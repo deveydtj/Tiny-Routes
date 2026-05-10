@@ -1,6 +1,6 @@
 # Tiny Routes Code Stories
 
-This document breaks the **Tiny Routes** backlog into granular development stories. Each story is designed to be small enough for a developer or AI coding agent to implement independently.
+This document breaks the **Tiny Routes** backlog into granular development stories. Each story is designed to be small enough for a developer or AI coding agent to implement independently, and the story order is aligned with `tiny_routes_game_concept.md` and `tiny_routes_epics_features_plan.md`.
 
 ---
 
@@ -19,7 +19,15 @@ Each story should follow this format:
 
 ---
 
-# Prototype Stories
+## Backlog Alignment
+
+- **STORY-001 to STORY-019** cover the P0 prototype loop from project setup through timer and tap tracking.
+- **STORY-020 onward** cover MVP systems such as stars, results, progression, monetization, cosmetics, analytics, onboarding, and settings.
+- The first engineering milestone stops at a playable route loop with a result screen; stars, coins, ads, and cosmetics stay in the MVP backlog.
+
+---
+
+# Core Backlog Stories
 
 ---
 
@@ -67,7 +75,52 @@ Establish the initial project folder and module layout for Tiny Routes.
 
 ---
 
-## STORY-002 — Add Core Domain Models
+## STORY-002 — Add App State Machine
+
+**Goal:**  
+Create a central app flow that can move cleanly between boot, menus, gameplay, pause, results, shop, and settings.
+
+**Files likely involved:**
+
+- `App/AppCoordinator.swift`
+- `App/AppState.swift`
+- `UI/HomeScreen.swift`
+- `UI/LevelSelectScreen.swift`
+- `UI/GameplayScreen.swift`
+- `UI/ResultScreen.swift`
+- `UI/SettingsScreen.swift`
+
+**Implementation steps:**
+
+1. Define the core app states.
+2. Create a single coordinator or state container that owns transitions.
+3. Add boot, main menu, level select, gameplay, pause, level complete, and level failed flows.
+4. Add placeholder routing for shop and settings.
+5. Keep gameplay logic out of menu screens.
+6. Confirm restart, resume, and exit paths are represented in the app flow.
+
+**Acceptance criteria:**
+
+- Screens transition cleanly.
+- Gameplay can be started, paused, resumed, restarted, and exited.
+- Menu screens do not own gameplay logic.
+- Shop and settings can be added without restructuring the app flow.
+
+**Testing notes:**
+
+- Launch the app and confirm it reaches the first interactive screen.
+- Enter gameplay, pause, resume, restart, and exit.
+- Complete or fail a level and confirm the result flow returns to the app shell cleanly.
+
+**Do not do / out of scope:**
+
+- Do not build the final shop UI yet.
+- Do not implement persistence yet.
+- Do not integrate ads or analytics yet.
+
+---
+
+## STORY-003 — Add Core Domain Models
 
 **Goal:**  
 Create the pure data models used by the game.
@@ -111,7 +164,7 @@ Create the pure data models used by the game.
 
 ---
 
-## STORY-003 — Add Level JSON Schema
+## STORY-004 — Add Level JSON Schema
 
 **Goal:**  
 Define the JSON format used to describe levels.
@@ -149,7 +202,7 @@ Define the JSON format used to describe levels.
 
 ---
 
-## STORY-004 — Add Level Repository
+## STORY-005 — Add Level Repository
 
 **Goal:**  
 Create a repository that loads levels from bundled JSON files.
@@ -186,7 +239,7 @@ Create a repository that loads levels from bundled JSON files.
 
 ---
 
-## STORY-005 — Add Sample Level 001
+## STORY-006 — Add Sample Level 001
 
 **Goal:**  
 Create the first playable sample level.
@@ -223,7 +276,7 @@ Create the first playable sample level.
 
 ---
 
-## STORY-006 — Build RouteGraph From LevelData
+## STORY-007 — Build RouteGraph From LevelData
 
 **Goal:**  
 Convert static level data into a runtime graph.
@@ -263,7 +316,7 @@ Convert static level data into a runtime graph.
 
 ---
 
-## STORY-007 — Render Static Route Board
+## STORY-008 — Render Static Route Board
 
 **Goal:**  
 Display the level graph visually without movement or interactivity.
@@ -302,7 +355,7 @@ Display the level graph visually without movement or interactivity.
 
 ---
 
-## STORY-008 — Add Delivery Dot Model
+## STORY-009 — Add Delivery Dot Model
 
 **Goal:**  
 Create the runtime model for the moving delivery dot.
@@ -340,7 +393,7 @@ Create the runtime model for the moving delivery dot.
 
 ---
 
-## STORY-009 — Move Dot Along One Edge
+## STORY-010 — Move Dot Along One Edge
 
 **Goal:**  
 Move the delivery dot smoothly from one node to another.
@@ -379,7 +432,7 @@ Move the delivery dot smoothly from one node to another.
 
 ---
 
-## STORY-010 — Move Dot Through Connected Nodes
+## STORY-011 — Move Dot Through Connected Nodes
 
 **Goal:**  
 Allow the dot to automatically continue through connected nodes.
@@ -418,7 +471,7 @@ Allow the dot to automatically continue through connected nodes.
 
 ---
 
-## STORY-011 — Add Switch Node Rotation
+## STORY-012 — Add Switch Node Rotation
 
 **Goal:**  
 Allow players to tap switch nodes and rotate their active direction.
@@ -458,7 +511,7 @@ Allow players to tap switch nodes and rotate their active direction.
 
 ---
 
-## STORY-012 — Route Dot Based On Active Switch Direction
+## STORY-013 — Route Dot Based On Active Switch Direction
 
 **Goal:**  
 Make the delivery dot follow the current active switch direction.
@@ -497,7 +550,7 @@ Make the delivery dot follow the current active switch direction.
 
 ---
 
-## STORY-013 — Add Package Pickup State
+## STORY-014 — Add Package Pickup State
 
 **Goal:**  
 Let the delivery dot collect the package when it reaches the package node.
@@ -536,7 +589,7 @@ Let the delivery dot collect the package when it reaches the package node.
 
 ---
 
-## STORY-014 — Add Destination Completion State
+## STORY-015 — Add Destination Completion State
 
 **Goal:**  
 Complete the level when the dot reaches the destination with the package.
@@ -576,7 +629,7 @@ Complete the level when the dot reaches the destination with the package.
 
 ---
 
-## STORY-015 — Add Failure State
+## STORY-016 — Add Failure State
 
 **Goal:**  
 Implement core fail conditions.
@@ -617,7 +670,7 @@ Implement core fail conditions.
 
 ---
 
-## STORY-016 — Add Instant Restart
+## STORY-017 — Add Instant Restart
 
 **Goal:**  
 Let players restart the current level immediately.
@@ -658,7 +711,7 @@ Let players restart the current level immediately.
 
 ---
 
-## STORY-017 — Add Timer
+## STORY-018 — Add Timer
 
 **Goal:**  
 Track and display level time.
@@ -697,7 +750,7 @@ Track and display level time.
 
 ---
 
-## STORY-018 — Add Tap Counter
+## STORY-019 — Add Tap Counter
 
 **Goal:**  
 Track switch taps during a level.
@@ -736,7 +789,7 @@ Track switch taps during a level.
 
 ---
 
-## STORY-019 — Add Star Scoring
+## STORY-020 — Add Star Scoring
 
 **Goal:**  
 Award stars based on completion, time, and tap count.
@@ -777,7 +830,7 @@ Award stars based on completion, time, and tap count.
 
 ---
 
-## STORY-020 — Add Result Screen
+## STORY-021 — Add Result Screen
 
 **Goal:**  
 Create a clear result screen for success and failure.
@@ -824,49 +877,117 @@ Create a clear result screen for success and failure.
 
 ---
 
-# Next Recommended Stories After STORY-020
+# Next Recommended Stories After STORY-021
 
-After the first playable loop works, continue with:
+After the first playable loop works, continue with the remaining phase-aligned backlog:
 
-## STORY-021 — Add Coin Wallet
+## Remaining P1 MVP Stories
+
+## STORY-022 — Add Player Save Profile
+
+Persist progress, stars, coins, cosmetics, settings, and ad-removal state.
+
+## STORY-023 — Add Level Unlocking
+
+Unlock levels sequentially while keeping completed levels replayable.
+
+## STORY-024 — Add Home Screen
+
+Create the main landing screen with Play, Daily Route, Shop, Settings, coins, and streak preview.
+
+## STORY-025 — Add Level Select Screen
+
+Display available levels, locks, and earned stars.
+
+## STORY-026 — Add Coin Wallet
 
 Create a soft-currency wallet that tracks earned and spent coins.
 
-## STORY-022 — Add Coin Rewards
+## STORY-027 — Add Reward Rules and Coin Rewards
 
-Award coins based on star results.
+Centralize reward logic and award coins from stars, level completion, and future systems.
 
-## STORY-023 — Add Local Save Profile
-
-Persist progress, stars, coins, and settings.
-
-## STORY-024 — Add Level Select Screen
-
-Display levels, locks, and earned stars.
-
-## STORY-025 — Add Home Screen
-
-Create main app navigation with Play, Daily Route, Shop, and Settings.
-
-## STORY-026 — Add Basic Cosmetic Inventory
+## STORY-028 — Add Basic Cosmetic Inventory
 
 Track owned and equipped cosmetics.
 
-## STORY-027 — Add Route Themes
+## STORY-029 — Add Route Themes
 
-Let players change board colors and route styles.
+Ship the first 4 MVP route themes.
 
-## STORY-028 — Add Trail Effects
+## STORY-030 — Add Trail Effects
 
-Let the delivery dot use simple visual trails.
+Ship the first 6 MVP trail options.
 
-## STORY-029 — Add Rewarded Rewind Stub
+## STORY-031 — Add Rewarded Ad Adapter
 
-Create the rewind system without connecting a real ad SDK yet.
+Abstract rewarded ads behind a game-facing service.
 
-## STORY-030 — Add Analytics Adapter
+## STORY-032 — Add Rewarded Rewind Placement
+
+Offer rewind after failure through the rewarded ad adapter.
+
+## STORY-033 — Add Double Coins Placement
+
+Offer a rewarded double-coins flow on successful level completion.
+
+## STORY-034 — Add Remove Ads Purchase
+
+Add the MVP remove-ads purchase and persist its unlock state.
+
+## STORY-035 — Add Analytics Adapter
 
 Create a centralized analytics wrapper for future SDK integration.
+
+## STORY-036 — Add Level and Monetization Events
+
+Track level starts, completions, failures, restarts, rewarded ads, and purchases.
+
+## STORY-037 — Add First-Time Tutorial Flow
+
+Use the first few levels to teach destination, switch tapping, failure, and package pickup.
+
+## STORY-038 — Add Objective Labels and Hand Pointer
+
+Add lightweight onboarding helpers without blocking gameplay.
+
+## STORY-039 — Add Settings Screen
+
+Add sound, music, haptics, restore purchases, privacy, terms, and credits.
+
+## STORY-040 — Add Haptics
+
+Add subtle feedback for taps, pickup, failure, completion, and rewards.
+
+## STORY-041 — Build First 30 MVP Levels
+
+Create the first 30 handcrafted levels with a smooth tutorial-to-MVP difficulty curve.
+
+## P2 Launch and Later Stories
+
+## STORY-042 — Add Daily Route Selector
+
+Rotate one curated daily challenge without requiring a server.
+
+## STORY-043 — Add Daily Result and Streak System
+
+Track daily completion, streak growth, and daily rewards.
+
+## STORY-044 — Add Hint System
+
+Support hints as a convenience system tied to coins or rewarded ads.
+
+## STORY-045 — Add Cosmetic Shop
+
+Let players preview, buy, and equip cosmetics with coins.
+
+## STORY-046 — Add World Structure and Milestone Rewards
+
+Group levels into worlds and reward long-term progression.
+
+## STORY-047 — Add Accessibility, Compliance, and Polish Pass
+
+Finish accessibility basics, privacy/tracking compliance, audio, animation, and launch polish.
 
 ---
 
@@ -874,4 +995,4 @@ Create a centralized analytics wrapper for future SDK integration.
 
 The first major milestone is complete when:
 
-> One JSON level loads, renders, the dot moves, switches rotate, the package is collected, the destination completes the level, stars are calculated, and the result screen appears.
+> One JSON level loads, renders, the dot moves, switches rotate, the package is collected, the destination completes the level, and a result screen appears.
