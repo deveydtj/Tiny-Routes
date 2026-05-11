@@ -70,7 +70,7 @@ final class DomainModelsTests: XCTestCase {
         }
     }
 
-    func testValidateOutgoingEdgesThrowsForDuplicateGraphEdgeIDs() {
+    func testValidateOutgoingEdgesThrowsForDuplicateOutgoingGraphEdgeIDs() {
         let node = RouteNode(id: "n1", x: 0, y: 0, outgoingEdgeIDs: ["e1"])
         let edges = [
             RouteEdge(id: "e1", fromNodeID: "n1", toNodeID: "n2"),
@@ -78,8 +78,8 @@ final class DomainModelsTests: XCTestCase {
         ]
 
         XCTAssertThrowsError(try node.validateOutgoingEdges(against: edges)) { error in
-            guard case let RouteNodeValidationError.duplicateGraphEdgeIDs(nodeID, duplicateEdgeIDs) = error else {
-                return XCTFail("Expected duplicateGraphEdgeIDs, got \(error)")
+            guard case let RouteNodeValidationError.duplicateOutgoingGraphEdgeIDs(nodeID, duplicateEdgeIDs) = error else {
+                return XCTFail("Expected duplicateOutgoingGraphEdgeIDs, got \(error)")
             }
 
             XCTAssertEqual(nodeID, "n1")

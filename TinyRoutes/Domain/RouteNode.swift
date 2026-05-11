@@ -11,7 +11,7 @@ struct RouteNode: Identifiable, Codable {
 enum RouteNodeValidationError: Error, LocalizedError {
     case outgoingEdgesMismatch(nodeID: String, expectedEdgeIDs: [String], actualEdgeIDs: [String])
     case duplicateOutgoingEdgeIDs(nodeID: String, duplicateEdgeIDs: [String])
-    case duplicateGraphEdgeIDs(nodeID: String, duplicateEdgeIDs: [String])
+    case duplicateOutgoingGraphEdgeIDs(nodeID: String, duplicateEdgeIDs: [String])
 
     var errorDescription: String? {
         switch self {
@@ -19,8 +19,8 @@ enum RouteNodeValidationError: Error, LocalizedError {
             return "RouteNode \(nodeID) has inconsistent outgoingEdgeIDs. Expected \(expectedEdgeIDs), got \(actualEdgeIDs)."
         case let .duplicateOutgoingEdgeIDs(nodeID, duplicateEdgeIDs):
             return "RouteNode \(nodeID) has duplicate outgoingEdgeIDs: \(duplicateEdgeIDs)."
-        case let .duplicateGraphEdgeIDs(nodeID, duplicateEdgeIDs):
-            return "RouteNode \(nodeID) has duplicate edge IDs in graph edges: \(duplicateEdgeIDs)."
+        case let .duplicateOutgoingGraphEdgeIDs(nodeID, duplicateEdgeIDs):
+            return "RouteNode \(nodeID) has duplicate edge IDs among outgoing graph edges: \(duplicateEdgeIDs)."
         }
     }
 }
@@ -37,7 +37,7 @@ extension RouteNode {
 
         let duplicateExpectedEdgeIDs = duplicates(in: expectedEdgeIDList)
         guard duplicateExpectedEdgeIDs.isEmpty else {
-            throw RouteNodeValidationError.duplicateGraphEdgeIDs(
+            throw RouteNodeValidationError.duplicateOutgoingGraphEdgeIDs(
                 nodeID: id,
                 duplicateEdgeIDs: duplicateExpectedEdgeIDs
             )
