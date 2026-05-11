@@ -1,9 +1,8 @@
 import Foundation
 
-/// A directed connection between two route nodes.
-/// Placeholder — fields defined in STORY-003.
-struct RouteEdge: Identifiable {
+/// Represents a directed connection from one route node to another.
+struct RouteEdge: Identifiable, Codable {
     let id: String
-    let from: String
-    let to: String
+    let fromNodeID: String
+    let toNodeID: String
 }

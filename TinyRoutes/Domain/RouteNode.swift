@@ -1,7 +1,9 @@
 import Foundation
 
-/// A node (intersection) in the route graph.
-/// Placeholder — fields defined in STORY-003.
-struct RouteNode: Identifiable {
+/// Represents a route-map intersection with a stable position and outgoing links.
+struct RouteNode: Identifiable, Codable {
     let id: String
+    var x: Double
+    var y: Double
+    var outgoingEdgeIDs: [String]
 }

@@ -1,8 +1,9 @@
 import Foundation
 
-/// Stores persistent player progress.
-/// Placeholder — fields defined in STORY-003.
+/// Stores beginner-safe player progression values and unlocked content state.
 struct PlayerProfile {
-    var totalStars: Int = 0
-    var coins: Int = 0
+    var unlockedLevelIDs: [String] = ["level_001"]
+    var completedLevelIDs: [String] = []
+    var bestStarsByLevelID: [String: Int] = [:]
+    var coinTotal: Int = 0
 }
