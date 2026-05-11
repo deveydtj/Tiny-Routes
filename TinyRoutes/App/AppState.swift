@@ -1,15 +1,14 @@
 import Foundation
 
 /// High-level states of the Tiny Routes application.
-/// Placeholder — transitions implemented in STORY-002.
-enum AppState {
+enum AppState: Equatable {
     case boot
     case mainMenu
     case levelSelect
-    case gameplay
-    case pause
-    case levelComplete
-    case levelFailed
+    case gameplay(levelID: String)
+    case pause(levelID: String)
+    case levelComplete(levelID: String)
+    case levelFailed(levelID: String)
     case shop
     case settings
 }
