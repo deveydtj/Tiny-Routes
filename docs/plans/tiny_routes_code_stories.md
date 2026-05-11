@@ -31,7 +31,7 @@ Each story should follow this format:
 
 ---
 
-## STORY-001 — Create Project Structure
+## STORY-001 — Create Project Structure ✅ COMPLETED
 
 **Goal:**  
 Establish the initial project folder and module layout for Tiny Routes.
@@ -72,6 +72,8 @@ Establish the initial project folder and module layout for Tiny Routes.
 - Do not add ads.
 - Do not add IAP.
 - Do not add cosmetics.
+
+**Status:** ✅ Completed — folder structure and placeholder Swift files created under `TinyRoutes/`. Portrait orientation configured in `Resources/Info.plist`.
 
 ---
 
