@@ -1,6 +1,7 @@
 import Combine
 
 /// Owns top-level navigation and coordinates transitions between app states.
+@MainActor
 final class AppCoordinator: ObservableObject {
     @Published private(set) var state: AppState = .boot
 
@@ -43,13 +44,21 @@ final class AppCoordinator: ObservableObject {
     }
 
     func completeLevel() {
-        guard case let .gameplay(levelID) = state else { return }
-        state = .levelComplete(levelID: levelID)
+        switch state {
+        case let .gameplay(levelID), let .pause(levelID):
+            state = .levelComplete(levelID: levelID)
+        default:
+            break
+        }
     }
 
     func failLevel() {
-        guard case let .gameplay(levelID) = state else { return }
-        state = .levelFailed(levelID: levelID)
+        switch state {
+        case let .gameplay(levelID), let .pause(levelID):
+            state = .levelFailed(levelID: levelID)
+        default:
+            break
+        }
     }
 
     func openShop() {
