@@ -53,4 +53,37 @@ final class DomainModelsTests: XCTestCase {
         XCTAssertFalse(cosmetic.isUnlocked)
         XCTAssertEqual(cosmetic.type, .trail)
     }
+
+    func testValidateOutgoingEdgesThrowsForDuplicateOutgoingEdgeIDs() {
+        let node = RouteNode(id: "n1", x: 0, y: 0, outgoingEdgeIDs: ["e1", "e1"])
+        let edges = [
+            RouteEdge(id: "e1", fromNodeID: "n1", toNodeID: "n2")
+        ]
+
+        XCTAssertThrowsError(try node.validateOutgoingEdges(against: edges)) { error in
+            guard case let RouteNodeValidationError.duplicateOutgoingEdgeIDs(nodeID, duplicateEdgeIDs) = error else {
+                return XCTFail("Expected duplicateOutgoingEdgeIDs, got \(error)")
+            }
+
+            XCTAssertEqual(nodeID, "n1")
+            XCTAssertEqual(duplicateEdgeIDs, ["e1"])
+        }
+    }
+
+    func testValidateOutgoingEdgesThrowsForDuplicateGraphEdgeIDs() {
+        let node = RouteNode(id: "n1", x: 0, y: 0, outgoingEdgeIDs: ["e1"])
+        let edges = [
+            RouteEdge(id: "e1", fromNodeID: "n1", toNodeID: "n2"),
+            RouteEdge(id: "e1", fromNodeID: "n1", toNodeID: "n3")
+        ]
+
+        XCTAssertThrowsError(try node.validateOutgoingEdges(against: edges)) { error in
+            guard case let RouteNodeValidationError.duplicateGraphEdgeIDs(nodeID, duplicateEdgeIDs) = error else {
+                return XCTFail("Expected duplicateGraphEdgeIDs, got \(error)")
+            }
+
+            XCTAssertEqual(nodeID, "n1")
+            XCTAssertEqual(duplicateEdgeIDs, ["e1"])
+        }
+    }
 }
