@@ -1,6 +1,7 @@
 import SwiftUI
 
 /// Root view wired to the app coordinator.
+@MainActor
 struct ContentView: View {
     @StateObject private var coordinator = AppCoordinator()
 
