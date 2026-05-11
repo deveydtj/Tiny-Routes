@@ -146,6 +146,21 @@ Create the pure data models used by the game.
 6. Define `CosmeticItem`.
 7. Keep all models free of UI or SpriteKit dependencies.
 
+**Sub-tasks (entry-level checklist):**
+
+- [ ] Open each target domain file and replace the placeholder comments with simple struct definitions that only use Swift/Foundation types.
+- [ ] Add `Codable` conformance to `LevelData`, `RouteNode`, and `RouteEdge` so these models can be read from JSON in a later story.
+- [ ] Add stable identity fields (`id`) to nodes and edges, and basic coordinate / connection fields needed to describe a route board.
+- [ ] Add `RouteGraph` fields for node and edge collections (dictionary or array-based), with no pathfinding logic yet.
+- [ ] Add a minimal initializer or helper on `RouteGraph` that can build an instance from node + edge collections for test setup.
+- [ ] Add `PlayerProfile` with beginner-safe progress properties (e.g., unlocked levels, best stars, coin total) using default values.
+- [ ] Add `CosmeticItem` with lightweight metadata fields (id, type, unlock status) only; no storefront logic.
+- [ ] Add doc comments above each model describing its purpose in one sentence.
+- [ ] Confirm there are no imports of UIKit, SwiftUI, or SpriteKit in these domain files.
+- [ ] Run the project tests/build and fix any compile issues caused by renamed or newly required fields.
+- [ ] Add/adjust unit tests that instantiate each model and verify basic graph wiring assumptions (node IDs referenced by edges exist).
+- [ ] Self-review the diff for scope: models only, no gameplay movement, rendering, or persistence behavior.
+
 **Acceptance criteria:**
 
 - Domain models compile.
