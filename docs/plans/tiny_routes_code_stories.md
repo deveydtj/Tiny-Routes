@@ -73,7 +73,7 @@ Establish the initial project folder and module layout for Tiny Routes.
 - Do not add IAP.
 - Do not add cosmetics.
 
-**Status:** ✅ Completed — folder structure and placeholder Swift files created under `TinyRoutes/`. Portrait orientation configured in `Resources/Info.plist`.
+**Status:** ✅ Completed — folder and file skeleton created under `TinyRoutes/`, covering all planned architectural layers (App, Domain, Gameplay, UI, Services, Infrastructure) with placeholder Swift stubs. Portrait orientation configured in `Resources/Info.plist`. Note: an Xcode project file is not part of this story's scope; "App builds / launches" criteria will be fully verified once the Xcode project is wired up in a follow-on setup step.
 
 ---
 
