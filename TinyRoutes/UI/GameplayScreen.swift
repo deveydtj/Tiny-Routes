@@ -5,7 +5,7 @@ import SwiftUI
 struct GameplayScreen: View {
     let levelID: String
     let isPaused: Bool
-    let onPauseTapped: () -> Void
+    let onPauseResumeTapped: () -> Void
     let onCompleteTapped: () -> Void
     let onFailTapped: () -> Void
     let onExitTapped: () -> Void
@@ -18,7 +18,7 @@ struct GameplayScreen: View {
             Text(isPaused ? "Paused" : "Running")
                 .foregroundColor(isPaused ? .orange : .green)
 
-            Button(isPaused ? "Resume" : "Pause", action: onPauseTapped)
+            Button(isPaused ? "Resume" : "Pause", action: onPauseResumeTapped)
             Button("Simulate Level Complete", action: onCompleteTapped)
             Button("Simulate Level Failed", action: onFailTapped)
             Button("Exit to Menu", action: onExitTapped)
@@ -30,7 +30,7 @@ struct GameplayScreen: View {
     GameplayScreen(
         levelID: "level_001",
         isPaused: false,
-        onPauseTapped: {},
+        onPauseResumeTapped: {},
         onCompleteTapped: {},
         onFailTapped: {},
         onExitTapped: {}

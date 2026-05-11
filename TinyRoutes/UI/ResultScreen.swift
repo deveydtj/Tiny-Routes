@@ -1,20 +1,28 @@
 import SwiftUI
 
-enum ResultType {
-    case completed
-    case failed
-}
-
 /// Post-level result screen.
 struct ResultScreen: View {
+
+    enum ResultType {
+        case completed
+        case failed
+    }
+
     let levelID: String
     let result: ResultType
     let onRestartTapped: () -> Void
     let onExitTapped: () -> Void
 
+    private var titleText: String {
+        switch result {
+        case .completed: "Level Complete"
+        case .failed: "Level Failed"
+        }
+    }
+
     var body: some View {
         VStack(spacing: 12) {
-            Text(result == .completed ? "Level Complete" : "Level Failed")
+            Text(titleText)
                 .font(.title)
             Text("Level: \(levelID)")
 

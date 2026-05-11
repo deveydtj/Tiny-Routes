@@ -40,7 +40,7 @@ final class AppCoordinator: ObservableObject {
     }
 
     func exitGameplayToMenu() {
-        state = .mainMenu
+        backToMainMenu()
     }
 
     func completeLevel() {

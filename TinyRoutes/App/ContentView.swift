@@ -29,24 +29,10 @@ struct ContentView: View {
                 )
 
             case let .gameplay(levelID):
-                GameplayScreen(
-                    levelID: levelID,
-                    isPaused: false,
-                    onPauseTapped: coordinator.pauseGameplay,
-                    onCompleteTapped: coordinator.completeLevel,
-                    onFailTapped: coordinator.failLevel,
-                    onExitTapped: coordinator.exitGameplayToMenu
-                )
+                gameplayView(levelID: levelID, isPaused: false)
 
             case let .pause(levelID):
-                GameplayScreen(
-                    levelID: levelID,
-                    isPaused: true,
-                    onPauseTapped: coordinator.resumeGameplay,
-                    onCompleteTapped: coordinator.completeLevel,
-                    onFailTapped: coordinator.failLevel,
-                    onExitTapped: coordinator.exitGameplayToMenu
-                )
+                gameplayView(levelID: levelID, isPaused: true)
 
             case let .levelComplete(levelID):
                 ResultScreen(
@@ -72,6 +58,18 @@ struct ContentView: View {
             }
         }
         .padding()
+    }
+
+    @ViewBuilder
+    private func gameplayView(levelID: String, isPaused: Bool) -> some View {
+        GameplayScreen(
+            levelID: levelID,
+            isPaused: isPaused,
+            onPauseResumeTapped: isPaused ? coordinator.resumeGameplay : coordinator.pauseGameplay,
+            onCompleteTapped: coordinator.completeLevel,
+            onFailTapped: coordinator.failLevel,
+            onExitTapped: coordinator.exitGameplayToMenu
+        )
     }
 }
 
