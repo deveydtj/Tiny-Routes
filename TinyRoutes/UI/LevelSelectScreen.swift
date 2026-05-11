@@ -1,11 +1,28 @@
 import SwiftUI
 
 /// Level selection screen.
-/// Placeholder — implemented in STORY-002.
 struct LevelSelectScreen: View {
+    let onBackTapped: () -> Void
+    let onLevelSelected: (String) -> Void
+
+    private let levelIDs: [String] = ["level_001", "level_002", "level_003"]
+
     var body: some View {
-        Text("Level Select")
+        VStack(spacing: 12) {
+            Text("Select a Level")
+                .font(.title2)
+
+            ForEach(levelIDs, id: \.self) { levelID in
+                Button(levelID.replacingOccurrences(of: "_", with: " ").capitalized) {
+                    onLevelSelected(levelID)
+                }
+            }
+
+            Button("Back", action: onBackTapped)
+        }
     }
 }
 
-#Preview { LevelSelectScreen() }
+#Preview {
+    LevelSelectScreen(onBackTapped: {}, onLevelSelected: { _ in })
+}

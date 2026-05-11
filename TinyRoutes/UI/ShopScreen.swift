@@ -1,11 +1,19 @@
 import SwiftUI
 
-/// In-app shop screen.
-/// Placeholder — implemented in MVP stories.
+/// In-app shop screen placeholder.
 struct ShopScreen: View {
+    let onBackTapped: () -> Void
+
     var body: some View {
-        Text("Shop")
+        VStack(spacing: 12) {
+            Text("Shop")
+                .font(.title)
+            Text("Placeholder content")
+            Button("Back", action: onBackTapped)
+        }
     }
 }
 
-#Preview { ShopScreen() }
+#Preview {
+    ShopScreen(onBackTapped: {})
+}

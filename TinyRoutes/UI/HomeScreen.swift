@@ -1,11 +1,23 @@
 import SwiftUI
 
 /// The home / main menu screen.
-/// Placeholder — implemented in STORY-002.
 struct HomeScreen: View {
+    let onPlayTapped: () -> Void
+    let onShopTapped: () -> Void
+    let onSettingsTapped: () -> Void
+
     var body: some View {
-        Text("Home")
+        VStack(spacing: 12) {
+            Text("Tiny Routes")
+                .font(.largeTitle)
+
+            Button("Play", action: onPlayTapped)
+            Button("Shop", action: onShopTapped)
+            Button("Settings", action: onSettingsTapped)
+        }
     }
 }
 
-#Preview { HomeScreen() }
+#Preview {
+    HomeScreen(onPlayTapped: {}, onShopTapped: {}, onSettingsTapped: {})
+}

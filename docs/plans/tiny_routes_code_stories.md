@@ -122,6 +122,8 @@ Create a central app flow that can move cleanly between boot, menus, gameplay, p
 
 ---
 
+**Status:** ✅ Completed — implemented a centralized `AppCoordinator` state machine with explicit transitions for boot, menu, level select, gameplay, pause, level complete/failed, plus placeholder shop/settings routes. `ContentView` now renders screen shells by state, and UI placeholders expose restart/resume/exit flow controls without embedding gameplay logic in menu screens.
+
 ## STORY-003 — Add Core Domain Models
 
 **Goal:**  
