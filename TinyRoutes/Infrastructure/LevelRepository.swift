@@ -36,8 +36,6 @@ final class LevelRepository {
         do {
             let data = try Data(contentsOf: url)
             return try decoder.decode(LevelData.self, from: data)
-        } catch let error as LevelRepositoryError {
-            throw error
         } catch {
             throw LevelRepositoryError.decodingFailed(id: id, underlying: error)
         }
