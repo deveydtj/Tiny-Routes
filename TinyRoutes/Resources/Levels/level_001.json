@@ -1,0 +1,18 @@
+{
+  "id": "level_001",
+  "name": "Getting Started",
+  "graph": {
+    "nodes": [
+      { "id": "n1", "x": 0.0, "y": 0.0, "outgoingEdgeIDs": ["e1"] },
+      { "id": "n2", "x": 1.0, "y": 0.0, "outgoingEdgeIDs": ["e2"] },
+      { "id": "n3", "x": 2.0, "y": 0.0, "outgoingEdgeIDs": [] }
+    ],
+    "edges": [
+      { "id": "e1", "fromNodeID": "n1", "toNodeID": "n2" },
+      { "id": "e2", "fromNodeID": "n2", "toNodeID": "n3" }
+    ]
+  },
+  "packageNodeID": "n1",
+  "destinationNodeID": "n3",
+  "timeLimitSeconds": 30
+}
