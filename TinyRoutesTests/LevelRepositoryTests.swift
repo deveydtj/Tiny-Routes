@@ -5,10 +5,27 @@ final class LevelRepositoryTests: XCTestCase {
 
     private let decoder = JSONDecoder()
 
-    // MARK: - Valid JSON decoding
+    // MARK: - Helpers
 
-    func testDecodesValidLevelJSON() throws {
-        let json = """
+    /// Returns a repository whose data-loader always hands back `data`,
+    /// bypassing the real bundle lookup.
+    private func makeRepo(returning data: Data) -> LevelRepository {
+        LevelRepository(
+            urlResolver: { _ in URL(string: "fake://level") },
+            dataLoader: { _ in data }
+        )
+    }
+
+    /// Returns a repository whose data-loader always throws `error`.
+    private func makeRepo(throwing error: Error) -> LevelRepository {
+        LevelRepository(
+            urlResolver: { _ in URL(string: "fake://level") },
+            dataLoader: { _ in throw error }
+        )
+    }
+
+    private var validLevelJSON: String {
+        """
         {
           "id": "level_001",
           "name": "Getting Started",
@@ -26,7 +43,12 @@ final class LevelRepositoryTests: XCTestCase {
           "timeLimitSeconds": 30
         }
         """
-        let data = try XCTUnwrap(json.data(using: .utf8))
+    }
+
+    // MARK: - Valid JSON decoding (decoder-level)
+
+    func testDecodesValidLevelJSON() throws {
+        let data = try XCTUnwrap(validLevelJSON.data(using: .utf8))
         let level = try decoder.decode(LevelData.self, from: data)
 
         XCTAssertEqual(level.id, "level_001")
@@ -84,16 +106,14 @@ final class LevelRepositoryTests: XCTestCase {
         XCTAssertTrue(level.graph.edges.isEmpty)
     }
 
-    // MARK: - Malformed JSON
+    // MARK: - Malformed JSON (decoder-level)
 
     func testMalformedJSONThrowsDecodingError() throws {
-        let json = "{ not valid json }"
-        let data = try XCTUnwrap(json.data(using: .utf8))
-
+        let data = try XCTUnwrap("{ not valid json }".data(using: .utf8))
         XCTAssertThrowsError(try decoder.decode(LevelData.self, from: data))
     }
 
-    // MARK: - Missing required fields
+    // MARK: - Missing required fields (decoder-level)
 
     func testMissingIDFieldThrowsDecodingError() throws {
         let json = """
@@ -106,7 +126,6 @@ final class LevelRepositoryTests: XCTestCase {
         }
         """
         let data = try XCTUnwrap(json.data(using: .utf8))
-
         XCTAssertThrowsError(try decoder.decode(LevelData.self, from: data))
     }
 
@@ -121,7 +140,6 @@ final class LevelRepositoryTests: XCTestCase {
         }
         """
         let data = try XCTUnwrap(json.data(using: .utf8))
-
         XCTAssertThrowsError(try decoder.decode(LevelData.self, from: data))
     }
 
@@ -137,7 +155,6 @@ final class LevelRepositoryTests: XCTestCase {
         }
         """
         let data = try XCTUnwrap(json.data(using: .utf8))
-
         XCTAssertThrowsError(try decoder.decode(LevelData.self, from: data))
     }
 
@@ -153,11 +170,26 @@ final class LevelRepositoryTests: XCTestCase {
         }
         """
         let data = try XCTUnwrap(json.data(using: .utf8))
-
         XCTAssertThrowsError(try decoder.decode(LevelData.self, from: data))
     }
 
-    // MARK: - LevelRepository file-not-found error
+    // MARK: - LevelRepository: successful load path
+
+    func testLoadLevelViaRepositorySucceedsWithValidData() throws {
+        let data = try XCTUnwrap(validLevelJSON.data(using: .utf8))
+        let repo = makeRepo(returning: data)
+        let level = try repo.loadLevel(id: "level_001")
+
+        XCTAssertEqual(level.id, "level_001")
+        XCTAssertEqual(level.name, "Getting Started")
+        XCTAssertEqual(level.graph.nodes.count, 2)
+        XCTAssertEqual(level.graph.edges.count, 1)
+        XCTAssertEqual(level.packageNodeID, "n1")
+        XCTAssertEqual(level.destinationNodeID, "n2")
+        XCTAssertEqual(level.timeLimitSeconds, 30)
+    }
+
+    // MARK: - LevelRepository: .fileNotFound error
 
     func testLoadLevelReturnsFileNotFoundForUnknownID() {
         // Use the test bundle, which does not contain level JSON files.
@@ -170,4 +202,54 @@ final class LevelRepositoryTests: XCTestCase {
             XCTAssertEqual(id, "nonexistent_level")
         }
     }
+
+    // MARK: - LevelRepository: .readFailed error
+
+    func testLoadLevelThrowsReadFailedForIOError() {
+        let ioError = NSError(domain: NSCocoaErrorDomain, code: NSFileNoSuchFileError)
+        let repo = makeRepo(throwing: ioError)
+
+        XCTAssertThrowsError(try repo.loadLevel(id: "level_001")) { error in
+            guard case LevelRepositoryError.readFailed(let id, _) = error else {
+                return XCTFail("Expected readFailed, got \(error)")
+            }
+            XCTAssertEqual(id, "level_001")
+        }
+    }
+
+    // MARK: - LevelRepository: .decodingFailed error
+
+    func testLoadLevelThrowsDecodingFailedForMalformedJSON() throws {
+        let data = try XCTUnwrap("{ not valid json }".data(using: .utf8))
+        let repo = makeRepo(returning: data)
+
+        XCTAssertThrowsError(try repo.loadLevel(id: "level_001")) { error in
+            guard case LevelRepositoryError.decodingFailed(let id, _) = error else {
+                return XCTFail("Expected decodingFailed, got \(error)")
+            }
+            XCTAssertEqual(id, "level_001")
+        }
+    }
+
+    func testLoadLevelThrowsDecodingFailedForMissingRequiredField() throws {
+        let missingIDJSON = """
+        {
+          "name": "Missing ID",
+          "graph": { "nodes": [], "edges": [] },
+          "packageNodeID": "n1",
+          "destinationNodeID": "n2",
+          "timeLimitSeconds": 30
+        }
+        """
+        let data = try XCTUnwrap(missingIDJSON.data(using: .utf8))
+        let repo = makeRepo(returning: data)
+
+        XCTAssertThrowsError(try repo.loadLevel(id: "level_001")) { error in
+            guard case LevelRepositoryError.decodingFailed(let id, _) = error else {
+                return XCTFail("Expected decodingFailed, got \(error)")
+            }
+            XCTAssertEqual(id, "level_001")
+        }
+    }
 }
+
