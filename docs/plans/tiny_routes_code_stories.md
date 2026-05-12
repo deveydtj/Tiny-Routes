@@ -150,18 +150,18 @@ Create the pure data models used by the game.
 
 **Sub-tasks (entry-level checklist):**
 
-- [ ] Open each target domain file and replace the placeholder comments with simple struct definitions that only use Swift/Foundation types.
-- [ ] Add `Codable` conformance to `LevelData`, `RouteNode`, and `RouteEdge` so these models can be read from JSON in a later story.
-- [ ] Add stable identity fields (`id`) to nodes and edges, and basic coordinate / connection fields needed to describe a route board.
-- [ ] Add `RouteGraph` fields for node and edge collections (dictionary or array-based), with no pathfinding logic yet.
-- [ ] Add a minimal initializer or helper on `RouteGraph` that can build an instance from node + edge collections for test setup.
-- [ ] Add `PlayerProfile` with beginner-safe progress properties (e.g., unlocked levels, best stars, coin total) using default values.
-- [ ] Add `CosmeticItem` with lightweight metadata fields (id, type, unlock status) only; no storefront logic.
-- [ ] Add doc comments above each model describing its purpose in one sentence.
-- [ ] Confirm there are no imports of UIKit, SwiftUI, or SpriteKit in these domain files.
-- [ ] Run the project tests/build and fix any compile issues caused by renamed or newly required fields.
-- [ ] Add/adjust unit tests that instantiate each model and verify basic graph wiring assumptions (node IDs referenced by edges exist).
-- [ ] Self-review the diff for scope: models only, no gameplay movement, rendering, or persistence behavior.
+- [x] Open each target domain file and replace the placeholder comments with simple struct definitions that only use Swift/Foundation types.
+- [x] Add `Codable` conformance to `LevelData`, `RouteNode`, and `RouteEdge` so these models can be read from JSON in a later story.
+- [x] Add stable identity fields (`id`) to nodes and edges, and basic coordinate / connection fields needed to describe a route board.
+- [x] Add `RouteGraph` fields for node and edge collections (dictionary or array-based), with no pathfinding logic yet.
+- [x] Add a minimal initializer or helper on `RouteGraph` that can build an instance from node + edge collections for test setup.
+- [x] Add `PlayerProfile` with beginner-safe progress properties (e.g., unlocked levels, best stars, coin total) using default values.
+- [x] Add `CosmeticItem` with lightweight metadata fields (id, type, unlock status) only; no storefront logic.
+- [x] Add doc comments above each model describing its purpose in one sentence.
+- [x] Confirm there are no imports of UIKit, SwiftUI, or SpriteKit in these domain files.
+- [x] Run the project tests/build and fix any compile issues caused by renamed or newly required fields.
+- [x] Add/adjust unit tests that instantiate each model and verify basic graph wiring assumptions (node IDs referenced by edges exist).
+- [x] Self-review the diff for scope: models only, no gameplay movement, rendering, or persistence behavior.
 
 **Acceptance criteria:**
 
@@ -182,6 +182,8 @@ Create the pure data models used by the game.
 - Do not implement persistence yet.
 
 ---
+
+**Status:** ✅ Completed — replaced STORY-003 domain placeholders with Foundation-only model definitions for level, node, edge, graph, player profile, and cosmetic metadata, including Codable support for level loading models and graph construction helpers. Added focused unit tests that instantiate the models and verify graph edge references point to existing node IDs.
 
 ## STORY-004 — Add Level JSON Schema
 
