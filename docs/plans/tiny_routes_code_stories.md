@@ -185,7 +185,7 @@ Create the pure data models used by the game.
 
 **Status:** ✅ Completed — replaced STORY-003 domain placeholders with Foundation-only model definitions for level, node, edge, graph, player profile, and cosmetic metadata, including Codable support for level loading models and graph construction helpers. Added focused unit tests that instantiate the models and verify graph edge references point to existing node IDs.
 
-## STORY-004 — Add Level JSON Schema
+## STORY-004 — Add Level JSON Schema ✅ COMPLETED
 
 **Goal:**  
 Define the JSON format used to describe levels.
@@ -222,6 +222,8 @@ Define the JSON format used to describe levels.
 - Do not create multiple levels yet.
 
 ---
+
+**Status:** ✅ Completed — created `Resources/Levels/level_001.json` with the canonical level JSON schema, implemented `LevelRepository` with `loadLevel(id:)` that decodes bundled JSON into `LevelData` and surfaces readable `LevelRepositoryError` values for missing files or decoding failures. Added `LevelRepositoryTests` covering valid decoding, malformed JSON, missing required fields, and the file-not-found error path.
 
 ## STORY-005 — Add Level Repository
 
