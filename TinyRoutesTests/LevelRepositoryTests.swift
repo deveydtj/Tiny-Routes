@@ -375,10 +375,13 @@ final class LevelRepositoryTests: XCTestCase {
     }
 
     private func sampleLevel001Data() throws -> Data {
-        let testsDirectory = URL(fileURLWithPath: #filePath).deletingLastPathComponent()
-        let levelURL = testsDirectory
-            .appendingPathComponent("../TinyRoutes/Resources/Levels/level_001.json")
-            .standardizedFileURL
-        return try Data(contentsOf: levelURL)
+        let bundles = [Bundle.main, Bundle(for: LevelRepositoryTests.self)]
+        for bundle in bundles {
+            if let levelURL = bundle.url(forResource: "level_001", withExtension: "json", subdirectory: "Levels") {
+                return try Data(contentsOf: levelURL)
+            }
+        }
+
+        throw LevelRepositoryError.fileNotFound(id: "level_001")
     }
 }
