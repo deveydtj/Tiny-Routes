@@ -251,5 +251,62 @@ final class LevelRepositoryTests: XCTestCase {
             XCTAssertEqual(id, "level_001")
         }
     }
+
+    // MARK: - LevelRepository: loadAllLevels
+
+    func testLoadAllLevelsReturnsEmptyWhenNoBundledLevels() throws {
+        let repo = LevelRepository(
+            urlResolver: { _ in nil },
+            dataLoader: { _ in Data() },
+            allLevelURLs: { [] }
+        )
+        let levels = try repo.loadAllLevels()
+        XCTAssertTrue(levels.isEmpty)
+    }
+
+    func testLoadAllLevelsReturnsDecodedLevels() throws {
+        let data = try XCTUnwrap(validLevelJSON.data(using: .utf8))
+        let url = try XCTUnwrap(URL(string: "fake://levels/level_001.json"))
+        let repo = LevelRepository(
+            urlResolver: { _ in nil },
+            dataLoader: { _ in data },
+            allLevelURLs: { [url] }
+        )
+        let levels = try repo.loadAllLevels()
+        XCTAssertEqual(levels.count, 1)
+        XCTAssertEqual(levels.first?.id, "level_001")
+    }
+
+    func testLoadAllLevelsThrowsReadFailedOnIOError() throws {
+        let ioError = NSError(domain: NSCocoaErrorDomain, code: NSFileNoSuchFileError)
+        let url = try XCTUnwrap(URL(string: "fake://levels/level_001.json"))
+        let repo = LevelRepository(
+            urlResolver: { _ in nil },
+            dataLoader: { _ in throw ioError },
+            allLevelURLs: { [url] }
+        )
+        XCTAssertThrowsError(try repo.loadAllLevels()) { error in
+            guard case LevelRepositoryError.readFailed(let id, _) = error else {
+                return XCTFail("Expected readFailed, got \(error)")
+            }
+            XCTAssertEqual(id, "level_001")
+        }
+    }
+
+    func testLoadAllLevelsThrowsDecodingFailedForMalformedJSON() throws {
+        let badData = try XCTUnwrap("{ not valid json }".data(using: .utf8))
+        let url = try XCTUnwrap(URL(string: "fake://levels/level_001.json"))
+        let repo = LevelRepository(
+            urlResolver: { _ in nil },
+            dataLoader: { _ in badData },
+            allLevelURLs: { [url] }
+        )
+        XCTAssertThrowsError(try repo.loadAllLevels()) { error in
+            guard case LevelRepositoryError.decodingFailed(let id, _) = error else {
+                return XCTFail("Expected decodingFailed, got \(error)")
+            }
+            XCTAssertEqual(id, "level_001")
+        }
+    }
 }
 
