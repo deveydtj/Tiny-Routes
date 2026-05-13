@@ -28,19 +28,26 @@ final class LevelRepositoryTests: XCTestCase {
         """
         {
           "id": "level_001",
-          "name": "Getting Started",
+          "name": "First Dispatch",
           "graph": {
             "nodes": [
-              { "id": "n1", "x": 0.0, "y": 0.0, "outgoingEdgeIDs": ["e1"] },
-              { "id": "n2", "x": 1.0, "y": 0.0, "outgoingEdgeIDs": [] }
+              { "id": "start", "x": 0.0, "y": 0.0, "outgoingEdgeIDs": ["e_start_switch"] },
+              { "id": "switch", "x": 1.0, "y": 0.0, "outgoingEdgeIDs": ["e_switch_package", "e_switch_dead_end", "e_switch_destination"] },
+              { "id": "package", "x": 2.0, "y": 1.0, "outgoingEdgeIDs": ["e_package_return"] },
+              { "id": "dead_end", "x": 2.0, "y": -1.0, "outgoingEdgeIDs": [] },
+              { "id": "destination", "x": 3.0, "y": 0.0, "outgoingEdgeIDs": [] }
             ],
             "edges": [
-              { "id": "e1", "fromNodeID": "n1", "toNodeID": "n2" }
+              { "id": "e_start_switch", "fromNodeID": "start", "toNodeID": "switch" },
+              { "id": "e_switch_package", "fromNodeID": "switch", "toNodeID": "package" },
+              { "id": "e_package_return", "fromNodeID": "package", "toNodeID": "switch" },
+              { "id": "e_switch_destination", "fromNodeID": "switch", "toNodeID": "destination" },
+              { "id": "e_switch_dead_end", "fromNodeID": "switch", "toNodeID": "dead_end" }
             ]
           },
-          "packageNodeID": "n1",
-          "destinationNodeID": "n2",
-          "timeLimitSeconds": 30
+          "packageNodeID": "package",
+          "destinationNodeID": "destination",
+          "timeLimitSeconds": 45
         }
         """
     }
@@ -52,12 +59,53 @@ final class LevelRepositoryTests: XCTestCase {
         let level = try decoder.decode(LevelData.self, from: data)
 
         XCTAssertEqual(level.id, "level_001")
-        XCTAssertEqual(level.name, "Getting Started")
-        XCTAssertEqual(level.graph.nodes.count, 2)
-        XCTAssertEqual(level.graph.edges.count, 1)
-        XCTAssertEqual(level.packageNodeID, "n1")
-        XCTAssertEqual(level.destinationNodeID, "n2")
-        XCTAssertEqual(level.timeLimitSeconds, 30)
+        XCTAssertEqual(level.name, "First Dispatch")
+        XCTAssertEqual(level.graph.nodes.count, 5)
+        XCTAssertEqual(level.graph.edges.count, 5)
+        XCTAssertEqual(level.packageNodeID, "package")
+        XCTAssertEqual(level.destinationNodeID, "destination")
+        XCTAssertEqual(level.timeLimitSeconds, 45)
+    }
+
+    func testSampleLevelContainsRequiredNodesAndValidReferences() throws {
+        let data = try XCTUnwrap(validLevelJSON.data(using: .utf8))
+        let level = try decoder.decode(LevelData.self, from: data)
+
+        let nodesByID = Dictionary(uniqueKeysWithValues: level.graph.nodes.map { ($0.id, $0) })
+        let nodeIDs = Set(nodesByID.keys)
+        XCTAssertTrue(nodeIDs.contains("start"))
+        XCTAssertTrue(nodeIDs.contains("switch"))
+        XCTAssertTrue(nodeIDs.contains("package"))
+        XCTAssertTrue(nodeIDs.contains("destination"))
+
+        XCTAssertNotNil(nodesByID[level.packageNodeID])
+        XCTAssertNotNil(nodesByID[level.destinationNodeID])
+
+        let edgeIDs = Set(level.graph.edges.map(\.id))
+        for node in level.graph.nodes {
+            for edgeID in node.outgoingEdgeIDs {
+                XCTAssertTrue(edgeIDs.contains(edgeID), "Missing edge \(edgeID) referenced by node \(node.id)")
+            }
+        }
+        for edge in level.graph.edges {
+            XCTAssertTrue(nodeIDs.contains(edge.fromNodeID), "Missing fromNodeID \(edge.fromNodeID) for edge \(edge.id)")
+            XCTAssertTrue(nodeIDs.contains(edge.toNodeID), "Missing toNodeID \(edge.toNodeID) for edge \(edge.id)")
+        }
+
+        let switchNode = try XCTUnwrap(nodesByID["switch"])
+        XCTAssertGreaterThan(switchNode.outgoingEdgeIDs.count, 1, "Switch node should offer multiple paths")
+
+        let deadEndNode = try XCTUnwrap(nodesByID["dead_end"])
+        XCTAssertTrue(deadEndNode.outgoingEdgeIDs.isEmpty, "Wrong path should terminate in a dead-end")
+
+        let adjacency = Dictionary(grouping: level.graph.edges, by: \.fromNodeID)
+            .mapValues { edges in edges.map(\.toNodeID) }
+
+        let canReachPackage = isReachable(from: "start", to: level.packageNodeID, adjacency: adjacency)
+        XCTAssertTrue(canReachPackage, "Expected a path from start to package")
+
+        let canReachDestination = isReachable(from: level.packageNodeID, to: level.destinationNodeID, adjacency: adjacency)
+        XCTAssertTrue(canReachDestination, "Expected a path from package to destination")
     }
 
     func testDecodesEdgeFieldsCorrectly() throws {
@@ -181,12 +229,12 @@ final class LevelRepositoryTests: XCTestCase {
         let level = try repo.loadLevel(id: "level_001")
 
         XCTAssertEqual(level.id, "level_001")
-        XCTAssertEqual(level.name, "Getting Started")
-        XCTAssertEqual(level.graph.nodes.count, 2)
-        XCTAssertEqual(level.graph.edges.count, 1)
-        XCTAssertEqual(level.packageNodeID, "n1")
-        XCTAssertEqual(level.destinationNodeID, "n2")
-        XCTAssertEqual(level.timeLimitSeconds, 30)
+        XCTAssertEqual(level.name, "First Dispatch")
+        XCTAssertEqual(level.graph.nodes.count, 5)
+        XCTAssertEqual(level.graph.edges.count, 5)
+        XCTAssertEqual(level.packageNodeID, "package")
+        XCTAssertEqual(level.destinationNodeID, "destination")
+        XCTAssertEqual(level.timeLimitSeconds, 45)
     }
 
     // MARK: - LevelRepository: .fileNotFound error
@@ -308,5 +356,24 @@ final class LevelRepositoryTests: XCTestCase {
             XCTAssertEqual(id, "level_001")
         }
     }
-}
 
+    private func isReachable(from startID: String, to targetID: String, adjacency: [String: [String]]) -> Bool {
+        var visited = Set<String>()
+        var queue: [String] = [startID]
+
+        while !queue.isEmpty {
+            let currentID = queue.removeFirst()
+            if currentID == targetID {
+                return true
+            }
+
+            guard visited.insert(currentID).inserted else {
+                continue
+            }
+
+            queue.append(contentsOf: adjacency[currentID, default: []])
+        }
+
+        return false
+    }
+}
