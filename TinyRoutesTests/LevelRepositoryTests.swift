@@ -375,7 +375,7 @@ final class LevelRepositoryTests: XCTestCase {
     }
 
     private func sampleLevel001Data() throws -> Data {
-        let bundles = [Bundle.main, Bundle(for: LevelRepositoryTests.self)]
+        let bundles = [Bundle(for: LevelRepositoryTests.self), Bundle.main]
         for bundle in bundles {
             if let levelURL = bundle.url(forResource: "level_001", withExtension: "json", subdirectory: "Levels") {
                 return try Data(contentsOf: levelURL)
