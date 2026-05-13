@@ -260,6 +260,8 @@ Create a repository that loads levels from bundled JSON files.
 - Do not fetch levels from a server.
 - Do not build level select UI yet.
 
+**Status:** ✅ Completed — added `loadAllLevels()` to `LevelRepository` that enumerates all bundled JSON files in `Resources/Levels/`, loads and decodes each, and surfaces `LevelRepositoryError.readFailed` or `.decodingFailed` on the first failure. Added an `allLevelURLs` injectable closure to the testing init to keep the new method fully unit-testable. Added four new tests covering the empty case, successful multi-level load, read I/O failure, and malformed-JSON failure.
+
 ---
 
 ## STORY-006 — Add Sample Level 001
