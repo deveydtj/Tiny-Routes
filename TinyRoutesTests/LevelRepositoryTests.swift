@@ -68,7 +68,7 @@ final class LevelRepositoryTests: XCTestCase {
     }
 
     func testSampleLevelContainsRequiredNodesAndValidReferences() throws {
-        let data = try XCTUnwrap(validLevelJSON.data(using: .utf8))
+        let data = try sampleLevel001Data()
         let level = try decoder.decode(LevelData.self, from: data)
 
         let nodesByID = Dictionary(uniqueKeysWithValues: level.graph.nodes.map { ($0.id, $0) })
@@ -81,11 +81,8 @@ final class LevelRepositoryTests: XCTestCase {
         XCTAssertNotNil(nodesByID[level.packageNodeID])
         XCTAssertNotNil(nodesByID[level.destinationNodeID])
 
-        let edgeIDs = Set(level.graph.edges.map(\.id))
         for node in level.graph.nodes {
-            for edgeID in node.outgoingEdgeIDs {
-                XCTAssertTrue(edgeIDs.contains(edgeID), "Missing edge \(edgeID) referenced by node \(node.id)")
-            }
+            try node.validateOutgoingEdges(against: level.graph.edges)
         }
         for edge in level.graph.edges {
             XCTAssertTrue(nodeIDs.contains(edge.fromNodeID), "Missing fromNodeID \(edge.fromNodeID) for edge \(edge.id)")
@@ -375,5 +372,13 @@ final class LevelRepositoryTests: XCTestCase {
         }
 
         return false
+    }
+
+    private func sampleLevel001Data() throws -> Data {
+        let testsDirectory = URL(fileURLWithPath: #filePath).deletingLastPathComponent()
+        let levelURL = testsDirectory
+            .appendingPathComponent("../TinyRoutes/Resources/Levels/level_001.json")
+            .standardizedFileURL
+        return try Data(contentsOf: levelURL)
     }
 }

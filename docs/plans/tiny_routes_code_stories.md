@@ -299,7 +299,7 @@ Create the first playable sample level.
 - Do not create all 30 levels.
 - Do not add advanced mechanics.
 
-**Status:** ✅ Completed — redesigned `Resources/Levels/level_001.json` into a playable starter route with explicit start/switch/package/destination nodes, a dead-end wrong path, connected edge topology, and tuned timer budget. Added tests that validate node/edge reference integrity, switch branching, wrong-path dead-end behavior, and graph reachability from start→package→destination to verify the level is solvable and decodable through `LevelRepository`.
+**Status:** 🚧 In Progress — redesigned `Resources/Levels/level_001.json` into a playable starter route with explicit start/switch/package/destination nodes, a dead-end wrong path, connected edge topology, and tuned timer budget. Added tests that validate node/edge reference integrity, switch branching, wrong-path dead-end behavior, and graph reachability from start→package→destination. Story remains open because step 5 also requires par-tap metadata, and `LevelData` currently has no `parTaps` field.
 
 ---
 
