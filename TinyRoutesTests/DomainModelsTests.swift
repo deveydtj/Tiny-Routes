@@ -18,7 +18,8 @@ final class DomainModelsTests: XCTestCase {
             graph: graph,
             packageNodeID: "n1",
             destinationNodeID: "n2",
-            timeLimitSeconds: 30
+            timeLimitSeconds: 30,
+            parTaps: 4
         )
 
         XCTAssertEqual(levelData.id, "level_001")

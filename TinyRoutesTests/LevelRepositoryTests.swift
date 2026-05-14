@@ -28,19 +28,27 @@ final class LevelRepositoryTests: XCTestCase {
         """
         {
           "id": "level_001",
-          "name": "Getting Started",
+          "name": "First Dispatch",
           "graph": {
             "nodes": [
-              { "id": "n1", "x": 0.0, "y": 0.0, "outgoingEdgeIDs": ["e1"] },
-              { "id": "n2", "x": 1.0, "y": 0.0, "outgoingEdgeIDs": [] }
+              { "id": "start", "x": 0.0, "y": 0.0, "outgoingEdgeIDs": ["e_start_switch"] },
+              { "id": "switch", "x": 1.0, "y": 0.0, "outgoingEdgeIDs": ["e_switch_package", "e_switch_dead_end", "e_switch_destination"] },
+              { "id": "package", "x": 2.0, "y": 1.0, "outgoingEdgeIDs": ["e_package_return"] },
+              { "id": "dead_end", "x": 2.0, "y": -1.0, "outgoingEdgeIDs": [] },
+              { "id": "destination", "x": 3.0, "y": 0.0, "outgoingEdgeIDs": [] }
             ],
             "edges": [
-              { "id": "e1", "fromNodeID": "n1", "toNodeID": "n2" }
+              { "id": "e_start_switch", "fromNodeID": "start", "toNodeID": "switch" },
+              { "id": "e_switch_package", "fromNodeID": "switch", "toNodeID": "package" },
+              { "id": "e_package_return", "fromNodeID": "package", "toNodeID": "switch" },
+              { "id": "e_switch_destination", "fromNodeID": "switch", "toNodeID": "destination" },
+              { "id": "e_switch_dead_end", "fromNodeID": "switch", "toNodeID": "dead_end" }
             ]
           },
-          "packageNodeID": "n1",
-          "destinationNodeID": "n2",
-          "timeLimitSeconds": 30
+          "packageNodeID": "package",
+          "destinationNodeID": "destination",
+          "timeLimitSeconds": 45,
+          "parTaps": 6
         }
         """
     }
@@ -52,12 +60,60 @@ final class LevelRepositoryTests: XCTestCase {
         let level = try decoder.decode(LevelData.self, from: data)
 
         XCTAssertEqual(level.id, "level_001")
-        XCTAssertEqual(level.name, "Getting Started")
-        XCTAssertEqual(level.graph.nodes.count, 2)
-        XCTAssertEqual(level.graph.edges.count, 1)
-        XCTAssertEqual(level.packageNodeID, "n1")
-        XCTAssertEqual(level.destinationNodeID, "n2")
-        XCTAssertEqual(level.timeLimitSeconds, 30)
+        XCTAssertEqual(level.name, "First Dispatch")
+        XCTAssertEqual(level.graph.nodes.count, 5)
+        XCTAssertEqual(level.graph.edges.count, 5)
+        XCTAssertEqual(level.packageNodeID, "package")
+        XCTAssertEqual(level.destinationNodeID, "destination")
+        XCTAssertEqual(level.timeLimitSeconds, 45)
+        XCTAssertEqual(level.parTaps, 6)
+    }
+
+    func testSampleLevelContainsRequiredNodesAndValidReferences() throws {
+        let data = try sampleLevel001Data()
+        let level = try decoder.decode(LevelData.self, from: data)
+
+        let duplicateNodeIDs = Dictionary(grouping: level.graph.nodes.map(\.id), by: { $0 })
+            .filter { $1.count > 1 }
+            .map(\.key)
+            .sorted()
+        XCTAssertTrue(duplicateNodeIDs.isEmpty, "Duplicate node IDs found: \(duplicateNodeIDs)")
+        guard duplicateNodeIDs.isEmpty else {
+            return
+        }
+
+        let nodesByID = Dictionary(uniqueKeysWithValues: level.graph.nodes.map { ($0.id, $0) })
+        let nodeIDs = Set(nodesByID.keys)
+        XCTAssertTrue(nodeIDs.contains("start"))
+        XCTAssertTrue(nodeIDs.contains("switch"))
+        XCTAssertTrue(nodeIDs.contains("package"))
+        XCTAssertTrue(nodeIDs.contains("destination"))
+
+        XCTAssertNotNil(nodesByID[level.packageNodeID])
+        XCTAssertNotNil(nodesByID[level.destinationNodeID])
+
+        for node in level.graph.nodes {
+            try node.validateOutgoingEdges(against: level.graph.edges)
+        }
+        for edge in level.graph.edges {
+            XCTAssertTrue(nodeIDs.contains(edge.fromNodeID), "Missing fromNodeID \(edge.fromNodeID) for edge \(edge.id)")
+            XCTAssertTrue(nodeIDs.contains(edge.toNodeID), "Missing toNodeID \(edge.toNodeID) for edge \(edge.id)")
+        }
+
+        let switchNode = try XCTUnwrap(nodesByID["switch"])
+        XCTAssertGreaterThan(switchNode.outgoingEdgeIDs.count, 1, "Switch node should offer multiple paths")
+
+        let deadEndNode = try XCTUnwrap(nodesByID["dead_end"])
+        XCTAssertTrue(deadEndNode.outgoingEdgeIDs.isEmpty, "Wrong path should terminate in a dead-end")
+
+        let adjacency = Dictionary(grouping: level.graph.edges, by: \.fromNodeID)
+            .mapValues { edges in edges.map(\.toNodeID) }
+
+        let canReachPackage = isReachable(from: "start", to: level.packageNodeID, adjacency: adjacency)
+        XCTAssertTrue(canReachPackage, "Expected a path from start to package")
+
+        let canReachDestination = isReachable(from: level.packageNodeID, to: level.destinationNodeID, adjacency: adjacency)
+        XCTAssertTrue(canReachDestination, "Expected a path from package to destination")
     }
 
     func testDecodesEdgeFieldsCorrectly() throws {
@@ -76,7 +132,8 @@ final class LevelRepositoryTests: XCTestCase {
           },
           "packageNodeID": "a",
           "destinationNodeID": "b",
-          "timeLimitSeconds": 60
+          "timeLimitSeconds": 60,
+          "parTaps": 3
         }
         """
         let data = try XCTUnwrap(json.data(using: .utf8))
@@ -96,7 +153,8 @@ final class LevelRepositoryTests: XCTestCase {
           "graph": { "nodes": [], "edges": [] },
           "packageNodeID": "",
           "destinationNodeID": "",
-          "timeLimitSeconds": 10
+          "timeLimitSeconds": 10,
+          "parTaps": 1
         }
         """
         let data = try XCTUnwrap(json.data(using: .utf8))
@@ -122,7 +180,8 @@ final class LevelRepositoryTests: XCTestCase {
           "graph": { "nodes": [], "edges": [] },
           "packageNodeID": "n1",
           "destinationNodeID": "n2",
-          "timeLimitSeconds": 30
+          "timeLimitSeconds": 30,
+          "parTaps": 5
         }
         """
         let data = try XCTUnwrap(json.data(using: .utf8))
@@ -136,7 +195,8 @@ final class LevelRepositoryTests: XCTestCase {
           "name": "No Graph",
           "packageNodeID": "n1",
           "destinationNodeID": "n2",
-          "timeLimitSeconds": 30
+          "timeLimitSeconds": 30,
+          "parTaps": 5
         }
         """
         let data = try XCTUnwrap(json.data(using: .utf8))
@@ -151,7 +211,8 @@ final class LevelRepositoryTests: XCTestCase {
           "graph": { "edges": [] },
           "packageNodeID": "n1",
           "destinationNodeID": "n2",
-          "timeLimitSeconds": 30
+          "timeLimitSeconds": 30,
+          "parTaps": 5
         }
         """
         let data = try XCTUnwrap(json.data(using: .utf8))
@@ -166,6 +227,22 @@ final class LevelRepositoryTests: XCTestCase {
           "graph": { "nodes": [] },
           "packageNodeID": "n1",
           "destinationNodeID": "n2",
+          "timeLimitSeconds": 30,
+          "parTaps": 5
+        }
+        """
+        let data = try XCTUnwrap(json.data(using: .utf8))
+        XCTAssertThrowsError(try decoder.decode(LevelData.self, from: data))
+    }
+
+    func testMissingParTapsFieldThrowsDecodingError() throws {
+        let json = """
+        {
+          "id": "level_001",
+          "name": "Missing Par Taps",
+          "graph": { "nodes": [], "edges": [] },
+          "packageNodeID": "n1",
+          "destinationNodeID": "n2",
           "timeLimitSeconds": 30
         }
         """
@@ -176,17 +253,17 @@ final class LevelRepositoryTests: XCTestCase {
     // MARK: - LevelRepository: successful load path
 
     func testLoadLevelViaRepositorySucceedsWithValidData() throws {
-        let data = try XCTUnwrap(validLevelJSON.data(using: .utf8))
-        let repo = makeRepo(returning: data)
+        let repo = LevelRepository(bundle: try sampleLevel001Bundle())
         let level = try repo.loadLevel(id: "level_001")
 
         XCTAssertEqual(level.id, "level_001")
-        XCTAssertEqual(level.name, "Getting Started")
-        XCTAssertEqual(level.graph.nodes.count, 2)
-        XCTAssertEqual(level.graph.edges.count, 1)
-        XCTAssertEqual(level.packageNodeID, "n1")
-        XCTAssertEqual(level.destinationNodeID, "n2")
-        XCTAssertEqual(level.timeLimitSeconds, 30)
+        XCTAssertEqual(level.name, "First Dispatch")
+        XCTAssertEqual(level.graph.nodes.count, 5)
+        XCTAssertEqual(level.graph.edges.count, 5)
+        XCTAssertEqual(level.packageNodeID, "package")
+        XCTAssertEqual(level.destinationNodeID, "destination")
+        XCTAssertEqual(level.timeLimitSeconds, 45)
+        XCTAssertEqual(level.parTaps, 6)
     }
 
     // MARK: - LevelRepository: .fileNotFound error
@@ -238,10 +315,33 @@ final class LevelRepositoryTests: XCTestCase {
           "graph": { "nodes": [], "edges": [] },
           "packageNodeID": "n1",
           "destinationNodeID": "n2",
-          "timeLimitSeconds": 30
+          "timeLimitSeconds": 30,
+          "parTaps": 5
         }
         """
         let data = try XCTUnwrap(missingIDJSON.data(using: .utf8))
+        let repo = makeRepo(returning: data)
+
+        XCTAssertThrowsError(try repo.loadLevel(id: "level_001")) { error in
+            guard case LevelRepositoryError.decodingFailed(let id, _) = error else {
+                return XCTFail("Expected decodingFailed, got \(error)")
+            }
+            XCTAssertEqual(id, "level_001")
+        }
+    }
+
+    func testLoadLevelThrowsDecodingFailedForMissingParTapsField() throws {
+        let missingParTapsJSON = """
+        {
+          "id": "level_001",
+          "name": "Missing Par Taps",
+          "graph": { "nodes": [], "edges": [] },
+          "packageNodeID": "n1",
+          "destinationNodeID": "n2",
+          "timeLimitSeconds": 30
+        }
+        """
+        let data = try XCTUnwrap(missingParTapsJSON.data(using: .utf8))
         let repo = makeRepo(returning: data)
 
         XCTAssertThrowsError(try repo.loadLevel(id: "level_001")) { error in
@@ -308,5 +408,43 @@ final class LevelRepositoryTests: XCTestCase {
             XCTAssertEqual(id, "level_001")
         }
     }
-}
 
+    private func isReachable(from startID: String, to targetID: String, adjacency: [String: [String]]) -> Bool {
+        var visited = Set<String>()
+        var queue: [String] = [startID]
+
+        while !queue.isEmpty {
+            let currentID = queue.removeFirst()
+            if currentID == targetID {
+                return true
+            }
+
+            guard visited.insert(currentID).inserted else {
+                continue
+            }
+
+            queue.append(contentsOf: adjacency[currentID, default: []])
+        }
+
+        return false
+    }
+
+    private func sampleLevel001Bundle() throws -> Bundle {
+        try sampleLevel001Resource().bundle
+    }
+
+    private func sampleLevel001Data() throws -> Data {
+        try Data(contentsOf: sampleLevel001Resource().url)
+    }
+
+    private func sampleLevel001Resource() throws -> (bundle: Bundle, url: URL) {
+        let bundles = [Bundle(for: LevelRepositoryTests.self), Bundle.main]
+        for bundle in bundles {
+            if let levelURL = bundle.url(forResource: "level_001", withExtension: "json", subdirectory: "Levels") {
+                return (bundle, levelURL)
+            }
+        }
+
+        throw LevelRepositoryError.fileNotFound(id: "level_001")
+    }
+}

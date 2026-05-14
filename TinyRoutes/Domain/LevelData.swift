@@ -8,4 +8,5 @@ struct LevelData: Identifiable, Codable {
     var packageNodeID: String
     var destinationNodeID: String
     var timeLimitSeconds: Int
+    var parTaps: Int
 }

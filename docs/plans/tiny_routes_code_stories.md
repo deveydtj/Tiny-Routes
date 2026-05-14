@@ -299,6 +299,8 @@ Create the first playable sample level.
 - Do not create all 30 levels.
 - Do not add advanced mechanics.
 
+**Status:** ✅ Completed — redesigned `Resources/Levels/level_001.json` into a playable starter route with explicit start/switch/package/destination nodes, a dead-end wrong path, connected edge topology, tuned timer budget, and `parTaps` metadata. Added tests that validate node/edge reference integrity, switch branching, wrong-path dead-end behavior, graph reachability from start→package→destination, and repository decoding against the bundled sample level.
+
 ---
 
 ## STORY-007 — Build RouteGraph From LevelData
