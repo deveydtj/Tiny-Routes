@@ -19,5 +19,6 @@
   },
   "packageNodeID": "package",
   "destinationNodeID": "destination",
-  "timeLimitSeconds": 45
+  "timeLimitSeconds": 45,
+  "parTaps": 6
 }

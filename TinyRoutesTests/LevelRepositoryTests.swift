@@ -47,7 +47,8 @@ final class LevelRepositoryTests: XCTestCase {
           },
           "packageNodeID": "package",
           "destinationNodeID": "destination",
-          "timeLimitSeconds": 45
+          "timeLimitSeconds": 45,
+          "parTaps": 6
         }
         """
     }
@@ -65,6 +66,7 @@ final class LevelRepositoryTests: XCTestCase {
         XCTAssertEqual(level.packageNodeID, "package")
         XCTAssertEqual(level.destinationNodeID, "destination")
         XCTAssertEqual(level.timeLimitSeconds, 45)
+        XCTAssertEqual(level.parTaps, 6)
     }
 
     func testSampleLevelContainsRequiredNodesAndValidReferences() throws {
@@ -121,7 +123,8 @@ final class LevelRepositoryTests: XCTestCase {
           },
           "packageNodeID": "a",
           "destinationNodeID": "b",
-          "timeLimitSeconds": 60
+          "timeLimitSeconds": 60,
+          "parTaps": 3
         }
         """
         let data = try XCTUnwrap(json.data(using: .utf8))
@@ -141,7 +144,8 @@ final class LevelRepositoryTests: XCTestCase {
           "graph": { "nodes": [], "edges": [] },
           "packageNodeID": "",
           "destinationNodeID": "",
-          "timeLimitSeconds": 10
+          "timeLimitSeconds": 10,
+          "parTaps": 1
         }
         """
         let data = try XCTUnwrap(json.data(using: .utf8))
@@ -167,7 +171,8 @@ final class LevelRepositoryTests: XCTestCase {
           "graph": { "nodes": [], "edges": [] },
           "packageNodeID": "n1",
           "destinationNodeID": "n2",
-          "timeLimitSeconds": 30
+          "timeLimitSeconds": 30,
+          "parTaps": 5
         }
         """
         let data = try XCTUnwrap(json.data(using: .utf8))
@@ -181,7 +186,8 @@ final class LevelRepositoryTests: XCTestCase {
           "name": "No Graph",
           "packageNodeID": "n1",
           "destinationNodeID": "n2",
-          "timeLimitSeconds": 30
+          "timeLimitSeconds": 30,
+          "parTaps": 5
         }
         """
         let data = try XCTUnwrap(json.data(using: .utf8))
@@ -196,7 +202,8 @@ final class LevelRepositoryTests: XCTestCase {
           "graph": { "edges": [] },
           "packageNodeID": "n1",
           "destinationNodeID": "n2",
-          "timeLimitSeconds": 30
+          "timeLimitSeconds": 30,
+          "parTaps": 5
         }
         """
         let data = try XCTUnwrap(json.data(using: .utf8))
@@ -211,7 +218,8 @@ final class LevelRepositoryTests: XCTestCase {
           "graph": { "nodes": [] },
           "packageNodeID": "n1",
           "destinationNodeID": "n2",
-          "timeLimitSeconds": 30
+          "timeLimitSeconds": 30,
+          "parTaps": 5
         }
         """
         let data = try XCTUnwrap(json.data(using: .utf8))
@@ -221,8 +229,7 @@ final class LevelRepositoryTests: XCTestCase {
     // MARK: - LevelRepository: successful load path
 
     func testLoadLevelViaRepositorySucceedsWithValidData() throws {
-        let data = try XCTUnwrap(validLevelJSON.data(using: .utf8))
-        let repo = makeRepo(returning: data)
+        let repo = LevelRepository(bundle: try sampleLevel001Bundle())
         let level = try repo.loadLevel(id: "level_001")
 
         XCTAssertEqual(level.id, "level_001")
@@ -232,6 +239,7 @@ final class LevelRepositoryTests: XCTestCase {
         XCTAssertEqual(level.packageNodeID, "package")
         XCTAssertEqual(level.destinationNodeID, "destination")
         XCTAssertEqual(level.timeLimitSeconds, 45)
+        XCTAssertEqual(level.parTaps, 6)
     }
 
     // MARK: - LevelRepository: .fileNotFound error
@@ -283,7 +291,8 @@ final class LevelRepositoryTests: XCTestCase {
           "graph": { "nodes": [], "edges": [] },
           "packageNodeID": "n1",
           "destinationNodeID": "n2",
-          "timeLimitSeconds": 30
+          "timeLimitSeconds": 30,
+          "parTaps": 5
         }
         """
         let data = try XCTUnwrap(missingIDJSON.data(using: .utf8))
@@ -379,6 +388,17 @@ final class LevelRepositoryTests: XCTestCase {
         for bundle in bundles {
             if let levelURL = bundle.url(forResource: "level_001", withExtension: "json", subdirectory: "Levels") {
                 return try Data(contentsOf: levelURL)
+            }
+        }
+
+        throw LevelRepositoryError.fileNotFound(id: "level_001")
+    }
+
+    private func sampleLevel001Bundle() throws -> Bundle {
+        let bundles = [Bundle(for: LevelRepositoryTests.self), Bundle.main]
+        for bundle in bundles {
+            if bundle.url(forResource: "level_001", withExtension: "json", subdirectory: "Levels") != nil {
+                return bundle
             }
         }
 
