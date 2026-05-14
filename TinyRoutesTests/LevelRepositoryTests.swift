@@ -73,6 +73,15 @@ final class LevelRepositoryTests: XCTestCase {
         let data = try sampleLevel001Data()
         let level = try decoder.decode(LevelData.self, from: data)
 
+        let duplicateNodeIDs = Dictionary(grouping: level.graph.nodes.map(\.id), by: { $0 })
+            .filter { $1.count > 1 }
+            .map(\.key)
+            .sorted()
+        XCTAssertTrue(duplicateNodeIDs.isEmpty, "Duplicate node IDs found: \(duplicateNodeIDs)")
+        guard duplicateNodeIDs.isEmpty else {
+            return
+        }
+
         let nodesByID = Dictionary(uniqueKeysWithValues: level.graph.nodes.map { ($0.id, $0) })
         let nodeIDs = Set(nodesByID.keys)
         XCTAssertTrue(nodeIDs.contains("start"))
@@ -226,6 +235,21 @@ final class LevelRepositoryTests: XCTestCase {
         XCTAssertThrowsError(try decoder.decode(LevelData.self, from: data))
     }
 
+    func testMissingParTapsFieldThrowsDecodingError() throws {
+        let json = """
+        {
+          "id": "level_001",
+          "name": "Missing Par Taps",
+          "graph": { "nodes": [], "edges": [] },
+          "packageNodeID": "n1",
+          "destinationNodeID": "n2",
+          "timeLimitSeconds": 30
+        }
+        """
+        let data = try XCTUnwrap(json.data(using: .utf8))
+        XCTAssertThrowsError(try decoder.decode(LevelData.self, from: data))
+    }
+
     // MARK: - LevelRepository: successful load path
 
     func testLoadLevelViaRepositorySucceedsWithValidData() throws {
@@ -296,6 +320,28 @@ final class LevelRepositoryTests: XCTestCase {
         }
         """
         let data = try XCTUnwrap(missingIDJSON.data(using: .utf8))
+        let repo = makeRepo(returning: data)
+
+        XCTAssertThrowsError(try repo.loadLevel(id: "level_001")) { error in
+            guard case LevelRepositoryError.decodingFailed(let id, _) = error else {
+                return XCTFail("Expected decodingFailed, got \(error)")
+            }
+            XCTAssertEqual(id, "level_001")
+        }
+    }
+
+    func testLoadLevelThrowsDecodingFailedForMissingParTapsField() throws {
+        let missingParTapsJSON = """
+        {
+          "id": "level_001",
+          "name": "Missing Par Taps",
+          "graph": { "nodes": [], "edges": [] },
+          "packageNodeID": "n1",
+          "destinationNodeID": "n2",
+          "timeLimitSeconds": 30
+        }
+        """
+        let data = try XCTUnwrap(missingParTapsJSON.data(using: .utf8))
         let repo = makeRepo(returning: data)
 
         XCTAssertThrowsError(try repo.loadLevel(id: "level_001")) { error in
@@ -383,22 +429,19 @@ final class LevelRepositoryTests: XCTestCase {
         return false
     }
 
+    private func sampleLevel001Bundle() throws -> Bundle {
+        try sampleLevel001Resource().bundle
+    }
+
     private func sampleLevel001Data() throws -> Data {
+        try Data(contentsOf: sampleLevel001Resource().url)
+    }
+
+    private func sampleLevel001Resource() throws -> (bundle: Bundle, url: URL) {
         let bundles = [Bundle(for: LevelRepositoryTests.self), Bundle.main]
         for bundle in bundles {
             if let levelURL = bundle.url(forResource: "level_001", withExtension: "json", subdirectory: "Levels") {
-                return try Data(contentsOf: levelURL)
-            }
-        }
-
-        throw LevelRepositoryError.fileNotFound(id: "level_001")
-    }
-
-    private func sampleLevel001Bundle() throws -> Bundle {
-        let bundles = [Bundle(for: LevelRepositoryTests.self), Bundle.main]
-        for bundle in bundles {
-            if bundle.url(forResource: "level_001", withExtension: "json", subdirectory: "Levels") != nil {
-                return bundle
+                return (bundle, levelURL)
             }
         }
 
