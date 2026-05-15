@@ -4,8 +4,7 @@ import Foundation
 enum RouteEngineError: Error, LocalizedError {
     case missingPackageNode(id: String)
     case missingDestinationNode(id: String)
-    case missingStartNode
-    case ambiguousStartNodes(ids: [String])
+    case missingStartNode(id: String)
     case edgeReferencesUnknownNode(edgeID: String, nodeID: String)
 
     var errorDescription: String? {
@@ -14,10 +13,8 @@ enum RouteEngineError: Error, LocalizedError {
             return "Package node '\(id)' does not exist in the level graph."
         case let .missingDestinationNode(id):
             return "Destination node '\(id)' does not exist in the level graph."
-        case .missingStartNode:
-            return "No start node found: all nodes have incoming edges."
-        case let .ambiguousStartNodes(ids):
-            return "Multiple possible start nodes found: \(ids.joined(separator: ", "))."
+        case let .missingStartNode(id):
+            return "Start node '\(id)' does not exist in the level graph."
         case let .edgeReferencesUnknownNode(edgeID, nodeID):
             return "Edge '\(edgeID)' references unknown node '\(nodeID)'."
         }
@@ -40,9 +37,11 @@ final class RouteEngine {
     /// - Parameter levelData: The decoded level to build the graph from.
     /// - Throws: `RouteEngineError` if the graph data is invalid.
     func buildGraph(from levelData: LevelData) throws {
+        runtimeGraph = nil
+        deliveryDot = nil
+
         let graph = levelData.graph
         let nodeIDs = Set(graph.nodes.map(\.id))
-        let incomingNodeIDs = Set(graph.edges.map(\.toNodeID))
 
         for edge in graph.edges {
             guard nodeIDs.contains(edge.fromNodeID) else {
@@ -58,6 +57,9 @@ final class RouteEngine {
         }
         guard nodeIDs.contains(levelData.destinationNodeID) else {
             throw RouteEngineError.missingDestinationNode(id: levelData.destinationNodeID)
+        }
+        guard nodeIDs.contains(levelData.startNodeID) else {
+            throw RouteEngineError.missingStartNode(id: levelData.startNodeID)
         }
 
         var nodesByID: [String: RuntimeRouteNode] = [:]
@@ -80,21 +82,10 @@ final class RouteEngine {
             )
         }
 
-        runtimeGraph = RuntimeRouteGraph(nodesByID: nodesByID, edgesByID: edgesByID)
+        let runtimeGraph = RuntimeRouteGraph(nodesByID: nodesByID, edgesByID: edgesByID)
+        let deliveryDot = DeliveryDot(currentNodeID: levelData.startNodeID)
 
-        let startNodeIDs = graph.nodes
-            .filter { !incomingNodeIDs.contains($0.id) }
-            .map(\.id)
-            // Keep deterministic ordering for stable error payloads and tests.
-            .sorted()
-
-        guard !startNodeIDs.isEmpty else {
-            throw RouteEngineError.missingStartNode
-        }
-        guard startNodeIDs.count == 1 else {
-            throw RouteEngineError.ambiguousStartNodes(ids: startNodeIDs)
-        }
-
-        deliveryDot = DeliveryDot(currentNodeID: startNodeIDs[0])
+        self.runtimeGraph = runtimeGraph
+        self.deliveryDot = deliveryDot
     }
 }

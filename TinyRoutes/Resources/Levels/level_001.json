@@ -17,6 +17,7 @@
       { "id": "e_switch_dead_end", "fromNodeID": "switch", "toNodeID": "dead_end" }
     ]
   },
+  "startNodeID": "start",
   "packageNodeID": "package",
   "destinationNodeID": "destination",
   "timeLimitSeconds": 45,

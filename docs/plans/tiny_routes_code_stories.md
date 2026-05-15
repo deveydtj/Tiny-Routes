@@ -422,7 +422,7 @@ Create the runtime model for the moving delivery dot.
 
 ---
 
-**Status:** ✅ Completed — added `Gameplay/DeliveryDot.swift` with runtime node/edge/progress/package fields and position interpolation support, then integrated delivery-dot initialization into `RouteEngine` so each loaded level starts with the dot at the inferred start node and exposes dot state via the engine.
+**Status:** ✅ Completed — added `Gameplay/DeliveryDot.swift` with runtime node/edge/progress/package fields and position interpolation support, then integrated delivery-dot initialization into `RouteEngine` so each loaded level starts with the dot at an explicit `startNodeID` and exposes dot state via the engine.
 
 ---
 
