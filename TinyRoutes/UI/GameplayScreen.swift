@@ -265,10 +265,17 @@ private struct RouteBoardView: View {
     }
 
     private func activeDirectionAngle(for node: RuntimeRouteNode, in layout: BoardLayout) -> Double? {
-        guard node.outgoingEdgeIDs.count > 1,
+        let validOutgoingEdgeIDs = node.outgoingEdgeIDs.filter { edgeID in
+            guard let edge = runtimeGraph.edgesByID[edgeID] else {
+                return false
+            }
+            return edge.fromNodeID == node.id
+        }
+
+        guard validOutgoingEdgeIDs.count > 1,
               let activeEdgeID = node.activeOutgoingEdgeID,
+              validOutgoingEdgeIDs.contains(activeEdgeID),
               let activeEdge = runtimeGraph.edgesByID[activeEdgeID],
-              activeEdge.fromNodeID == node.id,
               let fromPoint = layout.pointsByNodeID[node.id],
               let toPoint = layout.pointsByNodeID[activeEdge.toNodeID] else {
             return nil

@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="980" height="380" viewBox="0 0 980 380">
+  <rect width="980" height="380" fill="#ffffff"/>
+  <text x="40" y="36" font-family="Arial, sans-serif" font-size="18" fill="#111">Before (inconsistent): arrow shown with only 1 valid exit</text>
+  <text x="520" y="36" font-family="Arial, sans-serif" font-size="18" fill="#111">After (fixed): regular node with no switch arrow</text>
+
+  <circle cx="240" cy="200" r="50" fill="#f5faff" stroke="#2373db" stroke-width="4"/>
+  <polygon points="262,164 252,190 272,190" fill="#2373db" transform="rotate(-45 262 180)"/>
+  <text x="145" y="305" font-family="Arial, sans-serif" font-size="16" fill="#555">2 listed edges, only 1 valid edge</text>
+
+  <circle cx="760" cy="200" r="50" fill="#ffffff" stroke="#2373db" stroke-width="4"/>
+  <text x="668" y="305" font-family="Arial, sans-serif" font-size="16" fill="#555">Now rendered as non-switch node</text>
+</svg>

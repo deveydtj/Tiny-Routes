@@ -356,6 +356,36 @@ final class RouteEngineTests: XCTestCase {
         XCTAssertFalse(engine.rotateSwitchNode(nodeID: "unknown"))
     }
 
+    func testRotateSwitchNodeReturnsFalseWhenOnlyOneOutgoingEdgeIsValid() throws {
+        let nodes = [
+            RouteNode(id: "start", x: 0, y: 0, outgoingEdgeIDs: ["valid", "invalid"]),
+            RouteNode(id: "mid", x: 1, y: 0, outgoingEdgeIDs: []),
+            RouteNode(id: "end", x: 2, y: 0, outgoingEdgeIDs: [])
+        ]
+        let edges = [
+            RouteEdge(id: "valid", fromNodeID: "start", toNodeID: "mid"),
+            RouteEdge(id: "invalid", fromNodeID: "mid", toNodeID: "end")
+        ]
+        let level = LevelData(
+            id: "single_valid_outgoing",
+            name: "Single Valid Outgoing",
+            graph: RouteGraph(nodes: nodes, edges: edges),
+            startNodeID: "start",
+            packageNodeID: "start",
+            destinationNodeID: "mid",
+            timeLimitSeconds: 10,
+            parTaps: 1
+        )
+        let engine = RouteEngine()
+        try engine.buildGraph(from: level)
+
+        XCTAssertFalse(engine.rotateSwitchNode(nodeID: "start"))
+
+        let graph = try XCTUnwrap(engine.runtimeGraph)
+        let startNode = try XCTUnwrap(graph.nodesByID["start"])
+        XCTAssertEqual(startNode.activeOutgoingEdgeID, "valid")
+    }
+
     // MARK: - Invalid graph data
 
     func testBuildGraphThrowsForMissingPackageNode() {
