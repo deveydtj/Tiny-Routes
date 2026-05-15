@@ -85,6 +85,7 @@ final class RouteEngine {
         let startNodeIDs = graph.nodes
             .filter { !incomingNodeIDs.contains($0.id) }
             .map(\.id)
+            // Keep deterministic ordering for stable error payloads and tests.
             .sorted()
 
         guard !startNodeIDs.isEmpty else {

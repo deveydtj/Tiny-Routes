@@ -12,7 +12,8 @@ struct DeliveryDot {
     var currentNodeID: String
     /// The edge currently being traversed, or `nil` while idle on a node.
     var currentEdgeID: String?
-    /// Edge traversal progress in the closed range [0, 1]; callers are responsible for keeping values in range.
+    /// Edge traversal progress where 0 is edge-start and 1 is edge-end.
+    /// Values outside [0, 1] are clamped when computing runtime position.
     var progressAlongEdge: Double
     /// Whether the package objective has been collected.
     var hasCollectedPackage: Bool
