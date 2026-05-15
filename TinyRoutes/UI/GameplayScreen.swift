@@ -185,7 +185,6 @@ private struct RouteBoardView: View {
 
 private struct BoardLayout {
     let pointsByNodeID: [String: CGPoint]
-    private static let fallbackCenterRatio: CGFloat = 0.5
 
     static func make(
         for nodes: [RuntimeRouteNode],
@@ -227,11 +226,21 @@ private struct BoardLayout {
 
         var pointsByNodeID: [String: CGPoint] = [:]
         for node in nodes {
-            let normalizedX = widthRange > 0 ? (node.x - minX) / widthRange : fallbackCenterRatio
-            let normalizedY = heightRange > 0 ? (maxY - node.y) / heightRange : fallbackCenterRatio
+            let x: CGFloat
+            if widthRange > 0 {
+                let normalizedX = (node.x - minX) / widthRange
+                x = originX + (normalizedX * boardWidth)
+            } else {
+                x = size.width / 2
+            }
 
-            let x = originX + (normalizedX * boardWidth)
-            let y = originY + (normalizedY * boardHeight)
+            let y: CGFloat
+            if heightRange > 0 {
+                let normalizedY = (maxY - node.y) / heightRange
+                y = originY + (normalizedY * boardHeight)
+            } else {
+                y = size.height / 2
+            }
 
             pointsByNodeID[node.id] = CGPoint(x: x, y: y)
         }
