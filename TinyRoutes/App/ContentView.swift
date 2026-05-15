@@ -5,69 +5,54 @@ import SwiftUI
 struct ContentView: View {
     @StateObject private var coordinator = AppCoordinator()
 
-    private var activeGameplay: (levelID: String, isPaused: Bool)? {
-        switch coordinator.state {
-        case let .gameplay(levelID):
-            return (levelID, false)
-        case let .pause(levelID):
-            return (levelID, true)
-        default:
-            return nil
-        }
-    }
-
     var body: some View {
         Group {
-            if let activeGameplay {
-                gameplayView(levelID: activeGameplay.levelID, isPaused: activeGameplay.isPaused)
-            } else {
-                switch coordinator.state {
-                case .boot:
-                    ProgressView("Loading Tiny Routes…")
-                        .task {
-                            coordinator.launch()
-                        }
+            switch coordinator.state {
+            case .boot:
+                ProgressView("Loading Tiny Routes…")
+                    .task {
+                        coordinator.launch()
+                    }
 
-                case .mainMenu:
-                    HomeScreen(
-                        onPlayTapped: coordinator.openLevelSelect,
-                        onShopTapped: coordinator.openShop,
-                        onSettingsTapped: coordinator.openSettings
-                    )
+            case .mainMenu:
+                HomeScreen(
+                    onPlayTapped: coordinator.openLevelSelect,
+                    onShopTapped: coordinator.openShop,
+                    onSettingsTapped: coordinator.openSettings
+                )
 
-                case .levelSelect:
-                    LevelSelectScreen(
-                        onBackTapped: coordinator.backToMainMenu,
-                        onLevelSelected: { levelID in
-                            coordinator.startGameplay(levelID: levelID)
-                        }
-                    )
+            case .levelSelect:
+                LevelSelectScreen(
+                    onBackTapped: coordinator.backToMainMenu,
+                    onLevelSelected: { levelID in
+                        coordinator.startGameplay(levelID: levelID)
+                    }
+                )
 
-                case let .levelComplete(levelID):
-                    ResultScreen(
-                        levelID: levelID,
-                        result: .completed,
-                        onRestartTapped: coordinator.restartGameplay,
-                        onExitTapped: coordinator.exitGameplayToMenu
-                    )
+            case let .gameplay(levelID), let .pause(levelID):
+                gameplayView(levelID: levelID, isPaused: coordinator.state.isPaused)
 
-                case let .levelFailed(levelID):
-                    ResultScreen(
-                        levelID: levelID,
-                        result: .failed,
-                        onRestartTapped: coordinator.restartGameplay,
-                        onExitTapped: coordinator.exitGameplayToMenu
-                    )
+            case let .levelComplete(levelID):
+                ResultScreen(
+                    levelID: levelID,
+                    result: .completed,
+                    onRestartTapped: coordinator.restartGameplay,
+                    onExitTapped: coordinator.exitGameplayToMenu
+                )
 
-                case .shop:
-                    ShopScreen(onBackTapped: coordinator.backToMainMenu)
+            case let .levelFailed(levelID):
+                ResultScreen(
+                    levelID: levelID,
+                    result: .failed,
+                    onRestartTapped: coordinator.restartGameplay,
+                    onExitTapped: coordinator.exitGameplayToMenu
+                )
 
-                case .settings:
-                    SettingsScreen(onBackTapped: coordinator.backToMainMenu)
+            case .shop:
+                ShopScreen(onBackTapped: coordinator.backToMainMenu)
 
-                case .gameplay, .pause:
-                    EmptyView()
-                }
+            case .settings:
+                SettingsScreen(onBackTapped: coordinator.backToMainMenu)
             }
         }
         .padding()
@@ -83,6 +68,15 @@ struct ContentView: View {
             onFailTapped: coordinator.failLevel,
             onExitTapped: coordinator.exitGameplayToMenu
         )
+    }
+}
+
+private extension AppState {
+    var isPaused: Bool {
+        if case .pause = self {
+            return true
+        }
+        return false
     }
 }
 
