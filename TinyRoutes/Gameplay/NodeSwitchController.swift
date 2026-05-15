@@ -5,10 +5,12 @@ final class NodeSwitchController {
     /// Rotates the active outgoing edge for the specified node when it is a switch node.
     ///
     /// A node is treated as a switch only when it has more than one valid outgoing edge.
+    /// For nodes with zero or one valid outgoing edge, this method normalizes
+    /// `activeOutgoingEdgeID` to the sole valid edge (or `nil`) and returns `false`.
     /// - Parameters:
     ///   - nodeID: The tapped node id.
     ///   - runtimeGraph: The mutable runtime graph containing node/edge state.
-    /// - Returns: `true` when rotation occurred; otherwise `false`.
+    /// - Returns: `true` when rotation occurred; `false` otherwise, including normalization-only updates.
     @discardableResult
     func rotateSwitch(nodeID: String, in runtimeGraph: inout RuntimeRouteGraph) -> Bool {
         guard var node = runtimeGraph.nodesByID[nodeID] else {

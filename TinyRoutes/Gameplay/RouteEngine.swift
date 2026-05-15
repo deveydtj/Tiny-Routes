@@ -176,9 +176,11 @@ final class RouteEngine {
     }
 
     /// Rotates the active outgoing edge for a tapped switch node.
+    /// For nodes with zero or one valid outgoing edge, this may normalize
+    /// `activeOutgoingEdgeID` without rotating.
     ///
     /// - Parameter nodeID: The tapped node id.
-    /// - Returns: `true` when a switch node rotated, otherwise `false`.
+    /// - Returns: `true` when a switch node rotated; `false` otherwise, including normalization-only updates.
     @discardableResult
     func rotateSwitchNode(nodeID: String) -> Bool {
         guard var runtimeGraph else {
