@@ -29,11 +29,8 @@ struct ContentView: View {
                     }
                 )
 
-            case let .gameplay(levelID):
-                gameplayView(levelID: levelID, isPaused: false)
-
-            case let .pause(levelID):
-                gameplayView(levelID: levelID, isPaused: true)
+            case let .gameplay(levelID), let .pause(levelID):
+                gameplayView(levelID: levelID, isPaused: coordinator.state.isPaused)
 
             case let .levelComplete(levelID):
                 ResultScreen(
@@ -71,6 +68,15 @@ struct ContentView: View {
             onFailTapped: coordinator.failLevel,
             onExitTapped: coordinator.exitGameplayToMenu
         )
+    }
+}
+
+private extension AppState {
+    var isPaused: Bool {
+        if case .pause = self {
+            return true
+        }
+        return false
     }
 }
 

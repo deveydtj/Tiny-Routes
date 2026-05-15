@@ -23,11 +23,17 @@ enum RouteEngineError: Error, LocalizedError {
 
 /// Drives dot movement and evaluates win/loss conditions for a running level.
 final class RouteEngine {
+    private let dotSpeed: Double
+
 
     /// The runtime graph built from the loaded level, available after `buildGraph(from:)` succeeds.
     private(set) var runtimeGraph: RuntimeRouteGraph?
     /// Runtime state for the delivery dot, available after `buildGraph(from:)` succeeds.
     private(set) var deliveryDot: DeliveryDot?
+
+    init(dotSpeed: Double = 1) {
+        self.dotSpeed = max(0, dotSpeed)
+    }
 
     /// Converts a `LevelData` into a `RuntimeRouteGraph` and stores it in `runtimeGraph`.
     ///
@@ -87,5 +93,61 @@ final class RouteEngine {
 
         self.runtimeGraph = runtimeGraph
         self.deliveryDot = deliveryDot
+    }
+
+    /// Starts the delivery dot moving along the active edge for its current node, if one exists.
+    @discardableResult
+    func startDotMovement() -> Bool {
+        guard let runtimeGraph, var deliveryDot, deliveryDot.currentEdgeID == nil else {
+            return false
+        }
+        guard let currentNode = runtimeGraph.nodesByID[deliveryDot.currentNodeID],
+              let edgeID = currentNode.activeOutgoingEdgeID,
+              let edge = runtimeGraph.edgesByID[edgeID],
+              edge.fromNodeID == deliveryDot.currentNodeID else {
+            return false
+        }
+
+        deliveryDot.currentEdgeID = edgeID
+        deliveryDot.progressAlongEdge = 0
+        self.deliveryDot = deliveryDot
+        return true
+    }
+
+    /// Advances the delivery dot along its current edge using frame-rate independent timing.
+    func updateDot(deltaTime: TimeInterval) {
+        guard deltaTime > 0,
+              let runtimeGraph,
+              var deliveryDot,
+              let currentEdgeID = deliveryDot.currentEdgeID,
+              let edge = runtimeGraph.edgesByID[currentEdgeID],
+              let fromNode = runtimeGraph.nodesByID[edge.fromNodeID],
+              let toNode = runtimeGraph.nodesByID[edge.toNodeID] else {
+            return
+        }
+
+        let edgeLength = hypot(toNode.x - fromNode.x, toNode.y - fromNode.y)
+        guard edgeLength > 0 else {
+            snapDotToNode(edge.toNodeID, dot: &deliveryDot)
+            self.deliveryDot = deliveryDot
+            return
+        }
+
+        let progressDelta = (dotSpeed * deltaTime) / edgeLength
+        let nextProgress = min(deliveryDot.progressAlongEdge + progressDelta, 1)
+
+        if nextProgress >= 1 {
+            snapDotToNode(edge.toNodeID, dot: &deliveryDot)
+        } else {
+            deliveryDot.progressAlongEdge = nextProgress
+        }
+
+        self.deliveryDot = deliveryDot
+    }
+
+    private func snapDotToNode(_ nodeID: String, dot: inout DeliveryDot) {
+        dot.currentNodeID = nodeID
+        dot.currentEdgeID = nil
+        dot.progressAlongEdge = 0
     }
 }
