@@ -16,6 +16,7 @@ struct GameplayScreen: View {
     @State private var deliveryDot: DeliveryDot?
     @State private var packageNodeID: String = ""
     @State private var destinationNodeID: String = ""
+    @State private var tapCount: Int = 0
     @State private var loadErrorMessage: String?
     @State private var lastFrameDate: Date?
 
@@ -45,6 +46,9 @@ struct GameplayScreen: View {
                 .font(.headline)
             Text(isPaused ? "Paused" : "Running")
                 .foregroundColor(isPaused ? .orange : .green)
+            Text("Taps: \(tapCount)")
+                .font(.subheadline)
+                .foregroundColor(.secondary)
 
             Group {
                 if let loadErrorMessage {
@@ -56,7 +60,8 @@ struct GameplayScreen: View {
                         runtimeGraph: runtimeGraph,
                         deliveryDot: deliveryDot,
                         packageNodeID: packageNodeID,
-                        destinationNodeID: destinationNodeID
+                        destinationNodeID: destinationNodeID,
+                        onNodeTapped: handleNodeTapped
                     )
                 } else {
                     ProgressView("Loading board…")
@@ -90,6 +95,7 @@ struct GameplayScreen: View {
         runtimeGraph = nil
         deliveryDot = nil
         lastFrameDate = nil
+        tapCount = 0
 
         do {
             let levelData = try levelRepository.loadLevel(id: levelID)
@@ -126,6 +132,19 @@ struct GameplayScreen: View {
         routeEngine.updateDot(deltaTime: deltaTime)
         deliveryDot = routeEngine.deliveryDot
     }
+
+    private func handleNodeTapped(_ nodeID: String) {
+        guard !isPaused else {
+            return
+        }
+
+        guard routeEngine.rotateSwitchNode(nodeID: nodeID) else {
+            return
+        }
+
+        tapCount += 1
+        runtimeGraph = routeEngine.runtimeGraph
+    }
 }
 
 private struct RouteBoardView: View {
@@ -133,6 +152,7 @@ private struct RouteBoardView: View {
     let deliveryDot: DeliveryDot?
     let packageNodeID: String
     let destinationNodeID: String
+    let onNodeTapped: (String) -> Void
 
     private let edgeStrokeColor = Color.blue.opacity(0.7)
     private let nodeFillColor = Color.white
@@ -175,8 +195,12 @@ private struct RouteBoardView: View {
 
                 ForEach(nodes, id: \.id) { node in
                     if let nodePoint = layout.pointsByNodeID[node.id] {
-                        nodeView(for: node.id)
+                        nodeView(for: node, layout: layout)
                             .position(nodePoint)
+                            .contentShape(Circle())
+                            .onTapGesture {
+                                onNodeTapped(node.id)
+                            }
                     }
                 }
 
@@ -198,8 +222,8 @@ private struct RouteBoardView: View {
     }
 
     @ViewBuilder
-    private func nodeView(for nodeID: String) -> some View {
-        if nodeID == packageNodeID {
+    private func nodeView(for node: RuntimeRouteNode, layout: BoardLayout) -> some View {
+        if node.id == packageNodeID {
             Circle()
                 .fill(Color.orange.opacity(0.9))
                 .overlay(
@@ -211,7 +235,7 @@ private struct RouteBoardView: View {
                         .stroke(Color.orange, lineWidth: 2)
                 )
                 .frame(width: specialNodeSize, height: specialNodeSize)
-        } else if nodeID == destinationNodeID {
+        } else if node.id == destinationNodeID {
             Circle()
                 .fill(Color.green.opacity(0.9))
                 .overlay(
@@ -224,6 +248,11 @@ private struct RouteBoardView: View {
                         .stroke(Color.green, lineWidth: 2)
                 )
                 .frame(width: specialNodeSize, height: specialNodeSize)
+        } else if let activeDirectionAngle = activeDirectionAngle(for: node, in: layout) {
+            SwitchNodeView(
+                activeDirectionAngle: activeDirectionAngle,
+                size: nodeSize
+            )
         } else {
             Circle()
                 .fill(nodeFillColor)
@@ -233,6 +262,19 @@ private struct RouteBoardView: View {
                 )
                 .frame(width: nodeSize, height: nodeSize)
         }
+    }
+
+    private func activeDirectionAngle(for node: RuntimeRouteNode, in layout: BoardLayout) -> Double? {
+        guard node.outgoingEdgeIDs.count > 1,
+              let activeEdgeID = node.activeOutgoingEdgeID,
+              let activeEdge = runtimeGraph.edgesByID[activeEdgeID],
+              activeEdge.fromNodeID == node.id,
+              let fromPoint = layout.pointsByNodeID[node.id],
+              let toPoint = layout.pointsByNodeID[activeEdge.toNodeID] else {
+            return nil
+        }
+
+        return atan2(toPoint.y - fromPoint.y, toPoint.x - fromPoint.x)
     }
 
     private func deliveryDotPoint(in layout: BoardLayout) -> CGPoint? {

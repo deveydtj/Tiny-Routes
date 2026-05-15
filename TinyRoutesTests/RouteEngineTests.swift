@@ -321,6 +321,41 @@ final class RouteEngineTests: XCTestCase {
         XCTAssertNil(destinationNode.activeOutgoingEdgeID)
     }
 
+    func testRotateSwitchNodeCyclesThroughValidOutgoingEdges() throws {
+        let engine = RouteEngine()
+        try engine.buildGraph(from: makeLevelData())
+
+        XCTAssertTrue(engine.rotateSwitchNode(nodeID: "switch"))
+        var graph = try XCTUnwrap(engine.runtimeGraph)
+        var switchNode = try XCTUnwrap(graph.nodesByID["switch"])
+        XCTAssertEqual(switchNode.activeOutgoingEdgeID, "e_switch_dead_end")
+
+        XCTAssertTrue(engine.rotateSwitchNode(nodeID: "switch"))
+        graph = try XCTUnwrap(engine.runtimeGraph)
+        switchNode = try XCTUnwrap(graph.nodesByID["switch"])
+        XCTAssertEqual(switchNode.activeOutgoingEdgeID, "e_switch_destination")
+
+        XCTAssertTrue(engine.rotateSwitchNode(nodeID: "switch"))
+        graph = try XCTUnwrap(engine.runtimeGraph)
+        switchNode = try XCTUnwrap(graph.nodesByID["switch"])
+        XCTAssertEqual(switchNode.activeOutgoingEdgeID, "e_switch_package")
+    }
+
+    func testRotateSwitchNodeReturnsFalseForNonSwitchNode() throws {
+        let engine = RouteEngine()
+        try engine.buildGraph(from: makeLevelData())
+
+        XCTAssertFalse(engine.rotateSwitchNode(nodeID: "start"))
+        XCTAssertFalse(engine.rotateSwitchNode(nodeID: "destination"))
+    }
+
+    func testRotateSwitchNodeReturnsFalseForUnknownNode() throws {
+        let engine = RouteEngine()
+        try engine.buildGraph(from: makeLevelData())
+
+        XCTAssertFalse(engine.rotateSwitchNode(nodeID: "unknown"))
+    }
+
     // MARK: - Invalid graph data
 
     func testBuildGraphThrowsForMissingPackageNode() {

@@ -24,6 +24,7 @@ enum RouteEngineError: Error, LocalizedError {
 /// Drives dot movement and evaluates win/loss conditions for a running level.
 final class RouteEngine {
     private let dotSpeed: Double
+    private let nodeSwitchController = NodeSwitchController()
 
     /// Indicates whether the most recent `updateDot(deltaTime:)` call halted at a dead end.
     private(set) var didHaltAtDeadEnd = false
@@ -172,6 +173,20 @@ final class RouteEngine {
         }
 
         self.deliveryDot = deliveryDot
+    }
+
+    /// Rotates the active outgoing edge for a tapped switch node.
+    ///
+    /// - Parameter nodeID: The tapped node id.
+    /// - Returns: `true` when a switch node rotated, otherwise `false`.
+    @discardableResult
+    func rotateSwitchNode(nodeID: String) -> Bool {
+        guard var runtimeGraph else {
+            return false
+        }
+        let didRotate = nodeSwitchController.rotateSwitch(nodeID: nodeID, in: &runtimeGraph)
+        self.runtimeGraph = runtimeGraph
+        return didRotate
     }
 
     @discardableResult
