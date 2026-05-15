@@ -9,9 +9,9 @@ struct GameplayScreen: View {
     let onExitTapped: () -> Void
 
     private let levelRepository: LevelRepository
-    private let routeEngine: RouteEngine
     private let frameTimer = Timer.publish(every: 1.0 / 60.0, on: .main, in: .common).autoconnect()
 
+    @State private var routeEngine: RouteEngine
     @State private var runtimeGraph: RuntimeRouteGraph?
     @State private var deliveryDot: DeliveryDot?
     @State private var packageNodeID: String = ""
@@ -36,7 +36,7 @@ struct GameplayScreen: View {
         self.onFailTapped = onFailTapped
         self.onExitTapped = onExitTapped
         self.levelRepository = levelRepository
-        self.routeEngine = routeEngine
+        _routeEngine = State(initialValue: routeEngine)
     }
 
     var body: some View {
@@ -244,7 +244,7 @@ private struct RouteBoardView: View {
            let edge = runtimeGraph.edgesByID[currentEdgeID],
            let fromPoint = layout.pointsByNodeID[edge.fromNodeID],
            let toPoint = layout.pointsByNodeID[edge.toNodeID] {
-            let clampedProgress = max(0, min(deliveryDot.progressAlongEdge, 1))
+            let clampedProgress = CGFloat(max(0, min(deliveryDot.progressAlongEdge, 1)))
             return CGPoint(
                 x: fromPoint.x + ((toPoint.x - fromPoint.x) * clampedProgress),
                 y: fromPoint.y + ((toPoint.y - fromPoint.y) * clampedProgress)

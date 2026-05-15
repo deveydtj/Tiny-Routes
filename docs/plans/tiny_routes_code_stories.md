@@ -467,6 +467,8 @@ Move the delivery dot smoothly from one node to another.
 
 **Status:** ✅ Completed — added frame-rate-independent single-edge dot traversal to `RouteEngine`, including start-on-active-edge behavior, interpolation by delta time, overshoot-safe snapping, and zero-length edge handling. `GameplayScreen` now renders the delivery dot as a simple circle and advances it across the board while respecting pause state, with focused tests covering start, interpolation, snap, and leaf-node behavior.
 
+---
+
 ## STORY-011 — Move Dot Through Connected Nodes
 
 **Goal:**  

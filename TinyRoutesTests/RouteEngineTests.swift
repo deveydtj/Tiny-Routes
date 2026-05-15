@@ -133,6 +133,37 @@ final class RouteEngineTests: XCTestCase {
         XCTAssertNil(dot.currentEdgeID)
     }
 
+    func testStartDotMovementReturnsFalseWhenActiveEdgeDoesNotLeaveCurrentNode() throws {
+        let nodes = [
+            RouteNode(id: "start", x: 0, y: 0, outgoingEdgeIDs: ["wrong_edge"]),
+            RouteNode(id: "middle", x: 1, y: 0, outgoingEdgeIDs: ["middle_end"]),
+            RouteNode(id: "end", x: 2, y: 0, outgoingEdgeIDs: [])
+        ]
+        let edges = [
+            RouteEdge(id: "wrong_edge", fromNodeID: "middle", toNodeID: "end"),
+            RouteEdge(id: "middle_end", fromNodeID: "middle", toNodeID: "end")
+        ]
+        let level = LevelData(
+            id: "bad_outgoing_edge",
+            name: "Bad Outgoing Edge",
+            graph: RouteGraph(nodes: nodes, edges: edges),
+            startNodeID: "start",
+            packageNodeID: "start",
+            destinationNodeID: "end",
+            timeLimitSeconds: 10,
+            parTaps: 1
+        )
+        let engine = RouteEngine()
+        try engine.buildGraph(from: level)
+
+        XCTAssertFalse(engine.startDotMovement())
+
+        let dot = try XCTUnwrap(engine.deliveryDot)
+        XCTAssertEqual(dot.currentNodeID, "start")
+        XCTAssertNil(dot.currentEdgeID)
+        XCTAssertEqual(dot.progressAlongEdge, 0)
+    }
+
     func testUpdateDotImmediatelySnapsAcrossZeroLengthEdge() throws {
         let nodes = [
             RouteNode(id: "start", x: 0, y: 0, outgoingEdgeIDs: ["flat"]),

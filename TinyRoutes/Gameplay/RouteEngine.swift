@@ -103,7 +103,8 @@ final class RouteEngine {
         }
         guard let currentNode = runtimeGraph.nodesByID[deliveryDot.currentNodeID],
               let edgeID = currentNode.activeOutgoingEdgeID,
-              runtimeGraph.edgesByID[edgeID] != nil else {
+              let edge = runtimeGraph.edgesByID[edgeID],
+              edge.fromNodeID == deliveryDot.currentNodeID else {
             return false
         }
 
