@@ -380,6 +380,8 @@ Display the level graph visually without movement or interactivity.
 - Do not add dot movement.
 - Do not add switch tapping.
 
+**Status:** ✅ Completed — implemented static route-board rendering in `UI/GameplayScreen.swift` by loading level data, building a runtime graph via `RouteEngine`, drawing rounded route edges and circular nodes, visually distinguishing package and destination nodes, and fitting/centering the board responsively across device sizes.
+
 ---
 
 ## STORY-009 — Add Delivery Dot Model
