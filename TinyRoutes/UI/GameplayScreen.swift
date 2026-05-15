@@ -185,9 +185,9 @@ private struct RouteBoardView: View {
 
 private struct BoardLayout {
     let pointsByNodeID: [String: CGPoint]
-    /// Prevents zero-sized rendering dimensions in degenerate geometry calculations.
+    /// Ensures non-zero usable dimensions for board layout calculations.
     private static let minimumUsableDimension: CGFloat = 1
-    /// Controls circular spread radius when all nodes share identical coordinates.
+    /// Multiplier used to compute circular spread radius for identical node coordinates.
     private static let degenerateLayoutSpreadFactor: CGFloat = 0.15
 
     static func make(
