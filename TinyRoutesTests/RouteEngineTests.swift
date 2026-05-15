@@ -44,10 +44,12 @@ final class RouteEngineTests: XCTestCase {
         file: StaticString = #filePath,
         line: UInt = #line
     ) {
-        let position = try? XCTUnwrap(position, file: file, line: line)
-        XCTAssertNotNil(position, file: file, line: line)
-        XCTAssertEqual(position?.x, expected.x, accuracy: accuracy, file: file, line: line)
-        XCTAssertEqual(position?.y, expected.y, accuracy: accuracy, file: file, line: line)
+        guard let position else {
+            return XCTFail("Expected a delivery dot position.", file: file, line: line)
+        }
+
+        XCTAssertEqual(position.x, expected.x, accuracy: accuracy, file: file, line: line)
+        XCTAssertEqual(position.y, expected.y, accuracy: accuracy, file: file, line: line)
     }
 
     // MARK: - Successful build

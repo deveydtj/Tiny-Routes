@@ -94,12 +94,16 @@ struct GameplayScreen: View {
         do {
             let levelData = try levelRepository.loadLevel(id: levelID)
             try routeEngine.buildGraph(from: levelData)
-            _ = routeEngine.startDotMovement()
+            let didStartMovement = routeEngine.startDotMovement()
 
             runtimeGraph = routeEngine.runtimeGraph
             deliveryDot = routeEngine.deliveryDot
             packageNodeID = levelData.packageNodeID
             destinationNodeID = levelData.destinationNodeID
+
+            if !didStartMovement {
+                loadErrorMessage = "Level has no active outgoing edge from the start node."
+            }
         } catch {
             loadErrorMessage = error.localizedDescription
         }
