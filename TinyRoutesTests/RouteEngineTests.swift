@@ -107,6 +107,18 @@ final class RouteEngineTests: XCTestCase {
         assertPosition(dot.runtimePosition(in: graph), equals: DeliveryDotPosition(x: 0.5, y: 0))
     }
 
+    func testUpdateDotDoesNotAutoStartMovementFromIdleNode() throws {
+        let engine = RouteEngine(dotSpeed: 2)
+        try engine.buildGraph(from: makeLevelData())
+
+        engine.updateDot(deltaTime: 0.25)
+
+        let dot = try XCTUnwrap(engine.deliveryDot)
+        XCTAssertEqual(dot.currentNodeID, "start")
+        XCTAssertNil(dot.currentEdgeID)
+        XCTAssertEqual(dot.progressAlongEdge, 0)
+    }
+
     func testUpdateDotSnapsToTargetNodeWithoutOvershootingAndContinuesFromNode() throws {
         let engine = RouteEngine(dotSpeed: 4)
         try engine.buildGraph(from: makeLevelData())
@@ -235,6 +247,17 @@ final class RouteEngineTests: XCTestCase {
         XCTAssertEqual(dot.currentNodeID, "dead")
         XCTAssertNil(dot.currentEdgeID)
         XCTAssertEqual(dot.progressAlongEdge, 0)
+        XCTAssertTrue(engine.didHaltAtDeadEnd)
+    }
+
+    func testUpdateDotMarksDidHaltAtDeadEndFalseWhenStillMoving() throws {
+        let engine = RouteEngine(dotSpeed: 1)
+        try engine.buildGraph(from: makeLevelData())
+        XCTAssertTrue(engine.startDotMovement())
+
+        engine.updateDot(deltaTime: 0.25)
+
+        XCTAssertFalse(engine.didHaltAtDeadEnd)
     }
 
     func testBuildGraphNodeAndEdgeCountsMatchLevelData() throws {
