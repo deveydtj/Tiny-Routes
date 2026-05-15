@@ -8,6 +8,9 @@ struct GameplayScreen: View {
     let onFailTapped: () -> Void
     let onExitTapped: () -> Void
 
+    private let levelRepository = LevelRepository()
+    private let routeEngine = RouteEngine()
+
     @State private var runtimeGraph: RuntimeRouteGraph?
     @State private var packageNodeID: String = ""
     @State private var destinationNodeID: String = ""
@@ -54,11 +57,8 @@ struct GameplayScreen: View {
         loadErrorMessage = nil
         runtimeGraph = nil
 
-        let repository = LevelRepository()
-        let routeEngine = RouteEngine()
-
         do {
-            let levelData = try repository.loadLevel(id: levelID)
+            let levelData = try levelRepository.loadLevel(id: levelID)
             try routeEngine.buildGraph(from: levelData)
 
             runtimeGraph = routeEngine.runtimeGraph
@@ -165,6 +165,7 @@ private struct RouteBoardView: View {
 
 private struct BoardLayout {
     let pointsByNodeID: [String: CGPoint]
+    private static let centerPosition: CGFloat = 0.5
 
     static func make(
         for nodes: [RuntimeRouteNode],
@@ -186,8 +187,8 @@ private struct BoardLayout {
         let usableWidth = max(size.width - (padding * 2), 1)
         let usableHeight = max(size.height - (padding * 2), 1)
 
-        let horizontalScale = widthRange > 0 ? usableWidth / widthRange : usableWidth
-        let verticalScale = heightRange > 0 ? usableHeight / heightRange : usableHeight
+        let horizontalScale = widthRange > 0 ? usableWidth / widthRange : 1
+        let verticalScale = heightRange > 0 ? usableHeight / heightRange : 1
         let scale = min(horizontalScale, verticalScale)
 
         let boardWidth = widthRange * scale
@@ -197,8 +198,8 @@ private struct BoardLayout {
 
         var pointsByNodeID: [String: CGPoint] = [:]
         for node in nodes {
-            let normalizedX = widthRange > 0 ? (node.x - minX) / widthRange : 0.5
-            let normalizedY = heightRange > 0 ? (maxY - node.y) / heightRange : 0.5
+            let normalizedX = widthRange > 0 ? (node.x - minX) / widthRange : centerPosition
+            let normalizedY = heightRange > 0 ? (maxY - node.y) / heightRange : centerPosition
 
             let x = originX + (normalizedX * boardWidth)
             let y = originY + (normalizedY * boardHeight)
