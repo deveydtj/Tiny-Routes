@@ -37,6 +37,19 @@ final class RouteEngineTests: XCTestCase {
         )
     }
 
+    private func assertPosition(
+        _ position: DeliveryDotPosition?,
+        equals expected: DeliveryDotPosition,
+        accuracy: Double = 0.0001,
+        file: StaticString = #filePath,
+        line: UInt = #line
+    ) {
+        let position = try? XCTUnwrap(position, file: file, line: line)
+        XCTAssertNotNil(position, file: file, line: line)
+        XCTAssertEqual(position?.x, expected.x, accuracy: accuracy, file: file, line: line)
+        XCTAssertEqual(position?.y, expected.y, accuracy: accuracy, file: file, line: line)
+    }
+
     // MARK: - Successful build
 
     func testBuildGraphStoresRuntimeGraph() throws {
@@ -64,6 +77,86 @@ final class RouteEngineTests: XCTestCase {
         let graph = try XCTUnwrap(engine.runtimeGraph)
         let dot = try XCTUnwrap(engine.deliveryDot)
         XCTAssertEqual(dot.runtimePosition(in: graph), DeliveryDotPosition(x: 0, y: 0))
+    }
+
+    func testStartDotMovementBeginsTraversingActiveOutgoingEdge() throws {
+        let engine = RouteEngine()
+        try engine.buildGraph(from: makeLevelData())
+
+        XCTAssertTrue(engine.startDotMovement())
+
+        let dot = try XCTUnwrap(engine.deliveryDot)
+        XCTAssertEqual(dot.currentNodeID, "start")
+        XCTAssertEqual(dot.currentEdgeID, "e_start_switch")
+        XCTAssertEqual(dot.progressAlongEdge, 0)
+    }
+
+    func testUpdateDotMovesAlongSingleEdgeUsingDeltaTime() throws {
+        let engine = RouteEngine(dotSpeed: 2)
+        try engine.buildGraph(from: makeLevelData())
+        XCTAssertTrue(engine.startDotMovement())
+
+        engine.updateDot(deltaTime: 0.25)
+
+        let graph = try XCTUnwrap(engine.runtimeGraph)
+        let dot = try XCTUnwrap(engine.deliveryDot)
+        XCTAssertEqual(dot.currentEdgeID, "e_start_switch")
+        XCTAssertEqual(dot.progressAlongEdge, 0.5, accuracy: 0.0001)
+        assertPosition(dot.runtimePosition(in: graph), equals: DeliveryDotPosition(x: 0.5, y: 0))
+    }
+
+    func testUpdateDotSnapsToTargetNodeWithoutOvershooting() throws {
+        let engine = RouteEngine(dotSpeed: 4)
+        try engine.buildGraph(from: makeLevelData())
+        XCTAssertTrue(engine.startDotMovement())
+
+        engine.updateDot(deltaTime: 1)
+
+        let graph = try XCTUnwrap(engine.runtimeGraph)
+        let dot = try XCTUnwrap(engine.deliveryDot)
+        XCTAssertEqual(dot.currentNodeID, "switch")
+        XCTAssertNil(dot.currentEdgeID)
+        XCTAssertEqual(dot.progressAlongEdge, 0)
+        assertPosition(dot.runtimePosition(in: graph), equals: DeliveryDotPosition(x: 1, y: 0))
+    }
+
+    func testStartDotMovementReturnsFalseAtLeafNode() throws {
+        let engine = RouteEngine()
+        try engine.buildGraph(from: makeLevelData(startNodeID: "destination"))
+
+        XCTAssertFalse(engine.startDotMovement())
+
+        let dot = try XCTUnwrap(engine.deliveryDot)
+        XCTAssertEqual(dot.currentNodeID, "destination")
+        XCTAssertNil(dot.currentEdgeID)
+    }
+
+    func testUpdateDotImmediatelySnapsAcrossZeroLengthEdge() throws {
+        let nodes = [
+            RouteNode(id: "start", x: 0, y: 0, outgoingEdgeIDs: ["flat"]),
+            RouteNode(id: "end", x: 0, y: 0, outgoingEdgeIDs: [])
+        ]
+        let edges = [RouteEdge(id: "flat", fromNodeID: "start", toNodeID: "end")]
+        let level = LevelData(
+            id: "flat",
+            name: "Flat",
+            graph: RouteGraph(nodes: nodes, edges: edges),
+            startNodeID: "start",
+            packageNodeID: "start",
+            destinationNodeID: "end",
+            timeLimitSeconds: 10,
+            parTaps: 1
+        )
+        let engine = RouteEngine(dotSpeed: 1)
+        try engine.buildGraph(from: level)
+        XCTAssertTrue(engine.startDotMovement())
+
+        engine.updateDot(deltaTime: 0.25)
+
+        let dot = try XCTUnwrap(engine.deliveryDot)
+        XCTAssertEqual(dot.currentNodeID, "end")
+        XCTAssertNil(dot.currentEdgeID)
+        XCTAssertEqual(dot.progressAlongEdge, 0)
     }
 
     func testBuildGraphNodeAndEdgeCountsMatchLevelData() throws {

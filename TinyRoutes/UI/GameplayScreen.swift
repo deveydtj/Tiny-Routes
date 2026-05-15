@@ -10,11 +10,14 @@ struct GameplayScreen: View {
 
     private let levelRepository: LevelRepository
     private let routeEngine: RouteEngine
+    private let frameTimer = Timer.publish(every: 1.0 / 60.0, on: .main, in: .common).autoconnect()
 
     @State private var runtimeGraph: RuntimeRouteGraph?
+    @State private var deliveryDot: DeliveryDot?
     @State private var packageNodeID: String = ""
     @State private var destinationNodeID: String = ""
     @State private var loadErrorMessage: String?
+    @State private var lastFrameDate: Date?
 
     init(
         levelID: String,
@@ -51,6 +54,7 @@ struct GameplayScreen: View {
                 } else if let runtimeGraph {
                     RouteBoardView(
                         runtimeGraph: runtimeGraph,
+                        deliveryDot: deliveryDot,
                         packageNodeID: packageNodeID,
                         destinationNodeID: destinationNodeID
                     )
@@ -71,36 +75,69 @@ struct GameplayScreen: View {
         .task(id: levelID) {
             loadBoard()
         }
+        .onReceive(frameTimer) { frameDate in
+            advanceDot(at: frameDate)
+        }
+        .onChange(of: isPaused) { paused in
+            if paused {
+                lastFrameDate = nil
+            }
+        }
     }
 
     private func loadBoard() {
         loadErrorMessage = nil
         runtimeGraph = nil
+        deliveryDot = nil
+        lastFrameDate = nil
 
         do {
             let levelData = try levelRepository.loadLevel(id: levelID)
             try routeEngine.buildGraph(from: levelData)
+            _ = routeEngine.startDotMovement()
 
             runtimeGraph = routeEngine.runtimeGraph
+            deliveryDot = routeEngine.deliveryDot
             packageNodeID = levelData.packageNodeID
             destinationNodeID = levelData.destinationNodeID
         } catch {
             loadErrorMessage = error.localizedDescription
         }
     }
+
+    private func advanceDot(at frameDate: Date) {
+        guard !isPaused, runtimeGraph != nil else {
+            lastFrameDate = nil
+            return
+        }
+
+        let deltaTime = lastFrameDate.map { frameDate.timeIntervalSince($0) } ?? 0
+        lastFrameDate = frameDate
+
+        guard deltaTime > 0 else {
+            deliveryDot = routeEngine.deliveryDot
+            return
+        }
+
+        routeEngine.updateDot(deltaTime: deltaTime)
+        deliveryDot = routeEngine.deliveryDot
+    }
 }
 
 private struct RouteBoardView: View {
     let runtimeGraph: RuntimeRouteGraph
+    let deliveryDot: DeliveryDot?
     let packageNodeID: String
     let destinationNodeID: String
 
     private let edgeStrokeColor = Color.blue.opacity(0.7)
     private let nodeFillColor = Color.white
     private let nodeBorderColor = Color.blue
+    private let deliveryDotColor = Color.purple
     private let boardPadding: CGFloat = 20
     private let nodeSize: CGFloat = 22
     private let specialNodeSize: CGFloat = 30
+    private let deliveryDotSize: CGFloat = 18
     private let edgeWidth: CGFloat = 8
 
     var body: some View {
@@ -137,6 +174,18 @@ private struct RouteBoardView: View {
                         nodeView(for: node.id)
                             .position(nodePoint)
                     }
+                }
+
+                if let deliveryDotPoint = deliveryDotPoint(in: layout) {
+                    Circle()
+                        .fill(deliveryDotColor)
+                        .overlay(
+                            Circle()
+                                .stroke(Color.white.opacity(0.9), lineWidth: 2)
+                        )
+                        .frame(width: deliveryDotSize, height: deliveryDotSize)
+                        .shadow(color: deliveryDotColor.opacity(0.35), radius: 6, x: 0, y: 2)
+                        .position(deliveryDotPoint)
                 }
             }
             .background(Color(.secondarySystemBackground))
@@ -180,6 +229,25 @@ private struct RouteBoardView: View {
                 )
                 .frame(width: nodeSize, height: nodeSize)
         }
+    }
+
+    private func deliveryDotPoint(in layout: BoardLayout) -> CGPoint? {
+        guard let deliveryDot else {
+            return nil
+        }
+
+        if let currentEdgeID = deliveryDot.currentEdgeID,
+           let edge = runtimeGraph.edgesByID[currentEdgeID],
+           let fromPoint = layout.pointsByNodeID[edge.fromNodeID],
+           let toPoint = layout.pointsByNodeID[edge.toNodeID] {
+            let clampedProgress = max(0, min(deliveryDot.progressAlongEdge, 1))
+            return CGPoint(
+                x: fromPoint.x + ((toPoint.x - fromPoint.x) * clampedProgress),
+                y: fromPoint.y + ((toPoint.y - fromPoint.y) * clampedProgress)
+            )
+        }
+
+        return layout.pointsByNodeID[deliveryDot.currentNodeID]
     }
 }
 
