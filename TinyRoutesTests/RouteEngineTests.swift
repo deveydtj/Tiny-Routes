@@ -107,19 +107,32 @@ final class RouteEngineTests: XCTestCase {
         assertPosition(dot.runtimePosition(in: graph), equals: DeliveryDotPosition(x: 0.5, y: 0))
     }
 
-    func testUpdateDotSnapsToTargetNodeWithoutOvershooting() throws {
+    func testUpdateDotSnapsToTargetNodeWithoutOvershootingAndContinuesFromNode() throws {
         let engine = RouteEngine(dotSpeed: 4)
         try engine.buildGraph(from: makeLevelData())
         XCTAssertTrue(engine.startDotMovement())
 
-        engine.updateDot(deltaTime: 1)
+        engine.updateDot(deltaTime: 0.25)
 
         let graph = try XCTUnwrap(engine.runtimeGraph)
         let dot = try XCTUnwrap(engine.deliveryDot)
         XCTAssertEqual(dot.currentNodeID, "switch")
-        XCTAssertNil(dot.currentEdgeID)
+        XCTAssertEqual(dot.currentEdgeID, "e_switch_package")
         XCTAssertEqual(dot.progressAlongEdge, 0)
         assertPosition(dot.runtimePosition(in: graph), equals: DeliveryDotPosition(x: 1, y: 0))
+    }
+
+    func testUpdateDotContinuesThroughConnectedNodesUsingDefaultActiveDirections() throws {
+        let engine = RouteEngine(dotSpeed: 1)
+        try engine.buildGraph(from: makeLevelData())
+        XCTAssertTrue(engine.startDotMovement())
+
+        engine.updateDot(deltaTime: 2)
+
+        let dot = try XCTUnwrap(engine.deliveryDot)
+        XCTAssertEqual(dot.currentNodeID, "switch")
+        XCTAssertEqual(dot.currentEdgeID, "e_switch_package")
+        XCTAssertEqual(dot.progressAlongEdge, 0.70710678, accuracy: 0.0001)
     }
 
     func testStartDotMovementReturnsFalseAtLeafNode() throws {
@@ -188,6 +201,38 @@ final class RouteEngineTests: XCTestCase {
 
         let dot = try XCTUnwrap(engine.deliveryDot)
         XCTAssertEqual(dot.currentNodeID, "end")
+        XCTAssertNil(dot.currentEdgeID)
+        XCTAssertEqual(dot.progressAlongEdge, 0)
+    }
+
+    func testUpdateDotStopsAtDeadEndWhenNoOutgoingEdgeIsAvailable() throws {
+        let nodes = [
+            RouteNode(id: "start", x: 0, y: 0, outgoingEdgeIDs: ["to_mid"]),
+            RouteNode(id: "mid", x: 1, y: 0, outgoingEdgeIDs: ["to_dead"]),
+            RouteNode(id: "dead", x: 2, y: 0, outgoingEdgeIDs: [])
+        ]
+        let edges = [
+            RouteEdge(id: "to_mid", fromNodeID: "start", toNodeID: "mid"),
+            RouteEdge(id: "to_dead", fromNodeID: "mid", toNodeID: "dead")
+        ]
+        let level = LevelData(
+            id: "dead_end_stop",
+            name: "Dead End Stop",
+            graph: RouteGraph(nodes: nodes, edges: edges),
+            startNodeID: "start",
+            packageNodeID: "mid",
+            destinationNodeID: "dead",
+            timeLimitSeconds: 10,
+            parTaps: 1
+        )
+        let engine = RouteEngine(dotSpeed: 3)
+        try engine.buildGraph(from: level)
+        XCTAssertTrue(engine.startDotMovement())
+
+        engine.updateDot(deltaTime: 1)
+
+        let dot = try XCTUnwrap(engine.deliveryDot)
+        XCTAssertEqual(dot.currentNodeID, "dead")
         XCTAssertNil(dot.currentEdgeID)
         XCTAssertEqual(dot.progressAlongEdge, 0)
     }

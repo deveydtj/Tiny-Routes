@@ -118,31 +118,69 @@ final class RouteEngine {
     func updateDot(deltaTime: TimeInterval) {
         guard deltaTime > 0,
               let runtimeGraph,
-              var deliveryDot,
-              let currentEdgeID = deliveryDot.currentEdgeID,
-              let edge = runtimeGraph.edgesByID[currentEdgeID],
-              let fromNode = runtimeGraph.nodesByID[edge.fromNodeID],
-              let toNode = runtimeGraph.nodesByID[edge.toNodeID] else {
+              var deliveryDot else {
             return
         }
 
-        let edgeLength = hypot(toNode.x - fromNode.x, toNode.y - fromNode.y)
-        guard edgeLength > 0 else {
-            snapDotToNode(edge.toNodeID, dot: &deliveryDot)
+        guard deliveryDot.currentEdgeID != nil || beginMovementFromCurrentNode(in: runtimeGraph, dot: &deliveryDot) else {
             self.deliveryDot = deliveryDot
             return
         }
 
-        let progressDelta = (dotSpeed * deltaTime) / edgeLength
-        let nextProgress = min(deliveryDot.progressAlongEdge + progressDelta, 1)
+        var remainingDistance = dotSpeed * deltaTime
+        var safetyStepCount = 0
+        let maxSafetyStepCount = max(runtimeGraph.edgesByID.count, 1) * 4
 
-        if nextProgress >= 1 {
-            snapDotToNode(edge.toNodeID, dot: &deliveryDot)
-        } else {
-            deliveryDot.progressAlongEdge = nextProgress
+        while remainingDistance > 0, safetyStepCount < maxSafetyStepCount {
+            safetyStepCount += 1
+
+            guard let currentEdgeID = deliveryDot.currentEdgeID,
+                  let edge = runtimeGraph.edgesByID[currentEdgeID],
+                  let fromNode = runtimeGraph.nodesByID[edge.fromNodeID],
+                  let toNode = runtimeGraph.nodesByID[edge.toNodeID] else {
+                break
+            }
+
+            let edgeLength = hypot(toNode.x - fromNode.x, toNode.y - fromNode.y)
+            guard edgeLength > 0 else {
+                snapDotToNode(edge.toNodeID, dot: &deliveryDot)
+                guard beginMovementFromCurrentNode(in: runtimeGraph, dot: &deliveryDot) else {
+                    break
+                }
+                continue
+            }
+
+            let clampedProgress = max(0, min(deliveryDot.progressAlongEdge, 1))
+            let distanceToEdgeEnd = (1 - clampedProgress) * edgeLength
+
+            if remainingDistance < distanceToEdgeEnd {
+                deliveryDot.progressAlongEdge = clampedProgress + (remainingDistance / edgeLength)
+                remainingDistance = 0
+            } else {
+                remainingDistance -= distanceToEdgeEnd
+                snapDotToNode(edge.toNodeID, dot: &deliveryDot)
+                guard beginMovementFromCurrentNode(in: runtimeGraph, dot: &deliveryDot) else {
+                    break
+                }
+            }
         }
 
         self.deliveryDot = deliveryDot
+    }
+
+    @discardableResult
+    private func beginMovementFromCurrentNode(in runtimeGraph: RuntimeRouteGraph, dot: inout DeliveryDot) -> Bool {
+        guard dot.currentEdgeID == nil,
+              let currentNode = runtimeGraph.nodesByID[dot.currentNodeID],
+              let edgeID = currentNode.activeOutgoingEdgeID,
+              let edge = runtimeGraph.edgesByID[edgeID],
+              edge.fromNodeID == dot.currentNodeID else {
+            return false
+        }
+
+        dot.currentEdgeID = edgeID
+        dot.progressAlongEdge = 0
+        return true
     }
 
     private func snapDotToNode(_ nodeID: String, dot: inout DeliveryDot) {
