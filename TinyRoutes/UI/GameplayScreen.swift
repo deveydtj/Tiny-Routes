@@ -208,15 +208,27 @@ private struct BoardLayout {
 
         if widthRange == 0, heightRange == 0 {
             let centerPoint = CGPoint(x: size.width / 2, y: size.height / 2)
+            let count = nodes.count
+            let spreadRadius = min(usableWidth, usableHeight) * 0.15
             var pointsByNodeID: [String: CGPoint] = [:]
-            for node in nodes {
-                pointsByNodeID[node.id] = centerPoint
+            for (index, node) in nodes.enumerated() {
+                guard count > 1 else {
+                    pointsByNodeID[node.id] = centerPoint
+                    continue
+                }
+
+                let angle = (2 * .pi * CGFloat(index)) / CGFloat(count)
+                let point = CGPoint(
+                    x: centerPoint.x + (cos(angle) * spreadRadius),
+                    y: centerPoint.y + (sin(angle) * spreadRadius)
+                )
+                pointsByNodeID[node.id] = point
             }
             return BoardLayout(pointsByNodeID: pointsByNodeID)
         }
 
-        let horizontalScale = widthRange > 0 ? usableWidth / widthRange : 1
-        let verticalScale = heightRange > 0 ? usableHeight / heightRange : 1
+        let horizontalScale = widthRange > 0 ? usableWidth / widthRange : .greatestFiniteMagnitude
+        let verticalScale = heightRange > 0 ? usableHeight / heightRange : .greatestFiniteMagnitude
         let scale = min(horizontalScale, verticalScale)
 
         let boardWidth = widthRange * scale
