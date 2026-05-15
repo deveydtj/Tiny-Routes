@@ -207,6 +207,15 @@ private struct BoardLayout {
         let usableWidth = max(size.width - (padding * 2), 1)
         let usableHeight = max(size.height - (padding * 2), 1)
 
+        if widthRange == 0, heightRange == 0 {
+            let centerPoint = CGPoint(x: size.width / 2, y: size.height / 2)
+            var pointsByNodeID: [String: CGPoint] = [:]
+            for node in nodes {
+                pointsByNodeID[node.id] = centerPoint
+            }
+            return BoardLayout(pointsByNodeID: pointsByNodeID)
+        }
+
         let horizontalScale = widthRange > 0 ? usableWidth / widthRange : 1
         let verticalScale = heightRange > 0 ? usableHeight / heightRange : 1
         let scale = min(horizontalScale, verticalScale)
