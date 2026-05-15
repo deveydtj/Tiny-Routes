@@ -8,13 +8,33 @@ struct GameplayScreen: View {
     let onFailTapped: () -> Void
     let onExitTapped: () -> Void
 
-    private let levelRepository = LevelRepository()
-    private let routeEngine = RouteEngine()
+    private let levelRepository: LevelRepository
+    private let routeEngine: RouteEngine
 
     @State private var runtimeGraph: RuntimeRouteGraph?
     @State private var packageNodeID: String = ""
     @State private var destinationNodeID: String = ""
     @State private var loadErrorMessage: String?
+
+    init(
+        levelID: String,
+        isPaused: Bool,
+        onPauseResumeTapped: @escaping () -> Void,
+        onCompleteTapped: @escaping () -> Void,
+        onFailTapped: @escaping () -> Void,
+        onExitTapped: @escaping () -> Void,
+        levelRepository: LevelRepository = LevelRepository(),
+        routeEngine: RouteEngine = RouteEngine()
+    ) {
+        self.levelID = levelID
+        self.isPaused = isPaused
+        self.onPauseResumeTapped = onPauseResumeTapped
+        self.onCompleteTapped = onCompleteTapped
+        self.onFailTapped = onFailTapped
+        self.onExitTapped = onExitTapped
+        self.levelRepository = levelRepository
+        self.routeEngine = routeEngine
+    }
 
     var body: some View {
         VStack(spacing: 16) {
@@ -165,7 +185,7 @@ private struct RouteBoardView: View {
 
 private struct BoardLayout {
     let pointsByNodeID: [String: CGPoint]
-    private static let centerPosition: CGFloat = 0.5
+    private static let fallbackCenterRatio: CGFloat = 0.5
 
     static func make(
         for nodes: [RuntimeRouteNode],
@@ -198,8 +218,8 @@ private struct BoardLayout {
 
         var pointsByNodeID: [String: CGPoint] = [:]
         for node in nodes {
-            let normalizedX = widthRange > 0 ? (node.x - minX) / widthRange : centerPosition
-            let normalizedY = heightRange > 0 ? (maxY - node.y) / heightRange : centerPosition
+            let normalizedX = widthRange > 0 ? (node.x - minX) / widthRange : fallbackCenterRatio
+            let normalizedY = heightRange > 0 ? (maxY - node.y) / heightRange : fallbackCenterRatio
 
             let x = originX + (normalizedX * boardWidth)
             let y = originY + (normalizedY * boardHeight)
