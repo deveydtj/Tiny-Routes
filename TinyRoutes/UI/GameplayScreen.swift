@@ -197,15 +197,11 @@ private struct BoardLayout {
 
         var pointsByNodeID: [String: CGPoint] = [:]
         for node in nodes {
-            let normalizedX = widthRange > 0 ? (node.x - minX) : 0.5
-            let normalizedY = heightRange > 0 ? (maxY - node.y) : 0.5
+            let normalizedX = widthRange > 0 ? (node.x - minX) / widthRange : 0.5
+            let normalizedY = heightRange > 0 ? (maxY - node.y) / heightRange : 0.5
 
-            let x = widthRange > 0
-                ? originX + (normalizedX * boardWidth)
-                : size.width / 2
-            let y = heightRange > 0
-                ? originY + (normalizedY * boardHeight)
-                : size.height / 2
+            let x = originX + (normalizedX * boardWidth)
+            let y = originY + (normalizedY * boardHeight)
 
             pointsByNodeID[node.id] = CGPoint(x: x, y: y)
         }
