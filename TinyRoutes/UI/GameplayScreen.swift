@@ -214,6 +214,7 @@ private struct RouteBoardView: View {
                         .frame(width: deliveryDotSize, height: deliveryDotSize)
                         .shadow(color: deliveryDotColor.opacity(0.35), radius: 6, x: 0, y: 2)
                         .position(deliveryDotPoint)
+                        .allowsHitTesting(false)
                 }
             }
             .background(Color(.secondarySystemBackground))
@@ -265,12 +266,7 @@ private struct RouteBoardView: View {
     }
 
     private func activeDirectionAngle(for node: RuntimeRouteNode, in layout: BoardLayout) -> Double? {
-        let validOutgoingEdgeIDs = node.outgoingEdgeIDs.filter { edgeID in
-            guard let edge = runtimeGraph.edgesByID[edgeID] else {
-                return false
-            }
-            return edge.fromNodeID == node.id
-        }
+        let validOutgoingEdgeIDs = runtimeGraph.validOutgoingEdgeIDs(for: node)
 
         guard validOutgoingEdgeIDs.count > 1,
               let activeEdgeID = node.activeOutgoingEdgeID,

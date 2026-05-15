@@ -15,14 +15,14 @@ final class NodeSwitchController {
             return false
         }
 
-        let validOutgoingEdgeIDs = node.outgoingEdgeIDs.filter { edgeID in
-            guard let edge = runtimeGraph.edgesByID[edgeID] else {
-                return false
-            }
-            return edge.fromNodeID == nodeID
-        }
+        let validOutgoingEdgeIDs = runtimeGraph.validOutgoingEdgeIDs(for: node)
 
         guard validOutgoingEdgeIDs.count > 1 else {
+            let normalizedActiveEdgeID = validOutgoingEdgeIDs.first
+            if node.activeOutgoingEdgeID != normalizedActiveEdgeID {
+                node.activeOutgoingEdgeID = normalizedActiveEdgeID
+                runtimeGraph.nodesByID[nodeID] = node
+            }
             return false
         }
 

@@ -356,9 +356,9 @@ final class RouteEngineTests: XCTestCase {
         XCTAssertFalse(engine.rotateSwitchNode(nodeID: "unknown"))
     }
 
-    func testRotateSwitchNodeReturnsFalseWhenOnlyOneOutgoingEdgeIsValid() throws {
+    func testRotateSwitchNodeReturnsFalseWhenOnlyOneOutgoingEdgeIsValidAndNormalizesActiveEdge() throws {
         let nodes = [
-            RouteNode(id: "start", x: 0, y: 0, outgoingEdgeIDs: ["valid", "invalid"]),
+            RouteNode(id: "start", x: 0, y: 0, outgoingEdgeIDs: ["invalid", "valid"]),
             RouteNode(id: "mid", x: 1, y: 0, outgoingEdgeIDs: []),
             RouteNode(id: "end", x: 2, y: 0, outgoingEdgeIDs: [])
         ]
@@ -379,11 +379,48 @@ final class RouteEngineTests: XCTestCase {
         let engine = RouteEngine()
         try engine.buildGraph(from: level)
 
+        var graph = try XCTUnwrap(engine.runtimeGraph)
+        var startNode = try XCTUnwrap(graph.nodesByID["start"])
+        XCTAssertEqual(startNode.activeOutgoingEdgeID, "invalid")
+
         XCTAssertFalse(engine.rotateSwitchNode(nodeID: "start"))
 
-        let graph = try XCTUnwrap(engine.runtimeGraph)
-        let startNode = try XCTUnwrap(graph.nodesByID["start"])
+        graph = try XCTUnwrap(engine.runtimeGraph)
+        startNode = try XCTUnwrap(graph.nodesByID["start"])
         XCTAssertEqual(startNode.activeOutgoingEdgeID, "valid")
+    }
+
+    func testRotateSwitchNodeReturnsFalseWhenNoOutgoingEdgeIsValidAndClearsActiveEdge() throws {
+        let nodes = [
+            RouteNode(id: "start", x: 0, y: 0, outgoingEdgeIDs: ["invalid"]),
+            RouteNode(id: "mid", x: 1, y: 0, outgoingEdgeIDs: []),
+            RouteNode(id: "end", x: 2, y: 0, outgoingEdgeIDs: [])
+        ]
+        let edges = [
+            RouteEdge(id: "invalid", fromNodeID: "mid", toNodeID: "end")
+        ]
+        let level = LevelData(
+            id: "no_valid_outgoing",
+            name: "No Valid Outgoing",
+            graph: RouteGraph(nodes: nodes, edges: edges),
+            startNodeID: "start",
+            packageNodeID: "start",
+            destinationNodeID: "end",
+            timeLimitSeconds: 10,
+            parTaps: 1
+        )
+        let engine = RouteEngine()
+        try engine.buildGraph(from: level)
+
+        var graph = try XCTUnwrap(engine.runtimeGraph)
+        var startNode = try XCTUnwrap(graph.nodesByID["start"])
+        XCTAssertEqual(startNode.activeOutgoingEdgeID, "invalid")
+
+        XCTAssertFalse(engine.rotateSwitchNode(nodeID: "start"))
+
+        graph = try XCTUnwrap(engine.runtimeGraph)
+        startNode = try XCTUnwrap(graph.nodesByID["start"])
+        XCTAssertNil(startNode.activeOutgoingEdgeID)
     }
 
     // MARK: - Invalid graph data

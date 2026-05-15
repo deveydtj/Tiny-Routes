@@ -23,4 +23,13 @@ struct RuntimeRouteEdge {
 struct RuntimeRouteGraph {
     var nodesByID: [String: RuntimeRouteNode]
     let edgesByID: [String: RuntimeRouteEdge]
+
+    func validOutgoingEdgeIDs(for node: RuntimeRouteNode) -> [String] {
+        node.outgoingEdgeIDs.filter { edgeID in
+            guard let edge = edgesByID[edgeID] else {
+                return false
+            }
+            return edge.fromNodeID == node.id
+        }
+    }
 }
