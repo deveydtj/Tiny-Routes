@@ -4,6 +4,7 @@ import Foundation
 enum RouteEngineError: Error, LocalizedError {
     case missingPackageNode(id: String)
     case missingDestinationNode(id: String)
+    case missingStartNode
     case edgeReferencesUnknownNode(edgeID: String, nodeID: String)
 
     var errorDescription: String? {
@@ -12,6 +13,8 @@ enum RouteEngineError: Error, LocalizedError {
             return "Package node '\(id)' does not exist in the level graph."
         case let .missingDestinationNode(id):
             return "Destination node '\(id)' does not exist in the level graph."
+        case .missingStartNode:
+            return "Start node does not exist in the level graph."
         case let .edgeReferencesUnknownNode(edgeID, nodeID):
             return "Edge '\(edgeID)' references unknown node '\(nodeID)'."
         }
@@ -23,6 +26,8 @@ final class RouteEngine {
 
     /// The runtime graph built from the loaded level, available after `buildGraph(from:)` succeeds.
     private(set) var runtimeGraph: RuntimeRouteGraph?
+    /// Runtime state for the delivery dot, available after `buildGraph(from:)` succeeds.
+    private(set) var deliveryDot: DeliveryDot?
 
     /// Converts a `LevelData` into a `RuntimeRouteGraph` and stores it in `runtimeGraph`.
     ///
@@ -34,6 +39,7 @@ final class RouteEngine {
     func buildGraph(from levelData: LevelData) throws {
         let graph = levelData.graph
         let nodeIDs = Set(graph.nodes.map(\.id))
+        let incomingNodeIDs = Set(graph.edges.map(\.toNodeID))
 
         for edge in graph.edges {
             guard nodeIDs.contains(edge.fromNodeID) else {
@@ -72,5 +78,12 @@ final class RouteEngine {
         }
 
         runtimeGraph = RuntimeRouteGraph(nodesByID: nodesByID, edgesByID: edgesByID)
+
+        let startNodeID = graph.nodes.first(where: { !incomingNodeIDs.contains($0.id) })?.id
+        guard let startNodeID else {
+            throw RouteEngineError.missingStartNode
+        }
+
+        deliveryDot = DeliveryDot(currentNodeID: startNodeID)
     }
 }

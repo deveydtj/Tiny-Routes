@@ -422,6 +422,10 @@ Create the runtime model for the moving delivery dot.
 
 ---
 
+**Status:** ✅ Completed — added `Gameplay/DeliveryDot.swift` with runtime node/edge/progress/package fields and position interpolation support, then integrated delivery-dot initialization into `RouteEngine` so each loaded level starts with the dot at the inferred start node and exposes dot state via the engine.
+
+---
+
 ## STORY-010 — Move Dot Along One Edge
 
 **Goal:**  

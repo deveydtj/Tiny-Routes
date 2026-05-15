@@ -44,6 +44,26 @@ final class RouteEngineTests: XCTestCase {
         XCTAssertNotNil(engine.runtimeGraph)
     }
 
+    func testBuildGraphInitializesDeliveryDot() throws {
+        let engine = RouteEngine()
+        try engine.buildGraph(from: makeLevelData())
+
+        let dot = try XCTUnwrap(engine.deliveryDot)
+        XCTAssertEqual(dot.currentNodeID, "start")
+        XCTAssertNil(dot.currentEdgeID)
+        XCTAssertEqual(dot.progressAlongEdge, 0)
+        XCTAssertFalse(dot.hasCollectedPackage)
+    }
+
+    func testDeliveryDotReportsCurrentRuntimePositionAtStartNode() throws {
+        let engine = RouteEngine()
+        try engine.buildGraph(from: makeLevelData())
+
+        let graph = try XCTUnwrap(engine.runtimeGraph)
+        let dot = try XCTUnwrap(engine.deliveryDot)
+        XCTAssertEqual(dot.runtimePosition(in: graph), DeliveryDotPosition(x: 0, y: 0))
+    }
+
     func testBuildGraphNodeAndEdgeCountsMatchLevelData() throws {
         let engine = RouteEngine()
         let level = makeLevelData()
@@ -186,5 +206,37 @@ final class RouteEngineTests: XCTestCase {
     func testRuntimeGraphIsNilBeforeBuild() {
         let engine = RouteEngine()
         XCTAssertNil(engine.runtimeGraph)
+    }
+
+    func testDeliveryDotIsNilBeforeBuild() {
+        let engine = RouteEngine()
+        XCTAssertNil(engine.deliveryDot)
+    }
+
+    func testBuildGraphThrowsForMissingStartNode() {
+        let engine = RouteEngine()
+        let nodes = [
+            RouteNode(id: "a", x: 0, y: 0, outgoingEdgeIDs: ["e1"]),
+            RouteNode(id: "b", x: 1, y: 0, outgoingEdgeIDs: [])
+        ]
+        let edges = [
+            RouteEdge(id: "e1", fromNodeID: "a", toNodeID: "b"),
+            RouteEdge(id: "e2", fromNodeID: "b", toNodeID: "a")
+        ]
+        let level = LevelData(
+            id: "cyclic",
+            name: "Cyclic",
+            graph: RouteGraph(nodes: nodes, edges: edges),
+            packageNodeID: "a",
+            destinationNodeID: "b",
+            timeLimitSeconds: 10,
+            parTaps: 1
+        )
+
+        XCTAssertThrowsError(try engine.buildGraph(from: level)) { error in
+            guard case RouteEngineError.missingStartNode = error else {
+                return XCTFail("Expected missingStartNode, got \(error)")
+            }
+        }
     }
 }
