@@ -185,6 +185,8 @@ private struct RouteBoardView: View {
 
 private struct BoardLayout {
     let pointsByNodeID: [String: CGPoint]
+    private static let minimumUsableDimension: CGFloat = 1
+    private static let degenerateLayoutSpreadFactor: CGFloat = 0.15
 
     static func make(
         for nodes: [RuntimeRouteNode],
@@ -203,13 +205,13 @@ private struct BoardLayout {
         let widthRange = maxX - minX
         let heightRange = maxY - minY
 
-        let usableWidth = max(size.width - (padding * 2), 1)
-        let usableHeight = max(size.height - (padding * 2), 1)
+        let usableWidth = max(size.width - (padding * 2), minimumUsableDimension)
+        let usableHeight = max(size.height - (padding * 2), minimumUsableDimension)
 
         if widthRange == 0, heightRange == 0 {
             let centerPoint = CGPoint(x: size.width / 2, y: size.height / 2)
             let count = nodes.count
-            let spreadRadius = min(usableWidth, usableHeight) * 0.15
+            let spreadRadius = min(usableWidth, usableHeight) * degenerateLayoutSpreadFactor
             var pointsByNodeID: [String: CGPoint] = [:]
             for (index, node) in nodes.enumerated() {
                 guard count > 1 else {
@@ -227,9 +229,20 @@ private struct BoardLayout {
             return BoardLayout(pointsByNodeID: pointsByNodeID)
         }
 
-        let horizontalScale = widthRange > 0 ? usableWidth / widthRange : .greatestFiniteMagnitude
-        let verticalScale = heightRange > 0 ? usableHeight / heightRange : .greatestFiniteMagnitude
-        let scale = min(horizontalScale, verticalScale)
+        let hasHorizontalRange = widthRange > 0
+        let hasVerticalRange = heightRange > 0
+
+        let scale: CGFloat
+        switch (hasHorizontalRange, hasVerticalRange) {
+        case (true, true):
+            scale = min(usableWidth / widthRange, usableHeight / heightRange)
+        case (true, false):
+            scale = usableWidth / widthRange
+        case (false, true):
+            scale = usableHeight / heightRange
+        case (false, false):
+            scale = 1
+        }
 
         let boardWidth = widthRange * scale
         let boardHeight = heightRange * scale
