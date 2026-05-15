@@ -5,6 +5,7 @@ enum RouteEngineError: Error, LocalizedError {
     case missingPackageNode(id: String)
     case missingDestinationNode(id: String)
     case missingStartNode
+    case ambiguousStartNodes(ids: [String])
     case edgeReferencesUnknownNode(edgeID: String, nodeID: String)
 
     var errorDescription: String? {
@@ -15,6 +16,8 @@ enum RouteEngineError: Error, LocalizedError {
             return "Destination node '\(id)' does not exist in the level graph."
         case .missingStartNode:
             return "Start node does not exist in the level graph."
+        case let .ambiguousStartNodes(ids):
+            return "Multiple possible start nodes found: \(ids.joined(separator: ", "))."
         case let .edgeReferencesUnknownNode(edgeID, nodeID):
             return "Edge '\(edgeID)' references unknown node '\(nodeID)'."
         }
@@ -79,11 +82,18 @@ final class RouteEngine {
 
         runtimeGraph = RuntimeRouteGraph(nodesByID: nodesByID, edgesByID: edgesByID)
 
-        let startNodeID = graph.nodes.first(where: { !incomingNodeIDs.contains($0.id) })?.id
-        guard let startNodeID else {
+        let startNodeIDs = graph.nodes
+            .filter { !incomingNodeIDs.contains($0.id) }
+            .map(\.id)
+            .sorted()
+
+        guard !startNodeIDs.isEmpty else {
             throw RouteEngineError.missingStartNode
         }
+        guard startNodeIDs.count == 1 else {
+            throw RouteEngineError.ambiguousStartNodes(ids: startNodeIDs)
+        }
 
-        deliveryDot = DeliveryDot(currentNodeID: startNodeID)
+        deliveryDot = DeliveryDot(currentNodeID: startNodeIDs[0])
     }
 }

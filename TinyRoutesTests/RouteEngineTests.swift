@@ -217,7 +217,7 @@ final class RouteEngineTests: XCTestCase {
         let engine = RouteEngine()
         let nodes = [
             RouteNode(id: "a", x: 0, y: 0, outgoingEdgeIDs: ["e1"]),
-            RouteNode(id: "b", x: 1, y: 0, outgoingEdgeIDs: [])
+            RouteNode(id: "b", x: 1, y: 0, outgoingEdgeIDs: ["e2"])
         ]
         let edges = [
             RouteEdge(id: "e1", fromNodeID: "a", toNodeID: "b"),
@@ -237,6 +237,32 @@ final class RouteEngineTests: XCTestCase {
             guard case RouteEngineError.missingStartNode = error else {
                 return XCTFail("Expected missingStartNode, got \(error)")
             }
+        }
+    }
+
+    func testBuildGraphThrowsForAmbiguousStartNodes() {
+        let engine = RouteEngine()
+        let nodes = [
+            RouteNode(id: "a", x: 0, y: 0, outgoingEdgeIDs: ["e1"]),
+            RouteNode(id: "b", x: 1, y: 0, outgoingEdgeIDs: []),
+            RouteNode(id: "c", x: 2, y: 0, outgoingEdgeIDs: [])
+        ]
+        let edges = [RouteEdge(id: "e1", fromNodeID: "a", toNodeID: "b")]
+        let level = LevelData(
+            id: "ambiguous",
+            name: "Ambiguous",
+            graph: RouteGraph(nodes: nodes, edges: edges),
+            packageNodeID: "a",
+            destinationNodeID: "b",
+            timeLimitSeconds: 10,
+            parTaps: 1
+        )
+
+        XCTAssertThrowsError(try engine.buildGraph(from: level)) { error in
+            guard case RouteEngineError.ambiguousStartNodes(let ids) = error else {
+                return XCTFail("Expected ambiguousStartNodes, got \(error)")
+            }
+            XCTAssertEqual(ids, ["a", "c"])
         }
     }
 }

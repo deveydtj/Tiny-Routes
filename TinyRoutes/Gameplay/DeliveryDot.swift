@@ -30,6 +30,7 @@ struct DeliveryDot {
     }
 
     /// Returns the dot's current board-space position using node or edge interpolation state.
+    /// Returns `nil` when the dot references a node/edge that does not exist in the provided graph.
     func runtimePosition(in runtimeGraph: RuntimeRouteGraph) -> DeliveryDotPosition? {
         if let currentEdgeID,
            let edge = runtimeGraph.edgesByID[currentEdgeID],
