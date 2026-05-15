@@ -15,7 +15,7 @@ enum RouteEngineError: Error, LocalizedError {
         case let .missingDestinationNode(id):
             return "Destination node '\(id)' does not exist in the level graph."
         case .missingStartNode:
-            return "Start node does not exist in the level graph."
+            return "No start node found: all nodes have incoming edges."
         case let .ambiguousStartNodes(ids):
             return "Multiple possible start nodes found: \(ids.joined(separator: ", "))."
         case let .edgeReferencesUnknownNode(edgeID, nodeID):
