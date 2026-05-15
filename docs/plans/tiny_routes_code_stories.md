@@ -508,6 +508,10 @@ Allow the dot to automatically continue through connected nodes.
 
 ---
 
+**Status:** ✅ Completed — upgraded `RouteEngine` movement updates to automatically continue across connected nodes by following each node’s active outgoing edge, including within a single frame update when enough movement distance remains. Added dead-end stop behavior when no outgoing edge exists, retained overshoot-safe interpolation and snapping, and expanded `RouteEngineTests` to cover multi-node traversal, continuation after node arrival, and dead-end termination.
+
+---
+
 ## STORY-012 — Add Switch Node Rotation
 
 **Goal:**  

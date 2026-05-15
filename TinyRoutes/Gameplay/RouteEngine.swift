@@ -25,6 +25,8 @@ enum RouteEngineError: Error, LocalizedError {
 final class RouteEngine {
     private let dotSpeed: Double
 
+    /// Indicates whether the most recent `updateDot(deltaTime:)` call halted at a dead end.
+    private(set) var didHaltAtDeadEnd = false
 
     /// The runtime graph built from the loaded level, available after `buildGraph(from:)` succeeds.
     private(set) var runtimeGraph: RuntimeRouteGraph?
@@ -98,56 +100,106 @@ final class RouteEngine {
     /// Starts the delivery dot moving along the active edge for its current node, if one exists.
     @discardableResult
     func startDotMovement() -> Bool {
-        guard let runtimeGraph, var deliveryDot, deliveryDot.currentEdgeID == nil else {
+        guard let runtimeGraph, var deliveryDot else {
             return false
         }
-        guard let currentNode = runtimeGraph.nodesByID[deliveryDot.currentNodeID],
-              let edgeID = currentNode.activeOutgoingEdgeID,
-              let edge = runtimeGraph.edgesByID[edgeID],
-              edge.fromNodeID == deliveryDot.currentNodeID else {
-            return false
-        }
-
-        deliveryDot.currentEdgeID = edgeID
-        deliveryDot.progressAlongEdge = 0
+        let didStart = beginMovementFromCurrentNode(in: runtimeGraph, dot: &deliveryDot)
         self.deliveryDot = deliveryDot
-        return true
+        return didStart
     }
 
-    /// Advances the delivery dot along its current edge using frame-rate independent timing.
+    /// Advances the delivery dot using frame-rate independent timing, continuing across connected
+    /// nodes while movement distance remains by following each node's active outgoing edge.
+    ///
+    /// This method does not auto-start movement from an idle node; call `startDotMovement()` first.
+    /// If traversal reaches a dead end, the dot snaps to that node and remaining movement distance
+    /// is discarded for the current update.
     func updateDot(deltaTime: TimeInterval) {
+        didHaltAtDeadEnd = false
         guard deltaTime > 0,
               let runtimeGraph,
-              var deliveryDot,
-              let currentEdgeID = deliveryDot.currentEdgeID,
-              let edge = runtimeGraph.edgesByID[currentEdgeID],
-              let fromNode = runtimeGraph.nodesByID[edge.fromNodeID],
-              let toNode = runtimeGraph.nodesByID[edge.toNodeID] else {
+              var deliveryDot else {
             return
         }
 
-        let edgeLength = hypot(toNode.x - fromNode.x, toNode.y - fromNode.y)
-        guard edgeLength > 0 else {
-            snapDotToNode(edge.toNodeID, dot: &deliveryDot)
+        guard deliveryDot.currentEdgeID != nil else {
             self.deliveryDot = deliveryDot
             return
         }
 
-        let progressDelta = (dotSpeed * deltaTime) / edgeLength
-        let nextProgress = min(deliveryDot.progressAlongEdge + progressDelta, 1)
+        var remainingDistance = dotSpeed * deltaTime
+        var safetyStepCount = 0
+        let maxSafetyStepCount = max(runtimeGraph.edgesByID.count, 1) * 4
 
-        if nextProgress >= 1 {
-            snapDotToNode(edge.toNodeID, dot: &deliveryDot)
-        } else {
-            deliveryDot.progressAlongEdge = nextProgress
+        while remainingDistance > 0, safetyStepCount < maxSafetyStepCount {
+            safetyStepCount += 1
+
+            guard let currentEdgeID = deliveryDot.currentEdgeID,
+                  let edge = runtimeGraph.edgesByID[currentEdgeID],
+                  let fromNode = runtimeGraph.nodesByID[edge.fromNodeID],
+                  let toNode = runtimeGraph.nodesByID[edge.toNodeID] else {
+                break
+            }
+
+            let edgeLength = hypot(toNode.x - fromNode.x, toNode.y - fromNode.y)
+            guard edgeLength > 0 else {
+                snapDotToNode(edge.toNodeID, dot: &deliveryDot)
+                guard beginMovementFromCurrentNode(in: runtimeGraph, dot: &deliveryDot) else {
+                    didHaltAtDeadEnd = isDeadEnd(nodeID: deliveryDot.currentNodeID, in: runtimeGraph)
+                    break
+                }
+                continue
+            }
+
+            let clampedProgress = max(0, min(deliveryDot.progressAlongEdge, 1))
+            let distanceToEdgeEnd = (1 - clampedProgress) * edgeLength
+
+            if remainingDistance < distanceToEdgeEnd {
+                deliveryDot.progressAlongEdge = clampedProgress + (remainingDistance / edgeLength)
+                remainingDistance = 0
+            } else {
+                remainingDistance -= distanceToEdgeEnd
+                snapDotToNode(edge.toNodeID, dot: &deliveryDot)
+                guard beginMovementFromCurrentNode(in: runtimeGraph, dot: &deliveryDot) else {
+                    didHaltAtDeadEnd = isDeadEnd(nodeID: deliveryDot.currentNodeID, in: runtimeGraph)
+                    break
+                }
+            }
+        }
+
+        if safetyStepCount >= maxSafetyStepCount, remainingDistance > 0 {
+            assertionFailure("RouteEngine.updateDot exceeded safety step limit with remaining distance \(remainingDistance).")
         }
 
         self.deliveryDot = deliveryDot
+    }
+
+    @discardableResult
+    private func beginMovementFromCurrentNode(in runtimeGraph: RuntimeRouteGraph, dot: inout DeliveryDot) -> Bool {
+        guard dot.currentEdgeID == nil,
+              let currentNode = runtimeGraph.nodesByID[dot.currentNodeID],
+              let edgeID = currentNode.activeOutgoingEdgeID,
+              let edge = runtimeGraph.edgesByID[edgeID],
+              edge.fromNodeID == dot.currentNodeID else {
+            return false
+        }
+
+        dot.currentEdgeID = edgeID
+        dot.progressAlongEdge = 0
+        return true
     }
 
     private func snapDotToNode(_ nodeID: String, dot: inout DeliveryDot) {
         dot.currentNodeID = nodeID
         dot.currentEdgeID = nil
         dot.progressAlongEdge = 0
+    }
+
+    private func isDeadEnd(nodeID: String, in runtimeGraph: RuntimeRouteGraph) -> Bool {
+        guard let node = runtimeGraph.nodesByID[nodeID] else {
+            return false
+        }
+
+        return node.outgoingEdgeIDs.isEmpty || node.activeOutgoingEdgeID == nil
     }
 }
