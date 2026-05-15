@@ -16,6 +16,7 @@ final class DomainModelsTests: XCTestCase {
             id: "level_001",
             name: "Getting Started",
             graph: graph,
+            startNodeID: "n1",
             packageNodeID: "n1",
             destinationNodeID: "n2",
             timeLimitSeconds: 30,

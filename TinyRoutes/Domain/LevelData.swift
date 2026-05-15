@@ -5,6 +5,7 @@ struct LevelData: Identifiable, Codable {
     let id: String
     var name: String
     var graph: RouteGraph
+    var startNodeID: String
     var packageNodeID: String
     var destinationNodeID: String
     var timeLimitSeconds: Int

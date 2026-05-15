@@ -45,6 +45,7 @@ final class LevelRepositoryTests: XCTestCase {
               { "id": "e_switch_dead_end", "fromNodeID": "switch", "toNodeID": "dead_end" }
             ]
           },
+          "startNodeID": "start",
           "packageNodeID": "package",
           "destinationNodeID": "destination",
           "timeLimitSeconds": 45,
@@ -63,6 +64,7 @@ final class LevelRepositoryTests: XCTestCase {
         XCTAssertEqual(level.name, "First Dispatch")
         XCTAssertEqual(level.graph.nodes.count, 5)
         XCTAssertEqual(level.graph.edges.count, 5)
+        XCTAssertEqual(level.startNodeID, "start")
         XCTAssertEqual(level.packageNodeID, "package")
         XCTAssertEqual(level.destinationNodeID, "destination")
         XCTAssertEqual(level.timeLimitSeconds, 45)
@@ -88,7 +90,9 @@ final class LevelRepositoryTests: XCTestCase {
         XCTAssertTrue(nodeIDs.contains("switch"))
         XCTAssertTrue(nodeIDs.contains("package"))
         XCTAssertTrue(nodeIDs.contains("destination"))
+        XCTAssertTrue(nodeIDs.contains(level.startNodeID))
 
+        XCTAssertNotNil(nodesByID[level.startNodeID])
         XCTAssertNotNil(nodesByID[level.packageNodeID])
         XCTAssertNotNil(nodesByID[level.destinationNodeID])
 
@@ -130,6 +134,7 @@ final class LevelRepositoryTests: XCTestCase {
               { "id": "e1", "fromNodeID": "a", "toNodeID": "b" }
             ]
           },
+          "startNodeID": "a",
           "packageNodeID": "a",
           "destinationNodeID": "b",
           "timeLimitSeconds": 60,
@@ -151,6 +156,7 @@ final class LevelRepositoryTests: XCTestCase {
           "id": "level_empty",
           "name": "Empty",
           "graph": { "nodes": [], "edges": [] },
+          "startNodeID": "",
           "packageNodeID": "",
           "destinationNodeID": "",
           "timeLimitSeconds": 10,
@@ -178,6 +184,7 @@ final class LevelRepositoryTests: XCTestCase {
         {
           "name": "Missing ID",
           "graph": { "nodes": [], "edges": [] },
+          "startNodeID": "n0",
           "packageNodeID": "n1",
           "destinationNodeID": "n2",
           "timeLimitSeconds": 30,
@@ -193,6 +200,7 @@ final class LevelRepositoryTests: XCTestCase {
         {
           "id": "level_001",
           "name": "No Graph",
+          "startNodeID": "n0",
           "packageNodeID": "n1",
           "destinationNodeID": "n2",
           "timeLimitSeconds": 30,
@@ -209,6 +217,7 @@ final class LevelRepositoryTests: XCTestCase {
           "id": "level_001",
           "name": "No Nodes",
           "graph": { "edges": [] },
+          "startNodeID": "n0",
           "packageNodeID": "n1",
           "destinationNodeID": "n2",
           "timeLimitSeconds": 30,
@@ -225,6 +234,7 @@ final class LevelRepositoryTests: XCTestCase {
           "id": "level_001",
           "name": "No Edges",
           "graph": { "nodes": [] },
+          "startNodeID": "n0",
           "packageNodeID": "n1",
           "destinationNodeID": "n2",
           "timeLimitSeconds": 30,
@@ -241,6 +251,7 @@ final class LevelRepositoryTests: XCTestCase {
           "id": "level_001",
           "name": "Missing Par Taps",
           "graph": { "nodes": [], "edges": [] },
+          "startNodeID": "n0",
           "packageNodeID": "n1",
           "destinationNodeID": "n2",
           "timeLimitSeconds": 30
@@ -260,6 +271,7 @@ final class LevelRepositoryTests: XCTestCase {
         XCTAssertEqual(level.name, "First Dispatch")
         XCTAssertEqual(level.graph.nodes.count, 5)
         XCTAssertEqual(level.graph.edges.count, 5)
+        XCTAssertEqual(level.startNodeID, "start")
         XCTAssertEqual(level.packageNodeID, "package")
         XCTAssertEqual(level.destinationNodeID, "destination")
         XCTAssertEqual(level.timeLimitSeconds, 45)
@@ -313,6 +325,7 @@ final class LevelRepositoryTests: XCTestCase {
         {
           "name": "Missing ID",
           "graph": { "nodes": [], "edges": [] },
+          "startNodeID": "n0",
           "packageNodeID": "n1",
           "destinationNodeID": "n2",
           "timeLimitSeconds": 30,
@@ -336,6 +349,7 @@ final class LevelRepositoryTests: XCTestCase {
           "id": "level_001",
           "name": "Missing Par Taps",
           "graph": { "nodes": [], "edges": [] },
+          "startNodeID": "n0",
           "packageNodeID": "n1",
           "destinationNodeID": "n2",
           "timeLimitSeconds": 30
