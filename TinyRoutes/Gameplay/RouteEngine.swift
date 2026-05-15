@@ -24,7 +24,7 @@ enum RouteEngineError: Error, LocalizedError {
 /// Drives dot movement and evaluates win/loss conditions for a running level.
 final class RouteEngine {
     private let dotSpeed: Double
- 
+
 
     /// The runtime graph built from the loaded level, available after `buildGraph(from:)` succeeds.
     private(set) var runtimeGraph: RuntimeRouteGraph?
