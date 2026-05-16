@@ -678,6 +678,10 @@ Complete the level when the dot reaches the destination with the package.
 
 ---
 
+**Status:** ✅ Completed — implemented destination-based level resolution in the gameplay loop: reaching destination with package transitions to success, while reaching destination without package fails. Gameplay halts on terminal state and routes into the result flow.
+
+---
+
 ## STORY-016 — Add Failure State
 
 **Goal:**  
@@ -716,6 +720,10 @@ Implement core fail conditions.
 
 - Do not add rewinds.
 - Do not add rewarded ads.
+
+---
+
+**Status:** ✅ Completed — added core failure-state handling with explicit fail outcomes (including dead-end and invalid completion paths), terminal-state gameplay stop behavior, failure reason propagation, and failure result-screen integration.
 
 ---
 
@@ -760,6 +768,10 @@ Let players restart the current level immediately.
 
 ---
 
+**Status:** ✅ Completed — added restart actions from gameplay and result flows, wired through app navigation, with full in-level state reset behavior (dot progression, package/switch state, timer, and taps) so retries start cleanly without returning to level select.
+
+---
+
 ## STORY-018 — Add Timer
 
 **Goal:**  
@@ -799,6 +811,10 @@ Track and display level time.
 
 ---
 
+**Status:** ✅ Completed — implemented level timer state in the gameplay loop and HUD presentation, including countdown progression, timeout-triggered failure integration, and final-time handoff to results for completed/failed runs.
+
+---
+
 ## STORY-019 — Add Tap Counter
 
 **Goal:**  
@@ -835,6 +851,10 @@ Track switch taps during a level.
 
 - Do not count pause/restart/menu taps.
 - Do not calculate stars yet.
+
+---
+
+**Status:** ✅ Completed — implemented switch-rotation tap tracking with HUD and result-screen reporting, ensuring tap count starts at zero, increments only on switch rotations, and resets correctly on restart/new attempt.
 
 ---
 
