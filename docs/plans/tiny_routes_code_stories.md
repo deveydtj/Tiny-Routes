@@ -926,6 +926,8 @@ Create a clear result screen for success and failure.
 - Do not add coins.
 - Do not add daily challenge data.
 
+**Status:** ✅ Completed — added a unified result screen flow for both success and failure states; success now displays stars, final time, taps, restart, next level, and menu actions; failure displays reason, restart, and menu actions; result actions are wired through app navigation.
+
 ---
 
 # Next Recommended Stories After STORY-021

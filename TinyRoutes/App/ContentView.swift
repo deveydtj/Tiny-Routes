@@ -33,13 +33,19 @@ struct ContentView: View {
                 gameplayView(levelID: levelID, isPaused: coordinator.state.isPaused)
 
             case let .levelComplete(levelID, elapsedTime, tapCount):
+                let nextLevelID = nextLevelID(after: levelID)
                 ResultScreen(
                     levelID: levelID,
                     result: .completed,
                     elapsedTime: elapsedTime,
                     tapCount: tapCount,
                     failureReason: nil,
+                    canAdvanceToNextLevel: nextLevelID != nil,
                     onRestartTapped: coordinator.restartGameplay,
+                    onNextLevelTapped: {
+                        guard let nextLevelID else { return }
+                        coordinator.startGameplay(levelID: nextLevelID)
+                    },
                     onExitTapped: coordinator.exitGameplayToMenu
                 )
 
@@ -74,6 +80,23 @@ struct ContentView: View {
             onFailTapped: coordinator.failLevel,
             onExitTapped: coordinator.exitGameplayToMenu
         )
+    }
+
+    private func nextLevelID(after currentLevelID: String) -> String? {
+        let levelRepository = LevelRepository()
+        guard let levelIDs = try? levelRepository.loadAllLevels()
+            .map(\.id)
+            .sorted(),
+            let currentIndex = levelIDs.firstIndex(of: currentLevelID) else {
+            return nil
+        }
+
+        let nextIndex = currentIndex + 1
+        guard nextIndex < levelIDs.count else {
+            return nil
+        }
+
+        return levelIDs[nextIndex]
     }
 }
 
