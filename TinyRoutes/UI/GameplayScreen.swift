@@ -138,12 +138,11 @@ struct GameplayScreen: View {
             return
         }
 
-        guard routeEngine.rotateSwitchNode(nodeID: nodeID) else {
-            return
-        }
-
-        tapCount += 1
+        let didRotate = routeEngine.rotateSwitchNode(nodeID: nodeID)
         runtimeGraph = routeEngine.runtimeGraph
+        if didRotate {
+            tapCount += 1
+        }
     }
 }
 
