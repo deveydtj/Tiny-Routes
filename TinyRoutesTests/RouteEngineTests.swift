@@ -282,6 +282,38 @@ final class RouteEngineTests: XCTestCase {
         XCTAssertEqual(engine.levelOutcome, .failed(reason: .timeExpired))
     }
 
+    func testUpdateDotConsumesRemainingTimeSliceBeforeTimingOut() throws {
+        let nodes = [
+            RouteNode(id: "start", x: 0, y: 0, outgoingEdgeIDs: ["to_destination"]),
+            RouteNode(id: "destination", x: 1, y: 0, outgoingEdgeIDs: [])
+        ]
+        let edges = [
+            RouteEdge(id: "to_destination", fromNodeID: "start", toNodeID: "destination")
+        ]
+        let level = LevelData(
+            id: "time_slice",
+            name: "Time Slice",
+            graph: RouteGraph(nodes: nodes, edges: edges),
+            startNodeID: "start",
+            packageNodeID: "start",
+            destinationNodeID: "destination",
+            timeLimitSeconds: 1,
+            parTaps: 1
+        )
+
+        let engine = RouteEngine(dotSpeed: 2)
+        try engine.buildGraph(from: level)
+        XCTAssertTrue(engine.startDotMovement())
+
+        // Oversized frame delta should still move for the final 1.0s time slice.
+        engine.updateDot(deltaTime: 1.5)
+
+        let dot = try XCTUnwrap(engine.deliveryDot)
+        XCTAssertEqual(dot.currentNodeID, "destination")
+        XCTAssertNil(dot.currentEdgeID)
+        XCTAssertEqual(engine.levelOutcome, .completed)
+    }
+
     func testBuildGraphNodeAndEdgeCountsMatchLevelData() throws {
         let engine = RouteEngine()
         let level = makeLevelData()

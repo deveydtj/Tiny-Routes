@@ -173,14 +173,22 @@ final class RouteEngine {
             return
         }
 
+        let movementDeltaTime: TimeInterval
+        var didConsumeRemainingTime = false
         if let timeRemaining {
-            let updatedTimeRemaining = max(0, timeRemaining - deltaTime)
-            self.timeRemaining = updatedTimeRemaining
-            if updatedTimeRemaining <= 0 {
+            let clampedTimeRemaining = max(timeRemaining, 0)
+            if clampedTimeRemaining <= 0 {
                 levelOutcome = .failed(reason: .timeExpired)
                 self.deliveryDot = deliveryDot
                 return
             }
+
+            movementDeltaTime = min(deltaTime, clampedTimeRemaining)
+            let updatedTimeRemaining = clampedTimeRemaining - movementDeltaTime
+            self.timeRemaining = updatedTimeRemaining
+            didConsumeRemainingTime = updatedTimeRemaining <= 0
+        } else {
+            movementDeltaTime = deltaTime
         }
 
         guard deliveryDot.currentEdgeID != nil else {
@@ -188,7 +196,7 @@ final class RouteEngine {
             return
         }
 
-        var remainingDistance = dotSpeed * deltaTime
+        var remainingDistance = dotSpeed * movementDeltaTime
         var safetyStepCount = 0
         let maxSafetyStepCount = max(runtimeGraph.edgesByID.count, 1) * 4
 
@@ -242,6 +250,10 @@ final class RouteEngine {
 
         if safetyStepCount >= maxSafetyStepCount, remainingDistance > 0 {
             assertionFailure("RouteEngine.updateDot exceeded safety step limit with remaining distance \(remainingDistance).")
+        }
+
+        if didConsumeRemainingTime, levelOutcome == nil {
+            levelOutcome = .failed(reason: .timeExpired)
         }
 
         self.deliveryDot = deliveryDot
