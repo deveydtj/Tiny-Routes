@@ -121,8 +121,8 @@ struct ResultScreen: View {
             awardedStars = scoreResult.stars
             bestStars = progressService.saveBestStars(scoreResult.stars, for: levelID)
         } catch {
-            awardedStars = 1
-            bestStars = progressService.saveBestStars(awardedStars, for: levelID)
+            awardedStars = 0
+            bestStars = progressService.bestStars(for: levelID)
         }
     }
 }
