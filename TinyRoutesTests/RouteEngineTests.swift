@@ -657,4 +657,46 @@ final class RouteEngineTests: XCTestCase {
         XCTAssertNil(dot.currentEdgeID)
         XCTAssertTrue(engine.didHaltAtDeadEnd)
     }
+
+    // MARK: - Package pickup state (STORY-014)
+
+    func testDotCollectsPackageWhenReachingPackageNode() throws {
+        let engine = RouteEngine(dotSpeed: 1)
+        try engine.buildGraph(from: makeLevelData())
+        XCTAssertTrue(engine.startDotMovement())
+
+        // 1.0 unit start->switch + √2 ≈ 1.4142 units switch->package.
+        // Using 2.5 ensures package arrival within this update.
+        engine.updateDot(deltaTime: 2.5)
+
+        let dot = try XCTUnwrap(engine.deliveryDot)
+        XCTAssertTrue(dot.hasCollectedPackage)
+        XCTAssertEqual(dot.currentNodeID, "package")
+    }
+
+    func testReturningToPackageNodeDoesNotClearCollectedPackageState() throws {
+        let engine = RouteEngine(dotSpeed: 1)
+        try engine.buildGraph(from: makeLevelData())
+        XCTAssertTrue(engine.startDotMovement())
+
+        engine.updateDot(deltaTime: 2.5)
+        let dotAfterFirstPickup = try XCTUnwrap(engine.deliveryDot)
+        XCTAssertTrue(dotAfterFirstPickup.hasCollectedPackage)
+
+        // From this point: finish package_return then traverse back into package again.
+        engine.updateDot(deltaTime: 2.8)
+
+        let dotAfterRevisit = try XCTUnwrap(engine.deliveryDot)
+        XCTAssertTrue(dotAfterRevisit.hasCollectedPackage)
+        XCTAssertEqual(dotAfterRevisit.currentNodeID, "package")
+    }
+
+    func testBuildGraphMarksPackageCollectedWhenStartNodeIsPackageNode() throws {
+        let engine = RouteEngine()
+        try engine.buildGraph(from: makeLevelData(startNodeID: "package", packageNodeID: "package"))
+
+        let dot = try XCTUnwrap(engine.deliveryDot)
+        XCTAssertTrue(dot.hasCollectedPackage)
+        XCTAssertEqual(dot.currentNodeID, "package")
+    }
 }

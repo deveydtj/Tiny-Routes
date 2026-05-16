@@ -16,6 +16,7 @@ struct GameplayScreen: View {
     @State private var deliveryDot: DeliveryDot?
     @State private var packageNodeID: String = ""
     @State private var destinationNodeID: String = ""
+    @State private var hasCollectedPackage: Bool = false
     @State private var tapCount: Int = 0
     @State private var loadErrorMessage: String?
     @State private var lastFrameDate: Date?
@@ -61,6 +62,7 @@ struct GameplayScreen: View {
                         deliveryDot: deliveryDot,
                         packageNodeID: packageNodeID,
                         destinationNodeID: destinationNodeID,
+                        hasCollectedPackage: hasCollectedPackage,
                         onNodeTapped: handleNodeTapped
                     )
                 } else {
@@ -94,6 +96,9 @@ struct GameplayScreen: View {
         loadErrorMessage = nil
         runtimeGraph = nil
         deliveryDot = nil
+        packageNodeID = ""
+        destinationNodeID = ""
+        hasCollectedPackage = false
         lastFrameDate = nil
         tapCount = 0
 
@@ -106,6 +111,7 @@ struct GameplayScreen: View {
             deliveryDot = routeEngine.deliveryDot
             packageNodeID = levelData.packageNodeID
             destinationNodeID = levelData.destinationNodeID
+            hasCollectedPackage = routeEngine.deliveryDot?.hasCollectedPackage ?? false
 
             if !didStartMovement {
                 loadErrorMessage = "Level has no active outgoing edge from the start node."
@@ -126,11 +132,13 @@ struct GameplayScreen: View {
 
         guard deltaTime > 0 else {
             deliveryDot = routeEngine.deliveryDot
+            hasCollectedPackage = routeEngine.deliveryDot?.hasCollectedPackage ?? false
             return
         }
 
         routeEngine.updateDot(deltaTime: deltaTime)
         deliveryDot = routeEngine.deliveryDot
+        hasCollectedPackage = routeEngine.deliveryDot?.hasCollectedPackage ?? false
     }
 
     private func handleNodeTapped(_ nodeID: String) {
@@ -151,6 +159,7 @@ private struct RouteBoardView: View {
     let deliveryDot: DeliveryDot?
     let packageNodeID: String
     let destinationNodeID: String
+    let hasCollectedPackage: Bool
     let onNodeTapped: (String) -> Void
 
     private let edgeStrokeColor = Color.blue.opacity(0.7)
@@ -223,7 +232,7 @@ private struct RouteBoardView: View {
 
     @ViewBuilder
     private func nodeView(for node: RuntimeRouteNode, layout: BoardLayout) -> some View {
-        if node.id == packageNodeID {
+        if node.id == packageNodeID, !hasCollectedPackage {
             Circle()
                 .fill(Color.orange.opacity(0.9))
                 .overlay(
@@ -233,6 +242,19 @@ private struct RouteBoardView: View {
                 .overlay(
                     Circle()
                         .stroke(Color.orange, lineWidth: 2)
+                )
+                .frame(width: specialNodeSize, height: specialNodeSize)
+        } else if node.id == packageNodeID {
+            Circle()
+                .fill(Color.orange.opacity(0.2))
+                .overlay(
+                    Image(systemName: "checkmark")
+                        .font(.system(size: 14, weight: .bold))
+                        .foregroundColor(.orange)
+                )
+                .overlay(
+                    Circle()
+                        .stroke(Color.orange.opacity(0.6), lineWidth: 2)
                 )
                 .frame(width: specialNodeSize, height: specialNodeSize)
         } else if node.id == destinationNodeID {
