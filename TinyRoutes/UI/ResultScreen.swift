@@ -10,6 +10,7 @@ struct ResultScreen: View {
 
     let levelID: String
     let result: ResultType
+    let failureReason: LevelFailureReason?
     let onRestartTapped: () -> Void
     let onExitTapped: () -> Void
 
@@ -25,6 +26,11 @@ struct ResultScreen: View {
             Text(titleText)
                 .font(.title)
             Text("Level: \(levelID)")
+            if let failureReason, case .failed = result {
+                Text(failureReason.message)
+                    .font(.subheadline)
+                    .foregroundColor(.secondary)
+            }
 
             Button("Restart", action: onRestartTapped)
             Button("Back to Menu", action: onExitTapped)
@@ -33,5 +39,11 @@ struct ResultScreen: View {
 }
 
 #Preview {
-    ResultScreen(levelID: "level_001", result: .completed, onRestartTapped: {}, onExitTapped: {})
+    ResultScreen(
+        levelID: "level_001",
+        result: .completed,
+        failureReason: nil,
+        onRestartTapped: {},
+        onExitTapped: {}
+    )
 }

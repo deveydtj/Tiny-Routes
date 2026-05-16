@@ -32,7 +32,7 @@ final class AppCoordinator: ObservableObject {
         case let .gameplay(levelID),
              let .pause(levelID),
              let .levelComplete(levelID),
-             let .levelFailed(levelID):
+             let .levelFailed(levelID, _):
             state = .gameplay(levelID: levelID)
         default:
             break
@@ -52,10 +52,10 @@ final class AppCoordinator: ObservableObject {
         }
     }
 
-    func failLevel() {
+    func failLevel(reason: LevelFailureReason) {
         switch state {
         case let .gameplay(levelID), let .pause(levelID):
-            state = .levelFailed(levelID: levelID)
+            state = .levelFailed(levelID: levelID, reason: reason)
         default:
             break
         }

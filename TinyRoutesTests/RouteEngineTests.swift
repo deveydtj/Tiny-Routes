@@ -248,6 +248,7 @@ final class RouteEngineTests: XCTestCase {
         XCTAssertNil(dot.currentEdgeID)
         XCTAssertEqual(dot.progressAlongEdge, 0)
         XCTAssertTrue(engine.didHaltAtDeadEnd)
+        XCTAssertEqual(engine.levelOutcome, .failed(reason: .deadEnd))
     }
 
     func testUpdateDotMarksDidHaltAtDeadEndFalseWhenStillMoving() throws {
@@ -258,6 +259,80 @@ final class RouteEngineTests: XCTestCase {
         engine.updateDot(deltaTime: 0.25)
 
         XCTAssertFalse(engine.didHaltAtDeadEnd)
+    }
+
+    func testUpdateDotFailsWhenTimeExpires() throws {
+        let engine = RouteEngine(dotSpeed: 1)
+        let level = makeLevelData()
+        let timedLevel = LevelData(
+            id: level.id,
+            name: level.name,
+            graph: level.graph,
+            startNodeID: level.startNodeID,
+            packageNodeID: level.packageNodeID,
+            destinationNodeID: level.destinationNodeID,
+            timeLimitSeconds: 1,
+            parTaps: level.parTaps
+        )
+        try engine.buildGraph(from: timedLevel)
+        XCTAssertTrue(engine.startDotMovement())
+
+        engine.updateDot(deltaTime: 1.1)
+
+        XCTAssertEqual(engine.levelOutcome, .failed(reason: .timeExpired))
+    }
+
+    func testUpdateDotFailsImmediatelyWhenIdleAndTimeIsConsumed() throws {
+        let engine = RouteEngine(dotSpeed: 1)
+        let level = makeLevelData()
+        let timedLevel = LevelData(
+            id: level.id,
+            name: level.name,
+            graph: level.graph,
+            startNodeID: level.startNodeID,
+            packageNodeID: level.packageNodeID,
+            destinationNodeID: level.destinationNodeID,
+            timeLimitSeconds: 1,
+            parTaps: level.parTaps
+        )
+        try engine.buildGraph(from: timedLevel)
+
+        // Dot is idle because movement has not started.
+        engine.updateDot(deltaTime: 1.1)
+
+        XCTAssertEqual(engine.levelOutcome, .failed(reason: .timeExpired))
+    }
+
+    func testUpdateDotConsumesRemainingTimeSliceBeforeTimingOut() throws {
+        let nodes = [
+            RouteNode(id: "start", x: 0, y: 0, outgoingEdgeIDs: ["to_destination"]),
+            RouteNode(id: "destination", x: 1, y: 0, outgoingEdgeIDs: [])
+        ]
+        let edges = [
+            RouteEdge(id: "to_destination", fromNodeID: "start", toNodeID: "destination")
+        ]
+        let level = LevelData(
+            id: "time_slice",
+            name: "Time Slice",
+            graph: RouteGraph(nodes: nodes, edges: edges),
+            startNodeID: "start",
+            packageNodeID: "start",
+            destinationNodeID: "destination",
+            timeLimitSeconds: 1,
+            parTaps: 1
+        )
+
+        let engine = RouteEngine(dotSpeed: 2)
+        try engine.buildGraph(from: level)
+        XCTAssertTrue(engine.startDotMovement())
+
+        // Oversized frame delta should still move for the final 1.0s time slice.
+        engine.updateDot(deltaTime: 1.5)
+
+        let dot = try XCTUnwrap(engine.deliveryDot)
+        XCTAssertEqual(dot.currentNodeID, "destination")
+        XCTAssertNil(dot.currentEdgeID)
+        XCTAssertEqual(engine.levelOutcome, .completed)
     }
 
     func testBuildGraphNodeAndEdgeCountsMatchLevelData() throws {
@@ -736,7 +811,7 @@ final class RouteEngineTests: XCTestCase {
         XCTAssertFalse(dot.hasCollectedPackage)
         XCTAssertEqual(dot.currentNodeID, "destination")
         XCTAssertNil(dot.currentEdgeID)
-        XCTAssertEqual(engine.levelOutcome, .failed)
+        XCTAssertEqual(engine.levelOutcome, .failed(reason: .reachedDestinationWithoutPackage))
     }
 
     func testTerminalOutcomeStopsFurtherMovement() throws {
@@ -750,7 +825,7 @@ final class RouteEngineTests: XCTestCase {
         engine.updateDot(deltaTime: 3.1)
 
         let dotAtOutcome = try XCTUnwrap(engine.deliveryDot)
-        XCTAssertEqual(engine.levelOutcome, .failed)
+        XCTAssertEqual(engine.levelOutcome, .failed(reason: .reachedDestinationWithoutPackage))
         XCTAssertEqual(dotAtOutcome.currentNodeID, "destination")
         XCTAssertNil(dotAtOutcome.currentEdgeID)
 

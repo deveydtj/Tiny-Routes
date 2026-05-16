@@ -5,7 +5,7 @@ struct GameplayScreen: View {
     let isPaused: Bool
     let onPauseResumeTapped: () -> Void
     let onCompleteTapped: () -> Void
-    let onFailTapped: () -> Void
+    let onFailTapped: (LevelFailureReason) -> Void
     let onExitTapped: () -> Void
 
     private let levelRepository: LevelRepository
@@ -27,7 +27,7 @@ struct GameplayScreen: View {
         isPaused: Bool,
         onPauseResumeTapped: @escaping () -> Void,
         onCompleteTapped: @escaping () -> Void,
-        onFailTapped: @escaping () -> Void,
+        onFailTapped: @escaping (LevelFailureReason) -> Void,
         onExitTapped: @escaping () -> Void,
         levelRepository: LevelRepository = LevelRepository(),
         routeEngine: RouteEngine = RouteEngine()
@@ -166,8 +166,8 @@ struct GameplayScreen: View {
         switch levelOutcome {
         case .completed:
             onCompleteTapped()
-        case .failed:
-            onFailTapped()
+        case let .failed(reason):
+            onFailTapped(reason)
         }
     }
 }
@@ -439,7 +439,7 @@ private struct BoardLayout {
         isPaused: false,
         onPauseResumeTapped: {},
         onCompleteTapped: {},
-        onFailTapped: {},
+        onFailTapped: { _ in },
         onExitTapped: {}
     )
 }
