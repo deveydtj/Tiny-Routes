@@ -21,14 +21,22 @@ enum RouteEngineError: Error, LocalizedError {
     }
 }
 
+enum LevelOutcome: Equatable {
+    case completed
+    case failed
+}
+
 /// Drives dot movement and evaluates win/loss conditions for a running level.
 final class RouteEngine {
     private let dotSpeed: Double
     private let nodeSwitchController = NodeSwitchController()
     private var packageNodeID: String?
+    private var destinationNodeID: String?
 
     /// Indicates whether the most recent `updateDot(deltaTime:)` call halted at a dead end.
     private(set) var didHaltAtDeadEnd = false
+    /// Terminal gameplay state reached by the current level run.
+    private(set) var levelOutcome: LevelOutcome?
 
     /// The runtime graph built from the loaded level, available after `buildGraph(from:)` succeeds.
     private(set) var runtimeGraph: RuntimeRouteGraph?
@@ -50,6 +58,8 @@ final class RouteEngine {
         runtimeGraph = nil
         deliveryDot = nil
         packageNodeID = nil
+        destinationNodeID = nil
+        levelOutcome = nil
 
         let graph = levelData.graph
         let nodeIDs = Set(graph.nodes.map(\.id))
@@ -96,7 +106,9 @@ final class RouteEngine {
         let runtimeGraph = RuntimeRouteGraph(nodesByID: nodesByID, edgesByID: edgesByID)
         var deliveryDot = DeliveryDot(currentNodeID: levelData.startNodeID)
         packageNodeID = levelData.packageNodeID
+        destinationNodeID = levelData.destinationNodeID
         collectPackageIfNeeded(dot: &deliveryDot)
+        evaluateDestinationArrivalIfNeeded(dot: &deliveryDot)
 
         self.runtimeGraph = runtimeGraph
         self.deliveryDot = deliveryDot
@@ -106,6 +118,10 @@ final class RouteEngine {
     @discardableResult
     func startDotMovement() -> Bool {
         guard let runtimeGraph, var deliveryDot else {
+            return false
+        }
+        guard levelOutcome == nil else {
+            self.deliveryDot = deliveryDot
             return false
         }
         let didStart = beginMovementFromCurrentNode(in: runtimeGraph, dot: &deliveryDot)
@@ -124,6 +140,10 @@ final class RouteEngine {
         guard deltaTime > 0,
               let runtimeGraph,
               var deliveryDot else {
+            return
+        }
+        guard levelOutcome == nil else {
+            self.deliveryDot = deliveryDot
             return
         }
 
@@ -149,6 +169,9 @@ final class RouteEngine {
             let edgeLength = hypot(toNode.x - fromNode.x, toNode.y - fromNode.y)
             guard edgeLength > 0 else {
                 snapDotToNode(edge.toNodeID, dot: &deliveryDot)
+                if levelOutcome != nil {
+                    break
+                }
                 guard beginMovementFromCurrentNode(in: runtimeGraph, dot: &deliveryDot) else {
                     didHaltAtDeadEnd = isDeadEnd(nodeID: deliveryDot.currentNodeID, in: runtimeGraph)
                     break
@@ -165,6 +188,9 @@ final class RouteEngine {
             } else {
                 remainingDistance -= distanceToEdgeEnd
                 snapDotToNode(edge.toNodeID, dot: &deliveryDot)
+                if levelOutcome != nil {
+                    break
+                }
                 guard beginMovementFromCurrentNode(in: runtimeGraph, dot: &deliveryDot) else {
                     didHaltAtDeadEnd = isDeadEnd(nodeID: deliveryDot.currentNodeID, in: runtimeGraph)
                     break
@@ -215,6 +241,7 @@ final class RouteEngine {
         dot.currentEdgeID = nil
         dot.progressAlongEdge = 0
         collectPackageIfNeeded(dot: &dot)
+        evaluateDestinationArrivalIfNeeded(dot: &dot)
     }
 
     private func collectPackageIfNeeded(dot: inout DeliveryDot) {
@@ -224,6 +251,16 @@ final class RouteEngine {
             return
         }
         dot.hasCollectedPackage = true
+    }
+
+    private func evaluateDestinationArrivalIfNeeded(dot: inout DeliveryDot) {
+        guard levelOutcome == nil,
+              let destinationNodeID,
+              dot.currentNodeID == destinationNodeID else {
+            return
+        }
+
+        levelOutcome = dot.hasCollectedPackage ? .completed : .failed
     }
 
     private func isDeadEnd(nodeID: String, in runtimeGraph: RuntimeRouteGraph) -> Bool {

@@ -699,4 +699,66 @@ final class RouteEngineTests: XCTestCase {
         XCTAssertTrue(dot.hasCollectedPackage)
         XCTAssertEqual(dot.currentNodeID, "package")
     }
+
+    // MARK: - Destination completion state (STORY-015)
+
+    func testReachingDestinationWithPackageCompletesLevel() throws {
+        let engine = RouteEngine(dotSpeed: 1)
+        try engine.buildGraph(from: makeLevelData())
+        XCTAssertTrue(engine.startDotMovement())
+
+        // Reach package first.
+        engine.updateDot(deltaTime: 2.5)
+        engine.rotateSwitchNode(nodeID: "switch") // -> e_switch_dead_end
+        engine.rotateSwitchNode(nodeID: "switch") // -> e_switch_destination
+
+        // Complete package->switch->destination.
+        engine.updateDot(deltaTime: 3.5)
+
+        let dot = try XCTUnwrap(engine.deliveryDot)
+        XCTAssertTrue(dot.hasCollectedPackage)
+        XCTAssertEqual(dot.currentNodeID, "destination")
+        XCTAssertNil(dot.currentEdgeID)
+        XCTAssertEqual(engine.levelOutcome, .completed)
+    }
+
+    func testReachingDestinationWithoutPackageFailsLevel() throws {
+        let engine = RouteEngine(dotSpeed: 1)
+        try engine.buildGraph(from: makeLevelData())
+
+        // Route start->switch->destination without touching package.
+        engine.rotateSwitchNode(nodeID: "switch") // -> e_switch_dead_end
+        engine.rotateSwitchNode(nodeID: "switch") // -> e_switch_destination
+        XCTAssertTrue(engine.startDotMovement())
+        engine.updateDot(deltaTime: 3.1)
+
+        let dot = try XCTUnwrap(engine.deliveryDot)
+        XCTAssertFalse(dot.hasCollectedPackage)
+        XCTAssertEqual(dot.currentNodeID, "destination")
+        XCTAssertNil(dot.currentEdgeID)
+        XCTAssertEqual(engine.levelOutcome, .failed)
+    }
+
+    func testTerminalOutcomeStopsFurtherMovement() throws {
+        let engine = RouteEngine(dotSpeed: 1)
+        try engine.buildGraph(from: makeLevelData())
+
+        // Force fail by routing directly to destination.
+        engine.rotateSwitchNode(nodeID: "switch") // -> e_switch_dead_end
+        engine.rotateSwitchNode(nodeID: "switch") // -> e_switch_destination
+        XCTAssertTrue(engine.startDotMovement())
+        engine.updateDot(deltaTime: 3.1)
+
+        let dotAtOutcome = try XCTUnwrap(engine.deliveryDot)
+        XCTAssertEqual(engine.levelOutcome, .failed)
+        XCTAssertEqual(dotAtOutcome.currentNodeID, "destination")
+        XCTAssertNil(dotAtOutcome.currentEdgeID)
+
+        // No additional movement or restart from terminal state.
+        engine.updateDot(deltaTime: 10)
+        XCTAssertFalse(engine.startDotMovement())
+        let dotAfterExtraUpdate = try XCTUnwrap(engine.deliveryDot)
+        XCTAssertEqual(dotAfterExtraUpdate.currentNodeID, "destination")
+        XCTAssertNil(dotAfterExtraUpdate.currentEdgeID)
+    }
 }

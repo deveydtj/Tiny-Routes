@@ -20,6 +20,7 @@ struct GameplayScreen: View {
     @State private var tapCount: Int = 0
     @State private var loadErrorMessage: String?
     @State private var lastFrameDate: Date?
+    @State private var hasDispatchedOutcome: Bool = false
 
     init(
         levelID: String,
@@ -74,8 +75,6 @@ struct GameplayScreen: View {
 
             VStack(spacing: 10) {
                 Button(isPaused ? "Resume" : "Pause", action: onPauseResumeTapped)
-                Button("Simulate Level Complete", action: onCompleteTapped)
-                Button("Simulate Level Failed", action: onFailTapped)
                 Button("Exit to Menu", action: onExitTapped)
             }
         }
@@ -101,6 +100,7 @@ struct GameplayScreen: View {
         hasCollectedPackage = false
         lastFrameDate = nil
         tapCount = 0
+        hasDispatchedOutcome = false
 
         do {
             let levelData = try levelRepository.loadLevel(id: levelID)
@@ -116,6 +116,7 @@ struct GameplayScreen: View {
             if !didStartMovement {
                 loadErrorMessage = "Level has no active outgoing edge from the start node."
             }
+            dispatchLevelOutcomeIfNeeded()
         } catch {
             loadErrorMessage = error.localizedDescription
         }
@@ -139,10 +140,11 @@ struct GameplayScreen: View {
         routeEngine.updateDot(deltaTime: deltaTime)
         deliveryDot = routeEngine.deliveryDot
         hasCollectedPackage = routeEngine.deliveryDot?.hasCollectedPackage ?? false
+        dispatchLevelOutcomeIfNeeded()
     }
 
     private func handleNodeTapped(_ nodeID: String) {
-        guard !isPaused else {
+        guard !isPaused, routeEngine.levelOutcome == nil else {
             return
         }
 
@@ -150,6 +152,22 @@ struct GameplayScreen: View {
         runtimeGraph = routeEngine.runtimeGraph
         if didRotate {
             tapCount += 1
+        }
+    }
+
+    private func dispatchLevelOutcomeIfNeeded() {
+        guard !hasDispatchedOutcome,
+              let levelOutcome = routeEngine.levelOutcome else {
+            return
+        }
+
+        hasDispatchedOutcome = true
+        lastFrameDate = nil
+        switch levelOutcome {
+        case .completed:
+            onCompleteTapped()
+        case .failed:
+            onFailTapped()
         }
     }
 }
