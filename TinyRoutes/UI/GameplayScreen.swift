@@ -4,8 +4,8 @@ struct GameplayScreen: View {
     let levelID: String
     let isPaused: Bool
     let onPauseResumeTapped: () -> Void
-    let onCompleteTapped: (TimeInterval) -> Void
-    let onFailTapped: (LevelFailureReason, TimeInterval) -> Void
+    let onCompleteTapped: (TimeInterval, Int) -> Void
+    let onFailTapped: (LevelFailureReason, TimeInterval, Int) -> Void
     let onExitTapped: () -> Void
 
     private let levelRepository: LevelRepository
@@ -27,8 +27,8 @@ struct GameplayScreen: View {
         levelID: String,
         isPaused: Bool,
         onPauseResumeTapped: @escaping () -> Void,
-        onCompleteTapped: @escaping (TimeInterval) -> Void,
-        onFailTapped: @escaping (LevelFailureReason, TimeInterval) -> Void,
+        onCompleteTapped: @escaping (TimeInterval, Int) -> Void,
+        onFailTapped: @escaping (LevelFailureReason, TimeInterval, Int) -> Void,
         onExitTapped: @escaping () -> Void,
         levelRepository: LevelRepository = LevelRepository(),
         routeEngine: RouteEngine = RouteEngine()
@@ -116,6 +116,7 @@ struct GameplayScreen: View {
             destinationNodeID = levelData.destinationNodeID
             hasCollectedPackage = routeEngine.deliveryDot?.hasCollectedPackage ?? false
             timeRemaining = routeEngine.timeRemaining
+            tapCount = routeEngine.tapCount
 
             if !didStartMovement {
                 loadErrorMessage = "Level has no active outgoing edge from the start node."
@@ -141,6 +142,7 @@ struct GameplayScreen: View {
         destinationNodeID = routeEngine.destinationNodeID ?? ""
         hasCollectedPackage = routeEngine.deliveryDot?.hasCollectedPackage ?? false
         timeRemaining = routeEngine.timeRemaining
+        tapCount = routeEngine.tapCount
 
         if routeEngine.deliveryDot?.currentEdgeID == nil {
             loadErrorMessage = "Level has no active outgoing edge from the start node."
@@ -179,7 +181,7 @@ struct GameplayScreen: View {
         let didRotate = routeEngine.rotateSwitchNode(nodeID: nodeID)
         runtimeGraph = routeEngine.runtimeGraph
         if didRotate {
-            tapCount += 1
+            tapCount = routeEngine.tapCount
         }
     }
 
@@ -193,9 +195,9 @@ struct GameplayScreen: View {
         lastFrameDate = nil
         switch levelOutcome {
         case .completed:
-            onCompleteTapped(routeEngine.elapsedTime ?? 0)
+            onCompleteTapped(routeEngine.elapsedTime ?? 0, routeEngine.tapCount)
         case let .failed(reason):
-            onFailTapped(reason, routeEngine.elapsedTime ?? 0)
+            onFailTapped(reason, routeEngine.elapsedTime ?? 0, routeEngine.tapCount)
         }
     }
 
@@ -474,8 +476,8 @@ private struct BoardLayout {
         levelID: "level_001",
         isPaused: false,
         onPauseResumeTapped: {},
-        onCompleteTapped: { _ in },
-        onFailTapped: { _, _ in },
+        onCompleteTapped: { _, _ in },
+        onFailTapped: { _, _, _ in },
         onExitTapped: {}
     )
 }

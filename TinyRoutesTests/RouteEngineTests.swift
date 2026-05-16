@@ -402,6 +402,18 @@ final class RouteEngineTests: XCTestCase {
         XCTAssertEqual(resetGraph.nodesByID["switch"]?.activeOutgoingEdgeID, "e_switch_package")
     }
 
+    func testRestartLevelResetsTapCountToZero() throws {
+        let engine = RouteEngine()
+        try engine.buildGraph(from: makeLevelData())
+
+        XCTAssertTrue(engine.rotateSwitchNode(nodeID: "switch"))
+        XCTAssertTrue(engine.rotateSwitchNode(nodeID: "switch"))
+        XCTAssertEqual(engine.tapCount, 2)
+
+        XCTAssertTrue(engine.restartLevel())
+        XCTAssertEqual(engine.tapCount, 0)
+    }
+
     func testRestartLevelClearsFailureOutcome() throws {
         let engine = RouteEngine(dotSpeed: 1)
         try engine.buildGraph(from: makeLevelData())
@@ -517,6 +529,28 @@ final class RouteEngineTests: XCTestCase {
         graph = try XCTUnwrap(engine.runtimeGraph)
         switchNode = try XCTUnwrap(graph.nodesByID["switch"])
         XCTAssertEqual(switchNode.activeOutgoingEdgeID, "e_switch_package")
+    }
+
+    func testBuildGraphInitializesTapCountToZero() throws {
+        let engine = RouteEngine()
+
+        try engine.buildGraph(from: makeLevelData())
+
+        XCTAssertEqual(engine.tapCount, 0)
+    }
+
+    func testRotateSwitchNodeIncrementsTapCountOnlyOnSuccessfulRotation() throws {
+        let engine = RouteEngine()
+        try engine.buildGraph(from: makeLevelData())
+
+        XCTAssertTrue(engine.rotateSwitchNode(nodeID: "switch"))
+        XCTAssertEqual(engine.tapCount, 1)
+
+        XCTAssertFalse(engine.rotateSwitchNode(nodeID: "start"))
+        XCTAssertEqual(engine.tapCount, 1)
+
+        XCTAssertFalse(engine.rotateSwitchNode(nodeID: "unknown"))
+        XCTAssertEqual(engine.tapCount, 1)
     }
 
     func testRotateSwitchNodeReturnsFalseForNonSwitchNode() throws {
