@@ -51,6 +51,7 @@ final class RouteEngine {
     private(set) var packageNodeID: String?
     private(set) var destinationNodeID: String?
     private var remainingTime: TimeInterval?
+    private(set) var tapCount: Int = 0
 
     /// Indicates whether the most recent `updateDot(deltaTime:)` call halted at a dead end.
     private(set) var didHaltAtDeadEnd = false
@@ -94,6 +95,7 @@ final class RouteEngine {
         packageNodeID = nil
         destinationNodeID = nil
         remainingTime = nil
+        tapCount = 0
         levelOutcome = nil
         didHaltAtDeadEnd = false
 
@@ -311,6 +313,9 @@ final class RouteEngine {
         }
         let didRotate = nodeSwitchController.rotateSwitch(nodeID: nodeID, in: &runtimeGraph)
         self.runtimeGraph = runtimeGraph
+        if didRotate {
+            tapCount += 1
+        }
         return didRotate
     }
 
