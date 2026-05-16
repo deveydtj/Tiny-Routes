@@ -877,6 +877,8 @@ Award stars based on completion, time, and tap count.
 - Do not add coins yet.
 - Do not add perfect route badges.
 
+**Status:** ✅ Completed — implemented `ScoringService` star rules for 1/2/3-star outcomes based on completion, time limit, and par taps; implemented `ProgressService` persistence for best stars per level with upward-only updates; and updated `ResultScreen` to calculate/display awarded stars and persisted best stars on level completion. Added unit tests covering star thresholds and best-star persistence behavior.
+
 ---
 
 ## STORY-021 — Add Result Screen
