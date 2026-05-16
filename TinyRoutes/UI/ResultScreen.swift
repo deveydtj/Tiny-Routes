@@ -53,6 +53,17 @@ struct ResultScreen: View {
         }
     }
 
+    private var starsRefreshKey: String {
+        let resultKey: String
+        switch result {
+        case .completed:
+            resultKey = "completed"
+        case .failed:
+            resultKey = "failed"
+        }
+        return "\(levelID)|\(resultKey)|\(elapsedTime)|\(tapCount)"
+    }
+
     var body: some View {
         VStack(spacing: 12) {
             Text(titleText)
@@ -80,7 +91,7 @@ struct ResultScreen: View {
             Button("Restart", action: onRestartTapped)
             Button("Back to Menu", action: onExitTapped)
         }
-        .task {
+        .task(id: starsRefreshKey) {
             updateStars()
         }
     }

@@ -14,7 +14,7 @@ final class ProgressService {
     }
 
     func bestStars(for levelID: String) -> Int {
-        max(0, bestStarsByLevelID()[levelID] ?? 0)
+        min(max(bestStarsByLevelID()[levelID] ?? 0, 0), 3)
     }
 
     @discardableResult

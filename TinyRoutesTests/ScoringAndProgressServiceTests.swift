@@ -44,7 +44,7 @@ final class ScoringAndProgressServiceTests: XCTestCase {
         XCTAssertEqual(stars, 2)
     }
 
-    func testScoringAwardsThreeStarsWhenUnderTimeAndUnderParTaps() {
+    func testScoringAwardsThreeStarsWhenUnderTimeAndAtOrUnderParTaps() {
         let service = ScoringService()
 
         let score = service.score(
@@ -78,5 +78,15 @@ final class ScoringAndProgressServiceTests: XCTestCase {
 
         let reloadedService = ProgressService(userDefaults: defaults)
         XCTAssertEqual(reloadedService.bestStars(for: levelID), 3)
+    }
+
+    func testProgressServiceBestStarsReadIsClampedToThreeForCorruptValues() {
+        let suiteName = "ScoringAndProgressServiceTests.\(#function)"
+        let defaults = UserDefaults(suiteName: suiteName)!
+        defaults.removePersistentDomain(forName: suiteName)
+        defaults.set(["level_001": 9], forKey: "bestStarsByLevelID")
+
+        let service = ProgressService(userDefaults: defaults)
+        XCTAssertEqual(service.bestStars(for: "level_001"), 3)
     }
 }
