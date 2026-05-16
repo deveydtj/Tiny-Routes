@@ -278,6 +278,17 @@ final class LevelRepositoryTests: XCTestCase {
         XCTAssertEqual(level.parTaps, 6)
     }
 
+    func testLoadLevelViaRepositorySucceedsWhenLevelFileIsAtBundleRoot() throws {
+        let data = try XCTUnwrap(validLevelJSON.data(using: .utf8))
+        let repo = LevelRepository(
+            urlResolver: { _ in URL(string: "fake://level_001.json") },
+            dataLoader: { _ in data }
+        )
+
+        let level = try repo.loadLevel(id: "level_001")
+        XCTAssertEqual(level.id, "level_001")
+    }
+
     // MARK: - LevelRepository: .fileNotFound error
 
     func testLoadLevelReturnsFileNotFoundForUnknownID() {
@@ -455,6 +466,9 @@ final class LevelRepositoryTests: XCTestCase {
         let bundles = [Bundle(for: LevelRepositoryTests.self), Bundle.main]
         for bundle in bundles {
             if let levelURL = bundle.url(forResource: "level_001", withExtension: "json", subdirectory: "Levels") {
+                return (bundle, levelURL)
+            }
+            if let levelURL = bundle.url(forResource: "level_001", withExtension: "json") {
                 return (bundle, levelURL)
             }
         }
