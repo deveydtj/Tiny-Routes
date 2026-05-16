@@ -634,6 +634,10 @@ Let the delivery dot collect the package when it reaches the package node.
 
 ---
 
+**Status:** ✅ Completed — added one-time package pickup state in `RouteEngine` by tracking the level package node and marking `DeliveryDot.hasCollectedPackage` when the dot reaches that node (including start-on-package levels). Updated `GameplayScreen` rendering so the package node visual changes after pickup. Expanded `RouteEngineTests` with focused coverage for package pickup on arrival, persistence on revisits, and start-node package collection.
+
+---
+
 ## STORY-015 — Add Destination Completion State
 
 **Goal:**  

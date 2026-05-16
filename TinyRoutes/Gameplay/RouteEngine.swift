@@ -25,6 +25,7 @@ enum RouteEngineError: Error, LocalizedError {
 final class RouteEngine {
     private let dotSpeed: Double
     private let nodeSwitchController = NodeSwitchController()
+    private var packageNodeID: String?
 
     /// Indicates whether the most recent `updateDot(deltaTime:)` call halted at a dead end.
     private(set) var didHaltAtDeadEnd = false
@@ -48,6 +49,7 @@ final class RouteEngine {
     func buildGraph(from levelData: LevelData) throws {
         runtimeGraph = nil
         deliveryDot = nil
+        packageNodeID = nil
 
         let graph = levelData.graph
         let nodeIDs = Set(graph.nodes.map(\.id))
@@ -92,7 +94,9 @@ final class RouteEngine {
         }
 
         let runtimeGraph = RuntimeRouteGraph(nodesByID: nodesByID, edgesByID: edgesByID)
-        let deliveryDot = DeliveryDot(currentNodeID: levelData.startNodeID)
+        var deliveryDot = DeliveryDot(currentNodeID: levelData.startNodeID)
+        packageNodeID = levelData.packageNodeID
+        collectPackageIfNeeded(dot: &deliveryDot)
 
         self.runtimeGraph = runtimeGraph
         self.deliveryDot = deliveryDot
@@ -210,6 +214,16 @@ final class RouteEngine {
         dot.currentNodeID = nodeID
         dot.currentEdgeID = nil
         dot.progressAlongEdge = 0
+        collectPackageIfNeeded(dot: &dot)
+    }
+
+    private func collectPackageIfNeeded(dot: inout DeliveryDot) {
+        guard let packageNodeID,
+              !dot.hasCollectedPackage,
+              dot.currentNodeID == packageNodeID else {
+            return
+        }
+        dot.hasCollectedPackage = true
     }
 
     private func isDeadEnd(nodeID: String, in runtimeGraph: RuntimeRouteGraph) -> Bool {
