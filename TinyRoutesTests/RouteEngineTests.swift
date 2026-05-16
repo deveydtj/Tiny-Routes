@@ -221,7 +221,8 @@ final class RouteEngineTests: XCTestCase {
         let nodes = [
             RouteNode(id: "start", x: 0, y: 0, outgoingEdgeIDs: ["to_mid"]),
             RouteNode(id: "mid", x: 1, y: 0, outgoingEdgeIDs: ["to_dead"]),
-            RouteNode(id: "dead", x: 2, y: 0, outgoingEdgeIDs: [])
+            RouteNode(id: "dead", x: 2, y: 0, outgoingEdgeIDs: []),
+            RouteNode(id: "goal", x: 3, y: 0, outgoingEdgeIDs: [])
         ]
         let edges = [
             RouteEdge(id: "to_mid", fromNodeID: "start", toNodeID: "mid"),
@@ -233,7 +234,7 @@ final class RouteEngineTests: XCTestCase {
             graph: RouteGraph(nodes: nodes, edges: edges),
             startNodeID: "start",
             packageNodeID: "mid",
-            destinationNodeID: "dead",
+            destinationNodeID: "goal",
             timeLimitSeconds: 10,
             parTaps: 1
         )
@@ -333,6 +334,70 @@ final class RouteEngineTests: XCTestCase {
         XCTAssertEqual(dot.currentNodeID, "destination")
         XCTAssertNil(dot.currentEdgeID)
         XCTAssertEqual(engine.levelOutcome, .completed)
+    }
+
+    func testRestartLevelResetsDotPackageAndMovementState() throws {
+        let engine = RouteEngine(dotSpeed: 1)
+        try engine.buildGraph(from: makeLevelData())
+        XCTAssertTrue(engine.startDotMovement())
+
+        engine.updateDot(deltaTime: 3)
+
+        let movedDot = try XCTUnwrap(engine.deliveryDot)
+        XCTAssertEqual(movedDot.currentNodeID, "package")
+        XCTAssertEqual(movedDot.currentEdgeID, "e_package_return")
+        XCTAssertTrue(movedDot.hasCollectedPackage)
+
+        XCTAssertTrue(engine.restartLevel())
+
+        let resetDot = try XCTUnwrap(engine.deliveryDot)
+        XCTAssertEqual(resetDot.currentNodeID, "start")
+        XCTAssertEqual(resetDot.currentEdgeID, "e_start_switch")
+        XCTAssertEqual(resetDot.progressAlongEdge, 0)
+        XCTAssertFalse(resetDot.hasCollectedPackage)
+        XCTAssertNil(engine.levelOutcome)
+        XCTAssertFalse(engine.didHaltAtDeadEnd)
+    }
+
+    func testRestartLevelResetsSwitchDirectionsToDefault() throws {
+        let engine = RouteEngine()
+        try engine.buildGraph(from: makeLevelData())
+
+        XCTAssertTrue(engine.rotateSwitchNode(nodeID: "switch"))
+        XCTAssertTrue(engine.rotateSwitchNode(nodeID: "switch"))
+
+        let rotatedGraph = try XCTUnwrap(engine.runtimeGraph)
+        XCTAssertEqual(rotatedGraph.nodesByID["switch"]?.activeOutgoingEdgeID, "e_switch_destination")
+
+        XCTAssertTrue(engine.restartLevel())
+
+        let resetGraph = try XCTUnwrap(engine.runtimeGraph)
+        XCTAssertEqual(resetGraph.nodesByID["switch"]?.activeOutgoingEdgeID, "e_switch_package")
+    }
+
+    func testRestartLevelClearsFailureOutcome() throws {
+        let engine = RouteEngine(dotSpeed: 1)
+        try engine.buildGraph(from: makeLevelData())
+        XCTAssertTrue(engine.startDotMovement())
+        XCTAssertTrue(engine.rotateSwitchNode(nodeID: "switch"))
+        XCTAssertTrue(engine.rotateSwitchNode(nodeID: "switch"))
+
+        engine.updateDot(deltaTime: 3)
+
+        XCTAssertEqual(engine.levelOutcome, .failed(reason: .reachedDestinationWithoutPackage))
+
+        XCTAssertTrue(engine.restartLevel())
+
+        XCTAssertNil(engine.levelOutcome)
+        let dot = try XCTUnwrap(engine.deliveryDot)
+        XCTAssertEqual(dot.currentNodeID, "start")
+        XCTAssertEqual(dot.currentEdgeID, "e_start_switch")
+    }
+
+    func testRestartLevelReturnsFalseBeforeAnyLevelIsLoaded() {
+        let engine = RouteEngine()
+
+        XCTAssertFalse(engine.restartLevel())
     }
 
     func testBuildGraphNodeAndEdgeCountsMatchLevelData() throws {

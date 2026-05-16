@@ -14,6 +14,8 @@ struct ShopScreen: View {
     }
 }
 
-#Preview {
-    ShopScreen(onBackTapped: {})
+struct ShopScreen_Previews: PreviewProvider {
+    static var previews: some View {
+        ShopScreen(onBackTapped: {})
+    }
 }

@@ -74,6 +74,7 @@ struct GameplayScreen: View {
             .padding(.vertical, 8)
 
             VStack(spacing: 10) {
+                Button("Restart", action: restartLevel)
                 Button(isPaused ? "Resume" : "Pause", action: onPauseResumeTapped)
                 Button("Exit to Menu", action: onExitTapped)
             }
@@ -92,15 +93,13 @@ struct GameplayScreen: View {
     }
 
     private func loadBoard() {
+        resetViewState()
+
         loadErrorMessage = nil
         runtimeGraph = nil
         deliveryDot = nil
         packageNodeID = ""
         destinationNodeID = ""
-        hasCollectedPackage = false
-        lastFrameDate = nil
-        tapCount = 0
-        hasDispatchedOutcome = false
 
         do {
             let levelData = try levelRepository.loadLevel(id: levelID)
@@ -120,6 +119,21 @@ struct GameplayScreen: View {
         } catch {
             loadErrorMessage = error.localizedDescription
         }
+    }
+
+    private func restartLevel() {
+        resetViewState()
+        loadErrorMessage = nil
+
+        guard routeEngine.restartLevel() else {
+            loadBoard()
+            return
+        }
+
+        runtimeGraph = routeEngine.runtimeGraph
+        deliveryDot = routeEngine.deliveryDot
+        hasCollectedPackage = routeEngine.deliveryDot?.hasCollectedPackage ?? false
+        dispatchLevelOutcomeIfNeeded()
     }
 
     private func advanceDot(at frameDate: Date) {
@@ -169,6 +183,13 @@ struct GameplayScreen: View {
         case let .failed(reason):
             onFailTapped(reason)
         }
+    }
+
+    private func resetViewState() {
+        hasCollectedPackage = false
+        lastFrameDate = nil
+        tapCount = 0
+        hasDispatchedOutcome = false
     }
 }
 

@@ -47,6 +47,7 @@ enum LevelFailureReason: Equatable {
 final class RouteEngine {
     private let dotSpeed: Double
     private let nodeSwitchController = NodeSwitchController()
+    private var loadedLevelData: LevelData?
     private var packageNodeID: String?
     private var destinationNodeID: String?
     private var timeRemaining: TimeInterval?
@@ -73,6 +74,7 @@ final class RouteEngine {
     /// - Parameter levelData: The decoded level to build the graph from.
     /// - Throws: `RouteEngineError` if the graph data is invalid.
     func buildGraph(from levelData: LevelData) throws {
+        loadedLevelData = levelData
         runtimeGraph = nil
         deliveryDot = nil
         packageNodeID = nil
@@ -133,6 +135,24 @@ final class RouteEngine {
 
         self.runtimeGraph = runtimeGraph
         self.deliveryDot = deliveryDot
+    }
+
+    /// Rebuilds the last loaded level so the current run restarts from a clean state.
+    ///
+    /// - Returns: `true` when a previously loaded level was restored; `false` when no level is loaded.
+    @discardableResult
+    func restartLevel() -> Bool {
+        guard let loadedLevelData else {
+            return false
+        }
+
+        do {
+            try buildGraph(from: loadedLevelData)
+            return startDotMovement()
+        } catch {
+            assertionFailure("RouteEngine failed to restart previously loaded level: \(error)")
+            return false
+        }
     }
 
     /// Starts the delivery dot moving along the active edge for its current node, if one exists.
