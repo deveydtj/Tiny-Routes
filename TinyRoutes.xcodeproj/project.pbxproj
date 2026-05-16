@@ -10,6 +10,13 @@
 		060F8145B917BE3159712357 /* SwitchNodeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1B022B419A6C15C4612BCB4 /* SwitchNodeView.swift */; };
 		108AF7A8B6011001D9ABAC37 /* PurchaseAdapter.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE27E3BC383758466A258AC9 /* PurchaseAdapter.swift */; };
 		1F039950763EE9F4AFCEA19D /* AnalyticsAdapter.swift in Sources */ = {isa = PBXBuildFile; fileRef = BBF9A119C53A9804C693368D /* AnalyticsAdapter.swift */; };
+		21A4E100AA00000000000001 /* blue_orb.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 21A4E100AA00000000000011 /* blue_orb.jpg */; };
+		21A4E100AA00000000000002 /* locked_pin.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 21A4E100AA00000000000012 /* locked_pin.jpg */; };
+		21A4E100AA00000000000003 /* finish_flag_pin.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 21A4E100AA00000000000013 /* finish_flag_pin.jpg */; };
+		21A4E100AA00000000000004 /* glow_ring.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 21A4E100AA00000000000014 /* glow_ring.jpg */; };
+		21A4E100AA00000000000005 /* gold_coin.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 21A4E100AA00000000000015 /* gold_coin.jpg */; };
+		21A4E100AA00000000000006 /* right_arrow.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 21A4E100AA00000000000016 /* right_arrow.jpg */; };
+		21A4E100AA00000000000007 /* shipping_box.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 21A4E100AA00000000000017 /* shipping_box.jpg */; };
 		2642190DBD1F2E50EAEEA4FE /* GameTimeFormatter.swift in Sources */ = {isa = PBXBuildFile; fileRef = DAE6F8D4B8727D20DEC3BCB7 /* GameTimeFormatter.swift */; };
 		26CA64E5162D5D762A4548BE /* GameplayScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = B18B1BD2DCEA7552CE9DBD3B /* GameplayScreen.swift */; };
 		2A16A2EB2945E072AF6FA52C /* RouteNode.swift in Sources */ = {isa = PBXBuildFile; fileRef = 86D5601913C689EB5ED4A957 /* RouteNode.swift */; };
@@ -68,6 +75,13 @@
 		1DB2727B71275C07A269FAF1 /* CosmeticService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CosmeticService.swift; sourceTree = "<group>"; };
 		1ED10221512DC80E25D258A7 /* HomeScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeScreen.swift; sourceTree = "<group>"; };
 		1F9B94553540F5DEADB9944D /* RuntimeRouteGraph.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RuntimeRouteGraph.swift; sourceTree = "<group>"; };
+		21A4E100AA00000000000011 /* blue_orb.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = blue_orb.jpg; sourceTree = "<group>"; };
+		21A4E100AA00000000000012 /* locked_pin.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = locked_pin.jpg; sourceTree = "<group>"; };
+		21A4E100AA00000000000013 /* finish_flag_pin.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = finish_flag_pin.jpg; sourceTree = "<group>"; };
+		21A4E100AA00000000000014 /* glow_ring.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = glow_ring.jpg; sourceTree = "<group>"; };
+		21A4E100AA00000000000015 /* gold_coin.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = gold_coin.jpg; sourceTree = "<group>"; };
+		21A4E100AA00000000000016 /* right_arrow.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = right_arrow.jpg; sourceTree = "<group>"; };
+		21A4E100AA00000000000017 /* shipping_box.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = shipping_box.jpg; sourceTree = "<group>"; };
 		2F7EAE0B5F7024B5C002D119 /* TinyRoutes.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = TinyRoutes.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		32AA35B2BC4F9E45955D0ED1 /* StreakService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StreakService.swift; sourceTree = "<group>"; };
 		43431F22833C9470B99D4FF5 /* RouteEdge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RouteEdge.swift; sourceTree = "<group>"; };
@@ -133,6 +147,20 @@
 				C1B022B419A6C15C4612BCB4 /* SwitchNodeView.swift */,
 			);
 			path = UI;
+			sourceTree = "<group>";
+		};
+		21A4E100AA00000000000010 /* Sprites */ = {
+			isa = PBXGroup;
+			children = (
+				21A4E100AA00000000000011 /* blue_orb.jpg */,
+				21A4E100AA00000000000013 /* finish_flag_pin.jpg */,
+				21A4E100AA00000000000014 /* glow_ring.jpg */,
+				21A4E100AA00000000000015 /* gold_coin.jpg */,
+				21A4E100AA00000000000012 /* locked_pin.jpg */,
+				21A4E100AA00000000000016 /* right_arrow.jpg */,
+				21A4E100AA00000000000017 /* shipping_box.jpg */,
+			);
+			path = Sprites;
 			sourceTree = "<group>";
 		};
 		2CC069E53C0E83CF5BBD8DC4 /* Levels */ = {
@@ -207,6 +235,7 @@
 			isa = PBXGroup;
 			children = (
 				2CC069E53C0E83CF5BBD8DC4 /* Levels */,
+				21A4E100AA00000000000010 /* Sprites */,
 			);
 			path = Resources;
 			sourceTree = "<group>";
@@ -323,6 +352,13 @@
 			buildActionMask = 2147483647;
 			files = (
 				2A453CAD492368B04874AF3C /* level_001.json in Resources */,
+				21A4E100AA00000000000001 /* blue_orb.jpg in Resources */,
+				21A4E100AA00000000000003 /* finish_flag_pin.jpg in Resources */,
+				21A4E100AA00000000000004 /* glow_ring.jpg in Resources */,
+				21A4E100AA00000000000005 /* gold_coin.jpg in Resources */,
+				21A4E100AA00000000000002 /* locked_pin.jpg in Resources */,
+				21A4E100AA00000000000006 /* right_arrow.jpg in Resources */,
+				21A4E100AA00000000000007 /* shipping_box.jpg in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
