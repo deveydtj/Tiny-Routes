@@ -1,0 +1,625 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		060F8145B917BE3159712357 /* SwitchNodeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1B022B419A6C15C4612BCB4 /* SwitchNodeView.swift */; };
+		108AF7A8B6011001D9ABAC37 /* PurchaseAdapter.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE27E3BC383758466A258AC9 /* PurchaseAdapter.swift */; };
+		1F039950763EE9F4AFCEA19D /* AnalyticsAdapter.swift in Sources */ = {isa = PBXBuildFile; fileRef = BBF9A119C53A9804C693368D /* AnalyticsAdapter.swift */; };
+		26CA64E5162D5D762A4548BE /* GameplayScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = B18B1BD2DCEA7552CE9DBD3B /* GameplayScreen.swift */; };
+		2A16A2EB2945E072AF6FA52C /* RouteNode.swift in Sources */ = {isa = PBXBuildFile; fileRef = 86D5601913C689EB5ED4A957 /* RouteNode.swift */; };
+		2A453CAD492368B04874AF3C /* level_001.json in Resources */ = {isa = PBXBuildFile; fileRef = C110C9DEB2E44438FDB43C40 /* level_001.json */; };
+		2B2668ED0E64C49FD1A8008E /* AppState.swift in Sources */ = {isa = PBXBuildFile; fileRef = DB9C673DAD937B5A68706543 /* AppState.swift */; };
+		2BF99CA96CE5149BFEB26032 /* DotMovementController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43AEFC681671D4E071796810 /* DotMovementController.swift */; };
+		36E6C713306E7C41176B1393 /* ScoreResult.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3254B656FA1479A1C6CEB71 /* ScoreResult.swift */; };
+		3BA316346FA55C1EDDC6BA18 /* RouteEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1AFDFE57C38D02CBE7CAADA9 /* RouteEngine.swift */; };
+		3C735FA8625D783DA8BCC502 /* ResultScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C13BB2799AF7B8830705334 /* ResultScreen.swift */; };
+		3DDE58B9701BB050797CCF70 /* LevelRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5F08C3B9313317816DDFEDFD /* LevelRepository.swift */; };
+		3DF4863A4394B12A62D582F5 /* RuntimeRouteGraph.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F9B94553540F5DEADB9944D /* RuntimeRouteGraph.swift */; };
+		423990494EE386383B1F0602 /* DailyChallengeService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 727162B35BDBBDC6E65E677A /* DailyChallengeService.swift */; };
+		4986A68A1EF3C9798A30FF7A /* LevelData.swift in Sources */ = {isa = PBXBuildFile; fileRef = 07D7502FABFF22F936EA1666 /* LevelData.swift */; };
+		647FC0BF1CD92C14876B9E8D /* RouteGraph.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B6634FCA043D2B99D10F4BD /* RouteGraph.swift */; };
+		6EEFAA30620655D48C5F5EB3 /* RouteEngineTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8120FF4D4CC3F24DCE4CE9BB /* RouteEngineTests.swift */; };
+		73DD329B0E0BB4DBE3ED65AC /* AppCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1B76465F9BAB72AFFB92646 /* AppCoordinator.swift */; };
+		7A3B1263E583C1668B781B0C /* LevelRepositoryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B064034548F2A810BA3D12F6 /* LevelRepositoryTests.swift */; };
+		842BA947043C5ECCC143CB3E /* AdsAdapter.swift in Sources */ = {isa = PBXBuildFile; fileRef = B062DC62792DD750D631C000 /* AdsAdapter.swift */; };
+		84F3A1A4C912645C82AEDD2A /* LevelRuntimeState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 499A3741695801E77DD300A2 /* LevelRuntimeState.swift */; };
+		91CDAB6734C4F7252D08DEEC /* DomainModelsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D66F47942EBD89088355D80 /* DomainModelsTests.swift */; };
+		9A21AAC34BFA67BB81A01890 /* StreakService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 32AA35B2BC4F9E45955D0ED1 /* StreakService.swift */; };
+		A0E778D7B18192EDCE0ECDB7 /* NodeSwitchController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C944525464AD16A3C4C0A32B /* NodeSwitchController.swift */; };
+		A657B28188ABC7873A7C6B80 /* PlayerProfile.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE2D44D3B9CB219F2E76480E /* PlayerProfile.swift */; };
+		A96831092F654FB2C2E29F01 /* CollisionResolver.swift in Sources */ = {isa = PBXBuildFile; fileRef = BC6EE6C24F31FD317FA05E82 /* CollisionResolver.swift */; };
+		B04EF4A680C930534A0A7924 /* TinyRoutesApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A994D21F5163CDF8D5285EA /* TinyRoutesApp.swift */; };
+		BD0DF0D327100566238E104F /* SaveDataRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = 99BBFAA66BFB910BC1BEA096 /* SaveDataRepository.swift */; };
+		CB682E3A5073FD1E5B1A7D8E /* LevelSelectScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8423A86EB968231672776BCD /* LevelSelectScreen.swift */; };
+		D19F06BA0A4E8F26B21F0F78 /* ShopScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E972F20245469B0B50038E0 /* ShopScreen.swift */; };
+		D40FBDD53E591D4E730D22C8 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E540C87602DF9F761DD5828A /* ContentView.swift */; };
+		E02E4D1539CAE293E688B75D /* CosmeticService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1DB2727B71275C07A269FAF1 /* CosmeticService.swift */; };
+		E3B215FACED8A64655F0D52C /* SettingsScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1CC7D005BB054CA1F6F163C2 /* SettingsScreen.swift */; };
+		E7E9E38DC9513394E5F9B680 /* HomeScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1ED10221512DC80E25D258A7 /* HomeScreen.swift */; };
+		E8B9C8A25B0A06738009CDB2 /* ScoringService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6154D6AD36449F8760CCAEFF /* ScoringService.swift */; };
+		EDD8334841BEE446825FE614 /* RouteEdge.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43431F22833C9470B99D4FF5 /* RouteEdge.swift */; };
+		F5DA1B86E6BE1D9BDC8DD91D /* EconomyService.swift in Sources */ = {isa = PBXBuildFile; fileRef = DBDF4ED66B8042607FFD6F27 /* EconomyService.swift */; };
+		F9316D9A30EA4723E4CB5BAA /* CosmeticItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 465CFC8159B3613A970FE259 /* CosmeticItem.swift */; };
+		FE7495D0C01D185ABDF96AB5 /* ProgressService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3A2EB059F1ED8B1990CD973 /* ProgressService.swift */; };
+		FF04D88C3A93FB2A97C1A8A6 /* DeliveryDot.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6352EEEB57FB978CCB578FA1 /* DeliveryDot.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		1183046ECE751005D3D2CF2C /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 90306C95B3D34249174E5958 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 3AB7EBA4AB7185EE8AB2F958;
+			remoteInfo = TinyRoutes;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXFileReference section */
+		07D7502FABFF22F936EA1666 /* LevelData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LevelData.swift; sourceTree = "<group>"; };
+		0B6634FCA043D2B99D10F4BD /* RouteGraph.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RouteGraph.swift; sourceTree = "<group>"; };
+		1AFDFE57C38D02CBE7CAADA9 /* RouteEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RouteEngine.swift; sourceTree = "<group>"; };
+		1CC7D005BB054CA1F6F163C2 /* SettingsScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsScreen.swift; sourceTree = "<group>"; };
+		1DB2727B71275C07A269FAF1 /* CosmeticService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CosmeticService.swift; sourceTree = "<group>"; };
+		1ED10221512DC80E25D258A7 /* HomeScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeScreen.swift; sourceTree = "<group>"; };
+		1F9B94553540F5DEADB9944D /* RuntimeRouteGraph.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RuntimeRouteGraph.swift; sourceTree = "<group>"; };
+		2F7EAE0B5F7024B5C002D119 /* TinyRoutes.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = TinyRoutes.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		32AA35B2BC4F9E45955D0ED1 /* StreakService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StreakService.swift; sourceTree = "<group>"; };
+		43431F22833C9470B99D4FF5 /* RouteEdge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RouteEdge.swift; sourceTree = "<group>"; };
+		43AEFC681671D4E071796810 /* DotMovementController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DotMovementController.swift; sourceTree = "<group>"; };
+		465CFC8159B3613A970FE259 /* CosmeticItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CosmeticItem.swift; sourceTree = "<group>"; };
+		499A3741695801E77DD300A2 /* LevelRuntimeState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LevelRuntimeState.swift; sourceTree = "<group>"; };
+		4C13BB2799AF7B8830705334 /* ResultScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResultScreen.swift; sourceTree = "<group>"; };
+		5E972F20245469B0B50038E0 /* ShopScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShopScreen.swift; sourceTree = "<group>"; };
+		5F08C3B9313317816DDFEDFD /* LevelRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LevelRepository.swift; sourceTree = "<group>"; };
+		6154D6AD36449F8760CCAEFF /* ScoringService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScoringService.swift; sourceTree = "<group>"; };
+		6352EEEB57FB978CCB578FA1 /* DeliveryDot.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeliveryDot.swift; sourceTree = "<group>"; };
+		6407AEC46DFBDB62CFAB65F2 /* TinyRoutesTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = TinyRoutesTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		727162B35BDBBDC6E65E677A /* DailyChallengeService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DailyChallengeService.swift; sourceTree = "<group>"; };
+		8120FF4D4CC3F24DCE4CE9BB /* RouteEngineTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RouteEngineTests.swift; sourceTree = "<group>"; };
+		8423A86EB968231672776BCD /* LevelSelectScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LevelSelectScreen.swift; sourceTree = "<group>"; };
+		86D5601913C689EB5ED4A957 /* RouteNode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RouteNode.swift; sourceTree = "<group>"; };
+		8D66F47942EBD89088355D80 /* DomainModelsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DomainModelsTests.swift; sourceTree = "<group>"; };
+		99BBFAA66BFB910BC1BEA096 /* SaveDataRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SaveDataRepository.swift; sourceTree = "<group>"; };
+		9A994D21F5163CDF8D5285EA /* TinyRoutesApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TinyRoutesApp.swift; sourceTree = "<group>"; };
+		A3A2EB059F1ED8B1990CD973 /* ProgressService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProgressService.swift; sourceTree = "<group>"; };
+		B062DC62792DD750D631C000 /* AdsAdapter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AdsAdapter.swift; sourceTree = "<group>"; };
+		B064034548F2A810BA3D12F6 /* LevelRepositoryTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LevelRepositoryTests.swift; sourceTree = "<group>"; };
+		B18B1BD2DCEA7552CE9DBD3B /* GameplayScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameplayScreen.swift; sourceTree = "<group>"; };
+		BBF9A119C53A9804C693368D /* AnalyticsAdapter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnalyticsAdapter.swift; sourceTree = "<group>"; };
+		BC6EE6C24F31FD317FA05E82 /* CollisionResolver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CollisionResolver.swift; sourceTree = "<group>"; };
+		C110C9DEB2E44438FDB43C40 /* level_001.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = level_001.json; sourceTree = "<group>"; };
+		C1B022B419A6C15C4612BCB4 /* SwitchNodeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwitchNodeView.swift; sourceTree = "<group>"; };
+		C944525464AD16A3C4C0A32B /* NodeSwitchController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NodeSwitchController.swift; sourceTree = "<group>"; };
+		CE27E3BC383758466A258AC9 /* PurchaseAdapter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PurchaseAdapter.swift; sourceTree = "<group>"; };
+		DB9C673DAD937B5A68706543 /* AppState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppState.swift; sourceTree = "<group>"; };
+		DBDF4ED66B8042607FFD6F27 /* EconomyService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EconomyService.swift; sourceTree = "<group>"; };
+		E540C87602DF9F761DD5828A /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		F1B76465F9BAB72AFFB92646 /* AppCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppCoordinator.swift; sourceTree = "<group>"; };
+		F3254B656FA1479A1C6CEB71 /* ScoreResult.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScoreResult.swift; sourceTree = "<group>"; };
+		FE2D44D3B9CB219F2E76480E /* PlayerProfile.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlayerProfile.swift; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXGroup section */
+		07A3941DC73DEAB6730137A8 /* Services */ = {
+			isa = PBXGroup;
+			children = (
+				1DB2727B71275C07A269FAF1 /* CosmeticService.swift */,
+				727162B35BDBBDC6E65E677A /* DailyChallengeService.swift */,
+				DBDF4ED66B8042607FFD6F27 /* EconomyService.swift */,
+				A3A2EB059F1ED8B1990CD973 /* ProgressService.swift */,
+				6154D6AD36449F8760CCAEFF /* ScoringService.swift */,
+				32AA35B2BC4F9E45955D0ED1 /* StreakService.swift */,
+			);
+			path = Services;
+			sourceTree = "<group>";
+		};
+		0E1B5A63A4B2A7B83792B5CD /* UI */ = {
+			isa = PBXGroup;
+			children = (
+				B18B1BD2DCEA7552CE9DBD3B /* GameplayScreen.swift */,
+				1ED10221512DC80E25D258A7 /* HomeScreen.swift */,
+				8423A86EB968231672776BCD /* LevelSelectScreen.swift */,
+				4C13BB2799AF7B8830705334 /* ResultScreen.swift */,
+				1CC7D005BB054CA1F6F163C2 /* SettingsScreen.swift */,
+				5E972F20245469B0B50038E0 /* ShopScreen.swift */,
+				C1B022B419A6C15C4612BCB4 /* SwitchNodeView.swift */,
+			);
+			path = UI;
+			sourceTree = "<group>";
+		};
+		2CC069E53C0E83CF5BBD8DC4 /* Levels */ = {
+			isa = PBXGroup;
+			children = (
+				C110C9DEB2E44438FDB43C40 /* level_001.json */,
+			);
+			path = Levels;
+			sourceTree = "<group>";
+		};
+		421E5DBEDE5CDA40AD6B9020 = {
+			isa = PBXGroup;
+			children = (
+				DDAB1B75177EC03C4611D703 /* TinyRoutes */,
+				FD72FE323C983F23509CF1E3 /* TinyRoutesTests */,
+				DC78189A8DFAD0F3F397FE63 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		4F28B0AC8384F4F107339861 /* App */ = {
+			isa = PBXGroup;
+			children = (
+				F1B76465F9BAB72AFFB92646 /* AppCoordinator.swift */,
+				DB9C673DAD937B5A68706543 /* AppState.swift */,
+				E540C87602DF9F761DD5828A /* ContentView.swift */,
+				9A994D21F5163CDF8D5285EA /* TinyRoutesApp.swift */,
+			);
+			path = App;
+			sourceTree = "<group>";
+		};
+		5CE6E088551D24921A22411F /* Gameplay */ = {
+			isa = PBXGroup;
+			children = (
+				BC6EE6C24F31FD317FA05E82 /* CollisionResolver.swift */,
+				6352EEEB57FB978CCB578FA1 /* DeliveryDot.swift */,
+				43AEFC681671D4E071796810 /* DotMovementController.swift */,
+				499A3741695801E77DD300A2 /* LevelRuntimeState.swift */,
+				C944525464AD16A3C4C0A32B /* NodeSwitchController.swift */,
+				1AFDFE57C38D02CBE7CAADA9 /* RouteEngine.swift */,
+				1F9B94553540F5DEADB9944D /* RuntimeRouteGraph.swift */,
+			);
+			path = Gameplay;
+			sourceTree = "<group>";
+		};
+		61D5DBF701606C0B5D465ADD /* Infrastructure */ = {
+			isa = PBXGroup;
+			children = (
+				B062DC62792DD750D631C000 /* AdsAdapter.swift */,
+				BBF9A119C53A9804C693368D /* AnalyticsAdapter.swift */,
+				5F08C3B9313317816DDFEDFD /* LevelRepository.swift */,
+				CE27E3BC383758466A258AC9 /* PurchaseAdapter.swift */,
+				99BBFAA66BFB910BC1BEA096 /* SaveDataRepository.swift */,
+			);
+			path = Infrastructure;
+			sourceTree = "<group>";
+		};
+		9802601F67C746778A1B945E /* Domain */ = {
+			isa = PBXGroup;
+			children = (
+				465CFC8159B3613A970FE259 /* CosmeticItem.swift */,
+				07D7502FABFF22F936EA1666 /* LevelData.swift */,
+				FE2D44D3B9CB219F2E76480E /* PlayerProfile.swift */,
+				43431F22833C9470B99D4FF5 /* RouteEdge.swift */,
+				0B6634FCA043D2B99D10F4BD /* RouteGraph.swift */,
+				86D5601913C689EB5ED4A957 /* RouteNode.swift */,
+				F3254B656FA1479A1C6CEB71 /* ScoreResult.swift */,
+			);
+			path = Domain;
+			sourceTree = "<group>";
+		};
+		D88E4DA4A34101D0CED29C93 /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				2CC069E53C0E83CF5BBD8DC4 /* Levels */,
+			);
+			path = Resources;
+			sourceTree = "<group>";
+		};
+		DC78189A8DFAD0F3F397FE63 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				2F7EAE0B5F7024B5C002D119 /* TinyRoutes.app */,
+				6407AEC46DFBDB62CFAB65F2 /* TinyRoutesTests.xctest */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		DDAB1B75177EC03C4611D703 /* TinyRoutes */ = {
+			isa = PBXGroup;
+			children = (
+				4F28B0AC8384F4F107339861 /* App */,
+				9802601F67C746778A1B945E /* Domain */,
+				5CE6E088551D24921A22411F /* Gameplay */,
+				61D5DBF701606C0B5D465ADD /* Infrastructure */,
+				D88E4DA4A34101D0CED29C93 /* Resources */,
+				07A3941DC73DEAB6730137A8 /* Services */,
+				0E1B5A63A4B2A7B83792B5CD /* UI */,
+			);
+			path = TinyRoutes;
+			sourceTree = "<group>";
+		};
+		FD72FE323C983F23509CF1E3 /* TinyRoutesTests */ = {
+			isa = PBXGroup;
+			children = (
+				8D66F47942EBD89088355D80 /* DomainModelsTests.swift */,
+				B064034548F2A810BA3D12F6 /* LevelRepositoryTests.swift */,
+				8120FF4D4CC3F24DCE4CE9BB /* RouteEngineTests.swift */,
+			);
+			path = TinyRoutesTests;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		3AB7EBA4AB7185EE8AB2F958 /* TinyRoutes */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = F300EE37C6D1F3CDBFBB00C1 /* Build configuration list for PBXNativeTarget "TinyRoutes" */;
+			buildPhases = (
+				71924DFC7221CC4A88E2FE7E /* Sources */,
+				5D5A7EC98FBEB0DB940C02EB /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = TinyRoutes;
+			packageProductDependencies = (
+			);
+			productName = TinyRoutes;
+			productReference = 2F7EAE0B5F7024B5C002D119 /* TinyRoutes.app */;
+			productType = "com.apple.product-type.application";
+		};
+		EF3F16971E73659FCFAD6714 /* TinyRoutesTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 9C4E4A4DAEAB69173D241EFE /* Build configuration list for PBXNativeTarget "TinyRoutesTests" */;
+			buildPhases = (
+				D5D5DE6CC3486597D283512E /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				8615B69AED9B22EDB41B707B /* PBXTargetDependency */,
+			);
+			name = TinyRoutesTests;
+			packageProductDependencies = (
+			);
+			productName = TinyRoutesTests;
+			productReference = 6407AEC46DFBDB62CFAB65F2 /* TinyRoutesTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		90306C95B3D34249174E5958 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 1430;
+				TargetAttributes = {
+					3AB7EBA4AB7185EE8AB2F958 = {
+						ProvisioningStyle = Automatic;
+					};
+				};
+			};
+			buildConfigurationList = 892B6B7FF1DA221924302C94 /* Build configuration list for PBXProject "TinyRoutes" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				Base,
+				en,
+			);
+			mainGroup = 421E5DBEDE5CDA40AD6B9020;
+			minimizedProjectReferenceProxies = 1;
+			preferredProjectObjectVersion = 77;
+			productRefGroup = DC78189A8DFAD0F3F397FE63 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				3AB7EBA4AB7185EE8AB2F958 /* TinyRoutes */,
+				EF3F16971E73659FCFAD6714 /* TinyRoutesTests */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		5D5A7EC98FBEB0DB940C02EB /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				2A453CAD492368B04874AF3C /* level_001.json in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		71924DFC7221CC4A88E2FE7E /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				842BA947043C5ECCC143CB3E /* AdsAdapter.swift in Sources */,
+				1F039950763EE9F4AFCEA19D /* AnalyticsAdapter.swift in Sources */,
+				73DD329B0E0BB4DBE3ED65AC /* AppCoordinator.swift in Sources */,
+				2B2668ED0E64C49FD1A8008E /* AppState.swift in Sources */,
+				A96831092F654FB2C2E29F01 /* CollisionResolver.swift in Sources */,
+				D40FBDD53E591D4E730D22C8 /* ContentView.swift in Sources */,
+				F9316D9A30EA4723E4CB5BAA /* CosmeticItem.swift in Sources */,
+				E02E4D1539CAE293E688B75D /* CosmeticService.swift in Sources */,
+				423990494EE386383B1F0602 /* DailyChallengeService.swift in Sources */,
+				FF04D88C3A93FB2A97C1A8A6 /* DeliveryDot.swift in Sources */,
+				2BF99CA96CE5149BFEB26032 /* DotMovementController.swift in Sources */,
+				F5DA1B86E6BE1D9BDC8DD91D /* EconomyService.swift in Sources */,
+				26CA64E5162D5D762A4548BE /* GameplayScreen.swift in Sources */,
+				E7E9E38DC9513394E5F9B680 /* HomeScreen.swift in Sources */,
+				4986A68A1EF3C9798A30FF7A /* LevelData.swift in Sources */,
+				3DDE58B9701BB050797CCF70 /* LevelRepository.swift in Sources */,
+				84F3A1A4C912645C82AEDD2A /* LevelRuntimeState.swift in Sources */,
+				CB682E3A5073FD1E5B1A7D8E /* LevelSelectScreen.swift in Sources */,
+				A0E778D7B18192EDCE0ECDB7 /* NodeSwitchController.swift in Sources */,
+				A657B28188ABC7873A7C6B80 /* PlayerProfile.swift in Sources */,
+				FE7495D0C01D185ABDF96AB5 /* ProgressService.swift in Sources */,
+				108AF7A8B6011001D9ABAC37 /* PurchaseAdapter.swift in Sources */,
+				3C735FA8625D783DA8BCC502 /* ResultScreen.swift in Sources */,
+				EDD8334841BEE446825FE614 /* RouteEdge.swift in Sources */,
+				3BA316346FA55C1EDDC6BA18 /* RouteEngine.swift in Sources */,
+				647FC0BF1CD92C14876B9E8D /* RouteGraph.swift in Sources */,
+				2A16A2EB2945E072AF6FA52C /* RouteNode.swift in Sources */,
+				3DF4863A4394B12A62D582F5 /* RuntimeRouteGraph.swift in Sources */,
+				BD0DF0D327100566238E104F /* SaveDataRepository.swift in Sources */,
+				36E6C713306E7C41176B1393 /* ScoreResult.swift in Sources */,
+				E8B9C8A25B0A06738009CDB2 /* ScoringService.swift in Sources */,
+				E3B215FACED8A64655F0D52C /* SettingsScreen.swift in Sources */,
+				D19F06BA0A4E8F26B21F0F78 /* ShopScreen.swift in Sources */,
+				9A21AAC34BFA67BB81A01890 /* StreakService.swift in Sources */,
+				060F8145B917BE3159712357 /* SwitchNodeView.swift in Sources */,
+				B04EF4A680C930534A0A7924 /* TinyRoutesApp.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		D5D5DE6CC3486597D283512E /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				91CDAB6734C4F7252D08DEEC /* DomainModelsTests.swift in Sources */,
+				7A3B1263E583C1668B781B0C /* LevelRepositoryTests.swift in Sources */,
+				6EEFAA30620655D48C5F5EB3 /* RouteEngineTests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		8615B69AED9B22EDB41B707B /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 3AB7EBA4AB7185EE8AB2F958 /* TinyRoutes */;
+			targetProxy = 1183046ECE751005D3D2CF2C /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		407DF6837A71BD7AFD521BE3 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_ASSET_PATHS = "";
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = TinyRoutes/Resources/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.tinyroutes.app;
+				PRODUCT_NAME = TinyRoutes;
+				SDKROOT = iphoneos;
+				SUPPORTS_MACCATALYST = NO;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Release;
+		};
+		42356EE2D6959C339865F432 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					"DEBUG=1",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Debug;
+		};
+		6A04192C563FE183DF2CE82F /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Release;
+		};
+		8A967FD86ED4885CF78C507D /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				DEVELOPMENT_ASSET_PATHS = "";
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.tinyroutes.app.tests;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/TinyRoutes.app/TinyRoutes";
+			};
+			name = Debug;
+		};
+		F66DFA0EFA889F48903BF1AC /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_ASSET_PATHS = "";
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = TinyRoutes/Resources/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.tinyroutes.app;
+				PRODUCT_NAME = TinyRoutes;
+				SDKROOT = iphoneos;
+				SUPPORTS_MACCATALYST = NO;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Debug;
+		};
+		F67A56DFC6CC123337250BDF /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				DEVELOPMENT_ASSET_PATHS = "";
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.tinyroutes.app.tests;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/TinyRoutes.app/TinyRoutes";
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		892B6B7FF1DA221924302C94 /* Build configuration list for PBXProject "TinyRoutes" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				42356EE2D6959C339865F432 /* Debug */,
+				6A04192C563FE183DF2CE82F /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		9C4E4A4DAEAB69173D241EFE /* Build configuration list for PBXNativeTarget "TinyRoutesTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				8A967FD86ED4885CF78C507D /* Debug */,
+				F67A56DFC6CC123337250BDF /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		F300EE37C6D1F3CDBFBB00C1 /* Build configuration list for PBXNativeTarget "TinyRoutes" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				F66DFA0EFA889F48903BF1AC /* Debug */,
+				407DF6837A71BD7AFD521BE3 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 90306C95B3D34249174E5958 /* Project object */;
+}

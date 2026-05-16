@@ -21,6 +21,8 @@ struct SwitchNodeView: View {
     }
 }
 
-#Preview {
-    SwitchNodeView(activeDirectionAngle: 0, size: 22)
+struct SwitchNodeView_Previews: PreviewProvider {
+    static var previews: some View {
+        SwitchNodeView(activeDirectionAngle: 0, size: 22)
+    }
 }

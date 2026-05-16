@@ -47,8 +47,9 @@ enum LevelFailureReason: Equatable {
 final class RouteEngine {
     private let dotSpeed: Double
     private let nodeSwitchController = NodeSwitchController()
-    private var packageNodeID: String?
-    private var destinationNodeID: String?
+    private var loadedLevelData: LevelData?
+    private(set) var packageNodeID: String?
+    private(set) var destinationNodeID: String?
     private var timeRemaining: TimeInterval?
 
     /// Indicates whether the most recent `updateDot(deltaTime:)` call halted at a dead end.
@@ -133,6 +134,26 @@ final class RouteEngine {
 
         self.runtimeGraph = runtimeGraph
         self.deliveryDot = deliveryDot
+        loadedLevelData = levelData
+    }
+
+    /// Rebuilds the last loaded level so the current run restarts from a clean state.
+    ///
+    /// - Returns: `true` when a previously loaded level was restored; `false` when no level is loaded.
+    @discardableResult
+    func restartLevel() -> Bool {
+        guard let loadedLevelData else {
+            return false
+        }
+
+        do {
+            try buildGraph(from: loadedLevelData)
+            _ = startDotMovement()
+            return true
+        } catch {
+            assertionFailure("RouteEngine failed to restart previously loaded level: \(error)")
+            return false
+        }
     }
 
     /// Starts the delivery dot moving along the active edge for its current node, if one exists.

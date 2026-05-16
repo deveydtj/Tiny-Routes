@@ -14,6 +14,8 @@ struct SettingsScreen: View {
     }
 }
 
-#Preview {
-    SettingsScreen(onBackTapped: {})
+struct SettingsScreen_Previews: PreviewProvider {
+    static var previews: some View {
+        SettingsScreen(onBackTapped: {})
+    }
 }

@@ -23,6 +23,8 @@ struct LevelSelectScreen: View {
     }
 }
 
-#Preview {
-    LevelSelectScreen(onBackTapped: {}, onLevelSelected: { _ in })
+struct LevelSelectScreen_Previews: PreviewProvider {
+    static var previews: some View {
+        LevelSelectScreen(onBackTapped: {}, onLevelSelected: { _ in })
+    }
 }

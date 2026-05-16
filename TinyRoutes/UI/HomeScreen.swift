@@ -18,6 +18,8 @@ struct HomeScreen: View {
     }
 }
 
-#Preview {
-    HomeScreen(onPlayTapped: {}, onShopTapped: {}, onSettingsTapped: {})
+struct HomeScreen_Previews: PreviewProvider {
+    static var previews: some View {
+        HomeScreen(onPlayTapped: {}, onShopTapped: {}, onSettingsTapped: {})
+    }
 }

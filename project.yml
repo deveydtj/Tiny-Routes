@@ -1,0 +1,57 @@
+name: TinyRoutes
+options:
+  defaultConfig: Debug
+  deploymentTarget:
+    iOS: "17.0"
+configs:
+  Debug: debug
+  Release: release
+settings:
+  base:
+    SWIFT_VERSION: 5.0
+    TARGETED_DEVICE_FAMILY: "1"
+targets:
+  TinyRoutes:
+    type: application
+    platform: iOS
+    sources:
+      - path: TinyRoutes
+        excludes:
+          - Resources/Info.plist
+    resources:
+      - TinyRoutes/Resources
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.tinyroutes.app
+        PRODUCT_NAME: TinyRoutes
+        GENERATE_INFOPLIST_FILE: NO
+        INFOPLIST_FILE: TinyRoutes/Resources/Info.plist
+        CODE_SIGN_STYLE: Automatic
+        DEVELOPMENT_ASSET_PATHS: ""
+        SUPPORTS_MACCATALYST: NO
+  TinyRoutesTests:
+    type: bundle.unit-test
+    platform: iOS
+    sources:
+      - TinyRoutesTests
+    dependencies:
+      - target: TinyRoutes
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.tinyroutes.app.tests
+        GENERATE_INFOPLIST_FILE: YES
+        DEVELOPMENT_ASSET_PATHS: ""
+schemes:
+  TinyRoutes:
+    build:
+      targets:
+        TinyRoutes: all
+        TinyRoutesTests: [test]
+    run:
+      config: Debug
+    test:
+      config: Debug
+      targets:
+        - TinyRoutesTests
+    archive:
+      config: Release
