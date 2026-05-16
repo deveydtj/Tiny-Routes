@@ -10,6 +10,7 @@
 		060F8145B917BE3159712357 /* SwitchNodeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1B022B419A6C15C4612BCB4 /* SwitchNodeView.swift */; };
 		108AF7A8B6011001D9ABAC37 /* PurchaseAdapter.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE27E3BC383758466A258AC9 /* PurchaseAdapter.swift */; };
 		1F039950763EE9F4AFCEA19D /* AnalyticsAdapter.swift in Sources */ = {isa = PBXBuildFile; fileRef = BBF9A119C53A9804C693368D /* AnalyticsAdapter.swift */; };
+		2642190DBD1F2E50EAEEA4FE /* GameTimeFormatter.swift in Sources */ = {isa = PBXBuildFile; fileRef = DAE6F8D4B8727D20DEC3BCB7 /* GameTimeFormatter.swift */; };
 		26CA64E5162D5D762A4548BE /* GameplayScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = B18B1BD2DCEA7552CE9DBD3B /* GameplayScreen.swift */; };
 		2A16A2EB2945E072AF6FA52C /* RouteNode.swift in Sources */ = {isa = PBXBuildFile; fileRef = 86D5601913C689EB5ED4A957 /* RouteNode.swift */; };
 		2A453CAD492368B04874AF3C /* level_001.json in Resources */ = {isa = PBXBuildFile; fileRef = C110C9DEB2E44438FDB43C40 /* level_001.json */; };
@@ -96,6 +97,7 @@
 		C1B022B419A6C15C4612BCB4 /* SwitchNodeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwitchNodeView.swift; sourceTree = "<group>"; };
 		C944525464AD16A3C4C0A32B /* NodeSwitchController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NodeSwitchController.swift; sourceTree = "<group>"; };
 		CE27E3BC383758466A258AC9 /* PurchaseAdapter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PurchaseAdapter.swift; sourceTree = "<group>"; };
+		DAE6F8D4B8727D20DEC3BCB7 /* GameTimeFormatter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameTimeFormatter.swift; sourceTree = "<group>"; };
 		DB9C673DAD937B5A68706543 /* AppState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppState.swift; sourceTree = "<group>"; };
 		DBDF4ED66B8042607FFD6F27 /* EconomyService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EconomyService.swift; sourceTree = "<group>"; };
 		E540C87602DF9F761DD5828A /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
@@ -122,6 +124,7 @@
 			isa = PBXGroup;
 			children = (
 				B18B1BD2DCEA7552CE9DBD3B /* GameplayScreen.swift */,
+				DAE6F8D4B8727D20DEC3BCB7 /* GameTimeFormatter.swift */,
 				1ED10221512DC80E25D258A7 /* HomeScreen.swift */,
 				8423A86EB968231672776BCD /* LevelSelectScreen.swift */,
 				4C13BB2799AF7B8830705334 /* ResultScreen.swift */,
@@ -342,6 +345,7 @@
 				FF04D88C3A93FB2A97C1A8A6 /* DeliveryDot.swift in Sources */,
 				2BF99CA96CE5149BFEB26032 /* DotMovementController.swift in Sources */,
 				F5DA1B86E6BE1D9BDC8DD91D /* EconomyService.swift in Sources */,
+				2642190DBD1F2E50EAEEA4FE /* GameTimeFormatter.swift in Sources */,
 				26CA64E5162D5D762A4548BE /* GameplayScreen.swift in Sources */,
 				E7E9E38DC9513394E5F9B680 /* HomeScreen.swift in Sources */,
 				4986A68A1EF3C9798A30FF7A /* LevelData.swift in Sources */,
@@ -397,6 +401,7 @@
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_ASSET_PATHS = "";
+				DEVELOPMENT_TEAM = JM23Z9GG95;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = TinyRoutes/Resources/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -557,6 +562,7 @@
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_ASSET_PATHS = "";
+				DEVELOPMENT_TEAM = JM23Z9GG95;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = TinyRoutes/Resources/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (

@@ -32,19 +32,21 @@ struct ContentView: View {
             case let .gameplay(levelID), let .pause(levelID):
                 gameplayView(levelID: levelID, isPaused: coordinator.state.isPaused)
 
-            case let .levelComplete(levelID):
+            case let .levelComplete(levelID, elapsedTime):
                 ResultScreen(
                     levelID: levelID,
                     result: .completed,
+                    elapsedTime: elapsedTime,
                     failureReason: nil,
                     onRestartTapped: coordinator.restartGameplay,
                     onExitTapped: coordinator.exitGameplayToMenu
                 )
 
-            case let .levelFailed(levelID, reason):
+            case let .levelFailed(levelID, reason, elapsedTime):
                 ResultScreen(
                     levelID: levelID,
                     result: .failed,
+                    elapsedTime: elapsedTime,
                     failureReason: reason,
                     onRestartTapped: coordinator.restartGameplay,
                     onExitTapped: coordinator.exitGameplayToMenu

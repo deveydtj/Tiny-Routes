@@ -1,4 +1,5 @@
 import Combine
+import Foundation
 
 /// Owns top-level navigation and coordinates transitions between app states.
 @MainActor
@@ -31,8 +32,8 @@ final class AppCoordinator: ObservableObject {
         switch state {
         case let .gameplay(levelID),
              let .pause(levelID),
-             let .levelComplete(levelID),
-             let .levelFailed(levelID, _):
+             let .levelComplete(levelID, _),
+             let .levelFailed(levelID, _, _):
             state = .gameplay(levelID: levelID)
         default:
             break
@@ -43,19 +44,19 @@ final class AppCoordinator: ObservableObject {
         backToMainMenu()
     }
 
-    func completeLevel() {
+    func completeLevel(elapsedTime: TimeInterval) {
         switch state {
         case let .gameplay(levelID), let .pause(levelID):
-            state = .levelComplete(levelID: levelID)
+            state = .levelComplete(levelID: levelID, elapsedTime: elapsedTime)
         default:
             break
         }
     }
 
-    func failLevel(reason: LevelFailureReason) {
+    func failLevel(reason: LevelFailureReason, elapsedTime: TimeInterval) {
         switch state {
         case let .gameplay(levelID), let .pause(levelID):
-            state = .levelFailed(levelID: levelID, reason: reason)
+            state = .levelFailed(levelID: levelID, reason: reason, elapsedTime: elapsedTime)
         default:
             break
         }

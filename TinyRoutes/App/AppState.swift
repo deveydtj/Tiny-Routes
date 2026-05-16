@@ -7,8 +7,8 @@ enum AppState: Equatable {
     case levelSelect
     case gameplay(levelID: String)
     case pause(levelID: String)
-    case levelComplete(levelID: String)
-    case levelFailed(levelID: String, reason: LevelFailureReason)
+    case levelComplete(levelID: String, elapsedTime: TimeInterval)
+    case levelFailed(levelID: String, reason: LevelFailureReason, elapsedTime: TimeInterval)
     case shop
     case settings
 }

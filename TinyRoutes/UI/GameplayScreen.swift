@@ -4,8 +4,8 @@ struct GameplayScreen: View {
     let levelID: String
     let isPaused: Bool
     let onPauseResumeTapped: () -> Void
-    let onCompleteTapped: () -> Void
-    let onFailTapped: (LevelFailureReason) -> Void
+    let onCompleteTapped: (TimeInterval) -> Void
+    let onFailTapped: (LevelFailureReason, TimeInterval) -> Void
     let onExitTapped: () -> Void
 
     private let levelRepository: LevelRepository
@@ -18,6 +18,7 @@ struct GameplayScreen: View {
     @State private var destinationNodeID: String = ""
     @State private var hasCollectedPackage: Bool = false
     @State private var tapCount: Int = 0
+    @State private var timeRemaining: TimeInterval?
     @State private var loadErrorMessage: String?
     @State private var lastFrameDate: Date?
     @State private var hasDispatchedOutcome: Bool = false
@@ -26,8 +27,8 @@ struct GameplayScreen: View {
         levelID: String,
         isPaused: Bool,
         onPauseResumeTapped: @escaping () -> Void,
-        onCompleteTapped: @escaping () -> Void,
-        onFailTapped: @escaping (LevelFailureReason) -> Void,
+        onCompleteTapped: @escaping (TimeInterval) -> Void,
+        onFailTapped: @escaping (LevelFailureReason, TimeInterval) -> Void,
         onExitTapped: @escaping () -> Void,
         levelRepository: LevelRepository = LevelRepository(),
         routeEngine: RouteEngine = RouteEngine()
@@ -48,7 +49,10 @@ struct GameplayScreen: View {
                 .font(.headline)
             Text(isPaused ? "Paused" : "Running")
                 .foregroundColor(isPaused ? .orange : .green)
-            Text("Taps: \(tapCount)")
+            HStack(spacing: 16) {
+                Text("Time Left: \(GameTimeFormatter.countdown(timeRemaining))")
+                Text("Taps: \(tapCount)")
+            }
                 .font(.subheadline)
                 .foregroundColor(.secondary)
 
@@ -111,6 +115,7 @@ struct GameplayScreen: View {
             packageNodeID = levelData.packageNodeID
             destinationNodeID = levelData.destinationNodeID
             hasCollectedPackage = routeEngine.deliveryDot?.hasCollectedPackage ?? false
+            timeRemaining = routeEngine.timeRemaining
 
             if !didStartMovement {
                 loadErrorMessage = "Level has no active outgoing edge from the start node."
@@ -135,6 +140,7 @@ struct GameplayScreen: View {
         packageNodeID = routeEngine.packageNodeID ?? ""
         destinationNodeID = routeEngine.destinationNodeID ?? ""
         hasCollectedPackage = routeEngine.deliveryDot?.hasCollectedPackage ?? false
+        timeRemaining = routeEngine.timeRemaining
 
         if routeEngine.deliveryDot?.currentEdgeID == nil {
             loadErrorMessage = "Level has no active outgoing edge from the start node."
@@ -154,12 +160,14 @@ struct GameplayScreen: View {
         guard deltaTime > 0 else {
             deliveryDot = routeEngine.deliveryDot
             hasCollectedPackage = routeEngine.deliveryDot?.hasCollectedPackage ?? false
+            timeRemaining = routeEngine.timeRemaining
             return
         }
 
         routeEngine.updateDot(deltaTime: deltaTime)
         deliveryDot = routeEngine.deliveryDot
         hasCollectedPackage = routeEngine.deliveryDot?.hasCollectedPackage ?? false
+        timeRemaining = routeEngine.timeRemaining
         dispatchLevelOutcomeIfNeeded()
     }
 
@@ -185,9 +193,9 @@ struct GameplayScreen: View {
         lastFrameDate = nil
         switch levelOutcome {
         case .completed:
-            onCompleteTapped()
+            onCompleteTapped(routeEngine.elapsedTime ?? 0)
         case let .failed(reason):
-            onFailTapped(reason)
+            onFailTapped(reason, routeEngine.elapsedTime ?? 0)
         }
     }
 
@@ -195,6 +203,7 @@ struct GameplayScreen: View {
         hasCollectedPackage = false
         lastFrameDate = nil
         tapCount = 0
+        timeRemaining = nil
         hasDispatchedOutcome = false
     }
 }
@@ -465,8 +474,8 @@ private struct BoardLayout {
         levelID: "level_001",
         isPaused: false,
         onPauseResumeTapped: {},
-        onCompleteTapped: {},
-        onFailTapped: { _ in },
+        onCompleteTapped: { _ in },
+        onFailTapped: { _, _ in },
         onExitTapped: {}
     )
 }

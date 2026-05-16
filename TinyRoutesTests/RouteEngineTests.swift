@@ -262,6 +262,16 @@ final class RouteEngineTests: XCTestCase {
         XCTAssertFalse(engine.didHaltAtDeadEnd)
     }
 
+    func testBuildGraphInitializesTimerFromLevelData() throws {
+        let engine = RouteEngine()
+
+        try engine.buildGraph(from: makeLevelData())
+
+        XCTAssertEqual(engine.timeLimit ?? -1, 45, accuracy: 0.0001)
+        XCTAssertEqual(engine.timeRemaining ?? -1, 45, accuracy: 0.0001)
+        XCTAssertEqual(engine.elapsedTime ?? -1, 0, accuracy: 0.0001)
+    }
+
     func testUpdateDotFailsWhenTimeExpires() throws {
         let engine = RouteEngine(dotSpeed: 1)
         let level = makeLevelData()
@@ -280,6 +290,8 @@ final class RouteEngineTests: XCTestCase {
 
         engine.updateDot(deltaTime: 1.1)
 
+        XCTAssertEqual(engine.timeRemaining ?? -1, 0, accuracy: 0.0001)
+        XCTAssertEqual(engine.elapsedTime ?? -1, 1, accuracy: 0.0001)
         XCTAssertEqual(engine.levelOutcome, .failed(reason: .timeExpired))
     }
 
@@ -301,7 +313,20 @@ final class RouteEngineTests: XCTestCase {
         // Dot is idle because movement has not started.
         engine.updateDot(deltaTime: 1.1)
 
+        XCTAssertEqual(engine.timeRemaining ?? -1, 0, accuracy: 0.0001)
+        XCTAssertEqual(engine.elapsedTime ?? -1, 1, accuracy: 0.0001)
         XCTAssertEqual(engine.levelOutcome, .failed(reason: .timeExpired))
+    }
+
+    func testUpdateDotReducesTimeRemainingByConsumedFrameTime() throws {
+        let engine = RouteEngine(dotSpeed: 1)
+        try engine.buildGraph(from: makeLevelData())
+        XCTAssertTrue(engine.startDotMovement())
+
+        engine.updateDot(deltaTime: 0.25)
+
+        XCTAssertEqual(engine.timeRemaining ?? -1, 44.75, accuracy: 0.0001)
+        XCTAssertEqual(engine.elapsedTime ?? -1, 0.25, accuracy: 0.0001)
     }
 
     func testUpdateDotConsumesRemainingTimeSliceBeforeTimingOut() throws {
@@ -355,6 +380,8 @@ final class RouteEngineTests: XCTestCase {
         XCTAssertEqual(resetDot.currentEdgeID, "e_start_switch")
         XCTAssertEqual(resetDot.progressAlongEdge, 0)
         XCTAssertFalse(resetDot.hasCollectedPackage)
+        XCTAssertEqual(engine.timeRemaining ?? -1, 45, accuracy: 0.0001)
+        XCTAssertEqual(engine.elapsedTime ?? -1, 0, accuracy: 0.0001)
         XCTAssertNil(engine.levelOutcome)
         XCTAssertFalse(engine.didHaltAtDeadEnd)
     }

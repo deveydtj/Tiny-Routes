@@ -50,7 +50,7 @@ final class RouteEngine {
     private var loadedLevelData: LevelData?
     private(set) var packageNodeID: String?
     private(set) var destinationNodeID: String?
-    private var timeRemaining: TimeInterval?
+    private var remainingTime: TimeInterval?
 
     /// Indicates whether the most recent `updateDot(deltaTime:)` call halted at a dead end.
     private(set) var didHaltAtDeadEnd = false
@@ -61,6 +61,21 @@ final class RouteEngine {
     private(set) var runtimeGraph: RuntimeRouteGraph?
     /// Runtime state for the delivery dot, available after `buildGraph(from:)` succeeds.
     private(set) var deliveryDot: DeliveryDot?
+    /// Countdown timer state for the current run, or `nil` before a level is loaded.
+    var timeRemaining: TimeInterval? { remainingTime }
+    /// Configured time limit for the current run, or `nil` before a level is loaded.
+    var timeLimit: TimeInterval? {
+        loadedLevelData.map { max(TimeInterval($0.timeLimitSeconds), 0) }
+    }
+    /// Elapsed attempt time derived from the level time limit and remaining countdown.
+    var elapsedTime: TimeInterval? {
+        guard let timeLimit,
+              let remainingTime else {
+            return nil
+        }
+
+        return max(timeLimit - remainingTime, 0)
+    }
 
     init(dotSpeed: Double = 1) {
         self.dotSpeed = max(0, dotSpeed)
@@ -78,7 +93,7 @@ final class RouteEngine {
         deliveryDot = nil
         packageNodeID = nil
         destinationNodeID = nil
-        timeRemaining = nil
+        remainingTime = nil
         levelOutcome = nil
         didHaltAtDeadEnd = false
 
@@ -128,7 +143,7 @@ final class RouteEngine {
         var deliveryDot = DeliveryDot(currentNodeID: levelData.startNodeID)
         packageNodeID = levelData.packageNodeID
         destinationNodeID = levelData.destinationNodeID
-        timeRemaining = max(TimeInterval(levelData.timeLimitSeconds), 0)
+        remainingTime = max(TimeInterval(levelData.timeLimitSeconds), 0)
         collectPackageIfNeeded(dot: &deliveryDot)
         evaluateDestinationArrivalIfNeeded(dot: &deliveryDot)
 
@@ -163,8 +178,8 @@ final class RouteEngine {
             return false
         }
         if levelOutcome == nil,
-           let timeRemaining,
-           timeRemaining <= 0 {
+           let remainingTime,
+           remainingTime <= 0 {
             levelOutcome = .failed(reason: .timeExpired)
         }
         guard levelOutcome == nil else {
@@ -196,8 +211,8 @@ final class RouteEngine {
 
         let movementDeltaTime: TimeInterval
         var didConsumeRemainingTime = false
-        if let timeRemaining {
-            let clampedTimeRemaining = max(timeRemaining, 0)
+        if let remainingTime {
+            let clampedTimeRemaining = max(remainingTime, 0)
             if clampedTimeRemaining <= 0 {
                 levelOutcome = .failed(reason: .timeExpired)
                 self.deliveryDot = deliveryDot
@@ -206,7 +221,7 @@ final class RouteEngine {
 
             movementDeltaTime = min(deltaTime, clampedTimeRemaining)
             let updatedTimeRemaining = clampedTimeRemaining - movementDeltaTime
-            self.timeRemaining = updatedTimeRemaining
+            self.remainingTime = updatedTimeRemaining
             didConsumeRemainingTime = updatedTimeRemaining <= 0
         } else {
             movementDeltaTime = deltaTime

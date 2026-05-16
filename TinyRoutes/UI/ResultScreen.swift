@@ -10,6 +10,7 @@ struct ResultScreen: View {
 
     let levelID: String
     let result: ResultType
+    let elapsedTime: TimeInterval
     let failureReason: LevelFailureReason?
     let onRestartTapped: () -> Void
     let onExitTapped: () -> Void
@@ -26,6 +27,9 @@ struct ResultScreen: View {
             Text(titleText)
                 .font(.title)
             Text("Level: \(levelID)")
+            Text("Final Time: \(GameTimeFormatter.elapsed(elapsedTime))")
+                .font(.subheadline)
+                .foregroundColor(.secondary)
             if let failureReason, case .failed = result {
                 Text(failureReason.message)
                     .font(.subheadline)
@@ -42,6 +46,7 @@ struct ResultScreen: View {
     ResultScreen(
         levelID: "level_001",
         result: .completed,
+        elapsedTime: 18.4,
         failureReason: nil,
         onRestartTapped: {},
         onExitTapped: {}
