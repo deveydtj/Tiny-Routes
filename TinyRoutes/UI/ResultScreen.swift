@@ -13,7 +13,9 @@ struct ResultScreen: View {
     let elapsedTime: TimeInterval
     let tapCount: Int
     let failureReason: LevelFailureReason?
+    let canAdvanceToNextLevel: Bool
     let onRestartTapped: () -> Void
+    let onNextLevelTapped: () -> Void
     let onExitTapped: () -> Void
     private let levelRepository: LevelRepository
     private let scoringService: ScoringService
@@ -28,7 +30,9 @@ struct ResultScreen: View {
         elapsedTime: TimeInterval,
         tapCount: Int,
         failureReason: LevelFailureReason?,
+        canAdvanceToNextLevel: Bool = false,
         onRestartTapped: @escaping () -> Void,
+        onNextLevelTapped: @escaping () -> Void = {},
         onExitTapped: @escaping () -> Void,
         levelRepository: LevelRepository = LevelRepository(),
         scoringService: ScoringService = ScoringService(),
@@ -39,7 +43,9 @@ struct ResultScreen: View {
         self.elapsedTime = elapsedTime
         self.tapCount = tapCount
         self.failureReason = failureReason
+        self.canAdvanceToNextLevel = canAdvanceToNextLevel
         self.onRestartTapped = onRestartTapped
+        self.onNextLevelTapped = onNextLevelTapped
         self.onExitTapped = onExitTapped
         self.levelRepository = levelRepository
         self.scoringService = scoringService
@@ -89,6 +95,10 @@ struct ResultScreen: View {
             }
 
             Button("Restart", action: onRestartTapped)
+            if case .completed = result {
+                Button("Next Level", action: onNextLevelTapped)
+                    .disabled(!canAdvanceToNextLevel)
+            }
             Button("Back to Menu", action: onExitTapped)
         }
         .task(id: starsRefreshKey) {
@@ -135,6 +145,7 @@ struct ResultScreen: View {
         tapCount: 12,
         failureReason: nil,
         onRestartTapped: {},
+        onNextLevelTapped: {},
         onExitTapped: {}
     )
 }
