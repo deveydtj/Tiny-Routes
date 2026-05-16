@@ -248,6 +248,7 @@ final class RouteEngineTests: XCTestCase {
         XCTAssertNil(dot.currentEdgeID)
         XCTAssertEqual(dot.progressAlongEdge, 0)
         XCTAssertTrue(engine.didHaltAtDeadEnd)
+        XCTAssertEqual(engine.levelOutcome, .failed(reason: .deadEnd))
     }
 
     func testUpdateDotMarksDidHaltAtDeadEndFalseWhenStillMoving() throws {
@@ -258,6 +259,27 @@ final class RouteEngineTests: XCTestCase {
         engine.updateDot(deltaTime: 0.25)
 
         XCTAssertFalse(engine.didHaltAtDeadEnd)
+    }
+
+    func testUpdateDotFailsWhenTimeExpires() throws {
+        let engine = RouteEngine(dotSpeed: 1)
+        let level = makeLevelData()
+        let timedLevel = LevelData(
+            id: level.id,
+            name: level.name,
+            graph: level.graph,
+            startNodeID: level.startNodeID,
+            packageNodeID: level.packageNodeID,
+            destinationNodeID: level.destinationNodeID,
+            timeLimitSeconds: 1,
+            parTaps: level.parTaps
+        )
+        try engine.buildGraph(from: timedLevel)
+        XCTAssertTrue(engine.startDotMovement())
+
+        engine.updateDot(deltaTime: 1.1)
+
+        XCTAssertEqual(engine.levelOutcome, .failed(reason: .timeExpired))
     }
 
     func testBuildGraphNodeAndEdgeCountsMatchLevelData() throws {
@@ -736,7 +758,7 @@ final class RouteEngineTests: XCTestCase {
         XCTAssertFalse(dot.hasCollectedPackage)
         XCTAssertEqual(dot.currentNodeID, "destination")
         XCTAssertNil(dot.currentEdgeID)
-        XCTAssertEqual(engine.levelOutcome, .failed)
+        XCTAssertEqual(engine.levelOutcome, .failed(reason: .reachedDestinationWithoutPackage))
     }
 
     func testTerminalOutcomeStopsFurtherMovement() throws {
@@ -750,7 +772,7 @@ final class RouteEngineTests: XCTestCase {
         engine.updateDot(deltaTime: 3.1)
 
         let dotAtOutcome = try XCTUnwrap(engine.deliveryDot)
-        XCTAssertEqual(engine.levelOutcome, .failed)
+        XCTAssertEqual(engine.levelOutcome, .failed(reason: .reachedDestinationWithoutPackage))
         XCTAssertEqual(dotAtOutcome.currentNodeID, "destination")
         XCTAssertNil(dotAtOutcome.currentEdgeID)
 

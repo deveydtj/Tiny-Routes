@@ -23,7 +23,24 @@ enum RouteEngineError: Error, LocalizedError {
 
 enum LevelOutcome: Equatable {
     case completed
-    case failed
+    case failed(reason: LevelFailureReason)
+}
+
+enum LevelFailureReason: Equatable {
+    case deadEnd
+    case timeExpired
+    case reachedDestinationWithoutPackage
+
+    var message: String {
+        switch self {
+        case .deadEnd:
+            return "Dead end reached."
+        case .timeExpired:
+            return "Time expired."
+        case .reachedDestinationWithoutPackage:
+            return "Reached destination without package."
+        }
+    }
 }
 
 /// Drives dot movement and evaluates win/loss conditions for a running level.
@@ -32,6 +49,7 @@ final class RouteEngine {
     private let nodeSwitchController = NodeSwitchController()
     private var packageNodeID: String?
     private var destinationNodeID: String?
+    private var timeRemaining: TimeInterval?
 
     /// Indicates whether the most recent `updateDot(deltaTime:)` call halted at a dead end.
     private(set) var didHaltAtDeadEnd = false
@@ -59,7 +77,9 @@ final class RouteEngine {
         deliveryDot = nil
         packageNodeID = nil
         destinationNodeID = nil
+        timeRemaining = nil
         levelOutcome = nil
+        didHaltAtDeadEnd = false
 
         let graph = levelData.graph
         let nodeIDs = Set(graph.nodes.map(\.id))
@@ -107,6 +127,7 @@ final class RouteEngine {
         var deliveryDot = DeliveryDot(currentNodeID: levelData.startNodeID)
         packageNodeID = levelData.packageNodeID
         destinationNodeID = levelData.destinationNodeID
+        timeRemaining = max(TimeInterval(levelData.timeLimitSeconds), 0)
         collectPackageIfNeeded(dot: &deliveryDot)
         evaluateDestinationArrivalIfNeeded(dot: &deliveryDot)
 
@@ -119,6 +140,11 @@ final class RouteEngine {
     func startDotMovement() -> Bool {
         guard let runtimeGraph, var deliveryDot else {
             return false
+        }
+        if levelOutcome == nil,
+           let timeRemaining,
+           timeRemaining <= 0 {
+            levelOutcome = .failed(reason: .timeExpired)
         }
         guard levelOutcome == nil else {
             self.deliveryDot = deliveryDot
@@ -145,6 +171,16 @@ final class RouteEngine {
         guard levelOutcome == nil else {
             self.deliveryDot = deliveryDot
             return
+        }
+
+        if let timeRemaining {
+            let updatedTimeRemaining = max(0, timeRemaining - deltaTime)
+            self.timeRemaining = updatedTimeRemaining
+            if updatedTimeRemaining <= 0 {
+                levelOutcome = .failed(reason: .timeExpired)
+                self.deliveryDot = deliveryDot
+                return
+            }
         }
 
         guard deliveryDot.currentEdgeID != nil else {
@@ -174,6 +210,9 @@ final class RouteEngine {
                 }
                 guard beginMovementFromCurrentNode(in: runtimeGraph, dot: &deliveryDot) else {
                     didHaltAtDeadEnd = isDeadEnd(nodeID: deliveryDot.currentNodeID, in: runtimeGraph)
+                    if didHaltAtDeadEnd {
+                        levelOutcome = .failed(reason: .deadEnd)
+                    }
                     break
                 }
                 continue
@@ -193,6 +232,9 @@ final class RouteEngine {
                 }
                 guard beginMovementFromCurrentNode(in: runtimeGraph, dot: &deliveryDot) else {
                     didHaltAtDeadEnd = isDeadEnd(nodeID: deliveryDot.currentNodeID, in: runtimeGraph)
+                    if didHaltAtDeadEnd {
+                        levelOutcome = .failed(reason: .deadEnd)
+                    }
                     break
                 }
             }
@@ -260,7 +302,9 @@ final class RouteEngine {
             return
         }
 
-        levelOutcome = dot.hasCollectedPackage ? .completed : .failed
+        levelOutcome = dot.hasCollectedPackage
+            ? .completed
+            : .failed(reason: .reachedDestinationWithoutPackage)
     }
 
     private func isDeadEnd(nodeID: String, in runtimeGraph: RuntimeRouteGraph) -> Bool {

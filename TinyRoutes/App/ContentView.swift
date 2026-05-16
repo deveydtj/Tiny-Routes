@@ -36,14 +36,16 @@ struct ContentView: View {
                 ResultScreen(
                     levelID: levelID,
                     result: .completed,
+                    failureReason: nil,
                     onRestartTapped: coordinator.restartGameplay,
                     onExitTapped: coordinator.exitGameplayToMenu
                 )
 
-            case let .levelFailed(levelID):
+            case let .levelFailed(levelID, reason):
                 ResultScreen(
                     levelID: levelID,
                     result: .failed,
+                    failureReason: reason,
                     onRestartTapped: coordinator.restartGameplay,
                     onExitTapped: coordinator.exitGameplayToMenu
                 )
