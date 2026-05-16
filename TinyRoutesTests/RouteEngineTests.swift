@@ -587,20 +587,24 @@ final class RouteEngineTests: XCTestCase {
         try engine.buildGraph(from: makeLevelData())
         XCTAssertTrue(engine.startDotMovement())
 
-        // Move dot halfway along e_start_switch (length 1.0).
-        engine.updateDot(deltaTime: 0.5)
+        // Move dot 1.5 units: 1.0 to cross e_start_switch and reach the switch node, then 0.5 units
+        // into e_switch_package (the outgoing edge that the switch selected). This places the dot
+        // partway along a switch-selected outgoing edge — the edge the acceptance criterion protects.
+        engine.updateDot(deltaTime: 1.5)
 
         let dotBefore = try XCTUnwrap(engine.deliveryDot)
-        XCTAssertEqual(dotBefore.currentEdgeID, "e_start_switch")
-        XCTAssertEqual(dotBefore.progressAlongEdge, 0.5, accuracy: 0.0001)
+        XCTAssertEqual(dotBefore.currentEdgeID, "e_switch_package")
+        // e_switch_package length = sqrt(2) ≈ 1.4142; progress = 0.5 / sqrt(2) ≈ 0.3536
+        let expectedProgress = 0.5 / sqrt(2.0)
+        XCTAssertEqual(dotBefore.progressAlongEdge, expectedProgress, accuracy: 0.0001)
 
-        // Rotate the switch while dot is mid-edge.
+        // Rotate the switch while dot is mid-edge on the switch-selected outgoing edge.
         engine.rotateSwitchNode(nodeID: "switch")
 
-        // The current edge must not change.
+        // The dot must continue on the same edge — mid-edge rotation must not reroute it.
         let dotAfter = try XCTUnwrap(engine.deliveryDot)
-        XCTAssertEqual(dotAfter.currentEdgeID, "e_start_switch", "Edge must not change mid-traversal")
-        XCTAssertEqual(dotAfter.progressAlongEdge, 0.5, accuracy: 0.0001)
+        XCTAssertEqual(dotAfter.currentEdgeID, "e_switch_package", "Edge must not change mid-traversal")
+        XCTAssertEqual(dotAfter.progressAlongEdge, expectedProgress, accuracy: 0.0001)
     }
 
     func testSwitchRotationAffectsNextVisitToSwitchNode() throws {
