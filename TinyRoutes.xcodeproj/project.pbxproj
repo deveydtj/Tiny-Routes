@@ -397,7 +397,6 @@
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_ASSET_PATHS = "";
-				DEVELOPMENT_TEAM = JM23Z9GG95;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = TinyRoutes/Resources/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -408,7 +407,7 @@
 				PRODUCT_NAME = TinyRoutes;
 				SDKROOT = iphoneos;
 				SUPPORTS_MACCATALYST = NO;
-				TARGETED_DEVICE_FAMILY = "1,2";
+				TARGETED_DEVICE_FAMILY = 1;
 			};
 			name = Release;
 		};
@@ -558,7 +557,6 @@
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_ASSET_PATHS = "";
-				DEVELOPMENT_TEAM = JM23Z9GG95;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = TinyRoutes/Resources/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -569,7 +567,7 @@
 				PRODUCT_NAME = TinyRoutes;
 				SDKROOT = iphoneos;
 				SUPPORTS_MACCATALYST = NO;
-				TARGETED_DEVICE_FAMILY = "1,2";
+				TARGETED_DEVICE_FAMILY = 1;
 			};
 			name = Debug;
 		};

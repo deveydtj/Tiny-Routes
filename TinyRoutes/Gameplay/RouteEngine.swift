@@ -74,7 +74,6 @@ final class RouteEngine {
     /// - Parameter levelData: The decoded level to build the graph from.
     /// - Throws: `RouteEngineError` if the graph data is invalid.
     func buildGraph(from levelData: LevelData) throws {
-        loadedLevelData = levelData
         runtimeGraph = nil
         deliveryDot = nil
         packageNodeID = nil
@@ -135,6 +134,7 @@ final class RouteEngine {
 
         self.runtimeGraph = runtimeGraph
         self.deliveryDot = deliveryDot
+        loadedLevelData = levelData
     }
 
     /// Rebuilds the last loaded level so the current run restarts from a clean state.
@@ -148,7 +148,8 @@ final class RouteEngine {
 
         do {
             try buildGraph(from: loadedLevelData)
-            return startDotMovement()
+            _ = startDotMovement()
+            return true
         } catch {
             assertionFailure("RouteEngine failed to restart previously loaded level: \(error)")
             return false

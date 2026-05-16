@@ -400,6 +400,17 @@ final class RouteEngineTests: XCTestCase {
         XCTAssertFalse(engine.restartLevel())
     }
 
+    func testRestartLevelReturnsTrueWhenRestoredLevelStartsAtLeafNode() throws {
+        let engine = RouteEngine()
+        try engine.buildGraph(from: makeLevelData(startNodeID: "destination"))
+
+        XCTAssertTrue(engine.restartLevel())
+
+        let dot = try XCTUnwrap(engine.deliveryDot)
+        XCTAssertEqual(dot.currentNodeID, "destination")
+        XCTAssertNil(dot.currentEdgeID)
+    }
+
     func testBuildGraphNodeAndEdgeCountsMatchLevelData() throws {
         let engine = RouteEngine()
         let level = makeLevelData()
@@ -690,6 +701,22 @@ final class RouteEngineTests: XCTestCase {
         XCTAssertThrowsError(try engine.buildGraph(from: invalidLevel))
         XCTAssertNil(engine.runtimeGraph)
         XCTAssertNil(engine.deliveryDot)
+    }
+
+    func testBuildGraphFailureDoesNotReplaceRestartTarget() throws {
+        let engine = RouteEngine()
+        let validLevel = makeLevelData()
+        try engine.buildGraph(from: validLevel)
+
+        let invalidLevel = makeLevelData(startNodeID: "missing")
+        XCTAssertThrowsError(try engine.buildGraph(from: invalidLevel))
+        XCTAssertNil(engine.runtimeGraph)
+        XCTAssertNil(engine.deliveryDot)
+
+        XCTAssertTrue(engine.restartLevel())
+        let dot = try XCTUnwrap(engine.deliveryDot)
+        XCTAssertEqual(dot.currentNodeID, validLevel.startNodeID)
+        XCTAssertEqual(dot.currentEdgeID, "e_start_switch")
     }
 
     // MARK: - Switch direction routing (STORY-013)
