@@ -28,8 +28,12 @@ final class LevelRepository {
     /// Creates a repository that reads levels from a bundle.
     init(bundle: Bundle = .main) {
         let b = bundle
-        self.urlResolver = { id in b.url(forResource: id, withExtension: "json", subdirectory: "Levels") }
-        self.allLevelURLs = { b.urls(forResourcesWithExtension: "json", subdirectory: "Levels") ?? [] }
+        self.urlResolver = { id in
+            LevelRepository.resolveURL(for: id, in: b)
+        }
+        self.allLevelURLs = {
+            LevelRepository.resolveAllLevelURLs(in: b)
+        }
         self.dataLoader = { try Data(contentsOf: $0) }
         self.decoder = JSONDecoder()
     }
@@ -89,5 +93,22 @@ final class LevelRepository {
         } catch {
             throw LevelRepositoryError.decodingFailed(id: id, underlying: error)
         }
+    }
+
+    private static func resolveURL(for id: String, in bundle: Bundle) -> URL? {
+        if let nestedURL = bundle.url(forResource: id, withExtension: "json", subdirectory: "Levels") {
+            return nestedURL
+        }
+
+        return bundle.url(forResource: id, withExtension: "json")
+    }
+
+    private static func resolveAllLevelURLs(in bundle: Bundle) -> [URL] {
+        let nestedURLs = bundle.urls(forResourcesWithExtension: "json", subdirectory: "Levels") ?? []
+        let rootURLs = bundle.urls(forResourcesWithExtension: "json", subdirectory: nil) ?? []
+        let allURLs = nestedURLs + rootURLs
+
+        var seen = Set<URL>()
+        return allURLs.filter { seen.insert($0).inserted }
     }
 }
