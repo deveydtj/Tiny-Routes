@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="980" height="380" viewBox="0 0 980 380">
+  <rect width="980" height="380" fill="#ffffff"/>
+  <text x="40" y="36" font-family="Arial, sans-serif" font-size="18" fill="#111">Before: delivery dot blocks node taps</text>
+  <text x="520" y="36" font-family="Arial, sans-serif" font-size="18" fill="#111">After: dot ignores hits, node remains tappable</text>
+
+  <circle cx="220" cy="200" r="44" fill="#ffffff" stroke="#2373db" stroke-width="4"/>
+  <circle cx="220" cy="200" r="18" fill="#8d49d6" opacity="0.95"/>
+  <line x1="120" y1="290" x2="220" y2="220" stroke="#d93636" stroke-width="3"/>
+  <text x="82" y="312" font-family="Arial, sans-serif" font-size="15" fill="#d93636">Tap intercepted</text>
+
+  <circle cx="760" cy="200" r="44" fill="#ffffff" stroke="#2373db" stroke-width="4"/>
+  <circle cx="760" cy="200" r="18" fill="#8d49d6" opacity="0.95"/>
+  <line x1="660" y1="290" x2="760" y2="220" stroke="#1f8f4a" stroke-width="3"/>
+  <text x="620" y="312" font-family="Arial, sans-serif" font-size="15" fill="#1f8f4a">Tap reaches node</text>
+  <text x="555" y="338" font-family="Arial, sans-serif" font-size="14" fill="#555">(delivery dot uses allowsHitTesting(false))</text>
+</svg>

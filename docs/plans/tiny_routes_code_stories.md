@@ -552,6 +552,10 @@ Allow players to tap switch nodes and rotate their active direction.
 
 ---
 
+**Status:** ✅ Completed — implemented switch-node tap rotation by adding runtime switch cycling logic (`NodeSwitchController` + `RouteEngine.rotateSwitchNode(nodeID:)`), wired node tap handling into `GameplayScreen`, and added `tapCount` increments only when a switch rotation occurs. Added `SwitchNodeView` so switch arrows visibly update immediately to the active outgoing direction, while non-switch nodes continue to ignore taps. Expanded `RouteEngineTests` with switch-rotation cycle and non-switch/unknown-node tap coverage.
+
+---
+
 ## STORY-013 — Route Dot Based On Active Switch Direction
 
 **Goal:**  

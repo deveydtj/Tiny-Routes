@@ -1,7 +1,43 @@
 import Foundation
 
-/// Handles player taps that rotate or toggle switch nodes.
-/// Placeholder — implemented in STORY-007.
+/// Handles player taps that rotate switch-node outgoing direction.
 final class NodeSwitchController {
-    // TODO: implement switch tap logic
+    /// Rotates the active outgoing edge for the specified node when it is a switch node.
+    ///
+    /// A node is treated as a switch only when it has more than one valid outgoing edge.
+    /// For nodes with zero or one valid outgoing edge, this method normalizes
+    /// `activeOutgoingEdgeID` to the sole valid edge (or `nil`) and returns `false`.
+    /// - Parameters:
+    ///   - nodeID: The tapped node id.
+    ///   - runtimeGraph: The mutable runtime graph containing node/edge state.
+    /// - Returns: `true` when rotation occurred; `false` otherwise, including normalization-only updates.
+    @discardableResult
+    func rotateSwitch(nodeID: String, in runtimeGraph: inout RuntimeRouteGraph) -> Bool {
+        guard var node = runtimeGraph.nodesByID[nodeID] else {
+            return false
+        }
+
+        let validOutgoingEdgeIDs = runtimeGraph.validOutgoingEdgeIDs(for: node)
+
+        guard validOutgoingEdgeIDs.count > 1 else {
+            let normalizedActiveEdgeID = validOutgoingEdgeIDs.first
+            if node.activeOutgoingEdgeID != normalizedActiveEdgeID {
+                node.activeOutgoingEdgeID = normalizedActiveEdgeID
+                runtimeGraph.nodesByID[nodeID] = node
+            }
+            return false
+        }
+
+        let nextIndex: Int
+        if let currentActiveEdgeID = node.activeOutgoingEdgeID,
+           let currentIndex = validOutgoingEdgeIDs.firstIndex(of: currentActiveEdgeID) {
+            nextIndex = (currentIndex + 1) % validOutgoingEdgeIDs.count
+        } else {
+            nextIndex = 0
+        }
+
+        node.activeOutgoingEdgeID = validOutgoingEdgeIDs[nextIndex]
+        runtimeGraph.nodesByID[nodeID] = node
+        return true
+    }
 }
