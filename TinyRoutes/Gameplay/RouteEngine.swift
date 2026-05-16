@@ -48,8 +48,8 @@ final class RouteEngine {
     private let dotSpeed: Double
     private let nodeSwitchController = NodeSwitchController()
     private var loadedLevelData: LevelData?
-    private var packageNodeID: String?
-    private var destinationNodeID: String?
+    private(set) var packageNodeID: String?
+    private(set) var destinationNodeID: String?
     private var timeRemaining: TimeInterval?
 
     /// Indicates whether the most recent `updateDot(deltaTime:)` call halted at a dead end.

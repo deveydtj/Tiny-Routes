@@ -132,7 +132,13 @@ struct GameplayScreen: View {
 
         runtimeGraph = routeEngine.runtimeGraph
         deliveryDot = routeEngine.deliveryDot
+        packageNodeID = routeEngine.packageNodeID ?? ""
+        destinationNodeID = routeEngine.destinationNodeID ?? ""
         hasCollectedPackage = routeEngine.deliveryDot?.hasCollectedPackage ?? false
+
+        if routeEngine.deliveryDot?.currentEdgeID == nil {
+            loadErrorMessage = "Level has no active outgoing edge from the start node."
+        }
         dispatchLevelOutcomeIfNeeded()
     }
 
