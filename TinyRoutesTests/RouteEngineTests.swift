@@ -551,4 +551,110 @@ final class RouteEngineTests: XCTestCase {
         XCTAssertNil(engine.runtimeGraph)
         XCTAssertNil(engine.deliveryDot)
     }
+
+    // MARK: - Switch direction routing (STORY-013)
+
+    func testDotFollowsRotatedSwitchDirectionOnArrival() throws {
+        let engine = RouteEngine(dotSpeed: 2)
+        try engine.buildGraph(from: makeLevelData())
+
+        // Rotate switch: default e_switch_package -> e_switch_dead_end
+        engine.rotateSwitchNode(nodeID: "switch")
+        XCTAssertTrue(engine.startDotMovement())
+
+        // Distance = 2 * 0.6 = 1.2 units.
+        // e_start_switch length = 1.0, so dot reaches switch with 0.2 units left.
+        // At switch, active edge is now e_switch_dead_end.
+        engine.updateDot(deltaTime: 0.6)
+
+        let dot = try XCTUnwrap(engine.deliveryDot)
+        XCTAssertEqual(dot.currentEdgeID, "e_switch_dead_end")
+
+        let graph = try XCTUnwrap(engine.runtimeGraph)
+        // e_switch_dead_end length = sqrt(2) ≈ 1.4142; progress = 0.2 / sqrt(2) ≈ 0.1414
+        let expectedProgress = 0.2 / sqrt(2.0)
+        XCTAssertEqual(dot.progressAlongEdge, expectedProgress, accuracy: 0.0001)
+        let expectedX = 1.0 + (1.0 * expectedProgress)  // switch.x + (dead_end.x - switch.x) * progress
+        let expectedY = 0.0 + (-1.0 * expectedProgress) // switch.y + (dead_end.y - switch.y) * progress
+        assertPosition(
+            dot.runtimePosition(in: graph),
+            equals: DeliveryDotPosition(x: expectedX, y: expectedY)
+        )
+    }
+
+    func testDotDoesNotChangeCourseWhenSwitchIsRotatedMidEdge() throws {
+        let engine = RouteEngine(dotSpeed: 1)
+        try engine.buildGraph(from: makeLevelData())
+        XCTAssertTrue(engine.startDotMovement())
+
+        // Move dot 1.5 units: 1.0 to cross e_start_switch and reach the switch node, then 0.5 units
+        // into e_switch_package (the outgoing edge that the switch selected). This places the dot
+        // partway along a switch-selected outgoing edge — the edge the acceptance criterion protects.
+        engine.updateDot(deltaTime: 1.5)
+
+        let dotBefore = try XCTUnwrap(engine.deliveryDot)
+        XCTAssertEqual(dotBefore.currentEdgeID, "e_switch_package")
+        // e_switch_package length = sqrt(2) ≈ 1.4142; progress = 0.5 / sqrt(2) ≈ 0.3536
+        let expectedProgress = 0.5 / sqrt(2.0)
+        XCTAssertEqual(dotBefore.progressAlongEdge, expectedProgress, accuracy: 0.0001)
+
+        // Rotate the switch while dot is mid-edge on the switch-selected outgoing edge.
+        engine.rotateSwitchNode(nodeID: "switch")
+
+        // Advance the dot further along the edge AFTER the rotation.
+        // This step is what catches a regression where updateDot re-reads the switch direction
+        // mid-edge and reroutes the dot to the newly active outgoing edge.
+        engine.updateDot(deltaTime: 0.4)
+
+        // The dot must still be on e_switch_package, now 0.9 units in (progress = 0.9 / sqrt(2)).
+        let dotAfter = try XCTUnwrap(engine.deliveryDot)
+        XCTAssertEqual(dotAfter.currentEdgeID, "e_switch_package", "Edge must not change mid-traversal")
+        let expectedProgressAfter = 0.9 / sqrt(2.0)
+        XCTAssertEqual(dotAfter.progressAlongEdge, expectedProgressAfter, accuracy: 0.0001)
+    }
+
+    func testSwitchRotationAffectsNextVisitToSwitchNode() throws {
+        let engine = RouteEngine(dotSpeed: 1)
+        try engine.buildGraph(from: makeLevelData())
+        XCTAssertTrue(engine.startDotMovement())
+
+        // Move dot past switch onto e_switch_package (first pass through switch node).
+        // Distance = 1.5: 1.0 to reach switch, then 0.5 units into e_switch_package.
+        engine.updateDot(deltaTime: 1.5)
+
+        let dotMidLoop = try XCTUnwrap(engine.deliveryDot)
+        XCTAssertEqual(dotMidLoop.currentEdgeID, "e_switch_package")
+
+        // Rotate switch twice so destination is now the active direction.
+        engine.rotateSwitchNode(nodeID: "switch") // -> e_switch_dead_end
+        engine.rotateSwitchNode(nodeID: "switch") // -> e_switch_destination
+
+        // Advance enough for the dot to complete the loop back to switch and then start the
+        // destination edge.
+        // Remaining on e_switch_package: (1 − 0.5/√2) * √2 ≈ 0.9142 units
+        // e_package_return length = √2 ≈ 1.4142 units
+        // Remaining after arriving at switch second time: 2.5 − (0.9142 + 1.4142) ≈ 0.1716 units
+        engine.updateDot(deltaTime: 2.5)
+
+        let dot = try XCTUnwrap(engine.deliveryDot)
+        XCTAssertEqual(dot.currentEdgeID, "e_switch_destination",
+                       "Dot should follow the newly active direction on its second visit to the switch")
+    }
+
+    func testWrongSwitchDirectionSendsDotToDeadEnd() throws {
+        let engine = RouteEngine(dotSpeed: 4)
+        try engine.buildGraph(from: makeLevelData())
+
+        // Rotate switch to the dead-end branch.
+        engine.rotateSwitchNode(nodeID: "switch") // -> e_switch_dead_end
+        XCTAssertTrue(engine.startDotMovement())
+
+        // Advance far enough to travel start -> switch -> dead_end.
+        engine.updateDot(deltaTime: 2.0)
+
+        let dot = try XCTUnwrap(engine.deliveryDot)
+        XCTAssertEqual(dot.currentNodeID, "dead_end")
+        XCTAssertNil(dot.currentEdgeID)
+        XCTAssertTrue(engine.didHaltAtDeadEnd)
+    }
 }
