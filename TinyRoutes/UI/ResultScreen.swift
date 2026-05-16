@@ -15,6 +15,36 @@ struct ResultScreen: View {
     let failureReason: LevelFailureReason?
     let onRestartTapped: () -> Void
     let onExitTapped: () -> Void
+    private let levelRepository: LevelRepository
+    private let scoringService: ScoringService
+    private let progressService: ProgressService
+
+    @State private var awardedStars: Int = 0
+    @State private var bestStars: Int = 0
+
+    init(
+        levelID: String,
+        result: ResultType,
+        elapsedTime: TimeInterval,
+        tapCount: Int,
+        failureReason: LevelFailureReason?,
+        onRestartTapped: @escaping () -> Void,
+        onExitTapped: @escaping () -> Void,
+        levelRepository: LevelRepository = LevelRepository(),
+        scoringService: ScoringService = ScoringService(),
+        progressService: ProgressService = ProgressService()
+    ) {
+        self.levelID = levelID
+        self.result = result
+        self.elapsedTime = elapsedTime
+        self.tapCount = tapCount
+        self.failureReason = failureReason
+        self.onRestartTapped = onRestartTapped
+        self.onExitTapped = onExitTapped
+        self.levelRepository = levelRepository
+        self.scoringService = scoringService
+        self.progressService = progressService
+    }
 
     private var titleText: String {
         switch result {
@@ -34,6 +64,13 @@ struct ResultScreen: View {
             Text("Final Taps: \(tapCount)")
                 .font(.subheadline)
                 .foregroundColor(.secondary)
+            if case .completed = result {
+                Text("Stars: \(starString(for: awardedStars))")
+                    .font(.headline)
+                Text("Best: \(starString(for: bestStars))")
+                    .font(.subheadline)
+                    .foregroundColor(.secondary)
+            }
             if let failureReason, case .failed = result {
                 Text(failureReason.message)
                     .font(.subheadline)
@@ -42,6 +79,39 @@ struct ResultScreen: View {
 
             Button("Restart", action: onRestartTapped)
             Button("Back to Menu", action: onExitTapped)
+        }
+        .task {
+            updateStars()
+        }
+    }
+
+    private func starString(for stars: Int) -> String {
+        let clampedStars = min(max(stars, 0), 3)
+        return String(repeating: "★", count: clampedStars) + String(repeating: "☆", count: 3 - clampedStars)
+    }
+
+    private func updateStars() {
+        guard case .completed = result else {
+            awardedStars = 0
+            bestStars = progressService.bestStars(for: levelID)
+            return
+        }
+
+        do {
+            let levelData = try levelRepository.loadLevel(id: levelID)
+            let scoreResult = scoringService.score(
+                levelID: levelID,
+                didComplete: true,
+                elapsedTime: elapsedTime,
+                tapCount: tapCount,
+                timeLimit: TimeInterval(levelData.timeLimitSeconds),
+                parTaps: levelData.parTaps
+            )
+            awardedStars = scoreResult.stars
+            bestStars = progressService.saveBestStars(scoreResult.stars, for: levelID)
+        } catch {
+            awardedStars = 1
+            bestStars = progressService.saveBestStars(awardedStars, for: levelID)
         }
     }
 }
