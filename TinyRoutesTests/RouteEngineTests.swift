@@ -601,10 +601,16 @@ final class RouteEngineTests: XCTestCase {
         // Rotate the switch while dot is mid-edge on the switch-selected outgoing edge.
         engine.rotateSwitchNode(nodeID: "switch")
 
-        // The dot must continue on the same edge — mid-edge rotation must not reroute it.
+        // Advance the dot further along the edge AFTER the rotation.
+        // This step is what catches a regression where updateDot re-reads the switch direction
+        // mid-edge and reroutes the dot to the newly active outgoing edge.
+        engine.updateDot(deltaTime: 0.4)
+
+        // The dot must still be on e_switch_package, now 0.9 units in (progress = 0.9 / sqrt(2)).
         let dotAfter = try XCTUnwrap(engine.deliveryDot)
         XCTAssertEqual(dotAfter.currentEdgeID, "e_switch_package", "Edge must not change mid-traversal")
-        XCTAssertEqual(dotAfter.progressAlongEdge, expectedProgress, accuracy: 0.0001)
+        let expectedProgressAfter = 0.9 / sqrt(2.0)
+        XCTAssertEqual(dotAfter.progressAlongEdge, expectedProgressAfter, accuracy: 0.0001)
     }
 
     func testSwitchRotationAffectsNextVisitToSwitchNode() throws {
