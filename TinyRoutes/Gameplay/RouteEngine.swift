@@ -192,6 +192,9 @@ final class RouteEngine {
         }
 
         guard deliveryDot.currentEdgeID != nil else {
+            if didConsumeRemainingTime, levelOutcome == nil {
+                levelOutcome = .failed(reason: .timeExpired)
+            }
             self.deliveryDot = deliveryDot
             return
         }

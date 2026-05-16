@@ -282,6 +282,27 @@ final class RouteEngineTests: XCTestCase {
         XCTAssertEqual(engine.levelOutcome, .failed(reason: .timeExpired))
     }
 
+    func testUpdateDotFailsImmediatelyWhenIdleAndTimeIsConsumed() throws {
+        let engine = RouteEngine(dotSpeed: 1)
+        let level = makeLevelData()
+        let timedLevel = LevelData(
+            id: level.id,
+            name: level.name,
+            graph: level.graph,
+            startNodeID: level.startNodeID,
+            packageNodeID: level.packageNodeID,
+            destinationNodeID: level.destinationNodeID,
+            timeLimitSeconds: 1,
+            parTaps: level.parTaps
+        )
+        try engine.buildGraph(from: timedLevel)
+
+        // Dot is idle because movement has not started.
+        engine.updateDot(deltaTime: 1.1)
+
+        XCTAssertEqual(engine.levelOutcome, .failed(reason: .timeExpired))
+    }
+
     func testUpdateDotConsumesRemainingTimeSliceBeforeTimingOut() throws {
         let nodes = [
             RouteNode(id: "start", x: 0, y: 0, outgoingEdgeIDs: ["to_destination"]),
