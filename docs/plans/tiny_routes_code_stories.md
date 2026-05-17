@@ -1026,13 +1026,14 @@ Unlock campaign levels sequentially while keeping previously completed levels re
 4. Ensure replaying an already completed level does not regress unlock progress.
 5. Prevent locked levels from being launched through normal navigation.
 6. Update home/level-select/result flows so the next recommended level is based on current unlock state.
-7. Leave a clean override seam for future debug-mode lock bypass without exposing it in the normal player flow.
+7. Add a debug-only override path so locks can be bypassed for testing without exposing that control in the normal player flow.
 
 **Acceptance criteria:**
 
 - Completing a level unlocks the next level in sequence.
 - Completed levels remain replayable.
 - Locked levels are visibly locked and cannot be started through standard UI.
+- Debug mode can override locks for testing.
 - "Next level" navigation respects unlock state.
 - Unlock data persists through the player save profile.
 
@@ -1041,6 +1042,7 @@ Unlock campaign levels sequentially while keeping previously completed levels re
 - Complete the first playable level and confirm the next becomes available.
 - Replay a completed level and confirm unlock progress is unchanged.
 - Attempt to launch a locked level from level select and confirm it is blocked.
+- Enable debug mode and confirm a locked level can be launched through the override path without changing production UI behavior.
 - Relaunch the app and confirm unlocked state persists.
 
 **Do not do / out of scope:**
@@ -1217,7 +1219,8 @@ Centralize reward logic so coin payouts are determined consistently from level o
 4. Wire successful level completion to award coins through the centralized reward path and wallet service.
 5. Define replay behavior so repeat clears do not produce unintended economy exploits.
 6. Surface the awarded coin result on the result screen.
-7. Leave extension points for future reward sources such as dailies, streaks, rewarded ads, and bonus chests.
+7. Log reward grants through `AnalyticsAdapter` so awarded rewards are available for analytics reporting.
+8. Leave extension points for future reward sources such as dailies, streaks, rewarded ads, and bonus chests.
 
 **Acceptance criteria:**
 
@@ -1226,6 +1229,7 @@ Centralize reward logic so coin payouts are determined consistently from level o
 - Reward rules can be tuned from a single configuration point.
 - Coin awards are persisted through the wallet/profile flow.
 - Replay rewards follow a defined and testable MVP rule.
+- Reward grants are logged for analytics from the centralized reward path.
 
 **Testing notes:**
 
@@ -1233,6 +1237,7 @@ Centralize reward logic so coin payouts are determined consistently from level o
 - Replay a completed level and confirm reward behavior matches the chosen economy rule.
 - Verify the result screen displays the awarded coins from the centralized reward result.
 - Confirm no reward is granted on failed runs unless explicitly configured.
+- Confirm eligible reward grants emit the expected analytics event payload once per award.
 
 **Do not do / out of scope:**
 
@@ -1260,7 +1265,7 @@ Track owned and equipped cosmetics so the MVP can support default cosmetic avail
 
 1. Finalize the cosmetic model fields needed for inventory management, including category, rarity, unlock state, and price metadata.
 2. Seed the default always-available cosmetics required for MVP gameplay visuals.
-3. Add service APIs to list owned items, list equipable items by category, unlock items, and equip items.
+3. Add service APIs to list owned items, list equippable items by category, unlock items, and equip items.
 4. Enforce that only owned items can be equipped, while default items remain permanently available.
 5. Persist owned/equipped cosmetic state through the save profile flow.
 6. Expose inventory state in a UI-friendly form for future shop/equip screens, even if the first UI is minimal.
