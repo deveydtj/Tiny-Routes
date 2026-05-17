@@ -221,11 +221,14 @@ private struct RouteBoardView: View {
     private let edgeStrokeColor = Color.blue.opacity(0.7)
     private let nodeFillColor = Color.white
     private let nodeBorderColor = Color.blue
-    private let deliveryDotColor = Color.purple
     private let boardPadding: CGFloat = 20
-    private let nodeSize: CGFloat = 22
-    private let specialNodeSize: CGFloat = 30
-    private let deliveryDotSize: CGFloat = 18
+    private let nodeSize: CGFloat = 34
+    private let switchSpriteSize: CGFloat = 52
+    private let switchRingSize: CGFloat = 28
+    private let specialNodeSize: CGFloat = 74
+    private let specialNodeRingSize: CGFloat = 42
+    private let deliveryDotSize: CGFloat = 58
+    private let deliveryDotRingSize: CGFloat = 32
     private let edgeWidth: CGFloat = 8
 
     var body: some View {
@@ -240,7 +243,7 @@ private struct RouteBoardView: View {
             let tapTargetResolver = RouteBoardTapTargetResolver(
                 runtimeGraph: runtimeGraph,
                 layout: layout,
-                tapRadius: max(nodeSize, specialNodeSize) * 0.9
+                tapRadius: max(switchSpriteSize, specialNodeSize) * 0.65
             )
 
             ZStack {
@@ -270,14 +273,15 @@ private struct RouteBoardView: View {
                 }
 
                 if let deliveryDotPoint = deliveryDotPoint(in: layout) {
-                    Circle()
-                        .fill(deliveryDotColor)
+                    SpriteImage(name: "blue_orb")
+                        .scaledToFit()
+                        .frame(width: deliveryDotSize, height: deliveryDotSize)
                         .overlay(
                             Circle()
                                 .stroke(Color.white.opacity(0.9), lineWidth: 2)
+                                .frame(width: deliveryDotRingSize, height: deliveryDotRingSize)
                         )
-                        .frame(width: deliveryDotSize, height: deliveryDotSize)
-                        .shadow(color: deliveryDotColor.opacity(0.35), radius: 6, x: 0, y: 2)
+                        .shadow(color: Color.blue.opacity(0.35), radius: 6, x: 0, y: 2)
                         .position(deliveryDotPoint)
                         .allowsHitTesting(false)
                 }
@@ -300,17 +304,14 @@ private struct RouteBoardView: View {
     @ViewBuilder
     private func nodeView(for node: RuntimeRouteNode, layout: BoardLayout) -> some View {
         if node.id == packageNodeID, !hasCollectedPackage {
-            Circle()
-                .fill(Color.orange.opacity(0.9))
-                .overlay(
-                    Text("📦")
-                        .font(.system(size: 16))
-                )
+            SpriteImage(name: "shipping_box")
+                .scaledToFit()
+                .frame(width: specialNodeSize, height: specialNodeSize)
                 .overlay(
                     Circle()
                         .stroke(Color.orange, lineWidth: 2)
+                        .frame(width: specialNodeRingSize, height: specialNodeRingSize)
                 )
-                .frame(width: specialNodeSize, height: specialNodeSize)
         } else if node.id == packageNodeID {
             Circle()
                 .fill(Color.orange.opacity(0.2))
@@ -323,24 +324,21 @@ private struct RouteBoardView: View {
                     Circle()
                         .stroke(Color.orange.opacity(0.6), lineWidth: 2)
                 )
-                .frame(width: specialNodeSize, height: specialNodeSize)
+                .frame(width: specialNodeRingSize, height: specialNodeRingSize)
         } else if node.id == destinationNodeID {
-            Circle()
-                .fill(Color.green.opacity(0.9))
-                .overlay(
-                    Image(systemName: "flag.checkered")
-                        .font(.system(size: 14, weight: .semibold))
-                        .foregroundColor(.white)
-                )
+            SpriteImage(name: "finish_flag_pin")
+                .scaledToFit()
+                .frame(width: specialNodeSize, height: specialNodeSize)
                 .overlay(
                     Circle()
                         .stroke(Color.green, lineWidth: 2)
+                        .frame(width: specialNodeRingSize, height: specialNodeRingSize)
                 )
-                .frame(width: specialNodeSize, height: specialNodeSize)
         } else if let activeDirectionAngle = activeDirectionAngle(for: node, in: layout) {
             SwitchNodeView(
                 activeDirectionAngle: activeDirectionAngle,
-                size: nodeSize
+                spriteSize: switchSpriteSize,
+                ringSize: switchRingSize
             )
         } else {
             Circle()

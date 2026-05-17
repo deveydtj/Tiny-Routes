@@ -1,33 +1,33 @@
 {
   "id": "level_004",
-  "name": "Double Transfer",
+  "name": "Cross Town",
   "graph": {
     "nodes": [
-      { "id": "start", "x": 0.0, "y": 0.0, "outgoingEdgeIDs": ["e_start_west"] },
-      { "id": "west_switch", "x": 1.0, "y": 0.0, "outgoingEdgeIDs": ["e_west_package", "e_west_holding", "e_west_destination"] },
-      { "id": "package", "x": 2.0, "y": 1.0, "outgoingEdgeIDs": ["e_package_east"] },
-      { "id": "east_switch", "x": 3.0, "y": 1.0, "outgoingEdgeIDs": ["e_east_long_loop", "e_east_return_hub"] },
-      { "id": "long_loop", "x": 4.0, "y": 2.0, "outgoingEdgeIDs": ["e_long_loop_return"] },
-      { "id": "return_hub", "x": 2.0, "y": -0.2, "outgoingEdgeIDs": ["e_return_hub_west"] },
-      { "id": "holding", "x": 2.0, "y": -1.0, "outgoingEdgeIDs": ["e_holding_return"] },
-      { "id": "destination", "x": 4.0, "y": 0.0, "outgoingEdgeIDs": [] }
+      { "id": "start", "x": 0.0, "y": 0.0, "outgoingEdgeIDs": ["e_start_west_switch"] },
+      { "id": "west_switch", "x": 1.0, "y": 0.0, "outgoingEdgeIDs": ["e_west_holding", "e_west_package", "e_west_destination"] },
+      { "id": "holding", "x": 2.0, "y": -1.0, "outgoingEdgeIDs": ["e_holding_west"] },
+      { "id": "package", "x": 2.0, "y": 1.0, "outgoingEdgeIDs": ["e_package_east_switch"] },
+      { "id": "east_switch", "x": 3.0, "y": 0.9, "outgoingEdgeIDs": ["e_east_loop", "e_east_return"] },
+      { "id": "loop", "x": 4.0, "y": 1.8, "outgoingEdgeIDs": ["e_loop_east"] },
+      { "id": "return_lane", "x": 2.1, "y": -0.2, "outgoingEdgeIDs": ["e_return_west"] },
+      { "id": "destination", "x": 4.2, "y": 0.0, "outgoingEdgeIDs": [] }
     ],
     "edges": [
-      { "id": "e_start_west", "fromNodeID": "start", "toNodeID": "west_switch" },
-      { "id": "e_west_package", "fromNodeID": "west_switch", "toNodeID": "package" },
+      { "id": "e_start_west_switch", "fromNodeID": "start", "toNodeID": "west_switch" },
       { "id": "e_west_holding", "fromNodeID": "west_switch", "toNodeID": "holding" },
-      { "id": "e_holding_return", "fromNodeID": "holding", "toNodeID": "west_switch" },
+      { "id": "e_holding_west", "fromNodeID": "holding", "toNodeID": "west_switch" },
+      { "id": "e_west_package", "fromNodeID": "west_switch", "toNodeID": "package" },
       { "id": "e_west_destination", "fromNodeID": "west_switch", "toNodeID": "destination" },
-      { "id": "e_package_east", "fromNodeID": "package", "toNodeID": "east_switch" },
-      { "id": "e_east_long_loop", "fromNodeID": "east_switch", "toNodeID": "long_loop" },
-      { "id": "e_long_loop_return", "fromNodeID": "long_loop", "toNodeID": "east_switch" },
-      { "id": "e_east_return_hub", "fromNodeID": "east_switch", "toNodeID": "return_hub" },
-      { "id": "e_return_hub_west", "fromNodeID": "return_hub", "toNodeID": "west_switch" }
+      { "id": "e_package_east_switch", "fromNodeID": "package", "toNodeID": "east_switch" },
+      { "id": "e_east_loop", "fromNodeID": "east_switch", "toNodeID": "loop" },
+      { "id": "e_loop_east", "fromNodeID": "loop", "toNodeID": "east_switch" },
+      { "id": "e_east_return", "fromNodeID": "east_switch", "toNodeID": "return_lane" },
+      { "id": "e_return_west", "fromNodeID": "return_lane", "toNodeID": "west_switch" }
     ]
   },
   "startNodeID": "start",
   "packageNodeID": "package",
   "destinationNodeID": "destination",
-  "timeLimitSeconds": 48,
-  "parTaps": 4
+  "timeLimitSeconds": 52,
+  "parTaps": 3
 }

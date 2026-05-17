@@ -1,0 +1,33 @@
+{
+  "id": "level_008",
+  "name": "Canal Switches",
+  "graph": {
+    "nodes": [
+      { "id": "start", "x": 0.0, "y": 0.0, "outgoingEdgeIDs": ["e_start_split"] },
+      { "id": "split", "x": 1.0, "y": 0.0, "outgoingEdgeIDs": ["e_split_lower", "e_split_package"] },
+      { "id": "lower_loop", "x": 2.0, "y": -1.0, "outgoingEdgeIDs": ["e_lower_split"] },
+      { "id": "package", "x": 2.0, "y": 1.0, "outgoingEdgeIDs": ["e_package_bridge"] },
+      { "id": "bridge", "x": 3.0, "y": 0.5, "outgoingEdgeIDs": ["e_bridge_split", "e_bridge_gate"] },
+      { "id": "gate", "x": 4.0, "y": 0.5, "outgoingEdgeIDs": ["e_gate_detour", "e_gate_destination"] },
+      { "id": "detour", "x": 4.6, "y": 1.5, "outgoingEdgeIDs": ["e_detour_gate"] },
+      { "id": "destination", "x": 5.0, "y": 0.0, "outgoingEdgeIDs": [] }
+    ],
+    "edges": [
+      { "id": "e_start_split", "fromNodeID": "start", "toNodeID": "split" },
+      { "id": "e_split_lower", "fromNodeID": "split", "toNodeID": "lower_loop" },
+      { "id": "e_lower_split", "fromNodeID": "lower_loop", "toNodeID": "split" },
+      { "id": "e_split_package", "fromNodeID": "split", "toNodeID": "package" },
+      { "id": "e_package_bridge", "fromNodeID": "package", "toNodeID": "bridge" },
+      { "id": "e_bridge_split", "fromNodeID": "bridge", "toNodeID": "split" },
+      { "id": "e_bridge_gate", "fromNodeID": "bridge", "toNodeID": "gate" },
+      { "id": "e_gate_detour", "fromNodeID": "gate", "toNodeID": "detour" },
+      { "id": "e_detour_gate", "fromNodeID": "detour", "toNodeID": "gate" },
+      { "id": "e_gate_destination", "fromNodeID": "gate", "toNodeID": "destination" }
+    ]
+  },
+  "startNodeID": "start",
+  "packageNodeID": "package",
+  "destinationNodeID": "destination",
+  "timeLimitSeconds": 54,
+  "parTaps": 3
+}

@@ -1,25 +1,28 @@
 {
   "id": "level_003",
-  "name": "Red Light Spur",
+  "name": "Return Gate",
   "graph": {
     "nodes": [
-      { "id": "start", "x": 0.0, "y": 0.0, "outgoingEdgeIDs": ["e_start_switch"] },
-      { "id": "switch", "x": 1.0, "y": 0.0, "outgoingEdgeIDs": ["e_switch_dead_end", "e_switch_package", "e_switch_destination"] },
-      { "id": "package", "x": 2.0, "y": 1.0, "outgoingEdgeIDs": ["e_package_return"] },
-      { "id": "dead_end", "x": 2.0, "y": -1.0, "outgoingEdgeIDs": [] },
-      { "id": "destination", "x": 3.0, "y": 0.0, "outgoingEdgeIDs": [] }
+      { "id": "start", "x": 0.0, "y": 0.0, "outgoingEdgeIDs": ["e_start_pickup_switch"] },
+      { "id": "pickup_switch", "x": 1.0, "y": 0.0, "outgoingEdgeIDs": ["e_pickup_package", "e_pickup_delay"] },
+      { "id": "delay", "x": 2.0, "y": -0.9, "outgoingEdgeIDs": ["e_delay_pickup"] },
+      { "id": "package", "x": 2.0, "y": 0.9, "outgoingEdgeIDs": ["e_package_gate"] },
+      { "id": "gate", "x": 3.0, "y": 0.2, "outgoingEdgeIDs": ["e_gate_pickup", "e_gate_destination"] },
+      { "id": "destination", "x": 4.0, "y": 0.0, "outgoingEdgeIDs": [] }
     ],
     "edges": [
-      { "id": "e_start_switch", "fromNodeID": "start", "toNodeID": "switch" },
-      { "id": "e_switch_dead_end", "fromNodeID": "switch", "toNodeID": "dead_end" },
-      { "id": "e_switch_package", "fromNodeID": "switch", "toNodeID": "package" },
-      { "id": "e_package_return", "fromNodeID": "package", "toNodeID": "switch" },
-      { "id": "e_switch_destination", "fromNodeID": "switch", "toNodeID": "destination" }
+      { "id": "e_start_pickup_switch", "fromNodeID": "start", "toNodeID": "pickup_switch" },
+      { "id": "e_pickup_package", "fromNodeID": "pickup_switch", "toNodeID": "package" },
+      { "id": "e_pickup_delay", "fromNodeID": "pickup_switch", "toNodeID": "delay" },
+      { "id": "e_delay_pickup", "fromNodeID": "delay", "toNodeID": "pickup_switch" },
+      { "id": "e_package_gate", "fromNodeID": "package", "toNodeID": "gate" },
+      { "id": "e_gate_pickup", "fromNodeID": "gate", "toNodeID": "pickup_switch" },
+      { "id": "e_gate_destination", "fromNodeID": "gate", "toNodeID": "destination" }
     ]
   },
   "startNodeID": "start",
   "packageNodeID": "package",
   "destinationNodeID": "destination",
-  "timeLimitSeconds": 50,
-  "parTaps": 3
+  "timeLimitSeconds": 44,
+  "parTaps": 1
 }

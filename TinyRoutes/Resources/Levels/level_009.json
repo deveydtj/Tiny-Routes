@@ -1,0 +1,36 @@
+{
+  "id": "level_009",
+  "name": "Clockwise Courier",
+  "graph": {
+    "nodes": [
+      { "id": "start", "x": 0.0, "y": 0.0, "outgoingEdgeIDs": ["e_start_hub"] },
+      { "id": "hub", "x": 1.0, "y": 0.0, "outgoingEdgeIDs": ["e_hub_north", "e_hub_east", "e_hub_south"] },
+      { "id": "north", "x": 2.0, "y": 1.0, "outgoingEdgeIDs": ["e_north_package"] },
+      { "id": "east", "x": 2.0, "y": 0.0, "outgoingEdgeIDs": ["e_east_destination"] },
+      { "id": "south", "x": 2.0, "y": -1.0, "outgoingEdgeIDs": ["e_south_hub"] },
+      { "id": "package", "x": 3.0, "y": 1.0, "outgoingEdgeIDs": ["e_package_ring"] },
+      { "id": "ring", "x": 3.5, "y": 0.0, "outgoingEdgeIDs": ["e_ring_hub", "e_ring_gate"] },
+      { "id": "gate", "x": 4.5, "y": 0.0, "outgoingEdgeIDs": ["e_gate_ring", "e_gate_destination"] },
+      { "id": "destination", "x": 5.5, "y": 0.0, "outgoingEdgeIDs": [] }
+    ],
+    "edges": [
+      { "id": "e_start_hub", "fromNodeID": "start", "toNodeID": "hub" },
+      { "id": "e_hub_north", "fromNodeID": "hub", "toNodeID": "north" },
+      { "id": "e_hub_east", "fromNodeID": "hub", "toNodeID": "east" },
+      { "id": "e_hub_south", "fromNodeID": "hub", "toNodeID": "south" },
+      { "id": "e_south_hub", "fromNodeID": "south", "toNodeID": "hub" },
+      { "id": "e_north_package", "fromNodeID": "north", "toNodeID": "package" },
+      { "id": "e_east_destination", "fromNodeID": "east", "toNodeID": "destination" },
+      { "id": "e_package_ring", "fromNodeID": "package", "toNodeID": "ring" },
+      { "id": "e_ring_hub", "fromNodeID": "ring", "toNodeID": "hub" },
+      { "id": "e_ring_gate", "fromNodeID": "ring", "toNodeID": "gate" },
+      { "id": "e_gate_ring", "fromNodeID": "gate", "toNodeID": "ring" },
+      { "id": "e_gate_destination", "fromNodeID": "gate", "toNodeID": "destination" }
+    ]
+  },
+  "startNodeID": "start",
+  "packageNodeID": "package",
+  "destinationNodeID": "destination",
+  "timeLimitSeconds": 58,
+  "parTaps": 2
+}
