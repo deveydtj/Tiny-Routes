@@ -958,39 +958,435 @@ After the first playable loop works, continue with the remaining phase-aligned b
 
 ## STORY-022 — Add Player Save Profile
 
-Persist progress, stars, coins, cosmetics, settings, and ad-removal state.
+**Goal:**  
+Persist the player profile locally so progress, economy state, cosmetic state, settings, and monetization flags survive app restarts.
+
+**Files likely involved:**
+
+- `TinyRoutes/Domain/PlayerProfile.swift`
+- `TinyRoutes/Infrastructure/SaveDataRepository.swift`
+- `TinyRoutes/Services/ProgressService.swift`
+- `TinyRoutes/Services/EconomyService.swift`
+- `TinyRoutes/Services/CosmeticService.swift`
+- `TinyRoutes/App/AppCoordinator.swift`
+
+**Implementation steps:**
+
+1. Define the full save payload shape and make sure it contains version information.
+2. Expand `PlayerProfile` so it can represent completed levels, best stars, coin balance, owned/equipped cosmetics, basic settings, streak placeholders, and ad-removal state.
+3. Implement save/load behavior in `SaveDataRepository` using a local on-device format that can round-trip the profile cleanly.
+4. Create a bootstrap path that loads an existing profile on app start or creates a new default profile when no save exists.
+5. Add controlled fallback behavior for corrupt or unreadable save data so the app recovers without crashing.
+6. Route profile mutations through the existing game-facing services instead of letting UI screens write save data directly.
+7. Make sure save writes happen after meaningful profile changes and not on every frame of gameplay.
+
+**Acceptance criteria:**
+
+- Progress persists after app restart.
+- Save data contains a version field suitable for future migrations.
+- Missing save data creates a valid default profile automatically.
+- Corrupt save data does not crash the app and falls back to a recoverable default path.
+- UI and gameplay systems consume profile state through services/repositories instead of directly encoding JSON.
+
+**Testing notes:**
+
+- Save a populated profile, reload it, and confirm all persisted fields survive round-trip.
+- Launch with no existing save and confirm a default profile is created.
+- Simulate corrupt save payload data and confirm the app handles it safely.
+- Verify star progress, coin balance, equipped cosmetics, and settings all persist across relaunch.
+
+**Do not do / out of scope:**
+
+- Do not add cloud sync or account login.
+- Do not add world progression yet.
+- Do not add purchase restoration flows beyond persisting the local flag.
+- Do not add analytics migration events yet.
+
+---
 
 ## STORY-023 — Add Level Unlocking
 
-Unlock levels sequentially while keeping completed levels replayable.
+**Goal:**  
+Unlock campaign levels sequentially while keeping previously completed levels replayable and clearly separating locked vs. playable content.
+
+**Files likely involved:**
+
+- `TinyRoutes/Services/ProgressService.swift`
+- `TinyRoutes/Domain/PlayerProfile.swift`
+- `TinyRoutes/UI/LevelSelectScreen.swift`
+- `TinyRoutes/UI/ResultScreen.swift`
+- `TinyRoutes/UI/HomeScreen.swift`
+- `TinyRoutes/App/AppCoordinator.swift`
+
+**Implementation steps:**
+
+1. Define the unlocking rule for MVP campaign progression, including what counts as "completed" for unlocking the next level.
+2. Add progress-service APIs that answer whether a level is locked, unlocked, completed, or replayable.
+3. Update level-completion flow so finishing a level unlocks the next sequential level exactly once.
+4. Ensure replaying an already completed level does not regress unlock progress.
+5. Prevent locked levels from being launched through normal navigation.
+6. Update home/level-select/result flows so the next recommended level is based on current unlock state.
+7. Add a debug-only override path so locks can be bypassed for testing without exposing that control in the normal player flow.
+
+**Acceptance criteria:**
+
+- Completing a level unlocks the next level in sequence.
+- Completed levels remain replayable.
+- Locked levels are visibly locked and cannot be started through standard UI.
+- Debug mode can override locks for testing.
+- "Next level" navigation respects unlock state.
+- Unlock data persists through the player save profile.
+
+**Testing notes:**
+
+- Complete the first playable level and confirm the next becomes available.
+- Replay a completed level and confirm unlock progress is unchanged.
+- Attempt to launch a locked level from level select and confirm it is blocked.
+- Enable debug mode and confirm a locked level can be launched through the override path without changing production UI behavior.
+- Relaunch the app and confirm unlocked state persists.
+
+**Do not do / out of scope:**
+
+- Do not add world-based unlock rules yet.
+- Do not add coin-based unlock skips.
+- Do not add difficulty recommendations or progression maps.
+- Do not expose the debug unlock override in production UI.
+
+---
 
 ## STORY-024 — Add Home Screen
 
-Create the main landing screen with Play, Daily Route, Shop, Settings, coins, and streak preview.
+**Goal:**  
+Create the primary landing screen that gives the player a fast path into the next playable level and previews the main MVP navigation destinations.
+
+**Files likely involved:**
+
+- `TinyRoutes/UI/HomeScreen.swift`
+- `TinyRoutes/App/ContentView.swift`
+- `TinyRoutes/App/AppCoordinator.swift`
+- `TinyRoutes/Services/ProgressService.swift`
+- `TinyRoutes/Services/EconomyService.swift`
+- `TinyRoutes/Services/StreakService.swift`
+- `TinyRoutes/Services/DailyChallengeService.swift`
+
+**Implementation steps:**
+
+1. Replace the placeholder home screen with an MVP landing layout aligned to the product plan.
+2. Add primary actions for Play, Daily Route, Shop, and Settings.
+3. Show the current coin balance and a lightweight streak preview using available service data or placeholders when features are not yet implemented.
+4. Surface the player's next recommended campaign level so gameplay can start quickly.
+5. Add a simple route-preview graphic or board card that reinforces the game identity without embedding live gameplay logic in the home screen.
+6. Wire all home-screen actions through `AppCoordinator`.
+7. Make the layout resilient to partially implemented systems so missing daily/shop details do not break the screen.
+
+**Acceptance criteria:**
+
+- Player can start the next playable level quickly from home.
+- Daily Route, Shop, and Settings entry points are visible.
+- Coin balance is visible from the home screen.
+- Streak preview area exists even if backed by placeholder data.
+- Navigation from home feels simple and does not embed gameplay state management.
+
+**Testing notes:**
+
+- Launch the app and confirm home becomes the primary landing screen.
+- Tap Play and confirm it opens the correct next campaign level.
+- Tap Daily Route, Shop, and Settings and confirm routing works or reaches the intended placeholder destination.
+- Verify the home screen still renders when streak/daily data is empty.
+
+**Do not do / out of scope:**
+
+- Do not build the final polished live preview or animated board.
+- Do not add rewarded-ad placements on home.
+- Do not add profile/social features.
+- Do not implement the full daily challenge system yet.
+
+---
 
 ## STORY-025 — Add Level Select Screen
 
-Display available levels, locks, and earned stars.
+**Goal:**  
+Create a level select screen that shows campaign progression clearly, including unlocked levels, locked levels, and earned stars.
+
+**Files likely involved:**
+
+- `TinyRoutes/UI/LevelSelectScreen.swift`
+- `TinyRoutes/App/AppCoordinator.swift`
+- `TinyRoutes/Services/ProgressService.swift`
+- `TinyRoutes/Infrastructure/LevelRepository.swift`
+- `TinyRoutes/Domain/LevelData.swift`
+
+**Implementation steps:**
+
+1. Define the list/grid presentation for campaign levels using available level metadata.
+2. Load enough level metadata to show level number, lock state, and earned stars without starting gameplay.
+3. Display unlocked, completed, current, and locked states distinctly.
+4. Allow completed levels to be replayed and unlocked levels to be started.
+5. Prevent locked levels from entering gameplay.
+6. Highlight the next recommended/current level based on progression state.
+7. Add navigation back to home and into gameplay without duplicating unlock logic in the UI layer.
+
+**Acceptance criteria:**
+
+- Available levels are displayed.
+- Locked levels are shown as locked.
+- Completed levels show earned stars.
+- The current recommended level is highlighted.
+- Player can replay completed levels.
+
+**Testing notes:**
+
+- Open level select with a fresh profile and confirm only the expected starting levels are playable.
+- Complete levels and confirm stars and unlock state appear correctly.
+- Launch a replay from a completed level and confirm gameplay starts normally.
+- Attempt to select a locked level and confirm it does not start.
+
+**Do not do / out of scope:**
+
+- Do not add world grouping yet.
+- Do not add milestone reward UI.
+- Do not add filtering, sorting, or search.
+- Do not turn this into a map-navigation screen yet.
+
+---
 
 ## STORY-026 — Add Coin Wallet
 
-Create a soft-currency wallet that tracks earned and spent coins.
+**Goal:**  
+Create the MVP soft-currency wallet so the game can safely track earned and spent coins through a central service.
+
+**Files likely involved:**
+
+- `TinyRoutes/Services/EconomyService.swift`
+- `TinyRoutes/Domain/PlayerProfile.swift`
+- `TinyRoutes/Infrastructure/SaveDataRepository.swift`
+- `TinyRoutes/UI/HomeScreen.swift`
+- `TinyRoutes/UI/ResultScreen.swift`
+- `TinyRoutes/UI/ShopScreen.swift`
+
+**Implementation steps:**
+
+1. Define the wallet API for reading balance, earning coins, and spending coins.
+2. Store the authoritative coin balance in the player profile.
+3. Enforce non-negative balance rules in the economy layer so UI cannot overspend.
+4. Persist wallet changes through the save profile flow.
+5. Expose balance updates to screens that need to display currency.
+6. Return clear success/failure results for spend attempts so future shop flows can react predictably.
+7. Keep reward-calculation policy separate so this story only owns wallet state and transactions.
+
+**Acceptance criteria:**
+
+- Coins can be earned through the wallet API.
+- Coins can be spent through the wallet API.
+- Coin balance persists through app restart.
+- Negative balances are impossible.
+- Balance reads come from a centralized economy path, not duplicated UI state.
+
+**Testing notes:**
+
+- Award coins and confirm the balance increases correctly.
+- Spend coins within the available balance and confirm the balance decreases correctly.
+- Attempt to overspend and confirm the operation fails without producing a negative balance.
+- Relaunch the app and confirm the coin balance persists.
+
+**Do not do / out of scope:**
+
+- Do not add reward formulas yet.
+- Do not add double-coins rewards yet.
+- Do not add real-money currency packs.
+- Do not implement the cosmetic shop purchase flow yet.
+
+---
 
 ## STORY-027 — Add Reward Rules and Coin Rewards
 
-Centralize reward logic and award coins from stars, level completion, and future systems.
+**Goal:**  
+Centralize reward logic so coin payouts are determined consistently from level outcomes and are ready to expand to future reward sources.
+
+**Files likely involved:**
+
+- `TinyRoutes/Services/EconomyService.swift`
+- `TinyRoutes/Services/ScoringService.swift`
+- `TinyRoutes/Services/ProgressService.swift`
+- `TinyRoutes/UI/ResultScreen.swift`
+- `TinyRoutes/Infrastructure/AnalyticsAdapter.swift`
+
+**Implementation steps:**
+
+1. Define the MVP reward rule set for campaign completion and star-based coin payouts.
+2. Keep reward values configurable in one place so balance tuning does not require UI edits.
+3. Add a game-facing reward calculation path that consumes completion context and returns a reward breakdown.
+4. Wire successful level completion to award coins through the centralized reward path and wallet service.
+5. Define replay behavior so repeat clears do not produce unintended economy exploits.
+6. Surface the awarded coin result on the result screen.
+7. Log reward grants through `AnalyticsAdapter` so awarded rewards are available for analytics reporting.
+8. Leave extension points for future reward sources such as dailies, streaks, rewarded ads, and bonus chests.
+
+**Acceptance criteria:**
+
+- Coins are awarded after eligible level completion.
+- Reward amount is based on the centralized rules rather than UI-specific logic.
+- Reward rules can be tuned from a single configuration point.
+- Coin awards are persisted through the wallet/profile flow.
+- Replay rewards follow a defined and testable MVP rule.
+- Reward grants are logged for analytics from the centralized reward path.
+
+**Testing notes:**
+
+- Complete levels with different star outcomes and confirm the expected coin awards are granted.
+- Replay a completed level and confirm reward behavior matches the chosen economy rule.
+- Verify the result screen displays the awarded coins from the centralized reward result.
+- Confirm no reward is granted on failed runs unless explicitly configured.
+- Confirm eligible reward grants emit the expected analytics event payload once per award.
+
+**Do not do / out of scope:**
+
+- Do not add rewarded ad multipliers yet.
+- Do not add daily challenge rewards yet.
+- Do not add bonus chests or milestone rewards yet.
+- Do not add live economy tuning infrastructure yet.
+
+---
 
 ## STORY-028 — Add Basic Cosmetic Inventory
 
-Track owned and equipped cosmetics.
+**Goal:**  
+Track owned and equipped cosmetics so the MVP can support default cosmetic availability plus future unlock/equip flows.
+
+**Files likely involved:**
+
+- `TinyRoutes/Domain/CosmeticItem.swift`
+- `TinyRoutes/Domain/PlayerProfile.swift`
+- `TinyRoutes/Services/CosmeticService.swift`
+- `TinyRoutes/Infrastructure/SaveDataRepository.swift`
+- `TinyRoutes/UI/ShopScreen.swift`
+
+**Implementation steps:**
+
+1. Finalize the cosmetic model fields needed for inventory management, including category, rarity, unlock state, and price metadata.
+2. Seed the default always-available cosmetics required for MVP gameplay visuals.
+3. Add service APIs to list owned items, list equippable items by category, unlock items, and equip items.
+4. Enforce that only owned items can be equipped, while default items remain permanently available.
+5. Persist owned/equipped cosmetic state through the save profile flow.
+6. Expose inventory state in a UI-friendly form for future shop/equip screens, even if the first UI is minimal.
+7. Keep purchase and reward acquisition logic outside this story so inventory remains the single ownership/equip source of truth.
+
+**Acceptance criteria:**
+
+- Cosmetics have stable metadata fields needed for MVP inventory behavior.
+- Default cosmetics are always available.
+- Owned cosmetics persist.
+- Equipped cosmetics persist.
+- Invalid equip attempts are rejected cleanly.
+
+**Testing notes:**
+
+- Load a fresh profile and confirm default cosmetics are available.
+- Unlock a cosmetic and confirm it becomes owned.
+- Equip an owned cosmetic and confirm the equipped state persists after reload.
+- Attempt to equip an unowned cosmetic and confirm the service rejects it.
+
+**Do not do / out of scope:**
+
+- Do not build the full cosmetic shop yet.
+- Do not add real-money cosmetic bundles.
+- Do not add random cosmetic chest rewards yet.
+- Do not implement every cosmetic category's final UI in this story.
+
+---
 
 ## STORY-029 — Add Route Themes
 
-Ship the first 4 MVP route themes.
+**Goal:**  
+Ship the first four MVP route themes and apply them to gameplay visuals without affecting gameplay behavior.
+
+**Files likely involved:**
+
+- `TinyRoutes/Services/CosmeticService.swift`
+- `TinyRoutes/Domain/CosmeticItem.swift`
+- `TinyRoutes/UI/GameplayScreen.swift`
+- `TinyRoutes/UI/HomeScreen.swift`
+- `TinyRoutes/UI/LevelSelectScreen.swift`
+
+**Implementation steps:**
+
+1. Define the first four theme variants: Classic, Ocean Drive, Sunset, and Neon.
+2. Create a theme representation that captures route-line colors, node colors, destination/package accents, and background accents.
+3. Connect the equipped theme state from the cosmetic system to the gameplay renderer.
+4. Apply theme styling consistently to gameplay and any lightweight route previews used in navigation screens.
+5. Ensure theme changes are purely visual and do not modify hit areas, routing rules, or gameplay readability.
+6. Provide a preview-friendly way for future inventory/shop UI to render the theme options.
+7. Verify default fallback styling exists when equipped-theme data is missing.
+
+**Acceptance criteria:**
+
+- Four MVP route themes exist.
+- Theme selection changes route line colors, node colors, and background accents.
+- Equipped theme is reflected in gameplay visuals.
+- Theme changes do not alter gameplay behavior.
+- Theme options can be previewed from inventory-facing UI.
+
+**Testing notes:**
+
+- Equip each theme and confirm gameplay visuals update correctly.
+- Verify package, destination, switch arrows, and delivery dot remain readable across all themes.
+- Confirm a missing or invalid equipped-theme value falls back safely to the default theme.
+- Check lightweight preview surfaces for visual consistency with gameplay.
+
+**Do not do / out of scope:**
+
+- Do not add paid/premium theme bundles yet.
+- Do not add world-specific theming rules yet.
+- Do not add animated backgrounds.
+- Do not change level difficulty or layout per theme.
+
+---
 
 ## STORY-030 — Add Trail Effects
 
-Ship the first 6 MVP trail options.
+**Goal:**  
+Add the first six MVP delivery-dot trail effects so equipped cosmetics visibly change movement presentation during gameplay.
+
+**Files likely involved:**
+
+- `TinyRoutes/UI/GameplayScreen.swift`
+- `TinyRoutes/Gameplay/DeliveryDot.swift`
+- `TinyRoutes/Services/CosmeticService.swift`
+- `TinyRoutes/Domain/CosmeticItem.swift`
+
+**Implementation steps:**
+
+1. Define the first six trail options: Dots, Sparkles, Glow, Bubbles, Stars, and Leaves.
+2. Choose a lightweight rendering approach that can follow the moving delivery dot without introducing heavy performance cost.
+3. Bind the equipped trail selection from the cosmetic system to gameplay rendering.
+4. Render trail output behind or around the delivery dot while preserving route readability.
+5. Add safe fallback behavior for missing trail data so the default trail always works.
+6. Ensure trail state resets cleanly on restart, success, failure, and level changes.
+7. Keep the trail system extensible so more effects can be added later without rewriting gameplay movement.
+
+**Acceptance criteria:**
+
+- Six MVP trail options exist.
+- Trail follows the moving delivery dot.
+- Equipped trail is reflected during gameplay.
+- Trail can be changed from cosmetic inventory/shop-facing state.
+- Trail implementation does not introduce obvious performance issues on the MVP board.
+
+**Testing notes:**
+
+- Equip each trail and confirm it appears while the dot moves.
+- Restart/fail/complete a level and confirm the trail resets cleanly.
+- Verify trails do not obscure switches, package state, or destination readability.
+- Confirm default trail behavior works when no custom trail is equipped.
+
+**Do not do / out of scope:**
+
+- Do not add heavy particle systems that require complex tuning.
+- Do not add audio or haptic behavior tied to trails.
+- Do not add premium-only trail unlock rules yet.
+- Do not add trail-specific monetization or reward placements yet.
+
+---
 
 ## STORY-031 — Add Rewarded Ad Adapter
 
