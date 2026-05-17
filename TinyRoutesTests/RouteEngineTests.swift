@@ -336,6 +336,30 @@ final class RouteEngineTests: XCTestCase {
         XCTAssertNil(resolver.nodeID(at: CGPoint(x: 75, y: 20)))
     }
 
+    func testDirectionalArrowTransformMirrorsLeftFacingArrow() {
+        let transform = DirectionalArrowTransform(angle: .pi)
+
+        XCTAssertEqual(transform.xScale, -1)
+        XCTAssertEqual(transform.rotationAngle, 0, accuracy: 0.0001)
+    }
+
+    func testDirectionalArrowTransformKeepsRightFacingArrowUnflipped() {
+        let transform = DirectionalArrowTransform(angle: 0)
+
+        XCTAssertEqual(transform.xScale, 1)
+        XCTAssertEqual(transform.rotationAngle, 0, accuracy: 0.0001)
+    }
+
+    func testDirectionalArrowTransformKeepsVerticalArrowsRotated() {
+        let upTransform = DirectionalArrowTransform(angle: -.pi / 2)
+        let downTransform = DirectionalArrowTransform(angle: .pi / 2)
+
+        XCTAssertEqual(upTransform.xScale, 1)
+        XCTAssertEqual(upTransform.rotationAngle, -.pi / 2, accuracy: 0.0001)
+        XCTAssertEqual(downTransform.xScale, 1)
+        XCTAssertEqual(downTransform.rotationAngle, .pi / 2, accuracy: 0.0001)
+    }
+
     func testBuildGraphInitializesTimerFromLevelData() throws {
         let engine = RouteEngine()
 
@@ -900,8 +924,9 @@ final class RouteEngineTests: XCTestCase {
         let expectedProgress = 0.5 / sqrt(2.0)
         XCTAssertEqual(dotBefore.progressAlongEdge, expectedProgress, accuracy: 0.0001)
 
-        // Rotate the switch while dot is mid-edge on the switch-selected outgoing edge.
-        engine.rotateSwitchNode(nodeID: "switch")
+        // Rotating the switch that launched the current edge is ignored so the arrow cannot
+        // contradict the dot's committed movement.
+        XCTAssertFalse(engine.rotateSwitchNode(nodeID: "switch"))
 
         // Advance the dot further along the edge AFTER the rotation.
         // This step is what catches a regression where updateDot re-reads the switch direction
@@ -913,6 +938,23 @@ final class RouteEngineTests: XCTestCase {
         XCTAssertEqual(dotAfter.currentEdgeID, "e_switch_package", "Edge must not change mid-traversal")
         let expectedProgressAfter = 0.9 / sqrt(2.0)
         XCTAssertEqual(dotAfter.progressAlongEdge, expectedProgressAfter, accuracy: 0.0001)
+    }
+
+    func testSwitchCannotRotateWhileDotIsOnEdgeLeavingThatSwitch() throws {
+        let engine = RouteEngine(dotSpeed: 1)
+        try engine.buildGraph(from: makeLevelData())
+        XCTAssertTrue(engine.startDotMovement())
+
+        engine.updateDot(deltaTime: 1.5)
+
+        let dotBefore = try XCTUnwrap(engine.deliveryDot)
+        XCTAssertEqual(dotBefore.currentEdgeID, "e_switch_package")
+        XCTAssertFalse(engine.rotateSwitchNode(nodeID: "switch"))
+
+        let graph = try XCTUnwrap(engine.runtimeGraph)
+        let switchNode = try XCTUnwrap(graph.nodesByID["switch"])
+        XCTAssertEqual(switchNode.activeOutgoingEdgeID, "e_switch_package")
+        XCTAssertEqual(engine.tapCount, 0)
     }
 
     func testSwitchRotationAffectsNextVisitToSwitchNode() throws {
@@ -927,16 +969,22 @@ final class RouteEngineTests: XCTestCase {
         let dotMidLoop = try XCTUnwrap(engine.deliveryDot)
         XCTAssertEqual(dotMidLoop.currentEdgeID, "e_switch_package")
 
-        // Rotate switch twice so destination is now the active direction.
+        // Move onto the package return edge so the switch is no longer the source of the
+        // current committed movement.
+        engine.updateDot(deltaTime: 1.0)
+
+        let dotReturning = try XCTUnwrap(engine.deliveryDot)
+        XCTAssertEqual(dotReturning.currentEdgeID, "e_package_return")
+
+        // Rotate switch twice so destination is now the active direction for the next visit.
         engine.rotateSwitchNode(nodeID: "switch") // -> e_switch_dead_end
         engine.rotateSwitchNode(nodeID: "switch") // -> e_switch_destination
 
         // Advance enough for the dot to complete the loop back to switch and then start the
         // destination edge.
-        // Remaining on e_switch_package: (1 − 0.5/√2) * √2 ≈ 0.9142 units
-        // e_package_return length = √2 ≈ 1.4142 units
-        // Remaining after arriving at switch second time: 2.5 − (0.9142 + 1.4142) ≈ 0.1716 units
-        engine.updateDot(deltaTime: 2.5)
+        // Remaining on e_package_return: about 1.3284 units.
+        // Remaining after arriving at switch second time: 1.5 − 1.3284 ≈ 0.1716 units.
+        engine.updateDot(deltaTime: 1.5)
 
         let dot = try XCTUnwrap(engine.deliveryDot)
         XCTAssertEqual(dot.currentEdgeID, "e_switch_destination",

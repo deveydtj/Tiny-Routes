@@ -7,63 +7,70 @@ struct ContentView: View {
     private let levelRepository = LevelRepository()
 
     var body: some View {
-        Group {
-            switch coordinator.state {
-            case .boot:
-                ProgressView("Loading Tiny Routes…")
-                    .task {
-                        coordinator.launch()
-                    }
+        ZStack {
+            SpriteImage(name: "background")
+                .scaledToFill()
+                .ignoresSafeArea()
 
-            case .mainMenu:
-                HomeScreen(
-                    onPlayTapped: coordinator.openLevelSelect,
-                    onShopTapped: coordinator.openShop,
-                    onSettingsTapped: coordinator.openSettings
-                )
+            Group {
+                switch coordinator.state {
+                case .boot:
+                    ProgressView("Loading Tiny Routes…")
+                        .task {
+                            coordinator.launch()
+                        }
 
-            case .levelSelect:
-                levelSelectView
+                case .mainMenu:
+                    HomeScreen(
+                        onPlayTapped: coordinator.openLevelSelect,
+                        onShopTapped: coordinator.openShop,
+                        onSettingsTapped: coordinator.openSettings
+                    )
 
-            case let .gameplay(levelID), let .pause(levelID):
-                gameplayView(levelID: levelID, isPaused: coordinator.state.isPaused)
+                case .levelSelect:
+                    levelSelectView
 
-            case let .levelComplete(levelID, elapsedTime, tapCount):
-                let nextLevelID = nextLevelID(after: levelID)
-                ResultScreen(
-                    levelID: levelID,
-                    result: .completed,
-                    elapsedTime: elapsedTime,
-                    tapCount: tapCount,
-                    failureReason: nil,
-                    canAdvanceToNextLevel: nextLevelID != nil,
-                    onRestartTapped: coordinator.restartGameplay,
-                    onNextLevelTapped: {
-                        guard let nextLevelID else { return }
-                        coordinator.startGameplay(levelID: nextLevelID)
-                    },
-                    onExitTapped: coordinator.exitGameplayToMenu
-                )
+                case let .gameplay(levelID), let .pause(levelID):
+                    gameplayView(levelID: levelID, isPaused: coordinator.state.isPaused)
 
-            case let .levelFailed(levelID, reason, elapsedTime, tapCount):
-                ResultScreen(
-                    levelID: levelID,
-                    result: .failed,
-                    elapsedTime: elapsedTime,
-                    tapCount: tapCount,
-                    failureReason: reason,
-                    onRestartTapped: coordinator.restartGameplay,
-                    onExitTapped: coordinator.exitGameplayToMenu
-                )
+                case let .levelComplete(levelID, elapsedTime, tapCount):
+                    let nextLevelID = nextLevelID(after: levelID)
+                    ResultScreen(
+                        levelID: levelID,
+                        result: .completed,
+                        elapsedTime: elapsedTime,
+                        tapCount: tapCount,
+                        failureReason: nil,
+                        canAdvanceToNextLevel: nextLevelID != nil,
+                        onRestartTapped: coordinator.restartGameplay,
+                        onNextLevelTapped: {
+                            guard let nextLevelID else { return }
+                            coordinator.startGameplay(levelID: nextLevelID)
+                        },
+                        onExitTapped: coordinator.exitGameplayToMenu
+                    )
 
-            case .shop:
-                ShopScreen(onBackTapped: coordinator.backToMainMenu)
+                case let .levelFailed(levelID, reason, elapsedTime, tapCount):
+                    ResultScreen(
+                        levelID: levelID,
+                        result: .failed,
+                        elapsedTime: elapsedTime,
+                        tapCount: tapCount,
+                        failureReason: reason,
+                        onRestartTapped: coordinator.restartGameplay,
+                        onExitTapped: coordinator.exitGameplayToMenu
+                    )
 
-            case .settings:
-                SettingsScreen(onBackTapped: coordinator.backToMainMenu)
+                case .shop:
+                    ShopScreen(onBackTapped: coordinator.backToMainMenu)
+
+                case .settings:
+                    SettingsScreen(onBackTapped: coordinator.backToMainMenu)
+                }
             }
+            .foregroundColor(.black)
+            .padding()
         }
-        .padding()
     }
 
     @ViewBuilder

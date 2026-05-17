@@ -38,6 +38,10 @@ struct SwitchNodeView: View {
     let spriteSize: CGFloat
     let ringSize: CGFloat
 
+    private var arrowTransform: DirectionalArrowTransform {
+        DirectionalArrowTransform(angle: activeDirectionAngle)
+    }
+
     var body: some View {
         ZStack {
             Circle()
@@ -51,9 +55,37 @@ struct SwitchNodeView: View {
             SpriteImage(name: "right_arrow")
                 .scaledToFit()
                 .frame(width: spriteSize, height: spriteSize)
-                .rotationEffect(.radians(activeDirectionAngle))
+                .scaleEffect(x: arrowTransform.xScale, y: 1)
+                .rotationEffect(.radians(arrowTransform.rotationAngle))
         }
         .frame(width: max(spriteSize, ringSize), height: max(spriteSize, ringSize))
+    }
+}
+
+struct DirectionalArrowTransform {
+    let rotationAngle: Double
+    let xScale: CGFloat
+
+    init(angle: Double) {
+        let normalizedAngle = Self.normalizedAngle(angle)
+        if cos(normalizedAngle) < 0 {
+            rotationAngle = Self.normalizedAngle(normalizedAngle - .pi)
+            xScale = -1
+        } else {
+            rotationAngle = normalizedAngle
+            xScale = 1
+        }
+    }
+
+    private static func normalizedAngle(_ angle: Double) -> Double {
+        var normalizedAngle = angle
+        while normalizedAngle <= -.pi {
+            normalizedAngle += 2 * .pi
+        }
+        while normalizedAngle > .pi {
+            normalizedAngle -= 2 * .pi
+        }
+        return normalizedAngle
     }
 }
 

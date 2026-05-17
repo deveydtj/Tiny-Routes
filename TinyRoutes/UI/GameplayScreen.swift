@@ -45,16 +45,21 @@ struct GameplayScreen: View {
 
     var body: some View {
         VStack(spacing: 16) {
-            Text("Level: \(levelID)")
-                .font(.headline)
-            Text(isPaused ? "Paused" : "Running")
-                .foregroundColor(isPaused ? .orange : .green)
-            HStack(spacing: 16) {
-                Text("Time Left: \(GameTimeFormatter.countdown(timeRemaining))")
-                Text("Taps: \(tapCount)")
+            VStack(spacing: 8) {
+                Text("Level: \(levelID)")
+                    .font(.headline)
+                Text(isPaused ? "Paused" : "Running")
+                    .foregroundColor(isPaused ? .orange : .green)
+                HStack(spacing: 16) {
+                    Text("Time Left: \(GameTimeFormatter.countdown(timeRemaining))")
+                    Text("Taps: \(tapCount)")
+                }
+                    .font(.subheadline)
             }
-                .font(.subheadline)
-                .foregroundColor(.secondary)
+            .foregroundColor(.white)
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 12)
+            .background(hudBackground)
 
             Group {
                 if let loadErrorMessage {
@@ -82,6 +87,10 @@ struct GameplayScreen: View {
                 Button(isPaused ? "Resume" : "Pause", action: onPauseResumeTapped)
                 Button("Exit to Menu", action: onExitTapped)
             }
+            .foregroundColor(.white)
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 12)
+            .background(hudBackground)
         }
         .task(id: levelID) {
             loadBoard()
@@ -208,6 +217,11 @@ struct GameplayScreen: View {
         timeRemaining = nil
         hasDispatchedOutcome = false
     }
+
+    private var hudBackground: some View {
+        RoundedRectangle(cornerRadius: 8, style: .continuous)
+            .fill(Color.black.opacity(0.25))
+    }
 }
 
 private struct RouteBoardView: View {
@@ -219,10 +233,7 @@ private struct RouteBoardView: View {
     let onNodeTapped: (String) -> Void
 
     private let edgeStrokeColor = Color.blue.opacity(0.7)
-    private let nodeFillColor = Color.white
-    private let nodeBorderColor = Color.blue
     private let boardPadding: CGFloat = 20
-    private let nodeSize: CGFloat = 34
     private let switchSpriteSize: CGFloat = 52
     private let switchRingSize: CGFloat = 28
     private let specialNodeSize: CGFloat = 74
@@ -286,7 +297,10 @@ private struct RouteBoardView: View {
                         .allowsHitTesting(false)
                 }
             }
-            .background(Color(.secondarySystemBackground))
+            .background {
+                SpriteImage(name: "background")
+                    .scaledToFill()
+            }
             .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
             .contentShape(Rectangle())
             .gesture(
@@ -341,13 +355,7 @@ private struct RouteBoardView: View {
                 ringSize: switchRingSize
             )
         } else {
-            Circle()
-                .fill(nodeFillColor)
-                .overlay(
-                    Circle()
-                        .stroke(nodeBorderColor, lineWidth: 2)
-                )
-                .frame(width: nodeSize, height: nodeSize)
+            EmptyView()
         }
     }
 

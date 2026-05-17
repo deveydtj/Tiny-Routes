@@ -28,6 +28,7 @@
 		3DF4863A4394B12A62D582F5 /* RuntimeRouteGraph.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F9B94553540F5DEADB9944D /* RuntimeRouteGraph.swift */; };
 		423990494EE386383B1F0602 /* DailyChallengeService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 727162B35BDBBDC6E65E677A /* DailyChallengeService.swift */; };
 		4986A68A1EF3C9798A30FF7A /* LevelData.swift in Sources */ = {isa = PBXBuildFile; fileRef = 07D7502FABFF22F936EA1666 /* LevelData.swift */; };
+		4B475CBE67D74046B030C141 /* background.png in Resources */ = {isa = PBXBuildFile; fileRef = 4B475CBE67D74046B030C140 /* background.png */; };
 		647FC0BF1CD92C14876B9E8D /* RouteGraph.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B6634FCA043D2B99D10F4BD /* RouteGraph.swift */; };
 		68E4DC51486C80A64D324018 /* shipping_box.png in Resources */ = {isa = PBXBuildFile; fileRef = 1E9A9719618C9AAE8B8CC3A4 /* shipping_box.png */; };
 		6EEFAA30620655D48C5F5EB3 /* RouteEngineTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8120FF4D4CC3F24DCE4CE9BB /* RouteEngineTests.swift */; };
@@ -40,6 +41,7 @@
 		911B395A569AA6A966094AC3 /* glow_ring.png in Resources */ = {isa = PBXBuildFile; fileRef = 31CAF759955D2A96B2EFFFF2 /* glow_ring.png */; };
 		91CDAB6734C4F7252D08DEEC /* DomainModelsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D66F47942EBD89088355D80 /* DomainModelsTests.swift */; };
 		9A21AAC34BFA67BB81A01890 /* StreakService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 32AA35B2BC4F9E45955D0ED1 /* StreakService.swift */; };
+		A1B2C3D4E5F60718293A4B5C /* TRMenuButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F60718293A4B5D /* TRMenuButton.swift */; };
 		A0E778D7B18192EDCE0ECDB7 /* NodeSwitchController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C944525464AD16A3C4C0A32B /* NodeSwitchController.swift */; };
 		A657B28188ABC7873A7C6B80 /* PlayerProfile.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE2D44D3B9CB219F2E76480E /* PlayerProfile.swift */; };
 		A96831092F654FB2C2E29F01 /* CollisionResolver.swift in Sources */ = {isa = PBXBuildFile; fileRef = BC6EE6C24F31FD317FA05E82 /* CollisionResolver.swift */; };
@@ -99,6 +101,7 @@
 		43AEFC681671D4E071796810 /* DotMovementController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DotMovementController.swift; sourceTree = "<group>"; };
 		465CFC8159B3613A970FE259 /* CosmeticItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CosmeticItem.swift; sourceTree = "<group>"; };
 		499A3741695801E77DD300A2 /* LevelRuntimeState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LevelRuntimeState.swift; sourceTree = "<group>"; };
+		4B475CBE67D74046B030C140 /* background.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = background.png; sourceTree = "<group>"; };
 		4C13BB2799AF7B8830705334 /* ResultScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResultScreen.swift; sourceTree = "<group>"; };
 		5A59C1E60F1C1BADEF3CF796 /* locked_pin.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = locked_pin.png; sourceTree = "<group>"; };
 		5E972F20245469B0B50038E0 /* ShopScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShopScreen.swift; sourceTree = "<group>"; };
@@ -116,6 +119,7 @@
 		9A994D21F5163CDF8D5285EA /* TinyRoutesApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TinyRoutesApp.swift; sourceTree = "<group>"; };
 		A3A2EB059F1ED8B1990CD973 /* ProgressService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProgressService.swift; sourceTree = "<group>"; };
 		A3E54D90DBE6F88BA42C6549 /* right_arrow.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = right_arrow.png; sourceTree = "<group>"; };
+		A1B2C3D4E5F60718293A4B5D /* TRMenuButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TRMenuButton.swift; sourceTree = "<group>"; };
 		B062DC62792DD750D631C000 /* AdsAdapter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AdsAdapter.swift; sourceTree = "<group>"; };
 		B064034548F2A810BA3D12F6 /* LevelRepositoryTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LevelRepositoryTests.swift; sourceTree = "<group>"; };
 		B18B1BD2DCEA7552CE9DBD3B /* GameplayScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameplayScreen.swift; sourceTree = "<group>"; };
@@ -144,6 +148,7 @@
 		0763EA6312AD78EEAC817165 /* Sprites */ = {
 			isa = PBXGroup;
 			children = (
+				4B475CBE67D74046B030C140 /* background.png */,
 				F9B09B5F974F717FBC5BEFE6 /* blue_orb.png */,
 				E347E4BE5EA825DD487C9F9E /* finish_flag_pin.png */,
 				31CAF759955D2A96B2EFFFF2 /* glow_ring.png */,
@@ -171,6 +176,7 @@
 		0E1B5A63A4B2A7B83792B5CD /* UI */ = {
 			isa = PBXGroup;
 			children = (
+				A1B2C3D4E5F60718293A4B5E /* Components */,
 				B18B1BD2DCEA7552CE9DBD3B /* GameplayScreen.swift */,
 				DAE6F8D4B8727D20DEC3BCB7 /* GameTimeFormatter.swift */,
 				1ED10221512DC80E25D258A7 /* HomeScreen.swift */,
@@ -181,6 +187,14 @@
 				C1B022B419A6C15C4612BCB4 /* SwitchNodeView.swift */,
 			);
 			path = UI;
+			sourceTree = "<group>";
+		};
+		A1B2C3D4E5F60718293A4B5E /* Components */ = {
+			isa = PBXGroup;
+			children = (
+				A1B2C3D4E5F60718293A4B5D /* TRMenuButton.swift */,
+			);
+			path = Components;
 			sourceTree = "<group>";
 		};
 		2CC069E53C0E83CF5BBD8DC4 /* Levels */ = {
@@ -381,6 +395,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				4B475CBE67D74046B030C141 /* background.png in Resources */,
 				C7305BC61F224937EC65D436 /* blue_orb.png in Resources */,
 				DBD4E08E951D6FC9C950CCC6 /* finish_flag_pin.png in Resources */,
 				911B395A569AA6A966094AC3 /* glow_ring.png in Resources */,
@@ -445,6 +460,7 @@
 				9A21AAC34BFA67BB81A01890 /* StreakService.swift in Sources */,
 				060F8145B917BE3159712357 /* SwitchNodeView.swift in Sources */,
 				B04EF4A680C930534A0A7924 /* TinyRoutesApp.swift in Sources */,
+				A1B2C3D4E5F60718293A4B5C /* TRMenuButton.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

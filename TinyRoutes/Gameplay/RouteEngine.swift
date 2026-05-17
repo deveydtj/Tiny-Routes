@@ -311,6 +311,10 @@ final class RouteEngine {
         guard var runtimeGraph else {
             return false
         }
+        if let currentEdgeID = deliveryDot?.currentEdgeID,
+           runtimeGraph.edgesByID[currentEdgeID]?.fromNodeID == nodeID {
+            return false
+        }
         let didRotate = nodeSwitchController.rotateSwitch(nodeID: nodeID, in: &runtimeGraph)
         self.runtimeGraph = runtimeGraph
         if didRotate {
