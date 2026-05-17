@@ -1,0 +1,25 @@
+{
+  "id": "level_003",
+  "name": "Red Light Spur",
+  "graph": {
+    "nodes": [
+      { "id": "start", "x": 0.0, "y": 0.0, "outgoingEdgeIDs": ["e_start_switch"] },
+      { "id": "switch", "x": 1.0, "y": 0.0, "outgoingEdgeIDs": ["e_switch_dead_end", "e_switch_package", "e_switch_destination"] },
+      { "id": "package", "x": 2.0, "y": 1.0, "outgoingEdgeIDs": ["e_package_return"] },
+      { "id": "dead_end", "x": 2.0, "y": -1.0, "outgoingEdgeIDs": [] },
+      { "id": "destination", "x": 3.0, "y": 0.0, "outgoingEdgeIDs": [] }
+    ],
+    "edges": [
+      { "id": "e_start_switch", "fromNodeID": "start", "toNodeID": "switch" },
+      { "id": "e_switch_dead_end", "fromNodeID": "switch", "toNodeID": "dead_end" },
+      { "id": "e_switch_package", "fromNodeID": "switch", "toNodeID": "package" },
+      { "id": "e_package_return", "fromNodeID": "package", "toNodeID": "switch" },
+      { "id": "e_switch_destination", "fromNodeID": "switch", "toNodeID": "destination" }
+    ]
+  },
+  "startNodeID": "start",
+  "packageNodeID": "package",
+  "destinationNodeID": "destination",
+  "timeLimitSeconds": 50,
+  "parTaps": 3
+}

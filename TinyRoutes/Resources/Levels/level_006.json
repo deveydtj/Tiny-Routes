@@ -1,0 +1,31 @@
+{
+  "id": "level_006",
+  "name": "Priority Dispatch",
+  "graph": {
+    "nodes": [
+      { "id": "start", "x": 0.0, "y": 0.0, "outgoingEdgeIDs": ["e_start_alpha"] },
+      { "id": "alpha_switch", "x": 1.0, "y": 0.0, "outgoingEdgeIDs": ["e_alpha_bait", "e_alpha_package"] },
+      { "id": "bait_mid", "x": 2.0, "y": 0.0, "outgoingEdgeIDs": ["e_bait_destination"] },
+      { "id": "package", "x": 2.0, "y": 1.0, "outgoingEdgeIDs": ["e_package_beta"] },
+      { "id": "beta_switch", "x": 3.0, "y": 1.0, "outgoingEdgeIDs": ["e_beta_dead_end", "e_beta_return"] },
+      { "id": "dead_end", "x": 4.0, "y": 2.0, "outgoingEdgeIDs": [] },
+      { "id": "return_hub", "x": 2.0, "y": -1.0, "outgoingEdgeIDs": ["e_return_alpha"] },
+      { "id": "destination", "x": 4.0, "y": 0.0, "outgoingEdgeIDs": [] }
+    ],
+    "edges": [
+      { "id": "e_start_alpha", "fromNodeID": "start", "toNodeID": "alpha_switch" },
+      { "id": "e_alpha_bait", "fromNodeID": "alpha_switch", "toNodeID": "bait_mid" },
+      { "id": "e_bait_destination", "fromNodeID": "bait_mid", "toNodeID": "destination" },
+      { "id": "e_alpha_package", "fromNodeID": "alpha_switch", "toNodeID": "package" },
+      { "id": "e_package_beta", "fromNodeID": "package", "toNodeID": "beta_switch" },
+      { "id": "e_beta_dead_end", "fromNodeID": "beta_switch", "toNodeID": "dead_end" },
+      { "id": "e_beta_return", "fromNodeID": "beta_switch", "toNodeID": "return_hub" },
+      { "id": "e_return_alpha", "fromNodeID": "return_hub", "toNodeID": "alpha_switch" }
+    ]
+  },
+  "startNodeID": "start",
+  "packageNodeID": "package",
+  "destinationNodeID": "destination",
+  "timeLimitSeconds": 36,
+  "parTaps": 4
+}

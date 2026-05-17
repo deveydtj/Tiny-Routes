@@ -4,6 +4,7 @@ import SwiftUI
 @MainActor
 struct ContentView: View {
     @StateObject private var coordinator = AppCoordinator()
+    private let levelRepository = LevelRepository()
 
     var body: some View {
         Group {
@@ -22,12 +23,7 @@ struct ContentView: View {
                 )
 
             case .levelSelect:
-                LevelSelectScreen(
-                    onBackTapped: coordinator.backToMainMenu,
-                    onLevelSelected: { levelID in
-                        coordinator.startGameplay(levelID: levelID)
-                    }
-                )
+                levelSelectView
 
             case let .gameplay(levelID), let .pause(levelID):
                 gameplayView(levelID: levelID, isPaused: coordinator.state.isPaused)
@@ -82,11 +78,37 @@ struct ContentView: View {
         )
     }
 
+    @ViewBuilder
+    private var levelSelectView: some View {
+        switch levelSelectState {
+        case let .loaded(levels):
+            LevelSelectScreen(
+                levels: levels,
+                onBackTapped: coordinator.backToMainMenu,
+                onLevelSelected: { levelID in
+                    coordinator.startGameplay(levelID: levelID)
+                }
+            )
+
+        case .empty:
+            unavailableLevelsView(message: "No bundled levels are available yet.")
+
+        case let .failed(message):
+            unavailableLevelsView(message: message)
+        }
+    }
+
+    private var levelSelectState: LevelSelectState {
+        do {
+            let levels = try loadSortedLevels()
+            return levels.isEmpty ? .empty : .loaded(levels)
+        } catch {
+            return .failed("Unable to load bundled levels. \(error.localizedDescription)")
+        }
+    }
+
     private func nextLevelID(after currentLevelID: String) -> String? {
-        let levelRepository = LevelRepository()
-        guard let levelIDs = try? levelRepository.loadAllLevels()
-            .map(\.id)
-            .sorted(),
+        guard let levelIDs = try? loadSortedLevels().map(\.id),
             let currentIndex = levelIDs.firstIndex(of: currentLevelID) else {
             return nil
         }
@@ -98,6 +120,22 @@ struct ContentView: View {
 
         return levelIDs[nextIndex]
     }
+
+    private func loadSortedLevels() throws -> [LevelData] {
+        try levelRepository.loadAllLevels().sorted { $0.id < $1.id }
+    }
+
+    private func unavailableLevelsView(message: String) -> some View {
+        VStack(spacing: 12) {
+            Text("Levels Unavailable")
+                .font(.title2)
+            Text(message)
+                .font(.subheadline)
+                .foregroundColor(.secondary)
+                .multilineTextAlignment(.center)
+            Button("Back", action: coordinator.backToMainMenu)
+        }
+    }
 }
 
 private extension AppState {
@@ -107,6 +145,12 @@ private extension AppState {
         }
         return false
     }
+}
+
+private enum LevelSelectState {
+    case loaded([LevelData])
+    case empty
+    case failed(String)
 }
 
 struct ContentView_Previews: PreviewProvider {

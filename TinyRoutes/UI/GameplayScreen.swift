@@ -237,6 +237,11 @@ private struct RouteBoardView: View {
                 in: geometry.size,
                 padding: boardPadding
             )
+            let tapTargetResolver = RouteBoardTapTargetResolver(
+                runtimeGraph: runtimeGraph,
+                layout: layout,
+                tapRadius: max(nodeSize, specialNodeSize) * 0.9
+            )
 
             ZStack {
                 ForEach(edges, id: \.id) { edge in
@@ -261,10 +266,6 @@ private struct RouteBoardView: View {
                     if let nodePoint = layout.pointsByNodeID[node.id] {
                         nodeView(for: node, layout: layout)
                             .position(nodePoint)
-                            .contentShape(Circle())
-                            .onTapGesture {
-                                onNodeTapped(node.id)
-                            }
                     }
                 }
 
@@ -283,6 +284,16 @@ private struct RouteBoardView: View {
             }
             .background(Color(.secondarySystemBackground))
             .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+            .contentShape(Rectangle())
+            .gesture(
+                DragGesture(minimumDistance: 0)
+                    .onEnded { value in
+                        guard let nodeID = tapTargetResolver.nodeID(at: value.location) else {
+                            return
+                        }
+                        onNodeTapped(nodeID)
+                    }
+            )
         }
     }
 
@@ -377,7 +388,42 @@ private struct RouteBoardView: View {
     }
 }
 
-private struct BoardLayout {
+struct RouteBoardTapTargetResolver {
+    let runtimeGraph: RuntimeRouteGraph
+    let layout: BoardLayout
+    let tapRadius: CGFloat
+
+    func nodeID(at point: CGPoint) -> String? {
+        let tapRadiusSquared = tapRadius * tapRadius
+
+        return runtimeGraph.nodesByID.values
+            .compactMap { node -> (nodeID: String, distanceSquared: CGFloat)? in
+                let validOutgoingEdgeIDs = runtimeGraph.validOutgoingEdgeIDs(for: node)
+                guard validOutgoingEdgeIDs.count > 1,
+                      let nodePoint = layout.pointsByNodeID[node.id] else {
+                    return nil
+                }
+
+                let dx = nodePoint.x - point.x
+                let dy = nodePoint.y - point.y
+                let distanceSquared = (dx * dx) + (dy * dy)
+                guard distanceSquared <= tapRadiusSquared else {
+                    return nil
+                }
+
+                return (node.id, distanceSquared)
+            }
+            .min { lhs, rhs in
+                if lhs.distanceSquared == rhs.distanceSquared {
+                    return lhs.nodeID < rhs.nodeID
+                }
+                return lhs.distanceSquared < rhs.distanceSquared
+            }?
+            .nodeID
+    }
+}
+
+struct BoardLayout {
     let pointsByNodeID: [String: CGPoint]
     /// Ensures non-zero usable dimensions for board layout calculations.
     private static let minimumUsableDimension: CGFloat = 1
@@ -471,13 +517,15 @@ private struct BoardLayout {
     }
 }
 
-#Preview {
-    GameplayScreen(
-        levelID: "level_001",
-        isPaused: false,
-        onPauseResumeTapped: {},
-        onCompleteTapped: { _, _ in },
-        onFailTapped: { _, _, _ in },
-        onExitTapped: {}
-    )
+struct GameplayScreen_Previews: PreviewProvider {
+    static var previews: some View {
+        GameplayScreen(
+            levelID: "level_001",
+            isPaused: false,
+            onPauseResumeTapped: {},
+            onCompleteTapped: { _, _ in },
+            onFailTapped: { _, _, _ in },
+            onExitTapped: {}
+        )
+    }
 }

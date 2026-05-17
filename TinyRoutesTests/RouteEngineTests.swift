@@ -52,6 +52,10 @@ final class RouteEngineTests: XCTestCase {
         XCTAssertEqual(position.y, expected.y, accuracy: accuracy, file: file, line: line)
     }
 
+    private func makeBoardLayout(pointsByNodeID: [String: CGPoint]) -> BoardLayout {
+        BoardLayout(pointsByNodeID: pointsByNodeID)
+    }
+
     // MARK: - Successful build
 
     func testBuildGraphStoresRuntimeGraph() throws {
@@ -260,6 +264,76 @@ final class RouteEngineTests: XCTestCase {
         engine.updateDot(deltaTime: 0.25)
 
         XCTAssertFalse(engine.didHaltAtDeadEnd)
+    }
+
+    func testRouteBoardTapTargetResolverReturnsNearestSwitchNodeWithinRadius() throws {
+        let level = makeLevelData()
+        let engine = RouteEngine()
+        try engine.buildGraph(from: level)
+
+        let graph = try XCTUnwrap(engine.runtimeGraph)
+        let resolver = RouteBoardTapTargetResolver(
+            runtimeGraph: graph,
+            layout: makeBoardLayout(
+                pointsByNodeID: [
+                    "start": CGPoint(x: 10, y: 20),
+                    "switch": CGPoint(x: 50, y: 20),
+                    "package": CGPoint(x: 90, y: 10),
+                    "dead_end": CGPoint(x: 90, y: 40),
+                    "destination": CGPoint(x: 130, y: 20)
+                ]
+            ),
+            tapRadius: 30
+        )
+
+        XCTAssertEqual(resolver.nodeID(at: CGPoint(x: 52, y: 22)), "switch")
+    }
+
+    func testRouteBoardTapTargetResolverIgnoresNonSwitchNodes() throws {
+        let level = makeLevelData()
+        let engine = RouteEngine()
+        try engine.buildGraph(from: level)
+
+        let graph = try XCTUnwrap(engine.runtimeGraph)
+        let resolver = RouteBoardTapTargetResolver(
+            runtimeGraph: graph,
+            layout: makeBoardLayout(
+                pointsByNodeID: [
+                    "start": CGPoint(x: 10, y: 20),
+                    "switch": CGPoint(x: 50, y: 20),
+                    "package": CGPoint(x: 90, y: 10),
+                    "dead_end": CGPoint(x: 90, y: 40),
+                    "destination": CGPoint(x: 130, y: 20)
+                ]
+            ),
+            tapRadius: 20
+        )
+
+        XCTAssertNil(resolver.nodeID(at: CGPoint(x: 130, y: 20)))
+        XCTAssertNil(resolver.nodeID(at: CGPoint(x: 10, y: 20)))
+    }
+
+    func testRouteBoardTapTargetResolverReturnsNilOutsideTapRadius() throws {
+        let level = makeLevelData()
+        let engine = RouteEngine()
+        try engine.buildGraph(from: level)
+
+        let graph = try XCTUnwrap(engine.runtimeGraph)
+        let resolver = RouteBoardTapTargetResolver(
+            runtimeGraph: graph,
+            layout: makeBoardLayout(
+                pointsByNodeID: [
+                    "start": CGPoint(x: 10, y: 20),
+                    "switch": CGPoint(x: 50, y: 20),
+                    "package": CGPoint(x: 90, y: 10),
+                    "dead_end": CGPoint(x: 90, y: 40),
+                    "destination": CGPoint(x: 130, y: 20)
+                ]
+            ),
+            tapRadius: 12
+        )
+
+        XCTAssertNil(resolver.nodeID(at: CGPoint(x: 75, y: 20)))
     }
 
     func testBuildGraphInitializesTimerFromLevelData() throws {

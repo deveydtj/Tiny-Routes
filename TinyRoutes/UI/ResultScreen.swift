@@ -137,15 +137,17 @@ struct ResultScreen: View {
     }
 }
 
-#Preview {
-    ResultScreen(
-        levelID: "level_001",
-        result: .completed,
-        elapsedTime: 18.4,
-        tapCount: 12,
-        failureReason: nil,
-        onRestartTapped: {},
-        onNextLevelTapped: {},
-        onExitTapped: {}
-    )
+struct ResultScreen_Previews: PreviewProvider {
+    static var previews: some View {
+        ResultScreen(
+            levelID: "level_001",
+            result: .completed,
+            elapsedTime: 18.4,
+            tapCount: 12,
+            failureReason: nil,
+            onRestartTapped: {},
+            onNextLevelTapped: {},
+            onExitTapped: {}
+        )
+    }
 }

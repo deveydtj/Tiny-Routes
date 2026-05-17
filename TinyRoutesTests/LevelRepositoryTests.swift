@@ -434,6 +434,86 @@ final class LevelRepositoryTests: XCTestCase {
         }
     }
 
+    func testLoadAllLevelsDecodesShippedBundleLevels() throws {
+        let repo = LevelRepository(bundle: try bundledLevelsBundle())
+
+        let levels = try repo.loadAllLevels().sorted { $0.id < $1.id }
+
+        XCTAssertEqual(levels.map(\.id), expectedBundledLevelIDs)
+    }
+
+    func testBundledLevelsHaveUniqueIDsAndValidReferences() throws {
+        let resources = try bundledLevelResources()
+        let levels = try resources.map { resource in
+            try decoder.decode(LevelData.self, from: Data(contentsOf: resource.url))
+        }
+
+        let duplicateLevelIDs = Dictionary(grouping: levels.map(\.id), by: { $0 })
+            .filter { $1.count > 1 }
+            .map(\.key)
+            .sorted()
+        XCTAssertTrue(duplicateLevelIDs.isEmpty, "Duplicate level IDs found: \(duplicateLevelIDs)")
+
+        for (resource, level) in zip(resources, levels) {
+            XCTAssertEqual(resource.url.deletingPathExtension().lastPathComponent, level.id)
+            assertLevelGraphIntegrity(level)
+        }
+    }
+
+    func testBundledLevelsSortIntoExpectedNextLevelOrder() throws {
+        let repo = LevelRepository(bundle: try bundledLevelsBundle())
+        let sortedLevelIDs = try repo.loadAllLevels()
+            .map(\.id)
+            .sorted()
+
+        XCTAssertEqual(sortedLevelIDs, expectedBundledLevelIDs)
+
+        for (index, levelID) in sortedLevelIDs.enumerated() {
+            let expectedNextLevelID = index < sortedLevelIDs.count - 1
+                ? sortedLevelIDs[index + 1]
+                : nil
+            XCTAssertEqual(nextLevelID(after: levelID, in: sortedLevelIDs), expectedNextLevelID)
+        }
+    }
+
+    private func assertLevelGraphIntegrity(_ level: LevelData) {
+        let duplicateNodeIDs = Dictionary(grouping: level.graph.nodes.map(\.id), by: { $0 })
+            .filter { $1.count > 1 }
+            .map(\.key)
+            .sorted()
+        XCTAssertTrue(duplicateNodeIDs.isEmpty, "Duplicate node IDs found in \(level.id): \(duplicateNodeIDs)")
+        guard duplicateNodeIDs.isEmpty else {
+            return
+        }
+
+        let nodesByID = Dictionary(uniqueKeysWithValues: level.graph.nodes.map { ($0.id, $0) })
+        let nodeIDs = Set(nodesByID.keys)
+
+        XCTAssertNotNil(nodesByID[level.startNodeID], "Missing start node \(level.startNodeID) in \(level.id)")
+        XCTAssertNotNil(nodesByID[level.packageNodeID], "Missing package node \(level.packageNodeID) in \(level.id)")
+        XCTAssertNotNil(nodesByID[level.destinationNodeID], "Missing destination node \(level.destinationNodeID) in \(level.id)")
+
+        for node in level.graph.nodes {
+            XCTAssertNoThrow(try node.validateOutgoingEdges(against: level.graph.edges), "Invalid outgoing edges for node \(node.id) in \(level.id)")
+        }
+
+        for edge in level.graph.edges {
+            XCTAssertTrue(nodeIDs.contains(edge.fromNodeID), "Missing fromNodeID \(edge.fromNodeID) for edge \(edge.id) in \(level.id)")
+            XCTAssertTrue(nodeIDs.contains(edge.toNodeID), "Missing toNodeID \(edge.toNodeID) for edge \(edge.id) in \(level.id)")
+        }
+
+        let adjacency = Dictionary(grouping: level.graph.edges, by: \.fromNodeID)
+            .mapValues { edges in edges.map(\.toNodeID) }
+        XCTAssertTrue(
+            isReachable(from: level.startNodeID, to: level.packageNodeID, adjacency: adjacency),
+            "Expected a path from start to package in \(level.id)"
+        )
+        XCTAssertTrue(
+            isReachable(from: level.packageNodeID, to: level.destinationNodeID, adjacency: adjacency),
+            "Expected a path from package to destination in \(level.id)"
+        )
+    }
+
     private func isReachable(from startID: String, to targetID: String, adjacency: [String: [String]]) -> Bool {
         var visited = Set<String>()
         var queue: [String] = [startID]
@@ -452,6 +532,19 @@ final class LevelRepositoryTests: XCTestCase {
         }
 
         return false
+    }
+
+    private var expectedBundledLevelIDs: [String] {
+        (1...6).map { String(format: "level_%03d", $0) }
+    }
+
+    private func nextLevelID(after currentLevelID: String, in sortedLevelIDs: [String]) -> String? {
+        guard let currentIndex = sortedLevelIDs.firstIndex(of: currentLevelID),
+              currentIndex < sortedLevelIDs.count - 1 else {
+            return nil
+        }
+
+        return sortedLevelIDs[currentIndex + 1]
     }
 
     private func sampleLevel001Bundle() throws -> Bundle {
@@ -474,5 +567,23 @@ final class LevelRepositoryTests: XCTestCase {
         }
 
         throw LevelRepositoryError.fileNotFound(id: "level_001")
+    }
+
+    private func bundledLevelsBundle() throws -> Bundle {
+        try sampleLevel001Bundle()
+    }
+
+    private func bundledLevelResources() throws -> [(bundle: Bundle, url: URL)] {
+        let bundle = try bundledLevelsBundle()
+        let nestedURLs = bundle.urls(forResourcesWithExtension: "json", subdirectory: "Levels") ?? []
+        let rootURLs = bundle.urls(forResourcesWithExtension: "json", subdirectory: nil) ?? []
+
+        var seen = Set<URL>()
+        let urls = (nestedURLs + rootURLs)
+            .filter { seen.insert($0).inserted }
+            .filter { $0.deletingPathExtension().lastPathComponent.hasPrefix("level_") }
+            .sorted { $0.lastPathComponent < $1.lastPathComponent }
+
+        return urls.map { (bundle: bundle, url: $0) }
     }
 }
