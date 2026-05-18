@@ -889,20 +889,20 @@ TinyRoutesTests/LevelValidationTests.swift
 
 ### To Do
 
-- [ ] Validate duplicate values inside each node's `outgoingEdgeIDs`.
-- [ ] Validate every outgoing edge ID exists.
-- [ ] Validate every listed outgoing edge starts from that node.
-- [ ] Validate every graph edge appears in the source node's `outgoingEdgeIDs`.
-- [ ] Add broken fixture for duplicate outgoing edge IDs.
-- [ ] Add broken fixture for missing outgoing edge ID.
-- [ ] Add broken fixture where node omits one of its outgoing graph edges.
-- [ ] Add tests for each fixture.
+- [x] Validate duplicate values inside each node's `outgoingEdgeIDs`.
+- [x] Validate every outgoing edge ID exists.
+- [x] Validate every listed outgoing edge starts from that node.
+- [x] Validate every graph edge appears in the source node's `outgoingEdgeIDs`.
+- [x] Add broken fixture for duplicate outgoing edge IDs.
+- [x] Add broken fixture for missing outgoing edge ID.
+- [x] Add broken fixture where node omits one of its outgoing graph edges.
+- [x] Add tests for each fixture.
 
 ### Definition of Done
 
-- [ ] Outgoing edge mismatch fails validation.
-- [ ] Duplicate outgoing edge IDs fail validation.
-- [ ] Missing outgoing edge references fail validation.
+- [x] Outgoing edge mismatch fails validation.
+- [x] Duplicate outgoing edge IDs fail validation.
+- [x] Missing outgoing edge references fail validation.
 
 ---
 
