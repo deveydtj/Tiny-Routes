@@ -4,21 +4,28 @@ import XCTest
 final class LevelSolvabilityTests: XCTestCase {
     private let catalog = TestLevelCatalog()
     private let solutionRepository = LevelSolutionRepository()
-    private let harness = LevelSimulationHarness(
-        engineFactory: { RouteEngine(dotSpeed: 100) },
-        frameStep: 0.1
-    )
+    // Uses default production-equivalent parameters: RouteEngine() (dotSpeed 1) and frameStep 1/60.
+    private let harness = LevelSimulationHarness()
 
     // MARK: - Helpers
 
+    /// Returns all production levels paired with their solution scripts.
+    /// Levels without a solution script (`fileNotFound`) are silently skipped.
+    /// Any other loading error (e.g. decoding failure) is rethrown immediately.
     private func levelsWithScripts() throws -> [(level: LevelData, script: LevelSolutionScript)] {
         let levels = try catalog.loadAllProductionLevels()
-        return levels.compactMap { level in
-            guard let script = try? solutionRepository.loadScript(levelID: level.id) else {
-                return nil
+        var result: [(level: LevelData, script: LevelSolutionScript)] = []
+        for level in levels {
+            do {
+                let script = try solutionRepository.loadScript(levelID: level.id)
+                result.append((level, script))
+            } catch LevelSolutionRepositoryError.fileNotFound {
+                // No solution script exists yet for this level — skip it.
+            } catch {
+                throw error
             }
-            return (level, script)
         }
+        return result
     }
 
     // MARK: - Tests
@@ -54,8 +61,18 @@ final class LevelSolvabilityTests: XCTestCase {
         var failures: [String] = []
 
         for (level, script) in pairs where script.requiresWithinTimeLimit {
-            guard let result = try? harness.run(level: level, script: script),
-                  result.outcome == .completed else {
+            let result: LevelSolvabilityResult
+            do {
+                result = try harness.run(level: level, script: script)
+            } catch {
+                failures.append("\(level.id): harness threw \(error.localizedDescription)")
+                continue
+            }
+
+            guard result.outcome == .completed else {
+                failures.append(
+                    "\(level.id): did not complete (outcome: \(String(describing: result.outcome))); cannot verify time limit"
+                )
                 continue
             }
 
@@ -78,8 +95,18 @@ final class LevelSolvabilityTests: XCTestCase {
         var failures: [String] = []
 
         for (level, script) in pairs {
-            guard let result = try? harness.run(level: level, script: script),
-                  result.outcome == .completed else {
+            let result: LevelSolvabilityResult
+            do {
+                result = try harness.run(level: level, script: script)
+            } catch {
+                failures.append("\(level.id): harness threw \(error.localizedDescription)")
+                continue
+            }
+
+            guard result.outcome == .completed else {
+                failures.append(
+                    "\(level.id): did not complete (outcome: \(String(describing: result.outcome))); cannot verify tap count"
+                )
                 continue
             }
 
@@ -101,8 +128,18 @@ final class LevelSolvabilityTests: XCTestCase {
         var failures: [String] = []
 
         for (level, script) in pairs where script.maxTaps <= level.parTaps {
-            guard let result = try? harness.run(level: level, script: script),
-                  result.outcome == .completed else {
+            let result: LevelSolvabilityResult
+            do {
+                result = try harness.run(level: level, script: script)
+            } catch {
+                failures.append("\(level.id): harness threw \(error.localizedDescription)")
+                continue
+            }
+
+            guard result.outcome == .completed else {
+                failures.append(
+                    "\(level.id): did not complete (outcome: \(String(describing: result.outcome))); cannot verify par tap count"
+                )
                 continue
             }
 
@@ -121,7 +158,7 @@ final class LevelSolvabilityTests: XCTestCase {
 
     func testLevel001CompletesWithZeroTaps() throws {
         let level = try XCTUnwrap(
-            catalog.loadAllProductionLevels().first(where: { $0.id == "level_001" }),
+            try catalog.loadAllProductionLevels().first(where: { $0.id == "level_001" }),
             "level_001 not found in production levels"
         )
         let script = try solutionRepository.loadScript(levelID: "level_001")
