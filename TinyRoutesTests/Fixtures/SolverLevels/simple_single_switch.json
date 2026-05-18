@@ -1,0 +1,26 @@
+{
+  "id": "fixture_solver_simple_single_switch",
+  "name": "Solver Fixture: Simple Single Switch",
+  "graph": {
+    "nodes": [
+      { "id": "start", "x": 0.0, "y": 0.0, "outgoingEdgeIDs": ["e_start_approach"] },
+      { "id": "approach", "x": 1.0, "y": 0.0, "outgoingEdgeIDs": ["e_approach_switch"] },
+      { "id": "switch", "x": 2.0, "y": 0.0, "outgoingEdgeIDs": ["e_switch_dead_end", "e_switch_package"] },
+      { "id": "dead_end", "x": 3.0, "y": -1.0, "outgoingEdgeIDs": [] },
+      { "id": "package", "x": 3.0, "y": 1.0, "outgoingEdgeIDs": ["e_package_destination"] },
+      { "id": "destination", "x": 4.0, "y": 1.0, "outgoingEdgeIDs": [] }
+    ],
+    "edges": [
+      { "id": "e_start_approach", "fromNodeID": "start", "toNodeID": "approach" },
+      { "id": "e_approach_switch", "fromNodeID": "approach", "toNodeID": "switch" },
+      { "id": "e_switch_dead_end", "fromNodeID": "switch", "toNodeID": "dead_end", "roadShape": "horizontalFirst" },
+      { "id": "e_switch_package", "fromNodeID": "switch", "toNodeID": "package", "roadShape": "horizontalFirst" },
+      { "id": "e_package_destination", "fromNodeID": "package", "toNodeID": "destination" }
+    ]
+  },
+  "startNodeID": "start",
+  "packageNodeID": "package",
+  "destinationNodeID": "destination",
+  "timeLimitSeconds": 30,
+  "parTaps": 1
+}
