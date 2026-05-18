@@ -1112,18 +1112,18 @@ TinyRoutesTests/LevelSolutionScriptTests.swift
 ### To Do
 
 - [ ] Test every production level has a matching solution script.
-- [ ] Test every solution script references an existing production level.
-- [ ] Test action times are non-negative.
-- [ ] Test actions are sorted by time.
-- [ ] Test `maxTaps >= 0`.
-- [ ] Test every `tapNodeID` exists in the referenced level.
-- [ ] Test every tapped node has more than one outgoing edge.
+- [x] Test every solution script references an existing production level.
+- [x] Test action times are non-negative.
+- [x] Test actions are sorted by time.
+- [x] Test `maxTaps >= 0`.
+- [x] Test every `tapNodeID` exists in the referenced level.
+- [x] Test every tapped node has more than one outgoing edge.
 
 ### Definition of Done
 
-- [ ] Invalid solution scripts fail before engine simulation.
-- [ ] Missing solution scripts fail clearly.
-- [ ] Bad node references fail clearly.
+- [x] Invalid solution scripts fail before engine simulation.
+- [x] Missing solution scripts fail clearly.
+- [x] Bad node references fail clearly.
 
 ---
 

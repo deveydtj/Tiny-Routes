@@ -1,4 +1,5 @@
 import XCTest
+@testable import TinyRoutes
 
 final class LevelSolutionScriptTests: XCTestCase {
     private let decoder = JSONDecoder()
@@ -39,5 +40,166 @@ final class LevelSolutionScriptTests: XCTestCase {
 
         XCTAssertEqual(script.levelID, "level_001")
         XCTAssertTrue(script.actions.isEmpty)
+    }
+
+    func testCurrentTaskStageProductionLevelsHaveMatchingSolutionScript() throws {
+        let expectedLevelIDs = Set(["level_001"])
+        let productionLevelIDs = Set(try TestLevelCatalog().loadAllProductionLevels().map(\.id))
+        XCTAssertTrue(
+            expectedLevelIDs.isSubset(of: productionLevelIDs),
+            "Expected production levels for current stage are missing: \(expectedLevelIDs.subtracting(productionLevelIDs).sorted())"
+        )
+
+        let repository = LevelSolutionRepository()
+        var failures: [String] = []
+
+        for levelID in expectedLevelIDs.sorted() {
+            do {
+                let script = try repository.loadScript(levelID: levelID)
+                if script.levelID != levelID {
+                    failures.append("\(levelID): script payload levelID is '\(script.levelID)'")
+                }
+            } catch {
+                failures.append("\(levelID): \(error.localizedDescription)")
+            }
+        }
+
+        XCTAssertTrue(
+            failures.isEmpty,
+            "Expected production levels must have matching solution scripts:\n\(failures.joined(separator: "\n"))"
+        )
+    }
+
+    func testEverySolutionScriptReferencesExistingProductionLevel() throws {
+        let levelsByID = try productionLevelsByID()
+        let scripts = try LevelSolutionRepository().loadAllScripts()
+
+        XCTAssertFalse(scripts.isEmpty, "Expected at least one solution script in LevelSolutions/")
+
+        let invalidReferences = scripts
+            .filter { levelsByID[$0.levelID] == nil }
+            .map { "\($0.levelID): no matching production level" }
+
+        XCTAssertTrue(
+            invalidReferences.isEmpty,
+            "Solution scripts must reference existing production levels:\n\(invalidReferences.joined(separator: "\n"))"
+        )
+    }
+
+    func testMissingSolutionScriptFailsClearly() {
+        let repository = LevelSolutionRepository()
+
+        XCTAssertThrowsError(try repository.loadScript(levelID: "level_999")) { error in
+            guard case let LevelSolutionRepositoryError.fileNotFound(levelID) = error else {
+                XCTFail("Expected fileNotFound error, got \(error)")
+                return
+            }
+            XCTAssertEqual(levelID, "level_999")
+            XCTAssertTrue(
+                error.localizedDescription.contains("level_999.solution.json"),
+                "Expected missing script error to include expected filename"
+            )
+        }
+    }
+
+    func testSolutionActionTimesAreNonNegative() throws {
+        let scripts = try LevelSolutionRepository().loadAllScripts()
+
+        let invalidActions = scripts.flatMap { script in
+            script.actions.enumerated().compactMap { index, action in
+                action.timeSeconds < 0 ? "\(script.levelID) action[\(index)] has negative time \(action.timeSeconds)" : nil
+            }
+        }
+
+        XCTAssertTrue(
+            invalidActions.isEmpty,
+            "Solution action times must be non-negative:\n\(invalidActions.joined(separator: "\n"))"
+        )
+    }
+
+    func testSolutionActionsAreSortedByTime() throws {
+        let scripts = try LevelSolutionRepository().loadAllScripts()
+
+        let orderingIssues = scripts.flatMap { script in
+            zip(script.actions, script.actions.dropFirst()).enumerated().compactMap { index, pair in
+                let (previous, current) = pair
+                return previous.timeSeconds > current.timeSeconds
+                    ? "\(script.levelID) action[\(index)] time \(previous.timeSeconds) is after action[\(index + 1)] time \(current.timeSeconds)"
+                    : nil
+            }
+        }
+
+        XCTAssertTrue(
+            orderingIssues.isEmpty,
+            "Solution actions must be sorted by timeSeconds:\n\(orderingIssues.joined(separator: "\n"))"
+        )
+    }
+
+    func testSolutionMaxTapsIsNonNegative() throws {
+        let scripts = try LevelSolutionRepository().loadAllScripts()
+
+        let invalidMaxTaps = scripts
+            .filter { $0.maxTaps < 0 }
+            .map { "\($0.levelID) has maxTaps \($0.maxTaps)" }
+
+        XCTAssertTrue(
+            invalidMaxTaps.isEmpty,
+            "Solution maxTaps must be non-negative:\n\(invalidMaxTaps.joined(separator: "\n"))"
+        )
+    }
+
+    func testEveryTappedNodeExistsInReferencedLevel() throws {
+        let levelsByID = try productionLevelsByID()
+        let scripts = try LevelSolutionRepository().loadAllScripts()
+
+        let invalidTapNodes = scripts.flatMap { script in
+            guard let level = levelsByID[script.levelID] else {
+                return ["\(script.levelID): no matching production level"]
+            }
+
+            let nodeIDs = Set(level.graph.nodes.map(\.id))
+            return script.actions.enumerated().compactMap { index, action in
+                nodeIDs.contains(action.tapNodeID)
+                    ? nil
+                    : "\(script.levelID) action[\(index)] references missing node '\(action.tapNodeID)'"
+            }
+        }
+
+        XCTAssertTrue(
+            invalidTapNodes.isEmpty,
+            "Tapped nodes must exist in the referenced level:\n\(invalidTapNodes.joined(separator: "\n"))"
+        )
+    }
+
+    func testEveryTappedNodeHasMoreThanOneOutgoingEdge() throws {
+        let levelsByID = try productionLevelsByID()
+        let scripts = try LevelSolutionRepository().loadAllScripts()
+
+        let invalidTapTargets = scripts.flatMap { script in
+            guard let level = levelsByID[script.levelID] else {
+                return ["\(script.levelID): no matching production level"]
+            }
+
+            let nodesByID = Dictionary(uniqueKeysWithValues: level.graph.nodes.map { ($0.id, $0) })
+            return script.actions.enumerated().compactMap { index, action in
+                guard let node = nodesByID[action.tapNodeID] else {
+                    return "\(script.levelID) action[\(index)] references missing node '\(action.tapNodeID)'"
+                }
+                return node.outgoingEdgeIDs.count > 1
+                    ? nil
+                    : "\(script.levelID) action[\(index)] taps '\(action.tapNodeID)' with only \(node.outgoingEdgeIDs.count) outgoing edge(s)"
+            }
+        }
+
+        XCTAssertTrue(
+            invalidTapTargets.isEmpty,
+            "Tapped nodes must have more than one outgoing edge:\n\(invalidTapTargets.joined(separator: "\n"))"
+        )
+    }
+
+    private func productionLevelsByID() throws -> [String: LevelData] {
+        let levels = try TestLevelCatalog().loadAllProductionLevels()
+        XCTAssertFalse(levels.isEmpty, "Expected at least one production level")
+        return Dictionary(uniqueKeysWithValues: levels.map { ($0.id, $0) })
     }
 }
