@@ -1,0 +1,18 @@
+{
+  "id": "level_missing_start",
+  "name": "Missing Start Node",
+  "graph": {
+    "nodes": [
+      { "id": "package", "x": 1.0, "y": 0.0, "outgoingEdgeIDs": ["e_pkg_dest"] },
+      { "id": "destination", "x": 2.0, "y": 0.0, "outgoingEdgeIDs": [] }
+    ],
+    "edges": [
+      { "id": "e_pkg_dest", "fromNodeID": "package", "toNodeID": "destination" }
+    ]
+  },
+  "startNodeID": "start_missing",
+  "packageNodeID": "package",
+  "destinationNodeID": "destination",
+  "timeLimitSeconds": 30,
+  "parTaps": 0
+}

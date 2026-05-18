@@ -30,6 +30,45 @@ final class LevelValidationTests: XCTestCase {
         )
     }
 
+    func testMissingStartNodeProducesError() throws {
+        let level = try decodeBrokenLevelFixture(named: "missing_start_node")
+        let issues = LevelValidator().validate(level: level)
+
+        XCTAssertTrue(
+            issues.contains {
+                $0.severity == .error
+                    && $0.levelID == level.id
+                    && $0.message == "startNodeID 'start_missing' does not exist in the graph"
+            }
+        )
+    }
+
+    func testMissingPackageNodeProducesError() throws {
+        let level = try decodeBrokenLevelFixture(named: "missing_package_node")
+        let issues = LevelValidator().validate(level: level)
+
+        XCTAssertTrue(
+            issues.contains {
+                $0.severity == .error
+                    && $0.levelID == level.id
+                    && $0.message == "packageNodeID 'package_missing' does not exist in the graph"
+            }
+        )
+    }
+
+    func testMissingDestinationNodeProducesError() throws {
+        let level = try decodeBrokenLevelFixture(named: "missing_destination_node")
+        let issues = LevelValidator().validate(level: level)
+
+        XCTAssertTrue(
+            issues.contains {
+                $0.severity == .error
+                    && $0.levelID == level.id
+                    && $0.message == "destinationNodeID 'destination_missing' does not exist in the graph"
+            }
+        )
+    }
+
     func testValidationReturnsAllDuplicateIssuesNotOnlyFirst() {
         let level = makeLevelWithMultipleDuplicateIDs()
         let issues = LevelValidator().validate(level: level)

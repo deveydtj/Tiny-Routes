@@ -828,20 +828,20 @@ TinyRoutesTests/LevelValidationTests.swift
 
 ### To Do
 
-- [ ] Validate `startNodeID` exists.
-- [ ] Validate `packageNodeID` exists.
-- [ ] Validate `destinationNodeID` exists.
-- [ ] Add broken fixture for missing start node.
-- [ ] Add broken fixture for missing package node.
-- [ ] Add broken fixture for missing destination node.
-- [ ] Add tests for all three cases.
+- [x] Validate `startNodeID` exists.
+- [x] Validate `packageNodeID` exists.
+- [x] Validate `destinationNodeID` exists.
+- [x] Add broken fixture for missing start node.
+- [x] Add broken fixture for missing package node.
+- [x] Add broken fixture for missing destination node.
+- [x] Add tests for all three cases.
 
 ### Definition of Done
 
-- [ ] Missing start node fails validation.
-- [ ] Missing package node fails validation.
-- [ ] Missing destination node fails validation.
-- [ ] Failure messages include the missing ID.
+- [x] Missing start node fails validation.
+- [x] Missing package node fails validation.
+- [x] Missing destination node fails validation.
+- [x] Failure messages include the missing ID.
 
 ---
 
