@@ -95,6 +95,45 @@ final class LevelValidationTests: XCTestCase {
         )
     }
 
+    func testDuplicateOutgoingEdgeIDsProduceError() throws {
+        let level = try decodeBrokenLevelFixture(named: "duplicate_outgoing_edge_ids")
+        let issues = LevelValidator().validate(level: level)
+
+        XCTAssertTrue(
+            issues.contains {
+                $0.severity == .error
+                    && $0.levelID == level.id
+                    && $0.message == "Node 'start' has duplicate outgoingEdgeIDs: e_start_package"
+            }
+        )
+    }
+
+    func testUnknownOutgoingEdgeIDProducesError() throws {
+        let level = try decodeBrokenLevelFixture(named: "missing_outgoing_edge_id")
+        let issues = LevelValidator().validate(level: level)
+
+        XCTAssertTrue(
+            issues.contains {
+                $0.severity == .error
+                    && $0.levelID == level.id
+                    && $0.message == "Node 'start' lists unknown outgoing edge ID 'e_missing_edge'"
+            }
+        )
+    }
+
+    func testOmittedOutgoingGraphEdgeProducesError() throws {
+        let level = try decodeBrokenLevelFixture(named: "omitted_outgoing_graph_edge")
+        let issues = LevelValidator().validate(level: level)
+
+        XCTAssertTrue(
+            issues.contains {
+                $0.severity == .error
+                    && $0.levelID == level.id
+                    && $0.message == "Node 'start' is missing outgoing edge 'e_start_package' in outgoingEdgeIDs"
+            }
+        )
+    }
+
     func testValidationReturnsAllDuplicateIssuesNotOnlyFirst() {
         let level = makeLevelWithMultipleDuplicateIDs()
         let issues = LevelValidator().validate(level: level)

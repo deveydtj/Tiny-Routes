@@ -1,0 +1,20 @@
+{
+  "id": "level_missing_outgoing_edge_id",
+  "name": "Missing Outgoing Edge ID",
+  "graph": {
+    "nodes": [
+      { "id": "start", "x": 0.0, "y": 0.0, "outgoingEdgeIDs": ["e_start_package", "e_missing_edge"] },
+      { "id": "package", "x": 1.0, "y": 0.0, "outgoingEdgeIDs": ["e_package_destination"] },
+      { "id": "destination", "x": 2.0, "y": 0.0, "outgoingEdgeIDs": [] }
+    ],
+    "edges": [
+      { "id": "e_start_package", "fromNodeID": "start", "toNodeID": "package" },
+      { "id": "e_package_destination", "fromNodeID": "package", "toNodeID": "destination" }
+    ]
+  },
+  "startNodeID": "start",
+  "packageNodeID": "package",
+  "destinationNodeID": "destination",
+  "timeLimitSeconds": 30,
+  "parTaps": 0
+}

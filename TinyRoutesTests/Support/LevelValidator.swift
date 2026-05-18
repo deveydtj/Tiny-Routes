@@ -66,8 +66,13 @@ final class LevelValidator {
         }
 
         let edgeReferenceIssues = validateEdgeReferences(level: level, nodeIDs: nodeIDs)
+        let outgoingEdgeConsistencyIssues = validateOutgoingEdgeConsistency(level: level)
 
-        return duplicateNodeIssues + duplicateEdgeIssues + requiredNodeIssues + edgeReferenceIssues
+        return duplicateNodeIssues
+            + duplicateEdgeIssues
+            + requiredNodeIssues
+            + edgeReferenceIssues
+            + outgoingEdgeConsistencyIssues
     }
 
     private func validateEdgeReferences(level: LevelData, nodeIDs: Set<String>) -> [LevelValidationIssue] {
@@ -88,6 +93,58 @@ final class LevelValidator {
                 ))
             }
         }
+        return issues
+    }
+
+    private func validateOutgoingEdgeConsistency(level: LevelData) -> [LevelValidationIssue] {
+        var issues: [LevelValidationIssue] = []
+        let edgeIDs = Set(level.graph.edges.map(\.id))
+
+        for node in level.graph.nodes {
+            let duplicateOutgoingEdgeIDs = duplicateIDs(in: node.outgoingEdgeIDs)
+            issues += duplicateOutgoingEdgeIDs.map {
+                LevelValidationIssue(
+                    severity: .error,
+                    levelID: level.id,
+                    message: "Node '\(node.id)' has duplicate outgoingEdgeIDs: \($0)"
+                )
+            }
+
+            for listedEdgeID in node.outgoingEdgeIDs {
+                guard edgeIDs.contains(listedEdgeID) else {
+                    issues.append(LevelValidationIssue(
+                        severity: .error,
+                        levelID: level.id,
+                        message: "Node '\(node.id)' lists unknown outgoing edge ID '\(listedEdgeID)'"
+                    ))
+                    continue
+                }
+
+                if !level.graph.edges.contains(where: { $0.id == listedEdgeID && $0.fromNodeID == node.id }) {
+                    let actualSourceNodeID = level.graph.edges.first(where: { $0.id == listedEdgeID })?.fromNodeID ?? "unknown"
+                    issues.append(LevelValidationIssue(
+                        severity: .error,
+                        levelID: level.id,
+                        message: "Node '\(node.id)' lists edge '\(listedEdgeID)' but that edge starts from '\(actualSourceNodeID)'"
+                    ))
+                }
+            }
+        }
+
+        let nodeByID = Dictionary(uniqueKeysWithValues: level.graph.nodes.map { ($0.id, $0) })
+        for edge in level.graph.edges {
+            guard let sourceNode = nodeByID[edge.fromNodeID] else {
+                continue
+            }
+            if !sourceNode.outgoingEdgeIDs.contains(edge.id) {
+                issues.append(LevelValidationIssue(
+                    severity: .error,
+                    levelID: level.id,
+                    message: "Node '\(sourceNode.id)' is missing outgoing edge '\(edge.id)' in outgoingEdgeIDs"
+                ))
+            }
+        }
+
         return issues
     }
 
