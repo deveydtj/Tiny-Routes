@@ -697,20 +697,20 @@ TinyRoutesTests/Fixtures/BrokenLevels/.gitkeep
 
 ### To Do
 
-- [ ] Create `TinyRoutesTests/Support/`.
-- [ ] Create `TinyRoutesTests/Resources/`.
-- [ ] Create `TinyRoutesTests/Resources/LevelSolutions/`.
-- [ ] Create `TinyRoutesTests/Fixtures/`.
-- [ ] Create `TinyRoutesTests/Fixtures/BrokenLevels/`.
-- [ ] Add `.gitkeep` files where needed so empty folders are committed.
-- [ ] Verify the Xcode project still opens.
-- [ ] Verify the existing test target still builds.
+- [x] Create `TinyRoutesTests/Support/`.
+- [x] Create `TinyRoutesTests/Resources/`.
+- [x] Create `TinyRoutesTests/Resources/LevelSolutions/`.
+- [x] Create `TinyRoutesTests/Fixtures/`.
+- [x] Create `TinyRoutesTests/Fixtures/BrokenLevels/`.
+- [x] Add `.gitkeep` files where needed so empty folders are committed.
+- [x] Verify the Xcode project still opens.
+- [x] Verify the existing test target still builds.
 
 ### Definition of Done
 
-- [ ] Folder structure exists.
-- [ ] No production code changed.
-- [ ] Existing tests still pass.
+- [x] Folder structure exists.
+- [x] No production code changed.
+- [x] Existing tests still pass.
 
 ---
 
