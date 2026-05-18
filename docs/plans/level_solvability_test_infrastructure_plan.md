@@ -1265,19 +1265,19 @@ TinyRoutesTests/Resources/LevelSolutions/level_010.solution.json
 
 ### To Do
 
-- [ ] Open each production level JSON.
-- [ ] Identify the intended route.
-- [ ] Run the level manually or reason through switch defaults.
-- [ ] Create a solution script for each level.
-- [ ] Run `LevelSolvabilityTests` after each script is added.
-- [ ] Fix the script or level data if simulation fails.
-- [ ] Keep scripts minimal and readable.
+- [x] Open each production level JSON.
+- [x] Identify the intended route.
+- [x] Run the level manually or reason through switch defaults.
+- [x] Create a solution script for each level.
+- [x] Run `LevelSolvabilityTests` after each script is added.
+- [x] Fix the script or level data if simulation fails.
+- [x] Keep scripts minimal and readable.
 
 ### Definition of Done
 
-- [ ] Every current `level_###.json` has a matching solution script.
-- [ ] Every solution completes through `RouteEngine`.
-- [ ] Every solution completes within the time limit.
+- [x] Every current `level_###.json` has a matching solution script.
+- [x] Every solution completes through `RouteEngine`.
+- [x] Every solution completes within the time limit.
 
 ---
 

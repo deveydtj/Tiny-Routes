@@ -1,9 +1,21 @@
 {
   "levelID": "level_004",
-  "description": "Validation-stage placeholder script with no taps.",
+  "description": "Collect the package, route through the east return lane, then rotate west switch again for destination.",
   "expectedOutcome": "completed",
-  "maxTaps": 0,
+  "maxTaps": 3,
   "requiresWithinTimeLimit": true,
-  "isPlaceholder": true,
-  "actions": []
+  "actions": [
+    {
+      "timeSeconds": 0.1,
+      "tapNodeID": "west_switch"
+    },
+    {
+      "timeSeconds": 0.2,
+      "tapNodeID": "east_switch"
+    },
+    {
+      "timeSeconds": 5.0,
+      "tapNodeID": "west_switch"
+    }
+  ]
 }
