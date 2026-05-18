@@ -1235,7 +1235,7 @@ TinyRoutesTests/LevelSolvabilityTests.swift
 - [x] Load matching solution scripts.
 - [x] Run each level through `LevelSimulationHarness`.
 - [x] Assert outcome is `.completed`.
-- [x] Assert completion is within time limit.
+- [x] Assert that scripts marked `requiresWithinTimeLimit` reach `.completed` (i.e., do not time out).
 - [x] Assert tap count is less than or equal to script `maxTaps`.
 - [x] If script is intended as par solution, assert tap count is less than or equal to level `parTaps`.
 - [x] Include level ID in every failure message.
