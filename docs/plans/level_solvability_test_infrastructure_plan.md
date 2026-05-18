@@ -1242,7 +1242,7 @@ TinyRoutesTests/LevelSolvabilityTests.swift
 
 ### Definition of Done
 
-- [x] Every level with a solution script is simulated through real `RouteEngine`.
+- [x] Every level with a non-placeholder solution script is simulated through real `RouteEngine` (scripts marked `isPlaceholder: true` are skipped until Task 019 provides real solutions).
 - [x] Failed levels report clear diagnostics.
 - [x] `level_001` passes with zero taps.
 
