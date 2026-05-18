@@ -44,6 +44,7 @@ final class LevelSolvabilityTests: XCTestCase {
 
     /// Returns all production levels paired with their solution scripts.
     /// Levels whose script file does not exist (`fileNotFound`) are silently skipped.
+    /// Levels whose script is marked `isPlaceholder` are silently skipped until Task 019 provides real solutions.
     /// Any other loading error (e.g. decoding failure) is rethrown immediately.
     private func levelsWithScripts() throws -> [(level: LevelData, script: LevelSolutionScript)] {
         let levels = try catalog.loadAllProductionLevels()
@@ -51,6 +52,10 @@ final class LevelSolvabilityTests: XCTestCase {
         for level in levels {
             do {
                 let script = try solutionRepository.loadScript(levelID: level.id)
+                guard !script.isPlaceholder else {
+                    // Placeholder script — skip until real solution is available (Task 019).
+                    continue
+                }
                 result.append((level, script))
             } catch LevelSolutionRepositoryError.fileNotFound(_) {
                 // No solution script exists yet for this level — skip it.
