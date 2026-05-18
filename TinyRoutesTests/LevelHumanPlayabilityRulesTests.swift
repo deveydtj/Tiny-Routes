@@ -40,6 +40,22 @@ final class LevelHumanPlayabilityRulesTests: XCTestCase {
         XCTAssertTrue(LevelHumanPlayabilityRules.tapSpacingViolations(for: script).isEmpty)
     }
 
+    func testTapSpacingViolationsAllowsSpacingWithinFloatingPointToleranceOfMinimum() {
+        let script = LevelSolutionScript(
+            levelID: "level_spacing_tolerance",
+            description: "Spacing rule tolerance test",
+            expectedOutcome: .completed,
+            maxTaps: 2,
+            requiresWithinTimeLimit: true,
+            actions: [
+                LevelSolutionAction(timeSeconds: 0.40, tapNodeID: "switch_a"),
+                LevelSolutionAction(timeSeconds: 0.70, tapNodeID: "switch_b")
+            ]
+        )
+
+        XCTAssertTrue(LevelHumanPlayabilityRules.tapSpacingViolations(for: script).isEmpty)
+    }
+
     func testCompletionBufferViolationFailsWhenRemainingTimeIsTooSmall() {
         let level = makeLevel(id: "level_buffer")
         let result = LevelSolvabilityResult(
@@ -68,6 +84,22 @@ final class LevelHumanPlayabilityRulesTests: XCTestCase {
             outcome: .completed,
             elapsedTime: 29.50,
             timeRemaining: 0.50,
+            tapCount: 1,
+            finalNodeID: "destination",
+            didCollectPackage: true,
+            executedActions: []
+        )
+
+        XCTAssertNil(LevelHumanPlayabilityRules.completionBufferViolation(level: level, result: result))
+    }
+
+    func testCompletionBufferViolationAllowsRemainingTimeWithinFloatingPointToleranceOfMinimum() {
+        let level = makeLevel(id: "level_buffer_tolerance")
+        let result = LevelSolvabilityResult(
+            levelID: level.id,
+            outcome: .completed,
+            elapsedTime: 29.50,
+            timeRemaining: 0.70 - 0.20,
             tapCount: 1,
             finalNodeID: "destination",
             didCollectPackage: true,

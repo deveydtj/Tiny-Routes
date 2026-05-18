@@ -4,6 +4,7 @@ import Foundation
 enum LevelHumanPlayabilityRules {
     static let minimumTapSpacingSeconds: TimeInterval = 0.30
     static let minimumCompletionBufferSeconds: TimeInterval = 0.50
+    private static let comparisonTolerance: TimeInterval = 1e-9
 
     static func tapSpacingViolations(for script: LevelSolutionScript) -> [String] {
         let indexedActions = script.actions.enumerated().sorted { $0.element.timeSeconds < $1.element.timeSeconds }
@@ -15,7 +16,7 @@ enum LevelHumanPlayabilityRules {
             let previousAction = previous.element
             let currentAction = current.element
             let spacing = currentAction.timeSeconds - previousAction.timeSeconds
-            guard spacing < minimumTapSpacingSeconds else {
+            guard violatesMinimum(spacing, minimum: minimumTapSpacingSeconds) else {
                 return nil
             }
 
@@ -29,11 +30,15 @@ enum LevelHumanPlayabilityRules {
         }
 
         let timeRemaining = result.timeRemaining ?? max(TimeInterval(level.timeLimitSeconds) - result.elapsedTime, 0)
-        guard timeRemaining < minimumCompletionBufferSeconds else {
+        guard violatesMinimum(timeRemaining, minimum: minimumCompletionBufferSeconds) else {
             return nil
         }
 
         return "\(level.id): completed with only \(formatted(timeRemaining))s remaining before the \(level.timeLimitSeconds)s time limit (minimum buffer \(formatted(minimumCompletionBufferSeconds))s)"
+    }
+
+    private static func violatesMinimum(_ value: TimeInterval, minimum: TimeInterval) -> Bool {
+        value < minimum - comparisonTolerance
     }
 
     private static func formatted(_ value: TimeInterval) -> String {
