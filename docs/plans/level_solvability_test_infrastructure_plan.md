@@ -725,12 +725,12 @@ TinyRoutesTests/Support/LevelValidationIssue.swift
 
 ### To Do
 
-- [ ] Create `LevelValidationIssue`.
-- [ ] Add nested `Severity` enum with `error` and `warning`.
-- [ ] Add `levelID` property.
-- [ ] Add `message` property.
-- [ ] Make the type `Equatable`.
-- [ ] Add a helper computed property or function for display text.
+- [x] Create `LevelValidationIssue`.
+- [x] Add nested `Severity` enum with `error` and `warning`.
+- [x] Add `levelID` property.
+- [x] Add `message` property.
+- [x] Make the type `Equatable`.
+- [x] Add a helper computed property or function for display text.
 
 ### Suggested Shape
 
@@ -749,9 +749,9 @@ struct LevelValidationIssue: Equatable {
 
 ### Definition of Done
 
-- [ ] File compiles.
-- [ ] Type is available to tests.
-- [ ] No production code changed.
+- [x] File compiles.
+- [x] Type is available to tests.
+- [x] No production code changed.
 
 ---
 
