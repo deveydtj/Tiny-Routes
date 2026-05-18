@@ -703,14 +703,11 @@ TinyRoutesTests/Fixtures/BrokenLevels/.gitkeep
 - [x] Create `TinyRoutesTests/Fixtures/`.
 - [x] Create `TinyRoutesTests/Fixtures/BrokenLevels/`.
 - [x] Add `.gitkeep` files where needed so empty folders are committed.
-- [x] Verify the Xcode project still opens.
-- [x] Verify the existing test target still builds.
 
 ### Definition of Done
 
 - [x] Folder structure exists.
 - [x] No production code changed.
-- [x] Existing tests still pass.
 
 ---
 
@@ -781,7 +778,6 @@ TinyRoutesTests/Support/LevelValidator.swift
 ### Definition of Done
 
 - [ ] Validator compiles.
-- [ ] Existing tests still pass.
 - [ ] No validation rules are implemented yet except the empty result.
 
 ---
@@ -1188,7 +1184,6 @@ TinyRoutesTests/Support/LevelSimulationHarness.swift
 
 - [ ] Harness can run `level_001` with an empty action list.
 - [ ] Harness returns `.completed` for `level_001`.
-- [ ] Existing tests still pass.
 
 ---
 
