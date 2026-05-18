@@ -1202,18 +1202,18 @@ TinyRoutesTests/LevelSolvabilityTests.swift
 
 ### To Do
 
-- [ ] Sort actions by `timeSeconds` or require scripts to already be sorted.
-- [ ] Advance the engine to each action time.
-- [ ] Call `rotateSwitchNode(nodeID:)` for each action.
-- [ ] Record whether the tap rotated the switch.
-- [ ] Continue simulation after the final action until terminal outcome or time expiry.
-- [ ] Stop simulation once `levelOutcome` is not nil.
+- [x] Sort actions by `timeSeconds` or require scripts to already be sorted.
+- [x] Advance the engine to each action time.
+- [x] Call `rotateSwitchNode(nodeID:)` for each action.
+- [x] Record whether the tap rotated the switch.
+- [x] Continue simulation after the final action until terminal outcome or time expiry.
+- [x] Stop simulation once `levelOutcome` is not nil.
 
 ### Definition of Done
 
-- [ ] Harness can execute a non-empty action list.
-- [ ] Result includes executed action details.
-- [ ] Tap count matches the engine tap count.
+- [x] Harness can execute a non-empty action list.
+- [x] Result includes executed action details.
+- [x] Tap count matches the engine tap count.
 
 ---
 
