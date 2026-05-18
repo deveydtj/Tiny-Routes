@@ -1141,21 +1141,21 @@ TinyRoutesTests/Support/LevelSolvabilityResult.swift
 
 ### To Do
 
-- [ ] Create `LevelSolvabilityResult`.
-- [ ] Add `levelID`.
-- [ ] Add `outcome`.
-- [ ] Add `elapsedTime`.
-- [ ] Add `timeRemaining`.
-- [ ] Add `tapCount`.
-- [ ] Add `finalNodeID`.
-- [ ] Add `didCollectPackage`.
-- [ ] Add `executedActions`.
-- [ ] Create `ExecutedLevelSolutionAction`.
+- [x] Create `LevelSolvabilityResult`.
+- [x] Add `levelID`.
+- [x] Add `outcome`.
+- [x] Add `elapsedTime`.
+- [x] Add `timeRemaining`.
+- [x] Add `tapCount`.
+- [x] Add `finalNodeID`.
+- [x] Add `didCollectPackage`.
+- [x] Add `executedActions`.
+- [x] Create `ExecutedLevelSolutionAction`.
 
 ### Definition of Done
 
-- [ ] Result model compiles.
-- [ ] Tests can inspect outcome, time, taps, and final node.
+- [x] Result model compiles.
+- [x] Tests can inspect outcome, time, taps, and final node.
 
 ---
 
