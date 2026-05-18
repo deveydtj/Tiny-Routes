@@ -1,25 +1,29 @@
 {
   "id": "level_002",
-  "name": "Wrong Turn",
+  "name": "First Choice",
   "graph": {
     "nodes": [
-      { "id": "start", "x": 0.0, "y": 0.0, "outgoingEdgeIDs": ["e_start_hub"] },
-      { "id": "hub", "x": 1.0, "y": 0.0, "outgoingEdgeIDs": ["e_hub_dead_end", "e_hub_package", "e_hub_destination"] },
-      { "id": "package", "x": 2.0, "y": 0.9, "outgoingEdgeIDs": ["e_package_hub"] },
-      { "id": "dead_end", "x": 2.0, "y": -0.9, "outgoingEdgeIDs": [] },
-      { "id": "destination", "x": 3.2, "y": 0.0, "outgoingEdgeIDs": [] }
+      { "id": "start", "x": 0.0, "y": 0.0, "outgoingEdgeIDs": ["e_start_approach"] },
+      { "id": "approach", "x": 1.0, "y": 0.0, "outgoingEdgeIDs": ["e_approach_choice"] },
+      { "id": "choice", "x": 2.0, "y": 0.0, "outgoingEdgeIDs": ["e_choice_bypass", "e_choice_package"] },
+      { "id": "package", "x": 3.0, "y": 0.9, "outgoingEdgeIDs": ["e_package_destination"] },
+      { "id": "bypass", "x": 3.0, "y": -0.9, "outgoingEdgeIDs": [] },
+      { "id": "destination", "x": 3.0, "y": 1.8, "outgoingEdgeIDs": [] }
     ],
     "edges": [
-      { "id": "e_start_hub", "fromNodeID": "start", "toNodeID": "hub" },
-      { "id": "e_hub_dead_end", "fromNodeID": "hub", "toNodeID": "dead_end" },
-      { "id": "e_hub_package", "fromNodeID": "hub", "toNodeID": "package" },
-      { "id": "e_package_hub", "fromNodeID": "package", "toNodeID": "hub" },
-      { "id": "e_hub_destination", "fromNodeID": "hub", "toNodeID": "destination" }
+      { "id": "e_start_approach", "fromNodeID": "start", "toNodeID": "approach" },
+      { "id": "e_approach_choice", "fromNodeID": "approach", "toNodeID": "choice" },
+      { "id": "e_choice_bypass", "fromNodeID": "choice", "toNodeID": "bypass", "roadShape": "horizontalFirst" },
+      { "id": "e_choice_package", "fromNodeID": "choice", "toNodeID": "package", "roadShape": "horizontalFirst" },
+      { "id": "e_package_destination", "fromNodeID": "package", "toNodeID": "destination" }
     ]
   },
   "startNodeID": "start",
   "packageNodeID": "package",
   "destinationNodeID": "destination",
-  "timeLimitSeconds": 40,
-  "parTaps": 2
+  "timeLimitSeconds": 36,
+  "parTaps": 1,
+  "solution": {
+    "tapNodeIDs": ["choice"]
+  }
 }

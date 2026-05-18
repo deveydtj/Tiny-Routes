@@ -5,7 +5,7 @@ final class RouteEngineTests: XCTestCase {
 
     // MARK: - Helpers
 
-    /// Returns a minimal LevelData that mirrors level_001.json.
+    /// Returns a minimal switch-puzzle LevelData used by route-engine behavior tests.
     private func makeLevelData(
         startNodeID: String = "start",
         packageNodeID: String = "package",
@@ -52,8 +52,75 @@ final class RouteEngineTests: XCTestCase {
         XCTAssertEqual(position.y, expected.y, accuracy: accuracy, file: file, line: line)
     }
 
+    private func assertRoadPoint(
+        _ point: RoadPoint?,
+        equals expected: RoadPoint,
+        accuracy: Double = 0.0001,
+        file: StaticString = #filePath,
+        line: UInt = #line
+    ) {
+        guard let point else {
+            return XCTFail("Expected a road point.", file: file, line: line)
+        }
+
+        XCTAssertEqual(point.x, expected.x, accuracy: accuracy, file: file, line: line)
+        XCTAssertEqual(point.y, expected.y, accuracy: accuracy, file: file, line: line)
+    }
+
     private func makeBoardLayout(pointsByNodeID: [String: CGPoint]) -> BoardLayout {
         BoardLayout(pointsByNodeID: pointsByNodeID)
+    }
+
+    private func roadLength(for edgeID: String, in graph: RuntimeRouteGraph) throws -> Double {
+        try XCTUnwrap(graph.edgesByID[edgeID]).roadPath.totalLength
+    }
+
+    // MARK: - Road geometry
+
+    func testRoadPathGenerationCreatesHorizontalStraightEdge() {
+        let path = RoadPath.make(from: RoadPoint(x: 0, y: 0), to: RoadPoint(x: 2, y: 0))
+
+        XCTAssertEqual(path.segments.count, 1)
+        XCTAssertEqual(path.segments.first?.kind, .straight)
+        XCTAssertEqual(path.totalLength, 2, accuracy: 0.0001)
+        XCTAssertEqual(path.point(atProgress: 0.5), RoadPoint(x: 1, y: 0))
+        XCTAssertEqual(path.tangent(atProgress: 0), RoadVector(x: 1, y: 0))
+    }
+
+    func testRoadPathGenerationCreatesVerticalStraightEdge() {
+        let path = RoadPath.make(from: RoadPoint(x: 0, y: 0), to: RoadPoint(x: 0, y: 2))
+
+        XCTAssertEqual(path.segments.count, 1)
+        XCTAssertEqual(path.segments.first?.kind, .straight)
+        XCTAssertEqual(path.totalLength, 2, accuracy: 0.0001)
+        XCTAssertEqual(path.point(atProgress: 0.5), RoadPoint(x: 0, y: 1))
+        XCTAssertEqual(path.tangent(atProgress: 0), RoadVector(x: 0, y: 1))
+    }
+
+    func testRoadPathGenerationDefaultsDiagonalEdgeToHorizontalFirstElbow() {
+        let path = RoadPath.make(from: RoadPoint(x: 0, y: 0), to: RoadPoint(x: 1, y: 1))
+
+        XCTAssertEqual(path.segments.map(\.kind), [.straight, .quarterTurn, .straight])
+        assertRoadPoint(path.segments.first?.start, equals: RoadPoint(x: 0, y: 0))
+        assertRoadPoint(path.segments.first?.end, equals: RoadPoint(x: 0.82, y: 0))
+        assertRoadPoint(path.segments.last?.start, equals: RoadPoint(x: 1, y: 0.18))
+        assertRoadPoint(path.segments.last?.end, equals: RoadPoint(x: 1, y: 1))
+        XCTAssertEqual(path.tangent(atProgress: 0), RoadVector(x: 1, y: 0))
+    }
+
+    func testRoadPathGenerationHonorsExplicitVerticalFirstElbow() {
+        let path = RoadPath.make(
+            from: RoadPoint(x: 0, y: 0),
+            to: RoadPoint(x: 1, y: 1),
+            shape: .verticalFirst
+        )
+
+        XCTAssertEqual(path.segments.map(\.kind), [.straight, .quarterTurn, .straight])
+        assertRoadPoint(path.segments.first?.start, equals: RoadPoint(x: 0, y: 0))
+        assertRoadPoint(path.segments.first?.end, equals: RoadPoint(x: 0, y: 0.82))
+        assertRoadPoint(path.segments.last?.start, equals: RoadPoint(x: 0.18, y: 1))
+        assertRoadPoint(path.segments.last?.end, equals: RoadPoint(x: 1, y: 1))
+        XCTAssertEqual(path.tangent(atProgress: 0), RoadVector(x: 0, y: 1))
     }
 
     // MARK: - Successful build
@@ -148,7 +215,9 @@ final class RouteEngineTests: XCTestCase {
         let dot = try XCTUnwrap(engine.deliveryDot)
         XCTAssertEqual(dot.currentNodeID, "switch")
         XCTAssertEqual(dot.currentEdgeID, "e_switch_package")
-        XCTAssertEqual(dot.progressAlongEdge, 0.70710678, accuracy: 0.0001)
+        let graph = try XCTUnwrap(engine.runtimeGraph)
+        let expectedProgress = 1 / (try roadLength(for: "e_switch_package", in: graph))
+        XCTAssertEqual(dot.progressAlongEdge, expectedProgress, accuracy: 0.0001)
     }
 
     func testStartDotMovementReturnsFalseAtLeafNode() throws {
@@ -897,14 +966,12 @@ final class RouteEngineTests: XCTestCase {
         XCTAssertEqual(dot.currentEdgeID, "e_switch_dead_end")
 
         let graph = try XCTUnwrap(engine.runtimeGraph)
-        // e_switch_dead_end length = sqrt(2) ≈ 1.4142; progress = 0.2 / sqrt(2) ≈ 0.1414
-        let expectedProgress = 0.2 / sqrt(2.0)
+        let expectedProgress = 0.2 / (try roadLength(for: "e_switch_dead_end", in: graph))
         XCTAssertEqual(dot.progressAlongEdge, expectedProgress, accuracy: 0.0001)
-        let expectedX = 1.0 + (1.0 * expectedProgress)  // switch.x + (dead_end.x - switch.x) * progress
-        let expectedY = 0.0 + (-1.0 * expectedProgress) // switch.y + (dead_end.y - switch.y) * progress
+        let expectedRoadPoint = try XCTUnwrap(graph.edgesByID["e_switch_dead_end"]).roadPath.point(atProgress: expectedProgress)
         assertPosition(
             dot.runtimePosition(in: graph),
-            equals: DeliveryDotPosition(x: expectedX, y: expectedY)
+            equals: DeliveryDotPosition(x: expectedRoadPoint.x, y: expectedRoadPoint.y)
         )
     }
 
@@ -920,8 +987,8 @@ final class RouteEngineTests: XCTestCase {
 
         let dotBefore = try XCTUnwrap(engine.deliveryDot)
         XCTAssertEqual(dotBefore.currentEdgeID, "e_switch_package")
-        // e_switch_package length = sqrt(2) ≈ 1.4142; progress = 0.5 / sqrt(2) ≈ 0.3536
-        let expectedProgress = 0.5 / sqrt(2.0)
+        let graph = try XCTUnwrap(engine.runtimeGraph)
+        let expectedProgress = 0.5 / (try roadLength(for: "e_switch_package", in: graph))
         XCTAssertEqual(dotBefore.progressAlongEdge, expectedProgress, accuracy: 0.0001)
 
         // Rotating the switch that launched the current edge is ignored so the arrow cannot
@@ -933,10 +1000,10 @@ final class RouteEngineTests: XCTestCase {
         // mid-edge and reroutes the dot to the newly active outgoing edge.
         engine.updateDot(deltaTime: 0.4)
 
-        // The dot must still be on e_switch_package, now 0.9 units in (progress = 0.9 / sqrt(2)).
+        // The dot must still be on e_switch_package, now 0.9 road units in.
         let dotAfter = try XCTUnwrap(engine.deliveryDot)
         XCTAssertEqual(dotAfter.currentEdgeID, "e_switch_package", "Edge must not change mid-traversal")
-        let expectedProgressAfter = 0.9 / sqrt(2.0)
+        let expectedProgressAfter = 0.9 / (try roadLength(for: "e_switch_package", in: graph))
         XCTAssertEqual(dotAfter.progressAlongEdge, expectedProgressAfter, accuracy: 0.0001)
     }
 
@@ -971,7 +1038,7 @@ final class RouteEngineTests: XCTestCase {
 
         // Move onto the package return edge so the switch is no longer the source of the
         // current committed movement.
-        engine.updateDot(deltaTime: 1.0)
+        engine.updateDot(deltaTime: 1.5)
 
         let dotReturning = try XCTUnwrap(engine.deliveryDot)
         XCTAssertEqual(dotReturning.currentEdgeID, "e_package_return")
@@ -982,9 +1049,8 @@ final class RouteEngineTests: XCTestCase {
 
         // Advance enough for the dot to complete the loop back to switch and then start the
         // destination edge.
-        // Remaining on e_package_return: about 1.3284 units.
-        // Remaining after arriving at switch second time: 1.5 − 1.3284 ≈ 0.1716 units.
-        engine.updateDot(deltaTime: 1.5)
+        // Advance enough for the orthogonal package return road to finish, then enter destination.
+        engine.updateDot(deltaTime: 2.0)
 
         let dot = try XCTUnwrap(engine.deliveryDot)
         XCTAssertEqual(dot.currentEdgeID, "e_switch_destination",
@@ -1015,9 +1081,8 @@ final class RouteEngineTests: XCTestCase {
         try engine.buildGraph(from: makeLevelData())
         XCTAssertTrue(engine.startDotMovement())
 
-        // 1.0 unit start->switch + √2 ≈ 1.4142 units switch->package.
-        // Using 2.5 ensures package arrival within this update.
-        engine.updateDot(deltaTime: 2.5)
+        // Includes the longer orthogonal road from switch to package.
+        engine.updateDot(deltaTime: 3.0)
 
         let dot = try XCTUnwrap(engine.deliveryDot)
         XCTAssertTrue(dot.hasCollectedPackage)
@@ -1029,12 +1094,12 @@ final class RouteEngineTests: XCTestCase {
         try engine.buildGraph(from: makeLevelData())
         XCTAssertTrue(engine.startDotMovement())
 
-        engine.updateDot(deltaTime: 2.5)
+        engine.updateDot(deltaTime: 3.0)
         let dotAfterFirstPickup = try XCTUnwrap(engine.deliveryDot)
         XCTAssertTrue(dotAfterFirstPickup.hasCollectedPackage)
 
         // From this point: finish package_return then traverse back into package again.
-        engine.updateDot(deltaTime: 2.8)
+        engine.updateDot(deltaTime: 3.9)
 
         let dotAfterRevisit = try XCTUnwrap(engine.deliveryDot)
         XCTAssertTrue(dotAfterRevisit.hasCollectedPackage)
@@ -1058,12 +1123,12 @@ final class RouteEngineTests: XCTestCase {
         XCTAssertTrue(engine.startDotMovement())
 
         // Reach package first.
-        engine.updateDot(deltaTime: 2.5)
+        engine.updateDot(deltaTime: 3.0)
         engine.rotateSwitchNode(nodeID: "switch") // -> e_switch_dead_end
         engine.rotateSwitchNode(nodeID: "switch") // -> e_switch_destination
 
         // Complete package->switch->destination.
-        engine.updateDot(deltaTime: 3.5)
+        engine.updateDot(deltaTime: 4.0)
 
         let dot = try XCTUnwrap(engine.deliveryDot)
         XCTAssertTrue(dot.hasCollectedPackage)

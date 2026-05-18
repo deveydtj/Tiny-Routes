@@ -134,10 +134,22 @@ final class RouteEngine {
 
         var edgesByID: [String: RuntimeRouteEdge] = [:]
         for edge in graph.edges {
+            guard let fromNode = nodesByID[edge.fromNodeID] else {
+                throw RouteEngineError.edgeReferencesUnknownNode(edgeID: edge.id, nodeID: edge.fromNodeID)
+            }
+            guard let toNode = nodesByID[edge.toNodeID] else {
+                throw RouteEngineError.edgeReferencesUnknownNode(edgeID: edge.id, nodeID: edge.toNodeID)
+            }
+
             edgesByID[edge.id] = RuntimeRouteEdge(
                 id: edge.id,
                 fromNodeID: edge.fromNodeID,
-                toNodeID: edge.toNodeID
+                toNodeID: edge.toNodeID,
+                roadPath: RoadPath.make(
+                    from: RoadPoint(x: fromNode.x, y: fromNode.y),
+                    to: RoadPoint(x: toNode.x, y: toNode.y),
+                    shape: edge.roadShape
+                )
             )
         }
 
@@ -245,13 +257,11 @@ final class RouteEngine {
             safetyStepCount += 1
 
             guard let currentEdgeID = deliveryDot.currentEdgeID,
-                  let edge = runtimeGraph.edgesByID[currentEdgeID],
-                  let fromNode = runtimeGraph.nodesByID[edge.fromNodeID],
-                  let toNode = runtimeGraph.nodesByID[edge.toNodeID] else {
+                  let edge = runtimeGraph.edgesByID[currentEdgeID] else {
                 break
             }
 
-            let edgeLength = hypot(toNode.x - fromNode.x, toNode.y - fromNode.y)
+            let edgeLength = edge.roadPath.totalLength
             guard edgeLength > 0 else {
                 snapDotToNode(edge.toNodeID, dot: &deliveryDot)
                 if levelOutcome != nil {

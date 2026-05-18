@@ -34,13 +34,12 @@ struct DeliveryDot {
     /// Returns `nil` when the dot references a node/edge that does not exist in the provided graph.
     func runtimePosition(in runtimeGraph: RuntimeRouteGraph) -> DeliveryDotPosition? {
         if let currentEdgeID,
-           let edge = runtimeGraph.edgesByID[currentEdgeID],
-           let fromNode = runtimeGraph.nodesByID[edge.fromNodeID],
-           let toNode = runtimeGraph.nodesByID[edge.toNodeID] {
+           let edge = runtimeGraph.edgesByID[currentEdgeID] {
             let clampedProgress = max(0, min(progressAlongEdge, 1))
+            let roadPoint = edge.roadPath.point(atProgress: clampedProgress)
             return DeliveryDotPosition(
-                x: fromNode.x + ((toNode.x - fromNode.x) * clampedProgress),
-                y: fromNode.y + ((toNode.y - fromNode.y) * clampedProgress)
+                x: roadPoint.x,
+                y: roadPoint.y
             )
         }
 

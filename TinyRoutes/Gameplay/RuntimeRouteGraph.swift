@@ -16,6 +16,7 @@ struct RuntimeRouteEdge {
     let id: String
     let fromNodeID: String
     let toNodeID: String
+    let roadPath: RoadPath
 }
 
 /// The live, mutable graph used during a running level.

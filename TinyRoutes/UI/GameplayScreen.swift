@@ -232,7 +232,10 @@ private struct RouteBoardView: View {
     let hasCollectedPackage: Bool
     let onNodeTapped: (String) -> Void
 
-    private let edgeStrokeColor = Color.blue.opacity(0.7)
+    private let roadShadowColor = Color.black.opacity(0.25)
+    private let roadEdgeColor = Color(red: 0.31, green: 0.36, blue: 0.43)
+    private let roadFillColor = Color(red: 0.54, green: 0.58, blue: 0.64)
+    private let roadHighlightColor = Color.white.opacity(0.28)
     private let boardPadding: CGFloat = 20
     private let switchSpriteSize: CGFloat = 52
     private let switchRingSize: CGFloat = 28
@@ -240,7 +243,10 @@ private struct RouteBoardView: View {
     private let specialNodeRingSize: CGFloat = 42
     private let deliveryDotSize: CGFloat = 58
     private let deliveryDotRingSize: CGFloat = 32
-    private let edgeWidth: CGFloat = 8
+    private let roadOuterWidth: CGFloat = 20
+    private let roadInnerWidth: CGFloat = 15
+    private let roadHighlightWidth: CGFloat = 3
+    private let roadJunctionSize: CGFloat = 17
 
     var body: some View {
         GeometryReader { geometry in
@@ -259,20 +265,44 @@ private struct RouteBoardView: View {
 
             ZStack {
                 ForEach(edges, id: \.id) { edge in
-                    if let fromPoint = layout.pointsByNodeID[edge.fromNodeID],
-                       let toPoint = layout.pointsByNodeID[edge.toNodeID] {
-                        Path { path in
-                            path.move(to: fromPoint)
-                            path.addLine(to: toPoint)
-                        }
+                    roadPath(for: edge, layout: layout)
                         .stroke(
-                            edgeStrokeColor,
-                            style: StrokeStyle(
-                                lineWidth: edgeWidth,
-                                lineCap: .round,
-                                lineJoin: .round
-                            )
+                            roadShadowColor,
+                            style: StrokeStyle(lineWidth: roadOuterWidth + 3, lineCap: .round, lineJoin: .round)
                         )
+                        .offset(y: 2)
+
+                    roadPath(for: edge, layout: layout)
+                        .stroke(
+                            roadEdgeColor,
+                            style: StrokeStyle(lineWidth: roadOuterWidth, lineCap: .round, lineJoin: .round)
+                        )
+
+                    roadPath(for: edge, layout: layout)
+                        .stroke(
+                            roadFillColor,
+                            style: StrokeStyle(lineWidth: roadInnerWidth, lineCap: .round, lineJoin: .round)
+                        )
+
+                    roadPath(for: edge, layout: layout)
+                        .stroke(
+                            roadHighlightColor,
+                            style: StrokeStyle(lineWidth: roadHighlightWidth, lineCap: .round, lineJoin: .round)
+                        )
+                        .offset(y: -3)
+                }
+
+                ForEach(nodes, id: \.id) { node in
+                    if let nodePoint = layout.pointsByNodeID[node.id],
+                       !runtimeGraph.validOutgoingEdgeIDs(for: node).isEmpty || hasIncomingEdge(to: node.id) {
+                        Circle()
+                            .fill(roadFillColor)
+                            .frame(width: roadJunctionSize, height: roadJunctionSize)
+                            .overlay(
+                                Circle()
+                                    .stroke(roadHighlightColor, lineWidth: 1)
+                            )
+                            .position(nodePoint)
                     }
                 }
 
@@ -365,13 +395,12 @@ private struct RouteBoardView: View {
         guard validOutgoingEdgeIDs.count > 1,
               let activeEdgeID = node.activeOutgoingEdgeID,
               validOutgoingEdgeIDs.contains(activeEdgeID),
-              let activeEdge = runtimeGraph.edgesByID[activeEdgeID],
-              let fromPoint = layout.pointsByNodeID[node.id],
-              let toPoint = layout.pointsByNodeID[activeEdge.toNodeID] else {
+              let activeEdge = runtimeGraph.edgesByID[activeEdgeID] else {
             return nil
         }
 
-        return atan2(toPoint.y - fromPoint.y, toPoint.x - fromPoint.x)
+        let tangent = activeEdge.roadPath.tangent(atProgress: 0)
+        return atan2(-tangent.y, tangent.x)
     }
 
     private func deliveryDotPoint(in layout: BoardLayout) -> CGPoint? {
@@ -380,17 +409,53 @@ private struct RouteBoardView: View {
         }
 
         if let currentEdgeID = deliveryDot.currentEdgeID,
-           let edge = runtimeGraph.edgesByID[currentEdgeID],
-           let fromPoint = layout.pointsByNodeID[edge.fromNodeID],
-           let toPoint = layout.pointsByNodeID[edge.toNodeID] {
+           let edge = runtimeGraph.edgesByID[currentEdgeID] {
             let clampedProgress = CGFloat(max(0, min(deliveryDot.progressAlongEdge, 1)))
-            return CGPoint(
-                x: fromPoint.x + ((toPoint.x - fromPoint.x) * clampedProgress),
-                y: fromPoint.y + ((toPoint.y - fromPoint.y) * clampedProgress)
-            )
+            let roadPoint = edge.roadPath.point(atProgress: Double(clampedProgress))
+            return layout.point(for: roadPoint)
         }
 
         return layout.pointsByNodeID[deliveryDot.currentNodeID]
+    }
+
+    private func roadPath(for edge: RuntimeRouteEdge, layout: BoardLayout) -> Path {
+        Path { path in
+            guard let firstSegment = edge.roadPath.segments.first,
+                  let startPoint = layout.point(for: firstSegment.start) else {
+                return
+            }
+
+            path.move(to: startPoint)
+            for segment in edge.roadPath.segments {
+                switch segment.kind {
+                case .straight:
+                    if let endPoint = layout.point(for: segment.end) {
+                        path.addLine(to: endPoint)
+                    }
+                case .quarterTurn:
+                    guard let center = segment.center,
+                          let centerPoint = layout.point(for: center),
+                          let scale = layout.coordinateScale else {
+                        if let endPoint = layout.point(for: segment.end) {
+                            path.addLine(to: endPoint)
+                        }
+                        continue
+                    }
+
+                    path.addArc(
+                        center: centerPoint,
+                        radius: CGFloat(segment.radius) * scale,
+                        startAngle: .radians(-segment.startAngle),
+                        endAngle: .radians(-(segment.startAngle + segment.signedAngleDelta)),
+                        clockwise: segment.signedAngleDelta > 0
+                    )
+                }
+            }
+        }
+    }
+
+    private func hasIncomingEdge(to nodeID: String) -> Bool {
+        runtimeGraph.edgesByID.values.contains { $0.toNodeID == nodeID }
     }
 }
 
@@ -431,6 +496,28 @@ struct RouteBoardTapTargetResolver {
 
 struct BoardLayout {
     let pointsByNodeID: [String: CGPoint]
+    let coordinateScale: CGFloat?
+    private let minX: Double
+    private let maxY: Double
+    private let originX: CGFloat
+    private let originY: CGFloat
+
+    init(
+        pointsByNodeID: [String: CGPoint],
+        coordinateScale: CGFloat? = nil,
+        minX: Double = 0,
+        maxY: Double = 0,
+        originX: CGFloat = 0,
+        originY: CGFloat = 0
+    ) {
+        self.pointsByNodeID = pointsByNodeID
+        self.coordinateScale = coordinateScale
+        self.minX = minX
+        self.maxY = maxY
+        self.originX = originX
+        self.originY = originY
+    }
+
     /// Ensures non-zero usable dimensions for board layout calculations.
     private static let minimumUsableDimension: CGFloat = 1
     /// Multiplier used to compute circular spread radius for identical node coordinates.
@@ -519,7 +606,25 @@ struct BoardLayout {
             pointsByNodeID[node.id] = CGPoint(x: x, y: y)
         }
 
-        return BoardLayout(pointsByNodeID: pointsByNodeID)
+        return BoardLayout(
+            pointsByNodeID: pointsByNodeID,
+            coordinateScale: scale,
+            minX: minX,
+            maxY: maxY,
+            originX: originX,
+            originY: originY
+        )
+    }
+
+    func point(for roadPoint: RoadPoint) -> CGPoint? {
+        guard let coordinateScale else {
+            return nil
+        }
+
+        return CGPoint(
+            x: originX + (CGFloat(roadPoint.x - minX) * coordinateScale),
+            y: originY + (CGFloat(maxY - roadPoint.y) * coordinateScale)
+        )
     }
 }
 

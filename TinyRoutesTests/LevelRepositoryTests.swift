@@ -87,7 +87,6 @@ final class LevelRepositoryTests: XCTestCase {
         let nodesByID = Dictionary(uniqueKeysWithValues: level.graph.nodes.map { ($0.id, $0) })
         let nodeIDs = Set(nodesByID.keys)
         XCTAssertTrue(nodeIDs.contains("start"))
-        XCTAssertTrue(nodeIDs.contains("switch"))
         XCTAssertTrue(nodeIDs.contains("package"))
         XCTAssertTrue(nodeIDs.contains("destination"))
         XCTAssertTrue(nodeIDs.contains(level.startNodeID))
@@ -104,11 +103,11 @@ final class LevelRepositoryTests: XCTestCase {
             XCTAssertTrue(nodeIDs.contains(edge.toNodeID), "Missing toNodeID \(edge.toNodeID) for edge \(edge.id)")
         }
 
-        let switchNode = try XCTUnwrap(nodesByID["switch"])
-        XCTAssertGreaterThan(switchNode.outgoingEdgeIDs.count, 1, "Switch node should offer multiple paths")
+        let startNode = try XCTUnwrap(nodesByID["start"])
+        XCTAssertEqual(startNode.outgoingEdgeIDs, ["e_start_package"], "Level 1 should first route to the package")
 
-        let deadEndNode = try XCTUnwrap(nodesByID["dead_end"])
-        XCTAssertTrue(deadEndNode.outgoingEdgeIDs.isEmpty, "Wrong path should terminate in a dead-end")
+        let packageNode = try XCTUnwrap(nodesByID["package"])
+        XCTAssertEqual(packageNode.outgoingEdgeIDs, ["e_package_destination"], "Level 1 should route from the package to the destination")
 
         let adjacency = Dictionary(grouping: level.graph.edges, by: \.fromNodeID)
             .mapValues { edges in edges.map(\.toNodeID) }
@@ -118,6 +117,45 @@ final class LevelRepositoryTests: XCTestCase {
 
         let canReachDestination = isReachable(from: level.packageNodeID, to: level.destinationNodeID, adjacency: adjacency)
         XCTAssertTrue(canReachDestination, "Expected a path from package to destination")
+    }
+
+    func testLevelTwoUsesCurvedChoiceRoads() throws {
+        let data = try levelData(forResource: "level_002")
+        let level = try decoder.decode(LevelData.self, from: data)
+        let nodesByID = Dictionary(uniqueKeysWithValues: level.graph.nodes.map { ($0.id, $0) })
+        let edgesByID = Dictionary(uniqueKeysWithValues: level.graph.edges.map { ($0.id, $0) })
+
+        let choice = try XCTUnwrap(nodesByID["choice"])
+        let package = try XCTUnwrap(nodesByID["package"])
+        let bypass = try XCTUnwrap(nodesByID["bypass"])
+        let destination = try XCTUnwrap(nodesByID["destination"])
+        let packageEdge = try XCTUnwrap(edgesByID["e_choice_package"])
+        let bypassEdge = try XCTUnwrap(edgesByID["e_choice_bypass"])
+
+        XCTAssertEqual(choice.outgoingEdgeIDs, ["e_choice_bypass", "e_choice_package"])
+        XCTAssertEqual(packageEdge.roadShape, .horizontalFirst)
+        XCTAssertEqual(bypassEdge.roadShape, .horizontalFirst)
+        XCTAssertGreaterThan(package.x, choice.x)
+        XCTAssertGreaterThan(bypass.x, choice.x)
+        XCTAssertGreaterThan(package.y, choice.y)
+        XCTAssertLessThan(bypass.y, choice.y)
+        XCTAssertEqual(package.x, destination.x, accuracy: 0.0001)
+        XCTAssertGreaterThan(destination.y, package.y)
+        XCTAssertEqual(level.parTaps, 1)
+
+        let packageRoadPath = RoadPath.make(
+            from: RoadPoint(x: choice.x, y: choice.y),
+            to: RoadPoint(x: package.x, y: package.y),
+            shape: packageEdge.roadShape
+        )
+        let bypassRoadPath = RoadPath.make(
+            from: RoadPoint(x: choice.x, y: choice.y),
+            to: RoadPoint(x: bypass.x, y: bypass.y),
+            shape: bypassEdge.roadShape
+        )
+
+        XCTAssertTrue(packageRoadPath.segments.contains { $0.kind == .quarterTurn })
+        XCTAssertTrue(bypassRoadPath.segments.contains { $0.kind == .quarterTurn })
     }
 
     func testDecodesEdgeFieldsCorrectly() throws {
@@ -268,14 +306,14 @@ final class LevelRepositoryTests: XCTestCase {
         let level = try repo.loadLevel(id: "level_001")
 
         XCTAssertEqual(level.id, "level_001")
-        XCTAssertEqual(level.name, "First Dispatch")
-        XCTAssertEqual(level.graph.nodes.count, 5)
-        XCTAssertEqual(level.graph.edges.count, 5)
+        XCTAssertEqual(level.name, "First Pickup")
+        XCTAssertEqual(level.graph.nodes.count, 3)
+        XCTAssertEqual(level.graph.edges.count, 2)
         XCTAssertEqual(level.startNodeID, "start")
         XCTAssertEqual(level.packageNodeID, "package")
         XCTAssertEqual(level.destinationNodeID, "destination")
-        XCTAssertEqual(level.timeLimitSeconds, 45)
-        XCTAssertEqual(level.parTaps, 6)
+        XCTAssertEqual(level.timeLimitSeconds, 30)
+        XCTAssertEqual(level.parTaps, 0)
     }
 
     func testLoadLevelViaRepositorySucceedsWhenLevelFileIsAtBundleRoot() throws {
@@ -460,6 +498,115 @@ final class LevelRepositoryTests: XCTestCase {
         }
     }
 
+    func testBundledLevelsAreCompletableWithinTimeLimit() throws {
+        let resources = try bundledLevelResources()
+        let levels = try resources.map { resource in
+            try decoder.decode(LevelData.self, from: Data(contentsOf: resource.url))
+        }
+
+        for level in levels {
+            let validator = LevelSolvabilityValidator(level: level)
+            let solution = validator.shortestCompletion()
+            XCTAssertNotNil(solution, "Expected \(level.id) to be completable before its \(level.timeLimitSeconds)s time limit")
+        }
+    }
+
+    func testBundledLevelParTapsAreAchievable() throws {
+        let resources = try bundledLevelResources()
+        let levels = try resources.map { resource in
+            try decoder.decode(LevelData.self, from: Data(contentsOf: resource.url))
+        }
+
+        for level in levels {
+            let validator = LevelSolvabilityValidator(level: level)
+            let solution = validator.lowestTapCompletion()
+            XCTAssertNotNil(solution, "Expected \(level.id) to be completable")
+            XCTAssertLessThanOrEqual(
+                solution?.tapCount ?? Int.max,
+                level.parTaps,
+                "Expected \(level.id) parTaps \(level.parTaps) to be achievable, but best solution was \(solution?.tapCount.description ?? "none") taps"
+            )
+        }
+    }
+
+    func testBundledLevelsHaveReplayableRouteEngineSolutions() throws {
+        let resources = try bundledLevelResources()
+
+        for resource in resources {
+            let data = try Data(contentsOf: resource.url)
+            let level = try decoder.decode(LevelData.self, from: data)
+            let authoredSolution = try decoder.decode(AuthoredLevelSolutionEnvelope.self, from: data).solution
+            let solver = LevelSolvabilityValidator(level: level, dotSpeed: solutionReplayDotSpeed)
+            let solution = try XCTUnwrap(
+                solver.lowestTapCompletion(),
+                "Expected \(level.id) to have a solver-produced completion plan"
+            )
+
+            if let authoredTapNodeIDs = authoredSolution?.tapNodeIDs {
+                XCTAssertEqual(
+                    solution.tapNodeIDs,
+                    authoredTapNodeIDs,
+                    "Authored tap plan for \(level.id) should match the lowest-tap solver plan"
+                )
+            }
+
+            try assertSolution(solution, completes: level)
+            XCTAssertLessThanOrEqual(
+                solution.tapCount,
+                level.parTaps,
+                "Expected replayable solution for \(level.id) to be at or under par"
+            )
+        }
+    }
+
+    func testSolvabilityValidatorRejectsGraphReachableLevelThatCannotCollectPackageBeforeDestination() {
+        let nodes = [
+            RouteNode(id: "start", x: 0, y: 0, outgoingEdgeIDs: ["e_start_destination"]),
+            RouteNode(id: "package", x: 1, y: 1, outgoingEdgeIDs: ["e_package_destination"]),
+            RouteNode(id: "destination", x: 1, y: 0, outgoingEdgeIDs: [])
+        ]
+        let edges = [
+            RouteEdge(id: "e_start_destination", fromNodeID: "start", toNodeID: "destination"),
+            RouteEdge(id: "e_package_destination", fromNodeID: "package", toNodeID: "destination")
+        ]
+        let level = LevelData(
+            id: "destination_first",
+            name: "Destination First",
+            graph: RouteGraph(nodes: nodes, edges: edges),
+            startNodeID: "start",
+            packageNodeID: "package",
+            destinationNodeID: "destination",
+            timeLimitSeconds: 30,
+            parTaps: 0
+        )
+
+        XCTAssertNil(LevelSolvabilityValidator(level: level).shortestCompletion())
+    }
+
+    func testSolvabilityValidatorRejectsPlayableRouteThatExceedsTimeLimit() {
+        let nodes = [
+            RouteNode(id: "start", x: 0, y: 0, outgoingEdgeIDs: ["e_start_package"]),
+            RouteNode(id: "package", x: 2, y: 0, outgoingEdgeIDs: ["e_package_destination"]),
+            RouteNode(id: "destination", x: 4, y: 0, outgoingEdgeIDs: [])
+        ]
+        let edges = [
+            RouteEdge(id: "e_start_package", fromNodeID: "start", toNodeID: "package"),
+            RouteEdge(id: "e_package_destination", fromNodeID: "package", toNodeID: "destination")
+        ]
+        let level = LevelData(
+            id: "too_slow",
+            name: "Too Slow",
+            graph: RouteGraph(nodes: nodes, edges: edges),
+            startNodeID: "start",
+            packageNodeID: "package",
+            destinationNodeID: "destination",
+            timeLimitSeconds: 3,
+            parTaps: 0
+        )
+
+        XCTAssertNil(LevelSolvabilityValidator(level: level).shortestCompletion())
+    }
+
     func testBundledLevelsSortIntoExpectedNextLevelOrder() throws {
         let repo = LevelRepository(bundle: try bundledLevelsBundle())
         let sortedLevelIDs = try repo.loadAllLevels()
@@ -535,7 +682,7 @@ final class LevelRepositoryTests: XCTestCase {
     }
 
     private var expectedBundledLevelIDs: [String] {
-        (1...6).map { String(format: "level_%03d", $0) }
+        (1...10).map { String(format: "level_%03d", $0) }
     }
 
     private func nextLevelID(after currentLevelID: String, in sortedLevelIDs: [String]) -> String? {
@@ -552,21 +699,29 @@ final class LevelRepositoryTests: XCTestCase {
     }
 
     private func sampleLevel001Data() throws -> Data {
-        try Data(contentsOf: sampleLevel001Resource().url)
+        try levelData(forResource: "level_001")
+    }
+
+    private func levelData(forResource resourceName: String) throws -> Data {
+        try Data(contentsOf: levelResource(named: resourceName).url)
     }
 
     private func sampleLevel001Resource() throws -> (bundle: Bundle, url: URL) {
+        try levelResource(named: "level_001")
+    }
+
+    private func levelResource(named resourceName: String) throws -> (bundle: Bundle, url: URL) {
         let bundles = [Bundle(for: LevelRepositoryTests.self), Bundle.main]
         for bundle in bundles {
-            if let levelURL = bundle.url(forResource: "level_001", withExtension: "json", subdirectory: "Levels") {
+            if let levelURL = bundle.url(forResource: resourceName, withExtension: "json", subdirectory: "Levels") {
                 return (bundle, levelURL)
             }
-            if let levelURL = bundle.url(forResource: "level_001", withExtension: "json") {
+            if let levelURL = bundle.url(forResource: resourceName, withExtension: "json") {
                 return (bundle, levelURL)
             }
         }
 
-        throw LevelRepositoryError.fileNotFound(id: "level_001")
+        throw LevelRepositoryError.fileNotFound(id: resourceName)
     }
 
     private func bundledLevelsBundle() throws -> Bundle {
@@ -585,5 +740,320 @@ final class LevelRepositoryTests: XCTestCase {
             .sorted { $0.lastPathComponent < $1.lastPathComponent }
 
         return urls.map { (bundle: bundle, url: $0) }
+    }
+
+    private var solutionReplayDotSpeed: Double { 100 }
+
+    private func assertSolution(
+        _ solution: LevelSolvabilityValidator.Solution,
+        completes level: LevelData,
+        file: StaticString = #filePath,
+        line: UInt = #line
+    ) throws {
+        let engine = RouteEngine(dotSpeed: solutionReplayDotSpeed)
+        try engine.buildGraph(from: level)
+        XCTAssertTrue(engine.startDotMovement(), "Expected \(level.id) to start movement", file: file, line: line)
+
+        var actionIndex = 0
+        while actionIndex < solution.actions.count {
+            switch solution.actions[actionIndex] {
+            case let .tap(nodeID):
+                XCTAssertTrue(
+                    engine.rotateSwitchNode(nodeID: nodeID),
+                    "Expected \(level.id) tap on \(nodeID) to rotate a switch",
+                    file: file,
+                    line: line
+                )
+                actionIndex += 1
+            case let .move(edgeID):
+                let edge = try XCTUnwrap(
+                    engine.runtimeGraph?.edgesByID[edgeID],
+                    "Expected \(level.id) to contain solver edge \(edgeID)",
+                    file: file,
+                    line: line
+                )
+
+                while actionIndex + 1 < solution.actions.count,
+                      case let .tap(nodeID) = solution.actions[actionIndex + 1],
+                      nodeID == edge.toNodeID {
+                    XCTAssertTrue(
+                        engine.rotateSwitchNode(nodeID: nodeID),
+                        "Expected \(level.id) pre-arrival tap on \(nodeID) to rotate a switch",
+                        file: file,
+                        line: line
+                    )
+                    actionIndex += 1
+                }
+
+                XCTAssertEqual(
+                    engine.deliveryDot?.currentEdgeID,
+                    edgeID,
+                    "Expected \(level.id) replay to be traversing \(edgeID)",
+                    file: file,
+                    line: line
+                )
+                engine.updateDot(deltaTime: (edge.roadPath.totalLength / solutionReplayDotSpeed) + 0.000001)
+                actionIndex += 1
+            }
+        }
+
+        XCTAssertEqual(engine.levelOutcome, .completed, "Expected \(level.id) authored replay to complete", file: file, line: line)
+        XCTAssertEqual(engine.tapCount, solution.tapCount, "Expected \(level.id) replay tap count to match solver", file: file, line: line)
+    }
+}
+
+private struct AuthoredLevelSolutionEnvelope: Decodable {
+    struct Solution: Decodable {
+        let tapNodeIDs: [String]
+    }
+
+    let solution: Solution?
+}
+
+private struct LevelSolvabilityValidator {
+    enum Action: Equatable {
+        case tap(nodeID: String)
+        case move(edgeID: String)
+    }
+
+    private struct State: Hashable {
+        var nodeID: String
+        var hasPackage: Bool
+        var switchEdgeIndices: [Int]
+    }
+
+    struct Solution {
+        var elapsedTime: TimeInterval
+        var tapCount: Int
+        var tapNodeIDs: [String]
+        var actions: [Action]
+    }
+
+    private struct SearchEntry {
+        var state: State
+        var elapsedTime: TimeInterval
+        var tapCount: Int
+        var tapNodeIDs: [String]
+        var actions: [Action]
+    }
+
+    private struct BestCost: Comparable {
+        var elapsedTime: TimeInterval
+        var tapCount: Int
+
+        static func < (lhs: BestCost, rhs: BestCost) -> Bool {
+            if lhs.elapsedTime != rhs.elapsedTime {
+                return lhs.elapsedTime < rhs.elapsedTime
+            }
+
+            return lhs.tapCount < rhs.tapCount
+        }
+    }
+
+    private let level: LevelData
+    private let nodesByID: [String: RouteNode]
+    private let edgesByID: [String: RouteEdge]
+    private let switchNodeIDs: [String]
+    private let timeLimit: TimeInterval
+    private let dotSpeed: Double
+
+    init(level: LevelData, dotSpeed: Double = 1) {
+        self.level = level
+        self.nodesByID = Dictionary(uniqueKeysWithValues: level.graph.nodes.map { ($0.id, $0) })
+        self.edgesByID = Dictionary(uniqueKeysWithValues: level.graph.edges.map { ($0.id, $0) })
+        self.switchNodeIDs = level.graph.nodes
+            .filter { $0.outgoingEdgeIDs.count > 1 }
+            .map(\.id)
+            .sorted()
+        self.timeLimit = max(TimeInterval(level.timeLimitSeconds), 0)
+        self.dotSpeed = max(dotSpeed, 0)
+    }
+
+    func shortestCompletion() -> Solution? {
+        completion(preferLowestTapCount: false)
+    }
+
+    func lowestTapCompletion() -> Solution? {
+        completion(preferLowestTapCount: true)
+    }
+
+    private func completion(preferLowestTapCount: Bool) -> Solution? {
+        guard dotSpeed > 0,
+              nodesByID[level.startNodeID] != nil,
+              nodesByID[level.packageNodeID] != nil,
+              nodesByID[level.destinationNodeID] != nil else {
+            return nil
+        }
+
+        let initialState = State(
+            nodeID: level.startNodeID,
+            hasPackage: level.startNodeID == level.packageNodeID,
+            switchEdgeIndices: Array(repeating: 0, count: switchNodeIDs.count)
+        )
+        var bestCostByState: [State: BestCost] = [
+            initialState: BestCost(elapsedTime: 0, tapCount: 0)
+        ]
+        var queue: [SearchEntry] = [
+            SearchEntry(
+                state: initialState,
+                elapsedTime: 0,
+                tapCount: 0,
+                tapNodeIDs: [],
+                actions: []
+            )
+        ]
+        var bestSolution: Solution?
+
+        while !queue.isEmpty {
+            let bestQueueIndex = bestEntryIndex(in: queue, preferLowestTapCount: preferLowestTapCount)
+            let entry = queue.remove(at: bestQueueIndex)
+
+            if let knownCost = bestCostByState[entry.state],
+               BestCost(elapsedTime: entry.elapsedTime, tapCount: entry.tapCount) > knownCost {
+                continue
+            }
+
+            if entry.state.nodeID == level.destinationNodeID {
+                if entry.state.hasPackage {
+                    let solution = Solution(
+                        elapsedTime: entry.elapsedTime,
+                        tapCount: entry.tapCount,
+                        tapNodeIDs: entry.tapNodeIDs,
+                        actions: entry.actions
+                    )
+                    if isBetter(solution, than: bestSolution, preferLowestTapCount: preferLowestTapCount) {
+                        bestSolution = solution
+                    }
+                }
+                continue
+            }
+
+            for nextEntry in nextEntries(from: entry) {
+                guard nextEntry.elapsedTime <= timeLimit else {
+                    continue
+                }
+
+                let nextCost = BestCost(elapsedTime: nextEntry.elapsedTime, tapCount: nextEntry.tapCount)
+                if let currentBestCost = bestCostByState[nextEntry.state],
+                   currentBestCost <= nextCost {
+                    continue
+                }
+
+                bestCostByState[nextEntry.state] = nextCost
+                queue.append(nextEntry)
+            }
+        }
+
+        return bestSolution
+    }
+
+    private func nextEntries(from entry: SearchEntry) -> [SearchEntry] {
+        var entries: [SearchEntry] = rotationEntries(from: entry)
+
+        if let movementEntry = movementEntry(from: entry) {
+            entries.append(movementEntry)
+        }
+
+        return entries
+    }
+
+    private func rotationEntries(from entry: SearchEntry) -> [SearchEntry] {
+        switchNodeIDs.enumerated().compactMap { index, nodeID in
+            guard let node = nodesByID[nodeID], node.outgoingEdgeIDs.count > 1 else {
+                return nil
+            }
+
+            var nextState = entry.state
+            nextState.switchEdgeIndices[index] = (nextState.switchEdgeIndices[index] + 1) % node.outgoingEdgeIDs.count
+            return SearchEntry(
+                state: nextState,
+                elapsedTime: entry.elapsedTime,
+                tapCount: entry.tapCount + 1,
+                tapNodeIDs: entry.tapNodeIDs + [nodeID],
+                actions: entry.actions + [.tap(nodeID: nodeID)]
+            )
+        }
+    }
+
+    private func movementEntry(from entry: SearchEntry) -> SearchEntry? {
+        guard let node = nodesByID[entry.state.nodeID],
+              let activeEdgeID = activeEdgeID(for: node, in: entry.state),
+              let edge = edgesByID[activeEdgeID],
+              edge.fromNodeID == entry.state.nodeID,
+              nodesByID[edge.toNodeID] != nil else {
+            return nil
+        }
+
+        let nextState = State(
+            nodeID: edge.toNodeID,
+            hasPackage: entry.state.hasPackage || edge.toNodeID == level.packageNodeID,
+            switchEdgeIndices: entry.state.switchEdgeIndices
+        )
+        let travelTime = roadLength(for: edge) / dotSpeed
+
+        return SearchEntry(
+            state: nextState,
+            elapsedTime: entry.elapsedTime + travelTime,
+            tapCount: entry.tapCount,
+            tapNodeIDs: entry.tapNodeIDs,
+            actions: entry.actions + [.move(edgeID: edge.id)]
+        )
+    }
+
+    private func activeEdgeID(for node: RouteNode, in state: State) -> String? {
+        guard !node.outgoingEdgeIDs.isEmpty else {
+            return nil
+        }
+
+        guard let switchIndex = switchNodeIDs.firstIndex(of: node.id) else {
+            return node.outgoingEdgeIDs.first
+        }
+
+        return node.outgoingEdgeIDs[state.switchEdgeIndices[switchIndex]]
+    }
+
+    private func roadLength(for edge: RouteEdge) -> Double {
+        guard let fromNode = nodesByID[edge.fromNodeID],
+              let toNode = nodesByID[edge.toNodeID] else {
+            return .infinity
+        }
+
+        return RoadPath.make(
+            from: RoadPoint(x: fromNode.x, y: fromNode.y),
+            to: RoadPoint(x: toNode.x, y: toNode.y),
+            shape: edge.roadShape
+        )
+        .totalLength
+    }
+
+    private func bestEntryIndex(in queue: [SearchEntry], preferLowestTapCount: Bool) -> Int {
+        queue.indices.min { lhsIndex, rhsIndex in
+            let lhs = queue[lhsIndex]
+            let rhs = queue[rhsIndex]
+
+            if preferLowestTapCount, lhs.tapCount != rhs.tapCount {
+                return lhs.tapCount < rhs.tapCount
+            }
+            if lhs.elapsedTime != rhs.elapsedTime {
+                return lhs.elapsedTime < rhs.elapsedTime
+            }
+
+            return lhs.tapCount < rhs.tapCount
+        } ?? queue.startIndex
+    }
+
+    private func isBetter(_ solution: Solution, than currentBest: Solution?, preferLowestTapCount: Bool) -> Bool {
+        guard let currentBest else {
+            return true
+        }
+
+        if preferLowestTapCount, solution.tapCount != currentBest.tapCount {
+            return solution.tapCount < currentBest.tapCount
+        }
+        if solution.elapsedTime != currentBest.elapsedTime {
+            return solution.elapsedTime < currentBest.elapsedTime
+        }
+
+        return solution.tapCount < currentBest.tapCount
     }
 }
