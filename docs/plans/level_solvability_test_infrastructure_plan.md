@@ -1301,17 +1301,17 @@ TinyRoutesTests/LevelSolvabilityTests.swift
 
 ### To Do
 
-- [ ] Add `minimumTapSpacingSeconds`.
-- [ ] Add `minimumCompletionBufferSeconds`.
-- [ ] Validate actions are at least `minimumTapSpacingSeconds` apart.
-- [ ] Validate completed solution leaves at least `minimumCompletionBufferSeconds` before the time limit.
-- [ ] Add tests for these rules.
+- [x] Add `minimumTapSpacingSeconds`.
+- [x] Add `minimumCompletionBufferSeconds`.
+- [x] Validate actions are at least `minimumTapSpacingSeconds` apart.
+- [x] Validate completed solution leaves at least `minimumCompletionBufferSeconds` before the time limit.
+- [x] Add tests for these rules.
 
 ### Definition of Done
 
-- [ ] Solutions with taps too close together fail.
-- [ ] Solutions that complete with no time buffer fail.
-- [ ] Valid current solutions pass or failure is documented for level tuning.
+- [x] Solutions with taps too close together fail.
+- [x] Solutions that complete with no time buffer fail.
+- [x] Valid current solutions pass or failure is documented for level tuning.
 
 ---
 

@@ -179,6 +179,49 @@ final class LevelSolvabilityTests: XCTestCase {
         )
     }
 
+    func testProductionLevelSolutionScriptsMeetMinimumTapSpacing() throws {
+        let pairs = try levelsWithScripts()
+        let failures = pairs
+            .flatMap { _, script in
+                LevelHumanPlayabilityRules.tapSpacingViolations(for: script)
+            }
+
+        XCTAssertTrue(
+            failures.isEmpty,
+            "Level solution scripts require taps that are too close together:\n\(failures.joined(separator: "\n"))"
+        )
+    }
+
+    func testProductionCompletedSolutionsLeaveMinimumCompletionBuffer() throws {
+        let entries = try simulationEntries()
+        var failures: [String] = []
+
+        for entry in entries {
+            switch entry.outcome {
+            case .failure(let error):
+                failures.append("\(entry.level.id): harness threw \(error.localizedDescription)")
+            case .success(let result):
+                guard result.outcome == .completed else {
+                    failures.append(
+                        "\(entry.level.id): did not complete (outcome: \(String(describing: result.outcome))); cannot verify completion buffer"
+                    )
+                    continue
+                }
+                if let violation = LevelHumanPlayabilityRules.completionBufferViolation(
+                    level: entry.level,
+                    result: result
+                ) {
+                    failures.append(violation)
+                }
+            }
+        }
+
+        XCTAssertTrue(
+            failures.isEmpty,
+            "Completed solutions must leave a minimum time buffer:\n\(failures.joined(separator: "\n"))"
+        )
+    }
+
     func testLevel001CompletesWithZeroTaps() throws {
         let entries = try simulationEntries()
         let entry = try XCTUnwrap(

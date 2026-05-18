@@ -6,11 +6,11 @@
   "requiresWithinTimeLimit": true,
   "actions": [
     {
-      "timeSeconds": 0.1,
+      "timeSeconds": 0.4,
       "tapNodeID": "alpha"
     },
     {
-      "timeSeconds": 0.2,
+      "timeSeconds": 0.8,
       "tapNodeID": "beta"
     },
     {
