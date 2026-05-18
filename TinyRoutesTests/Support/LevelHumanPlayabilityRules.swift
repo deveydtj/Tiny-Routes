@@ -6,16 +6,20 @@ enum LevelHumanPlayabilityRules {
     static let minimumCompletionBufferSeconds: TimeInterval = 0.50
 
     static func tapSpacingViolations(for script: LevelSolutionScript) -> [String] {
-        let actions = script.actions.sorted { $0.timeSeconds < $1.timeSeconds }
+        let indexedActions = script.actions.enumerated().sorted { $0.element.timeSeconds < $1.element.timeSeconds }
 
-        return zip(actions, actions.dropFirst()).enumerated().compactMap { index, pair in
+        return zip(indexedActions, indexedActions.dropFirst()).compactMap { pair in
             let (previous, current) = pair
-            let spacing = current.timeSeconds - previous.timeSeconds
+            let previousIndex = previous.offset
+            let currentIndex = current.offset
+            let previousAction = previous.element
+            let currentAction = current.element
+            let spacing = currentAction.timeSeconds - previousAction.timeSeconds
             guard spacing < minimumTapSpacingSeconds else {
                 return nil
             }
 
-            return "\(script.levelID): action[\(index)] at \(formatted(previous.timeSeconds))s and action[\(index + 1)] at \(formatted(current.timeSeconds))s are only \(formatted(spacing))s apart (minimum \(formatted(minimumTapSpacingSeconds))s)"
+            return "\(script.levelID): action[\(previousIndex)] at \(formatted(previousAction.timeSeconds))s and action[\(currentIndex)] at \(formatted(currentAction.timeSeconds))s are only \(formatted(spacing))s apart (minimum \(formatted(minimumTapSpacingSeconds))s)"
         }
     }
 
