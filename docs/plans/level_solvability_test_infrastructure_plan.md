@@ -1329,18 +1329,18 @@ docs/plans/level_solution_intent_dsl_plan.md
 
 ### To Do
 
-- [ ] Explain why timed scripts are phase 1 only.
-- [ ] Define `beforeDotReachesNode` step.
-- [ ] Define `afterDotLeavesNode` step if needed.
-- [ ] Define `rotateCount` behavior.
-- [ ] Explain how intent steps convert to timed actions.
-- [ ] Include examples for one-switch and multi-switch levels.
+- [x] Explain why timed scripts are phase 1 only.
+- [x] Define `beforeDotReachesNode` step.
+- [x] Define `afterDotLeavesNode` step if needed.
+- [x] Define `rotateCount` behavior.
+- [x] Explain how intent steps convert to timed actions.
+- [x] Include examples for one-switch and multi-switch levels.
 
 ### Definition of Done
 
-- [ ] Future DSL is documented.
-- [ ] No production code changed.
-- [ ] No test behavior changed.
+- [x] Future DSL is documented.
+- [x] No production code changed.
+- [x] No test behavior changed.
 
 ---
 
