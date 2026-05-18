@@ -1111,7 +1111,7 @@ TinyRoutesTests/LevelSolutionScriptTests.swift
 
 ### To Do
 
-- [ ] Test every production level has a matching solution script.
+- [x] Test every production level has a matching solution script.
 - [x] Test every solution script references an existing production level.
 - [x] Test action times are non-negative.
 - [x] Test actions are sorted by time.
