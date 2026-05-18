@@ -12,12 +12,16 @@ final class LevelSolvabilityTests: XCTestCase {
     private struct SimulationEntry {
         let level: LevelData
         let script: LevelSolutionScript
-        let result: LevelSolvabilityResult?
-        let harnessError: Error?
+        let outcome: Result<LevelSolvabilityResult, Error>
     }
 
     /// Static cache so each level is simulated at most once across all test methods in the suite.
     private static var simulationCache: [SimulationEntry]?
+
+    override class func tearDown() {
+        simulationCache = nil
+        super.tearDown()
+    }
 
     /// Returns cached simulation results, computing them on first call.
     private func simulationEntries() throws -> [SimulationEntry] {
@@ -25,14 +29,12 @@ final class LevelSolvabilityTests: XCTestCase {
             return cached
         }
         let pairs = try levelsWithScripts()
-        var entries: [SimulationEntry] = []
-        for (level, script) in pairs {
-            do {
-                let result = try harness.run(level: level, script: script)
-                entries.append(SimulationEntry(level: level, script: script, result: result, harnessError: nil))
-            } catch {
-                entries.append(SimulationEntry(level: level, script: script, result: nil, harnessError: error))
-            }
+        let entries = pairs.map { level, script in
+            SimulationEntry(
+                level: level,
+                script: script,
+                outcome: Result { try harness.run(level: level, script: script) }
+            )
         }
         Self.simulationCache = entries
         return entries
@@ -66,12 +68,15 @@ final class LevelSolvabilityTests: XCTestCase {
         var failures: [String] = []
 
         for entry in entries {
-            if let error = entry.harnessError {
+            switch entry.outcome {
+            case .failure(let error):
                 failures.append("\(entry.level.id): harness threw \(error.localizedDescription)")
-            } else if entry.result?.outcome != .completed {
+            case .success(let result) where result.outcome != .completed:
                 failures.append(
-                    "\(entry.level.id): expected .completed but got \(String(describing: entry.result?.outcome))"
+                    "\(entry.level.id): expected .completed but got \(String(describing: result.outcome))"
                 )
+            case .success:
+                break
             }
         }
 
@@ -86,12 +91,15 @@ final class LevelSolvabilityTests: XCTestCase {
         var failures: [String] = []
 
         for entry in entries where entry.script.requiresWithinTimeLimit {
-            if let error = entry.harnessError {
+            switch entry.outcome {
+            case .failure(let error):
                 failures.append("\(entry.level.id): harness threw \(error.localizedDescription)")
-            } else if entry.result?.outcome != .completed {
+            case .success(let result) where result.outcome != .completed:
                 failures.append(
-                    "\(entry.level.id): expected .completed but got \(String(describing: entry.result?.outcome))"
+                    "\(entry.level.id): expected .completed but got \(String(describing: result.outcome))"
                 )
+            case .success:
+                break
             }
         }
 
@@ -106,23 +114,21 @@ final class LevelSolvabilityTests: XCTestCase {
         var failures: [String] = []
 
         for entry in entries {
-            if let error = entry.harnessError {
+            switch entry.outcome {
+            case .failure(let error):
                 failures.append("\(entry.level.id): harness threw \(error.localizedDescription)")
-                continue
-            }
-            guard let result = entry.result else { continue }
-
-            guard result.outcome == .completed else {
-                failures.append(
-                    "\(entry.level.id): did not complete (outcome: \(String(describing: result.outcome))); cannot verify tap count"
-                )
-                continue
-            }
-
-            if result.tapCount > entry.script.maxTaps {
-                failures.append(
-                    "\(entry.level.id): tap count \(result.tapCount) exceeds script maxTaps \(entry.script.maxTaps)"
-                )
+            case .success(let result):
+                guard result.outcome == .completed else {
+                    failures.append(
+                        "\(entry.level.id): did not complete (outcome: \(String(describing: result.outcome))); cannot verify tap count"
+                    )
+                    continue
+                }
+                if result.tapCount > entry.script.maxTaps {
+                    failures.append(
+                        "\(entry.level.id): tap count \(result.tapCount) exceeds script maxTaps \(entry.script.maxTaps)"
+                    )
+                }
             }
         }
 
@@ -137,23 +143,21 @@ final class LevelSolvabilityTests: XCTestCase {
         var failures: [String] = []
 
         for entry in entries where entry.script.maxTaps <= entry.level.parTaps {
-            if let error = entry.harnessError {
+            switch entry.outcome {
+            case .failure(let error):
                 failures.append("\(entry.level.id): harness threw \(error.localizedDescription)")
-                continue
-            }
-            guard let result = entry.result else { continue }
-
-            guard result.outcome == .completed else {
-                failures.append(
-                    "\(entry.level.id): did not complete (outcome: \(String(describing: result.outcome))); cannot verify par tap count"
-                )
-                continue
-            }
-
-            if result.tapCount > entry.level.parTaps {
-                failures.append(
-                    "\(entry.level.id): par script tap count \(result.tapCount) exceeds level parTaps \(entry.level.parTaps)"
-                )
+            case .success(let result):
+                guard result.outcome == .completed else {
+                    failures.append(
+                        "\(entry.level.id): did not complete (outcome: \(String(describing: result.outcome))); cannot verify par tap count"
+                    )
+                    continue
+                }
+                if result.tapCount > entry.level.parTaps {
+                    failures.append(
+                        "\(entry.level.id): par script tap count \(result.tapCount) exceeds level parTaps \(entry.level.parTaps)"
+                    )
+                }
             }
         }
 
@@ -170,17 +174,16 @@ final class LevelSolvabilityTests: XCTestCase {
             "level_001 not found in simulation entries"
         )
 
-        if let error = entry.harnessError {
+        switch entry.outcome {
+        case .failure(let error):
             XCTFail("level_001: harness threw \(error.localizedDescription)")
-            return
+        case .success(let result):
+            XCTAssertEqual(
+                result.outcome,
+                .completed,
+                "level_001: expected .completed but got \(String(describing: result.outcome))"
+            )
+            XCTAssertEqual(result.tapCount, 0, "level_001: expected 0 taps but got \(result.tapCount)")
         }
-
-        let result = try XCTUnwrap(entry.result)
-        XCTAssertEqual(
-            result.outcome,
-            .completed,
-            "level_001: expected .completed but got \(String(describing: result.outcome))"
-        )
-        XCTAssertEqual(result.tapCount, 0, "level_001: expected 0 taps but got \(result.tapCount)")
     }
 }
