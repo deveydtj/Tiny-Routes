@@ -921,18 +921,18 @@ TinyRoutesTests/LevelValidationTests.swift
 
 ### To Do
 
-- [ ] Validate `id` is not empty.
-- [ ] Validate `name` is not empty.
-- [ ] Validate `timeLimitSeconds > 0`.
-- [ ] Validate `parTaps >= 0`.
-- [ ] Add tests for invalid values.
+- [x] Validate `id` is not empty.
+- [x] Validate `name` is not empty.
+- [x] Validate `timeLimitSeconds > 0`.
+- [x] Validate `parTaps >= 0`.
+- [x] Add tests for invalid values.
 
 ### Definition of Done
 
-- [ ] Empty ID fails validation.
-- [ ] Empty name fails validation.
-- [ ] Non-positive time limit fails validation.
-- [ ] Negative par taps fail validation.
+- [x] Empty ID fails validation.
+- [x] Empty name fails validation.
+- [x] Non-positive time limit fails validation.
+- [x] Negative par taps fail validation.
 
 ---
 
