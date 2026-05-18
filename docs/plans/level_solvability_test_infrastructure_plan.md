@@ -1043,18 +1043,18 @@ TinyRoutesTests/Support/LevelSolutionRepository.swift
 
 ### To Do
 
-- [ ] Create `LevelSolutionRepository`.
-- [ ] Add method to load one script by level ID.
-- [ ] Add method to load all scripts.
-- [ ] Use `JSONDecoder`.
-- [ ] Return helpful errors when files are missing.
-- [ ] Return helpful errors when decoding fails.
+- [x] Create `LevelSolutionRepository`.
+- [x] Add method to load one script by level ID.
+- [x] Add method to load all scripts.
+- [x] Use `JSONDecoder`.
+- [x] Return helpful errors when files are missing.
+- [x] Return helpful errors when decoding fails.
 
 ### Definition of Done
 
-- [ ] Repository can load one script.
-- [ ] Repository can load all scripts.
-- [ ] Missing script produces a clear failure.
+- [x] Repository can load one script.
+- [x] Repository can load all scripts.
+- [x] Missing script produces a clear failure.
 
 ---
 
