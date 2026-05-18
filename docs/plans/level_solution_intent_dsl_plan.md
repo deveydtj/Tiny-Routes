@@ -53,22 +53,22 @@ Timed scripts remain valid. A future intent-based script can add a `steps` array
 
 ```json
 {
-  "levelID": "level_007",
-  "description": "Collect the package, then open the path to the destination.",
+  "levelID": "level_010",
+  "description": "Route through the package path, then prepare the final branch to destination.",
   "expectedOutcome": "completed",
   "maxTaps": 3,
   "requiresWithinTimeLimit": true,
   "steps": [
     {
       "type": "beforeDotReachesNode",
-      "targetNodeID": "switch_a",
-      "tapNodeID": "switch_a",
+      "targetNodeID": "a_switch",
+      "tapNodeID": "a_switch",
       "rotateCount": 1
     },
     {
       "type": "beforeDotReachesNode",
-      "targetNodeID": "switch_b",
-      "tapNodeID": "switch_b",
+      "targetNodeID": "c_switch",
+      "tapNodeID": "c_switch",
       "rotateCount": 2
     }
   ]
@@ -209,8 +209,8 @@ This keeps one authoritative execution path:
   "steps": [
     {
       "type": "beforeDotReachesNode",
-      "targetNodeID": "switch_a",
-      "tapNodeID": "switch_a"
+      "targetNodeID": "choice",
+      "tapNodeID": "choice"
     }
   ]
 }
@@ -223,21 +223,21 @@ Reading this script should immediately tell a reviewer the puzzle idea: there is
 ```json
 {
   "levelID": "level_010",
-  "description": "Prepare the package branch, then rotate the destination branch twice.",
+  "description": "Route toward the package branch, then open the final destination branch.",
   "expectedOutcome": "completed",
   "maxTaps": 3,
   "requiresWithinTimeLimit": true,
   "steps": [
     {
       "type": "beforeDotReachesNode",
-      "targetNodeID": "switch_a",
-      "tapNodeID": "switch_a",
+      "targetNodeID": "a_switch",
+      "tapNodeID": "a_switch",
       "rotateCount": 1
     },
     {
       "type": "afterDotLeavesNode",
-      "targetNodeID": "switch_a",
-      "tapNodeID": "switch_b",
+      "targetNodeID": "a_switch",
+      "tapNodeID": "c_switch",
       "rotateCount": 2
     }
   ]
