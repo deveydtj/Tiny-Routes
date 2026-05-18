@@ -15,16 +15,23 @@ final class LevelSolvabilityTests: XCTestCase {
         let outcome: Result<LevelSolvabilityResult, Error>
     }
 
+    /// Serializes all reads and writes of `simulationCache` so parallel test execution is safe.
+    private static let cacheLock = NSLock()
     /// Static cache so each level is simulated at most once across all test methods in the suite.
     private static var simulationCache: [SimulationEntry]?
 
     override class func tearDown() {
+        cacheLock.lock()
         simulationCache = nil
+        cacheLock.unlock()
         super.tearDown()
     }
 
     /// Returns cached simulation results, computing them on first call.
+    /// The lock is held for the full initialization so only one thread populates the cache.
     private func simulationEntries() throws -> [SimulationEntry] {
+        Self.cacheLock.lock()
+        defer { Self.cacheLock.unlock() }
         if let cached = Self.simulationCache {
             return cached
         }
