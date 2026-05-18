@@ -797,19 +797,19 @@ TinyRoutesTests/LevelValidationTests.swift
 
 ### To Do
 
-- [ ] Add validation for duplicate node IDs.
-- [ ] Add validation for duplicate edge IDs.
-- [ ] Add test fixture for duplicate node IDs.
-- [ ] Add test fixture for duplicate edge IDs.
-- [ ] Add test that duplicate node IDs produce an error.
-- [ ] Add test that duplicate edge IDs produce an error.
-- [ ] Confirm validation returns all duplicate issues, not just the first one.
+- [x] Add validation for duplicate node IDs.
+- [x] Add validation for duplicate edge IDs.
+- [x] Add test fixture for duplicate node IDs.
+- [x] Add test fixture for duplicate edge IDs.
+- [x] Add test that duplicate node IDs produce an error.
+- [x] Add test that duplicate edge IDs produce an error.
+- [x] Confirm validation returns all duplicate issues, not just the first one.
 
 ### Definition of Done
 
-- [ ] Duplicate node IDs fail validation.
-- [ ] Duplicate edge IDs fail validation.
-- [ ] Tests prove both cases.
+- [x] Duplicate node IDs fail validation.
+- [x] Duplicate edge IDs fail validation.
+- [x] Tests prove both cases.
 
 ---
 
