@@ -1011,21 +1011,21 @@ TinyRoutesTests/Support/LevelSolutionScript.swift
 
 ### To Do
 
-- [ ] Create `LevelSolutionScript`.
-- [ ] Create `LevelSolutionAction`.
-- [ ] Create `ExpectedOutcome` enum with `completed`.
-- [ ] Add `levelID`.
-- [ ] Add optional `description`.
-- [ ] Add `expectedOutcome`.
-- [ ] Add `maxTaps`.
-- [ ] Add `requiresWithinTimeLimit`.
-- [ ] Add `actions`.
-- [ ] Make all types `Codable`.
+- [x] Create `LevelSolutionScript`.
+- [x] Create `LevelSolutionAction`.
+- [x] Create `ExpectedOutcome` enum with `completed`.
+- [x] Add `levelID`.
+- [x] Add optional `description`.
+- [x] Add `expectedOutcome`.
+- [x] Add `maxTaps`.
+- [x] Add `requiresWithinTimeLimit`.
+- [x] Add `actions`.
+- [x] Make all types `Codable`.
 
 ### Definition of Done
 
-- [ ] Solution script model compiles.
-- [ ] A sample JSON script can decode in a unit test.
+- [x] Solution script model compiles.
+- [x] A sample JSON script can decode in a unit test.
 
 ---
 
