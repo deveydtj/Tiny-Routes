@@ -65,7 +65,30 @@ final class LevelValidator {
             ))
         }
 
-        return duplicateNodeIssues + duplicateEdgeIssues + requiredNodeIssues
+        let edgeReferenceIssues = validateEdgeReferences(level: level, nodeIDs: nodeIDs)
+
+        return duplicateNodeIssues + duplicateEdgeIssues + requiredNodeIssues + edgeReferenceIssues
+    }
+
+    private func validateEdgeReferences(level: LevelData, nodeIDs: Set<String>) -> [LevelValidationIssue] {
+        var issues: [LevelValidationIssue] = []
+        for edge in level.graph.edges {
+            if !nodeIDs.contains(edge.fromNodeID) {
+                issues.append(LevelValidationIssue(
+                    severity: .error,
+                    levelID: level.id,
+                    message: "Edge '\(edge.id)' references unknown fromNodeID '\(edge.fromNodeID)'"
+                ))
+            }
+            if !nodeIDs.contains(edge.toNodeID) {
+                issues.append(LevelValidationIssue(
+                    severity: .error,
+                    levelID: level.id,
+                    message: "Edge '\(edge.id)' references unknown toNodeID '\(edge.toNodeID)'"
+                ))
+            }
+        }
+        return issues
     }
 
     // MARK: - Intent Validation
