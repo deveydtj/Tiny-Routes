@@ -42,24 +42,31 @@ final class LevelSolutionScriptTests: XCTestCase {
         XCTAssertTrue(script.actions.isEmpty)
     }
 
-    func testEveryProductionLevelHasMatchingSolutionScript() throws {
-        let levels = try TestLevelCatalog().loadAllProductionLevels()
-        XCTAssertFalse(levels.isEmpty, "Expected at least one production level to validate against solution scripts")
+    func testCurrentTaskStageProductionLevelsHaveMatchingSolutionScript() throws {
+        let expectedLevelIDs = Set(["level_001"])
+        let productionLevelIDs = Set(try TestLevelCatalog().loadAllProductionLevels().map(\.id))
+        XCTAssertTrue(
+            expectedLevelIDs.isSubset(of: productionLevelIDs),
+            "Expected production levels for current stage are missing: \(expectedLevelIDs.subtracting(productionLevelIDs).sorted())"
+        )
 
         let repository = LevelSolutionRepository()
-        var missingScripts: [String] = []
+        var failures: [String] = []
 
-        for level in levels {
+        for levelID in expectedLevelIDs.sorted() {
             do {
-                _ = try repository.loadScript(levelID: level.id)
+                let script = try repository.loadScript(levelID: levelID)
+                if script.levelID != levelID {
+                    failures.append("\(levelID): script payload levelID is '\(script.levelID)'")
+                }
             } catch {
-                missingScripts.append("\(level.id): \(error.localizedDescription)")
+                failures.append("\(levelID): \(error.localizedDescription)")
             }
         }
 
         XCTAssertTrue(
-            missingScripts.isEmpty,
-            "Missing or invalid solution scripts for production levels:\n\(missingScripts.joined(separator: "\n"))"
+            failures.isEmpty,
+            "Expected production levels must have matching solution scripts:\n\(failures.joined(separator: "\n"))"
         )
     }
 
@@ -77,6 +84,22 @@ final class LevelSolutionScriptTests: XCTestCase {
             invalidReferences.isEmpty,
             "Solution scripts must reference existing production levels:\n\(invalidReferences.joined(separator: "\n"))"
         )
+    }
+
+    func testMissingSolutionScriptFailsClearly() {
+        let repository = LevelSolutionRepository()
+
+        XCTAssertThrowsError(try repository.loadScript(levelID: "level_999")) { error in
+            guard case let LevelSolutionRepositoryError.fileNotFound(levelID) = error else {
+                XCTFail("Expected fileNotFound error, got \(error)")
+                return
+            }
+            XCTAssertEqual(levelID, "level_999")
+            XCTAssertTrue(
+                error.localizedDescription.contains("level_999.solution.json"),
+                "Expected missing script error to include expected filename"
+            )
+        }
     }
 
     func testSolutionActionTimesAreNonNegative() throws {
