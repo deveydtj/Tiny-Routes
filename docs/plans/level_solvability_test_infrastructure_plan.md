@@ -1231,20 +1231,20 @@ TinyRoutesTests/LevelSolvabilityTests.swift
 
 ### To Do
 
-- [ ] Load all production levels.
-- [ ] Load matching solution scripts.
-- [ ] Run each level through `LevelSimulationHarness`.
-- [ ] Assert outcome is `.completed`.
-- [ ] Assert completion is within time limit.
-- [ ] Assert tap count is less than or equal to script `maxTaps`.
-- [ ] If script is intended as par solution, assert tap count is less than or equal to level `parTaps`.
-- [ ] Include level ID in every failure message.
+- [x] Load all production levels.
+- [x] Load matching solution scripts.
+- [x] Run each level through `LevelSimulationHarness`.
+- [x] Assert outcome is `.completed`.
+- [x] Assert completion is within time limit.
+- [x] Assert tap count is less than or equal to script `maxTaps`.
+- [x] If script is intended as par solution, assert tap count is less than or equal to level `parTaps`.
+- [x] Include level ID in every failure message.
 
 ### Definition of Done
 
-- [ ] Every level with a solution script is simulated through real `RouteEngine`.
-- [ ] Failed levels report clear diagnostics.
-- [ ] `level_001` passes with zero taps.
+- [x] Every level with a solution script is simulated through real `RouteEngine`.
+- [x] Failed levels report clear diagnostics.
+- [x] `level_001` passes with zero taps.
 
 ---
 
