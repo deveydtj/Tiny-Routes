@@ -10,7 +10,7 @@ final class LevelSolvabilityTests: XCTestCase {
     // MARK: - Helpers
 
     /// Returns all production levels paired with their solution scripts.
-    /// Levels without a solution script (`fileNotFound`) are silently skipped.
+    /// Levels whose script file does not exist (`fileNotFound`) are silently skipped.
     /// Any other loading error (e.g. decoding failure) is rethrown immediately.
     private func levelsWithScripts() throws -> [(level: LevelData, script: LevelSolutionScript)] {
         let levels = try catalog.loadAllProductionLevels()
@@ -19,7 +19,7 @@ final class LevelSolvabilityTests: XCTestCase {
             do {
                 let script = try solutionRepository.loadScript(levelID: level.id)
                 result.append((level, script))
-            } catch LevelSolutionRepositoryError.fileNotFound {
+            } catch LevelSolutionRepositoryError.fileNotFound(_) {
                 // No solution script exists yet for this level — skip it.
             } catch {
                 throw error
@@ -30,7 +30,7 @@ final class LevelSolvabilityTests: XCTestCase {
 
     // MARK: - Tests
 
-    func testEveryProductionLevelCanBeCompletedByItsSolutionScript() throws {
+    func testProductionLevelsWithScriptsAllComplete() throws {
         let pairs = try levelsWithScripts()
         var failures: [String] = []
 
@@ -56,7 +56,7 @@ final class LevelSolvabilityTests: XCTestCase {
         )
     }
 
-    func testEveryProductionLevelCompletesWithinTimeLimit() throws {
+    func testProductionLevelsWithTimeLimitFlagCompleteWithinTimeLimit() throws {
         let pairs = try levelsWithScripts()
         var failures: [String] = []
 
@@ -90,7 +90,7 @@ final class LevelSolvabilityTests: XCTestCase {
         )
     }
 
-    func testEveryProductionLevelCompletesWithinDeclaredMaxTaps() throws {
+    func testProductionLevelsWithScriptsCompleteWithinDeclaredMaxTaps() throws {
         let pairs = try levelsWithScripts()
         var failures: [String] = []
 
