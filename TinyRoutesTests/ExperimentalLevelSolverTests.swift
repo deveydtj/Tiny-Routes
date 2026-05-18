@@ -16,6 +16,20 @@ final class ExperimentalLevelSolverTests: XCTestCase {
         XCTAssertEqual(unwrapped.actions.first?.tapNodeID, "switch")
     }
 
+    func testFindSolutionReturnsNilWhenTapBudgetIsTooLow() throws {
+        let level = try decodeSolverFixture(named: "simple_single_switch")
+        let solver = ExperimentalLevelSolver()
+        let configuration = ExperimentalLevelSolver.SearchConfiguration(
+            maximumTapCount: 0,
+            firstTapTimeSeconds: 0.50,
+            tapSpacingSeconds: 0.50
+        )
+
+        let solution = try solver.findSolution(for: level, configuration: configuration)
+
+        XCTAssertNil(solution)
+    }
+
     private func decodeSolverFixture(named fixtureName: String) throws -> LevelData {
         let fixtureURL = URL(fileURLWithPath: #filePath)
             .deletingLastPathComponent()

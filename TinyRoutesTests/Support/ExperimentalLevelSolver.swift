@@ -35,50 +35,82 @@ struct ExperimentalLevelSolver {
         let tapSpacingSeconds = max(configuration.tapSpacingSeconds, 0.01)
 
         for tapCount in 0...maximumTapCount {
-            let tapNodeSequences = sequences(nodeIDs: switchNodeIDs, count: tapCount)
-            for tapNodeSequence in tapNodeSequences {
-                let actions = tapNodeSequence.enumerated().map { index, nodeID in
-                    LevelSolutionAction(
-                        timeSeconds: firstTapTimeSeconds + (TimeInterval(index) * tapSpacingSeconds),
-                        tapNodeID: nodeID
-                    )
-                }
-                let script = LevelSolutionScript(
-                    levelID: level.id,
-                    description: "experimental_solver_candidate_taps_\(tapCount)",
-                    expectedOutcome: .completed,
-                    maxTaps: maximumTapCount,
-                    requiresWithinTimeLimit: true,
-                    actions: actions
-                )
-                let result = try harness.run(level: level, script: script)
-                if result.outcome == .completed {
-                    return Solution(actions: actions, result: result)
-                }
+            var candidateTapNodeIDs: [String] = []
+            if let solution = try findSolution(
+                for: level,
+                switchNodeIDs: switchNodeIDs,
+                targetTapCount: tapCount,
+                firstTapTimeSeconds: firstTapTimeSeconds,
+                tapSpacingSeconds: tapSpacingSeconds,
+                candidateTapNodeIDs: &candidateTapNodeIDs
+            ) {
+                return solution
             }
         }
 
         return nil
     }
 
-    private func sequences(nodeIDs: [String], count: Int) -> [[String]] {
-        guard count > 0 else {
-            return [[]]
-        }
-        guard !nodeIDs.isEmpty else {
-            return []
+    private func findSolution(
+        for level: LevelData,
+        switchNodeIDs: [String],
+        targetTapCount: Int,
+        firstTapTimeSeconds: TimeInterval,
+        tapSpacingSeconds: TimeInterval,
+        candidateTapNodeIDs: inout [String]
+    ) throws -> Solution? {
+        if candidateTapNodeIDs.count == targetTapCount {
+            return try evaluateCandidate(
+                level: level,
+                tapNodeIDs: candidateTapNodeIDs,
+                firstTapTimeSeconds: firstTapTimeSeconds,
+                tapSpacingSeconds: tapSpacingSeconds
+            )
         }
 
-        var result = [[String]]([[]])
-        for _ in 0..<count {
-            result = result.flatMap { prefix in
-                nodeIDs.map { nodeID in
-                    var sequence = prefix
-                    sequence.append(nodeID)
-                    return sequence
-                }
+        for switchNodeID in switchNodeIDs {
+            candidateTapNodeIDs.append(switchNodeID)
+            if let solution = try findSolution(
+                for: level,
+                switchNodeIDs: switchNodeIDs,
+                targetTapCount: targetTapCount,
+                firstTapTimeSeconds: firstTapTimeSeconds,
+                tapSpacingSeconds: tapSpacingSeconds,
+                candidateTapNodeIDs: &candidateTapNodeIDs
+            ) {
+                return solution
             }
+            candidateTapNodeIDs.removeLast()
         }
-        return result
+
+        return nil
+    }
+
+    private func evaluateCandidate(
+        level: LevelData,
+        tapNodeIDs: [String],
+        firstTapTimeSeconds: TimeInterval,
+        tapSpacingSeconds: TimeInterval
+    ) throws -> Solution? {
+        let actions = tapNodeIDs.enumerated().map { index, nodeID in
+            LevelSolutionAction(
+                timeSeconds: firstTapTimeSeconds + (TimeInterval(index) * tapSpacingSeconds),
+                tapNodeID: nodeID
+            )
+        }
+        let script = LevelSolutionScript(
+            levelID: level.id,
+            description: "experimental_solver_candidate_taps_\(actions.count)",
+            expectedOutcome: .completed,
+            maxTaps: actions.count,
+            requiresWithinTimeLimit: true,
+            actions: actions
+        )
+        let result = try harness.run(level: level, script: script)
+        if result.outcome == .completed {
+            return Solution(actions: actions, result: result)
+        }
+
+        return nil
     }
 }
