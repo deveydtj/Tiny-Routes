@@ -1358,17 +1358,23 @@ TinyRoutesTests/Support/ExperimentalLevelSolver.swift
 
 ### To Do
 
-- [ ] Mark solver as experimental in comments.
-- [ ] Search possible switch rotations by tap count.
-- [ ] Use `RouteEngine` or a carefully isolated graph-state search.
-- [ ] Test only small fixture levels first.
-- [ ] Do not require the solver for production level validation yet.
+- [x] Mark solver as experimental in comments.
+- [x] Search possible switch rotations by tap count.
+- [x] Use `RouteEngine` or a carefully isolated graph-state search.
+- [x] Test only small fixture levels first.
+- [x] Do not require the solver for production level validation yet.
 
 ### Definition of Done
 
-- [ ] Solver can find a solution for at least one simple test fixture.
-- [ ] Solver is not required for production tests.
-- [ ] Results are documented.
+- [x] Solver can find a solution for at least one simple test fixture.
+- [x] Solver is not required for production tests.
+- [x] Results are documented.
+
+### Results
+
+- Added `ExperimentalLevelSolver` as an explicit experimental spike in `TinyRoutesTests/Support/ExperimentalLevelSolver.swift`.
+- Added a small solver fixture (`simple_single_switch`) and `ExperimentalLevelSolverTests` to verify the solver finds a completion path.
+- Kept production solvability validation unchanged (solver is only used by dedicated experimental tests).
 
 ---
 
