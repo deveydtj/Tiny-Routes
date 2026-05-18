@@ -1,0 +1,8 @@
+{
+  "levelID": "level_001",
+  "description": "No taps required. The default route moves from start to package to destination.",
+  "expectedOutcome": "completed",
+  "maxTaps": 0,
+  "requiresWithinTimeLimit": true,
+  "actions": []
+}
