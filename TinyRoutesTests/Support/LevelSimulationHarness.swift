@@ -17,6 +17,24 @@ final class LevelSimulationHarness {
         let engine = engineFactory()
         try engine.buildGraph(from: level)
         _ = engine.startDotMovement()
+        var executedActions: [ExecutedLevelSolutionAction] = []
+
+        for action in script.actions.sorted(by: { $0.timeSeconds < $1.timeSeconds }) {
+            advance(engine: engine, toElapsedTime: action.timeSeconds)
+            guard engine.levelOutcome == nil else {
+                break
+            }
+
+            let didRotate = engine.rotateSwitchNode(nodeID: action.tapNodeID)
+            executedActions.append(
+                ExecutedLevelSolutionAction(
+                    requestedTime: action.timeSeconds,
+                    nodeID: action.tapNodeID,
+                    didRotate: didRotate,
+                    actualTapCountAfterAction: engine.tapCount
+                )
+            )
+        }
 
         while engine.levelOutcome == nil, let timeRemaining = engine.timeRemaining, timeRemaining > 0 {
             engine.updateDot(deltaTime: min(frameStep, timeRemaining))
@@ -30,7 +48,22 @@ final class LevelSimulationHarness {
             tapCount: engine.tapCount,
             finalNodeID: engine.deliveryDot?.currentNodeID,
             didCollectPackage: engine.deliveryDot?.hasCollectedPackage ?? false,
-            executedActions: []
+            executedActions: executedActions
         )
+    }
+
+    private func advance(engine: RouteEngine, toElapsedTime targetElapsedTime: TimeInterval) {
+        let clampedTarget = max(targetElapsedTime, 0)
+        while engine.levelOutcome == nil {
+            let elapsedTime = engine.elapsedTime ?? 0
+            let remainingToTarget = clampedTarget - elapsedTime
+            guard remainingToTarget > 0,
+                  let timeRemaining = engine.timeRemaining,
+                  timeRemaining > 0 else {
+                return
+            }
+
+            engine.updateDot(deltaTime: min(frameStep, remainingToTarget, timeRemaining))
+        }
     }
 }
