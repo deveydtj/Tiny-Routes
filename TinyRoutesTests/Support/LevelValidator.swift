@@ -3,11 +3,12 @@ import Foundation
 
 final class LevelValidator {
     func validate(level: LevelData) -> [LevelValidationIssue] {
-        _ = validateIdentity(level: level)
-        _ = validateGraph(level: level)
-        _ = validateIntent(level: level)
-        _ = validatePlayability(level: level)
-        return []
+        var issues: [LevelValidationIssue] = []
+        issues += validateIdentity(level: level)
+        issues += validateGraph(level: level)
+        issues += validateIntent(level: level)
+        issues += validatePlayability(level: level)
+        return issues
     }
 
     // MARK: - Identity Validation
@@ -20,8 +21,25 @@ final class LevelValidator {
     // MARK: - Graph Validation
 
     private func validateGraph(level: LevelData) -> [LevelValidationIssue] {
-        _ = level
-        return []
+        let duplicateNodeIDs = duplicateIDs(in: level.graph.nodes.map(\.id))
+        let duplicateEdgeIDs = duplicateIDs(in: level.graph.edges.map(\.id))
+
+        let duplicateNodeIssues = duplicateNodeIDs.map {
+            LevelValidationIssue(
+                severity: .error,
+                levelID: level.id,
+                message: "Duplicate node ID: \($0)"
+            )
+        }
+        let duplicateEdgeIssues = duplicateEdgeIDs.map {
+            LevelValidationIssue(
+                severity: .error,
+                levelID: level.id,
+                message: "Duplicate edge ID: \($0)"
+            )
+        }
+
+        return duplicateNodeIssues + duplicateEdgeIssues
     }
 
     // MARK: - Intent Validation
@@ -36,5 +54,12 @@ final class LevelValidator {
     private func validatePlayability(level: LevelData) -> [LevelValidationIssue] {
         _ = level
         return []
+    }
+
+    private func duplicateIDs(in ids: [String]) -> [String] {
+        Dictionary(grouping: ids, by: { $0 })
+            .filter { $1.count > 1 }
+            .map(\.key)
+            .sorted()
     }
 }
