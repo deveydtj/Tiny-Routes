@@ -1085,15 +1085,15 @@ TinyRoutesTests/Resources/LevelSolutions/level_001.solution.json
 
 ### To Do
 
-- [ ] Add `level_001.solution.json`.
-- [ ] Decode it with `LevelSolutionRepository`.
-- [ ] Verify `levelID` equals `level_001`.
-- [ ] Verify `actions` is empty.
+- [x] Add `level_001.solution.json`.
+- [x] Decode it with `LevelSolutionRepository`.
+- [x] Verify `levelID` equals `level_001`.
+- [x] Verify `actions` is empty.
 
 ### Definition of Done
 
-- [ ] `level_001` has a matching solution script.
-- [ ] The script decodes successfully.
+- [x] `level_001` has a matching solution script.
+- [x] The script decodes successfully.
 
 ---
 

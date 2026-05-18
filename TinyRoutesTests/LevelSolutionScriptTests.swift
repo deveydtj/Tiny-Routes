@@ -32,4 +32,12 @@ final class LevelSolutionScriptTests: XCTestCase {
         XCTAssertEqual(script.actions[0].timeSeconds, 0.25)
         XCTAssertEqual(script.actions[0].tapNodeID, "switch_a")
     }
+
+    func testLevel001ScriptDecodesFromRepositoryWithNoActions() throws {
+        let repository = LevelSolutionRepository()
+        let script = try repository.loadScript(levelID: "level_001")
+
+        XCTAssertEqual(script.levelID, "level_001")
+        XCTAssertTrue(script.actions.isEmpty)
+    }
 }
