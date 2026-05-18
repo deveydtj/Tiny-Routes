@@ -982,18 +982,18 @@ TinyRoutesTests/Support/TestLevelCatalog.swift
 
 ### To Do
 
-- [ ] Create `TestLevelCatalog` helper.
-- [ ] Add method to load all production levels.
-- [ ] Add test that loops through every production level.
-- [ ] Run `LevelValidator.validate(level:)` on every level.
-- [ ] Fail the test if any issue has severity `.error`.
-- [ ] Include all validation messages in the failure output.
+- [x] Create `TestLevelCatalog` helper.
+- [x] Add method to load all production levels.
+- [x] Add test that loops through every production level.
+- [x] Run `LevelValidator.validate(level:)` on every level.
+- [x] Fail the test if any issue has severity `.error`.
+- [x] Include all validation messages in the failure output.
 
 ### Definition of Done
 
-- [ ] Every production level is validated by one test.
-- [ ] The failure output includes level ID and issue message.
-- [ ] Existing production levels pass or failures are clearly documented.
+- [x] Every production level is validated by one test.
+- [x] The failure output includes level ID and issue message.
+- [x] Existing production levels pass or failures are clearly documented.
 
 ---
 

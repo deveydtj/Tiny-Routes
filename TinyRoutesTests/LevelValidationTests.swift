@@ -242,34 +242,30 @@ final class LevelValidationTests: XCTestCase {
         )
     }
 
-    func testProductionLevelsPassReachabilityValidation() throws {
-        let levels = try decodeProductionLevels()
-        XCTAssertFalse(levels.isEmpty, "Expected production level files in TinyRoutes/Resources/Levels")
+    func testProductionLevelsPassValidation() throws {
+        let levels = try TestLevelCatalog().loadAllProductionLevels()
+        XCTAssertFalse(levels.isEmpty, "Expected bundled production level files named level_###.json")
 
         let validator = LevelValidator()
         var failures: [String] = []
 
         for level in levels {
-            let reachabilityIssues = validator
+            let errorIssues = validator
                 .validate(level: level)
-                .filter {
-                    $0.message.contains("unreachable from startNodeID")
-                        || $0.message.contains("unreachable from packageNodeID")
-                        || $0.message == "No directed path can satisfy start → package → destination"
-                }
+                .filter { $0.severity == .error }
 
-            if !reachabilityIssues.isEmpty {
-                let issueDescriptions = reachabilityIssues
+            if !errorIssues.isEmpty {
+                let issueDescriptions = errorIssues
                     .map(\.message)
                     .sorted()
-                    .joined(separator: "; ")
-                failures.append("\(level.id): \(issueDescriptions)")
+                    .joined(separator: "\n  ")
+                failures.append("\(level.id):\n  \(issueDescriptions)")
             }
         }
 
         XCTAssertTrue(
             failures.isEmpty,
-            "Production levels failed reachability validation:\n\(failures.joined(separator: "\n"))"
+            "Production levels failed validation:\n\(failures.joined(separator: "\n"))"
         )
     }
 
@@ -281,25 +277,6 @@ final class LevelValidationTests: XCTestCase {
             .appendingPathComponent("\(fixtureName).json")
         let data = try Data(contentsOf: fixtureURL)
         return try decoder.decode(LevelData.self, from: data)
-    }
-
-    private func decodeProductionLevels() throws -> [LevelData] {
-        let levelsDirectoryURL = URL(fileURLWithPath: #filePath)
-            .deletingLastPathComponent()
-            .deletingLastPathComponent()
-            .appendingPathComponent("TinyRoutes")
-            .appendingPathComponent("Resources")
-            .appendingPathComponent("Levels")
-
-        let levelFileURLs = try FileManager.default
-            .contentsOfDirectory(at: levelsDirectoryURL, includingPropertiesForKeys: nil)
-            .filter { $0.pathExtension == "json" && $0.deletingPathExtension().lastPathComponent.hasPrefix("level_") }
-            .sorted { $0.lastPathComponent < $1.lastPathComponent }
-
-        return try levelFileURLs.map { fileURL in
-            let data = try Data(contentsOf: fileURL)
-            return try decoder.decode(LevelData.self, from: data)
-        }
     }
 
     private func makeLevelWithMultipleDuplicateIDs() -> LevelData {
