@@ -42,18 +42,13 @@ final class LevelSolutionScriptTests: XCTestCase {
         XCTAssertTrue(script.actions.isEmpty)
     }
 
-    func testCurrentTaskStageProductionLevelsHaveMatchingSolutionScript() throws {
-        let expectedLevelIDs = Set(["level_001"])
-        let productionLevelIDs = Set(try TestLevelCatalog().loadAllProductionLevels().map(\.id))
-        XCTAssertTrue(
-            expectedLevelIDs.isSubset(of: productionLevelIDs),
-            "Expected production levels for current stage are missing: \(expectedLevelIDs.subtracting(productionLevelIDs).sorted())"
-        )
-
+    func testEveryProductionLevelHasMatchingSolutionScript() throws {
+        let productionLevelIDs = try TestLevelCatalog().loadAllProductionLevels().map(\.id).sorted()
+        XCTAssertFalse(productionLevelIDs.isEmpty, "Expected at least one production level")
         let repository = LevelSolutionRepository()
         var failures: [String] = []
 
-        for levelID in expectedLevelIDs.sorted() {
+        for levelID in productionLevelIDs {
             do {
                 let script = try repository.loadScript(levelID: levelID)
                 if script.levelID != levelID {
@@ -66,7 +61,7 @@ final class LevelSolutionScriptTests: XCTestCase {
 
         XCTAssertTrue(
             failures.isEmpty,
-            "Expected production levels must have matching solution scripts:\n\(failures.joined(separator: "\n"))"
+            "Every production level must have a matching solution script:\n\(failures.joined(separator: "\n"))"
         )
     }
 

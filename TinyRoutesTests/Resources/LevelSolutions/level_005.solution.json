@@ -1,0 +1,8 @@
+{
+  "levelID": "level_005",
+  "description": "Validation-stage placeholder script with no taps.",
+  "expectedOutcome": "completed",
+  "maxTaps": 0,
+  "requiresWithinTimeLimit": true,
+  "actions": []
+}
