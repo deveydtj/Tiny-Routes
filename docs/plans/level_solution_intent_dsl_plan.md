@@ -53,22 +53,22 @@ Timed scripts remain valid. A future intent-based script can add a `steps` array
 
 ```json
 {
-  "levelID": "level_010",
-  "description": "Route through the package path, then prepare the final branch to destination.",
+  "levelID": "example_multi_switch",
+  "description": "Route through one branch, then prepare the final branch to destination.",
   "expectedOutcome": "completed",
   "maxTaps": 3,
   "requiresWithinTimeLimit": true,
   "steps": [
     {
       "type": "beforeDotReachesNode",
-      "targetNodeID": "a_switch",
-      "tapNodeID": "a_switch",
+      "targetNodeID": "switch_a",
+      "tapNodeID": "switch_a",
       "rotateCount": 1
     },
     {
       "type": "beforeDotReachesNode",
-      "targetNodeID": "c_switch",
-      "tapNodeID": "c_switch",
+      "targetNodeID": "switch_b",
+      "tapNodeID": "switch_b",
       "rotateCount": 2
     }
   ]
@@ -235,19 +235,26 @@ Reading this script should immediately tell a reviewer the puzzle idea: there is
       "rotateCount": 1
     },
     {
-      "type": "afterDotLeavesNode",
-      "targetNodeID": "a_switch",
+      "type": "beforeDotReachesNode",
+      "targetNodeID": "b_switch",
+      "tapNodeID": "b_switch",
+      "rotateCount": 1
+    },
+    {
+      "type": "beforeDotReachesNode",
+      "targetNodeID": "c_switch",
       "tapNodeID": "c_switch",
-      "rotateCount": 2
+      "rotateCount": 1
     }
   ]
 }
 ```
 
-This example shows why both triggers can be useful:
+This example shows how a real multi-switch level can read as three separate arrival-based intent steps:
 
-- the first switch must be ready before arrival
-- the second switch should wait until the dot has already committed to leaving the first area
+- the first switch opens the package route
+- the second switch exits the package area toward the final branch
+- the third switch aims the final branch at the destination
 
 ---
 
