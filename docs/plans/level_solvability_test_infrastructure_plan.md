@@ -1173,17 +1173,17 @@ TinyRoutesTests/Support/LevelSimulationHarness.swift
 
 ### To Do
 
-- [ ] Create `final class LevelSimulationHarness`.
-- [ ] Add initializer with `engineFactory` and `frameStep`.
-- [ ] Add `run(level:script:)` method.
-- [ ] Build the engine from the level.
-- [ ] Start dot movement.
-- [ ] Return a basic result without applying actions yet.
+- [x] Create `final class LevelSimulationHarness`.
+- [x] Add initializer with `engineFactory` and `frameStep`.
+- [x] Add `run(level:script:)` method.
+- [x] Build the engine from the level.
+- [x] Start dot movement.
+- [x] Return a basic result without applying actions yet.
 
 ### Definition of Done
 
-- [ ] Harness can run `level_001` with an empty action list.
-- [ ] Harness returns `.completed` for `level_001`.
+- [x] Harness can run `level_001` with an empty action list.
+- [x] Harness returns `.completed` for `level_001`.
 
 ---
 
