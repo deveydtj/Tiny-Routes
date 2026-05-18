@@ -184,8 +184,44 @@ final class LevelValidator {
     // MARK: - Intent Validation
 
     private func validateIntent(level: LevelData) -> [LevelValidationIssue] {
-        _ = level
-        return []
+        let nodeIDs = Set(level.graph.nodes.map(\.id))
+        guard nodeIDs.contains(level.startNodeID),
+              nodeIDs.contains(level.packageNodeID),
+              nodeIDs.contains(level.destinationNodeID) else {
+            return []
+        }
+
+        var issues: [LevelValidationIssue] = []
+
+        let reachableFromStart = reachableNodeIDs(from: level.startNodeID, edges: level.graph.edges)
+        let packageReachableFromStart = reachableFromStart.contains(level.packageNodeID)
+        if !packageReachableFromStart {
+            issues.append(LevelValidationIssue(
+                severity: .error,
+                levelID: level.id,
+                message: "packageNodeID '\(level.packageNodeID)' is unreachable from startNodeID '\(level.startNodeID)'"
+            ))
+        }
+
+        let reachableFromPackage = reachableNodeIDs(from: level.packageNodeID, edges: level.graph.edges)
+        let destinationReachableFromPackage = reachableFromPackage.contains(level.destinationNodeID)
+        if !destinationReachableFromPackage {
+            issues.append(LevelValidationIssue(
+                severity: .error,
+                levelID: level.id,
+                message: "destinationNodeID '\(level.destinationNodeID)' is unreachable from packageNodeID '\(level.packageNodeID)'"
+            ))
+        }
+
+        if !(packageReachableFromStart && destinationReachableFromPackage) {
+            issues.append(LevelValidationIssue(
+                severity: .error,
+                levelID: level.id,
+                message: "No directed path can satisfy start → package → destination"
+            ))
+        }
+
+        return issues
     }
 
     // MARK: - Playability Validation
@@ -200,5 +236,20 @@ final class LevelValidator {
             .filter { $1.count > 1 }
             .map(\.key)
             .sorted()
+    }
+
+    private func reachableNodeIDs(from startNodeID: String, edges: [RouteEdge]) -> Set<String> {
+        let edgesBySourceNodeID = Dictionary(grouping: edges, by: \.fromNodeID)
+        var visited: Set<String> = [startNodeID]
+        var stack = [startNodeID]
+
+        while let nodeID = stack.popLast() {
+            let nextNodeIDs = edgesBySourceNodeID[nodeID]?.map(\.toNodeID) ?? []
+            for nextNodeID in nextNodeIDs where visited.insert(nextNodeID).inserted {
+                stack.append(nextNodeID)
+            }
+        }
+
+        return visited
     }
 }

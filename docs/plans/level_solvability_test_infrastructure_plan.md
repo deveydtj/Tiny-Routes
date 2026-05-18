@@ -951,19 +951,19 @@ TinyRoutesTests/LevelValidationTests.swift
 
 ### To Do
 
-- [ ] Add helper that computes reachable node IDs from a starting node using directed edges.
-- [ ] Validate package is reachable from start.
-- [ ] Validate destination is reachable from package.
-- [ ] Validate at least one directed path can go start → package → destination.
-- [ ] Add broken fixture where package is unreachable.
-- [ ] Add broken fixture where destination is unreachable from package.
-- [ ] Add tests for both fixtures.
+- [x] Add helper that computes reachable node IDs from a starting node using directed edges.
+- [x] Validate package is reachable from start.
+- [x] Validate destination is reachable from package.
+- [x] Validate at least one directed path can go start → package → destination.
+- [x] Add broken fixture where package is unreachable.
+- [x] Add broken fixture where destination is unreachable from package.
+- [x] Add tests for both fixtures.
 
 ### Definition of Done
 
-- [ ] Unreachable package fails validation.
-- [ ] Unreachable destination after package fails validation.
-- [ ] Valid production levels pass this validation.
+- [x] Unreachable package fails validation.
+- [x] Unreachable destination after package fails validation.
+- [x] Valid production levels pass this validation.
 
 ---
 

@@ -202,6 +202,77 @@ final class LevelValidationTests: XCTestCase {
         )
     }
 
+    func testUnreachablePackageProducesError() throws {
+        let level = try decodeBrokenLevelFixture(named: "unreachable_package")
+        let issues = LevelValidator().validate(level: level)
+
+        XCTAssertTrue(
+            issues.contains {
+                $0.severity == .error
+                    && $0.levelID == level.id
+                    && $0.message == "packageNodeID 'package' is unreachable from startNodeID 'start'"
+            }
+        )
+        XCTAssertTrue(
+            issues.contains {
+                $0.severity == .error
+                    && $0.levelID == level.id
+                    && $0.message == "No directed path can satisfy start → package → destination"
+            }
+        )
+    }
+
+    func testUnreachableDestinationFromPackageProducesError() throws {
+        let level = try decodeBrokenLevelFixture(named: "unreachable_destination_from_package")
+        let issues = LevelValidator().validate(level: level)
+
+        XCTAssertTrue(
+            issues.contains {
+                $0.severity == .error
+                    && $0.levelID == level.id
+                    && $0.message == "destinationNodeID 'destination' is unreachable from packageNodeID 'package'"
+            }
+        )
+        XCTAssertTrue(
+            issues.contains {
+                $0.severity == .error
+                    && $0.levelID == level.id
+                    && $0.message == "No directed path can satisfy start → package → destination"
+            }
+        )
+    }
+
+    func testProductionLevelsPassReachabilityValidation() throws {
+        let levels = try decodeProductionLevels()
+        XCTAssertFalse(levels.isEmpty, "Expected production level files in TinyRoutes/Resources/Levels")
+
+        let validator = LevelValidator()
+        var failures: [String] = []
+
+        for level in levels {
+            let reachabilityIssues = validator
+                .validate(level: level)
+                .filter {
+                    $0.message.contains("unreachable from startNodeID")
+                        || $0.message.contains("unreachable from packageNodeID")
+                        || $0.message == "No directed path can satisfy start → package → destination"
+                }
+
+            if !reachabilityIssues.isEmpty {
+                let issueDescriptions = reachabilityIssues
+                    .map(\.message)
+                    .sorted()
+                    .joined(separator: "; ")
+                failures.append("\(level.id): \(issueDescriptions)")
+            }
+        }
+
+        XCTAssertTrue(
+            failures.isEmpty,
+            "Production levels failed reachability validation:\n\(failures.joined(separator: "\n"))"
+        )
+    }
+
     private func decodeBrokenLevelFixture(named fixtureName: String) throws -> LevelData {
         let fixtureURL = URL(fileURLWithPath: #filePath)
             .deletingLastPathComponent()
@@ -210,6 +281,25 @@ final class LevelValidationTests: XCTestCase {
             .appendingPathComponent("\(fixtureName).json")
         let data = try Data(contentsOf: fixtureURL)
         return try decoder.decode(LevelData.self, from: data)
+    }
+
+    private func decodeProductionLevels() throws -> [LevelData] {
+        let levelsDirectoryURL = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+            .appendingPathComponent("TinyRoutes")
+            .appendingPathComponent("Resources")
+            .appendingPathComponent("Levels")
+
+        let levelFileURLs = try FileManager.default
+            .contentsOfDirectory(at: levelsDirectoryURL, includingPropertiesForKeys: nil)
+            .filter { $0.pathExtension == "json" && $0.deletingPathExtension().lastPathComponent.hasPrefix("level_") }
+            .sorted { $0.lastPathComponent < $1.lastPathComponent }
+
+        return try levelFileURLs.map { fileURL in
+            let data = try Data(contentsOf: fileURL)
+            return try decoder.decode(LevelData.self, from: data)
+        }
     }
 
     private func makeLevelWithMultipleDuplicateIDs() -> LevelData {
