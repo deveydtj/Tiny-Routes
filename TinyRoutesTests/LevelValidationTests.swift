@@ -4,6 +4,58 @@ import XCTest
 final class LevelValidationTests: XCTestCase {
     private let decoder = JSONDecoder()
 
+    func testEmptyLevelIDProducesError() throws {
+        let level = try decodeBrokenLevelFixture(named: "empty_level_id")
+        let issues = LevelValidator().validate(level: level)
+
+        XCTAssertTrue(
+            issues.contains {
+                $0.severity == .error
+                    && $0.levelID == level.id
+                    && $0.message == "Level id must not be empty"
+            }
+        )
+    }
+
+    func testEmptyLevelNameProducesError() throws {
+        let level = try decodeBrokenLevelFixture(named: "empty_level_name")
+        let issues = LevelValidator().validate(level: level)
+
+        XCTAssertTrue(
+            issues.contains {
+                $0.severity == .error
+                    && $0.levelID == level.id
+                    && $0.message == "Level name must not be empty"
+            }
+        )
+    }
+
+    func testNonPositiveTimeLimitProducesError() throws {
+        let level = try decodeBrokenLevelFixture(named: "non_positive_time_limit")
+        let issues = LevelValidator().validate(level: level)
+
+        XCTAssertTrue(
+            issues.contains {
+                $0.severity == .error
+                    && $0.levelID == level.id
+                    && $0.message == "timeLimitSeconds must be greater than 0"
+            }
+        )
+    }
+
+    func testNegativeParTapsProducesError() throws {
+        let level = try decodeBrokenLevelFixture(named: "negative_par_taps")
+        let issues = LevelValidator().validate(level: level)
+
+        XCTAssertTrue(
+            issues.contains {
+                $0.severity == .error
+                    && $0.levelID == level.id
+                    && $0.message == "parTaps must be greater than or equal to 0"
+            }
+        )
+    }
+
     func testDuplicateNodeIDsProduceError() throws {
         let level = try decodeBrokenLevelFixture(named: "duplicate_node_ids")
         let issues = LevelValidator().validate(level: level)

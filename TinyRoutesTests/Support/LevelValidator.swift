@@ -14,8 +14,41 @@ final class LevelValidator {
     // MARK: - Identity Validation
 
     private func validateIdentity(level: LevelData) -> [LevelValidationIssue] {
-        _ = level
-        return []
+        var issues: [LevelValidationIssue] = []
+
+        if level.id.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            issues.append(LevelValidationIssue(
+                severity: .error,
+                levelID: level.id,
+                message: "Level id must not be empty"
+            ))
+        }
+
+        if level.name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            issues.append(LevelValidationIssue(
+                severity: .error,
+                levelID: level.id,
+                message: "Level name must not be empty"
+            ))
+        }
+
+        if level.timeLimitSeconds <= 0 {
+            issues.append(LevelValidationIssue(
+                severity: .error,
+                levelID: level.id,
+                message: "timeLimitSeconds must be greater than 0"
+            ))
+        }
+
+        if level.parTaps < 0 {
+            issues.append(LevelValidationIssue(
+                severity: .error,
+                levelID: level.id,
+                message: "parTaps must be greater than or equal to 0"
+            ))
+        }
+
+        return issues
     }
 
     // MARK: - Graph Validation
