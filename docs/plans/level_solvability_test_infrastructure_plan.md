@@ -769,16 +769,16 @@ TinyRoutesTests/Support/LevelValidator.swift
 
 ### To Do
 
-- [ ] Create `final class LevelValidator`.
-- [ ] Add `func validate(level: LevelData) -> [LevelValidationIssue]`.
-- [ ] Return an empty issue list for now.
-- [ ] Add private helper placeholder sections for identity, graph, intent, and playability validation.
-- [ ] Ensure the file imports `Foundation` and can access `@testable import TinyRoutes` from tests as needed.
+- [x] Create `final class LevelValidator`.
+- [x] Add `func validate(level: LevelData) -> [LevelValidationIssue]`.
+- [x] Return an empty issue list for now.
+- [x] Add private helper placeholder sections for identity, graph, intent, and playability validation.
+- [x] Ensure the file imports `Foundation` and can access `@testable import TinyRoutes` from tests as needed.
 
 ### Definition of Done
 
-- [ ] Validator compiles.
-- [ ] No validation rules are implemented yet except the empty result.
+- [x] Validator compiles.
+- [x] No validation rules are implemented yet except the empty result.
 
 ---
 
