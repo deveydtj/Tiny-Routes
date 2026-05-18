@@ -860,17 +860,17 @@ TinyRoutesTests/LevelValidationTests.swift
 
 ### To Do
 
-- [ ] Validate every edge `fromNodeID` exists in the graph node set.
-- [ ] Validate every edge `toNodeID` exists in the graph node set.
-- [ ] Add broken fixture for unknown `fromNodeID`.
-- [ ] Add broken fixture for unknown `toNodeID`.
-- [ ] Add tests for both cases.
+- [x] Validate every edge `fromNodeID` exists in the graph node set.
+- [x] Validate every edge `toNodeID` exists in the graph node set.
+- [x] Add broken fixture for unknown `fromNodeID`.
+- [x] Add broken fixture for unknown `toNodeID`.
+- [x] Add tests for both cases.
 
 ### Definition of Done
 
-- [ ] Unknown edge source node fails validation.
-- [ ] Unknown edge target node fails validation.
-- [ ] Failure messages include edge ID and bad node ID.
+- [x] Unknown edge source node fails validation.
+- [x] Unknown edge target node fails validation.
+- [x] Failure messages include edge ID and bad node ID.
 
 ---
 

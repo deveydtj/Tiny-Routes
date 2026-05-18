@@ -69,6 +69,32 @@ final class LevelValidationTests: XCTestCase {
         )
     }
 
+    func testEdgeWithUnknownFromNodeIDProducesError() throws {
+        let level = try decodeBrokenLevelFixture(named: "edge_unknown_from_node")
+        let issues = LevelValidator().validate(level: level)
+
+        XCTAssertTrue(
+            issues.contains {
+                $0.severity == .error
+                    && $0.levelID == level.id
+                    && $0.message == "Edge 'e_ghost_package' references unknown fromNodeID 'ghost_node'"
+            }
+        )
+    }
+
+    func testEdgeWithUnknownToNodeIDProducesError() throws {
+        let level = try decodeBrokenLevelFixture(named: "edge_unknown_to_node")
+        let issues = LevelValidator().validate(level: level)
+
+        XCTAssertTrue(
+            issues.contains {
+                $0.severity == .error
+                    && $0.levelID == level.id
+                    && $0.message == "Edge 'e_start_ghost' references unknown toNodeID 'ghost_dest'"
+            }
+        )
+    }
+
     func testValidationReturnsAllDuplicateIssuesNotOnlyFirst() {
         let level = makeLevelWithMultipleDuplicateIDs()
         let issues = LevelValidator().validate(level: level)
