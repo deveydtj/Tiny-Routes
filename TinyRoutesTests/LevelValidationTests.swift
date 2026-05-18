@@ -244,7 +244,7 @@ final class LevelValidationTests: XCTestCase {
 
     func testProductionLevelsPassValidation() throws {
         let levels = try TestLevelCatalog().loadAllProductionLevels()
-        XCTAssertFalse(levels.isEmpty, "Expected production level files in TinyRoutes/Resources/Levels")
+        XCTAssertFalse(levels.isEmpty, "Expected bundled production level files named level_###.json")
 
         let validator = LevelValidator()
         var failures: [String] = []
@@ -256,7 +256,7 @@ final class LevelValidationTests: XCTestCase {
 
             if !errorIssues.isEmpty {
                 let issueDescriptions = errorIssues
-                    .map(\.displayText)
+                    .map(\.message)
                     .sorted()
                     .joined(separator: "\n  ")
                 failures.append("\(level.id):\n  \(issueDescriptions)")
