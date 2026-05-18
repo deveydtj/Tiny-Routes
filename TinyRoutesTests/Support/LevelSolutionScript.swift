@@ -11,6 +11,24 @@ struct LevelSolutionScript: Codable {
     var isPlaceholder: Bool
     var actions: [LevelSolutionAction]
 
+    init(
+        levelID: String,
+        description: String? = nil,
+        expectedOutcome: ExpectedOutcome,
+        maxTaps: Int,
+        requiresWithinTimeLimit: Bool,
+        isPlaceholder: Bool = false,
+        actions: [LevelSolutionAction]
+    ) {
+        self.levelID = levelID
+        self.description = description
+        self.expectedOutcome = expectedOutcome
+        self.maxTaps = maxTaps
+        self.requiresWithinTimeLimit = requiresWithinTimeLimit
+        self.isPlaceholder = isPlaceholder
+        self.actions = actions
+    }
+
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         levelID = try container.decode(String.self, forKey: .levelID)
