@@ -1,9 +1,13 @@
 {
   "levelID": "level_007",
-  "description": "Validation-stage placeholder script with no taps.",
+  "description": "Rotate center once so the post-package path exits to destination.",
   "expectedOutcome": "completed",
-  "maxTaps": 0,
+  "maxTaps": 1,
   "requiresWithinTimeLimit": true,
-  "isPlaceholder": true,
-  "actions": []
+  "actions": [
+    {
+      "timeSeconds": 0.1,
+      "tapNodeID": "center"
+    }
+  ]
 }

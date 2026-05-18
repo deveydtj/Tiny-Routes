@@ -1,9 +1,21 @@
 {
   "levelID": "level_010",
-  "description": "Validation-stage placeholder script with no taps.",
+  "description": "Route to package at a_switch, then through b_switch and c_switch directly to destination.",
   "expectedOutcome": "completed",
-  "maxTaps": 0,
+  "maxTaps": 3,
   "requiresWithinTimeLimit": true,
-  "isPlaceholder": true,
-  "actions": []
+  "actions": [
+    {
+      "timeSeconds": 0.1,
+      "tapNodeID": "a_switch"
+    },
+    {
+      "timeSeconds": 0.2,
+      "tapNodeID": "b_switch"
+    },
+    {
+      "timeSeconds": 0.3,
+      "tapNodeID": "c_switch"
+    }
+  ]
 }

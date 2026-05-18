@@ -1,9 +1,17 @@
 {
   "levelID": "level_009",
-  "description": "Validation-stage placeholder script with no taps.",
+  "description": "After collecting the package, route from ring to gate and then from gate to destination.",
   "expectedOutcome": "completed",
-  "maxTaps": 0,
+  "maxTaps": 2,
   "requiresWithinTimeLimit": true,
-  "isPlaceholder": true,
-  "actions": []
+  "actions": [
+    {
+      "timeSeconds": 0.1,
+      "tapNodeID": "ring"
+    },
+    {
+      "timeSeconds": 0.2,
+      "tapNodeID": "gate"
+    }
+  ]
 }
