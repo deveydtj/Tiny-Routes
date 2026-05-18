@@ -38,7 +38,7 @@ final class LevelValidationTests: XCTestCase {
             issues.contains {
                 $0.severity == .error
                     && $0.levelID == level.id
-                    && $0.message == "startNodeID 'start_missing' does not exist in the graph."
+                    && $0.message == "startNodeID 'start_missing' does not exist in the graph"
             }
         )
     }
@@ -51,7 +51,7 @@ final class LevelValidationTests: XCTestCase {
             issues.contains {
                 $0.severity == .error
                     && $0.levelID == level.id
-                    && $0.message == "packageNodeID 'package_missing' does not exist in the graph."
+                    && $0.message == "packageNodeID 'package_missing' does not exist in the graph"
             }
         )
     }
@@ -64,7 +64,7 @@ final class LevelValidationTests: XCTestCase {
             issues.contains {
                 $0.severity == .error
                     && $0.levelID == level.id
-                    && $0.message == "destinationNodeID 'destination_missing' does not exist in the graph."
+                    && $0.message == "destinationNodeID 'destination_missing' does not exist in the graph"
             }
         )
     }
