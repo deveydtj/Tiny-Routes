@@ -886,20 +886,20 @@ Tools/LevelEditor/app/repositories/level_file_repository.py
 
 ### To do
 
-- [ ] Add a `File` menu.
-- [ ] Add an `Open Level...` action.
-- [ ] Open a file picker starting in the default levels directory.
-- [ ] Load the selected file through `LevelFileRepository`.
-- [ ] Store the loaded level as the current document.
-- [ ] Show the loaded level ID or file name in the window title.
-- [ ] Show a clear error dialog if loading fails.
+- [x] Add a `File` menu.
+- [x] Add an `Open Level...` action.
+- [x] Open a file picker starting in the default levels directory.
+- [x] Load the selected file through `LevelFileRepository`.
+- [x] Store the loaded level as the current document.
+- [x] Show the loaded level ID or file name in the window title.
+- [x] Show a clear error dialog if loading fails.
 
 ### Acceptance criteria
 
-- [ ] User can select an existing `level_###.json`.
-- [ ] The level loads without crashing.
-- [ ] Invalid files show a readable error.
-- [ ] The repository remains responsible for file I/O.
+- [x] User can select an existing `level_###.json`.
+- [x] The level loads without crashing.
+- [x] Invalid files show a readable error.
+- [x] The repository remains responsible for file I/O.
 
 ---
 
