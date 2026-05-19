@@ -1327,17 +1327,17 @@ Tools/LevelEditor/app/ui/edge_item.py
 
 ### To do
 
-- [ ] Support Delete key press to remove the selected node or edge.
-- [ ] When deleting a node, also delete connected edges.
-- [ ] Update `outgoingEdgeIDs` lists on connected nodes.
-- [ ] Mark level as dirty after deletion.
+- [x] Support Delete key press to remove the selected node or edge.
+- [x] When deleting a node, also delete connected edges.
+- [x] Update `outgoingEdgeIDs` lists on connected nodes.
+- [x] Mark level as dirty after deletion.
 
 ### Acceptance criteria
 
-- [ ] Selected node is deleted with the Delete key.
-- [ ] Connected edges are also removed.
-- [ ] Level is marked dirty after deletion.
-- [ ] Deleting the last node does not crash.
+- [x] Selected node is deleted with the Delete key.
+- [x] Connected edges are also removed.
+- [x] Level is marked dirty after deletion.
+- [x] Deleting the last node does not crash.
 
 ---
 

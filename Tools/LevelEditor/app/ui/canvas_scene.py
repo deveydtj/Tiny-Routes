@@ -1,7 +1,7 @@
 import math
 
 from PySide6.QtCore import QPointF, QRectF, Qt, Signal
-from PySide6.QtGui import QColor, QPainter, QPen
+from PySide6.QtGui import QColor, QKeyEvent, QPainter, QPen
 from PySide6.QtWidgets import QGraphicsScene, QGraphicsSceneMouseEvent
 
 from app.models import LevelDocument, RouteNodeModel
@@ -24,6 +24,8 @@ class LevelCanvasScene(QGraphicsScene):
     node_item_moved = Signal(str, float, float)
     # Emitted when the user creates a new edge. Args: edge_id, from_node_id, to_node_id
     edge_creation_requested = Signal(str, str, str)
+    # Emitted after selected nodes and/or edges are deleted from the document.
+    level_items_deleted = Signal()
 
     def __init__(self) -> None:
         super().__init__()
@@ -95,6 +97,12 @@ class LevelCanvasScene(QGraphicsScene):
             self._clear_connection_source()
         super().mousePressEvent(event)
 
+    def keyPressEvent(self, event: QKeyEvent) -> None:
+        if event.key() in {Qt.Key.Key_Delete, Qt.Key.Key_Backspace} and self._delete_selected_items():
+            event.accept()
+            return
+        super().keyPressEvent(event)
+
     # ------------------------------------------------------------------
     # Selection handling
     # ------------------------------------------------------------------
@@ -120,6 +128,45 @@ class LevelCanvasScene(QGraphicsScene):
         placeholder = self.addSimpleText(message)
         placeholder.setBrush(QColor("#666666"))
         placeholder.setPos(-80, -10)
+
+    def _delete_selected_items(self) -> bool:
+        if self._document is None:
+            return False
+
+        selected_node_ids = {
+            item.node_id for item in self.selectedItems() if isinstance(item, NodeItem)
+        }
+        selected_edge_ids = {
+            item.edge_id for item in self.selectedItems() if isinstance(item, EdgeItem)
+        }
+
+        if not selected_node_ids and not selected_edge_ids:
+            return False
+
+        edge_ids_to_delete = selected_edge_ids | {
+            edge.id
+            for edge in self._document.graph.edges
+            if edge.fromNodeID in selected_node_ids or edge.toNodeID in selected_node_ids
+        }
+
+        self._document.graph.nodes = [
+            node for node in self._document.graph.nodes if node.id not in selected_node_ids
+        ]
+        self._document.graph.edges = [
+            edge for edge in self._document.graph.edges if edge.id not in edge_ids_to_delete
+        ]
+
+        for node in self._document.graph.nodes:
+            node.outgoingEdgeIDs = [
+                edge_id for edge_id in node.outgoingEdgeIDs if edge_id not in edge_ids_to_delete
+            ]
+
+        if self._connection_source_node_id in selected_node_ids:
+            self._connection_source_node_id = None
+
+        self.display_level(self._document)
+        self.level_items_deleted.emit()
+        return True
 
     def _resolve_node_item_at_position(self, scene_position: QPointF) -> NodeItem | None:
         for item in self.items(scene_position):

@@ -60,6 +60,7 @@ class LevelEditorMainWindow(QMainWindow):
         scene.selection_cleared.connect(self._properties_panel.clear)
         scene.node_item_moved.connect(self._on_node_item_moved)
         scene.edge_creation_requested.connect(self._on_edge_creation_requested)
+        scene.level_items_deleted.connect(self._on_level_items_deleted)
         self._validation_panel.validate_requested.connect(self._validate_current_level)
         self._piece_palette.node_type_activated.connect(self._add_node_from_palette)
 
@@ -250,6 +251,12 @@ class LevelEditorMainWindow(QMainWindow):
         )
 
         self._canvas_view.scene().display_level(self._current_document)
+        self._validation_panel.clear()
+        self._set_dirty(True)
+
+    def _on_level_items_deleted(self) -> None:
+        if self._current_document is None:
+            return
         self._validation_panel.clear()
         self._set_dirty(True)
 

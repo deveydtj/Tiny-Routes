@@ -8,6 +8,7 @@ import pytest
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
 try:
+    from PySide6.QtGui import QKeyEvent
     from PySide6.QtWidgets import QApplication, QFileDialog, QMessageBox
 except ImportError as exc:
     pytest.skip(f"PySide6 unavailable in this environment: {exc}", allow_module_level=True)
@@ -1091,3 +1092,142 @@ def test_dragging_node_updates_current_document_and_marks_dirty(
         assert window._validation_panel._empty_label.isVisibleTo(window._validation_panel)
     finally:
         window.close()
+
+
+def test_delete_key_removes_selected_edge_and_updates_outgoing_edge_ids(
+    qapplication: QApplication,
+) -> None:
+    scene = LevelCanvasScene()
+    document = _make_two_node_one_edge_document()
+    scene.display_level(document)
+
+    edge_item = next(item for item in scene.items() if isinstance(item, EdgeItem))
+    edge_item.setSelected(True)
+    qapplication.processEvents()
+
+    scene.keyPressEvent(
+        QKeyEvent(QKeyEvent.Type.KeyPress, Qt.Key.Key_Delete, Qt.KeyboardModifier.NoModifier)
+    )
+    qapplication.processEvents()
+
+    assert document.graph.edges == []
+    start_node = next(node for node in document.graph.nodes if node.id == "start")
+    assert start_node.outgoingEdgeIDs == []
+    assert [item for item in scene.items() if isinstance(item, EdgeItem)] == []
+
+
+def test_delete_key_removes_selected_node_and_connected_edges(
+    qapplication: QApplication,
+) -> None:
+    scene = LevelCanvasScene()
+    document = _make_two_node_one_edge_document()
+    scene.display_level(document)
+
+    start_item = next(
+        item for item in scene.items() if isinstance(item, NodeItem) and item.node_id == "start"
+    )
+    start_item.setSelected(True)
+    qapplication.processEvents()
+
+    scene.keyPressEvent(
+        QKeyEvent(QKeyEvent.Type.KeyPress, Qt.Key.Key_Delete, Qt.KeyboardModifier.NoModifier)
+    )
+    qapplication.processEvents()
+
+    remaining_node_ids = {node.id for node in document.graph.nodes}
+    assert remaining_node_ids == {"destination"}
+    assert document.graph.edges == []
+    assert [item for item in scene.items() if isinstance(item, EdgeItem)] == []
+
+
+def test_delete_key_marks_main_window_dirty_and_clears_validation(
+    qapplication: QApplication,
+) -> None:
+    window = LevelEditorMainWindow()
+    try:
+        window._current_document = _make_two_node_one_edge_document()
+        window._canvas_view.scene().display_level(window._current_document)
+        window._validation_panel.show_result(
+            ValidationResult(
+                messages=[
+                    ValidationMessage(
+                        severity=ValidationSeverity.INFO,
+                        code="validated",
+                        message="Validation completed.",
+                    )
+                ]
+            )
+        )
+        window._set_dirty(False)
+
+        edge_item = next(
+            item for item in window._canvas_view.scene().items() if isinstance(item, EdgeItem)
+        )
+        edge_item.setSelected(True)
+        qapplication.processEvents()
+
+        window._canvas_view.scene().keyPressEvent(
+            QKeyEvent(QKeyEvent.Type.KeyPress, Qt.Key.Key_Delete, Qt.KeyboardModifier.NoModifier)
+        )
+        qapplication.processEvents()
+
+        assert window._is_dirty is True
+        assert window._current_document.graph.edges == []
+        assert window._validation_panel._message_list.count() == 0
+        assert window._validation_panel._empty_label.isVisibleTo(window._validation_panel)
+    finally:
+        window.close()
+
+
+def test_canvas_view_forwards_delete_key_to_scene(
+    qapplication: QApplication,
+) -> None:
+    view = LevelCanvasView()
+    try:
+        document = _make_two_node_one_edge_document()
+        view.scene().display_level(document)
+
+        edge_item = next(item for item in view.scene().items() if isinstance(item, EdgeItem))
+        edge_item.setSelected(True)
+        qapplication.processEvents()
+
+        view.keyPressEvent(
+            QKeyEvent(QKeyEvent.Type.KeyPress, Qt.Key.Key_Delete, Qt.KeyboardModifier.NoModifier)
+        )
+        qapplication.processEvents()
+
+        assert document.graph.edges == []
+    finally:
+        view.close()
+
+
+def test_deleting_last_node_does_not_crash(
+    qapplication: QApplication,
+) -> None:
+    scene = LevelCanvasScene()
+    document = LevelDocument(
+        id="single_node_level",
+        name="Single Node Level",
+        graph=RouteGraphModel(
+            nodes=[RouteNodeModel(id="start", x=0.0, y=0.0, outgoingEdgeIDs=[])]
+        ),
+        startNodeID="start",
+        packageNodeID="start",
+        destinationNodeID="start",
+        timeLimitSeconds=10,
+        parTaps=0,
+    )
+    scene.display_level(document)
+
+    start_item = next(item for item in scene.items() if isinstance(item, NodeItem))
+    start_item.setSelected(True)
+    qapplication.processEvents()
+
+    scene.keyPressEvent(
+        QKeyEvent(QKeyEvent.Type.KeyPress, Qt.Key.Key_Delete, Qt.KeyboardModifier.NoModifier)
+    )
+    qapplication.processEvents()
+
+    assert document.graph.nodes == []
+    text_items = [item.text() for item in scene.items() if hasattr(item, "text")]
+    assert "No nodes in this level" in text_items
