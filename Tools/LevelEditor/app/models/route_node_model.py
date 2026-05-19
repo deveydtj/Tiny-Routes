@@ -23,7 +23,7 @@ class RouteNodeModel:
             id=data["id"],
             x=float(data["x"]),
             y=float(data["y"]),
-            outgoingEdgeIDs=list(data.get("outgoingEdgeIDs", [])),
+            outgoingEdgeIDs=list(data["outgoingEdgeIDs"]),
             _extra=extra,
         )
 

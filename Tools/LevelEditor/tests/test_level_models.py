@@ -1,4 +1,5 @@
 import json
+import pytest
 import sys
 from pathlib import Path
 
@@ -6,7 +7,7 @@ LEVEL_EDITOR_ROOT = Path(__file__).resolve().parents[1]
 if str(LEVEL_EDITOR_ROOT) not in sys.path:
     sys.path.insert(0, str(LEVEL_EDITOR_ROOT))
 
-from app.models import LevelDocument, RouteGraphModel, RouteNodeModel, RouteEdgeModel, EmbeddedSolution
+from app.models import LevelDocument, RouteNodeModel, RouteEdgeModel, EmbeddedSolution
 
 
 # ---------------------------------------------------------------------------
@@ -133,6 +134,10 @@ class TestRouteNodeModel:
         result = RouteNodeModel.from_dict(data).to_dict()
         assert result["_meta"] == "test"
 
+    def test_missing_outgoing_edge_ids_raises(self):
+        with pytest.raises(KeyError):
+            RouteNodeModel.from_dict({"id": "n", "x": 0.0, "y": 0.0})
+
     def test_integer_coordinates_cast_to_float(self):
         data = {"id": "n", "x": 1, "y": 2, "outgoingEdgeIDs": []}
         node = RouteNodeModel.from_dict(data)
@@ -158,6 +163,15 @@ class TestEmbeddedSolution:
         data = {"tapNodeIDs": []}
         sol = EmbeddedSolution.from_dict(data)
         assert sol.tapNodeIDs == []
+
+    def test_missing_tap_node_ids_raises(self):
+        with pytest.raises(KeyError):
+            EmbeddedSolution.from_dict({})
+
+    def test_preserves_unknown_fields_in_solution(self):
+        data = {"tapNodeIDs": ["choice"], "_hint": "extra"}
+        result = EmbeddedSolution.from_dict(data).to_dict()
+        assert result["_hint"] == "extra"
 
 
 # ---------------------------------------------------------------------------
@@ -212,3 +226,24 @@ class TestLevelDocument:
         data["_debugNote"] = "test"
         result = LevelDocument.from_dict(data).to_dict()
         assert result["_debugNote"] == "test"
+
+    def test_preserves_unknown_fields_in_graph(self):
+        import copy
+        data = copy.deepcopy(FIXTURE_LEVEL_SIMPLE)
+        data["graph"]["_layoutVersion"] = 2
+        result = LevelDocument.from_dict(data).to_dict()
+        assert result["graph"]["_layoutVersion"] == 2
+
+    def test_missing_graph_nodes_raises(self):
+        import copy
+        data = copy.deepcopy(FIXTURE_LEVEL_SIMPLE)
+        del data["graph"]["nodes"]
+        with pytest.raises(KeyError):
+            LevelDocument.from_dict(data)
+
+    def test_missing_graph_edges_raises(self):
+        import copy
+        data = copy.deepcopy(FIXTURE_LEVEL_SIMPLE)
+        del data["graph"]["edges"]
+        with pytest.raises(KeyError):
+            LevelDocument.from_dict(data)

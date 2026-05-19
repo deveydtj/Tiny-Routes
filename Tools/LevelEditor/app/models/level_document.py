@@ -19,7 +19,7 @@ class EmbeddedSolution:
         known = {"tapNodeIDs"}
         extra = {k: v for k, v in data.items() if k not in known}
         return cls(
-            tapNodeIDs=list(data.get("tapNodeIDs", [])),
+            tapNodeIDs=list(data["tapNodeIDs"]),
             _extra=extra,
         )
 
@@ -42,8 +42,8 @@ class RouteGraphModel:
         known = {"nodes", "edges"}
         extra = {k: v for k, v in data.items() if k not in known}
         return cls(
-            nodes=[RouteNodeModel.from_dict(n) for n in data.get("nodes", [])],
-            edges=[RouteEdgeModel.from_dict(e) for e in data.get("edges", [])],
+            nodes=[RouteNodeModel.from_dict(n) for n in data["nodes"]],
+            edges=[RouteEdgeModel.from_dict(e) for e in data["edges"]],
             _extra=extra,
         )
 
