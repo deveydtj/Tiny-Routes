@@ -82,6 +82,7 @@ def test_load_level_wraps_permission_error_as_level_file_io_error(tmp_path: Path
 
     assert exc_info.value.error_code == "io_error"
     assert exc_info.value.path == some_path
+    assert str(some_path) in exc_info.value.message
 
 
 def test_load_level_wraps_os_error_as_level_file_io_error(tmp_path: Path) -> None:
@@ -94,6 +95,7 @@ def test_load_level_wraps_os_error_as_level_file_io_error(tmp_path: Path) -> Non
 
     assert exc_info.value.error_code == "io_error"
     assert exc_info.value.path == some_path
+    assert str(some_path) in exc_info.value.message
 
 
 def test_save_level_wraps_os_error_as_level_file_io_error(tmp_path: Path) -> None:
@@ -101,9 +103,10 @@ def test_save_level_wraps_os_error_as_level_file_io_error(tmp_path: Path) -> Non
     document = repository.load_level(FIXTURE_PATH)
     some_path = tmp_path / "level.json"
 
-    with patch.object(Path, "write_text", side_effect=PermissionError("Permission denied")):
+    with patch.object(Path, "write_text", side_effect=OSError("Disk I/O error")):
         with pytest.raises(LevelFileIOError) as exc_info:
             repository.save_level(some_path, document)
 
     assert exc_info.value.error_code == "io_error"
     assert exc_info.value.path == some_path
+    assert str(some_path) in exc_info.value.message

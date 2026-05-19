@@ -6,7 +6,7 @@ from PySide6.QtWidgets import QFileDialog, QLabel, QMainWindow, QMessageBox
 
 from app.config import get_default_levels_directory
 from app.models import LevelDocument
-from app.repositories.level_file_repository import LevelFileRepository, LevelFileRepositoryError
+from app.repositories import LevelFileRepository, LevelFileRepositoryError
 
 
 class LevelEditorMainWindow(QMainWindow):

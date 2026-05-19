@@ -47,7 +47,7 @@ class LevelFileRepository:
         except FileNotFoundError as exc:
             raise MissingLevelFileError(level_path) from exc
         except OSError as exc:
-            raise LevelFileIOError(level_path, f"Could not read level file: {exc}") from exc
+            raise LevelFileIOError(level_path, f"Could not read level file {level_path}: {exc}") from exc
 
         try:
             raw_level = json.loads(raw_content)
@@ -70,4 +70,4 @@ class LevelFileRepository:
         try:
             level_path.write_text(serialized, encoding="utf-8")
         except OSError as exc:
-            raise LevelFileIOError(level_path, f"Could not write level file: {exc}") from exc
+            raise LevelFileIOError(level_path, f"Could not write level file {level_path}: {exc}") from exc
