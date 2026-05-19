@@ -691,20 +691,20 @@ Tools/LevelEditor/tests/__init__.py
 
 ### To do
 
-- [ ] Create `Tools/LevelEditor/`.
-- [ ] Create the initial `app/` package.
-- [ ] Create the initial `tests/` folder.
-- [ ] Add `PySide6` to `requirements.txt`.
-- [ ] Add `pytest` to `requirements.txt`.
-- [ ] Add a short README explaining that this is an internal Tiny Routes level editor.
-- [ ] Add a `run_level_editor.py` script that imports and calls `app.main.main()`.
-- [ ] Add `app/main.py` with a placeholder `main()` function.
+- [x] Create `Tools/LevelEditor/`.
+- [x] Create the initial `app/` package.
+- [x] Create the initial `tests/` folder.
+- [x] Add `PySide6` to `requirements.txt`.
+- [x] Add `pytest` to `requirements.txt`.
+- [x] Add a short README explaining that this is an internal Tiny Routes level editor.
+- [x] Add a `run_level_editor.py` script that imports and calls `app.main.main()`.
+- [x] Add `app/main.py` with a placeholder `main()` function.
 
 ### Acceptance criteria
 
-- [ ] The folder structure exists.
-- [ ] `python Tools/LevelEditor/run_level_editor.py` runs without import errors.
-- [ ] No game app files are modified.
+- [x] The folder structure exists.
+- [x] `python Tools/LevelEditor/run_level_editor.py` runs without import errors.
+- [x] No game app files are modified.
 
 ---
 
