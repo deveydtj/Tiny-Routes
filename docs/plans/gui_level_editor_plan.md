@@ -853,21 +853,21 @@ Tools/LevelEditor/tests/fixtures/valid_level.json
 
 ### To do
 
-- [ ] Create `LevelFileRepository`.
-- [ ] Add `load_level(path)`.
-- [ ] Add `save_level(path, level_document)`.
-- [ ] Return structured errors for invalid JSON.
-- [ ] Return structured errors for missing files.
-- [ ] Add tests for loading a valid file.
-- [ ] Add tests for missing file behavior.
-- [ ] Add tests for invalid JSON behavior.
+- [x] Create `LevelFileRepository`.
+- [x] Add `load_level(path)`.
+- [x] Add `save_level(path, level_document)`.
+- [x] Return structured errors for invalid JSON.
+- [x] Return structured errors for missing files.
+- [x] Add tests for loading a valid file.
+- [x] Add tests for missing file behavior.
+- [x] Add tests for invalid JSON behavior.
 
 ### Acceptance criteria
 
-- [ ] Valid level JSON loads into the Python model.
-- [ ] Saved level JSON can be loaded again.
-- [ ] Missing or invalid files produce clear errors.
-- [ ] Repository code contains no Qt imports.
+- [x] Valid level JSON loads into the Python model.
+- [x] Saved level JSON can be loaded again.
+- [x] Missing or invalid files produce clear errors.
+- [x] Repository code contains no Qt imports.
 
 ---
 
