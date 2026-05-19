@@ -1079,23 +1079,23 @@ Tools/LevelEditor/tests/fixtures/invalid_missing_node_level.json
 
 ### To do
 
-- [ ] Validate level ID is present.
-- [ ] Validate level name is present.
-- [ ] Validate time limit is positive.
-- [ ] Validate exactly one start node exists.
-- [ ] Validate at least one destination node exists.
-- [ ] Validate all node IDs are unique.
-- [ ] Validate all edge IDs are unique.
-- [ ] Validate every edge references an existing node.
-- [ ] Add tests using fixture levels.
-- [ ] Test both valid and invalid fixtures.
+- [x] Validate level ID is present.
+- [x] Validate level name is present.
+- [x] Validate time limit is positive.
+- [x] Validate exactly one start node exists.
+- [x] Validate at least one destination node exists.
+- [x] Validate all node IDs are unique.
+- [x] Validate all edge IDs are unique.
+- [x] Validate every edge references an existing node.
+- [x] Add tests using fixture levels.
+- [x] Test both valid and invalid fixtures.
 
 ### Acceptance criteria
 
-- [ ] All listed rules are implemented.
-- [ ] Valid fixture level produces no errors.
-- [ ] Invalid fixture level produces at least one error.
-- [ ] Tests do not import any Qt modules.
+- [x] All listed rules are implemented.
+- [x] Valid fixture level produces no errors.
+- [x] Invalid fixture level produces at least one error.
+- [x] Tests do not import any Qt modules.
 
 ---
 
