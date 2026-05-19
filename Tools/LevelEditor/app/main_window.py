@@ -1,6 +1,7 @@
 from pathlib import Path
 
 from PySide6.QtCore import Qt
+from PySide6.QtGui import QKeySequence
 from PySide6.QtWidgets import QFileDialog, QLabel, QMainWindow, QMessageBox
 
 from app.config import get_default_levels_directory
@@ -28,7 +29,7 @@ class LevelEditorMainWindow(QMainWindow):
         file_menu = menu_bar.addMenu("File")
 
         open_action = file_menu.addAction("Open Level...")
-        open_action.setShortcut("Ctrl+O")
+        open_action.setShortcut(QKeySequence.StandardKey.Open)
         open_action.triggered.connect(self._open_level)
 
     def _open_level(self) -> None:
