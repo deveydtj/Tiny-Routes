@@ -18,7 +18,9 @@ if str(LEVEL_EDITOR_ROOT) not in sys.path:
 
 from app.main_window import LevelEditorMainWindow
 from app.models import LevelDocument, RouteEdgeModel, RouteGraphModel, RouteNodeModel
+from app.services import ValidationMessage, ValidationResult, ValidationSeverity
 from app.ui import EdgeItem, LevelCanvasScene, LevelCanvasView, NodeItem, PropertiesPanel
+from app.ui.validation_panel import ValidationPanel
 from app.ui.node_item import NODE_TYPE_STYLES
 
 
@@ -351,6 +353,86 @@ def test_main_window_has_properties_panel(qapplication: QApplication) -> None:
         window.close()
 
 
+def test_main_window_has_validation_panel(qapplication: QApplication) -> None:
+    window = LevelEditorMainWindow()
+    try:
+        assert isinstance(window._validation_panel, ValidationPanel)
+    finally:
+        window.close()
+
+
+def test_validation_panel_displays_messages_with_icons(qapplication: QApplication) -> None:
+    panel = ValidationPanel()
+    try:
+        panel.show_result(
+            ValidationResult(
+                messages=[
+                    ValidationMessage(
+                        severity=ValidationSeverity.ERROR,
+                        code="missing_level_id",
+                        message="Level ID is missing or empty.",
+                    ),
+                    ValidationMessage(
+                        severity=ValidationSeverity.WARNING,
+                        code="unreachable_non_critical_node",
+                        message="Node 'side' is not reachable from start node 'start'.",
+                    ),
+                    ValidationMessage(
+                        severity=ValidationSeverity.INFO,
+                        code="ok",
+                        message="Validation completed.",
+                    ),
+                ]
+            )
+        )
+
+        assert not panel._empty_label.isVisibleTo(panel)
+        assert panel._message_list.isVisibleTo(panel)
+        assert panel._message_list.count() == 3
+        assert panel._message_list.item(0).text() == "Level ID is missing or empty."
+        assert not panel._message_list.item(0).icon().isNull()
+        assert not panel._message_list.item(1).icon().isNull()
+        assert not panel._message_list.item(2).icon().isNull()
+    finally:
+        panel.close()
+
+
+def test_validate_button_runs_validation_service_for_current_level(
+    qapplication: QApplication,
+) -> None:
+    window = LevelEditorMainWindow()
+    document = _make_two_node_one_edge_document()
+    received: list[LevelDocument] = []
+
+    def fake_validate(level: LevelDocument) -> ValidationResult:
+        received.append(level)
+        return ValidationResult(
+            messages=[
+                ValidationMessage(
+                    severity=ValidationSeverity.WARNING,
+                    code="unreachable_non_critical_node",
+                    message="Node 'side' is not reachable from start node 'start'.",
+                )
+            ]
+        )
+
+    window._current_document = document
+    window._validation_service.validate = fake_validate
+
+    try:
+        window._validation_panel._validate_button.click()
+        qapplication.processEvents()
+
+        assert received == [document]
+        assert window._validation_panel._message_list.count() == 1
+        assert (
+            window._validation_panel._message_list.item(0).text()
+            == "Node 'side' is not reachable from start node 'start'."
+        )
+    finally:
+        window.close()
+
+
 def test_properties_panel_initial_state_is_empty(qapplication: QApplication) -> None:
     window = LevelEditorMainWindow()
     panel = window._properties_panel
@@ -493,6 +575,40 @@ def test_loading_new_level_clears_properties_panel(
         window.close()
 
 
+def test_loading_new_level_clears_validation_panel(
+    qapplication: QApplication,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    window = LevelEditorMainWindow()
+    document = _make_two_node_one_edge_document()
+
+    monkeypatch.setattr(QFileDialog, "getOpenFileName", lambda *args, **kwargs: ("/tmp/level_props.json", ""))
+    monkeypatch.setattr(window._repository, "load_level", lambda path: document)
+
+    window._validation_panel.show_result(
+        ValidationResult(
+            messages=[
+                ValidationMessage(
+                    severity=ValidationSeverity.ERROR,
+                    code="missing_level_name",
+                    message="Level name is missing or empty.",
+                )
+            ]
+        )
+    )
+
+    try:
+        window._open_level()
+        qapplication.processEvents()
+
+        panel = window._validation_panel
+        assert panel._empty_label.isVisibleTo(panel)
+        assert not panel._message_list.isVisibleTo(panel)
+        assert panel._message_list.count() == 0
+    finally:
+        window.close()
+
+
 def test_node_item_stores_model_coordinates() -> None:
     item = NodeItem(node_id="n1", node_type="route", model_x=3.5, model_y=-1.2)
     assert item.model_x == 3.5
@@ -562,4 +678,3 @@ def test_scene_emits_selection_cleared_signal(qapplication: QApplication) -> Non
     qapplication.processEvents()
 
     assert len(cleared) >= 1
-

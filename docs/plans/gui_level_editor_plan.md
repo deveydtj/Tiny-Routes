@@ -1145,18 +1145,18 @@ Tools/LevelEditor/app/main_window.py
 
 ### To do
 
-- [ ] Create a `ValidationPanel` widget.
-- [ ] Add it to the bottom area of the main window.
-- [ ] Add a Validate button that triggers validation.
-- [ ] Display each validation message with its severity icon.
-- [ ] Clear the panel when a new level is loaded.
-- [ ] Use the `LevelValidationService` through the main window, not inline.
+- [x] Create a `ValidationPanel` widget.
+- [x] Add it to the bottom area of the main window.
+- [x] Add a Validate button that triggers validation.
+- [x] Display each validation message with its severity icon.
+- [x] Clear the panel when a new level is loaded.
+- [x] Use the `LevelValidationService` through the main window, not inline.
 
 ### Acceptance criteria
 
-- [ ] Clicking Validate runs validation on the current level.
-- [ ] Errors, warnings, and info messages are displayed.
-- [ ] The panel updates when a new level is opened.
+- [x] Clicking Validate runs validation on the current level.
+- [x] Errors, warnings, and info messages are displayed.
+- [x] The panel updates when a new level is opened.
 
 ---
 
