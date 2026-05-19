@@ -2,10 +2,8 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import TYPE_CHECKING
 
-if TYPE_CHECKING:
-    from app.models.level_document import LevelDocument
+from app.models import LevelDocument, RouteGraphModel, RouteNodeModel
 
 
 class ValidationSeverity(str, Enum):
@@ -39,6 +37,29 @@ class ValidationResult:
 class LevelValidationService:
     def validate(self, level: "LevelDocument") -> ValidationResult:
         return validate(level)
+
+
+def create_default_level_document() -> LevelDocument:
+    return LevelDocument(
+        id="new_level",
+        name="New Level",
+        graph=RouteGraphModel(
+            nodes=[
+                RouteNodeModel(
+                    id="start",
+                    x=0.0,
+                    y=0.0,
+                    outgoingEdgeIDs=[],
+                )
+            ],
+            edges=[],
+        ),
+        startNodeID="start",
+        packageNodeID="start",
+        destinationNodeID="start",
+        timeLimitSeconds=30,
+        parTaps=0,
+    )
 
 
 def _collect_reachable_node_ids(level: "LevelDocument", node_ids: set[str]) -> set[str]:

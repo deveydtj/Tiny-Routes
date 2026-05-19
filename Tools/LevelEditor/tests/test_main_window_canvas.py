@@ -47,6 +47,24 @@ def test_main_window_uses_canvas_view_as_central_widget(qapplication: QApplicati
         window.close()
 
 
+def test_main_window_file_menu_includes_new_level_action(qapplication: QApplication) -> None:
+    window = LevelEditorMainWindow()
+    try:
+        file_menu = next(
+            (
+                action.menu()
+                for action in window.menuBar().actions()
+                if action.menu() is not None and action.text().replace("&", "") == "File"
+            ),
+            None,
+        )
+        assert file_menu is not None
+        action_texts = [action.text() for action in file_menu.actions()]
+        assert "New Level" in action_texts
+    finally:
+        window.close()
+
+
 def test_level_canvas_view_starts_centered_on_origin(qapplication: QApplication) -> None:
     view = LevelCanvasView()
     try:
@@ -609,6 +627,86 @@ def test_loading_new_level_clears_validation_panel(
         window.close()
 
 
+def test_new_level_creates_minimal_document_and_updates_canvas(
+    qapplication: QApplication,
+) -> None:
+    window = LevelEditorMainWindow()
+
+    try:
+        window._new_level()
+        qapplication.processEvents()
+
+        assert window._current_document is not None
+        assert window._current_document.id == "new_level"
+        assert window._current_document.name == "New Level"
+        assert window._current_document.startNodeID == "start"
+        assert window._current_document.packageNodeID == "start"
+        assert window._current_document.destinationNodeID == "start"
+        assert window._current_document.timeLimitSeconds == 30
+        assert window._current_file_path is None
+        assert window._is_dirty is True
+
+        node_items = [item for item in window._canvas_view.scene().items() if isinstance(item, NodeItem)]
+        assert {item.node_id for item in node_items} == {"start"}
+    finally:
+        window.close()
+
+
+def test_new_level_respects_unsaved_changes_prompt_cancel(
+    qapplication: QApplication,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    window = LevelEditorMainWindow()
+    existing_document = _make_two_node_one_edge_document()
+    window._current_document = existing_document
+    window._set_dirty(True)
+    prompted = False
+
+    def fake_prompt() -> bool:
+        nonlocal prompted
+        prompted = True
+        return False
+
+    monkeypatch.setattr(window, "_prompt_to_save_unsaved_changes", fake_prompt)
+
+    try:
+        window._new_level()
+        assert prompted is True
+        assert window._current_document is existing_document
+    finally:
+        window.close()
+
+
+def test_open_level_respects_unsaved_changes_prompt_cancel(
+    qapplication: QApplication,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    window = LevelEditorMainWindow()
+    existing_document = _make_two_node_one_edge_document()
+    window._current_document = existing_document
+    window._set_dirty(True)
+    prompted = False
+
+    def fake_prompt() -> bool:
+        nonlocal prompted
+        prompted = True
+        return False
+
+    monkeypatch.setattr(window, "_prompt_to_save_unsaved_changes", fake_prompt)
+    monkeypatch.setattr(
+        QFileDialog,
+        "getOpenFileName",
+        lambda *args, **kwargs: pytest.fail("Open file dialog should not be shown when prompt is canceled"),
+    )
+
+    try:
+        window._open_level()
+        assert prompted is True
+        assert window._current_document is existing_document
+    finally:
+        window.close()
+
+
 def test_save_level_writes_to_current_path_without_prompt(
     qapplication: QApplication,
     tmp_path: Path,
@@ -706,6 +804,29 @@ def test_close_prompt_save_invokes_save(
 
     try:
         assert window._prompt_to_save_unsaved_changes() is True
+    finally:
+        window.close()
+
+
+def test_unsaved_changes_prompt_uses_generic_message(
+    qapplication: QApplication,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    window = LevelEditorMainWindow()
+    window._current_document = _make_two_node_one_edge_document()
+    window._set_dirty(True)
+    captured_text: str | None = None
+
+    def fake_question(*args, **kwargs):
+        nonlocal captured_text
+        captured_text = args[2]
+        return QMessageBox.StandardButton.Discard
+
+    monkeypatch.setattr(QMessageBox, "question", fake_question)
+
+    try:
+        assert window._prompt_to_save_unsaved_changes() is True
+        assert captured_text == "You have unsaved changes. Save before continuing?"
     finally:
         window.close()
 

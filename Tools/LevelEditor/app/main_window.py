@@ -7,7 +7,7 @@ from PySide6.QtWidgets import QDockWidget, QFileDialog, QMainWindow, QMessageBox
 from app.config import get_default_levels_directory
 from app.models import LevelDocument
 from app.repositories import LevelFileRepository, LevelFileRepositoryError
-from app.services import LevelValidationService
+from app.services import LevelValidationService, create_default_level_document
 from app.ui import LevelCanvasView, PropertiesPanel, ValidationPanel
 
 
@@ -58,6 +58,10 @@ class LevelEditorMainWindow(QMainWindow):
         menu_bar = self.menuBar()
         file_menu = menu_bar.addMenu("File")
 
+        new_action = file_menu.addAction("New Level")
+        new_action.setShortcut(QKeySequence.StandardKey.New)
+        new_action.triggered.connect(self._new_level)
+
         open_action = file_menu.addAction("Open Level...")
         open_action.setShortcut(QKeySequence.StandardKey.Open)
         open_action.triggered.connect(self._open_level)
@@ -71,6 +75,9 @@ class LevelEditorMainWindow(QMainWindow):
         save_as_action.triggered.connect(self._save_level_as)
 
     def _open_level(self) -> None:
+        if not self._prompt_to_save_unsaved_changes():
+            return
+
         levels_dir = self._resolve_default_levels_dir()
 
         file_path, _ = QFileDialog.getOpenFileName(
@@ -95,6 +102,17 @@ class LevelEditorMainWindow(QMainWindow):
         self._properties_panel.clear()
         self._validation_panel.clear()
         self._set_dirty(False)
+
+    def _new_level(self) -> None:
+        if not self._prompt_to_save_unsaved_changes():
+            return
+
+        self._current_document = create_default_level_document()
+        self._current_file_path = None
+        self._canvas_view.scene().display_level(self._current_document)
+        self._properties_panel.clear()
+        self._validation_panel.clear()
+        self._set_dirty(True)
 
     def _save_level(self) -> bool:
         if self._current_document is None:
@@ -171,7 +189,7 @@ class LevelEditorMainWindow(QMainWindow):
         selection = QMessageBox.question(
             self,
             "Unsaved Changes",
-            "You have unsaved changes. Save before closing?",
+            "You have unsaved changes. Save before continuing?",
             QMessageBox.StandardButton.Save
             | QMessageBox.StandardButton.Discard
             | QMessageBox.StandardButton.Cancel,

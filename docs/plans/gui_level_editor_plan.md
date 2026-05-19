@@ -1206,18 +1206,18 @@ Tools/LevelEditor/app/services/level_validation_service.py
 
 ### To do
 
-- [ ] Add a `New Level` menu action.
-- [ ] Create a minimal default level with a start node.
-- [ ] Assign a placeholder level ID and name.
-- [ ] Set a default time limit.
-- [ ] Display the new level on the canvas.
-- [ ] Prompt to save unsaved changes before creating a new level.
+- [x] Add a `New Level` menu action.
+- [x] Create a minimal default level with a start node.
+- [x] Assign a placeholder level ID and name.
+- [x] Set a default time limit.
+- [x] Display the new level on the canvas.
+- [x] Prompt to save unsaved changes before creating a new level.
 
 ### Acceptance criteria
 
-- [ ] New Level action creates a minimal usable level.
-- [ ] Canvas updates to show the new level.
-- [ ] Unsaved changes prompt appears if the current level is dirty.
+- [x] New Level action creates a minimal usable level.
+- [x] Canvas updates to show the new level.
+- [x] Unsaved changes prompt appears if the current level is dirty.
 
 ---
 
