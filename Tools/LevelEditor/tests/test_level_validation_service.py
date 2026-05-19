@@ -1,3 +1,4 @@
+import ast
 import json
 import sys
 from pathlib import Path
@@ -208,6 +209,14 @@ def test_validate_empty_package_node_id():
     assert "missing_package_node" in codes
 
 
+def test_validate_whitespace_package_node_id():
+    level = _load_fixture("valid_level.json")
+    level.packageNodeID = "   "
+    result = validate(level)
+    codes = [m.code for m in result.messages]
+    assert "missing_package_node" in codes
+
+
 def test_validate_duplicate_node_ids():
     level = _load_fixture("valid_level.json")
     # Duplicate the first node
@@ -249,9 +258,27 @@ def test_validate_invalid_fixture_has_edge_referencing_missing_node():
     assert "edge_references_missing_node" in codes
 
 
+def test_validate_bool_time_limit():
+    level = _load_fixture("valid_level.json")
+    level.timeLimitSeconds = True
+    result = validate(level)
+    codes = [m.code for m in result.messages]
+    assert "invalid_time_limit" in codes
+
+
 def test_validate_no_qt_imports():
-    """Ensure the validation service module contains no Qt imports."""
+    """Ensure the validation service module imports no Qt modules."""
     service_path = LEVEL_EDITOR_ROOT / "app" / "services" / "level_validation_service.py"
-    source = service_path.read_text(encoding="utf-8")
-    assert "PySide6" not in source
-    assert "PyQt" not in source
+    tree = ast.parse(service_path.read_text(encoding="utf-8"))
+    qt_prefixes = ("PySide6", "PyQt5", "PyQt6")
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Import):
+            for alias in node.names:
+                assert not any(alias.name.startswith(p) for p in qt_prefixes), (
+                    f"Unexpected Qt import: {alias.name}"
+                )
+        elif isinstance(node, ast.ImportFrom):
+            module = node.module or ""
+            assert not any(module.startswith(p) for p in qt_prefixes), (
+                f"Unexpected Qt import from: {module}"
+            )

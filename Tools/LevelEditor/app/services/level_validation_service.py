@@ -65,7 +65,11 @@ def validate(level: "LevelDocument") -> ValidationResult:
         )
 
     # --- Time limit ---
-    if not (isinstance(level.timeLimitSeconds, (int, float)) and level.timeLimitSeconds > 0):
+    if not (
+        isinstance(level.timeLimitSeconds, (int, float))
+        and not isinstance(level.timeLimitSeconds, bool)
+        and level.timeLimitSeconds > 0
+    ):
         messages.append(
             ValidationMessage(
                 severity=ValidationSeverity.ERROR,
