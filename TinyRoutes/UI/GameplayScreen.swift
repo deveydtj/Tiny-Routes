@@ -241,8 +241,10 @@ private struct RouteBoardView: View {
     private let switchRingSize: CGFloat = 28
     private let specialNodeSize: CGFloat = 74
     private let specialNodeRingSize: CGFloat = 42
-    private let deliveryDotSize: CGFloat = 58
-    private let deliveryDotRingSize: CGFloat = 32
+    @State private var isPulseExpanded: Bool = false
+
+    private let deliveryDotSize: CGFloat = 28
+    private let deliveryDotRingSize: CGFloat = 34
     private let roadOuterWidth: CGFloat = 20
     private let roadInnerWidth: CGFloat = 15
     private let roadHighlightWidth: CGFloat = 3
@@ -314,15 +316,7 @@ private struct RouteBoardView: View {
                 }
 
                 if let deliveryDotPoint = deliveryDotPoint(in: layout) {
-                    SpriteImage(name: "blue_orb")
-                        .scaledToFit()
-                        .frame(width: deliveryDotSize, height: deliveryDotSize)
-                        .overlay(
-                            Circle()
-                                .stroke(Color.white.opacity(0.9), lineWidth: 2)
-                                .frame(width: deliveryDotRingSize, height: deliveryDotRingSize)
-                        )
-                        .shadow(color: Color.blue.opacity(0.35), radius: 6, x: 0, y: 2)
+                    deliveryDotView(isMoving: deliveryDot?.currentEdgeID != nil)
                         .position(deliveryDotPoint)
                         .allowsHitTesting(false)
                 }
@@ -345,6 +339,46 @@ private struct RouteBoardView: View {
         }
     }
 
+
+
+    @ViewBuilder
+    private func deliveryDotView(isMoving: Bool) -> some View {
+        ZStack {
+            Circle()
+                .fill(
+                    RadialGradient(
+                        colors: [
+                            Color.white.opacity(0.95),
+                            Color(red: 0.40, green: 0.77, blue: 1.0),
+                            Color(red: 0.16, green: 0.52, blue: 0.98)
+                        ],
+                        center: .center,
+                        startRadius: 1,
+                        endRadius: deliveryDotSize * 0.7
+                    )
+                )
+                .frame(width: deliveryDotSize, height: deliveryDotSize)
+
+            Circle()
+                .stroke(Color.white.opacity(0.95), lineWidth: 2.5)
+                .frame(width: deliveryDotRingSize, height: deliveryDotRingSize)
+
+            if isMoving {
+                Circle()
+                    .stroke(Color(red: 0.40, green: 0.77, blue: 1.0).opacity(0.9), lineWidth: 3)
+                    .frame(
+                        width: isPulseExpanded ? deliveryDotRingSize + 12 : deliveryDotRingSize,
+                        height: isPulseExpanded ? deliveryDotRingSize + 12 : deliveryDotRingSize
+                    )
+                    .opacity(isPulseExpanded ? 0.15 : 0.55)
+                    .animation(.easeInOut(duration: 0.85).repeatForever(autoreverses: true), value: isPulseExpanded)
+            }
+        }
+        .shadow(color: Color(red: 0.16, green: 0.52, blue: 0.98).opacity(0.35), radius: 8, x: 0, y: 2)
+        .onAppear {
+            isPulseExpanded = true
+        }
+    }
     @ViewBuilder
     private func nodeView(for node: RuntimeRouteNode, layout: BoardLayout) -> some View {
         if node.id == packageNodeID, !hasCollectedPackage {
