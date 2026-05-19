@@ -266,6 +266,58 @@ def test_validate_bool_time_limit():
     assert "invalid_time_limit" in codes
 
 
+def test_validate_unreachable_package_produces_error():
+    level = _load_fixture("invalid_unreachable_package.json")
+    result = validate(level)
+    messages = [m for m in result.messages if m.code == "unreachable_package_node"]
+    assert len(messages) == 1
+    assert messages[0].severity is ValidationSeverity.ERROR
+    assert messages[0].related_node_id == "package"
+
+
+def test_validate_unreachable_destination_produces_error():
+    level = _load_fixture("valid_level.json")
+    level.graph.edges = []
+    level.graph.nodes[0].outgoingEdgeIDs = []
+    level.graph.nodes[1].outgoingEdgeIDs = []
+
+    result = validate(level)
+    messages = [m for m in result.messages if m.code == "unreachable_destination_node"]
+    assert len(messages) == 1
+    assert messages[0].severity is ValidationSeverity.ERROR
+    assert messages[0].related_node_id == "destination"
+
+
+def test_validate_unreachable_non_critical_node_produces_warning():
+    level_data = _load_fixture("valid_level.json").to_dict()
+    level_data["graph"]["nodes"].append(
+        {
+            "id": "side_node",
+            "x": 99.0,
+            "y": 99.0,
+            "outgoingEdgeIDs": [],
+        }
+    )
+    level = LevelDocument.from_dict(level_data)
+
+    result = validate(level)
+    messages = [m for m in result.messages if m.code == "unreachable_non_critical_node"]
+    assert len(messages) == 1
+    assert messages[0].severity is ValidationSeverity.WARNING
+    assert messages[0].related_node_id == "side_node"
+
+
+def test_validate_reachable_level_has_no_reachability_messages():
+    level = _load_fixture("valid_level.json")
+    result = validate(level)
+    reachability_codes = {
+        "unreachable_package_node",
+        "unreachable_destination_node",
+        "unreachable_non_critical_node",
+    }
+    assert not any(message.code in reachability_codes for message in result.messages)
+
+
 def test_validate_no_qt_imports():
     """Ensure the validation service module imports no Qt modules."""
     service_path = LEVEL_EDITOR_ROOT / "app" / "services" / "level_validation_service.py"

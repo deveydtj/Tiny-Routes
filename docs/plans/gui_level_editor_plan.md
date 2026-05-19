@@ -1115,18 +1115,18 @@ Tools/LevelEditor/tests/fixtures/invalid_unreachable_package.json
 
 ### To do
 
-- [ ] Implement graph reachability from the start node.
-- [ ] Validate the package node is reachable from start.
-- [ ] Validate the destination node is reachable from start.
-- [ ] Add a warning for unreachable non-critical nodes.
-- [ ] Add tests for reachable and unreachable cases.
+- [x] Implement graph reachability from the start node.
+- [x] Validate the package node is reachable from start.
+- [x] Validate the destination node is reachable from start.
+- [x] Add a warning for unreachable non-critical nodes.
+- [x] Add tests for reachable and unreachable cases.
 
 ### Acceptance criteria
 
-- [ ] Unreachable package produces a validation error.
-- [ ] Unreachable destination produces a validation error.
-- [ ] Unreachable side node produces a validation warning.
-- [ ] A fully reachable level produces no reachability errors.
+- [x] Unreachable package produces a validation error.
+- [x] Unreachable destination produces a validation error.
+- [x] Unreachable side node produces a validation warning.
+- [x] A fully reachable level produces no reachability errors.
 
 ---
 
