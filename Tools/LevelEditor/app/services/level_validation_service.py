@@ -36,6 +36,11 @@ class ValidationResult:
         return any(message.severity is ValidationSeverity.WARNING for message in self.messages)
 
 
+class LevelValidationService:
+    def validate(self, level: "LevelDocument") -> ValidationResult:
+        return validate(level)
+
+
 def _collect_reachable_node_ids(level: "LevelDocument", node_ids: set[str]) -> set[str]:
     if level.startNodeID not in node_ids:
         return set()
