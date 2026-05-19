@@ -20,6 +20,9 @@ class LevelCanvasScene(QGraphicsScene):
 
     def display_level(self, document: LevelDocument) -> None:
         self.clear()
+        if not document.graph.nodes:
+            self._show_placeholder("No nodes in this level")
+            return
 
         for index, node in enumerate(document.graph.nodes):
             node_type = self._resolve_node_type(document, node)
@@ -27,10 +30,10 @@ class LevelCanvasScene(QGraphicsScene):
             node_item.setPos(self._resolve_scene_position(node, index))
             self.addItem(node_item)
 
-    def _show_placeholder(self) -> None:
-        placeholder = self.addSimpleText("Open a level to begin")
+    def _show_placeholder(self, message: str = "Open a level to begin") -> None:
+        placeholder = self.addSimpleText(message)
         placeholder.setBrush(QColor("#666666"))
-        placeholder.setPos(-70, -10)
+        placeholder.setPos(-80, -10)
 
     def _resolve_node_type(self, document: LevelDocument, node: RouteNodeModel) -> str:
         if node.id == document.startNodeID:

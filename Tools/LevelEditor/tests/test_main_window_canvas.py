@@ -1,5 +1,6 @@
 import os
 import sys
+import math
 from pathlib import Path
 
 import pytest
@@ -82,6 +83,8 @@ def test_open_level_still_loads_document_with_canvas_central_widget(
         window._open_level()
         assert window.windowTitle() == "Tiny Routes Level Editor — level_123"
         assert isinstance(window.centralWidget(), LevelCanvasView)
+        text_items = [item.text() for item in window._canvas_view.scene().items() if hasattr(item, "text")]
+        assert "No nodes in this level" in text_items
     finally:
         window.close()
 
@@ -129,7 +132,7 @@ def test_canvas_scene_uses_fallback_layout_for_missing_coordinates(qapplication:
         graph=RouteGraphModel(
             nodes=[
                 RouteNodeModel(id="start", x=0.0, y=0.0, outgoingEdgeIDs=["e_start_route"]),
-                RouteNodeModel(id="route_a", x=None, y=None, outgoingEdgeIDs=[]),  # type: ignore[arg-type]
+                RouteNodeModel(id="route_a", x=math.nan, y=math.inf, outgoingEdgeIDs=[]),
             ],
         ),
         startNodeID="start",
@@ -143,6 +146,24 @@ def test_canvas_scene_uses_fallback_layout_for_missing_coordinates(qapplication:
     node_items = {item.node_id: item for item in scene.items() if isinstance(item, NodeItem)}
     assert node_items["route_a"].pos().x() == scene.FALLBACK_SPACING
     assert node_items["route_a"].pos().y() == 0.0
+
+
+def test_canvas_scene_shows_no_nodes_message_for_empty_document(qapplication: QApplication) -> None:
+    scene = LevelCanvasScene()
+    empty_document = LevelDocument(
+        id="empty_level",
+        name="Empty",
+        graph=RouteGraphModel(),
+        startNodeID="start",
+        packageNodeID="package",
+        destinationNodeID="destination",
+        timeLimitSeconds=10,
+        parTaps=0,
+    )
+
+    scene.display_level(empty_document)
+    text_items = [item.text() for item in scene.items() if hasattr(item, "text")]
+    assert "No nodes in this level" in text_items
 
 
 def test_node_types_have_distinct_styles() -> None:

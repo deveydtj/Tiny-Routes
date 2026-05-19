@@ -7,7 +7,8 @@ from .canvas_scene import LevelCanvasScene
 
 class LevelCanvasView(QGraphicsView):
     def __init__(self) -> None:
-        super().__init__(LevelCanvasScene())
+        super().__init__()
+        self.setScene(LevelCanvasScene())
         self.setRenderHints(
             QPainter.RenderHint.Antialiasing | QPainter.RenderHint.TextAntialiasing,
         )
