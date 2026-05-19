@@ -322,7 +322,7 @@ def test_canvas_scene_skips_edge_between_colocated_nodes(qapplication: QApplicat
 # Task 011: Properties panel tests
 # ---------------------------------------------------------------------------
 
-def _make_two_node_two_edge_document() -> LevelDocument:
+def _make_two_node_one_edge_document() -> LevelDocument:
     return LevelDocument(
         id="level_props",
         name="Properties Test Level",
@@ -365,7 +365,7 @@ def test_selecting_node_item_updates_properties_panel(qapplication: QApplication
     window = LevelEditorMainWindow()
     try:
         scene = window._canvas_view.scene()
-        scene.display_level(_make_two_node_two_edge_document())
+        scene.display_level(_make_two_node_one_edge_document())
 
         node_items = [item for item in scene.items() if isinstance(item, NodeItem)]
         start_item = next(item for item in node_items if item.node_id == "start")
@@ -392,7 +392,7 @@ def test_selecting_node_item_shows_correct_type_and_position(qapplication: QAppl
     window = LevelEditorMainWindow()
     try:
         scene = window._canvas_view.scene()
-        scene.display_level(_make_two_node_two_edge_document())
+        scene.display_level(_make_two_node_one_edge_document())
 
         node_items = [item for item in scene.items() if isinstance(item, NodeItem)]
         dest_item = next(item for item in node_items if item.node_id == "destination")
@@ -418,7 +418,7 @@ def test_selecting_edge_item_updates_properties_panel(qapplication: QApplication
     window = LevelEditorMainWindow()
     try:
         scene = window._canvas_view.scene()
-        scene.display_level(_make_two_node_two_edge_document())
+        scene.display_level(_make_two_node_one_edge_document())
 
         edge_items = [item for item in scene.items() if isinstance(item, EdgeItem)]
         assert len(edge_items) == 1
@@ -446,7 +446,7 @@ def test_clearing_selection_resets_properties_panel(qapplication: QApplication) 
     window = LevelEditorMainWindow()
     try:
         scene = window._canvas_view.scene()
-        scene.display_level(_make_two_node_two_edge_document())
+        scene.display_level(_make_two_node_one_edge_document())
 
         node_items = [item for item in scene.items() if isinstance(item, NodeItem)]
         node_items[0].setSelected(True)
@@ -468,7 +468,7 @@ def test_loading_new_level_clears_properties_panel(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     window = LevelEditorMainWindow()
-    document = _make_two_node_two_edge_document()
+    document = _make_two_node_one_edge_document()
 
     monkeypatch.setattr(QFileDialog, "getOpenFileName", lambda *args, **kwargs: ("/tmp/level_props.json", ""))
     monkeypatch.setattr(window._repository, "load_level", lambda path: document)
@@ -511,7 +511,7 @@ def test_edge_item_stores_source_and_target_node_ids(qapplication: QApplication)
 
 def test_scene_emits_node_selected_signal(qapplication: QApplication) -> None:
     scene = LevelCanvasScene()
-    scene.display_level(_make_two_node_two_edge_document())
+    scene.display_level(_make_two_node_one_edge_document())
 
     received: list[tuple] = []
     scene.node_item_selected.connect(lambda *args: received.append(args))
@@ -531,7 +531,7 @@ def test_scene_emits_node_selected_signal(qapplication: QApplication) -> None:
 
 def test_scene_emits_edge_selected_signal(qapplication: QApplication) -> None:
     scene = LevelCanvasScene()
-    scene.display_level(_make_two_node_two_edge_document())
+    scene.display_level(_make_two_node_one_edge_document())
 
     received: list[tuple] = []
     scene.edge_item_selected.connect(lambda *args: received.append(args))
@@ -549,7 +549,7 @@ def test_scene_emits_edge_selected_signal(qapplication: QApplication) -> None:
 
 def test_scene_emits_selection_cleared_signal(qapplication: QApplication) -> None:
     scene = LevelCanvasScene()
-    scene.display_level(_make_two_node_two_edge_document())
+    scene.display_level(_make_two_node_one_edge_document())
 
     cleared: list[bool] = []
     scene.selection_cleared.connect(lambda: cleared.append(True))
