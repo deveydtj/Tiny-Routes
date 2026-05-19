@@ -75,7 +75,6 @@ def validate(level: "LevelDocument") -> ValidationResult:
         )
 
     node_ids = {node.id for node in level.graph.nodes}
-    edge_ids = [edge.id for edge in level.graph.edges]
 
     # --- Exactly one start node ---
     if not level.startNodeID or not level.startNodeID.strip():
@@ -112,6 +111,25 @@ def validate(level: "LevelDocument") -> ValidationResult:
                 code="destination_node_not_found",
                 message=f"Destination node '{level.destinationNodeID}' is not present in the graph nodes.",
                 related_node_id=level.destinationNodeID,
+            )
+        )
+
+    # --- Package node ---
+    if not level.packageNodeID or not level.packageNodeID.strip():
+        messages.append(
+            ValidationMessage(
+                severity=ValidationSeverity.ERROR,
+                code="missing_package_node",
+                message="Level must have a package node (packageNodeID is missing or empty).",
+            )
+        )
+    elif level.packageNodeID not in node_ids:
+        messages.append(
+            ValidationMessage(
+                severity=ValidationSeverity.ERROR,
+                code="package_node_not_found",
+                message=f"Package node '{level.packageNodeID}' is not present in the graph nodes.",
+                related_node_id=level.packageNodeID,
             )
         )
 

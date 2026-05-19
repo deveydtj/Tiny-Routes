@@ -96,7 +96,7 @@ def test_validation_result_without_errors_or_warnings():
 
 
 def _load_fixture(filename: str) -> LevelDocument:
-    data = json.loads((FIXTURES_DIR / filename).read_text())
+    data = json.loads((FIXTURES_DIR / filename).read_text(encoding="utf-8"))
     return LevelDocument.from_dict(data)
 
 
@@ -152,12 +152,60 @@ def test_validate_start_node_not_in_graph():
     assert "start_node_not_found" in codes
 
 
+def test_validate_empty_start_node_id():
+    level = _load_fixture("valid_level.json")
+    level.startNodeID = ""
+    result = validate(level)
+    codes = [m.code for m in result.messages]
+    assert "missing_start_node" in codes
+
+
+def test_validate_whitespace_start_node_id():
+    level = _load_fixture("valid_level.json")
+    level.startNodeID = "   "
+    result = validate(level)
+    codes = [m.code for m in result.messages]
+    assert "missing_start_node" in codes
+
+
 def test_validate_destination_node_not_in_graph():
     level = _load_fixture("valid_level.json")
     level.destinationNodeID = "nonexistent_dest"
     result = validate(level)
     codes = [m.code for m in result.messages]
     assert "destination_node_not_found" in codes
+
+
+def test_validate_empty_destination_node_id():
+    level = _load_fixture("valid_level.json")
+    level.destinationNodeID = ""
+    result = validate(level)
+    codes = [m.code for m in result.messages]
+    assert "missing_destination_node" in codes
+
+
+def test_validate_whitespace_destination_node_id():
+    level = _load_fixture("valid_level.json")
+    level.destinationNodeID = "   "
+    result = validate(level)
+    codes = [m.code for m in result.messages]
+    assert "missing_destination_node" in codes
+
+
+def test_validate_package_node_not_in_graph():
+    level = _load_fixture("valid_level.json")
+    level.packageNodeID = "nonexistent_package"
+    result = validate(level)
+    codes = [m.code for m in result.messages]
+    assert "package_node_not_found" in codes
+
+
+def test_validate_empty_package_node_id():
+    level = _load_fixture("valid_level.json")
+    level.packageNodeID = ""
+    result = validate(level)
+    codes = [m.code for m in result.messages]
+    assert "missing_package_node" in codes
 
 
 def test_validate_duplicate_node_ids():
@@ -204,6 +252,6 @@ def test_validate_invalid_fixture_has_edge_referencing_missing_node():
 def test_validate_no_qt_imports():
     """Ensure the validation service module contains no Qt imports."""
     service_path = LEVEL_EDITOR_ROOT / "app" / "services" / "level_validation_service.py"
-    source = service_path.read_text()
+    source = service_path.read_text(encoding="utf-8")
     assert "PySide6" not in source
     assert "PyQt" not in source
