@@ -43,6 +43,20 @@ def test_main_window_uses_canvas_view_as_central_widget(qapplication: QApplicati
         window.close()
 
 
+def test_level_canvas_view_starts_centered_on_origin(qapplication: QApplication) -> None:
+    view = LevelCanvasView()
+    try:
+        view.resize(800, 600)
+        view.show()
+        qapplication.processEvents()
+
+        center_point = view.mapToScene(view.viewport().rect().center())
+        assert abs(center_point.x()) < 10
+        assert abs(center_point.y()) < 10
+    finally:
+        view.close()
+
+
 def test_open_level_still_loads_document_with_canvas_central_widget(
     qapplication: QApplication,
     monkeypatch: pytest.MonkeyPatch,

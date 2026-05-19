@@ -12,6 +12,7 @@ class LevelCanvasView(QGraphicsView):
             QPainter.RenderHint.Antialiasing | QPainter.RenderHint.TextAntialiasing,
         )
         self.setTransformationAnchor(QGraphicsView.ViewportAnchor.AnchorUnderMouse)
+        self.centerOn(0, 0)
 
     def wheelEvent(self, event: QWheelEvent) -> None:
         if event.modifiers() & Qt.KeyboardModifier.ControlModifier:
