@@ -8,3 +8,5 @@ DerivedData/
 *.xcworkspace/xcuserdata/
 *.xcodeproj/xcuserdata/
 xcuserdata/
+__pycache__/
+*.pyc
