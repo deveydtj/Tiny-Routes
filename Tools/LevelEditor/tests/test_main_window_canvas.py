@@ -124,11 +124,11 @@ def test_open_level_draws_nodes_on_canvas(
         window.close()
 
 
-def test_canvas_scene_uses_fallback_layout_for_missing_coordinates(qapplication: QApplication) -> None:
+def test_canvas_scene_uses_fallback_layout_for_non_finite_coordinates(qapplication: QApplication) -> None:
     scene = LevelCanvasScene()
     document = LevelDocument(
-        id="level_missing_coords",
-        name="Missing Coordinates",
+        id="level_invalid_coords",
+        name="Invalid Coordinates",
         graph=RouteGraphModel(
             nodes=[
                 RouteNodeModel(id="start", x=0.0, y=0.0, outgoingEdgeIDs=["e_start_route"]),

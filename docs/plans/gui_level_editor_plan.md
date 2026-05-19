@@ -954,8 +954,8 @@ Tools/LevelEditor/app/ui/canvas_scene.py
 - [x] Render each node with a visible shape.
 - [x] Display the node ID as text.
 - [x] Use different visual treatment for start, route, switch, package, destination, and finish nodes when that information exists.
-- [x] Position nodes using coordinates from the JSON if available.
-- [x] If coordinates are missing, place nodes using a simple fallback layout.
+- [x] Position nodes using coordinates from the JSON when they are finite values.
+- [x] If coordinates are invalid/non-finite, place nodes using a simple fallback layout.
 - [x] Clear and redraw nodes when a new level is loaded.
 
 ### Acceptance criteria
@@ -963,7 +963,7 @@ Tools/LevelEditor/app/ui/canvas_scene.py
 - [x] Opening a level shows nodes on the canvas.
 - [x] Node labels are readable.
 - [x] Different node types are distinguishable.
-- [x] The app does not crash when node coordinates are missing.
+- [x] The app does not crash when node coordinates are invalid/non-finite.
 
 ---
 
