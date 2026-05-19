@@ -291,3 +291,28 @@ def test_canvas_scene_clears_and_redraws_edges(qapplication: QApplication) -> No
     scene.display_level(second_document)
     second_edges = [item for item in scene.items() if isinstance(item, EdgeItem)]
     assert len(second_edges) == 0
+
+
+def test_canvas_scene_skips_edge_between_colocated_nodes(qapplication: QApplication) -> None:
+    document = LevelDocument(
+        id="level_colocated",
+        name="Co-located Nodes",
+        graph=RouteGraphModel(
+            nodes=[
+                RouteNodeModel(id="start", x=1.0, y=1.0, outgoingEdgeIDs=["e_same"]),
+                RouteNodeModel(id="destination", x=1.0, y=1.0, outgoingEdgeIDs=[]),
+            ],
+            edges=[
+                RouteEdgeModel(id="e_same", fromNodeID="start", toNodeID="destination"),
+            ],
+        ),
+        startNodeID="start",
+        packageNodeID="start",
+        destinationNodeID="destination",
+        timeLimitSeconds=10,
+        parTaps=0,
+    )
+    scene = LevelCanvasScene()
+    scene.display_level(document)
+    edge_items = [item for item in scene.items() if isinstance(item, EdgeItem)]
+    assert len(edge_items) == 0
