@@ -1,0 +1,40 @@
+{
+  "id": "level_invalid_unreachable_package_001",
+  "name": "Invalid Level – Unreachable Package",
+  "graph": {
+    "nodes": [
+      {
+        "id": "start",
+        "x": 0.0,
+        "y": 0.0,
+        "outgoingEdgeIDs": [
+          "e_start_destination"
+        ]
+      },
+      {
+        "id": "package",
+        "x": 1.5,
+        "y": 0.0,
+        "outgoingEdgeIDs": []
+      },
+      {
+        "id": "destination",
+        "x": 3.0,
+        "y": 0.0,
+        "outgoingEdgeIDs": []
+      }
+    ],
+    "edges": [
+      {
+        "id": "e_start_destination",
+        "fromNodeID": "start",
+        "toNodeID": "destination"
+      }
+    ]
+  },
+  "startNodeID": "start",
+  "packageNodeID": "package",
+  "destinationNodeID": "destination",
+  "timeLimitSeconds": 30,
+  "parTaps": 0
+}

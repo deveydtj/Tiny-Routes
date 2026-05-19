@@ -36,6 +36,27 @@ class ValidationResult:
         return any(message.severity is ValidationSeverity.WARNING for message in self.messages)
 
 
+def _collect_reachable_node_ids(level: "LevelDocument", node_ids: set[str]) -> set[str]:
+    if level.startNodeID not in node_ids:
+        return set()
+
+    adjacency: dict[str, set[str]] = {}
+    for edge in level.graph.edges:
+        if edge.fromNodeID in node_ids and edge.toNodeID in node_ids:
+            adjacency.setdefault(edge.fromNodeID, set()).add(edge.toNodeID)
+
+    reachable: set[str] = set()
+    stack: list[str] = [level.startNodeID]
+    while stack:
+        node_id = stack.pop()
+        if node_id in reachable:
+            continue
+        reachable.add(node_id)
+        stack.extend(adjacency.get(node_id, ()))
+
+    return reachable
+
+
 def validate(level: "LevelDocument") -> ValidationResult:
     """Run all core structural validation rules against a LevelDocument.
 
@@ -191,5 +212,54 @@ def validate(level: "LevelDocument") -> ValidationResult:
                     related_node_id=edge.toNodeID,
                 )
             )
+
+    # --- Reachability from start node ---
+    reachable_node_ids = _collect_reachable_node_ids(level, node_ids)
+    if reachable_node_ids:
+        if (
+            level.packageNodeID in node_ids
+            and level.packageNodeID not in reachable_node_ids
+        ):
+            messages.append(
+                ValidationMessage(
+                    severity=ValidationSeverity.ERROR,
+                    code="unreachable_package_node",
+                    message=(
+                        f"Package node '{level.packageNodeID}' is not reachable from start node '{level.startNodeID}'."
+                    ),
+                    related_node_id=level.packageNodeID,
+                )
+            )
+
+        if (
+            level.destinationNodeID in node_ids
+            and level.destinationNodeID not in reachable_node_ids
+        ):
+            messages.append(
+                ValidationMessage(
+                    severity=ValidationSeverity.ERROR,
+                    code="unreachable_destination_node",
+                    message=(
+                        f"Destination node '{level.destinationNodeID}' is not reachable from start node '{level.startNodeID}'."
+                    ),
+                    related_node_id=level.destinationNodeID,
+                )
+            )
+
+        critical_node_ids = {
+            level.startNodeID,
+            level.packageNodeID,
+            level.destinationNodeID,
+        }
+        for node_id in sorted(node_ids):
+            if node_id not in critical_node_ids and node_id not in reachable_node_ids:
+                messages.append(
+                    ValidationMessage(
+                        severity=ValidationSeverity.WARNING,
+                        code="unreachable_non_critical_node",
+                        message=f"Node '{node_id}' is not reachable from start node '{level.startNodeID}'.",
+                        related_node_id=node_id,
+                    )
+                )
 
     return ValidationResult(messages=messages)
