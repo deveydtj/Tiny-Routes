@@ -1237,18 +1237,18 @@ Tools/LevelEditor/app/main_window.py
 
 ### To do
 
-- [ ] Create a `PiecePalette` widget.
-- [ ] List available node types: Start, Route Node, Switch, Package, Destination.
-- [ ] Allow double-click to add a node to the center of the canvas.
-- [ ] Generate a unique default node ID.
-- [ ] Mark the level as dirty after adding a node.
+- [x] Create a `PiecePalette` widget.
+- [x] List available node types: Start, Route Node, Switch, Package, Destination.
+- [x] Allow double-click to add a node to the center of the canvas.
+- [x] Generate a unique default node ID.
+- [x] Mark the level as dirty after adding a node.
 
 ### Acceptance criteria
 
-- [ ] All node types appear in the palette.
-- [ ] Double-clicking adds the node to the canvas.
-- [ ] New nodes have unique IDs.
-- [ ] Level dirty state is set after adding a node.
+- [x] All node types appear in the palette.
+- [x] Double-clicking adds the node to the canvas.
+- [x] New nodes have unique IDs.
+- [x] Level dirty state is set after adding a node.
 
 ---
 

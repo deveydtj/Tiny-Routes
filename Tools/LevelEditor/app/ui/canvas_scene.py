@@ -54,6 +54,12 @@ class LevelCanvasScene(QGraphicsScene):
                 continue
             self.addItem(edge_item)
 
+    def scene_to_model_coordinates(self, scene_position: QPointF) -> tuple[float, float]:
+        return (
+            scene_position.x() / self.COORDINATE_SCALE,
+            scene_position.y() / self.COORDINATE_SCALE,
+        )
+
     # ------------------------------------------------------------------
     # Selection handling
     # ------------------------------------------------------------------

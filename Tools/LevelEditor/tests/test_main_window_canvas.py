@@ -19,7 +19,7 @@ if str(LEVEL_EDITOR_ROOT) not in sys.path:
 from app.main_window import LevelEditorMainWindow
 from app.models import LevelDocument, RouteEdgeModel, RouteGraphModel, RouteNodeModel
 from app.services import ValidationMessage, ValidationResult, ValidationSeverity
-from app.ui import EdgeItem, LevelCanvasScene, LevelCanvasView, NodeItem, PropertiesPanel
+from app.ui import EdgeItem, LevelCanvasScene, LevelCanvasView, NodeItem, PiecePalette, PropertiesPanel
 from app.ui.validation_panel import ValidationPanel
 from app.ui.node_item import NODE_TYPE_STYLES
 
@@ -63,6 +63,23 @@ def test_main_window_file_menu_includes_new_level_action(qapplication: QApplicat
         assert "New Level" in action_texts
     finally:
         window.close()
+
+
+def test_main_window_has_piece_palette(qapplication: QApplication) -> None:
+    window = LevelEditorMainWindow()
+    try:
+        assert isinstance(window._piece_palette, PiecePalette)
+    finally:
+        window.close()
+
+
+def test_piece_palette_lists_all_node_types(qapplication: QApplication) -> None:
+    palette = PiecePalette()
+    try:
+        labels = [palette._list_widget.item(index).text() for index in range(palette._list_widget.count())]
+        assert labels == ["Start", "Route Node", "Switch", "Package", "Destination"]
+    finally:
+        palette.close()
 
 
 def test_level_canvas_view_starts_centered_on_origin(qapplication: QApplication) -> None:
@@ -648,6 +665,50 @@ def test_new_level_creates_minimal_document_and_updates_canvas(
 
         node_items = [item for item in window._canvas_view.scene().items() if isinstance(item, NodeItem)]
         assert {item.node_id for item in node_items} == {"start"}
+    finally:
+        window.close()
+
+
+def test_palette_double_click_adds_unique_node_to_canvas_center_and_marks_dirty(
+    qapplication: QApplication,
+) -> None:
+    window = LevelEditorMainWindow()
+
+    try:
+        window._new_level()
+        window._set_dirty(False)
+
+        route_item = next(
+            window._piece_palette._list_widget.item(index)
+            for index in range(window._piece_palette._list_widget.count())
+            if window._piece_palette._list_widget.item(index).text() == "Route Node"
+        )
+
+        center_scene_point = window._canvas_view.mapToScene(window._canvas_view.viewport().rect().center())
+        expected_model_x = center_scene_point.x() / window._canvas_view.scene().COORDINATE_SCALE
+        expected_model_y = center_scene_point.y() / window._canvas_view.scene().COORDINATE_SCALE
+
+        window._piece_palette._list_widget.itemDoubleClicked.emit(route_item)
+        window._piece_palette._list_widget.itemDoubleClicked.emit(route_item)
+        qapplication.processEvents()
+
+        assert window._current_document is not None
+        node_ids = [node.id for node in window._current_document.graph.nodes]
+        assert "node" in node_ids
+        assert "node_1" in node_ids
+
+        created_node = next(node for node in window._current_document.graph.nodes if node.id == "node")
+        assert created_node.x == pytest.approx(expected_model_x)
+        assert created_node.y == pytest.approx(expected_model_y)
+
+        canvas_node_ids = {
+            item.node_id
+            for item in window._canvas_view.scene().items()
+            if isinstance(item, NodeItem)
+        }
+        assert "node" in canvas_node_ids
+        assert "node_1" in canvas_node_ids
+        assert window._is_dirty is True
     finally:
         window.close()
 
