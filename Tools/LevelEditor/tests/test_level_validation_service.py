@@ -277,15 +277,23 @@ def test_validate_unreachable_package_produces_error():
 
 def test_validate_unreachable_destination_produces_error():
     level = _load_fixture("valid_level.json")
-    level.graph.edges = []
-    level.graph.nodes[0].outgoingEdgeIDs = []
-    level.graph.nodes[1].outgoingEdgeIDs = []
+    destination_edge_ids = {
+        edge.id for edge in level.graph.edges if edge.toNodeID == "destination"
+    }
+    level.graph.edges = [
+        edge for edge in level.graph.edges if edge.id not in destination_edge_ids
+    ]
+    for node in level.graph.nodes:
+        node.outgoingEdgeIDs = [
+            edge_id for edge_id in node.outgoingEdgeIDs if edge_id not in destination_edge_ids
+        ]
 
     result = validate(level)
     messages = [m for m in result.messages if m.code == "unreachable_destination_node"]
     assert len(messages) == 1
     assert messages[0].severity is ValidationSeverity.ERROR
     assert messages[0].related_node_id == "destination"
+    assert not any(m.code == "unreachable_package_node" for m in result.messages)
 
 
 def test_validate_unreachable_non_critical_node_produces_warning():
