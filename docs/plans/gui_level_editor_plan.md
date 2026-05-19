@@ -1175,19 +1175,19 @@ Tools/LevelEditor/app/repositories/level_file_repository.py
 
 ### To do
 
-- [ ] Add a `Save Level` menu action.
-- [ ] Save to the current file path without prompting if already opened.
-- [ ] Add a `Save Level As...` action to save to a new path.
-- [ ] Track dirty state when the level is modified.
-- [ ] Show a dirty indicator in the window title.
-- [ ] Prompt to save unsaved changes when closing.
+- [x] Add a `Save Level` menu action.
+- [x] Save to the current file path without prompting if already opened.
+- [x] Add a `Save Level As...` action to save to a new path.
+- [x] Track dirty state when the level is modified.
+- [x] Show a dirty indicator in the window title.
+- [x] Prompt to save unsaved changes when closing.
 
 ### Acceptance criteria
 
-- [ ] Saving overwrites the original file.
-- [ ] Save As creates a new file at the chosen path.
-- [ ] Dirty state indicator appears when level is changed.
-- [ ] Unsaved changes prompt appears on close.
+- [x] Saving overwrites the original file.
+- [x] Save As creates a new file at the chosen path.
+- [x] Dirty state indicator appears when level is changed.
+- [x] Unsaved changes prompt appears on close.
 
 ---
 

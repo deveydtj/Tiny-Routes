@@ -8,7 +8,7 @@ import pytest
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
 try:
-    from PySide6.QtWidgets import QApplication, QFileDialog
+    from PySide6.QtWidgets import QApplication, QFileDialog, QMessageBox
 except ImportError as exc:
     pytest.skip(f"PySide6 unavailable in this environment: {exc}", allow_module_level=True)
 
@@ -605,6 +605,107 @@ def test_loading_new_level_clears_validation_panel(
         assert panel._empty_label.isVisibleTo(panel)
         assert not panel._message_list.isVisibleTo(panel)
         assert panel._message_list.count() == 0
+    finally:
+        window.close()
+
+
+def test_save_level_writes_to_current_path_without_prompt(
+    qapplication: QApplication,
+    tmp_path: Path,
+) -> None:
+    window = LevelEditorMainWindow()
+    document = _make_two_node_one_edge_document()
+    save_path = tmp_path / "save_current.json"
+    received: list[tuple[Path, LevelDocument]] = []
+
+    window._current_document = document
+    window._current_file_path = save_path
+    window._set_dirty(True)
+
+    def fake_save(path: Path, level_document: LevelDocument) -> None:
+        received.append((path, level_document))
+
+    window._repository.save_level = fake_save
+
+    try:
+        assert window._save_level() is True
+        assert received == [(save_path, document)]
+        assert window._is_dirty is False
+    finally:
+        window.close()
+
+
+def test_save_level_as_prompts_for_new_path_and_updates_current_path(
+    qapplication: QApplication,
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    window = LevelEditorMainWindow()
+    document = _make_two_node_one_edge_document()
+    save_path = tmp_path / "save_as.json"
+    received: list[tuple[Path, LevelDocument]] = []
+
+    window._current_document = document
+    window._set_dirty(True)
+    monkeypatch.setattr(QFileDialog, "getSaveFileName", lambda *args, **kwargs: (str(save_path), ""))
+
+    def fake_save(path: Path, level_document: LevelDocument) -> None:
+        received.append((path, level_document))
+
+    window._repository.save_level = fake_save
+
+    try:
+        assert window._save_level_as() is True
+        assert received == [(save_path, document)]
+        assert window._current_file_path == save_path
+        assert window._is_dirty is False
+    finally:
+        window.close()
+
+
+def test_dirty_indicator_appears_in_window_title(
+    qapplication: QApplication,
+) -> None:
+    window = LevelEditorMainWindow()
+    document = _make_two_node_one_edge_document()
+    window._current_document = document
+    window._set_dirty(False)
+
+    try:
+        assert window.windowTitle() == "Tiny Routes Level Editor — level_props"
+        window._mark_document_dirty()
+        assert window.windowTitle() == "Tiny Routes Level Editor — level_props *"
+    finally:
+        window.close()
+
+
+def test_close_prompt_cancel_keeps_window_open(
+    qapplication: QApplication,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    window = LevelEditorMainWindow()
+    window._current_document = _make_two_node_one_edge_document()
+    window._set_dirty(True)
+    monkeypatch.setattr(QMessageBox, "question", lambda *args, **kwargs: QMessageBox.StandardButton.Cancel)
+
+    try:
+        assert window._prompt_to_save_unsaved_changes() is False
+    finally:
+        window.close()
+
+
+def test_close_prompt_save_invokes_save(
+    qapplication: QApplication,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    window = LevelEditorMainWindow()
+    window._current_document = _make_two_node_one_edge_document()
+    window._set_dirty(True)
+    monkeypatch.setattr(QMessageBox, "question", lambda *args, **kwargs: QMessageBox.StandardButton.Save)
+    monkeypatch.setattr(window, "_save_level", lambda: True)
+
+    try:
+        assert window._prompt_to_save_unsaved_changes() is True
     finally:
         window.close()
 
