@@ -30,6 +30,13 @@ class InvalidLevelJSONError(LevelFileRepositoryError):
         super().__init__(path=path, message=message, error_code="invalid_json")
 
 
+class LevelFileIOError(LevelFileRepositoryError):
+    """Raised when an OS-level I/O error prevents reading or writing a level file."""
+
+    def __init__(self, path: Path, message: str) -> None:
+        super().__init__(path=path, message=message, error_code="io_error")
+
+
 class LevelFileRepository:
     """Handles level JSON file loading and saving."""
 
@@ -39,6 +46,8 @@ class LevelFileRepository:
             raw_content = level_path.read_text(encoding="utf-8")
         except FileNotFoundError as exc:
             raise MissingLevelFileError(level_path) from exc
+        except OSError as exc:
+            raise LevelFileIOError(level_path, f"Could not read level file {level_path}: {exc}") from exc
 
         try:
             raw_level = json.loads(raw_content)
@@ -58,4 +67,7 @@ class LevelFileRepository:
         level_path = Path(path)
         payload = level_document.to_dict()
         serialized = json.dumps(payload, ensure_ascii=False, indent=2) + "\n"
-        level_path.write_text(serialized, encoding="utf-8")
+        try:
+            level_path.write_text(serialized, encoding="utf-8")
+        except OSError as exc:
+            raise LevelFileIOError(level_path, f"Could not write level file {level_path}: {exc}") from exc

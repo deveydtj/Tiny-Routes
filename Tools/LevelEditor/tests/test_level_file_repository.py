@@ -1,6 +1,7 @@
 import json
 import sys
 from pathlib import Path
+from unittest.mock import patch
 
 import pytest
 
@@ -8,7 +9,7 @@ LEVEL_EDITOR_ROOT = Path(__file__).resolve().parents[1]
 if str(LEVEL_EDITOR_ROOT) not in sys.path:
     sys.path.insert(0, str(LEVEL_EDITOR_ROOT))
 
-from app.repositories import InvalidLevelJSONError, LevelFileRepository, MissingLevelFileError
+from app.repositories import InvalidLevelJSONError, LevelFileIOError, LevelFileRepository, MissingLevelFileError
 
 
 FIXTURE_PATH = Path(__file__).parent / "fixtures" / "valid_level.json"
@@ -69,3 +70,43 @@ def test_load_level_raises_structured_error_for_invalid_shape(tmp_path: Path) ->
 
     assert exc_info.value.error_code == "invalid_json"
     assert exc_info.value.path == invalid_shape_path
+
+
+def test_load_level_wraps_permission_error_as_level_file_io_error(tmp_path: Path) -> None:
+    repository = LevelFileRepository()
+    some_path = tmp_path / "level.json"
+
+    with patch.object(Path, "read_text", side_effect=PermissionError("Permission denied")):
+        with pytest.raises(LevelFileIOError) as exc_info:
+            repository.load_level(some_path)
+
+    assert exc_info.value.error_code == "io_error"
+    assert exc_info.value.path == some_path
+    assert str(some_path) in exc_info.value.message
+
+
+def test_load_level_wraps_os_error_as_level_file_io_error(tmp_path: Path) -> None:
+    repository = LevelFileRepository()
+    some_path = tmp_path / "level.json"
+
+    with patch.object(Path, "read_text", side_effect=OSError("Disk I/O error")):
+        with pytest.raises(LevelFileIOError) as exc_info:
+            repository.load_level(some_path)
+
+    assert exc_info.value.error_code == "io_error"
+    assert exc_info.value.path == some_path
+    assert str(some_path) in exc_info.value.message
+
+
+def test_save_level_wraps_os_error_as_level_file_io_error(tmp_path: Path) -> None:
+    repository = LevelFileRepository()
+    document = repository.load_level(FIXTURE_PATH)
+    some_path = tmp_path / "level.json"
+
+    with patch.object(Path, "write_text", side_effect=OSError("Disk I/O error")):
+        with pytest.raises(LevelFileIOError) as exc_info:
+            repository.save_level(some_path, document)
+
+    assert exc_info.value.error_code == "io_error"
+    assert exc_info.value.path == some_path
+    assert str(some_path) in exc_info.value.message
