@@ -982,18 +982,18 @@ Tools/LevelEditor/app/ui/canvas_scene.py
 
 ### To do
 
-- [ ] Create an `EdgeItem` graphics item.
-- [ ] Draw a line between the source node and target node.
-- [ ] Add an arrow or direction indicator if route direction matters.
-- [ ] Draw edges behind nodes.
-- [ ] Handle missing node references gracefully.
-- [ ] Redraw edges when a new level is loaded.
+- [x] Create an `EdgeItem` graphics item.
+- [x] Draw a line between the source node and target node.
+- [x] Add an arrow or direction indicator if route direction matters.
+- [x] Draw edges behind nodes.
+- [x] Handle missing node references gracefully.
+- [x] Redraw edges when a new level is loaded.
 
 ### Acceptance criteria
 
-- [ ] Opening a level shows the graph connections.
-- [ ] Edges do not cover node labels.
-- [ ] Bad edge references do not crash the GUI.
+- [x] Opening a level shows the graph connections.
+- [x] Edges do not cover node labels.
+- [x] Bad edge references do not crash the GUI.
 
 ---
 
