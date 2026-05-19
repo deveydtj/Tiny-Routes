@@ -18,7 +18,7 @@ if str(LEVEL_EDITOR_ROOT) not in sys.path:
 
 from app.main_window import LevelEditorMainWindow
 from app.models import LevelDocument, RouteEdgeModel, RouteGraphModel, RouteNodeModel
-from app.ui import EdgeItem, LevelCanvasScene, LevelCanvasView, NodeItem
+from app.ui import EdgeItem, LevelCanvasScene, LevelCanvasView, NodeItem, PropertiesPanel
 from app.ui.node_item import NODE_TYPE_STYLES
 
 
@@ -316,3 +316,248 @@ def test_canvas_scene_skips_edge_between_colocated_nodes(qapplication: QApplicat
     scene.display_level(document)
     edge_items = [item for item in scene.items() if isinstance(item, EdgeItem)]
     assert len(edge_items) == 0
+
+
+# ---------------------------------------------------------------------------
+# Task 011: Properties panel tests
+# ---------------------------------------------------------------------------
+
+def _make_two_node_two_edge_document() -> LevelDocument:
+    return LevelDocument(
+        id="level_props",
+        name="Properties Test Level",
+        graph=RouteGraphModel(
+            nodes=[
+                RouteNodeModel(id="start", x=0.0, y=0.0, outgoingEdgeIDs=["e1"]),
+                RouteNodeModel(id="destination", x=2.0, y=1.5, outgoingEdgeIDs=[]),
+            ],
+            edges=[
+                RouteEdgeModel(id="e1", fromNodeID="start", toNodeID="destination"),
+            ],
+        ),
+        startNodeID="start",
+        packageNodeID="start",
+        destinationNodeID="destination",
+        timeLimitSeconds=30,
+        parTaps=0,
+    )
+
+
+def test_main_window_has_properties_panel(qapplication: QApplication) -> None:
+    window = LevelEditorMainWindow()
+    try:
+        assert isinstance(window._properties_panel, PropertiesPanel)
+    finally:
+        window.close()
+
+
+def test_properties_panel_initial_state_is_empty(qapplication: QApplication) -> None:
+    window = LevelEditorMainWindow()
+    try:
+        assert window._properties_panel._empty_label.isVisible()
+        assert not window._properties_panel._form_widget.isVisible()
+    finally:
+        window.close()
+
+
+def test_selecting_node_item_updates_properties_panel(qapplication: QApplication) -> None:
+    window = LevelEditorMainWindow()
+    try:
+        scene = window._canvas_view.scene()
+        scene.display_level(_make_two_node_two_edge_document())
+
+        node_items = [item for item in scene.items() if isinstance(item, NodeItem)]
+        start_item = next(item for item in node_items if item.node_id == "start")
+
+        scene.clearSelection()
+        start_item.setSelected(True)
+        qapplication.processEvents()
+
+        panel = window._properties_panel
+        assert not panel._empty_label.isVisible()
+        assert panel._form_widget.isVisible()
+
+        labels = [panel._form_layout.itemAt(i).widget().text()
+                  for i in range(panel._form_layout.count())
+                  if panel._form_layout.itemAt(i).widget() is not None]
+        assert "start" in labels
+        assert "start" in labels  # node_id value row
+    finally:
+        window.close()
+
+
+def test_selecting_node_item_shows_correct_type_and_position(qapplication: QApplication) -> None:
+    window = LevelEditorMainWindow()
+    try:
+        scene = window._canvas_view.scene()
+        scene.display_level(_make_two_node_two_edge_document())
+
+        node_items = [item for item in scene.items() if isinstance(item, NodeItem)]
+        dest_item = next(item for item in node_items if item.node_id == "destination")
+
+        scene.clearSelection()
+        dest_item.setSelected(True)
+        qapplication.processEvents()
+
+        panel = window._properties_panel
+        labels = [panel._form_layout.itemAt(i).widget().text()
+                  for i in range(panel._form_layout.count())
+                  if panel._form_layout.itemAt(i).widget() is not None]
+
+        # Destination node should show its type and position values
+        assert "destination" in labels  # node_id or type value
+        assert any("2.00" in lbl for lbl in labels)   # model_x = 2.0
+        assert any("1.50" in lbl for lbl in labels)   # model_y = 1.5
+    finally:
+        window.close()
+
+
+def test_selecting_edge_item_updates_properties_panel(qapplication: QApplication) -> None:
+    window = LevelEditorMainWindow()
+    try:
+        scene = window._canvas_view.scene()
+        scene.display_level(_make_two_node_two_edge_document())
+
+        edge_items = [item for item in scene.items() if isinstance(item, EdgeItem)]
+        assert len(edge_items) == 1
+        edge_item = edge_items[0]
+
+        scene.clearSelection()
+        edge_item.setSelected(True)
+        qapplication.processEvents()
+
+        panel = window._properties_panel
+        assert not panel._empty_label.isVisible()
+        assert panel._form_widget.isVisible()
+
+        labels = [panel._form_layout.itemAt(i).widget().text()
+                  for i in range(panel._form_layout.count())
+                  if panel._form_layout.itemAt(i).widget() is not None]
+        assert "e1" in labels
+        assert "start" in labels
+        assert "destination" in labels
+    finally:
+        window.close()
+
+
+def test_clearing_selection_resets_properties_panel(qapplication: QApplication) -> None:
+    window = LevelEditorMainWindow()
+    try:
+        scene = window._canvas_view.scene()
+        scene.display_level(_make_two_node_two_edge_document())
+
+        node_items = [item for item in scene.items() if isinstance(item, NodeItem)]
+        node_items[0].setSelected(True)
+        qapplication.processEvents()
+
+        # Now clear the selection
+        scene.clearSelection()
+        qapplication.processEvents()
+
+        panel = window._properties_panel
+        assert panel._empty_label.isVisible()
+        assert not panel._form_widget.isVisible()
+    finally:
+        window.close()
+
+
+def test_loading_new_level_clears_properties_panel(
+    qapplication: QApplication,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    window = LevelEditorMainWindow()
+    document = _make_two_node_two_edge_document()
+
+    monkeypatch.setattr(QFileDialog, "getOpenFileName", lambda *args, **kwargs: ("/tmp/level_props.json", ""))
+    monkeypatch.setattr(window._repository, "load_level", lambda path: document)
+
+    try:
+        # Select a node first
+        scene = window._canvas_view.scene()
+        scene.display_level(document)
+        node_items = [item for item in scene.items() if isinstance(item, NodeItem)]
+        if node_items:
+            node_items[0].setSelected(True)
+            qapplication.processEvents()
+
+        # Load a new level; the properties panel should be cleared
+        window._open_level()
+        qapplication.processEvents()
+
+        panel = window._properties_panel
+        assert panel._empty_label.isVisible()
+        assert not panel._form_widget.isVisible()
+    finally:
+        window.close()
+
+
+def test_node_item_stores_model_coordinates() -> None:
+    item = NodeItem(node_id="n1", node_type="route", model_x=3.5, model_y=-1.2)
+    assert item.model_x == 3.5
+    assert item.model_y == -1.2
+
+
+def test_edge_item_stores_source_and_target_node_ids(qapplication: QApplication) -> None:
+    from_node = NodeItem(node_id="alpha", node_type="start")
+    from_node.setPos(0, 0)
+    to_node = NodeItem(node_id="beta", node_type="route")
+    to_node.setPos(200, 0)
+    edge = EdgeItem(edge_id="e_ab", from_node=from_node, to_node=to_node)
+    assert edge.from_node_id == "alpha"
+    assert edge.to_node_id == "beta"
+
+
+def test_scene_emits_node_selected_signal(qapplication: QApplication) -> None:
+    scene = LevelCanvasScene()
+    scene.display_level(_make_two_node_two_edge_document())
+
+    received: list[tuple] = []
+    scene.node_item_selected.connect(lambda *args: received.append(args))
+
+    node_items = [item for item in scene.items() if isinstance(item, NodeItem)]
+    start_item = next(item for item in node_items if item.node_id == "start")
+    start_item.setSelected(True)
+    qapplication.processEvents()
+
+    assert len(received) == 1
+    node_id, node_type, mx, my = received[0]
+    assert node_id == "start"
+    assert node_type == "start"
+    assert mx == 0.0
+    assert my == 0.0
+
+
+def test_scene_emits_edge_selected_signal(qapplication: QApplication) -> None:
+    scene = LevelCanvasScene()
+    scene.display_level(_make_two_node_two_edge_document())
+
+    received: list[tuple] = []
+    scene.edge_item_selected.connect(lambda *args: received.append(args))
+
+    edge_items = [item for item in scene.items() if isinstance(item, EdgeItem)]
+    edge_items[0].setSelected(True)
+    qapplication.processEvents()
+
+    assert len(received) == 1
+    edge_id, from_id, to_id = received[0]
+    assert edge_id == "e1"
+    assert from_id == "start"
+    assert to_id == "destination"
+
+
+def test_scene_emits_selection_cleared_signal(qapplication: QApplication) -> None:
+    scene = LevelCanvasScene()
+    scene.display_level(_make_two_node_two_edge_document())
+
+    cleared: list[bool] = []
+    scene.selection_cleared.connect(lambda: cleared.append(True))
+
+    node_items = [item for item in scene.items() if isinstance(item, NodeItem)]
+    node_items[0].setSelected(True)
+    qapplication.processEvents()
+
+    scene.clearSelection()
+    qapplication.processEvents()
+
+    assert len(cleared) >= 1
+
