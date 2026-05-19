@@ -23,6 +23,8 @@ NODE_TYPE_STYLES: dict[str, NodeVisualStyle] = {
 
 class NodeItem(QGraphicsItemGroup):
     NODE_DIAMETER = 64.0
+    PENDING_BORDER_COLOR = "#d81b60"
+    PENDING_BORDER_WIDTH = 4
 
     def __init__(self, node_id: str, node_type: str, model_x: float = 0.0, model_y: float = 0.0) -> None:
         super().__init__()
@@ -30,22 +32,28 @@ class NodeItem(QGraphicsItemGroup):
         self.node_type = node_type if node_type in NODE_TYPE_STYLES else "route"
         self.model_x = model_x
         self.model_y = model_y
+        self._style = NODE_TYPE_STYLES[self.node_type]
         self.setFlag(QGraphicsItem.GraphicsItemFlag.ItemIsSelectable, True)
         self.setFlag(QGraphicsItem.GraphicsItemFlag.ItemIsMovable, True)
         self.setFlag(QGraphicsItem.GraphicsItemFlag.ItemSendsGeometryChanges, True)
 
-        style = NODE_TYPE_STYLES[self.node_type]
         radius = self.NODE_DIAMETER / 2
 
         circle = QGraphicsEllipseItem(QRectF(-radius, -radius, self.NODE_DIAMETER, self.NODE_DIAMETER))
-        circle.setBrush(QColor(style.fill_color))
-        circle.setPen(QPen(QColor(style.border_color), 2))
+        circle.setBrush(QColor(self._style.fill_color))
+        self._circle = circle
+        self._update_border()
         self.addToGroup(circle)
 
         label = QGraphicsSimpleTextItem(self.node_id)
         label_rect = label.boundingRect()
         label.setPos(-label_rect.width() / 2, -label_rect.height() / 2)
         self.addToGroup(label)
+        self._is_connection_source = False
+
+    def set_connection_source(self, is_source: bool) -> None:
+        self._is_connection_source = is_source
+        self._update_border()
 
     def itemChange(self, change: QGraphicsItem.GraphicsItemChange, value: object) -> object:
         result = super().itemChange(change, value)
@@ -54,3 +62,8 @@ class NodeItem(QGraphicsItemGroup):
             if scene is not None and hasattr(scene, "handle_node_item_moved"):
                 scene.handle_node_item_moved(self)
         return result
+
+    def _update_border(self) -> None:
+        border_color = self.PENDING_BORDER_COLOR if self._is_connection_source else self._style.border_color
+        border_width = self.PENDING_BORDER_WIDTH if self._is_connection_source else 2
+        self._circle.setPen(QPen(QColor(border_color), border_width))

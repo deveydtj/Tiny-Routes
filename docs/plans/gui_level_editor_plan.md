@@ -1295,19 +1295,19 @@ Tools/LevelEditor/app/ui/node_item.py
 
 ### To do
 
-- [ ] Add an edge-drawing mode or right-click interaction.
-- [ ] Allow users to click a source node and then a target node to create an edge.
-- [ ] Assign a generated unique edge ID.
-- [ ] Update the source node's `outgoingEdgeIDs` list.
-- [ ] Render the new edge immediately.
-- [ ] Mark the level as dirty.
+- [x] Add an edge-drawing mode or right-click interaction.
+- [x] Allow users to click a source node and then a target node to create an edge.
+- [x] Assign a generated unique edge ID.
+- [x] Update the source node's `outgoingEdgeIDs` list.
+- [x] Render the new edge immediately.
+- [x] Mark the level as dirty.
 
 ### Acceptance criteria
 
-- [ ] User can connect two nodes with an edge.
-- [ ] The new edge appears on the canvas.
-- [ ] Edge references are correct in the data model.
-- [ ] Level is marked dirty after edge creation.
+- [x] User can connect two nodes with an edge.
+- [x] The new edge appears on the canvas.
+- [x] Edge references are correct in the data model.
+- [x] Level is marked dirty after edge creation.
 
 ---
 

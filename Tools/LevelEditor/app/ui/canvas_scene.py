@@ -1,8 +1,8 @@
 import math
 
-from PySide6.QtCore import QPointF, QRectF, Signal
+from PySide6.QtCore import QPointF, QRectF, Qt, Signal
 from PySide6.QtGui import QColor, QPainter, QPen
-from PySide6.QtWidgets import QGraphicsScene
+from PySide6.QtWidgets import QGraphicsScene, QGraphicsSceneMouseEvent
 
 from app.models import LevelDocument, RouteNodeModel
 
@@ -22,19 +22,25 @@ class LevelCanvasScene(QGraphicsScene):
     selection_cleared = Signal()
     # Emitted when a node is repositioned. Args: node_id, model_x, model_y
     node_item_moved = Signal(str, float, float)
+    # Emitted when the user creates a new edge. Args: edge_id, from_node_id, to_node_id
+    edge_creation_requested = Signal(str, str, str)
 
     def __init__(self) -> None:
         super().__init__()
         self.setSceneRect(QRectF(-2000, -2000, 4000, 4000))
+        self._document: LevelDocument | None = None
         self._node_items_by_id: dict[str, NodeItem] = {}
         self._edges_by_node_id: dict[str, list[EdgeItem]] = {}
+        self._connection_source_node_id: str | None = None
         self._show_placeholder()
         self.selectionChanged.connect(self._on_selection_changed)
 
     def display_level(self, document: LevelDocument) -> None:
         self.clear()
+        self._document = document
         self._node_items_by_id = {}
         self._edges_by_node_id = {}
+        self._clear_connection_source()
         if not document.graph.nodes:
             self._show_placeholder("No nodes in this level")
             return
@@ -79,6 +85,16 @@ class LevelCanvasScene(QGraphicsScene):
             self.node_item_selected.emit(item.node_id, item.node_type, item.model_x, item.model_y)
         self.node_item_moved.emit(item.node_id, item.model_x, item.model_y)
 
+    def mousePressEvent(self, event: QGraphicsSceneMouseEvent) -> None:
+        if event.button() == Qt.MouseButton.RightButton:
+            node_item = self._resolve_node_item_at_position(event.scenePos())
+            if node_item is not None:
+                self._handle_connection_click(node_item)
+                event.accept()
+                return
+            self._clear_connection_source()
+        super().mousePressEvent(event)
+
     # ------------------------------------------------------------------
     # Selection handling
     # ------------------------------------------------------------------
@@ -104,6 +120,80 @@ class LevelCanvasScene(QGraphicsScene):
         placeholder = self.addSimpleText(message)
         placeholder.setBrush(QColor("#666666"))
         placeholder.setPos(-80, -10)
+
+    def _resolve_node_item_at_position(self, scene_position: QPointF) -> NodeItem | None:
+        for item in self.items(scene_position):
+            current_item = item
+            while current_item is not None:
+                if isinstance(current_item, NodeItem):
+                    return current_item
+                current_item = current_item.parentItem()
+        return None
+
+    def _handle_connection_click(self, item: NodeItem) -> None:
+        if self._document is None:
+            return
+
+        if self._connection_source_node_id is None:
+            self._set_connection_source(item.node_id)
+            item.setSelected(True)
+            return
+
+        if self._connection_source_node_id == item.node_id:
+            self._clear_connection_source()
+            item.setSelected(True)
+            return
+
+        from_node_id = self._connection_source_node_id
+        to_node_id = item.node_id
+        self._clear_connection_source()
+        item.setSelected(True)
+
+        if self._edge_exists(from_node_id, to_node_id):
+            return
+
+        edge_id = self._generate_unique_edge_id()
+        self.edge_creation_requested.emit(edge_id, from_node_id, to_node_id)
+
+    def _set_connection_source(self, node_id: str) -> None:
+        if self._connection_source_node_id == node_id:
+            return
+        self._clear_connection_source()
+        source_item = self._node_items_by_id.get(node_id)
+        if source_item is None:
+            return
+        self._connection_source_node_id = node_id
+        source_item.set_connection_source(True)
+
+    def _clear_connection_source(self) -> None:
+        if self._connection_source_node_id is None:
+            return
+        source_item = self._node_items_by_id.get(self._connection_source_node_id)
+        if source_item is not None:
+            source_item.set_connection_source(False)
+        self._connection_source_node_id = None
+
+    def _edge_exists(self, from_node_id: str, to_node_id: str) -> bool:
+        if self._document is None:
+            return False
+        return any(
+            edge.fromNodeID == from_node_id and edge.toNodeID == to_node_id
+            for edge in self._document.graph.edges
+        )
+
+    def _generate_unique_edge_id(self) -> str:
+        existing_edge_ids = set()
+        if self._document is not None:
+            existing_edge_ids = {edge.id for edge in self._document.graph.edges}
+
+        base_id = "edge"
+        if base_id not in existing_edge_ids:
+            return base_id
+
+        suffix = 1
+        while f"{base_id}_{suffix}" in existing_edge_ids:
+            suffix += 1
+        return f"{base_id}_{suffix}"
 
     def _resolve_node_type(self, document: LevelDocument, node: RouteNodeModel) -> str:
         if node.id == document.startNodeID:

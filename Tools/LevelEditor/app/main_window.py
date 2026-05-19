@@ -5,7 +5,7 @@ from PySide6.QtGui import QCloseEvent, QKeySequence
 from PySide6.QtWidgets import QDockWidget, QFileDialog, QMainWindow, QMessageBox
 
 from app.config import get_default_levels_directory
-from app.models import LevelDocument, RouteNodeModel
+from app.models import LevelDocument, RouteEdgeModel, RouteNodeModel
 from app.repositories import LevelFileRepository, LevelFileRepositoryError
 from app.services import LevelValidationService, create_default_level_document
 from app.ui import LevelCanvasView, PiecePalette, PropertiesPanel, ValidationPanel
@@ -59,6 +59,7 @@ class LevelEditorMainWindow(QMainWindow):
         scene.edge_item_selected.connect(self._properties_panel.show_edge)
         scene.selection_cleared.connect(self._properties_panel.clear)
         scene.node_item_moved.connect(self._on_node_item_moved)
+        scene.edge_creation_requested.connect(self._on_edge_creation_requested)
         self._validation_panel.validate_requested.connect(self._validate_current_level)
         self._piece_palette.node_type_activated.connect(self._add_node_from_palette)
 
@@ -222,6 +223,33 @@ class LevelEditorMainWindow(QMainWindow):
 
         self._canvas_view.scene().display_level(self._current_document)
         self._properties_panel.clear()
+        self._validation_panel.clear()
+        self._set_dirty(True)
+
+    def _on_edge_creation_requested(self, edge_id: str, from_node_id: str, to_node_id: str) -> None:
+        if self._current_document is None:
+            return
+
+        if any(edge.id == edge_id for edge in self._current_document.graph.edges):
+            return
+
+        source_node = next(
+            (node for node in self._current_document.graph.nodes if node.id == from_node_id),
+            None,
+        )
+        if source_node is None:
+            return
+
+        source_node.outgoingEdgeIDs.append(edge_id)
+        self._current_document.graph.edges.append(
+            RouteEdgeModel(
+                id=edge_id,
+                fromNodeID=from_node_id,
+                toNodeID=to_node_id,
+            )
+        )
+
+        self._canvas_view.scene().display_level(self._current_document)
         self._validation_panel.clear()
         self._set_dirty(True)
 
