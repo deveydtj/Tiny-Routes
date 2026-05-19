@@ -38,7 +38,10 @@ class LevelCanvasScene(QGraphicsScene):
             to_node = node_items.get(edge.toNodeID)
             if from_node is None or to_node is None:
                 continue
-            edge_item = EdgeItem(edge_id=edge.id, from_node=from_node, to_node=to_node)
+            try:
+                edge_item = EdgeItem(edge_id=edge.id, from_node=from_node, to_node=to_node)
+            except ValueError:
+                continue
             self.addItem(edge_item)
 
     def _show_placeholder(self, message: str = "Open a level to begin") -> None:

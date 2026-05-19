@@ -30,8 +30,7 @@ class EdgeItem(QGraphicsItemGroup):
         length = math.hypot(dx, dy)
 
         if length < 1e-6:
-            # Nodes are co-located; nothing useful to draw
-            return
+            raise ValueError(f"Cannot draw edge for co-located nodes (edge_id={edge_id!r})")
 
         ux = dx / length
         uy = dy / length
