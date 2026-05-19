@@ -51,6 +51,7 @@ class LevelEditorMainWindow(QMainWindow):
             return
 
         self._current_document = document
+        self._canvas_view.scene().display_level(document)
         self.setWindowTitle(f"Tiny Routes Level Editor — {document.id}")
 
     def _resolve_default_levels_dir(self) -> Path:
