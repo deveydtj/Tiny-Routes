@@ -20,20 +20,25 @@ class LevelCanvasScene(QGraphicsScene):
     edge_item_selected = Signal(str, str, str)
     # Emitted when the selection is cleared or an unrecognised item is selected
     selection_cleared = Signal()
+    # Emitted when a node is repositioned. Args: node_id, model_x, model_y
+    node_item_moved = Signal(str, float, float)
 
     def __init__(self) -> None:
         super().__init__()
         self.setSceneRect(QRectF(-2000, -2000, 4000, 4000))
+        self._node_items_by_id: dict[str, NodeItem] = {}
+        self._edges_by_node_id: dict[str, list[EdgeItem]] = {}
         self._show_placeholder()
         self.selectionChanged.connect(self._on_selection_changed)
 
     def display_level(self, document: LevelDocument) -> None:
         self.clear()
+        self._node_items_by_id = {}
+        self._edges_by_node_id = {}
         if not document.graph.nodes:
             self._show_placeholder("No nodes in this level")
             return
 
-        node_items: dict[str, NodeItem] = {}
         for index, node in enumerate(document.graph.nodes):
             node_type = self._resolve_node_type(document, node)
             model_x = float(node.x) if isinstance(node.x, (int, float)) else 0.0
@@ -41,11 +46,11 @@ class LevelCanvasScene(QGraphicsScene):
             node_item = NodeItem(node_id=node.id, node_type=node_type, model_x=model_x, model_y=model_y)
             node_item.setPos(self._resolve_scene_position(node, index))
             self.addItem(node_item)
-            node_items[node.id] = node_item
+            self._node_items_by_id[node.id] = node_item
 
         for edge in document.graph.edges:
-            from_node = node_items.get(edge.fromNodeID)
-            to_node = node_items.get(edge.toNodeID)
+            from_node = self._node_items_by_id.get(edge.fromNodeID)
+            to_node = self._node_items_by_id.get(edge.toNodeID)
             if from_node is None or to_node is None:
                 continue
             try:
@@ -53,12 +58,26 @@ class LevelCanvasScene(QGraphicsScene):
             except ValueError:
                 continue
             self.addItem(edge_item)
+            self._edges_by_node_id.setdefault(from_node.node_id, []).append(edge_item)
+            self._edges_by_node_id.setdefault(to_node.node_id, []).append(edge_item)
 
     def scene_to_model_coordinates(self, scene_position: QPointF) -> tuple[float, float]:
         return (
             scene_position.x() / self.COORDINATE_SCALE,
             scene_position.y() / self.COORDINATE_SCALE,
         )
+
+    def handle_node_item_moved(self, item: NodeItem) -> None:
+        model_x, model_y = self.scene_to_model_coordinates(item.pos())
+        item.model_x = model_x
+        item.model_y = model_y
+
+        for edge_item in self._edges_by_node_id.get(item.node_id, []):
+            edge_item.refresh_position(allow_degenerate=True)
+
+        if item.isSelected():
+            self.node_item_selected.emit(item.node_id, item.node_type, item.model_x, item.model_y)
+        self.node_item_moved.emit(item.node_id, item.model_x, item.model_y)
 
     # ------------------------------------------------------------------
     # Selection handling

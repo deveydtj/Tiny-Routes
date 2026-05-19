@@ -58,6 +58,7 @@ class LevelEditorMainWindow(QMainWindow):
         scene.node_item_selected.connect(self._properties_panel.show_node)
         scene.edge_item_selected.connect(self._properties_panel.show_edge)
         scene.selection_cleared.connect(self._properties_panel.clear)
+        scene.node_item_moved.connect(self._on_node_item_moved)
         self._validation_panel.validate_requested.connect(self._validate_current_level)
         self._piece_palette.node_type_activated.connect(self._add_node_from_palette)
 
@@ -179,6 +180,21 @@ class LevelEditorMainWindow(QMainWindow):
         if self._current_document is None:
             return
         self._set_dirty(True)
+
+    def _on_node_item_moved(self, node_id: str, model_x: float, model_y: float) -> None:
+        if self._current_document is None:
+            return
+
+        for node in self._current_document.graph.nodes:
+            if node.id != node_id:
+                continue
+            if node.x == model_x and node.y == model_y:
+                return
+            node.x = model_x
+            node.y = model_y
+            self._validation_panel.clear()
+            self._set_dirty(True)
+            return
 
     def _add_node_from_palette(self, node_type: str) -> None:
         if self._current_document is None:

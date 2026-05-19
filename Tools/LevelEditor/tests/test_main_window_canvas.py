@@ -935,6 +935,11 @@ def test_node_item_stores_model_coordinates() -> None:
     assert item.model_y == -1.2
 
 
+def test_node_item_is_draggable() -> None:
+    item = NodeItem(node_id="n1", node_type="route")
+    assert item.flags() & item.GraphicsItemFlag.ItemIsMovable
+
+
 def test_edge_item_stores_source_and_target_node_ids(qapplication: QApplication) -> None:
     from_node = NodeItem(node_id="alpha", node_type="start")
     from_node.setPos(0, 0)
@@ -998,3 +1003,91 @@ def test_scene_emits_selection_cleared_signal(qapplication: QApplication) -> Non
     qapplication.processEvents()
 
     assert len(cleared) >= 1
+
+
+def test_dragging_node_updates_model_coordinates_and_connected_edge(
+    qapplication: QApplication,
+) -> None:
+    scene = LevelCanvasScene()
+    scene.display_level(_make_two_node_one_edge_document())
+
+    moved: list[tuple[str, float, float]] = []
+    scene.node_item_moved.connect(lambda *args: moved.append(args))
+
+    node_items = [item for item in scene.items() if isinstance(item, NodeItem)]
+    start_item = next(item for item in node_items if item.node_id == "start")
+    edge_item = next(item for item in scene.items() if isinstance(item, EdgeItem))
+    original_line = edge_item._line_item.line()
+
+    start_item.setSelected(True)
+    start_item.setPos(180.0, 90.0)
+    qapplication.processEvents()
+
+    assert start_item.model_x == pytest.approx(1.0)
+    assert start_item.model_y == pytest.approx(0.5)
+    assert moved[-1] == ("start", pytest.approx(1.0), pytest.approx(0.5))
+
+    updated_line = edge_item._line_item.line()
+    assert updated_line.x1() != original_line.x1()
+    assert updated_line.y1() != original_line.y1()
+
+
+def test_dragging_selected_node_updates_properties_panel_position(
+    qapplication: QApplication,
+) -> None:
+    window = LevelEditorMainWindow()
+    try:
+        scene = window._canvas_view.scene()
+        scene.display_level(_make_two_node_one_edge_document())
+
+        node_items = [item for item in scene.items() if isinstance(item, NodeItem)]
+        start_item = next(item for item in node_items if item.node_id == "start")
+
+        start_item.setSelected(True)
+        start_item.setPos(180.0, 90.0)
+        qapplication.processEvents()
+
+        labels = [
+            window._properties_panel._form_layout.itemAt(i).widget().text()
+            for i in range(window._properties_panel._form_layout.count())
+            if window._properties_panel._form_layout.itemAt(i).widget() is not None
+        ]
+        assert any("(1.00, 0.50)" == label for label in labels)
+    finally:
+        window.close()
+
+
+def test_dragging_node_updates_current_document_and_marks_dirty(
+    qapplication: QApplication,
+) -> None:
+    window = LevelEditorMainWindow()
+    try:
+        window._current_document = _make_two_node_one_edge_document()
+        window._canvas_view.scene().display_level(window._current_document)
+        window._validation_panel.show_result(
+            ValidationResult(
+                messages=[
+                    ValidationMessage(
+                        severity=ValidationSeverity.INFO,
+                        code="validated",
+                        message="Validation completed.",
+                    )
+                ]
+            )
+        )
+        window._set_dirty(False)
+
+        node_items = [item for item in window._canvas_view.scene().items() if isinstance(item, NodeItem)]
+        start_item = next(item for item in node_items if item.node_id == "start")
+
+        start_item.setPos(180.0, 90.0)
+        qapplication.processEvents()
+
+        moved_node = next(node for node in window._current_document.graph.nodes if node.id == "start")
+        assert moved_node.x == pytest.approx(1.0)
+        assert moved_node.y == pytest.approx(0.5)
+        assert window._is_dirty is True
+        assert window._validation_panel._message_list.count() == 0
+        assert window._validation_panel._empty_label.isVisibleTo(window._validation_panel)
+    finally:
+        window.close()

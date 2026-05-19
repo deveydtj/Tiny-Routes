@@ -31,6 +31,8 @@ class NodeItem(QGraphicsItemGroup):
         self.model_x = model_x
         self.model_y = model_y
         self.setFlag(QGraphicsItem.GraphicsItemFlag.ItemIsSelectable, True)
+        self.setFlag(QGraphicsItem.GraphicsItemFlag.ItemIsMovable, True)
+        self.setFlag(QGraphicsItem.GraphicsItemFlag.ItemSendsGeometryChanges, True)
 
         style = NODE_TYPE_STYLES[self.node_type]
         radius = self.NODE_DIAMETER / 2
@@ -44,3 +46,11 @@ class NodeItem(QGraphicsItemGroup):
         label_rect = label.boundingRect()
         label.setPos(-label_rect.width() / 2, -label_rect.height() / 2)
         self.addToGroup(label)
+
+    def itemChange(self, change: QGraphicsItem.GraphicsItemChange, value: object) -> object:
+        result = super().itemChange(change, value)
+        if change == QGraphicsItem.GraphicsItemChange.ItemPositionHasChanged:
+            scene = self.scene()
+            if scene is not None and hasattr(scene, "handle_node_item_moved"):
+                scene.handle_node_item_moved(self)
+        return result

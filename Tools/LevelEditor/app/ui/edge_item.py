@@ -17,36 +17,45 @@ class EdgeItem(QGraphicsItemGroup):
     def __init__(self, edge_id: str, from_node: NodeItem, to_node: NodeItem) -> None:
         super().__init__()
         self.edge_id = edge_id
+        self._from_node = from_node
+        self._to_node = to_node
         self.from_node_id = from_node.node_id
         self.to_node_id = to_node.node_id
         self.setZValue(-1)
         self.setFlag(QGraphicsItem.GraphicsItemFlag.ItemIsSelectable, True)
+        self._line_item = QGraphicsLineItem()
+        self._line_item.setPen(QPen(QColor(self.LINE_COLOR), 2))
+        self.addToGroup(self._line_item)
+        self._arrow_item = QGraphicsPolygonItem()
+        self._arrow_item.setBrush(QColor(self.ARROW_COLOR))
+        self._arrow_item.setPen(QPen(QColor(self.ARROW_COLOR), 1))
+        self.addToGroup(self._arrow_item)
+        self.refresh_position()
 
-        from_pos = from_node.pos()
-        to_pos = to_node.pos()
+    def refresh_position(self, allow_degenerate: bool = False) -> None:
+        from_pos = self._from_node.pos()
+        to_pos = self._to_node.pos()
 
         radius = NodeItem.NODE_DIAMETER / 2
 
-        # Direction vector from source to target
         dx = to_pos.x() - from_pos.x()
         dy = to_pos.y() - from_pos.y()
         length = math.hypot(dx, dy)
 
         if length < 1e-6:
-            raise ValueError(f"Cannot draw edge for co-located nodes (edge_id={edge_id!r})")
+            if allow_degenerate:
+                self.setVisible(False)
+                return
+            raise ValueError(f"Cannot draw edge for co-located nodes (edge_id={self.edge_id!r})")
+
+        self.setVisible(True)
 
         ux = dx / length
         uy = dy / length
 
-        # Adjust endpoints so the line starts/ends at the node circle boundary
         start = QPointF(from_pos.x() + ux * radius, from_pos.y() + uy * radius)
         end = QPointF(to_pos.x() - ux * radius, to_pos.y() - uy * radius)
-
-        line = QGraphicsLineItem(start.x(), start.y(), end.x(), end.y())
-        line.setPen(QPen(QColor(self.LINE_COLOR), 2))
-        self.addToGroup(line)
-
-        # Arrowhead at the target end
+        self._line_item.setLine(start.x(), start.y(), end.x(), end.y())
         arrow_tip = end
         arrow_left = QPointF(
             arrow_tip.x() - self.ARROW_SIZE * (ux - uy * 0.5),
@@ -56,8 +65,4 @@ class EdgeItem(QGraphicsItemGroup):
             arrow_tip.x() - self.ARROW_SIZE * (ux + uy * 0.5),
             arrow_tip.y() - self.ARROW_SIZE * (uy - ux * 0.5),
         )
-
-        arrow = QGraphicsPolygonItem(QPolygonF([arrow_tip, arrow_left, arrow_right]))
-        arrow.setBrush(QColor(self.ARROW_COLOR))
-        arrow.setPen(QPen(QColor(self.ARROW_COLOR), 1))
-        self.addToGroup(arrow)
+        self._arrow_item.setPolygon(QPolygonF([arrow_tip, arrow_left, arrow_right]))

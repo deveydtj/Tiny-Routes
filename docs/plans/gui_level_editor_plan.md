@@ -1267,16 +1267,16 @@ Tools/LevelEditor/app/ui/canvas_scene.py
 
 ### To do
 
-- [ ] Make `NodeItem` draggable.
-- [ ] Update the node's coordinates in the level document when dragged.
-- [ ] Update connected edges when a node is moved.
-- [ ] Mark the level as dirty after dragging.
+- [x] Make `NodeItem` draggable.
+- [x] Update the node's coordinates in the level document when dragged.
+- [x] Update connected edges when a node is moved.
+- [x] Mark the level as dirty after dragging.
 
 ### Acceptance criteria
 
-- [ ] Nodes can be dragged to new positions.
-- [ ] Edge lines follow the node when moved.
-- [ ] Level is marked dirty after dragging.
+- [x] Nodes can be dragged to new positions.
+- [x] Edge lines follow the node when moved.
+- [x] Level is marked dirty after dragging.
 
 ---
 
