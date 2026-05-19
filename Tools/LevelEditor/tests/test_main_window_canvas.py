@@ -353,9 +353,10 @@ def test_main_window_has_properties_panel(qapplication: QApplication) -> None:
 
 def test_properties_panel_initial_state_is_empty(qapplication: QApplication) -> None:
     window = LevelEditorMainWindow()
+    panel = window._properties_panel
     try:
-        assert window._properties_panel._empty_label.isVisible()
-        assert not window._properties_panel._form_widget.isVisible()
+        assert panel._empty_label.isVisibleTo(panel)
+        assert not panel._form_widget.isVisibleTo(panel)
     finally:
         window.close()
 
@@ -374,8 +375,8 @@ def test_selecting_node_item_updates_properties_panel(qapplication: QApplication
         qapplication.processEvents()
 
         panel = window._properties_panel
-        assert not panel._empty_label.isVisible()
-        assert panel._form_widget.isVisible()
+        assert not panel._empty_label.isVisibleTo(panel)
+        assert panel._form_widget.isVisibleTo(panel)
 
         labels = [panel._form_layout.itemAt(i).widget().text()
                   for i in range(panel._form_layout.count())
@@ -427,8 +428,8 @@ def test_selecting_edge_item_updates_properties_panel(qapplication: QApplication
         qapplication.processEvents()
 
         panel = window._properties_panel
-        assert not panel._empty_label.isVisible()
-        assert panel._form_widget.isVisible()
+        assert not panel._empty_label.isVisibleTo(panel)
+        assert panel._form_widget.isVisibleTo(panel)
 
         labels = [panel._form_layout.itemAt(i).widget().text()
                   for i in range(panel._form_layout.count())
@@ -455,8 +456,8 @@ def test_clearing_selection_resets_properties_panel(qapplication: QApplication) 
         qapplication.processEvents()
 
         panel = window._properties_panel
-        assert panel._empty_label.isVisible()
-        assert not panel._form_widget.isVisible()
+        assert panel._empty_label.isVisibleTo(panel)
+        assert not panel._form_widget.isVisibleTo(panel)
     finally:
         window.close()
 
@@ -485,8 +486,8 @@ def test_loading_new_level_clears_properties_panel(
         qapplication.processEvents()
 
         panel = window._properties_panel
-        assert panel._empty_label.isVisible()
-        assert not panel._form_widget.isVisible()
+        assert panel._empty_label.isVisibleTo(panel)
+        assert not panel._form_widget.isVisibleTo(panel)
     finally:
         window.close()
 
