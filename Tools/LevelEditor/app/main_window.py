@@ -75,6 +75,9 @@ class LevelEditorMainWindow(QMainWindow):
         save_as_action.triggered.connect(self._save_level_as)
 
     def _open_level(self) -> None:
+        if not self._prompt_to_save_unsaved_changes():
+            return
+
         levels_dir = self._resolve_default_levels_dir()
 
         file_path, _ = QFileDialog.getOpenFileName(

@@ -50,10 +50,16 @@ def test_main_window_uses_canvas_view_as_central_widget(qapplication: QApplicati
 def test_main_window_file_menu_includes_new_level_action(qapplication: QApplication) -> None:
     window = LevelEditorMainWindow()
     try:
-        action_texts = [
-            action.text()
-            for action in window.menuBar().actions()[0].menu().actions()
-        ]
+        file_menu = next(
+            (
+                action.menu()
+                for action in window.menuBar().actions()
+                if action.menu() is not None and action.text().replace("&", "") == "File"
+            ),
+            None,
+        )
+        assert file_menu is not None
+        action_texts = [action.text() for action in file_menu.actions()]
         assert "New Level" in action_texts
     finally:
         window.close()
@@ -665,6 +671,36 @@ def test_new_level_respects_unsaved_changes_prompt_cancel(
 
     try:
         window._new_level()
+        assert prompted is True
+        assert window._current_document is existing_document
+    finally:
+        window.close()
+
+
+def test_open_level_respects_unsaved_changes_prompt_cancel(
+    qapplication: QApplication,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    window = LevelEditorMainWindow()
+    existing_document = _make_two_node_one_edge_document()
+    window._current_document = existing_document
+    window._set_dirty(True)
+    prompted = False
+
+    def fake_prompt() -> bool:
+        nonlocal prompted
+        prompted = True
+        return False
+
+    monkeypatch.setattr(window, "_prompt_to_save_unsaved_changes", fake_prompt)
+    monkeypatch.setattr(
+        QFileDialog,
+        "getOpenFileName",
+        lambda *args, **kwargs: pytest.fail("Open file dialog should not be shown when prompt is canceled"),
+    )
+
+    try:
+        window._open_level()
         assert prompted is True
         assert window._current_document is existing_document
     finally:
