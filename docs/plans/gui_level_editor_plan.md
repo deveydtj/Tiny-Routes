@@ -723,18 +723,18 @@ Tools/LevelEditor/app/main_window.py
 
 ### To do
 
-- [ ] Create `main_window.py`.
-- [ ] Add a `LevelEditorMainWindow` class.
-- [ ] Set the window title to `Tiny Routes Level Editor`.
-- [ ] Set a reasonable default window size.
-- [ ] Add a placeholder central label or widget that says `Level Editor`.
-- [ ] Update `main.py` to create the Qt application and show the main window.
+- [x] Create `main_window.py`.
+- [x] Add a `LevelEditorMainWindow` class.
+- [x] Set the window title to `Tiny Routes Level Editor`.
+- [x] Set a reasonable default window size.
+- [x] Add a placeholder central label or widget that says `Level Editor`.
+- [x] Update `main.py` to create the Qt application and show the main window.
 
 ### Acceptance criteria
 
-- [ ] Running `python Tools/LevelEditor/run_level_editor.py` opens a window.
-- [ ] The window title is `Tiny Routes Level Editor`.
-- [ ] Closing the window exits the process cleanly.
+- [x] Running `python Tools/LevelEditor/run_level_editor.py` opens a window.
+- [x] The window title is `Tiny Routes Level Editor`.
+- [x] Closing the window exits the process cleanly.
 
 ---
 
