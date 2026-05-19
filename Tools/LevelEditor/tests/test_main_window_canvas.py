@@ -381,8 +381,9 @@ def test_selecting_node_item_updates_properties_panel(qapplication: QApplication
         labels = [panel._form_layout.itemAt(i).widget().text()
                   for i in range(panel._form_layout.count())
                   if panel._form_layout.itemAt(i).widget() is not None]
-        assert "start" in labels
-        assert "start" in labels  # node_id value row
+        assert "ID:" in labels
+        assert "Type:" in labels
+        assert labels.count("start") == 2  # appears in both the ID row and the Type row
     finally:
         window.close()
 

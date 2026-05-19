@@ -71,4 +71,8 @@ class PropertiesPanel(QWidget):
 
     def _reset_form(self) -> None:
         while self._form_layout.rowCount() > 0:
-            self._form_layout.removeRow(0)
+            taken = self._form_layout.takeRow(0)
+            if taken.labelItem and taken.labelItem.widget():
+                taken.labelItem.widget().deleteLater()
+            if taken.fieldItem and taken.fieldItem.widget():
+                taken.fieldItem.widget().deleteLater()
