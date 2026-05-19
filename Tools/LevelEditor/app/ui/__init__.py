@@ -4,6 +4,7 @@ from .edge_item import EdgeItem
 from .node_item import NodeItem
 from .piece_palette import PiecePalette
 from .properties_panel import PropertiesPanel
+from .solution_panel import SolutionPanel
 from .validation_panel import ValidationPanel
 
 __all__ = [
@@ -13,5 +14,6 @@ __all__ = [
     "NodeItem",
     "PiecePalette",
     "PropertiesPanel",
+    "SolutionPanel",
     "ValidationPanel",
 ]

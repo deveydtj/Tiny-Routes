@@ -1388,19 +1388,19 @@ Tools/LevelEditor/app/main_window.py
 
 ### To do
 
-- [ ] Create a `SolutionPanel` widget.
-- [ ] Display the current solution's action list.
-- [ ] Show tap node IDs and times for each action.
-- [ ] Add an `Add Action` button.
-- [ ] Add a `Remove Action` button.
-- [ ] Allow editing tap node ID and time inline.
-- [ ] Mark level as dirty after solution changes.
+- [x] Create a `SolutionPanel` widget.
+- [x] Display the current solution's action list.
+- [x] Show tap node IDs and times for each action.
+- [x] Add an `Add Action` button.
+- [x] Add a `Remove Action` button.
+- [x] Allow editing tap node ID and time inline.
+- [x] Mark level as dirty after solution changes.
 
 ### Acceptance criteria
 
-- [ ] Solution panel shows existing actions.
-- [ ] User can add and remove actions.
-- [ ] Changes mark the level dirty.
+- [x] Solution panel shows existing actions.
+- [x] User can add and remove actions.
+- [x] Changes mark the level dirty.
 
 ---
 

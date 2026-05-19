@@ -18,9 +18,9 @@ if str(LEVEL_EDITOR_ROOT) not in sys.path:
     sys.path.insert(0, str(LEVEL_EDITOR_ROOT))
 
 from app.main_window import LevelEditorMainWindow
-from app.models import LevelDocument, RouteEdgeModel, RouteGraphModel, RouteNodeModel
+from app.models import LevelDocument, RouteEdgeModel, RouteGraphModel, RouteNodeModel, SolutionActionModel, SolutionModel
 from app.services import ValidationMessage, ValidationResult, ValidationSeverity
-from app.ui import EdgeItem, LevelCanvasScene, LevelCanvasView, NodeItem, PiecePalette, PropertiesPanel
+from app.ui import EdgeItem, LevelCanvasScene, LevelCanvasView, NodeItem, PiecePalette, PropertiesPanel, SolutionPanel
 from app.ui.validation_panel import ValidationPanel
 from app.ui.node_item import NODE_TYPE_STYLES
 
@@ -70,6 +70,14 @@ def test_main_window_has_piece_palette(qapplication: QApplication) -> None:
     window = LevelEditorMainWindow()
     try:
         assert isinstance(window._piece_palette, PiecePalette)
+    finally:
+        window.close()
+
+
+def test_main_window_has_solution_panel(qapplication: QApplication) -> None:
+    window = LevelEditorMainWindow()
+    try:
+        assert isinstance(window._solution_panel, SolutionPanel)
     finally:
         window.close()
 
@@ -162,6 +170,43 @@ def test_open_level_draws_nodes_on_canvas(
         window.close()
 
 
+def test_open_level_loads_solution_actions_into_solution_panel(
+    qapplication: QApplication,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    window = LevelEditorMainWindow()
+    document = LevelDocument(
+        id="level_002",
+        name="Node Drawing Level",
+        graph=RouteGraphModel(),
+        startNodeID="start",
+        packageNodeID="package",
+        destinationNodeID="destination",
+        timeLimitSeconds=60,
+        parTaps=2,
+    )
+    solution = SolutionModel(
+        levelID="level_002",
+        description="Test",
+        expectedOutcome="completed",
+        maxTaps=1,
+        requiresWithinTimeLimit=True,
+        actions=[SolutionActionModel(timeSeconds=0.5, tapNodeID="choice")],
+    )
+
+    monkeypatch.setattr(QFileDialog, "getOpenFileName", lambda *args, **kwargs: ("/tmp/level_002.json", ""))
+    monkeypatch.setattr(window._repository, "load_level", lambda path: document)
+    monkeypatch.setattr(window._solution_repository, "load_solution", lambda path: solution)
+
+    try:
+        window._open_level()
+        assert window._solution_panel._table.rowCount() == 1
+        assert window._solution_panel._table.item(0, 0).text() == "0.5"
+        assert window._solution_panel._table.item(0, 1).text() == "choice"
+    finally:
+        window.close()
+
+
 def test_canvas_scene_uses_fallback_layout_for_non_finite_coordinates(qapplication: QApplication) -> None:
     scene = LevelCanvasScene()
     document = LevelDocument(
@@ -238,6 +283,130 @@ def test_canvas_scene_clears_and_redraws_nodes(qapplication: QApplication) -> No
     scene.display_level(second_document)
     second_node_ids = {item.node_id for item in scene.items() if isinstance(item, NodeItem)}
     assert second_node_ids == {"node_b"}
+
+
+def test_solution_panel_can_add_edit_and_remove_actions(qapplication: QApplication) -> None:
+    panel = SolutionPanel()
+    panel.set_solution(
+        SolutionModel(
+            levelID="level_002",
+            description="Test",
+            expectedOutcome="completed",
+            maxTaps=0,
+            requiresWithinTimeLimit=True,
+            actions=[],
+        )
+    )
+
+    emitted_solutions: list[SolutionModel] = []
+    panel.solution_changed.connect(emitted_solutions.append)
+
+    try:
+        panel._add_action_button.click()
+        assert panel._table.rowCount() == 1
+        assert emitted_solutions[-1].actions[0].tapNodeID == ""
+
+        panel._table.item(0, 0).setText("1.25")
+        panel._table.item(0, 1).setText("switch_a")
+        assert emitted_solutions[-1].actions[0].timeSeconds == 1.25
+        assert emitted_solutions[-1].actions[0].tapNodeID == "switch_a"
+
+        panel._table.selectRow(0)
+        panel._remove_action_button.click()
+        assert panel._table.rowCount() == 0
+        assert emitted_solutions[-1].actions == []
+    finally:
+        panel.close()
+
+
+def test_solution_changes_mark_main_window_dirty(
+    qapplication: QApplication,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    window = LevelEditorMainWindow()
+    document = LevelDocument(
+        id="level_002",
+        name="Dirty State Level",
+        graph=RouteGraphModel(),
+        startNodeID="start",
+        packageNodeID="package",
+        destinationNodeID="destination",
+        timeLimitSeconds=60,
+        parTaps=2,
+    )
+    solution = SolutionModel(
+        levelID="level_002",
+        description="Test",
+        expectedOutcome="completed",
+        maxTaps=1,
+        requiresWithinTimeLimit=True,
+        actions=[SolutionActionModel(timeSeconds=0.5, tapNodeID="choice")],
+    )
+
+    monkeypatch.setattr(QFileDialog, "getOpenFileName", lambda *args, **kwargs: ("/tmp/level_002.json", ""))
+    monkeypatch.setattr(window._repository, "load_level", lambda path: document)
+    monkeypatch.setattr(window._solution_repository, "load_solution", lambda path: solution)
+
+    try:
+        window._open_level()
+        assert window._is_dirty is False
+
+        window._solution_panel._table.item(0, 1).setText("choice_b")
+
+        assert window._is_dirty is True
+        assert window._current_solution is not None
+        assert window._current_solution.actions[0].tapNodeID == "choice_b"
+    finally:
+        window.close()
+
+
+def test_save_level_also_saves_solution_sidecar(
+    qapplication: QApplication,
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    window = LevelEditorMainWindow()
+    level_path = tmp_path / "level_050.json"
+    document = LevelDocument(
+        id="level_050",
+        name="Save Level",
+        graph=RouteGraphModel(),
+        startNodeID="start",
+        packageNodeID="package",
+        destinationNodeID="destination",
+        timeLimitSeconds=60,
+        parTaps=2,
+    )
+    solution = SolutionModel(
+        levelID="level_050",
+        description="Test",
+        expectedOutcome="completed",
+        maxTaps=1,
+        requiresWithinTimeLimit=True,
+        actions=[SolutionActionModel(timeSeconds=0.5, tapNodeID="choice")],
+    )
+    saved_solution: dict[str, object] = {}
+
+    window._current_document = document
+    window._current_solution = solution
+    window._current_file_path = level_path
+
+    monkeypatch.setattr(window._repository, "save_level", lambda path, doc: None)
+    monkeypatch.setattr(window._solution_repository, "find_solution_path", lambda path: tmp_path / "level_050.solution.json")
+
+    def capture_save_solution(path: Path, saved_model: SolutionModel) -> None:
+        saved_solution["path"] = path
+        saved_solution["model"] = saved_model
+
+    monkeypatch.setattr(window._solution_repository, "save_solution", capture_save_solution)
+
+    try:
+        assert window._save_level() is True
+        assert saved_solution["path"] == tmp_path / "level_050.solution.json"
+        assert isinstance(saved_solution["model"], SolutionModel)
+        assert saved_solution["model"].actions[0].tapNodeID == "choice"
+    finally:
+        window.close()
 
 
 # ---------------------------------------------------------------------------

@@ -5,10 +5,16 @@ from PySide6.QtGui import QCloseEvent, QKeySequence
 from PySide6.QtWidgets import QDockWidget, QFileDialog, QMainWindow, QMessageBox
 
 from app.config import get_default_levels_directory
-from app.models import LevelDocument, RouteEdgeModel, RouteNodeModel
-from app.repositories import LevelFileRepository, LevelFileRepositoryError
+from app.models import LevelDocument, RouteEdgeModel, RouteNodeModel, SolutionModel
+from app.repositories import (
+    LevelFileRepository,
+    LevelFileRepositoryError,
+    MissingSolutionFileError,
+    SolutionFileRepository,
+    SolutionFileRepositoryError,
+)
 from app.services import LevelValidationService, create_default_level_document
-from app.ui import LevelCanvasView, PiecePalette, PropertiesPanel, ValidationPanel
+from app.ui import LevelCanvasView, PiecePalette, PropertiesPanel, SolutionPanel, ValidationPanel
 
 
 class LevelEditorMainWindow(QMainWindow):
@@ -17,13 +23,16 @@ class LevelEditorMainWindow(QMainWindow):
         self.resize(1024, 768)
 
         self._current_document: LevelDocument | None = None
+        self._current_solution: SolutionModel | None = None
         self._current_file_path: Path | None = None
         self._is_dirty = False
         self._repository = LevelFileRepository()
+        self._solution_repository = SolutionFileRepository()
         self._validation_service = LevelValidationService()
         self._canvas_view = LevelCanvasView()
         self._piece_palette = PiecePalette()
         self._properties_panel = PropertiesPanel()
+        self._solution_panel = SolutionPanel()
         self._validation_panel = ValidationPanel()
 
         self.setCentralWidget(self._canvas_view)
@@ -45,6 +54,14 @@ class LevelEditorMainWindow(QMainWindow):
         )
         self.addDockWidget(Qt.DockWidgetArea.BottomDockWidgetArea, self._validation_dock)
 
+        self._solution_dock = QDockWidget("Solution", self)
+        self._solution_dock.setWidget(self._solution_panel)
+        self._solution_dock.setFeatures(
+            QDockWidget.DockWidgetFeature.DockWidgetMovable
+            | QDockWidget.DockWidgetFeature.DockWidgetFloatable,
+        )
+        self.addDockWidget(Qt.DockWidgetArea.BottomDockWidgetArea, self._solution_dock)
+
         self._palette_dock = QDockWidget("Palette", self)
         self._palette_dock.setWidget(self._piece_palette)
         self._palette_dock.setFeatures(
@@ -63,6 +80,7 @@ class LevelEditorMainWindow(QMainWindow):
         scene.level_items_deleted.connect(self._on_level_items_deleted)
         self._validation_panel.validate_requested.connect(self._validate_current_level)
         self._piece_palette.node_type_activated.connect(self._add_node_from_palette)
+        self._solution_panel.solution_changed.connect(self._on_solution_changed)
 
         self._build_menu_bar()
         self._update_window_title()
@@ -111,8 +129,10 @@ class LevelEditorMainWindow(QMainWindow):
 
         self._current_document = document
         self._current_file_path = Path(file_path)
+        self._current_solution = self._load_solution_for_level(self._current_file_path, document)
         self._canvas_view.scene().display_level(document)
         self._properties_panel.clear()
+        self._solution_panel.set_solution(self._current_solution)
         self._validation_panel.clear()
         self._set_dirty(False)
 
@@ -122,8 +142,10 @@ class LevelEditorMainWindow(QMainWindow):
 
         self._current_document = create_default_level_document()
         self._current_file_path = None
+        self._current_solution = self._build_default_solution(self._current_document)
         self._canvas_view.scene().display_level(self._current_document)
         self._properties_panel.clear()
+        self._solution_panel.set_solution(self._current_solution)
         self._validation_panel.clear()
         self._set_dirty(True)
 
@@ -139,6 +161,14 @@ class LevelEditorMainWindow(QMainWindow):
         except LevelFileRepositoryError as exc:
             QMessageBox.critical(self, "Failed to Save Level", exc.message)
             return False
+
+        if self._current_solution is not None:
+            solution_path = self._solution_repository.find_solution_path(self._current_file_path)
+            try:
+                self._solution_repository.save_solution(solution_path, self._current_solution)
+            except SolutionFileRepositoryError as exc:
+                QMessageBox.critical(self, "Failed to Save Solution", exc.message)
+                return False
 
         self._set_dirty(False)
         return True
@@ -181,6 +211,16 @@ class LevelEditorMainWindow(QMainWindow):
     def _mark_document_dirty(self) -> None:
         if self._current_document is None:
             return
+        self._set_dirty(True)
+
+    def _on_solution_changed(self, updated_solution: SolutionModel) -> None:
+        if self._current_document is None:
+            return
+
+        updated_solution.levelID = self._current_document.id
+        updated_solution.maxTaps = len(updated_solution.actions)
+        self._current_solution = updated_solution
+        self._validation_panel.clear()
         self._set_dirty(True)
 
     def _on_node_item_moved(self, node_id: str, model_x: float, model_y: float) -> None:
@@ -285,6 +325,36 @@ class LevelEditorMainWindow(QMainWindow):
     def _set_dirty(self, is_dirty: bool) -> None:
         self._is_dirty = is_dirty
         self._update_window_title()
+
+    def _build_default_solution(self, document: LevelDocument) -> SolutionModel:
+        return SolutionModel(
+            levelID=document.id,
+            description=f"Solution for {document.name}",
+            expectedOutcome="completed",
+            maxTaps=0,
+            requiresWithinTimeLimit=True,
+            actions=[],
+        )
+
+    def _load_solution_for_level(self, level_path: Path, document: LevelDocument) -> SolutionModel:
+        solution_path = self._solution_repository.find_solution_path(level_path)
+        try:
+            solution = self._solution_repository.load_solution(solution_path)
+        except MissingSolutionFileError:
+            return self._build_default_solution(document)
+        except SolutionFileRepositoryError as exc:
+            QMessageBox.warning(
+                self,
+                "Failed to Load Solution",
+                f"{exc.message}\n\nA blank solution will be used until the file is saved.",
+            )
+            return self._build_default_solution(document)
+
+        solution.levelID = document.id
+        solution.maxTaps = len(solution.actions)
+        if solution.description is None:
+            solution.description = f"Solution for {document.name}"
+        return solution
 
     def _update_window_title(self) -> None:
         base_title = "Tiny Routes Level Editor"
