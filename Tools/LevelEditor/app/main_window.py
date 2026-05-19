@@ -1,12 +1,12 @@
 from pathlib import Path
 
-from PySide6.QtCore import Qt
 from PySide6.QtGui import QKeySequence
-from PySide6.QtWidgets import QFileDialog, QLabel, QMainWindow, QMessageBox
+from PySide6.QtWidgets import QFileDialog, QMainWindow, QMessageBox
 
 from app.config import get_default_levels_directory
 from app.models import LevelDocument
 from app.repositories import LevelFileRepository, LevelFileRepositoryError
+from app.ui import LevelCanvasView
 
 
 class LevelEditorMainWindow(QMainWindow):
@@ -17,10 +17,9 @@ class LevelEditorMainWindow(QMainWindow):
 
         self._current_document: LevelDocument | None = None
         self._repository = LevelFileRepository()
+        self._canvas_view = LevelCanvasView()
 
-        placeholder_label = QLabel("Level Editor")
-        placeholder_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.setCentralWidget(placeholder_label)
+        self.setCentralWidget(self._canvas_view)
 
         self._build_menu_bar()
 
