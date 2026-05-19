@@ -1,7 +1,7 @@
 from pathlib import Path
 
 from PySide6.QtCore import Qt
-from PySide6.QtGui import QKeySequence
+from PySide6.QtGui import QCloseEvent, QKeySequence
 from PySide6.QtWidgets import QDockWidget, QFileDialog, QMainWindow, QMessageBox
 
 from app.config import get_default_levels_directory
@@ -14,10 +14,11 @@ from app.ui import LevelCanvasView, PropertiesPanel, ValidationPanel
 class LevelEditorMainWindow(QMainWindow):
     def __init__(self) -> None:
         super().__init__()
-        self.setWindowTitle("Tiny Routes Level Editor")
         self.resize(1024, 768)
 
         self._current_document: LevelDocument | None = None
+        self._current_file_path: Path | None = None
+        self._is_dirty = False
         self._repository = LevelFileRepository()
         self._validation_service = LevelValidationService()
         self._canvas_view = LevelCanvasView()
@@ -51,6 +52,7 @@ class LevelEditorMainWindow(QMainWindow):
         self._validation_panel.validate_requested.connect(self._validate_current_level)
 
         self._build_menu_bar()
+        self._update_window_title()
 
     def _build_menu_bar(self) -> None:
         menu_bar = self.menuBar()
@@ -59,6 +61,14 @@ class LevelEditorMainWindow(QMainWindow):
         open_action = file_menu.addAction("Open Level...")
         open_action.setShortcut(QKeySequence.StandardKey.Open)
         open_action.triggered.connect(self._open_level)
+
+        save_action = file_menu.addAction("Save Level")
+        save_action.setShortcut(QKeySequence.StandardKey.Save)
+        save_action.triggered.connect(self._save_level)
+
+        save_as_action = file_menu.addAction("Save Level As...")
+        save_as_action.setShortcut(QKeySequence.StandardKey.SaveAs)
+        save_as_action.triggered.connect(self._save_level_as)
 
     def _open_level(self) -> None:
         levels_dir = self._resolve_default_levels_dir()
@@ -80,10 +90,48 @@ class LevelEditorMainWindow(QMainWindow):
             return
 
         self._current_document = document
+        self._current_file_path = Path(file_path)
         self._canvas_view.scene().display_level(document)
         self._properties_panel.clear()
         self._validation_panel.clear()
-        self.setWindowTitle(f"Tiny Routes Level Editor — {document.id}")
+        self._set_dirty(False)
+
+    def _save_level(self) -> bool:
+        if self._current_document is None:
+            return False
+
+        if self._current_file_path is None:
+            return self._save_level_as()
+
+        try:
+            self._repository.save_level(self._current_file_path, self._current_document)
+        except LevelFileRepositoryError as exc:
+            QMessageBox.critical(self, "Failed to Save Level", exc.message)
+            return False
+
+        self._set_dirty(False)
+        return True
+
+    def _save_level_as(self) -> bool:
+        if self._current_document is None:
+            return False
+
+        initial_path = self._current_file_path
+        if initial_path is None:
+            initial_path = self._resolve_default_levels_dir() / f"{self._current_document.id}.json"
+
+        file_path, _ = QFileDialog.getSaveFileName(
+            self,
+            "Save Level As",
+            str(initial_path),
+            "Level JSON Files (*.json);;All Files (*)",
+        )
+
+        if not file_path:
+            return False
+
+        self._current_file_path = Path(file_path)
+        return self._save_level()
 
     def _validate_current_level(self) -> None:
         if self._current_document is None:
@@ -98,3 +146,46 @@ class LevelEditorMainWindow(QMainWindow):
             return get_default_levels_directory()
         except FileNotFoundError:
             return Path.home()
+
+    def _mark_document_dirty(self) -> None:
+        if self._current_document is None:
+            return
+        self._set_dirty(True)
+
+    def _set_dirty(self, is_dirty: bool) -> None:
+        self._is_dirty = is_dirty
+        self._update_window_title()
+
+    def _update_window_title(self) -> None:
+        base_title = "Tiny Routes Level Editor"
+        if self._current_document is None:
+            self.setWindowTitle(base_title)
+            return
+        dirty_suffix = " *" if self._is_dirty else ""
+        self.setWindowTitle(f"{base_title} — {self._current_document.id}{dirty_suffix}")
+
+    def _prompt_to_save_unsaved_changes(self) -> bool:
+        if not self._is_dirty or self._current_document is None:
+            return True
+
+        selection = QMessageBox.question(
+            self,
+            "Unsaved Changes",
+            "You have unsaved changes. Save before closing?",
+            QMessageBox.StandardButton.Save
+            | QMessageBox.StandardButton.Discard
+            | QMessageBox.StandardButton.Cancel,
+            QMessageBox.StandardButton.Save,
+        )
+
+        if selection == QMessageBox.StandardButton.Cancel:
+            return False
+        if selection == QMessageBox.StandardButton.Save:
+            return self._save_level()
+        return True
+
+    def closeEvent(self, event: QCloseEvent) -> None:  # noqa: N802
+        if not self._prompt_to_save_unsaved_changes():
+            event.ignore()
+            return
+        event.accept()
