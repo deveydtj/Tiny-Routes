@@ -77,7 +77,9 @@ def test_open_level_still_loads_document_with_canvas_central_widget(
     monkeypatch.setattr(window._repository, "load_level", lambda path: document)
 
     try:
+        assert isinstance(window.centralWidget(), LevelCanvasView)
         window._open_level()
         assert window.windowTitle() == "Tiny Routes Level Editor — level_123"
+        assert isinstance(window.centralWidget(), LevelCanvasView)
     finally:
         window.close()
