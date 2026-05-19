@@ -783,20 +783,20 @@ Tools/LevelEditor/docs/current_level_json_shape.md
 
 ### To do
 
-- [ ] Open at least `level_001.json`, `level_002.json`, and one later level.
-- [ ] Document the top-level JSON fields.
-- [ ] Document the node fields.
-- [ ] Document the edge fields.
-- [ ] Document package/destination/switch-related fields.
-- [ ] Document any optional fields.
-- [ ] Document any fields that are present in Swift models but missing from JSON.
-- [ ] Add a README link to the new JSON shape document.
+- [x] Open at least `level_001.json`, `level_002.json`, and one later level.
+- [x] Document the top-level JSON fields.
+- [x] Document the node fields.
+- [x] Document the edge fields.
+- [x] Document package/destination/switch-related fields.
+- [x] Document any optional fields.
+- [x] Document any fields that are present in Swift models but missing from JSON.
+- [x] Add a README link to the new JSON shape document.
 
 ### Acceptance criteria
 
-- [ ] The document shows the current real JSON shape.
-- [ ] The document does not invent future schema fields.
-- [ ] Another engineer can use the document to implement Python models.
+- [x] The document shows the current real JSON shape.
+- [x] The document does not invent future schema fields.
+- [x] Another engineer can use the document to implement Python models.
 
 ---
 
