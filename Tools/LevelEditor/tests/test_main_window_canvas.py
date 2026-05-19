@@ -77,7 +77,7 @@ def test_piece_palette_lists_all_node_types(qapplication: QApplication) -> None:
     palette = PiecePalette()
     try:
         labels = [palette._list_widget.item(index).text() for index in range(palette._list_widget.count())]
-        assert labels == ["Start", "Route Node", "Switch", "Package", "Destination"]
+        assert labels == ["Start", "Route Node", "Package", "Destination"]
     finally:
         palette.close()
 
@@ -709,6 +709,43 @@ def test_palette_double_click_adds_unique_node_to_canvas_center_and_marks_dirty(
         assert "node" in canvas_node_ids
         assert "node_1" in canvas_node_ids
         assert window._is_dirty is True
+    finally:
+        window.close()
+
+
+@pytest.mark.parametrize(
+    ("palette_label", "document_id_field"),
+    [
+        ("Start", "startNodeID"),
+        ("Package", "packageNodeID"),
+        ("Destination", "destinationNodeID"),
+    ],
+)
+def test_palette_double_click_updates_special_node_ids(
+    qapplication: QApplication,
+    palette_label: str,
+    document_id_field: str,
+) -> None:
+    window = LevelEditorMainWindow()
+
+    try:
+        window._new_level()
+        window._set_dirty(False)
+
+        initial_node_count = len(window._current_document.graph.nodes) if window._current_document else 0
+        target_item = next(
+            window._piece_palette._list_widget.item(index)
+            for index in range(window._piece_palette._list_widget.count())
+            if window._piece_palette._list_widget.item(index).text() == palette_label
+        )
+
+        window._piece_palette._list_widget.itemDoubleClicked.emit(target_item)
+        qapplication.processEvents()
+
+        assert window._current_document is not None
+        created_node = window._current_document.graph.nodes[-1]
+        assert len(window._current_document.graph.nodes) == initial_node_count + 1
+        assert getattr(window._current_document, document_id_field) == created_node.id
     finally:
         window.close()
 
