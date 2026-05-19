@@ -1,5 +1,6 @@
 from .level_file_repository import (
     InvalidLevelJSONError,
+    LevelFileIOError,
     LevelFileRepository,
     LevelFileRepositoryError,
     MissingLevelFileError,
@@ -10,4 +11,5 @@ __all__ = [
     "LevelFileRepositoryError",
     "MissingLevelFileError",
     "InvalidLevelJSONError",
+    "LevelFileIOError",
 ]
