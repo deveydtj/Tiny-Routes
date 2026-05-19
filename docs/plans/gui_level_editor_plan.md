@@ -1358,18 +1358,18 @@ Tools/LevelEditor/tests/fixtures/valid_solution.json
 
 ### To do
 
-- [ ] Create `SolutionFileRepository`.
-- [ ] Add `load_solution(path)`.
-- [ ] Add `save_solution(path, solution)`.
-- [ ] Add `find_solution_path(level_path)` to locate the matching `.solution.json`.
-- [ ] Add tests for loading, saving, and missing files.
+- [x] Create `SolutionFileRepository`.
+- [x] Add `load_solution(path)`.
+- [x] Add `save_solution(path, solution)`.
+- [x] Add `find_solution_path(level_path)` to locate the matching `.solution.json`.
+- [x] Add tests for loading, saving, and missing files.
 
 ### Acceptance criteria
 
-- [ ] Valid solution JSON loads into the model.
-- [ ] Saved solution JSON can be reloaded.
-- [ ] Missing files produce clear errors.
-- [ ] No Qt imports in the repository.
+- [x] Valid solution JSON loads into the model.
+- [x] Saved solution JSON can be reloaded.
+- [x] Missing files produce clear errors.
+- [x] No Qt imports in the repository.
 
 ---
 

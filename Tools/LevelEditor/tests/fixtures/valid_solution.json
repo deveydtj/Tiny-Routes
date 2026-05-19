@@ -1,0 +1,13 @@
+{
+  "levelID": "level_002",
+  "description": "Tap the choice node after the dot reaches the approach.",
+  "expectedOutcome": "completed",
+  "maxTaps": 1,
+  "requiresWithinTimeLimit": true,
+  "actions": [
+    {
+      "timeSeconds": 0.5,
+      "tapNodeID": "choice"
+    }
+  ]
+}
