@@ -32,7 +32,9 @@ class ValidationPanel(QWidget):
         header_row.addStretch()
 
         self._validate_button = QPushButton("Validate")
-        self._validate_button.clicked.connect(self.validate_requested.emit)
+        self._validate_button.clicked.connect(
+            lambda checked=False: self.validate_requested.emit()
+        )
         header_row.addWidget(self._validate_button)
         outer.addLayout(header_row)
 
