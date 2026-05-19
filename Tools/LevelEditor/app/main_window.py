@@ -186,7 +186,7 @@ class LevelEditorMainWindow(QMainWindow):
         selection = QMessageBox.question(
             self,
             "Unsaved Changes",
-            "You have unsaved changes. Save before closing?",
+            "You have unsaved changes. Save before continuing?",
             QMessageBox.StandardButton.Save
             | QMessageBox.StandardButton.Discard
             | QMessageBox.StandardButton.Cancel,

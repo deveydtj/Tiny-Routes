@@ -772,6 +772,29 @@ def test_close_prompt_save_invokes_save(
         window.close()
 
 
+def test_unsaved_changes_prompt_uses_generic_message(
+    qapplication: QApplication,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    window = LevelEditorMainWindow()
+    window._current_document = _make_two_node_one_edge_document()
+    window._set_dirty(True)
+    captured_text: str | None = None
+
+    def fake_question(*args, **kwargs):
+        nonlocal captured_text
+        captured_text = args[2]
+        return QMessageBox.StandardButton.Discard
+
+    monkeypatch.setattr(QMessageBox, "question", fake_question)
+
+    try:
+        assert window._prompt_to_save_unsaved_changes() is True
+        assert captured_text == "You have unsaved changes. Save before continuing?"
+    finally:
+        window.close()
+
+
 def test_node_item_stores_model_coordinates() -> None:
     item = NodeItem(node_id="n1", node_type="route", model_x=3.5, model_y=-1.2)
     assert item.model_x == 3.5
