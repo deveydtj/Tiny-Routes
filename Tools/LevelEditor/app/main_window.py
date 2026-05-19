@@ -5,10 +5,10 @@ from PySide6.QtGui import QCloseEvent, QKeySequence
 from PySide6.QtWidgets import QDockWidget, QFileDialog, QMainWindow, QMessageBox
 
 from app.config import get_default_levels_directory
-from app.models import LevelDocument
+from app.models import LevelDocument, RouteNodeModel
 from app.repositories import LevelFileRepository, LevelFileRepositoryError
 from app.services import LevelValidationService, create_default_level_document
-from app.ui import LevelCanvasView, PropertiesPanel, ValidationPanel
+from app.ui import LevelCanvasView, PiecePalette, PropertiesPanel, ValidationPanel
 
 
 class LevelEditorMainWindow(QMainWindow):
@@ -22,6 +22,7 @@ class LevelEditorMainWindow(QMainWindow):
         self._repository = LevelFileRepository()
         self._validation_service = LevelValidationService()
         self._canvas_view = LevelCanvasView()
+        self._piece_palette = PiecePalette()
         self._properties_panel = PropertiesPanel()
         self._validation_panel = ValidationPanel()
 
@@ -44,12 +45,21 @@ class LevelEditorMainWindow(QMainWindow):
         )
         self.addDockWidget(Qt.DockWidgetArea.BottomDockWidgetArea, self._validation_dock)
 
+        self._palette_dock = QDockWidget("Palette", self)
+        self._palette_dock.setWidget(self._piece_palette)
+        self._palette_dock.setFeatures(
+            QDockWidget.DockWidgetFeature.DockWidgetMovable
+            | QDockWidget.DockWidgetFeature.DockWidgetFloatable,
+        )
+        self.addDockWidget(Qt.DockWidgetArea.LeftDockWidgetArea, self._palette_dock)
+
         # Wire canvas scene selection signals to the properties panel
         scene = self._canvas_view.scene()
         scene.node_item_selected.connect(self._properties_panel.show_node)
         scene.edge_item_selected.connect(self._properties_panel.show_edge)
         scene.selection_cleared.connect(self._properties_panel.clear)
         self._validation_panel.validate_requested.connect(self._validate_current_level)
+        self._piece_palette.node_type_activated.connect(self._add_node_from_palette)
 
         self._build_menu_bar()
         self._update_window_title()
@@ -169,6 +179,57 @@ class LevelEditorMainWindow(QMainWindow):
         if self._current_document is None:
             return
         self._set_dirty(True)
+
+    def _add_node_from_palette(self, node_type: str) -> None:
+        if self._current_document is None:
+            return
+
+        node_id = self._generate_unique_default_node_id(node_type)
+        center_scene_position = self._canvas_view.mapToScene(
+            self._canvas_view.viewport().rect().center()
+        )
+        model_x, model_y = self._canvas_view.scene().scene_to_model_coordinates(center_scene_position)
+        new_node = RouteNodeModel(
+            id=node_id,
+            x=model_x,
+            y=model_y,
+            outgoingEdgeIDs=[],
+        )
+
+        self._current_document.graph.nodes.append(new_node)
+        if node_type == "start":
+            self._current_document.startNodeID = node_id
+        elif node_type == "package":
+            self._current_document.packageNodeID = node_id
+        elif node_type == "destination":
+            self._current_document.destinationNodeID = node_id
+
+        self._canvas_view.scene().display_level(self._current_document)
+        self._properties_panel.clear()
+        self._validation_panel.clear()
+        self._set_dirty(True)
+
+    def _generate_unique_default_node_id(self, node_type: str) -> str:
+        if self._current_document is None:
+            return "node"
+
+        base_id_lookup = {
+            "start": "start",
+            "route": "node",
+            "switch": "switch",
+            "package": "package",
+            "destination": "destination",
+        }
+        base_id = base_id_lookup.get(node_type, "node")
+        existing_node_ids = {node.id for node in self._current_document.graph.nodes}
+
+        if base_id not in existing_node_ids:
+            return base_id
+
+        suffix = 1
+        while f"{base_id}_{suffix}" in existing_node_ids:
+            suffix += 1
+        return f"{base_id}_{suffix}"
 
     def _set_dirty(self, is_dirty: bool) -> None:
         self._is_dirty = is_dirty
