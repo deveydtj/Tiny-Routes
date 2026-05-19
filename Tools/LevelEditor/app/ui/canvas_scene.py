@@ -6,6 +6,7 @@ from PySide6.QtWidgets import QGraphicsScene
 
 from app.models import LevelDocument, RouteNodeModel
 
+from .edge_item import EdgeItem
 from .node_item import NodeItem
 
 
@@ -24,11 +25,21 @@ class LevelCanvasScene(QGraphicsScene):
             self._show_placeholder("No nodes in this level")
             return
 
+        node_items: dict[str, NodeItem] = {}
         for index, node in enumerate(document.graph.nodes):
             node_type = self._resolve_node_type(document, node)
             node_item = NodeItem(node_id=node.id, node_type=node_type)
             node_item.setPos(self._resolve_scene_position(node, index))
             self.addItem(node_item)
+            node_items[node.id] = node_item
+
+        for edge in document.graph.edges:
+            from_node = node_items.get(edge.fromNodeID)
+            to_node = node_items.get(edge.toNodeID)
+            if from_node is None or to_node is None:
+                continue
+            edge_item = EdgeItem(edge_id=edge.id, from_node=from_node, to_node=to_node)
+            self.addItem(edge_item)
 
     def _show_placeholder(self, message: str = "Open a level to begin") -> None:
         placeholder = self.addSimpleText(message)

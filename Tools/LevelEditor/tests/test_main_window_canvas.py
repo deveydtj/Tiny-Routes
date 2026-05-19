@@ -18,7 +18,8 @@ if str(LEVEL_EDITOR_ROOT) not in sys.path:
 
 from app.main_window import LevelEditorMainWindow
 from app.models import LevelDocument, RouteGraphModel, RouteNodeModel
-from app.ui import LevelCanvasScene, LevelCanvasView, NodeItem
+from app.models.route_edge_model import RouteEdgeModel
+from app.ui import EdgeItem, LevelCanvasScene, LevelCanvasView, NodeItem
 from app.ui.node_item import NODE_TYPE_STYLES
 
 
@@ -200,3 +201,94 @@ def test_canvas_scene_clears_and_redraws_nodes(qapplication: QApplication) -> No
     scene.display_level(second_document)
     second_node_ids = {item.node_id for item in scene.items() if isinstance(item, NodeItem)}
     assert second_node_ids == {"node_b"}
+
+
+# ---------------------------------------------------------------------------
+# Task 010: Edge rendering tests
+# ---------------------------------------------------------------------------
+
+def _make_two_node_document() -> LevelDocument:
+    return LevelDocument(
+        id="level_edges",
+        name="Edge Level",
+        graph=RouteGraphModel(
+            nodes=[
+                RouteNodeModel(id="start", x=0.0, y=0.0, outgoingEdgeIDs=["e1"]),
+                RouteNodeModel(id="destination", x=2.0, y=0.0, outgoingEdgeIDs=[]),
+            ],
+            edges=[
+                RouteEdgeModel(id="e1", fromNodeID="start", toNodeID="destination"),
+            ],
+        ),
+        startNodeID="start",
+        packageNodeID="start",
+        destinationNodeID="destination",
+        timeLimitSeconds=30,
+        parTaps=0,
+    )
+
+
+def test_canvas_scene_draws_edge_items(qapplication: QApplication) -> None:
+    scene = LevelCanvasScene()
+    scene.display_level(_make_two_node_document())
+    edge_items = [item for item in scene.items() if isinstance(item, EdgeItem)]
+    assert len(edge_items) == 1
+    assert edge_items[0].edge_id == "e1"
+
+
+def test_edge_items_are_behind_node_items(qapplication: QApplication) -> None:
+    scene = LevelCanvasScene()
+    scene.display_level(_make_two_node_document())
+    edge_z = max(item.zValue() for item in scene.items() if isinstance(item, EdgeItem))
+    node_z = min(item.zValue() for item in scene.items() if isinstance(item, NodeItem))
+    assert edge_z < node_z
+
+
+def test_canvas_scene_ignores_edge_with_missing_node(qapplication: QApplication) -> None:
+    document = LevelDocument(
+        id="level_bad_edge",
+        name="Bad Edge Level",
+        graph=RouteGraphModel(
+            nodes=[
+                RouteNodeModel(id="start", x=0.0, y=0.0, outgoingEdgeIDs=["e_missing"]),
+            ],
+            edges=[
+                RouteEdgeModel(id="e_missing", fromNodeID="start", toNodeID="nonexistent"),
+            ],
+        ),
+        startNodeID="start",
+        packageNodeID="start",
+        destinationNodeID="start",
+        timeLimitSeconds=10,
+        parTaps=0,
+    )
+    scene = LevelCanvasScene()
+    scene.display_level(document)
+    edge_items = [item for item in scene.items() if isinstance(item, EdgeItem)]
+    assert len(edge_items) == 0
+
+
+def test_canvas_scene_clears_and_redraws_edges(qapplication: QApplication) -> None:
+    scene = LevelCanvasScene()
+
+    first_document = _make_two_node_document()
+    scene.display_level(first_document)
+    first_edges = [item for item in scene.items() if isinstance(item, EdgeItem)]
+    assert len(first_edges) == 1
+
+    second_document = LevelDocument(
+        id="level_no_edges",
+        name="No Edges",
+        graph=RouteGraphModel(
+            nodes=[RouteNodeModel(id="node_a", x=0.0, y=0.0, outgoingEdgeIDs=[])],
+            edges=[],
+        ),
+        startNodeID="node_a",
+        packageNodeID="node_a",
+        destinationNodeID="node_a",
+        timeLimitSeconds=10,
+        parTaps=0,
+    )
+    scene.display_level(second_document)
+    second_edges = [item for item in scene.items() if isinstance(item, EdgeItem)]
+    assert len(second_edges) == 0
