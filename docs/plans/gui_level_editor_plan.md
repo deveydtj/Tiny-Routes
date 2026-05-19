@@ -818,21 +818,21 @@ Tools/LevelEditor/tests/test_level_models.py
 
 ### To do
 
-- [ ] Create a dataclass for the full level document.
-- [ ] Create a dataclass for route nodes.
-- [ ] Create a dataclass for route edges.
-- [ ] Match the current JSON field names.
-- [ ] Add conversion from raw dictionaries into dataclasses.
-- [ ] Add conversion from dataclasses back into raw dictionaries.
-- [ ] Add tests using a small fixture level.
-- [ ] Preserve unknown fields if needed to avoid destructive saves.
+- [x] Create a dataclass for the full level document.
+- [x] Create a dataclass for route nodes.
+- [x] Create a dataclass for route edges.
+- [x] Match the current JSON field names.
+- [x] Add conversion from raw dictionaries into dataclasses.
+- [x] Add conversion from dataclasses back into raw dictionaries.
+- [x] Add tests using a small fixture level.
+- [x] Preserve unknown fields if needed to avoid destructive saves.
 
 ### Acceptance criteria
 
-- [ ] A fixture level can be loaded into models.
-- [ ] The model can be converted back to JSON-compatible dictionaries.
-- [ ] Required fields are represented.
-- [ ] Tests prove round-trip behavior.
+- [x] A fixture level can be loaded into models.
+- [x] The model can be converted back to JSON-compatible dictionaries.
+- [x] Required fields are represented.
+- [x] Tests prove round-trip behavior.
 
 ---
 
