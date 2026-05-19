@@ -753,18 +753,18 @@ Tools/LevelEditor/tests/test_config.py
 
 ### To do
 
-- [ ] Create `config.py`.
-- [ ] Add a helper to locate the repo root from the `Tools/LevelEditor/` folder.
-- [ ] Add a helper that returns the default levels directory path.
-- [ ] Add a helper that returns the default docs directory path.
-- [ ] Add unit tests for the path helpers.
-- [ ] Do not hard-code an absolute user-specific path.
+- [x] Create `config.py`.
+- [x] Add a helper to locate the repo root from the `Tools/LevelEditor/` folder.
+- [x] Add a helper that returns the default levels directory path.
+- [x] Add a helper that returns the default docs directory path.
+- [x] Add unit tests for the path helpers.
+- [x] Do not hard-code an absolute user-specific path.
 
 ### Acceptance criteria
 
-- [ ] Tests pass from inside `Tools/LevelEditor/`.
-- [ ] Tests pass from the repo root.
-- [ ] The default levels path resolves to `TinyRoutes/Resources/Levels`.
+- [x] Tests pass from inside `Tools/LevelEditor/`.
+- [x] Tests pass from the repo root.
+- [x] The default levels path resolves to `TinyRoutes/Resources/Levels`.
 
 ---
 
