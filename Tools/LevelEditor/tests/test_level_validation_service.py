@@ -12,6 +12,7 @@ from app.services.level_validation_service import (
     ValidationMessage,
     ValidationResult,
     ValidationSeverity,
+    create_default_level_document,
     validate,
 )
 
@@ -99,6 +100,24 @@ def test_validation_result_without_errors_or_warnings():
 def _load_fixture(filename: str) -> LevelDocument:
     data = json.loads((FIXTURES_DIR / filename).read_text(encoding="utf-8"))
     return LevelDocument.from_dict(data)
+
+
+def test_create_default_level_document_is_minimal_and_valid():
+    level = create_default_level_document()
+
+    assert level.id == "new_level"
+    assert level.name == "New Level"
+    assert level.startNodeID == "start"
+    assert level.packageNodeID == "start"
+    assert level.destinationNodeID == "start"
+    assert level.timeLimitSeconds == 30
+    assert level.parTaps == 0
+    assert len(level.graph.nodes) == 1
+    assert level.graph.nodes[0].id == "start"
+    assert level.graph.edges == []
+
+    result = validate(level)
+    assert result.has_errors is False
 
 
 def test_validate_valid_fixture_produces_no_errors():

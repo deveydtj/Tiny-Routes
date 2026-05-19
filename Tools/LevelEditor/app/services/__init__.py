@@ -3,6 +3,7 @@ from .level_validation_service import (
     ValidationMessage,
     ValidationResult,
     ValidationSeverity,
+    create_default_level_document,
 )
 
 __all__ = [
@@ -10,4 +11,5 @@ __all__ = [
     "ValidationSeverity",
     "ValidationMessage",
     "ValidationResult",
+    "create_default_level_document",
 ]
