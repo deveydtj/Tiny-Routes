@@ -2,7 +2,7 @@ from dataclasses import dataclass
 
 from PySide6.QtCore import QRectF
 from PySide6.QtGui import QColor, QPen
-from PySide6.QtWidgets import QGraphicsEllipseItem, QGraphicsItemGroup, QGraphicsSimpleTextItem
+from PySide6.QtWidgets import QGraphicsEllipseItem, QGraphicsItem, QGraphicsItemGroup, QGraphicsSimpleTextItem
 
 
 @dataclass(frozen=True)
@@ -24,10 +24,13 @@ NODE_TYPE_STYLES: dict[str, NodeVisualStyle] = {
 class NodeItem(QGraphicsItemGroup):
     NODE_DIAMETER = 64.0
 
-    def __init__(self, node_id: str, node_type: str) -> None:
+    def __init__(self, node_id: str, node_type: str, model_x: float = 0.0, model_y: float = 0.0) -> None:
         super().__init__()
         self.node_id = node_id
         self.node_type = node_type if node_type in NODE_TYPE_STYLES else "route"
+        self.model_x = model_x
+        self.model_y = model_y
+        self.setFlag(QGraphicsItem.GraphicsItemFlag.ItemIsSelectable, True)
 
         style = NODE_TYPE_STYLES[self.node_type]
         radius = self.NODE_DIAMETER / 2

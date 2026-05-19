@@ -2,7 +2,7 @@ import math
 
 from PySide6.QtCore import QPointF
 from PySide6.QtGui import QColor, QPen, QPolygonF
-from PySide6.QtWidgets import QGraphicsItemGroup, QGraphicsLineItem, QGraphicsPolygonItem
+from PySide6.QtWidgets import QGraphicsItem, QGraphicsItemGroup, QGraphicsLineItem, QGraphicsPolygonItem
 
 from .node_item import NodeItem
 
@@ -17,7 +17,10 @@ class EdgeItem(QGraphicsItemGroup):
     def __init__(self, edge_id: str, from_node: NodeItem, to_node: NodeItem) -> None:
         super().__init__()
         self.edge_id = edge_id
+        self.from_node_id = from_node.node_id
+        self.to_node_id = to_node.node_id
         self.setZValue(-1)
+        self.setFlag(QGraphicsItem.GraphicsItemFlag.ItemIsSelectable, True)
 
         from_pos = from_node.pos()
         to_pos = to_node.pos()

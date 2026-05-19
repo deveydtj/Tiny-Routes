@@ -1014,21 +1014,21 @@ Tools/LevelEditor/app/ui/edge_item.py
 
 ### To do
 
-- [ ] Create a `PropertiesPanel` widget.
-- [ ] Add it to the right side of the main window.
-- [ ] Detect node selection.
-- [ ] Display selected node ID.
-- [ ] Display selected node type.
-- [ ] Display selected node position.
-- [ ] Detect edge selection.
-- [ ] Display selected edge source and target.
-- [ ] Show an empty state when nothing is selected.
+- [x] Create a `PropertiesPanel` widget.
+- [x] Add it to the right side of the main window.
+- [x] Detect node selection.
+- [x] Display selected node ID.
+- [x] Display selected node type.
+- [x] Display selected node position.
+- [x] Detect edge selection.
+- [x] Display selected edge source and target.
+- [x] Show an empty state when nothing is selected.
 
 ### Acceptance criteria
 
-- [ ] Selecting a node updates the properties panel.
-- [ ] Selecting an edge updates the properties panel.
-- [ ] Clicking empty canvas clears or resets the panel.
+- [x] Selecting a node updates the properties panel.
+- [x] Selecting an edge updates the properties panel.
+- [x] Clicking empty canvas clears or resets the panel.
 
 ---
 
