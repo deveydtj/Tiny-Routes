@@ -1,0 +1,28 @@
+{
+  "id": "level_invalid_001",
+  "name": "Invalid Level – Missing Node",
+  "graph": {
+    "nodes": [
+      {
+        "id": "start",
+        "x": 0.0,
+        "y": 0.0,
+        "outgoingEdgeIDs": [
+          "e_start_ghost"
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "id": "e_start_ghost",
+        "fromNodeID": "start",
+        "toNodeID": "ghost_node"
+      }
+    ]
+  },
+  "startNodeID": "start",
+  "packageNodeID": "package",
+  "destinationNodeID": "destination",
+  "timeLimitSeconds": 30,
+  "parTaps": 0
+}
