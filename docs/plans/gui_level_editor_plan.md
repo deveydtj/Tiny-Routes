@@ -920,18 +920,18 @@ Tools/LevelEditor/app/main_window.py
 
 ### To do
 
-- [ ] Create `LevelCanvasView` using `QGraphicsView`.
-- [ ] Create `LevelCanvasScene` using `QGraphicsScene`.
-- [ ] Add the canvas view to the main window central area.
-- [ ] Add basic zoom support if simple to implement.
-- [ ] Add a placeholder grid or empty-state message.
-- [ ] Keep canvas rendering code out of `main_window.py`.
+- [x] Create `LevelCanvasView` using `QGraphicsView`.
+- [x] Create `LevelCanvasScene` using `QGraphicsScene`.
+- [x] Add the canvas view to the main window central area.
+- [x] Add basic zoom support if simple to implement.
+- [x] Add a placeholder grid or empty-state message.
+- [x] Keep canvas rendering code out of `main_window.py`.
 
 ### Acceptance criteria
 
-- [ ] The main window contains a canvas area.
-- [ ] The canvas is ready to render nodes and edges.
-- [ ] Opening a level still works.
+- [x] The main window contains a canvas area.
+- [x] The canvas is ready to render nodes and edges.
+- [x] Opening a level still works.
 
 ---
 
