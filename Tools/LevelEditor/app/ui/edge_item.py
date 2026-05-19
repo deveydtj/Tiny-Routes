@@ -4,7 +4,7 @@ from PySide6.QtCore import QPointF
 from PySide6.QtGui import QColor, QPen, QPolygonF
 from PySide6.QtWidgets import QGraphicsItemGroup, QGraphicsLineItem, QGraphicsPolygonItem
 
-from app.ui.node_item import NodeItem
+from .node_item import NodeItem
 
 
 class EdgeItem(QGraphicsItemGroup):

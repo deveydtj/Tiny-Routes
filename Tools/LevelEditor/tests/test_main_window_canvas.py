@@ -17,8 +17,7 @@ if str(LEVEL_EDITOR_ROOT) not in sys.path:
     sys.path.insert(0, str(LEVEL_EDITOR_ROOT))
 
 from app.main_window import LevelEditorMainWindow
-from app.models import LevelDocument, RouteGraphModel, RouteNodeModel
-from app.models.route_edge_model import RouteEdgeModel
+from app.models import LevelDocument, RouteEdgeModel, RouteGraphModel, RouteNodeModel
 from app.ui import EdgeItem, LevelCanvasScene, LevelCanvasView, NodeItem
 from app.ui.node_item import NODE_TYPE_STYLES
 
