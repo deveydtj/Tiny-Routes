@@ -1047,18 +1047,18 @@ Tools/LevelEditor/tests/test_level_validation_service.py
 
 ### To do
 
-- [ ] Create a `ValidationSeverity` enum or equivalent constants.
-- [ ] Create a `ValidationMessage` dataclass.
-- [ ] Include severity, code, message, and optional related node/edge ID.
-- [ ] Create a `ValidationResult` container.
-- [ ] Add helper properties like `has_errors` and `has_warnings`.
-- [ ] Add unit tests for the result model.
+- [x] Create a `ValidationSeverity` enum or equivalent constants.
+- [x] Create a `ValidationMessage` dataclass.
+- [x] Include severity, code, message, and optional related node/edge ID.
+- [x] Create a `ValidationResult` container.
+- [x] Add helper properties like `has_errors` and `has_warnings`.
+- [x] Add unit tests for the result model.
 
 ### Acceptance criteria
 
-- [ ] Validation messages can represent errors, warnings, and info.
-- [ ] The result container correctly reports `has_errors` and `has_warnings`.
-- [ ] No Qt imports are present in the validation service.
+- [x] Validation messages can represent errors, warnings, and info.
+- [x] The result container correctly reports `has_errors` and `has_warnings`.
+- [x] No Qt imports are present in the validation service.
 
 ---
 
