@@ -13,6 +13,7 @@
 		0E34A0D5C4B7E89012340008 /* level_008.json in Resources */ = {isa = PBXBuildFile; fileRef = 0E34A0D5C4B7E89012345008 /* level_008.json */; };
 		0E34A0D5C4B7E89012340009 /* level_009.json in Resources */ = {isa = PBXBuildFile; fileRef = 0E34A0D5C4B7E89012345009 /* level_009.json */; };
 		0E34A0D5C4B7E89012340010 /* level_010.json in Resources */ = {isa = PBXBuildFile; fileRef = 0E34A0D5C4B7E89012345010 /* level_010.json */; };
+		0E34A0D5C4B7E89012340011 /* level_011.json in Resources */ = {isa = PBXBuildFile; fileRef = 0E34A0D5C4B7E89012345011 /* level_011.json */; };
 		108AF7A8B6011001D9ABAC37 /* PurchaseAdapter.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE27E3BC383758466A258AC9 /* PurchaseAdapter.swift */; };
 		1F039950763EE9F4AFCEA19D /* AnalyticsAdapter.swift in Sources */ = {isa = PBXBuildFile; fileRef = BBF9A119C53A9804C693368D /* AnalyticsAdapter.swift */; };
 		2642190DBD1F2E50EAEEA4FE /* GameTimeFormatter.swift in Sources */ = {isa = PBXBuildFile; fileRef = DAE6F8D4B8727D20DEC3BCB7 /* GameTimeFormatter.swift */; };
@@ -90,6 +91,7 @@
 		0E34A0D5C4B7E89012345008 /* level_008.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = level_008.json; sourceTree = "<group>"; };
 		0E34A0D5C4B7E89012345009 /* level_009.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = level_009.json; sourceTree = "<group>"; };
 		0E34A0D5C4B7E89012345010 /* level_010.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = level_010.json; sourceTree = "<group>"; };
+		0E34A0D5C4B7E89012345011 /* level_011.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = level_011.json; sourceTree = "<group>"; };
 		110E615D1CB962B4C43D1072 /* ScoringAndProgressServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScoringAndProgressServiceTests.swift; sourceTree = "<group>"; };
 		1AFDFE57C38D02CBE7CAADA9 /* RouteEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RouteEngine.swift; sourceTree = "<group>"; };
 		1CC7D005BB054CA1F6F163C2 /* SettingsScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsScreen.swift; sourceTree = "<group>"; };
@@ -222,6 +224,7 @@
 				0E34A0D5C4B7E89012345008 /* level_008.json */,
 				0E34A0D5C4B7E89012345009 /* level_009.json */,
 				0E34A0D5C4B7E89012345010 /* level_010.json */,
+				0E34A0D5C4B7E89012345011 /* level_011.json */,
 			);
 			path = Levels;
 			sourceTree = "<group>";
@@ -422,6 +425,7 @@
 				0E34A0D5C4B7E89012340008 /* level_008.json in Resources */,
 				0E34A0D5C4B7E89012340009 /* level_009.json in Resources */,
 				0E34A0D5C4B7E89012340010 /* level_010.json in Resources */,
+				0E34A0D5C4B7E89012340011 /* level_011.json in Resources */,
 				F4BE3F7589B2281A3A07BA5A /* locked_pin.png in Resources */,
 				4C8074DDA3B34DB4A4656C04 /* play_filled.png in Resources */,
 				75AC92D2F1B32C00D390A47F /* right_arrow.png in Resources */,

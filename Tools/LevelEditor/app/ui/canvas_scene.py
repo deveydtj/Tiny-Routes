@@ -1,8 +1,13 @@
 import math
 
 from PySide6.QtCore import QPointF, QRectF, Qt, Signal
-from PySide6.QtGui import QColor, QKeyEvent, QPainter, QPen
-from PySide6.QtWidgets import QGraphicsScene, QGraphicsSceneMouseEvent
+from PySide6.QtGui import QColor, QKeyEvent, QPainter, QPainterPath, QPen
+from PySide6.QtWidgets import (
+    QGraphicsPathItem,
+    QGraphicsScene,
+    QGraphicsSceneMouseEvent,
+    QGraphicsSimpleTextItem,
+)
 
 from app.models import LevelDocument, RouteNodeModel
 
@@ -16,16 +21,18 @@ class LevelCanvasScene(QGraphicsScene):
 
     # Emitted when a NodeItem is selected.  Args: node_id, node_type, model_x, model_y
     node_item_selected = Signal(str, str, float, float)
-    # Emitted when an EdgeItem is selected.  Args: edge_id, from_node_id, to_node_id
-    edge_item_selected = Signal(str, str, str)
+    # Emitted when an EdgeItem is selected.  Args: edge_id, from_node_id, to_node_id, road_shape
+    edge_item_selected = Signal(str, str, str, str)
     # Emitted when the selection is cleared or an unrecognised item is selected
     selection_cleared = Signal()
     # Emitted when a node is repositioned. Args: node_id, model_x, model_y
     node_item_moved = Signal(str, float, float)
-    # Emitted when the user creates a new edge. Args: edge_id, from_node_id, to_node_id
-    edge_creation_requested = Signal(str, str, str)
+    # Emitted when the user creates a new edge. Args: edge_id, from_node_id, to_node_id, road_shape
+    edge_creation_requested = Signal(str, str, str, str)
     # Emitted after selected nodes and/or edges are deleted from the document.
     level_items_deleted = Signal()
+    # Emitted to explain placement state and failures.
+    placement_message_changed = Signal(str)
 
     def __init__(self) -> None:
         super().__init__()
@@ -34,6 +41,9 @@ class LevelCanvasScene(QGraphicsScene):
         self._node_items_by_id: dict[str, NodeItem] = {}
         self._edges_by_node_id: dict[str, list[EdgeItem]] = {}
         self._connection_source_node_id: str | None = None
+        self._pending_road_shape = "horizontalFirst"
+        self._preview_path_item: QGraphicsPathItem | None = None
+        self._preview_label_item: QGraphicsSimpleTextItem | None = None
         self._show_placeholder()
         self.selectionChanged.connect(self._on_selection_changed)
 
@@ -62,7 +72,12 @@ class LevelCanvasScene(QGraphicsScene):
             if from_node is None or to_node is None:
                 continue
             try:
-                edge_item = EdgeItem(edge_id=edge.id, from_node=from_node, to_node=to_node)
+                edge_item = EdgeItem(
+                    edge_id=edge.id,
+                    from_node=from_node,
+                    to_node=to_node,
+                    road_shape=edge.roadShape,
+                )
             except ValueError:
                 continue
             self.addItem(edge_item)
@@ -95,10 +110,27 @@ class LevelCanvasScene(QGraphicsScene):
                 event.accept()
                 return
             self._clear_connection_source()
+            self.placement_message_changed.emit("Road placement canceled.")
+            event.accept()
+            return
         super().mousePressEvent(event)
+
+    def mouseMoveEvent(self, event: QGraphicsSceneMouseEvent) -> None:
+        if self._connection_source_node_id is not None:
+            self._update_connection_preview(event.scenePos())
+        super().mouseMoveEvent(event)
 
     def keyPressEvent(self, event: QKeyEvent) -> None:
         if event.key() in {Qt.Key.Key_Delete, Qt.Key.Key_Backspace} and self._delete_selected_items():
+            event.accept()
+            return
+        if self._connection_source_node_id is not None and event.key() == Qt.Key.Key_Tab:
+            self._toggle_pending_road_shape()
+            event.accept()
+            return
+        if self._connection_source_node_id is not None and event.key() == Qt.Key.Key_Escape:
+            self._clear_connection_source()
+            self.placement_message_changed.emit("Road placement canceled.")
             event.accept()
             return
         super().keyPressEvent(event)
@@ -116,7 +148,12 @@ class LevelCanvasScene(QGraphicsScene):
         if isinstance(item, NodeItem):
             self.node_item_selected.emit(item.node_id, item.node_type, item.model_x, item.model_y)
         elif isinstance(item, EdgeItem):
-            self.edge_item_selected.emit(item.edge_id, item.from_node_id, item.to_node_id)
+            self.edge_item_selected.emit(
+                item.edge_id,
+                item.from_node_id,
+                item.to_node_id,
+                item.road_shape,
+            )
         else:
             self.selection_cleared.emit()
 
@@ -189,18 +226,32 @@ class LevelCanvasScene(QGraphicsScene):
         if self._connection_source_node_id == item.node_id:
             self._clear_connection_source()
             item.setSelected(True)
+            self.placement_message_changed.emit("Road placement canceled.")
             return
 
         from_node_id = self._connection_source_node_id
         to_node_id = item.node_id
-        self._clear_connection_source()
-        item.setSelected(True)
 
         if self._edge_exists(from_node_id, to_node_id):
+            item.setSelected(True)
+            self.placement_message_changed.emit(
+                f"Road not added. {from_node_id} already connects to {to_node_id}."
+            )
             return
 
+        self._clear_connection_source()
+        item.setSelected(True)
         edge_id = self._generate_unique_edge_id()
-        self.edge_creation_requested.emit(edge_id, from_node_id, to_node_id)
+        self.edge_creation_requested.emit(
+            edge_id,
+            from_node_id,
+            to_node_id,
+            self._pending_road_shape,
+        )
+        self.placement_message_changed.emit(
+            "Road added with "
+            f"{self._describe_road_shape(self._pending_road_shape).lower()}."
+        )
 
     def _set_connection_source(self, node_id: str) -> None:
         if self._connection_source_node_id == node_id:
@@ -211,6 +262,12 @@ class LevelCanvasScene(QGraphicsScene):
             return
         self._connection_source_node_id = node_id
         source_item.set_connection_source(True)
+        self._ensure_preview_items()
+        self._update_preview_label()
+        self.placement_message_changed.emit(
+            "Road start selected. Right-click a destination node to place the road. "
+            "Press Tab to switch the turn direction."
+        )
 
     def _clear_connection_source(self) -> None:
         if self._connection_source_node_id is None:
@@ -219,6 +276,7 @@ class LevelCanvasScene(QGraphicsScene):
         if source_item is not None:
             source_item.set_connection_source(False)
         self._connection_source_node_id = None
+        self._remove_preview_items()
 
     def _edge_exists(self, from_node_id: str, to_node_id: str) -> bool:
         if self._document is None:
@@ -227,6 +285,87 @@ class LevelCanvasScene(QGraphicsScene):
             edge.fromNodeID == from_node_id and edge.toNodeID == to_node_id
             for edge in self._document.graph.edges
         )
+
+    def _toggle_pending_road_shape(self) -> None:
+        self._pending_road_shape = (
+            "verticalFirst" if self._pending_road_shape == "horizontalFirst" else "horizontalFirst"
+        )
+        self._update_preview_label()
+        self.placement_message_changed.emit(
+            f"Road preview set to {self._describe_road_shape(self._pending_road_shape)}."
+        )
+
+    def _ensure_preview_items(self) -> None:
+        if self._preview_path_item is None:
+            self._preview_path_item = QGraphicsPathItem()
+            self._preview_path_item.setZValue(-0.5)
+            preview_pen = QPen(QColor("#d81b60"), 3)
+            preview_pen.setStyle(Qt.PenStyle.DashLine)
+            self._preview_path_item.setPen(preview_pen)
+            self.addItem(self._preview_path_item)
+        if self._preview_label_item is None:
+            self._preview_label_item = self.addSimpleText("")
+            self._preview_label_item.setBrush(QColor("#d81b60"))
+            self._preview_label_item.setZValue(5)
+
+    def _remove_preview_items(self) -> None:
+        if self._preview_path_item is not None:
+            self.removeItem(self._preview_path_item)
+            self._preview_path_item = None
+        if self._preview_label_item is not None:
+            self.removeItem(self._preview_label_item)
+            self._preview_label_item = None
+
+    def _update_connection_preview(self, scene_position: QPointF) -> None:
+        source_node_id = self._connection_source_node_id
+        source_item = self._node_items_by_id.get(source_node_id) if source_node_id is not None else None
+        if source_item is None:
+            self._remove_preview_items()
+            return
+
+        self._ensure_preview_items()
+
+        preview_target = self._resolve_node_item_at_position(scene_position)
+        target_position = preview_target.pos() if preview_target is not None else scene_position
+
+        if self._points_are_close(source_item.pos(), target_position):
+            if self._preview_path_item is not None:
+                self._preview_path_item.setPath(QPainterPath())
+                self._preview_path_item.setVisible(False)
+            if self._preview_label_item is not None:
+                self._preview_label_item.setPos(source_item.pos().x() + 10, source_item.pos().y() - 28)
+            self._update_preview_label()
+            return
+
+        preview_edge = EdgeItem(
+            edge_id="_preview",
+            from_node=source_item,
+            to_node=_PreviewNodeItem(target_position),
+            road_shape=self._pending_road_shape,
+        )
+        if self._preview_path_item is not None:
+            self._preview_path_item.setPath(preview_edge._path_item.path())
+            self._preview_path_item.setVisible(True)
+
+        if self._preview_label_item is not None:
+            self._preview_label_item.setPos(
+                (source_item.pos().x() + target_position.x()) / 2 + 10,
+                (source_item.pos().y() + target_position.y()) / 2 - 28,
+            )
+        self._update_preview_label()
+
+    def _update_preview_label(self) -> None:
+        if self._preview_label_item is None:
+            return
+        self._preview_label_item.setText(
+            f"Road Preview: {self._describe_road_shape(self._pending_road_shape)}"
+        )
+
+    @staticmethod
+    def _describe_road_shape(road_shape: str) -> str:
+        if road_shape == "verticalFirst":
+            return "Vertical First"
+        return "Horizontal First"
 
     def _generate_unique_edge_id(self) -> str:
         existing_edge_ids = set()
@@ -267,6 +406,12 @@ class LevelCanvasScene(QGraphicsScene):
         column = index % 5
         return QPointF(column * self.FALLBACK_SPACING, row * self.FALLBACK_SPACING)
 
+    @staticmethod
+    def _points_are_close(first: QPointF, second: QPointF) -> bool:
+        return math.isclose(first.x(), second.x(), abs_tol=1e-6) and math.isclose(
+            first.y(), second.y(), abs_tol=1e-6
+        )
+
     def drawBackground(self, painter: QPainter, rect: QRectF) -> None:
         super().drawBackground(painter, rect)
 
@@ -286,3 +431,12 @@ class LevelCanvasScene(QGraphicsScene):
         while y < int(rect.bottom()):
             painter.drawLine(int(rect.left()), y, int(rect.right()), y)
             y += grid_size
+
+
+class _PreviewNodeItem:
+    def __init__(self, position: QPointF) -> None:
+        self.node_id = "_preview_target"
+        self._position = position
+
+    def pos(self) -> QPointF:
+        return self._position

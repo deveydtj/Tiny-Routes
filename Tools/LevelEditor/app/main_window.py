@@ -78,6 +78,7 @@ class LevelEditorMainWindow(QMainWindow):
         scene.node_item_moved.connect(self._on_node_item_moved)
         scene.edge_creation_requested.connect(self._on_edge_creation_requested)
         scene.level_items_deleted.connect(self._on_level_items_deleted)
+        scene.placement_message_changed.connect(self.statusBar().showMessage)
         self._validation_panel.validate_requested.connect(self._validate_current_level)
         self._piece_palette.node_type_activated.connect(self._add_node_from_palette)
         self._solution_panel.solution_changed.connect(self._on_solution_changed)
@@ -267,7 +268,13 @@ class LevelEditorMainWindow(QMainWindow):
         self._validation_panel.clear()
         self._set_dirty(True)
 
-    def _on_edge_creation_requested(self, edge_id: str, from_node_id: str, to_node_id: str) -> None:
+    def _on_edge_creation_requested(
+        self,
+        edge_id: str,
+        from_node_id: str,
+        to_node_id: str,
+        road_shape: str,
+    ) -> None:
         if self._current_document is None:
             return
 
@@ -287,6 +294,7 @@ class LevelEditorMainWindow(QMainWindow):
                 id=edge_id,
                 fromNodeID=from_node_id,
                 toNodeID=to_node_id,
+                roadShape=road_shape,
             )
         )
 

@@ -33,6 +33,7 @@ class NodeItem(QGraphicsItemGroup):
         self.model_x = model_x
         self.model_y = model_y
         self._style = NODE_TYPE_STYLES[self.node_type]
+        self._is_connection_source = False
         self.setFlag(QGraphicsItem.GraphicsItemFlag.ItemIsSelectable, True)
         self.setFlag(QGraphicsItem.GraphicsItemFlag.ItemIsMovable, True)
         self.setFlag(QGraphicsItem.GraphicsItemFlag.ItemSendsGeometryChanges, True)
@@ -49,7 +50,6 @@ class NodeItem(QGraphicsItemGroup):
         label_rect = label.boundingRect()
         label.setPos(-label_rect.width() / 2, -label_rect.height() / 2)
         self.addToGroup(label)
-        self._is_connection_source = False
 
     def set_connection_source(self, is_source: bool) -> None:
         self._is_connection_source = is_source

@@ -243,8 +243,9 @@ private struct RouteBoardView: View {
     private let specialNodeRingSize: CGFloat = 42
     @State private var isPulseExpanded: Bool = false
 
-    private let deliveryDotSize: CGFloat = 28
-    private let deliveryDotRingSize: CGFloat = 34
+    private let deliveryDotSize: CGFloat = 46
+    private let deliveryDotRingSize: CGFloat = 28
+    private let deliveryDotHaloSize: CGFloat = 48
     private let roadOuterWidth: CGFloat = 20
     private let roadInnerWidth: CGFloat = 15
     private let roadHighlightWidth: CGFloat = 3
@@ -345,36 +346,33 @@ private struct RouteBoardView: View {
     private func deliveryDotView(isMoving: Bool) -> some View {
         ZStack {
             Circle()
-                .fill(
-                    RadialGradient(
-                        colors: [
-                            Color.white.opacity(0.95),
-                            Color(red: 0.40, green: 0.77, blue: 1.0),
-                            Color(red: 0.16, green: 0.52, blue: 0.98)
-                        ],
-                        center: .center,
-                        startRadius: 1,
-                        endRadius: deliveryDotSize * 0.7
-                    )
-                )
+                .fill(Color.white.opacity(0.4))
+                .frame(width: deliveryDotHaloSize, height: deliveryDotHaloSize)
+                .blur(radius: 6)
+
+            SpriteImage(name: "blue_orb")
+                .scaledToFit()
                 .frame(width: deliveryDotSize, height: deliveryDotSize)
+                .scaleEffect(1.55)
+                .offset(y: 1.5)
 
             Circle()
-                .stroke(Color.white.opacity(0.95), lineWidth: 2.5)
+                .stroke(Color.white.opacity(0.95), lineWidth: 2)
                 .frame(width: deliveryDotRingSize, height: deliveryDotRingSize)
+                .shadow(color: Color.white.opacity(0.35), radius: 2, x: 0, y: 0)
 
             if isMoving {
                 Circle()
-                    .stroke(Color(red: 0.40, green: 0.77, blue: 1.0).opacity(0.9), lineWidth: 3)
+                    .stroke(Color(red: 0.40, green: 0.77, blue: 1.0).opacity(0.75), lineWidth: 3)
                     .frame(
-                        width: isPulseExpanded ? deliveryDotRingSize + 12 : deliveryDotRingSize,
-                        height: isPulseExpanded ? deliveryDotRingSize + 12 : deliveryDotRingSize
+                        width: isPulseExpanded ? deliveryDotRingSize + 14 : deliveryDotRingSize + 4,
+                        height: isPulseExpanded ? deliveryDotRingSize + 14 : deliveryDotRingSize + 4
                     )
-                    .opacity(isPulseExpanded ? 0.15 : 0.55)
+                    .opacity(isPulseExpanded ? 0.08 : 0.32)
                     .animation(.easeInOut(duration: 0.85).repeatForever(autoreverses: true), value: isPulseExpanded)
             }
         }
-        .shadow(color: Color(red: 0.16, green: 0.52, blue: 0.98).opacity(0.35), radius: 8, x: 0, y: 2)
+        .shadow(color: Color(red: 0.16, green: 0.52, blue: 0.98).opacity(0.28), radius: 10, x: 0, y: 4)
         .onAppear {
             isPulseExpanded = true
         }

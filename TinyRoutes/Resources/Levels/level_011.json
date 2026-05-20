@@ -1,0 +1,63 @@
+{
+  "id": "level_011",
+  "name": "Level 011",
+  "graph": {
+    "nodes": [
+      {
+        "id": "start",
+        "x": -0.027777777777777776,
+        "y": 0.8277777777777777,
+        "outgoingEdgeIDs": [
+          "edge"
+        ]
+      },
+      {
+        "id": "node",
+        "x": -0.005555555555555556,
+        "y": 0.07222222222222222,
+        "outgoingEdgeIDs": [
+          "edge_1"
+        ]
+      },
+      {
+        "id": "package",
+        "x": 1.0611111111111111,
+        "y": -1.0944444444444446,
+        "outgoingEdgeIDs": [
+          "edge_2"
+        ]
+      },
+      {
+        "id": "destination",
+        "x": -0.9388888888888889,
+        "y": -1.2333333333333334,
+        "outgoingEdgeIDs": []
+      }
+    ],
+    "edges": [
+      {
+        "id": "edge",
+        "fromNodeID": "start",
+        "toNodeID": "node",
+        "roadShape": "horizontalFirst"
+      },
+      {
+        "id": "edge_1",
+        "fromNodeID": "node",
+        "toNodeID": "package",
+        "roadShape": "horizontalFirst"
+      },
+      {
+        "id": "edge_2",
+        "fromNodeID": "package",
+        "toNodeID": "destination",
+        "roadShape": "horizontalFirst"
+      }
+    ]
+  },
+  "startNodeID": "start",
+  "packageNodeID": "package",
+  "destinationNodeID": "destination",
+  "timeLimitSeconds": 30,
+  "parTaps": 0
+}

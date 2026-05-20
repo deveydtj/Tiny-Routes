@@ -8,6 +8,7 @@ import pytest
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
 try:
+    from PySide6.QtCore import Qt
     from PySide6.QtGui import QKeyEvent
     from PySide6.QtWidgets import QApplication, QFileDialog, QMessageBox
 except ImportError as exc:
@@ -725,6 +726,7 @@ def test_selecting_edge_item_updates_properties_panel(qapplication: QApplication
         assert "e1" in labels
         assert "start" in labels
         assert "destination" in labels
+        assert "Horizontal First" in labels
     finally:
         window.close()
 
@@ -1110,6 +1112,24 @@ def test_node_item_is_draggable() -> None:
     assert item.flags() & item.GraphicsItemFlag.ItemIsMovable
 
 
+def test_node_item_connection_source_updates_border(qapplication: QApplication) -> None:
+    item = NodeItem(node_id="n1", node_type="route")
+
+    default_pen = item._circle.pen()
+    assert default_pen.color().name() == NODE_TYPE_STYLES["route"].border_color
+    assert default_pen.width() == 2
+
+    item.set_connection_source(True)
+    pending_pen = item._circle.pen()
+    assert pending_pen.color().name() == item.PENDING_BORDER_COLOR
+    assert pending_pen.width() == item.PENDING_BORDER_WIDTH
+
+    item.set_connection_source(False)
+    restored_pen = item._circle.pen()
+    assert restored_pen.color().name() == NODE_TYPE_STYLES["route"].border_color
+    assert restored_pen.width() == 2
+
+
 def test_edge_item_stores_source_and_target_node_ids(qapplication: QApplication) -> None:
     from_node = NodeItem(node_id="alpha", node_type="start")
     from_node.setPos(0, 0)
@@ -1118,6 +1138,44 @@ def test_edge_item_stores_source_and_target_node_ids(qapplication: QApplication)
     edge = EdgeItem(edge_id="e_ab", from_node=from_node, to_node=to_node)
     assert edge.from_node_id == "alpha"
     assert edge.to_node_id == "beta"
+
+
+def test_edge_item_uses_orthogonal_path_for_horizontal_first(qapplication: QApplication) -> None:
+    from_node = NodeItem(node_id="alpha", node_type="start")
+    from_node.setPos(0, 0)
+    to_node = NodeItem(node_id="beta", node_type="route")
+    to_node.setPos(180, 180)
+
+    edge = EdgeItem(
+        edge_id="e_ab",
+        from_node=from_node,
+        to_node=to_node,
+        road_shape="horizontalFirst",
+    )
+
+    path = edge._path_item.path()
+    assert path.elementCount() == 3
+    assert path.elementAt(1).y == pytest.approx(path.elementAt(0).y)
+    assert path.elementAt(1).x == pytest.approx(path.elementAt(2).x)
+
+
+def test_edge_item_uses_orthogonal_path_for_vertical_first(qapplication: QApplication) -> None:
+    from_node = NodeItem(node_id="alpha", node_type="start")
+    from_node.setPos(0, 0)
+    to_node = NodeItem(node_id="beta", node_type="route")
+    to_node.setPos(180, 180)
+
+    edge = EdgeItem(
+        edge_id="e_ab",
+        from_node=from_node,
+        to_node=to_node,
+        road_shape="verticalFirst",
+    )
+
+    path = edge._path_item.path()
+    assert path.elementCount() == 3
+    assert path.elementAt(1).x == pytest.approx(path.elementAt(0).x)
+    assert path.elementAt(1).y == pytest.approx(path.elementAt(2).y)
 
 
 def test_scene_emits_node_selected_signal(qapplication: QApplication) -> None:
@@ -1152,10 +1210,11 @@ def test_scene_emits_edge_selected_signal(qapplication: QApplication) -> None:
     qapplication.processEvents()
 
     assert len(received) == 1
-    edge_id, from_id, to_id = received[0]
+    edge_id, from_id, to_id, road_shape = received[0]
     assert edge_id == "e1"
     assert from_id == "start"
     assert to_id == "destination"
+    assert road_shape == "horizontalFirst"
 
 
 def test_scene_emits_selection_cleared_signal(qapplication: QApplication) -> None:
@@ -1187,7 +1246,7 @@ def test_dragging_node_updates_model_coordinates_and_connected_edge(
     node_items = [item for item in scene.items() if isinstance(item, NodeItem)]
     start_item = next(item for item in node_items if item.node_id == "start")
     edge_item = next(item for item in scene.items() if isinstance(item, EdgeItem))
-    original_line = edge_item._line_item.line()
+    original_path = edge_item._path_item.path()
 
     start_item.setSelected(True)
     start_item.setPos(180.0, 90.0)
@@ -1197,9 +1256,8 @@ def test_dragging_node_updates_model_coordinates_and_connected_edge(
     assert start_item.model_y == pytest.approx(0.5)
     assert moved[-1] == ("start", pytest.approx(1.0), pytest.approx(0.5))
 
-    updated_line = edge_item._line_item.line()
-    assert updated_line.x1() != original_line.x1()
-    assert updated_line.y1() != original_line.y1()
+    updated_path = edge_item._path_item.path()
+    assert updated_path != original_path
 
 
 def test_dragging_selected_node_updates_properties_panel_position(
@@ -1400,3 +1458,80 @@ def test_deleting_last_node_does_not_crash(
     assert document.graph.nodes == []
     text_items = [item.text() for item in scene.items() if hasattr(item, "text")]
     assert "No nodes in this level" in text_items
+
+
+def test_scene_duplicate_edge_attempt_emits_clear_message(qapplication: QApplication) -> None:
+    scene = LevelCanvasScene()
+    scene.display_level(_make_two_node_one_edge_document())
+
+    messages: list[str] = []
+    scene.placement_message_changed.connect(messages.append)
+
+    node_items = {item.node_id: item for item in scene.items() if isinstance(item, NodeItem)}
+    scene._handle_connection_click(node_items["start"])
+    scene._handle_connection_click(node_items["destination"])
+
+    assert messages[-1] == "Road not added. start already connects to destination."
+
+
+def test_main_window_edge_creation_persists_selected_road_shape(qapplication: QApplication) -> None:
+    window = LevelEditorMainWindow()
+    try:
+        window._current_document = LevelDocument(
+            id="level_new_edge",
+            name="New Edge",
+            graph=RouteGraphModel(
+                nodes=[
+                    RouteNodeModel(id="start", x=0.0, y=0.0, outgoingEdgeIDs=[]),
+                    RouteNodeModel(id="destination", x=2.0, y=1.0, outgoingEdgeIDs=[]),
+                ],
+                edges=[],
+            ),
+            startNodeID="start",
+            packageNodeID="start",
+            destinationNodeID="destination",
+            timeLimitSeconds=30,
+            parTaps=0,
+        )
+
+        window._on_edge_creation_requested("edge", "start", "destination", "verticalFirst")
+
+        assert window._current_document.graph.edges[0].roadShape == "verticalFirst"
+        assert window._current_document.graph.nodes[0].outgoingEdgeIDs == ["edge"]
+    finally:
+        window.close()
+
+
+def test_scene_tab_toggles_preview_shape_and_emits_message(qapplication: QApplication) -> None:
+    scene = LevelCanvasScene()
+    scene.display_level(_make_two_node_one_edge_document())
+
+    messages: list[str] = []
+    scene.placement_message_changed.connect(messages.append)
+
+    start_item = next(
+        item for item in scene.items() if isinstance(item, NodeItem) and item.node_id == "start"
+    )
+    scene._handle_connection_click(start_item)
+    scene.keyPressEvent(
+        QKeyEvent(QKeyEvent.Type.KeyPress, Qt.Key.Key_Tab, Qt.KeyboardModifier.NoModifier)
+    )
+
+    assert scene._pending_road_shape == "verticalFirst"
+    assert messages[-1] == "Road preview set to Vertical First."
+
+
+def test_connection_preview_hides_when_cursor_is_on_source_node(qapplication: QApplication) -> None:
+    scene = LevelCanvasScene()
+    scene.display_level(_make_two_node_one_edge_document())
+
+    start_item = next(
+        item for item in scene.items() if isinstance(item, NodeItem) and item.node_id == "start"
+    )
+    scene._handle_connection_click(start_item)
+
+    scene._update_connection_preview(start_item.pos())
+
+    assert scene._preview_path_item is not None
+    assert scene._preview_path_item.path().isEmpty()
+    assert scene._preview_path_item.isVisible() is False

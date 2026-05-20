@@ -50,12 +50,19 @@ class PropertiesPanel(QWidget):
         self._empty_label.setVisible(False)
         self._form_widget.setVisible(True)
 
-    def show_edge(self, edge_id: str, from_node_id: str, to_node_id: str) -> None:
+    def show_edge(
+        self,
+        edge_id: str,
+        from_node_id: str,
+        to_node_id: str,
+        road_shape: str,
+    ) -> None:
         """Display properties for the selected edge."""
         self._reset_form()
         self._form_layout.addRow("ID:", QLabel(edge_id))
         self._form_layout.addRow("From:", QLabel(from_node_id))
         self._form_layout.addRow("To:", QLabel(to_node_id))
+        self._form_layout.addRow("Road Shape:", QLabel(self._format_road_shape(road_shape)))
         self._empty_label.setVisible(False)
         self._form_widget.setVisible(True)
 
@@ -76,3 +83,9 @@ class PropertiesPanel(QWidget):
                 taken.labelItem.widget().deleteLater()
             if taken.fieldItem and taken.fieldItem.widget():
                 taken.fieldItem.widget().deleteLater()
+
+    @staticmethod
+    def _format_road_shape(road_shape: str) -> str:
+        if road_shape == "verticalFirst":
+            return "Vertical First"
+        return "Horizontal First"
