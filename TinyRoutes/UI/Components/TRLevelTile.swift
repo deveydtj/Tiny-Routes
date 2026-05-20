@@ -64,6 +64,9 @@ struct TRLevelTile: View {
         }
         .buttonStyle(.plain)
         .disabled(state == .locked)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("Level \(levelNumber)")
+        .accessibilityValue("\(accessibilityStateDescription), \(starCountDescription)")
     }
 
     @ViewBuilder
@@ -80,6 +83,7 @@ struct TRLevelTile: View {
                         .foregroundStyle(Color(red: 1.0, green: 0.86, blue: 0.20))
                 }
             }
+            .accessibilityHidden(true)
         } else {
             HStack(spacing: 3) {
                 ForEach(0..<3, id: \.self) { index in
@@ -118,6 +122,23 @@ struct TRLevelTile: View {
                 .font(.system(size: 10, weight: .bold))
                 .foregroundStyle(.white)
         }
+        .accessibilityHidden(true)
+    }
+
+    private var accessibilityStateDescription: String {
+        switch state {
+        case .completed:
+            "Completed"
+        case .current:
+            "Current"
+        case .locked:
+            "Locked"
+        }
+    }
+
+    private var starCountDescription: String {
+        let starCount = state == .completed ? 3 : stars
+        return starCount == 1 ? "1 star" : "\(starCount) stars"
     }
 }
 
