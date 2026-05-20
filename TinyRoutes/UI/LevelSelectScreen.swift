@@ -48,6 +48,33 @@ struct TRSerpentineLayout {
     }
 }
 
+struct TRLevelProgressSnapshot {
+    let bestStarsByLevelID: [String: Int]
+    let firstIncompleteIndex: Int
+
+    init(levels: [LevelData], progressService: ProgressService) {
+        var starsByLevelID: [String: Int] = [:]
+        starsByLevelID.reserveCapacity(levels.count)
+
+        for level in levels {
+            starsByLevelID[level.id] = progressService.bestStars(for: level.id)
+        }
+
+        self.bestStarsByLevelID = starsByLevelID
+        self.firstIncompleteIndex = levels.firstIndex { (starsByLevelID[$0.id] ?? 0) == 0 } ?? levels.count
+    }
+
+    func stars(for levelID: String) -> Int {
+        bestStarsByLevelID[levelID] ?? 0
+    }
+
+    func tileState(at index: Int, levelID: String) -> TRLevelTileState {
+        if stars(for: levelID) > 0 { return .completed }
+        if index == firstIncompleteIndex { return .current }
+        return .locked
+    }
+}
+
 // MARK: - Level Selection Screen
 
 /// Level selection screen.
@@ -75,23 +102,11 @@ struct LevelSelectScreen: View {
         verticalSpacing: 24
     )
 
-    /// Index of the first level that has not yet been completed (bestStars == 0).
-    /// Returns `levels.count` when all levels are completed.
-    private var firstIncompleteIndex: Int {
-        levels.firstIndex(where: { progressService.bestStars(for: $0.id) == 0 }) ?? levels.count
-    }
-
-    private func tileState(at index: Int, firstIncompleteIndex fi: Int) -> TRLevelTileState {
-        if index < fi { return .completed }
-        if index == fi { return .current }
-        return .locked
-    }
-
     var body: some View {
         let positions = layout.positions(for: levels)
         let contentWidth = mapContentWidth(levelCount: levels.count)
         let contentHeight = mapContentHeight(positions: positions)
-        let fi = firstIncompleteIndex
+        let progressSnapshot = TRLevelProgressSnapshot(levels: levels, progressService: progressService)
 
         return VStack(spacing: 12) {
             HStack {
@@ -109,8 +124,8 @@ struct LevelSelectScreen: View {
                     ForEach(Array(positions.enumerated()), id: \.element.levelID) { index, position in
                         TRLevelTile(
                             levelNumber: position.levelNumber,
-                            state: tileState(at: index, firstIncompleteIndex: fi),
-                            stars: progressService.bestStars(for: position.levelID)
+                            state: progressSnapshot.tileState(at: index, levelID: position.levelID),
+                            stars: progressSnapshot.stars(for: position.levelID)
                         ) {
                             onLevelSelected(position.levelID)
                         }
