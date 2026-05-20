@@ -55,6 +55,19 @@ struct LevelSelectScreen: View {
     let levels: [LevelData]
     let onBackTapped: () -> Void
     let onLevelSelected: (String) -> Void
+    private let progressService: ProgressService
+
+    init(
+        levels: [LevelData],
+        onBackTapped: @escaping () -> Void,
+        onLevelSelected: @escaping (String) -> Void,
+        progressService: ProgressService = ProgressService()
+    ) {
+        self.levels = levels
+        self.onBackTapped = onBackTapped
+        self.onLevelSelected = onLevelSelected
+        self.progressService = progressService
+    }
 
     private let layout = TRSerpentineLayout(
         tileSize: TRLevelTile.size,
@@ -62,10 +75,23 @@ struct LevelSelectScreen: View {
         verticalSpacing: 24
     )
 
+    /// Index of the first level that has not yet been completed (bestStars == 0).
+    /// Returns `levels.count` when all levels are completed.
+    private var firstIncompleteIndex: Int {
+        levels.firstIndex(where: { progressService.bestStars(for: $0.id) == 0 }) ?? levels.count
+    }
+
+    private func tileState(at index: Int, firstIncompleteIndex fi: Int) -> TRLevelTileState {
+        if index < fi { return .completed }
+        if index == fi { return .current }
+        return .locked
+    }
+
     var body: some View {
         let positions = layout.positions(for: levels)
         let contentWidth = mapContentWidth(levelCount: levels.count)
         let contentHeight = mapContentHeight(positions: positions)
+        let fi = firstIncompleteIndex
 
         return VStack(spacing: 12) {
             HStack {
@@ -80,11 +106,11 @@ struct LevelSelectScreen: View {
 
             ScrollView([.vertical, .horizontal], showsIndicators: false) {
                 ZStack(alignment: .topLeading) {
-                    ForEach(positions, id: \.levelID) { position in
+                    ForEach(Array(positions.enumerated()), id: \.element.levelID) { index, position in
                         TRLevelTile(
                             levelNumber: position.levelNumber,
-                            state: .current,
-                            stars: 0
+                            state: tileState(at: index, firstIncompleteIndex: fi),
+                            stars: progressService.bestStars(for: position.levelID)
                         ) {
                             onLevelSelected(position.levelID)
                         }

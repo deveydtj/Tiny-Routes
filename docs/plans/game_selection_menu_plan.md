@@ -444,12 +444,12 @@ TinyRoutes/UI/LevelSelectScreen.swift
 
 ### Task 8 - Connect Progress to Tile States
 
-- [ ] Read star counts from `ProgressService.bestStars(for:)`, or pass equivalent progress data into the screen.
-- [ ] Mark completed levels when `bestStars > 0`.
-- [ ] Mark the first incomplete level as current.
-- [ ] Mark later levels as locked.
-- [ ] Disable locked level taps.
-- [ ] Verify level 1 is unlocked when no progress exists.
+- [x] Read star counts from `ProgressService.bestStars(for:)`, or pass equivalent progress data into the screen.
+- [x] Mark completed levels when `bestStars > 0`.
+- [x] Mark the first incomplete level as current.
+- [x] Mark later levels as locked.
+- [x] Disable locked level taps.
+- [x] Verify level 1 is unlocked when no progress exists.
 
 Expected files:
 
