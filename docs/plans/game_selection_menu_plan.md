@@ -490,11 +490,11 @@ TinyRoutes/UI/Components/TRLevelPathView.swift
 
 ### Task 11 - Add the Map Background
 
-- [ ] Create `TRMapBackgroundView`.
-- [ ] Add a pale blue base color.
-- [ ] Add very low-opacity street or block shapes behind the route.
-- [ ] Keep the background subtle enough that level tiles remain the focus.
-- [ ] Verify the screen no longer feels like a plain white list.
+- [x] Create `TRMapBackgroundView`.
+- [x] Add a pale blue base color.
+- [x] Add very low-opacity street or block shapes behind the route.
+- [x] Keep the background subtle enough that level tiles remain the focus.
+- [x] Verify the screen no longer feels like a plain white list.
 
 Expected files:
 
