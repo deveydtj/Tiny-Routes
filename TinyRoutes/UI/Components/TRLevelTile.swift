@@ -44,16 +44,24 @@ struct TRLevelTile: View {
             }
             .overlay(
                 RoundedRectangle(cornerRadius: 20, style: .continuous)
-                    .stroke(Color.white, lineWidth: 2)
+                    .stroke(Color.white, lineWidth: state == .current ? 3 : 2)
             )
             .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
             .shadow(
                 color: state == .completed
                     ? Color(red: 0.10, green: 0.42, blue: 0.34).opacity(0.35)
-                    : Color.black.opacity(0.16),
-                radius: state == .completed ? 9 : 5,
+                    : state == .current
+                    ? Color(red: 0.16, green: 0.40, blue: 0.98).opacity(0.45)
+                    : Color.black.opacity(0.10),
+                radius: state == .completed ? 9 : state == .current ? 10 : 3,
                 x: 0,
-                y: state == .completed ? 5 : 2
+                y: state == .completed ? 5 : state == .current ? 6 : 1
+            )
+            .overlay(alignment: .top) {
+                if state == .current {
+                    currentPin
+                        .offset(y: -15)
+                }
             )
             .overlay(alignment: .topTrailing) {
                 if state == .completed {
@@ -87,11 +95,16 @@ struct TRLevelTile: View {
         } else {
             HStack(spacing: 3) {
                 ForEach(0..<3, id: \.self) { index in
-                    Image(systemName: index < stars ? "star.fill" : "star")
+                    Image(systemName: index < clampedStarCount ? "star.fill" : "star")
                         .font(.system(size: 11, weight: .semibold))
-                        .foregroundStyle(index < stars ? Color.yellow : Color.white.opacity(0.6))
+                        .foregroundStyle(
+                            index < clampedStarCount
+                                ? Color(red: 1.0, green: 0.86, blue: 0.20)
+                                : Color(red: 1.0, green: 0.90, blue: 0.60).opacity(0.35)
+                        )
                 }
             }
+            .accessibilityHidden(true)
         }
     }
 
@@ -123,6 +136,13 @@ struct TRLevelTile: View {
                 .foregroundStyle(.white)
         }
         .accessibilityHidden(true)
+    }
+
+    private var currentPin: some View {
+        Image(systemName: "mappin.circle.fill")
+            .font(.system(size: 20, weight: .bold))
+            .foregroundStyle(.white, Color(red: 0.19, green: 0.48, blue: 0.98))
+            .accessibilityHidden(true)
     }
 
     private var accessibilityStateDescription: String {

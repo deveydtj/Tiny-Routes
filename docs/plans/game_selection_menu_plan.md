@@ -384,12 +384,12 @@ TinyRoutes/UI/Components/TRLevelTile.swift
 
 ### Task 4 - Recreate the Blue Current Tile
 
-- [ ] Add the bright blue gradient background.
-- [ ] Add a stronger white outline than the completed tile.
-- [ ] Add a subtle blue glow or shadow.
-- [ ] Show earned yellow stars and muted empty stars.
-- [ ] Add an optional map pin above the tile if it fits cleanly.
-- [ ] Verify the current tile is visually more prominent than completed and locked tiles.
+- [x] Add the bright blue gradient background.
+- [x] Add a stronger white outline than the completed tile.
+- [x] Add a subtle blue glow or shadow.
+- [x] Show earned yellow stars and muted empty stars.
+- [x] Add an optional map pin above the tile if it fits cleanly.
+- [x] Verify the current tile is visually more prominent than completed and locked tiles.
 
 Expected files:
 
