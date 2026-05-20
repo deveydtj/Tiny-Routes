@@ -13,16 +13,17 @@ struct TRLevelTilePosition {
 
 /// Computes a four-column serpentine tile layout.
 ///
-/// Odd-numbered visual rows (0, 2, …) run left-to-right; even-numbered rows (1, 3, …) run right-to-left.
+/// Even-numbered rows (0, 2, …) run left-to-right; odd-numbered rows (1, 3, …) run right-to-left.
 struct TRSerpentineLayout {
     var tileSize: CGSize
     var horizontalSpacing: CGFloat
     var verticalSpacing: CGFloat
     var columns: Int = 4
 
-    /// Returns the tile positions for `levels`, sorted by level order.
+    /// Returns the tile positions for `levels` in input order.
     func positions(for levels: [LevelData]) -> [TRLevelTilePosition] {
-        levels.enumerated().map { index, level in
+        precondition(columns > 0, "columns must be greater than 0")
+        return levels.enumerated().map { index, level in
             let row = index / columns
             let positionInRow = index % columns
             let visualColumn = row.isMultiple(of: 2) ? positionInRow : (columns - 1 - positionInRow)
