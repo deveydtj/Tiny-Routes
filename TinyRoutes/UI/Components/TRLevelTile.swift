@@ -77,10 +77,10 @@ struct TRLevelTile: View {
                 .foregroundStyle(Color(red: 0.46, green: 0.53, blue: 0.63))
         } else if state == .completed {
             HStack(spacing: 3) {
-                ForEach(0..<clampedStarCount, id: \.self) { _ in
+                ForEach(0..<3, id: \.self) { index in
                     Image(systemName: "star.fill")
                         .font(.system(size: 11, weight: .semibold))
-                        .foregroundStyle(Color(red: 1.0, green: 0.86, blue: 0.20))
+                        .foregroundStyle(Color(red: 1.0, green: 0.86, blue: 0.20).opacity(index < clampedStarCount ? 1.0 : 0.25))
                 }
             }
             .accessibilityHidden(true)
