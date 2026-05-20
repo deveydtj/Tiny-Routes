@@ -77,7 +77,7 @@ struct TRLevelTile: View {
                 .foregroundStyle(Color(red: 0.46, green: 0.53, blue: 0.63))
         } else if state == .completed {
             HStack(spacing: 3) {
-                ForEach(0..<3, id: \.self) { _ in
+                ForEach(0..<clampedStarCount, id: \.self) { _ in
                     Image(systemName: "star.fill")
                         .font(.system(size: 11, weight: .semibold))
                         .foregroundStyle(Color(red: 1.0, green: 0.86, blue: 0.20))
@@ -136,8 +136,12 @@ struct TRLevelTile: View {
         }
     }
 
+    private var clampedStarCount: Int {
+        min(max(stars, 0), 3)
+    }
+
     private var starCountDescription: String {
-        let starCount = state == .completed ? 3 : stars
+        let starCount = clampedStarCount
         return starCount == 1 ? "1 star" : "\(starCount) stars"
     }
 }
