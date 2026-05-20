@@ -56,19 +56,63 @@ struct LevelSelectScreen: View {
     let onBackTapped: () -> Void
     let onLevelSelected: (String) -> Void
 
-    var body: some View {
-        VStack(spacing: 12) {
-            Text("Select a Level")
-                .font(.title2)
+    private let layout = TRSerpentineLayout(
+        tileSize: TRLevelTile.size,
+        horizontalSpacing: 16,
+        verticalSpacing: 24
+    )
 
-            ForEach(levels) { level in
-                Button(level.name) {
-                    onLevelSelected(level.id)
-                }
+    var body: some View {
+        let positions = layout.positions(for: levels)
+        let contentWidth = mapContentWidth(levelCount: levels.count)
+        let contentHeight = mapContentHeight(positions: positions)
+
+        return VStack(spacing: 12) {
+            HStack {
+                Button("Back", action: onBackTapped)
+                Spacer()
+            }
+            .overlay {
+                Text("Select a Level")
+                    .font(.title2)
+                    .fontWeight(.semibold)
             }
 
-            Button("Back", action: onBackTapped)
+            ScrollView([.vertical, .horizontal], showsIndicators: false) {
+                ZStack(alignment: .topLeading) {
+                    ForEach(positions, id: \.levelID) { position in
+                        TRLevelTile(
+                            levelNumber: position.levelNumber,
+                            state: .current,
+                            stars: 0
+                        ) {
+                            onLevelSelected(position.levelID)
+                        }
+                        .position(position.center)
+                    }
+                }
+                .frame(width: contentWidth, height: contentHeight, alignment: .topLeading)
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 4)
+            }
         }
+        .padding(.horizontal, 8)
+    }
+
+    private func mapContentWidth(levelCount: Int) -> CGFloat {
+        let columns = min(max(levelCount, 1), layout.columns)
+        return CGFloat(columns) * layout.tileSize.width
+            + CGFloat(max(columns - 1, 0)) * layout.horizontalSpacing
+    }
+
+    private func mapContentHeight(positions: [TRLevelTilePosition]) -> CGFloat {
+        let rowCount = (positions.map(\.row).max() ?? -1) + 1
+        guard rowCount > 0 else {
+            return 0
+        }
+
+        return CGFloat(rowCount) * layout.tileSize.height
+            + CGFloat(max(rowCount - 1, 0)) * layout.verticalSpacing
     }
 }
 

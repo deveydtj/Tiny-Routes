@@ -429,12 +429,12 @@ TinyRoutesTests/
 
 ### Task 7 - Replace the Plain Level List
 
-- [ ] Replace the current vertical button list in `LevelSelectScreen`.
-- [ ] Render level tiles using the serpentine layout helper.
-- [ ] Keep the existing `onLevelSelected(level.id)` callback for playable levels.
-- [ ] Keep the existing `onBackTapped` callback.
-- [ ] Wrap the map in a vertical `ScrollView`.
-- [ ] Verify selecting a playable level still starts gameplay.
+- [x] Replace the current vertical button list in `LevelSelectScreen`.
+- [x] Render level tiles using the serpentine layout helper.
+- [x] Keep the existing `onLevelSelected(level.id)` callback for playable levels.
+- [x] Keep the existing `onBackTapped` callback.
+- [x] Wrap the map in a vertical + horizontal `ScrollView`.
+- [x] Verify selecting a playable level still starts gameplay.
 
 Expected files:
 
