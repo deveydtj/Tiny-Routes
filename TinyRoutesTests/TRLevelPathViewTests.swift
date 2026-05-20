@@ -80,4 +80,41 @@ final class TRLevelPathViewTests: XCTestCase {
         XCTAssertTrue(transitions[0].isUnlocked)
         XCTAssertFalse(transitions[1].isUnlocked)
     }
+
+    func testRowTransitionSegmentsUseRowAndColumnGeometryWhenInputOrderDiffers() {
+        let levels = [makeLevel(10), makeLevel(2), makeLevel(1), makeLevel(5), makeLevel(4), makeLevel(9)]
+        let positions = layout.positions(for: levels)
+        let states = Dictionary(uniqueKeysWithValues: positions.map { ($0.levelID, TRLevelTileState.current) })
+        let endpointInset: CGFloat = 6
+
+        let transitions = makeRowTransitionSegments(
+            positions: positions,
+            tileStatesByLevelID: states,
+            endpointInset: endpointInset
+        )
+
+        XCTAssertEqual(transitions.count, 1)
+        let row0Rightmost = positions.filter { $0.row == 0 }.max { $0.column < $1.column }!
+        let expectedX = row0Rightmost.center.x + TRLevelTile.size.width / 2 - endpointInset
+        XCTAssertEqual(transitions[0].start.x, expectedX, accuracy: 0.001)
+        XCTAssertEqual(transitions[0].end.x, expectedX, accuracy: 0.001)
+    }
+
+    func testRowTransitionEndpointsAnchorToTileEdges() {
+        let positions = layout.positions(for: makeLevels(8))
+        let states = Dictionary(uniqueKeysWithValues: positions.map { ($0.levelID, TRLevelTileState.current) })
+        let endpointInset: CGFloat = 6
+        let tileWidth = TRLevelTile.size.width
+
+        let transitions = makeRowTransitionSegments(
+            positions: positions,
+            tileStatesByLevelID: states,
+            endpointInset: endpointInset
+        )
+
+        XCTAssertEqual(transitions.count, 1)
+        let expectedEdgeX = positions.first { $0.levelNumber == 4 }!.center.x + tileWidth / 2 - endpointInset
+        XCTAssertEqual(transitions[0].start.x, expectedEdgeX, accuracy: 0.001)
+        XCTAssertEqual(transitions[0].end.x, expectedEdgeX, accuracy: 0.001)
+    }
 }

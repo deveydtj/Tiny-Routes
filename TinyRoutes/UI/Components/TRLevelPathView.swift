@@ -53,17 +53,25 @@ func makeRowTransitionSegments(
     endpointInset: CGFloat = connectorEndpointInset,
     curveOutset: CGFloat = 28
 ) -> [TRLevelPathCurveSegment] {
-    let orderedPositions = positions.sorted { lhs, rhs in
-        if lhs.levelNumber == rhs.levelNumber {
-            return lhs.levelID < rhs.levelID
-        }
-        return lhs.levelNumber < rhs.levelNumber
-    }
+    let groupedByRow = Dictionary(grouping: positions, by: \.row)
+    let sortedRows = groupedByRow.keys.sorted()
 
-    guard orderedPositions.count > 1 else { return [] }
+    guard sortedRows.count > 1 else { return [] }
 
-    return zip(orderedPositions, orderedPositions.dropFirst()).compactMap { from, to in
-        guard to.row == from.row + 1 else { return nil }
+    return zip(sortedRows, sortedRows.dropFirst()).compactMap { fromRow, toRow in
+        guard toRow == fromRow + 1 else { return nil }
+
+        let fromPositions = groupedByRow[fromRow] ?? []
+        let toPositions = groupedByRow[toRow] ?? []
+        guard !fromPositions.isEmpty, !toPositions.isEmpty else { return nil }
+
+        let from = fromRow.isMultiple(of: 2)
+            ? fromPositions.max { $0.column < $1.column }
+            : fromPositions.min { $0.column < $1.column }
+        let to = toRow.isMultiple(of: 2)
+            ? toPositions.min { $0.column < $1.column }
+            : toPositions.max { $0.column < $1.column }
+        guard let from, let to else { return nil }
 
         let fromState = tileStatesByLevelID[from.levelID] ?? .locked
         let toState = tileStatesByLevelID[to.levelID] ?? .locked
@@ -71,14 +79,16 @@ func makeRowTransitionSegments(
         let horizontalDirection: CGFloat = isRightTurn ? 1 : -1
         let startY = from.center.y + tileSize.height / 2 - endpointInset
         let endY = to.center.y - tileSize.height / 2 + endpointInset
-        let controlX = from.center.x + horizontalDirection * (tileSize.width / 2 + curveOutset)
+        let startX = from.center.x + horizontalDirection * (tileSize.width / 2 - endpointInset)
+        let endX = to.center.x + horizontalDirection * (tileSize.width / 2 - endpointInset)
+        let controlX = startX + horizontalDirection * curveOutset
         let verticalDelta = endY - startY
 
         return TRLevelPathCurveSegment(
-            start: CGPoint(x: from.center.x, y: startY),
+            start: CGPoint(x: startX, y: startY),
             control1: CGPoint(x: controlX, y: startY + verticalDelta * 0.35),
             control2: CGPoint(x: controlX, y: startY + verticalDelta * 0.65),
-            end: CGPoint(x: to.center.x, y: endY),
+            end: CGPoint(x: endX, y: endY),
             isUnlocked: fromState != .locked && toState != .locked
         )
     }
