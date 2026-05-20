@@ -57,7 +57,7 @@ struct LevelSelectScreen: View {
     let onLevelSelected: (String) -> Void
 
     private let layout = TRSerpentineLayout(
-        tileSize: CGSize(width: 92, height: 104),
+        tileSize: TRLevelTile.size,
         horizontalSpacing: 16,
         verticalSpacing: 24
     )
@@ -71,15 +71,14 @@ struct LevelSelectScreen: View {
             HStack {
                 Button("Back", action: onBackTapped)
                 Spacer()
+            }
+            .overlay {
                 Text("Select a Level")
                     .font(.title2)
                     .fontWeight(.semibold)
-                Spacer()
-                Color.clear
-                    .frame(width: 44, height: 1)
             }
 
-            ScrollView(.vertical, showsIndicators: false) {
+            ScrollView([.vertical, .horizontal], showsIndicators: false) {
                 ZStack(alignment: .topLeading) {
                     ForEach(positions, id: \.levelID) { position in
                         TRLevelTile(
@@ -109,7 +108,7 @@ struct LevelSelectScreen: View {
     private func mapContentHeight(positions: [TRLevelTilePosition]) -> CGFloat {
         let rowCount = (positions.map(\.row).max() ?? -1) + 1
         guard rowCount > 0 else {
-            return layout.tileSize.height
+            return 0
         }
 
         return CGFloat(rowCount) * layout.tileSize.height

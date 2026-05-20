@@ -7,12 +7,14 @@ enum TRLevelTileState {
 }
 
 struct TRLevelTile: View {
+    static let size = CGSize(width: 92, height: 104)
+
     let levelNumber: Int
     let state: TRLevelTileState
     let stars: Int
     let action: () -> Void
 
-    private let tileSize = CGSize(width: 92, height: 104)
+    private let tileSize = Self.size
 
     var body: some View {
         Button(action: action) {
