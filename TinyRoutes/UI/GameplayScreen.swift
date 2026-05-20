@@ -317,7 +317,7 @@ private struct RouteBoardView: View {
                 }
 
                 if let deliveryDotPoint = deliveryDotPoint(in: layout) {
-                    deliveryDotView(isMoving: deliveryDot?.currentEdgeID != nil)
+                    deliveryDotView(isMoving: deliveryDot?.currentEdgeID != nil || deliveryDot?.transition != nil)
                         .position(deliveryDotPoint)
                         .allowsHitTesting(false)
                 }
@@ -438,6 +438,12 @@ private struct RouteBoardView: View {
     private func deliveryDotPoint(in layout: BoardLayout) -> CGPoint? {
         guard let deliveryDot else {
             return nil
+        }
+
+        if let transition = deliveryDot.transition {
+            let clampedProgress = CGFloat(max(0, min(transition.progressAlongTransition, 1)))
+            let roadPoint = transition.roadPath.point(atProgress: Double(clampedProgress))
+            return layout.point(for: roadPoint)
         }
 
         if let currentEdgeID = deliveryDot.currentEdgeID,

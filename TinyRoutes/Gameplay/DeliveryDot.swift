@@ -6,6 +6,15 @@ struct DeliveryDotPosition: Equatable {
     let y: Double
 }
 
+/// Runtime-only connector used while the dot rounds a node between perpendicular roads.
+struct DeliveryDotTransition: Equatable {
+    let nodeID: String
+    let toEdgeID: String
+    let roadPath: RoadPath
+    let exitDistanceAlongToEdge: Double
+    var progressAlongTransition: Double
+}
+
 /// Mutable runtime state for the moving delivery dot.
 struct DeliveryDot {
     /// The node currently occupied by the dot when not traversing an edge.
@@ -15,6 +24,8 @@ struct DeliveryDot {
     /// Edge traversal progress where 0 is edge-start and 1 is edge-end.
     /// Values outside [0, 1] are clamped when computing runtime position.
     var progressAlongEdge: Double
+    /// A temporary rounded connector between the current road and the next road.
+    var transition: DeliveryDotTransition?
     /// Whether the package objective has been collected.
     var hasCollectedPackage: Bool
 
@@ -22,17 +33,28 @@ struct DeliveryDot {
         currentNodeID: String,
         currentEdgeID: String? = nil,
         progressAlongEdge: Double = 0,
+        transition: DeliveryDotTransition? = nil,
         hasCollectedPackage: Bool = false
     ) {
         self.currentNodeID = currentNodeID
         self.currentEdgeID = currentEdgeID
         self.progressAlongEdge = progressAlongEdge
+        self.transition = transition
         self.hasCollectedPackage = hasCollectedPackage
     }
 
     /// Returns the dot's current board-space position using node or edge interpolation state.
     /// Returns `nil` when the dot references a node/edge that does not exist in the provided graph.
     func runtimePosition(in runtimeGraph: RuntimeRouteGraph) -> DeliveryDotPosition? {
+        if let transition {
+            let clampedProgress = max(0, min(transition.progressAlongTransition, 1))
+            let roadPoint = transition.roadPath.point(atProgress: clampedProgress)
+            return DeliveryDotPosition(
+                x: roadPoint.x,
+                y: roadPoint.y
+            )
+        }
+
         if let currentEdgeID,
            let edge = runtimeGraph.edgesByID[currentEdgeID] {
             let clampedProgress = max(0, min(progressAlongEdge, 1))

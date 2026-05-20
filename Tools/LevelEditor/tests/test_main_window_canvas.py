@@ -21,7 +21,16 @@ if str(LEVEL_EDITOR_ROOT) not in sys.path:
 from app.main_window import LevelEditorMainWindow
 from app.models import LevelDocument, RouteEdgeModel, RouteGraphModel, RouteNodeModel, SolutionActionModel, SolutionModel
 from app.services import ValidationMessage, ValidationResult, ValidationSeverity
-from app.ui import EdgeItem, LevelCanvasScene, LevelCanvasView, NodeItem, PiecePalette, PropertiesPanel, SolutionPanel
+from app.ui import (
+    EdgeItem,
+    LevelCanvasScene,
+    LevelCanvasView,
+    NodeItem,
+    PiecePalette,
+    PropertiesPanel,
+    SolutionPanel,
+    TransitionArcItem,
+)
 from app.ui.validation_panel import ValidationPanel
 from app.ui.node_item import NODE_TYPE_STYLES
 
@@ -524,6 +533,111 @@ def test_canvas_scene_skips_edge_between_colocated_nodes(qapplication: QApplicat
     scene.display_level(document)
     edge_items = [item for item in scene.items() if isinstance(item, EdgeItem)]
     assert len(edge_items) == 0
+
+
+def test_canvas_scene_draws_smooth_transition_arc_for_perpendicular_default_handoff(
+    qapplication: QApplication,
+) -> None:
+    document = LevelDocument(
+        id="level_smooth_corner",
+        name="Smooth Corner",
+        graph=RouteGraphModel(
+            nodes=[
+                RouteNodeModel(id="start", x=0.0, y=0.0, outgoingEdgeIDs=["to_corner"]),
+                RouteNodeModel(id="corner", x=1.0, y=0.0, outgoingEdgeIDs=["to_end"]),
+                RouteNodeModel(id="end", x=1.0, y=1.0, outgoingEdgeIDs=[]),
+            ],
+            edges=[
+                RouteEdgeModel(id="to_corner", fromNodeID="start", toNodeID="corner"),
+                RouteEdgeModel(id="to_end", fromNodeID="corner", toNodeID="end"),
+            ],
+        ),
+        startNodeID="start",
+        packageNodeID="start",
+        destinationNodeID="end",
+        timeLimitSeconds=10,
+        parTaps=0,
+    )
+
+    scene = LevelCanvasScene()
+    scene.display_level(document)
+
+    arc_items = [item for item in scene.items() if isinstance(item, TransitionArcItem)]
+    assert len(arc_items) == 1
+    assert arc_items[0].node_id == "corner"
+    assert arc_items[0].incoming_edge_id == "to_corner"
+    assert arc_items[0].outgoing_edge_id == "to_end"
+
+    path = arc_items[0].path()
+    radius = LevelCanvasScene.STANDARD_TURN_RADIUS * LevelCanvasScene.COORDINATE_SCALE
+    assert path.elementAt(0).x == pytest.approx(LevelCanvasScene.COORDINATE_SCALE - radius)
+    assert path.elementAt(0).y == pytest.approx(0)
+    assert path.elementAt(path.elementCount() - 1).x == pytest.approx(LevelCanvasScene.COORDINATE_SCALE)
+    assert path.elementAt(path.elementCount() - 1).y == pytest.approx(radius)
+
+
+def test_canvas_scene_does_not_draw_transition_arc_for_straight_handoff(
+    qapplication: QApplication,
+) -> None:
+    document = LevelDocument(
+        id="level_straight",
+        name="Straight",
+        graph=RouteGraphModel(
+            nodes=[
+                RouteNodeModel(id="start", x=0.0, y=0.0, outgoingEdgeIDs=["to_middle"]),
+                RouteNodeModel(id="middle", x=1.0, y=0.0, outgoingEdgeIDs=["to_end"]),
+                RouteNodeModel(id="end", x=2.0, y=0.0, outgoingEdgeIDs=[]),
+            ],
+            edges=[
+                RouteEdgeModel(id="to_middle", fromNodeID="start", toNodeID="middle"),
+                RouteEdgeModel(id="to_end", fromNodeID="middle", toNodeID="end"),
+            ],
+        ),
+        startNodeID="start",
+        packageNodeID="start",
+        destinationNodeID="end",
+        timeLimitSeconds=10,
+        parTaps=0,
+    )
+
+    scene = LevelCanvasScene()
+    scene.display_level(document)
+
+    arc_items = [item for item in scene.items() if isinstance(item, TransitionArcItem)]
+    assert arc_items == []
+
+
+def test_canvas_scene_transition_arc_uses_first_valid_outgoing_edge_as_default(
+    qapplication: QApplication,
+) -> None:
+    document = LevelDocument(
+        id="level_switch_default",
+        name="Switch Default",
+        graph=RouteGraphModel(
+            nodes=[
+                RouteNodeModel(id="start", x=0.0, y=0.0, outgoingEdgeIDs=["to_switch"]),
+                RouteNodeModel(id="switch", x=1.0, y=0.0, outgoingEdgeIDs=["to_straight", "to_turn"]),
+                RouteNodeModel(id="straight", x=2.0, y=0.0, outgoingEdgeIDs=[]),
+                RouteNodeModel(id="turn", x=1.0, y=1.0, outgoingEdgeIDs=[]),
+            ],
+            edges=[
+                RouteEdgeModel(id="to_switch", fromNodeID="start", toNodeID="switch"),
+                RouteEdgeModel(id="to_straight", fromNodeID="switch", toNodeID="straight"),
+                RouteEdgeModel(id="to_turn", fromNodeID="switch", toNodeID="turn"),
+            ],
+        ),
+        startNodeID="start",
+        packageNodeID="start",
+        destinationNodeID="turn",
+        timeLimitSeconds=10,
+        parTaps=0,
+    )
+
+    scene = LevelCanvasScene()
+    scene.display_level(document)
+
+    arc_items = [item for item in scene.items() if isinstance(item, TransitionArcItem)]
+    assert arc_items == []
 
 
 # ---------------------------------------------------------------------------

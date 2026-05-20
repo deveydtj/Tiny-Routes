@@ -241,7 +241,7 @@ final class RouteEngine {
             movementDeltaTime = deltaTime
         }
 
-        guard deliveryDot.currentEdgeID != nil else {
+        guard deliveryDot.currentEdgeID != nil || deliveryDot.transition != nil else {
             if didConsumeRemainingTime, levelOutcome == nil {
                 levelOutcome = .failed(reason: .timeExpired)
             }
@@ -255,6 +255,44 @@ final class RouteEngine {
 
         while remainingDistance > 0, safetyStepCount < maxSafetyStepCount {
             safetyStepCount += 1
+
+            if var transition = deliveryDot.transition {
+                let transitionLength = transition.roadPath.totalLength
+                guard transitionLength > 0,
+                      let toEdge = runtimeGraph.edgesByID[transition.toEdgeID],
+                      toEdge.roadPath.totalLength > 0 else {
+                    snapDotToNode(transition.nodeID, dot: &deliveryDot)
+                    if levelOutcome != nil {
+                        break
+                    }
+                    guard beginMovementFromCurrentNode(in: runtimeGraph, dot: &deliveryDot) else {
+                        didHaltAtDeadEnd = isDeadEnd(nodeID: deliveryDot.currentNodeID, in: runtimeGraph)
+                        if didHaltAtDeadEnd {
+                            levelOutcome = .failed(reason: .deadEnd)
+                        }
+                        break
+                    }
+                    continue
+                }
+
+                let clampedProgress = max(0, min(transition.progressAlongTransition, 1))
+                let distanceToTransitionEnd = (1 - clampedProgress) * transitionLength
+                if remainingDistance < distanceToTransitionEnd {
+                    transition.progressAlongTransition = clampedProgress + (remainingDistance / transitionLength)
+                    deliveryDot.transition = transition
+                    remainingDistance = 0
+                } else {
+                    remainingDistance -= distanceToTransitionEnd
+                    deliveryDot.currentNodeID = transition.nodeID
+                    deliveryDot.currentEdgeID = transition.toEdgeID
+                    deliveryDot.progressAlongEdge = max(
+                        0,
+                        min(transition.exitDistanceAlongToEdge / toEdge.roadPath.totalLength, 1)
+                    )
+                    deliveryDot.transition = nil
+                }
+                continue
+            }
 
             guard let currentEdgeID = deliveryDot.currentEdgeID,
                   let edge = runtimeGraph.edgesByID[currentEdgeID] else {
@@ -278,13 +316,27 @@ final class RouteEngine {
             }
 
             let clampedProgress = max(0, min(deliveryDot.progressAlongEdge, 1))
-            let distanceToEdgeEnd = (1 - clampedProgress) * edgeLength
+            let transition = smoothTransition(from: edge, in: runtimeGraph)
+            let exitDistanceFromCurrentEdge = transition?.exitDistanceFromCurrentEdge ?? edgeLength
+            let targetProgress = max(0, min(exitDistanceFromCurrentEdge / edgeLength, 1))
+            let distanceToEdgeTarget = max(0, (targetProgress - clampedProgress) * edgeLength)
 
-            if remainingDistance < distanceToEdgeEnd {
+            if remainingDistance < distanceToEdgeTarget {
                 deliveryDot.progressAlongEdge = clampedProgress + (remainingDistance / edgeLength)
                 remainingDistance = 0
+            } else if let transition {
+                remainingDistance -= distanceToEdgeTarget
+                deliveryDot.currentNodeID = edge.toNodeID
+                deliveryDot.currentEdgeID = nil
+                deliveryDot.progressAlongEdge = 0
+                deliveryDot.transition = transition.dotTransition
+                collectPackageIfNeeded(dot: &deliveryDot)
+                evaluateDestinationArrivalIfNeeded(dot: &deliveryDot)
+                if levelOutcome != nil {
+                    break
+                }
             } else {
-                remainingDistance -= distanceToEdgeEnd
+                remainingDistance -= distanceToEdgeTarget
                 snapDotToNode(edge.toNodeID, dot: &deliveryDot)
                 if levelOutcome != nil {
                     break
@@ -321,6 +373,9 @@ final class RouteEngine {
         guard var runtimeGraph else {
             return false
         }
+        if deliveryDot?.transition?.nodeID == nodeID {
+            return false
+        }
         if let currentEdgeID = deliveryDot?.currentEdgeID,
            runtimeGraph.edgesByID[currentEdgeID]?.fromNodeID == nodeID {
             return false
@@ -345,6 +400,7 @@ final class RouteEngine {
 
         dot.currentEdgeID = edgeID
         dot.progressAlongEdge = 0
+        dot.transition = nil
         return true
     }
 
@@ -352,6 +408,7 @@ final class RouteEngine {
         dot.currentNodeID = nodeID
         dot.currentEdgeID = nil
         dot.progressAlongEdge = 0
+        dot.transition = nil
         collectPackageIfNeeded(dot: &dot)
         evaluateDestinationArrivalIfNeeded(dot: &dot)
     }
@@ -383,5 +440,78 @@ final class RouteEngine {
         }
 
         return node.outgoingEdgeIDs.isEmpty || node.activeOutgoingEdgeID == nil
+    }
+
+    private struct SmoothTransition {
+        let exitDistanceFromCurrentEdge: Double
+        let dotTransition: DeliveryDotTransition
+    }
+
+    private func smoothTransition(from edge: RuntimeRouteEdge, in runtimeGraph: RuntimeRouteGraph) -> SmoothTransition? {
+        guard let node = runtimeGraph.nodesByID[edge.toNodeID],
+              let nextEdgeID = node.activeOutgoingEdgeID,
+              let nextEdge = runtimeGraph.edgesByID[nextEdgeID],
+              nextEdge.fromNodeID == node.id else {
+            return nil
+        }
+
+        let edgeLength = edge.roadPath.totalLength
+        let nextEdgeLength = nextEdge.roadPath.totalLength
+        guard edgeLength > 0, nextEdgeLength > 0 else {
+            return nil
+        }
+
+        let incoming = edge.roadPath.tangent(atDistance: edgeLength)
+        let outgoing = nextEdge.roadPath.tangent(atDistance: 0)
+        let dotProduct = (incoming.x * outgoing.x) + (incoming.y * outgoing.y)
+        let crossProduct = (incoming.x * outgoing.y) - (incoming.y * outgoing.x)
+
+        guard abs(dotProduct) < 0.0001,
+              abs(crossProduct) > 0.9999 else {
+            return nil
+        }
+
+        let radius = min(RoadPath.standardTurnRadius, edgeLength / 2, nextEdgeLength / 2)
+        guard radius > 0 else {
+            return nil
+        }
+
+        let nodePoint = RoadPoint(x: node.x, y: node.y)
+        let start = RoadPoint(
+            x: nodePoint.x - (incoming.x * radius),
+            y: nodePoint.y - (incoming.y * radius)
+        )
+        let end = RoadPoint(
+            x: nodePoint.x + (outgoing.x * radius),
+            y: nodePoint.y + (outgoing.y * radius)
+        )
+        let center = RoadPoint(
+            x: start.x + (outgoing.x * radius),
+            y: start.y + (outgoing.y * radius)
+        )
+        let startAngle = atan2(start.y - center.y, start.x - center.x)
+        let signedAngleDelta = crossProduct > 0 ? Double.pi / 2 : -Double.pi / 2
+        let transitionPath = RoadPath(segments: [
+            RoadSegment(
+                kind: .quarterTurn,
+                start: start,
+                end: end,
+                center: center,
+                radius: radius,
+                startAngle: startAngle,
+                signedAngleDelta: signedAngleDelta
+            )
+        ])
+
+        return SmoothTransition(
+            exitDistanceFromCurrentEdge: edgeLength - radius,
+            dotTransition: DeliveryDotTransition(
+                nodeID: node.id,
+                toEdgeID: nextEdgeID,
+                roadPath: transitionPath,
+                exitDistanceAlongToEdge: radius,
+                progressAlongTransition: 0
+            )
+        )
     }
 }

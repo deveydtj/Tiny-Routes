@@ -785,20 +785,43 @@ final class LevelRepositoryTests: XCTestCase {
                     actionIndex += 1
                 }
 
-                XCTAssertEqual(
-                    engine.deliveryDot?.currentEdgeID,
-                    edgeID,
-                    "Expected \(level.id) replay to be traversing \(edgeID)",
+                XCTAssertTrue(
+                    isReplayCommitted(to: edgeID, in: engine.deliveryDot),
+                    "Expected \(level.id) replay to be traversing or smoothly entering \(edgeID)",
                     file: file,
                     line: line
                 )
-                engine.updateDot(deltaTime: (edge.roadPath.totalLength / solutionReplayDotSpeed) + 0.000001)
+                let replayDistance = remainingReplayDistance(for: edgeID, edge: edge, in: engine.deliveryDot)
+                engine.updateDot(deltaTime: (replayDistance / solutionReplayDotSpeed) + 0.000001)
                 actionIndex += 1
             }
         }
 
         XCTAssertEqual(engine.levelOutcome, .completed, "Expected \(level.id) authored replay to complete", file: file, line: line)
         XCTAssertEqual(engine.tapCount, solution.tapCount, "Expected \(level.id) replay tap count to match solver", file: file, line: line)
+    }
+
+    private func isReplayCommitted(to edgeID: String, in dot: DeliveryDot?) -> Bool {
+        dot?.currentEdgeID == edgeID || dot?.transition?.toEdgeID == edgeID
+    }
+
+    private func remainingReplayDistance(for edgeID: String, edge: RuntimeRouteEdge, in dot: DeliveryDot?) -> Double {
+        let edgeLength = edge.roadPath.totalLength
+
+        if dot?.currentEdgeID == edgeID {
+            let progress = max(0, min(dot?.progressAlongEdge ?? 0, 1))
+            return (1 - progress) * edgeLength
+        }
+
+        if let transition = dot?.transition, transition.toEdgeID == edgeID {
+            let transitionLength = transition.roadPath.totalLength
+            let transitionProgress = max(0, min(transition.progressAlongTransition, 1))
+            let transitionRemaining = (1 - transitionProgress) * transitionLength
+            let edgeRemaining = max(edgeLength - transition.exitDistanceAlongToEdge, 0)
+            return transitionRemaining + edgeRemaining
+        }
+
+        return edgeLength
     }
 }
 

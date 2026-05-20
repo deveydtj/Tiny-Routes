@@ -220,6 +220,51 @@ final class RouteEngineTests: XCTestCase {
         XCTAssertEqual(dot.progressAlongEdge, expectedProgress, accuracy: 0.0001)
     }
 
+    func testUpdateDotUsesSmoothTransitionBetweenPerpendicularRoads() throws {
+        let nodes = [
+            RouteNode(id: "start", x: 0, y: 0, outgoingEdgeIDs: ["to_corner"]),
+            RouteNode(id: "corner", x: 1, y: 0, outgoingEdgeIDs: ["to_end"]),
+            RouteNode(id: "end", x: 1, y: 1, outgoingEdgeIDs: [])
+        ]
+        let edges = [
+            RouteEdge(id: "to_corner", fromNodeID: "start", toNodeID: "corner"),
+            RouteEdge(id: "to_end", fromNodeID: "corner", toNodeID: "end")
+        ]
+        let level = LevelData(
+            id: "smooth_corner",
+            name: "Smooth Corner",
+            graph: RouteGraph(nodes: nodes, edges: edges),
+            startNodeID: "start",
+            packageNodeID: "start",
+            destinationNodeID: "end",
+            timeLimitSeconds: 10,
+            parTaps: 1
+        )
+        let engine = RouteEngine(dotSpeed: 1)
+        try engine.buildGraph(from: level)
+        XCTAssertTrue(engine.startDotMovement())
+
+        engine.updateDot(deltaTime: 0.9)
+
+        let graph = try XCTUnwrap(engine.runtimeGraph)
+        let dot = try XCTUnwrap(engine.deliveryDot)
+        let transition = try XCTUnwrap(dot.transition)
+        XCTAssertNil(dot.currentEdgeID)
+        XCTAssertEqual(transition.nodeID, "corner")
+        XCTAssertEqual(transition.toEdgeID, "to_end")
+        XCTAssertGreaterThan(transition.progressAlongTransition, 0)
+        XCTAssertLessThan(transition.progressAlongTransition, 1)
+        XCTAssertEqual(transition.roadPath.tangent(atProgress: 0).x, 1, accuracy: 0.0001)
+        XCTAssertEqual(transition.roadPath.tangent(atProgress: 0).y, 0, accuracy: 0.0001)
+        XCTAssertEqual(transition.roadPath.tangent(atProgress: 1).x, 0, accuracy: 0.0001)
+        XCTAssertEqual(transition.roadPath.tangent(atProgress: 1).y, 1, accuracy: 0.0001)
+        let position = try XCTUnwrap(dot.runtimePosition(in: graph))
+        XCTAssertGreaterThan(position.x, 0.82)
+        XCTAssertLessThan(position.x, 1)
+        XCTAssertGreaterThan(position.y, 0)
+        XCTAssertLessThan(position.y, 0.18)
+    }
+
     func testStartDotMovementReturnsFalseAtLeafNode() throws {
         let engine = RouteEngine()
         try engine.buildGraph(from: makeLevelData(startNodeID: "destination"))
@@ -537,7 +582,8 @@ final class RouteEngineTests: XCTestCase {
 
         let movedDot = try XCTUnwrap(engine.deliveryDot)
         XCTAssertEqual(movedDot.currentNodeID, "package")
-        XCTAssertEqual(movedDot.currentEdgeID, "e_package_return")
+        XCTAssertNil(movedDot.currentEdgeID)
+        XCTAssertEqual(movedDot.transition?.toEdgeID, "e_package_return")
         XCTAssertTrue(movedDot.hasCollectedPackage)
 
         XCTAssertTrue(engine.restartLevel())
@@ -1041,7 +1087,8 @@ final class RouteEngineTests: XCTestCase {
         engine.updateDot(deltaTime: 1.5)
 
         let dotReturning = try XCTUnwrap(engine.deliveryDot)
-        XCTAssertEqual(dotReturning.currentEdgeID, "e_package_return")
+        XCTAssertNil(dotReturning.currentEdgeID)
+        XCTAssertEqual(dotReturning.transition?.toEdgeID, "e_package_return")
 
         // Rotate switch twice so destination is now the active direction for the next visit.
         engine.rotateSwitchNode(nodeID: "switch") // -> e_switch_dead_end

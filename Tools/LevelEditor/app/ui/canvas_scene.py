@@ -13,11 +13,13 @@ from app.models import LevelDocument, RouteNodeModel
 
 from .edge_item import EdgeItem
 from .node_item import NodeItem
+from .transition_arc_item import TransitionArcItem
 
 
 class LevelCanvasScene(QGraphicsScene):
     COORDINATE_SCALE = 180.0
     FALLBACK_SPACING = 140.0
+    STANDARD_TURN_RADIUS = 0.18
 
     # Emitted when a NodeItem is selected.  Args: node_id, node_type, model_x, model_y
     node_item_selected = Signal(str, str, float, float)
@@ -40,6 +42,7 @@ class LevelCanvasScene(QGraphicsScene):
         self._document: LevelDocument | None = None
         self._node_items_by_id: dict[str, NodeItem] = {}
         self._edges_by_node_id: dict[str, list[EdgeItem]] = {}
+        self._transition_arc_items: list[TransitionArcItem] = []
         self._connection_source_node_id: str | None = None
         self._pending_road_shape = "horizontalFirst"
         self._preview_path_item: QGraphicsPathItem | None = None
@@ -52,6 +55,7 @@ class LevelCanvasScene(QGraphicsScene):
         self._document = document
         self._node_items_by_id = {}
         self._edges_by_node_id = {}
+        self._transition_arc_items = []
         self._clear_connection_source()
         if not document.graph.nodes:
             self._show_placeholder("No nodes in this level")
@@ -83,6 +87,7 @@ class LevelCanvasScene(QGraphicsScene):
             self.addItem(edge_item)
             self._edges_by_node_id.setdefault(from_node.node_id, []).append(edge_item)
             self._edges_by_node_id.setdefault(to_node.node_id, []).append(edge_item)
+        self._redraw_transition_arcs()
 
     def scene_to_model_coordinates(self, scene_position: QPointF) -> tuple[float, float]:
         return (
@@ -97,6 +102,7 @@ class LevelCanvasScene(QGraphicsScene):
 
         for edge_item in self._edges_by_node_id.get(item.node_id, []):
             edge_item.refresh_position(allow_degenerate=True)
+        self._redraw_transition_arcs()
 
         if item.isSelected():
             self.node_item_selected.emit(item.node_id, item.node_type, item.model_x, item.model_y)
@@ -405,6 +411,148 @@ class LevelCanvasScene(QGraphicsScene):
         row = index // 5
         column = index % 5
         return QPointF(column * self.FALLBACK_SPACING, row * self.FALLBACK_SPACING)
+
+    def _redraw_transition_arcs(self) -> None:
+        for arc_item in self._transition_arc_items:
+            self.removeItem(arc_item)
+        self._transition_arc_items = []
+
+        if self._document is None:
+            return
+
+        edges_by_id = {edge.id: edge for edge in self._document.graph.edges}
+        for node in self._document.graph.nodes:
+            node_item = self._node_items_by_id.get(node.id)
+            if node_item is None:
+                continue
+
+            active_outgoing_edge = self._default_active_outgoing_edge(node, edges_by_id)
+            if active_outgoing_edge is None:
+                continue
+
+            for incoming_edge in self._document.graph.edges:
+                if incoming_edge.toNodeID != node.id:
+                    continue
+
+                arc_item = self._make_transition_arc_item(
+                    node_id=node.id,
+                    incoming_edge=incoming_edge,
+                    outgoing_edge=active_outgoing_edge,
+                    node_position=node_item.pos(),
+                )
+                if arc_item is None:
+                    continue
+                self._transition_arc_items.append(arc_item)
+                self.addItem(arc_item)
+
+    def _default_active_outgoing_edge(self, node: RouteNodeModel, edges_by_id: dict):
+        for edge_id in node.outgoingEdgeIDs:
+            edge = edges_by_id.get(edge_id)
+            if edge is not None and edge.fromNodeID == node.id:
+                return edge
+        return None
+
+    def _make_transition_arc_item(
+        self,
+        node_id: str,
+        incoming_edge,
+        outgoing_edge,
+        node_position: QPointF,
+    ) -> TransitionArcItem | None:
+        incoming_tangent = self._edge_end_tangent(incoming_edge)
+        outgoing_tangent = self._edge_start_tangent(outgoing_edge)
+        if incoming_tangent is None or outgoing_tangent is None:
+            return None
+
+        dot_product = (incoming_tangent[0] * outgoing_tangent[0]) + (
+            incoming_tangent[1] * outgoing_tangent[1]
+        )
+        cross_product = (incoming_tangent[0] * outgoing_tangent[1]) - (
+            incoming_tangent[1] * outgoing_tangent[0]
+        )
+        if not (abs(dot_product) < 0.0001 and abs(cross_product) > 0.9999):
+            return None
+
+        incoming_length = self._edge_road_length(incoming_edge)
+        outgoing_length = self._edge_road_length(outgoing_edge)
+        if incoming_length <= 0 or outgoing_length <= 0:
+            return None
+
+        radius = min(
+            self.STANDARD_TURN_RADIUS * self.COORDINATE_SCALE,
+            incoming_length / 2,
+            outgoing_length / 2,
+        )
+        if radius <= 0:
+            return None
+
+        start = QPointF(
+            node_position.x() - (incoming_tangent[0] * radius),
+            node_position.y() - (incoming_tangent[1] * radius),
+        )
+        end = QPointF(
+            node_position.x() + (outgoing_tangent[0] * radius),
+            node_position.y() + (outgoing_tangent[1] * radius),
+        )
+        center = QPointF(
+            start.x() + (outgoing_tangent[0] * radius),
+            start.y() + (outgoing_tangent[1] * radius),
+        )
+        start_angle = math.atan2(start.y() - center.y(), start.x() - center.x())
+        signed_angle_delta = math.pi / 2 if cross_product > 0 else -math.pi / 2
+
+        return TransitionArcItem(
+            node_id=node_id,
+            incoming_edge_id=incoming_edge.id,
+            outgoing_edge_id=outgoing_edge.id,
+            start=start,
+            end=end,
+            center=center,
+            start_angle=start_angle,
+            signed_angle_delta=signed_angle_delta,
+        )
+
+    def _edge_start_tangent(self, edge) -> tuple[float, float] | None:
+        return self._edge_endpoint_tangent(edge, at_start=True)
+
+    def _edge_end_tangent(self, edge) -> tuple[float, float] | None:
+        return self._edge_endpoint_tangent(edge, at_start=False)
+
+    def _edge_endpoint_tangent(self, edge, at_start: bool) -> tuple[float, float] | None:
+        from_node = self._node_items_by_id.get(edge.fromNodeID)
+        to_node = self._node_items_by_id.get(edge.toNodeID)
+        if from_node is None or to_node is None:
+            return None
+
+        dx = to_node.pos().x() - from_node.pos().x()
+        dy = to_node.pos().y() - from_node.pos().y()
+        if math.isclose(dx, 0, abs_tol=1e-6) and math.isclose(dy, 0, abs_tol=1e-6):
+            return None
+
+        if math.isclose(dx, 0, abs_tol=1e-6):
+            return (0, 1 if dy > 0 else -1)
+        if math.isclose(dy, 0, abs_tol=1e-6):
+            return (1 if dx > 0 else -1, 0)
+
+        x_direction = 1 if dx > 0 else -1
+        y_direction = 1 if dy > 0 else -1
+        if edge.roadShape == "verticalFirst":
+            return (0, y_direction) if at_start else (x_direction, 0)
+        return (x_direction, 0) if at_start else (0, y_direction)
+
+    def _edge_road_length(self, edge) -> float:
+        from_node = self._node_items_by_id.get(edge.fromNodeID)
+        to_node = self._node_items_by_id.get(edge.toNodeID)
+        if from_node is None or to_node is None:
+            return 0
+
+        dx = abs(to_node.pos().x() - from_node.pos().x())
+        dy = abs(to_node.pos().y() - from_node.pos().y())
+        if math.isclose(dx, 0, abs_tol=1e-6) or math.isclose(dy, 0, abs_tol=1e-6):
+            return math.hypot(dx, dy)
+
+        turn_radius = min(self.STANDARD_TURN_RADIUS * self.COORDINATE_SCALE, dx / 2, dy / 2)
+        return (dx - turn_radius) + ((math.pi / 2) * turn_radius) + (dy - turn_radius)
 
     @staticmethod
     def _points_are_close(first: QPointF, second: QPointF) -> bool:
