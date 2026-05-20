@@ -341,10 +341,10 @@ These tasks are intentionally scoped so entry-level engineers can complete them 
 
 ### Task 1 - Create the Level Tile State Enum
 
-- [ ] Add `TRLevelTileState` with `completed`, `current`, and `locked` cases.
-- [ ] Place it near the level tile component, or in its own small file if the component becomes large.
-- [ ] Add simple computed properties for state-specific colors only if they keep the tile code easier to read.
-- [ ] Verify the project builds after adding the enum.
+- [x] Add `TRLevelTileState` with `completed`, `current`, and `locked` cases.
+- [x] Place it near the level tile component, or in its own small file if the component becomes large.
+- [x] Add simple computed properties for state-specific colors only if they keep the tile code easier to read.
+- [x] Verify the project builds after adding the enum.
 
 Expected files:
 
