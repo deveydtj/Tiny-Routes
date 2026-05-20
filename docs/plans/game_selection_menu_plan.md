@@ -505,11 +505,11 @@ TinyRoutes/UI/LevelSelectScreen.swift
 
 ### Task 12 - Add Accessibility Labels
 
-- [ ] Add accessibility labels for completed, current, and locked tiles.
-- [ ] Include the level number.
-- [ ] Include the tile state.
-- [ ] Include stars for completed/current tiles.
-- [ ] Verify VoiceOver labels are meaningful and do not expose raw IDs like `level_001`.
+- [x] Add accessibility labels for completed, current, and locked tiles.
+- [x] Include the level number.
+- [x] Include the tile state.
+- [x] Include stars for completed/current tiles.
+- [x] Verify VoiceOver labels are meaningful and do not expose raw IDs like `level_001`.
 
 Expected files:
 
