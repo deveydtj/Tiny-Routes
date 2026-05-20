@@ -65,8 +65,8 @@ struct TRLevelTile: View {
         .buttonStyle(.plain)
         .disabled(state == .locked)
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel("Level \(levelNumber)")
-        .accessibilityValue("\(accessibilityStateDescription), \(starCountDescription)")
+        .accessibilityLabel(Text("Level \(levelNumber)"))
+        .accessibilityValue(Text(accessibilityValueDescription))
     }
 
     @ViewBuilder
@@ -143,6 +143,13 @@ struct TRLevelTile: View {
     private var starCountDescription: String {
         let starCount = clampedStarCount
         return starCount == 1 ? "1 star" : "\(starCount) stars"
+    }
+
+    private var accessibilityValueDescription: String {
+        guard state != .locked else {
+            return accessibilityStateDescription
+        }
+        return "\(accessibilityStateDescription), \(starCountDescription)"
     }
 }
 
