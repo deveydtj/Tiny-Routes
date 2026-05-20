@@ -414,11 +414,11 @@ TinyRoutes/UI/Components/TRLevelTile.swift
 
 ### Task 6 - Add the Serpentine Layout Helper
 
-- [ ] Create a pure layout helper for four-column placement.
-- [ ] Use the placement rule `visualColumn = row.isMultiple(of: 2) ? positionInRow : 3 - positionInRow`.
-- [ ] Return enough data to render each tile: level ID, level number, row, column, and center point.
-- [ ] Add tests or preview-only debug output proving levels 1 through 8 render as `1 2 3 4` then `8 7 6 5`.
-- [ ] Verify the helper also works for 12, 16, and 24 levels.
+- [x] Create a pure layout helper for four-column placement.
+- [x] Use the placement rule `visualColumn = row.isMultiple(of: 2) ? positionInRow : 3 - positionInRow`.
+- [x] Return enough data to render each tile: level ID, level number, row, column, and center point.
+- [x] Add tests or preview-only debug output proving levels 1 through 8 render as `1 2 3 4` then `8 7 6 5`.
+- [x] Verify the helper also works for 12, 16, and 24 levels.
 
 Expected files:
 
