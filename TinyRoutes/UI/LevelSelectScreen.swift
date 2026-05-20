@@ -31,12 +31,20 @@ struct TRSerpentineLayout {
             let y = CGFloat(row) * (tileSize.height + verticalSpacing) + tileSize.height / 2
             return TRLevelTilePosition(
                 levelID: level.id,
-                levelNumber: index + 1,
+                levelNumber: levelNumber(for: level, fallback: index + 1),
                 row: row,
                 column: visualColumn,
                 center: CGPoint(x: x, y: y)
             )
         }
+    }
+
+    private func levelNumber(for level: LevelData, fallback: Int) -> Int {
+        guard let suffix = level.id.split(separator: "_").last,
+              let parsed = Int(suffix) else {
+            return fallback
+        }
+        return parsed
     }
 }
 

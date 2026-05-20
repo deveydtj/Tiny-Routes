@@ -95,6 +95,12 @@ final class LevelSelectLayoutTests: XCTestCase {
         XCTAssertEqual(ids, ["level_001", "level_002", "level_003", "level_004"])
     }
 
+    func testLevelNumberComesFromLevelIDWhenInputOrderIsDifferent() {
+        let levels = [makeLevel(10), makeLevel(2), makeLevel(1)]
+        let positions = layout.positions(for: levels)
+        XCTAssertEqual(positions.map(\.levelNumber), [10, 2, 1])
+    }
+
     // MARK: - Works for 12, 16, and 24 levels
 
     func testLayoutFor12Levels() {
