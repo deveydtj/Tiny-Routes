@@ -6,7 +6,7 @@ struct TRLevelPathSegment: Equatable {
     let isUnlocked: Bool
 }
 
-private let connectorEndpointInset: CGFloat = 6
+let connectorEndpointInset: CGFloat = 6
 
 func makeHorizontalSegments(
     positions: [TRLevelTilePosition],
