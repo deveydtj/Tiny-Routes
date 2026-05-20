@@ -107,6 +107,10 @@ struct LevelSelectScreen: View {
         let contentWidth = mapContentWidth(levelCount: levels.count)
         let contentHeight = mapContentHeight(positions: positions)
         let progressSnapshot = TRLevelProgressSnapshot(levels: levels, progressService: progressService)
+        let tileStates = positions.enumerated().map { index, position in
+            progressSnapshot.tileState(at: index, levelID: position.levelID)
+        }
+        let tileStatesByLevelID = Dictionary(uniqueKeysWithValues: zip(positions.map(\.levelID), tileStates))
 
         return VStack(spacing: 12) {
             HStack {
@@ -121,10 +125,16 @@ struct LevelSelectScreen: View {
 
             ScrollView([.vertical, .horizontal], showsIndicators: false) {
                 ZStack(alignment: .topLeading) {
+                    TRLevelPathView(
+                        positions: positions,
+                        tileStatesByLevelID: tileStatesByLevelID
+                    )
+                    .frame(width: contentWidth, height: contentHeight, alignment: .topLeading)
+
                     ForEach(Array(positions.enumerated()), id: \.element.levelID) { index, position in
                         TRLevelTile(
                             levelNumber: position.levelNumber,
-                            state: progressSnapshot.tileState(at: index, levelID: position.levelID),
+                            state: tileStates[index],
                             stars: progressSnapshot.stars(for: position.levelID)
                         ) {
                             onLevelSelected(position.levelID)

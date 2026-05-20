@@ -461,12 +461,12 @@ TinyRoutes/Services/ProgressService.swift
 
 ### Task 9 - Draw Horizontal Route Connectors
 
-- [ ] Create `TRLevelPathView`.
-- [ ] Draw thick horizontal connector segments between tiles in the same row.
-- [ ] Use green connectors for completed/unlocked route portions.
-- [ ] Use grey connectors for locked route portions.
-- [ ] Add a lighter dashed center stroke.
-- [ ] Verify connectors sit behind tiles and do not overlap text or stars.
+- [x] Create `TRLevelPathView`.
+- [x] Draw thick horizontal connector segments between tiles in the same row.
+- [x] Use green connectors for completed/unlocked route portions.
+- [x] Use grey connectors for locked route portions.
+- [x] Add a lighter dashed center stroke.
+- [x] Verify connectors sit behind tiles and do not overlap text or stars.
 
 Expected files:
 
