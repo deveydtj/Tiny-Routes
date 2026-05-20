@@ -48,19 +48,16 @@ struct TRLevelTile: View {
             )
             .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
             .shadow(
-                color: state == .completed
-                    ? Color(red: 0.10, green: 0.42, blue: 0.34).opacity(0.35)
-                    : state == .current
-                    ? Color(red: 0.16, green: 0.40, blue: 0.98).opacity(0.45)
-                    : Color.black.opacity(0.10),
-                radius: state == .completed ? 9 : state == .current ? 10 : 3,
+                color: shadowColor,
+                radius: shadowRadius,
                 x: 0,
-                y: state == .completed ? 5 : state == .current ? 6 : 1
+                y: shadowYOffset
             )
             .overlay(alignment: .top) {
                 if state == .current {
                     currentPin
                         .offset(y: -15)
+                        .allowsHitTesting(false)
                 }
             )
             .overlay(alignment: .topTrailing) {
@@ -143,6 +140,39 @@ struct TRLevelTile: View {
             .font(.system(size: 20, weight: .bold))
             .foregroundStyle(.white, Color(red: 0.19, green: 0.48, blue: 0.98))
             .accessibilityHidden(true)
+    }
+
+    private var shadowColor: Color {
+        switch state {
+        case .completed:
+            Color(red: 0.10, green: 0.42, blue: 0.34).opacity(0.35)
+        case .current:
+            Color(red: 0.16, green: 0.40, blue: 0.98).opacity(0.45)
+        case .locked:
+            Color.black.opacity(0.10)
+        }
+    }
+
+    private var shadowRadius: CGFloat {
+        switch state {
+        case .completed:
+            9
+        case .current:
+            10
+        case .locked:
+            3
+        }
+    }
+
+    private var shadowYOffset: CGFloat {
+        switch state {
+        case .completed:
+            5
+        case .current:
+            6
+        case .locked:
+            1
+        }
     }
 
     private var accessibilityStateDescription: String {
