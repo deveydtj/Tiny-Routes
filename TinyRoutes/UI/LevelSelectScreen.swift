@@ -125,6 +125,9 @@ struct LevelSelectScreen: View {
 
             ScrollView([.vertical, .horizontal], showsIndicators: false) {
                 ZStack(alignment: .topLeading) {
+                    TRMapBackgroundView()
+                        .frame(width: contentWidth, height: contentHeight, alignment: .topLeading)
+
                     TRLevelPathView(
                         positions: positions,
                         tileStatesByLevelID: tileStatesByLevelID
