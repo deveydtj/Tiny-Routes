@@ -130,9 +130,13 @@ final class LevelSelectLayoutTests: XCTestCase {
     // MARK: - Center points are unique and ordered correctly
 
     func testCenterPointsAreDistinct() {
+        struct CGPointKey: Hashable {
+            let x: CGFloat
+            let y: CGFloat
+        }
         let positions = layout.positions(for: makeLevels(8))
-        let centers = positions.map { "\($0.center.x),\($0.center.y)" }
-        XCTAssertEqual(Set(centers).count, 8, "All center points should be unique")
+        let centers = Set(positions.map { CGPointKey(x: $0.center.x, y: $0.center.y) })
+        XCTAssertEqual(centers.count, 8, "All center points should be unique")
     }
 
     func testCenterXMatchesColumn() {
