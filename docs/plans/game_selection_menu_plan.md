@@ -369,12 +369,12 @@ TinyRoutes/UI/Components/TRLevelTile.swift
 
 ### Task 3 - Recreate the Green Completed Tile
 
-- [ ] Add the teal-green gradient background.
-- [ ] Add a white outer stroke.
-- [ ] Add a soft shadow.
-- [ ] Add three yellow stars at the bottom.
-- [ ] Add the circular check badge in the top-right corner.
-- [ ] Verify the completed preview resembles the concept art.
+- [x] Add the teal-green gradient background.
+- [x] Add a white outer stroke.
+- [x] Add a soft shadow.
+- [x] Add three yellow stars at the bottom.
+- [x] Add the circular check badge in the top-right corner.
+- [x] Verify the completed preview resembles the concept art.
 
 Expected files:
 

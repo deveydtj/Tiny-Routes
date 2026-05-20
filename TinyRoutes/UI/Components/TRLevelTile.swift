@@ -28,11 +28,39 @@ struct TRLevelTile: View {
             .padding(.vertical, 12)
             .frame(width: tileSize.width, height: tileSize.height)
             .background(tileFill)
+            .overlay(alignment: .top) {
+                if state == .completed {
+                    RoundedRectangle(cornerRadius: 20, style: .continuous)
+                        .fill(
+                            LinearGradient(
+                                colors: [Color.white.opacity(0.35), Color.white.opacity(0)],
+                                startPoint: .top,
+                                endPoint: .bottom
+                            )
+                        )
+                        .frame(height: 34)
+                        .allowsHitTesting(false)
+                }
+            }
             .overlay(
                 RoundedRectangle(cornerRadius: 20, style: .continuous)
                     .stroke(Color.white, lineWidth: 2)
             )
             .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
+            .shadow(
+                color: state == .completed
+                    ? Color(red: 0.10, green: 0.42, blue: 0.34).opacity(0.35)
+                    : Color.black.opacity(0.16),
+                radius: state == .completed ? 9 : 5,
+                x: 0,
+                y: state == .completed ? 5 : 2
+            )
+            .overlay(alignment: .topTrailing) {
+                if state == .completed {
+                    completedBadge
+                        .offset(x: 8, y: -8)
+                }
+            }
         }
         .buttonStyle(.plain)
         .disabled(state == .locked)
@@ -44,6 +72,14 @@ struct TRLevelTile: View {
             Image(systemName: "lock.fill")
                 .font(.system(size: 12, weight: .semibold))
                 .foregroundStyle(Color(red: 0.46, green: 0.53, blue: 0.63))
+        } else if state == .completed {
+            HStack(spacing: 3) {
+                ForEach(0..<3, id: \.self) { _ in
+                    Image(systemName: "star.fill")
+                        .font(.system(size: 11, weight: .semibold))
+                        .foregroundStyle(Color(red: 1.0, green: 0.86, blue: 0.20))
+                }
+            }
         } else {
             HStack(spacing: 3) {
                 ForEach(0..<3, id: \.self) { index in
@@ -68,6 +104,20 @@ struct TRLevelTile: View {
 
     private var numberColor: Color {
         state == .locked ? Color(red: 0.44, green: 0.50, blue: 0.60) : .white
+    }
+
+    private var completedBadge: some View {
+        ZStack {
+            Circle()
+                .fill(Color.white)
+                .frame(width: 26, height: 26)
+            Circle()
+                .fill(Color(red: 0.20, green: 0.74, blue: 0.50))
+                .frame(width: 21, height: 21)
+            Image(systemName: "checkmark")
+                .font(.system(size: 10, weight: .bold))
+                .foregroundStyle(.white)
+        }
     }
 }
 
