@@ -11,7 +11,7 @@ struct TRLevelTilePosition {
     let center: CGPoint
 }
 
-/// Computes a four-column serpentine tile layout.
+/// Computes a serpentine tile layout with configurable columns (default: 4).
 ///
 /// Even-numbered rows (0, 2, …) run left-to-right; odd-numbered rows (1, 3, …) run right-to-left.
 struct TRSerpentineLayout {
