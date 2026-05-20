@@ -5,6 +5,7 @@ import SwiftUI
 struct ContentView: View {
     @StateObject private var coordinator = AppCoordinator()
     private let levelRepository = LevelRepository()
+    private let progressService = ProgressService()
 
     var body: some View {
         ZStack {
@@ -91,6 +92,7 @@ struct ContentView: View {
         case let .loaded(levels):
             LevelSelectScreen(
                 levels: levels,
+                progressService: progressService,
                 onBackTapped: coordinator.backToMainMenu,
                 onLevelSelected: { levelID in
                     coordinator.startGameplay(levelID: levelID)
