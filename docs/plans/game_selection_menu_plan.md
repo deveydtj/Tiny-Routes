@@ -399,12 +399,12 @@ TinyRoutes/UI/Components/TRLevelTile.swift
 
 ### Task 5 - Recreate the Grey Locked Tile
 
-- [ ] Add the pale grey/white gradient background.
-- [ ] Use a blue-grey level number.
-- [ ] Hide stars for locked levels.
-- [ ] Add a lock icon at the bottom.
-- [ ] Reduce the shadow strength compared with playable tiles.
-- [ ] Verify the locked tile clearly reads as unavailable.
+- [x] Add the pale grey/white gradient background.
+- [x] Use a blue-grey level number.
+- [x] Hide stars for locked levels.
+- [x] Add a lock icon at the bottom.
+- [x] Reduce the shadow strength compared with playable tiles.
+- [x] Verify the locked tile clearly reads as unavailable.
 
 Expected files:
 
