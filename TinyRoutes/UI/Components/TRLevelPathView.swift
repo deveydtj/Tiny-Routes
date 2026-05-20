@@ -6,10 +6,13 @@ struct TRLevelPathSegment: Equatable {
     let isUnlocked: Bool
 }
 
+private let connectorEndpointInset: CGFloat = 6
+
 func makeHorizontalSegments(
     positions: [TRLevelTilePosition],
     tileStatesByLevelID: [String: TRLevelTileState],
-    tileSize: CGSize = TRLevelTile.size
+    tileSize: CGSize = TRLevelTile.size,
+    endpointInset: CGFloat = connectorEndpointInset
 ) -> [TRLevelPathSegment] {
     let groupedByRow = Dictionary(grouping: positions, by: \.row)
     let sortedRows = groupedByRow.keys.sorted()
@@ -21,8 +24,8 @@ func makeHorizontalSegments(
         return zip(rowPositions, rowPositions.dropFirst()).map { left, right in
             let leftCenter = left.center
             let rightCenter = right.center
-            let startX = min(leftCenter.x, rightCenter.x) + tileSize.width / 2 - 6
-            let endX = max(leftCenter.x, rightCenter.x) - tileSize.width / 2 + 6
+            let startX = min(leftCenter.x, rightCenter.x) + tileSize.width / 2 - endpointInset
+            let endX = max(leftCenter.x, rightCenter.x) - tileSize.width / 2 + endpointInset
             let leftState = tileStatesByLevelID[left.levelID] ?? .locked
             let rightState = tileStatesByLevelID[right.levelID] ?? .locked
 
@@ -44,11 +47,13 @@ struct TRLevelPathView: View {
     private let dashHighlightColor = Color.white.opacity(0.45)
 
     var body: some View {
+        let segments = makeHorizontalSegments(
+            positions: positions,
+            tileStatesByLevelID: tileStatesByLevelID
+        )
+
         Canvas { context, _ in
-            for segment in makeHorizontalSegments(
-                positions: positions,
-                tileStatesByLevelID: tileStatesByLevelID
-            ) {
+            for segment in segments {
                 var path = Path()
                 path.move(to: segment.start)
                 path.addLine(to: segment.end)
