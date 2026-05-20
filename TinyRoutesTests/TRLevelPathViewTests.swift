@@ -46,4 +46,38 @@ final class TRLevelPathViewTests: XCTestCase {
         let unlockedCount = segments.filter(\.isUnlocked).count
         XCTAssertEqual(unlockedCount, 3)
     }
+
+    func testRowTransitionSegmentsConnectAdjacentRows() {
+        let positions = layout.positions(for: makeLevels(12))
+        let states = Dictionary(uniqueKeysWithValues: positions.map { ($0.levelID, TRLevelTileState.current) })
+
+        let transitions = makeRowTransitionSegments(positions: positions, tileStatesByLevelID: states)
+
+        XCTAssertEqual(transitions.count, 2)
+    }
+
+    func testRowTransitionSegmentsFollowSerpentineTurnDirection() {
+        let positions = layout.positions(for: makeLevels(12))
+        let states = Dictionary(uniqueKeysWithValues: positions.map { ($0.levelID, TRLevelTileState.current) })
+
+        let transitions = makeRowTransitionSegments(positions: positions, tileStatesByLevelID: states)
+
+        XCTAssertEqual(transitions.count, 2)
+        XCTAssertGreaterThan(transitions[0].control1.x, transitions[0].start.x)
+        XCTAssertLessThan(transitions[1].control1.x, transitions[1].start.x)
+    }
+
+    func testRowTransitionUnlockStateUsesBothConnectedTileStates() {
+        let positions = layout.positions(for: makeLevels(12))
+        var states = Dictionary(uniqueKeysWithValues: positions.map { ($0.levelID, TRLevelTileState.locked) })
+        [4, 5].forEach { number in
+            states["level_\(String(format: "%03d", number))"] = .completed
+        }
+
+        let transitions = makeRowTransitionSegments(positions: positions, tileStatesByLevelID: states)
+
+        XCTAssertEqual(transitions.count, 2)
+        XCTAssertTrue(transitions[0].isUnlocked)
+        XCTAssertFalse(transitions[1].isUnlocked)
+    }
 }

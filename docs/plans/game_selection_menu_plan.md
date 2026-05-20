@@ -477,10 +477,10 @@ TinyRoutes/UI/LevelSelectScreen.swift
 
 ### Task 10 - Draw Curved Row Transitions
 
-- [ ] Add curved connector turns between the end of one row and the start of the next row.
-- [ ] Match the serpentine direction: row 1 turns down on the right, row 2 turns down on the left.
-- [ ] Keep curve thickness and dash styling consistent with horizontal connectors.
-- [ ] Verify levels 4 to 5 and 8 to 9 appear connected.
+- [x] Add curved connector turns between the end of one row and the start of the next row.
+- [x] Match the serpentine direction: row 1 turns down on the right, row 2 turns down on the left.
+- [x] Keep curve thickness and dash styling consistent with horizontal connectors.
+- [x] Verify levels 4 to 5 and 8 to 9 appear connected.
 
 Expected files:
 

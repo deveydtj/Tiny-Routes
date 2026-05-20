@@ -6,6 +6,14 @@ struct TRLevelPathSegment: Equatable {
     let isUnlocked: Bool
 }
 
+struct TRLevelPathCurveSegment: Equatable {
+    let start: CGPoint
+    let control1: CGPoint
+    let control2: CGPoint
+    let end: CGPoint
+    let isUnlocked: Bool
+}
+
 let connectorEndpointInset: CGFloat = 6
 
 func makeHorizontalSegments(
@@ -38,6 +46,44 @@ func makeHorizontalSegments(
     }
 }
 
+func makeRowTransitionSegments(
+    positions: [TRLevelTilePosition],
+    tileStatesByLevelID: [String: TRLevelTileState],
+    tileSize: CGSize = TRLevelTile.size,
+    endpointInset: CGFloat = connectorEndpointInset,
+    curveOutset: CGFloat = 28
+) -> [TRLevelPathCurveSegment] {
+    let orderedPositions = positions.sorted { lhs, rhs in
+        if lhs.levelNumber == rhs.levelNumber {
+            return lhs.levelID < rhs.levelID
+        }
+        return lhs.levelNumber < rhs.levelNumber
+    }
+
+    guard orderedPositions.count > 1 else { return [] }
+
+    return zip(orderedPositions, orderedPositions.dropFirst()).compactMap { from, to in
+        guard to.row == from.row + 1 else { return nil }
+
+        let fromState = tileStatesByLevelID[from.levelID] ?? .locked
+        let toState = tileStatesByLevelID[to.levelID] ?? .locked
+        let isRightTurn = from.row.isMultiple(of: 2)
+        let horizontalDirection: CGFloat = isRightTurn ? 1 : -1
+        let startY = from.center.y + tileSize.height / 2 - endpointInset
+        let endY = to.center.y - tileSize.height / 2 + endpointInset
+        let controlX = from.center.x + horizontalDirection * (tileSize.width / 2 + curveOutset)
+        let verticalDelta = endY - startY
+
+        return TRLevelPathCurveSegment(
+            start: CGPoint(x: from.center.x, y: startY),
+            control1: CGPoint(x: controlX, y: startY + verticalDelta * 0.35),
+            control2: CGPoint(x: controlX, y: startY + verticalDelta * 0.65),
+            end: CGPoint(x: to.center.x, y: endY),
+            isUnlocked: fromState != .locked && toState != .locked
+        )
+    }
+}
+
 struct TRLevelPathView: View {
     let positions: [TRLevelTilePosition]
     let tileStatesByLevelID: [String: TRLevelTileState]
@@ -51,6 +97,10 @@ struct TRLevelPathView: View {
             positions: positions,
             tileStatesByLevelID: tileStatesByLevelID
         )
+        let transitions = makeRowTransitionSegments(
+            positions: positions,
+            tileStatesByLevelID: tileStatesByLevelID
+        )
 
         Canvas { context, _ in
             for segment in segments {
@@ -59,6 +109,24 @@ struct TRLevelPathView: View {
                 path.addLine(to: segment.end)
 
                 let baseColor = segment.isUnlocked ? unlockedColor : lockedColor
+                context.stroke(
+                    path,
+                    with: .color(baseColor),
+                    style: StrokeStyle(lineWidth: 16, lineCap: .round, lineJoin: .round)
+                )
+                context.stroke(
+                    path,
+                    with: .color(dashHighlightColor),
+                    style: StrokeStyle(lineWidth: 3, lineCap: .round, dash: [8, 12])
+                )
+            }
+
+            for transition in transitions {
+                var path = Path()
+                path.move(to: transition.start)
+                path.addCurve(to: transition.end, control1: transition.control1, control2: transition.control2)
+
+                let baseColor = transition.isUnlocked ? unlockedColor : lockedColor
                 context.stroke(
                     path,
                     with: .color(baseColor),
