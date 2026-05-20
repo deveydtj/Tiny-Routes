@@ -1,14 +1,14 @@
 import math
 
 from PySide6.QtCore import QPointF
-from PySide6.QtGui import QColor, QPainterPath, QPen
+from PySide6.QtGui import QPainterPath, QPen
 from PySide6.QtWidgets import QGraphicsPathItem
+
+from .canvas_colors import road_color
 
 
 class TransitionArcItem(QGraphicsPathItem):
     """Editor-only preview of RouteEngine's runtime node transition arc."""
-
-    LINE_COLOR = "#546e7a"
 
     def __init__(
         self,
@@ -26,7 +26,7 @@ class TransitionArcItem(QGraphicsPathItem):
         self.incoming_edge_id = incoming_edge_id
         self.outgoing_edge_id = outgoing_edge_id
         self.setZValue(1)
-        self.setPen(QPen(QColor(self.LINE_COLOR), 2))
+        self.setPen(QPen(road_color(), 2))
 
         path = QPainterPath(start)
         sample_count = 12

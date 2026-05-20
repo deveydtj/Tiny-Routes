@@ -9,7 +9,7 @@ os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
 try:
     from PySide6.QtCore import Qt
-    from PySide6.QtGui import QKeyEvent
+    from PySide6.QtGui import QColor, QKeyEvent, QPalette
     from PySide6.QtWidgets import QApplication, QFileDialog, QMessageBox
 except ImportError as exc:
     pytest.skip(f"PySide6 unavailable in this environment: {exc}", allow_module_level=True)
@@ -32,6 +32,14 @@ from app.ui import (
     TransitionArcItem,
 )
 from app.ui.validation_panel import ValidationPanel
+from app.ui.canvas_colors import (
+    DARK_GRID_COLOR,
+    DARK_ROAD_COLOR,
+    LIGHT_GRID_COLOR,
+    LIGHT_ROAD_COLOR,
+    canvas_grid_color,
+    road_color,
+)
 from app.ui.node_item import NODE_TYPE_STYLES
 
 
@@ -41,6 +49,32 @@ def qapplication() -> QApplication:
     if app is None:
         app = QApplication([])
     return app
+
+
+def test_canvas_colors_use_higher_contrast_light_palette(qapplication: QApplication) -> None:
+    original_palette = qapplication.palette()
+    try:
+        palette = QPalette(original_palette)
+        palette.setColor(QPalette.ColorRole.Window, QColor("#ffffff"))
+        qapplication.setPalette(palette)
+
+        assert canvas_grid_color().name() == LIGHT_GRID_COLOR
+        assert road_color().name() == LIGHT_ROAD_COLOR
+    finally:
+        qapplication.setPalette(original_palette)
+
+
+def test_canvas_colors_preserve_existing_dark_palette(qapplication: QApplication) -> None:
+    original_palette = qapplication.palette()
+    try:
+        palette = QPalette(original_palette)
+        palette.setColor(QPalette.ColorRole.Window, QColor("#202124"))
+        qapplication.setPalette(palette)
+
+        assert canvas_grid_color().name() == DARK_GRID_COLOR
+        assert road_color().name() == DARK_ROAD_COLOR
+    finally:
+        qapplication.setPalette(original_palette)
 
 
 def test_level_canvas_scene_has_empty_state_message(qapplication: QApplication) -> None:
@@ -239,6 +273,34 @@ def test_canvas_scene_uses_fallback_layout_for_non_finite_coordinates(qapplicati
     node_items = {item.node_id: item for item in scene.items() if isinstance(item, NodeItem)}
     assert node_items["route_a"].pos().x() == scene.FALLBACK_SPACING
     assert node_items["route_a"].pos().y() == 0.0
+
+
+def test_canvas_scene_displays_positive_model_y_upward(qapplication: QApplication) -> None:
+    scene = LevelCanvasScene()
+    document = LevelDocument(
+        id="level_vertical",
+        name="Vertical Level",
+        graph=RouteGraphModel(
+            nodes=[
+                RouteNodeModel(id="start", x=0.0, y=0.0, outgoingEdgeIDs=["e1"]),
+                RouteNodeModel(id="destination", x=0.0, y=2.0, outgoingEdgeIDs=[]),
+            ],
+            edges=[
+                RouteEdgeModel(id="e1", fromNodeID="start", toNodeID="destination"),
+            ],
+        ),
+        startNodeID="start",
+        packageNodeID="start",
+        destinationNodeID="destination",
+        timeLimitSeconds=20,
+        parTaps=0,
+    )
+
+    scene.display_level(document)
+
+    node_items = {item.node_id: item for item in scene.items() if isinstance(item, NodeItem)}
+    assert node_items["start"].pos().y() == pytest.approx(0.0)
+    assert node_items["destination"].pos().y() == pytest.approx(-2.0 * scene.COORDINATE_SCALE)
 
 
 def test_canvas_scene_shows_no_nodes_message_for_empty_document(qapplication: QApplication) -> None:
@@ -972,7 +1034,7 @@ def test_palette_double_click_adds_unique_node_to_canvas_center_and_marks_dirty(
 
         center_scene_point = window._canvas_view.mapToScene(window._canvas_view.viewport().rect().center())
         expected_model_x = center_scene_point.x() / window._canvas_view.scene().COORDINATE_SCALE
-        expected_model_y = center_scene_point.y() / window._canvas_view.scene().COORDINATE_SCALE
+        expected_model_y = -center_scene_point.y() / window._canvas_view.scene().COORDINATE_SCALE
 
         window._piece_palette._list_widget.itemDoubleClicked.emit(route_item)
         window._piece_palette._list_widget.itemDoubleClicked.emit(route_item)
@@ -1363,7 +1425,7 @@ def test_dragging_node_updates_model_coordinates_and_connected_edge(
     original_path = edge_item._path_item.path()
 
     start_item.setSelected(True)
-    start_item.setPos(180.0, 90.0)
+    start_item.setPos(180.0, -90.0)
     qapplication.processEvents()
 
     assert start_item.model_x == pytest.approx(1.0)
@@ -1386,7 +1448,7 @@ def test_dragging_selected_node_updates_properties_panel_position(
         start_item = next(item for item in node_items if item.node_id == "start")
 
         start_item.setSelected(True)
-        start_item.setPos(180.0, 90.0)
+        start_item.setPos(180.0, -90.0)
         qapplication.processEvents()
 
         labels = [
@@ -1422,7 +1484,7 @@ def test_dragging_node_updates_current_document_and_marks_dirty(
         node_items = [item for item in window._canvas_view.scene().items() if isinstance(item, NodeItem)]
         start_item = next(item for item in node_items if item.node_id == "start")
 
-        start_item.setPos(180.0, 90.0)
+        start_item.setPos(180.0, -90.0)
         qapplication.processEvents()
 
         moved_node = next(node for node in window._current_document.graph.nodes if node.id == "start")

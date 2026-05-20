@@ -61,7 +61,7 @@ struct TRLevelTile: View {
                         .offset(y: -15)
                         .allowsHitTesting(false)
                 }
-            )
+            }
             .overlay(alignment: .topTrailing) {
                 if state == .completed {
                     completedBadge

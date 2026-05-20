@@ -11,6 +11,7 @@ from PySide6.QtWidgets import (
 
 from app.models import LevelDocument, RouteNodeModel
 
+from .canvas_colors import canvas_grid_color
 from .edge_item import EdgeItem
 from .node_item import NodeItem
 from .transition_arc_item import TransitionArcItem
@@ -92,7 +93,7 @@ class LevelCanvasScene(QGraphicsScene):
     def scene_to_model_coordinates(self, scene_position: QPointF) -> tuple[float, float]:
         return (
             scene_position.x() / self.COORDINATE_SCALE,
-            scene_position.y() / self.COORDINATE_SCALE,
+            -scene_position.y() / self.COORDINATE_SCALE,
         )
 
     def handle_node_item_moved(self, item: NodeItem) -> None:
@@ -406,7 +407,7 @@ class LevelCanvasScene(QGraphicsScene):
 
         if isinstance(x, (int, float)) and isinstance(y, (int, float)):
             if math.isfinite(x) and math.isfinite(y):
-                return QPointF(x * self.COORDINATE_SCALE, y * self.COORDINATE_SCALE)
+                return QPointF(x * self.COORDINATE_SCALE, -y * self.COORDINATE_SCALE)
 
         row = index // 5
         column = index % 5
@@ -564,8 +565,7 @@ class LevelCanvasScene(QGraphicsScene):
         super().drawBackground(painter, rect)
 
         grid_size = 50
-        grid_color = QColor("#e8e8e8")
-        painter.setPen(QPen(grid_color))
+        painter.setPen(QPen(canvas_grid_color()))
 
         left = int(rect.left()) - (int(rect.left()) % grid_size)
         top = int(rect.top()) - (int(rect.top()) % grid_size)

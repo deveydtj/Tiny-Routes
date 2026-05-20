@@ -92,11 +92,11 @@ struct ContentView: View {
         case let .loaded(levels):
             LevelSelectScreen(
                 levels: levels,
-                progressService: progressService,
                 onBackTapped: coordinator.backToMainMenu,
                 onLevelSelected: { levelID in
                     coordinator.startGameplay(levelID: levelID)
-                }
+                },
+                progressService: progressService
             )
 
         case .empty:

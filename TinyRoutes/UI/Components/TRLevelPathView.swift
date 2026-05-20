@@ -27,7 +27,7 @@ func makeHorizontalSegments(
 
     return sortedRows.flatMap { row in
         let rowPositions = (groupedByRow[row] ?? []).sorted { $0.column < $1.column }
-        guard rowPositions.count > 1 else { return [] }
+        guard rowPositions.count > 1 else { return [TRLevelPathSegment]() }
 
         return zip(rowPositions, rowPositions.dropFirst()).map { left, right in
             let leftCenter = left.center

@@ -1,9 +1,10 @@
 import math
 
 from PySide6.QtCore import QPointF
-from PySide6.QtGui import QColor, QPainterPath, QPen, QPolygonF
+from PySide6.QtGui import QPainterPath, QPen, QPolygonF
 from PySide6.QtWidgets import QGraphicsItem, QGraphicsItemGroup, QGraphicsPathItem, QGraphicsPolygonItem
 
+from .canvas_colors import road_color
 from .node_item import NodeItem
 
 
@@ -11,8 +12,6 @@ class EdgeItem(QGraphicsItemGroup):
     """Graphics item representing a directed edge between two nodes."""
 
     ARROW_SIZE = 10.0
-    LINE_COLOR = "#546e7a"
-    ARROW_COLOR = "#546e7a"
 
     def __init__(
         self,
@@ -31,11 +30,12 @@ class EdgeItem(QGraphicsItemGroup):
         self.setZValue(-1)
         self.setFlag(QGraphicsItem.GraphicsItemFlag.ItemIsSelectable, True)
         self._path_item = QGraphicsPathItem()
-        self._path_item.setPen(QPen(QColor(self.LINE_COLOR), 2))
+        self._path_item.setPen(QPen(road_color(), 2))
         self.addToGroup(self._path_item)
         self._arrow_item = QGraphicsPolygonItem()
-        self._arrow_item.setBrush(QColor(self.ARROW_COLOR))
-        self._arrow_item.setPen(QPen(QColor(self.ARROW_COLOR), 1))
+        road = road_color()
+        self._arrow_item.setBrush(road)
+        self._arrow_item.setPen(QPen(road, 1))
         self.addToGroup(self._arrow_item)
         self.refresh_position()
 

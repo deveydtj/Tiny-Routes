@@ -249,7 +249,6 @@ private struct RouteBoardView: View {
     private let roadOuterWidth: CGFloat = 20
     private let roadInnerWidth: CGFloat = 15
     private let roadHighlightWidth: CGFloat = 3
-    private let roadJunctionSize: CGFloat = 17
 
     var body: some View {
         GeometryReader { geometry in
@@ -271,42 +270,28 @@ private struct RouteBoardView: View {
                     roadPath(for: edge, layout: layout)
                         .stroke(
                             roadShadowColor,
-                            style: StrokeStyle(lineWidth: roadOuterWidth + 3, lineCap: .round, lineJoin: .round)
+                            style: StrokeStyle(lineWidth: roadOuterWidth + 3, lineCap: .butt, lineJoin: .round)
                         )
                         .offset(y: 2)
 
                     roadPath(for: edge, layout: layout)
                         .stroke(
                             roadEdgeColor,
-                            style: StrokeStyle(lineWidth: roadOuterWidth, lineCap: .round, lineJoin: .round)
+                            style: StrokeStyle(lineWidth: roadOuterWidth, lineCap: .butt, lineJoin: .round)
                         )
 
                     roadPath(for: edge, layout: layout)
                         .stroke(
                             roadFillColor,
-                            style: StrokeStyle(lineWidth: roadInnerWidth, lineCap: .round, lineJoin: .round)
+                            style: StrokeStyle(lineWidth: roadInnerWidth, lineCap: .butt, lineJoin: .round)
                         )
 
                     roadPath(for: edge, layout: layout)
                         .stroke(
                             roadHighlightColor,
-                            style: StrokeStyle(lineWidth: roadHighlightWidth, lineCap: .round, lineJoin: .round)
+                            style: StrokeStyle(lineWidth: roadHighlightWidth, lineCap: .butt, lineJoin: .round)
                         )
                         .offset(y: -3)
-                }
-
-                ForEach(nodes, id: \.id) { node in
-                    if let nodePoint = layout.pointsByNodeID[node.id],
-                       !runtimeGraph.validOutgoingEdgeIDs(for: node).isEmpty || hasIncomingEdge(to: node.id) {
-                        Circle()
-                            .fill(roadFillColor)
-                            .frame(width: roadJunctionSize, height: roadJunctionSize)
-                            .overlay(
-                                Circle()
-                                    .stroke(roadHighlightColor, lineWidth: 1)
-                            )
-                            .position(nodePoint)
-                    }
                 }
 
                 ForEach(nodes, id: \.id) { node in
@@ -492,9 +477,6 @@ private struct RouteBoardView: View {
         }
     }
 
-    private func hasIncomingEdge(to nodeID: String) -> Bool {
-        runtimeGraph.edgesByID.values.contains { $0.toNodeID == nodeID }
-    }
 }
 
 struct RouteBoardTapTargetResolver {
