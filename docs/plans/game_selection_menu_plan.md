@@ -354,12 +354,12 @@ TinyRoutes/UI/Components/TRLevelTile.swift
 
 ### Task 2 - Build the Static Level Tile Component
 
-- [ ] Create `TRLevelTile`.
-- [ ] Add parameters for `levelNumber`, `state`, `stars`, and `action`.
-- [ ] Render a fixed-size rounded tile.
-- [ ] Show the level number in the center.
-- [ ] Add a SwiftUI preview with one completed tile, one current tile, and one locked tile.
-- [ ] Verify the preview renders without layout warnings.
+- [x] Create `TRLevelTile`.
+- [x] Add parameters for `levelNumber`, `state`, `stars`, and `action`.
+- [x] Render a fixed-size rounded tile.
+- [x] Show the level number in the center.
+- [x] Add a SwiftUI preview with one completed tile, one current tile, and one locked tile.
+- [x] Verify the preview renders without layout warnings.
 
 Expected files:
 
