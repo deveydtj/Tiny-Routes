@@ -2,20 +2,20 @@ import SwiftUI
 
 /// Settings screen.
 struct SettingsScreen: View {
-    let onBackTapped: () -> Void
-
     var body: some View {
         VStack(spacing: 12) {
-            Text("Settings")
+            Spacer()
+            Text("Profile")
                 .font(.title)
-            Text("Placeholder content")
-            Button("Back", action: onBackTapped)
+            Text("Profile and settings coming soon")
+            Spacer()
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 }
 
 struct SettingsScreen_Previews: PreviewProvider {
     static var previews: some View {
-        SettingsScreen(onBackTapped: {})
+        SettingsScreen()
     }
 }

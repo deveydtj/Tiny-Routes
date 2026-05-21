@@ -4,8 +4,6 @@ import SwiftUI
 struct HomeScreen: View {
     let onPlayTapped: () -> Void
     let onDailyRouteTapped: (() -> Void)? = nil
-    let onShopTapped: () -> Void
-    let onSettingsTapped: () -> Void
 
     var body: some View {
         VStack(spacing: 24) {
@@ -33,24 +31,6 @@ struct HomeScreen: View {
                 )
                 .disabled(onDailyRouteTapped == nil)
                 .accessibilityHint(onDailyRouteTapped == nil ? Text("Coming soon") : Text(""))
-
-                TRMenuButton(
-                    title: "Shop",
-                    systemImage: nil,
-                    spriteName: "shop_bag",
-                    variant: .shop,
-                    size: .secondary,
-                    action: onShopTapped
-                )
-
-                TRMenuButton(
-                    title: "Settings",
-                    systemImage: nil,
-                    spriteName: "settings_gear",
-                    variant: .settings,
-                    size: .secondary,
-                    action: onSettingsTapped
-                )
             }
             .frame(maxWidth: 340)
 
@@ -121,7 +101,7 @@ struct HomeScreen_Previews: PreviewProvider {
             )
             .ignoresSafeArea()
 
-            HomeScreen(onPlayTapped: {}, onShopTapped: {}, onSettingsTapped: {})
+            HomeScreen(onPlayTapped: {})
         }
     }
 }

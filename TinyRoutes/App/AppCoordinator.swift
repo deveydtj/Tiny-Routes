@@ -70,6 +70,19 @@ final class AppCoordinator: ObservableObject {
         state = .settings
     }
 
+    func selectTab(_ tab: TRBottomTab) {
+        switch tab {
+        case .home:
+            state = .mainMenu
+        case .levels:
+            state = .levelSelect
+        case .shop:
+            state = .shop
+        case .profile:
+            state = .settings
+        }
+    }
+
     func backToMainMenu() {
         state = .mainMenu
     }

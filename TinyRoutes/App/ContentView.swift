@@ -6,6 +6,7 @@ struct ContentView: View {
     @StateObject private var coordinator = AppCoordinator()
     private let levelRepository = LevelRepository()
     private let progressService = ProgressService()
+    private let bottomNavigationReservedHeight: CGFloat = 96
 
     var body: some View {
         ZStack {
@@ -23,9 +24,7 @@ struct ContentView: View {
 
                 case .mainMenu:
                     HomeScreen(
-                        onPlayTapped: coordinator.openLevelSelect,
-                        onShopTapped: coordinator.openShop,
-                        onSettingsTapped: coordinator.openSettings
+                        onPlayTapped: coordinator.openLevelSelect
                     )
 
                 case .levelSelect:
@@ -63,14 +62,25 @@ struct ContentView: View {
                     )
 
                 case .shop:
-                    ShopScreen(onBackTapped: coordinator.backToMainMenu)
+                    ShopScreen()
 
                 case .settings:
-                    SettingsScreen(onBackTapped: coordinator.backToMainMenu)
+                    SettingsScreen()
                 }
             }
             .foregroundColor(.black)
             .padding()
+            .padding(.bottom, selectedBottomTab == nil ? 0 : bottomNavigationReservedHeight)
+
+            if let selectedBottomTab {
+                VStack {
+                    Spacer()
+                    TRBottomNavigationBar(
+                        selectedTab: selectedBottomTab,
+                        onTabSelected: coordinator.selectTab
+                    )
+                }
+            }
         }
     }
 
@@ -92,7 +102,6 @@ struct ContentView: View {
         case let .loaded(levels):
             LevelSelectScreen(
                 levels: levels,
-                onBackTapped: coordinator.backToMainMenu,
                 onLevelSelected: { levelID in
                     coordinator.startGameplay(levelID: levelID)
                 },
@@ -143,6 +152,25 @@ struct ContentView: View {
                 .foregroundColor(.secondary)
                 .multilineTextAlignment(.center)
             Button("Back", action: coordinator.backToMainMenu)
+        }
+    }
+
+    private var selectedBottomTab: TRBottomTab? {
+        switch coordinator.state {
+        case .mainMenu:
+            return .home
+        case .levelSelect:
+            return .levels
+        case .shop:
+            return .shop
+        case .settings:
+            return .profile
+        case .boot,
+             .gameplay(_),
+             .pause(_),
+             .levelComplete(_, _, _),
+             .levelFailed(_, _, _, _):
+            return nil
         }
     }
 }

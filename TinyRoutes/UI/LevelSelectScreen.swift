@@ -80,18 +80,15 @@ struct TRLevelProgressSnapshot {
 /// Level selection screen.
 struct LevelSelectScreen: View {
     let levels: [LevelData]
-    let onBackTapped: () -> Void
     let onLevelSelected: (String) -> Void
     private let progressService: ProgressService
 
     init(
         levels: [LevelData],
-        onBackTapped: @escaping () -> Void,
         onLevelSelected: @escaping (String) -> Void,
         progressService: ProgressService = ProgressService()
     ) {
         self.levels = levels
-        self.onBackTapped = onBackTapped
         self.onLevelSelected = onLevelSelected
         self.progressService = progressService
     }
@@ -123,23 +120,10 @@ struct LevelSelectScreen: View {
         let tileStatesByLevelID = Dictionary(uniqueKeysWithValues: zip(positions.map(\.levelID), tileStates))
 
         return VStack(spacing: 12) {
-            HStack {
-                Button(action: onBackTapped) {
-                    Text("Back")
-                        .font(.system(size: 15, weight: .medium))
-                        .padding(.vertical, 8)
-                        .padding(.trailing, 12)
-                }
-                .buttonStyle(.plain)
-                .contentShape(Rectangle())
-                Spacer()
-            }
-            .overlay {
-                Text("Select a Level")
-                    .font(.title2)
-                    .fontWeight(.semibold)
-                    .allowsHitTesting(false)
-            }
+            Text("Select a Level")
+                .font(.title2)
+                .fontWeight(.semibold)
+                .frame(maxWidth: .infinity)
 
             ScrollView(.vertical, showsIndicators: false) {
                 ZStack(alignment: .topLeading) {
@@ -212,7 +196,6 @@ struct LevelSelectScreen_Previews: PreviewProvider {
                     parTaps: 2
                 )
             ],
-            onBackTapped: {},
             onLevelSelected: { _ in }
         )
     }
