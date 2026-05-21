@@ -8,6 +8,7 @@ from PySide6.QtWidgets import (
     QGraphicsSceneMouseEvent,
     QGraphicsSimpleTextItem,
 )
+from shiboken6 import isValid
 
 from app.models import LevelDocument, RouteNodeModel
 
@@ -52,6 +53,7 @@ class LevelCanvasScene(QGraphicsScene):
         self.selectionChanged.connect(self._on_selection_changed)
 
     def display_level(self, document: LevelDocument) -> None:
+        self._reset_preview_state()
         self.clear()
         self._document = document
         self._node_items_by_id = {}
@@ -277,11 +279,11 @@ class LevelCanvasScene(QGraphicsScene):
         )
 
     def _clear_connection_source(self) -> None:
-        if self._connection_source_node_id is None:
-            return
-        source_item = self._node_items_by_id.get(self._connection_source_node_id)
-        if source_item is not None:
-            source_item.set_connection_source(False)
+        source_node_id = self._connection_source_node_id
+        if source_node_id is not None:
+            source_item = self._node_items_by_id.get(source_node_id)
+            if source_item is not None:
+                source_item.set_connection_source(False)
         self._connection_source_node_id = None
         self._remove_preview_items()
 
@@ -303,6 +305,11 @@ class LevelCanvasScene(QGraphicsScene):
         )
 
     def _ensure_preview_items(self) -> None:
+        if not self._is_live_graphics_item(self._preview_path_item):
+            self._preview_path_item = None
+        if not self._is_live_graphics_item(self._preview_label_item):
+            self._preview_label_item = None
+
         if self._preview_path_item is None:
             self._preview_path_item = QGraphicsPathItem()
             self._preview_path_item.setZValue(-0.5)
@@ -316,12 +323,20 @@ class LevelCanvasScene(QGraphicsScene):
             self._preview_label_item.setZValue(5)
 
     def _remove_preview_items(self) -> None:
-        if self._preview_path_item is not None:
+        if self._is_live_graphics_item(self._preview_path_item):
             self.removeItem(self._preview_path_item)
-            self._preview_path_item = None
-        if self._preview_label_item is not None:
+        self._preview_path_item = None
+        if self._is_live_graphics_item(self._preview_label_item):
             self.removeItem(self._preview_label_item)
-            self._preview_label_item = None
+        self._preview_label_item = None
+
+    def _reset_preview_state(self) -> None:
+        self._preview_path_item = None
+        self._preview_label_item = None
+
+    @staticmethod
+    def _is_live_graphics_item(item: object | None) -> bool:
+        return item is not None and isValid(item)
 
     def _update_connection_preview(self, scene_position: QPointF) -> None:
         source_node_id = self._connection_source_node_id

@@ -96,7 +96,9 @@
 		BD0DF0D327100566238E104F /* SaveDataRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = 99BBFAA66BFB910BC1BEA096 /* SaveDataRepository.swift */; };
 		BE4A93EADC877472E41000E3 /* ExperimentalLevelSolver.swift in Sources */ = {isa = PBXBuildFile; fileRef = A876C96C4CBEC33CDFFE32C3 /* ExperimentalLevelSolver.swift */; };
 		BE79281A15C128FD8EBC96F3 /* settings_gear.png in Resources */ = {isa = PBXBuildFile; fileRef = 05B32D760F6E2D8859F9F9F2 /* settings_gear.png */; };
+		C10F68C948226E4CE8D9FA40 /* new_level.json in Resources */ = {isa = PBXBuildFile; fileRef = C7B5D54B02D0E5DA1425B26D /* new_level.json */; };
 		CB682E3A5073FD1E5B1A7D8E /* LevelSelectScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8423A86EB968231672776BCD /* LevelSelectScreen.swift */; };
+		CD00B5549A9647B25522EE65 /* new_level.solution.json in Resources */ = {isa = PBXBuildFile; fileRef = C80B2776903487362D5BA5DE /* new_level.solution.json */; };
 		CFFEC17005CB4526654599D2 /* ScoringAndProgressServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 110E615D1CB962B4C43D1072 /* ScoringAndProgressServiceTests.swift */; };
 		D19F06BA0A4E8F26B21F0F78 /* ShopScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E972F20245469B0B50038E0 /* ShopScreen.swift */; };
 		D40FBDD53E591D4E730D22C8 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E540C87602DF9F761DD5828A /* ContentView.swift */; };
@@ -223,6 +225,8 @@
 		BD797DABF97371C1E3AC74E2 /* level_002.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = level_002.json; sourceTree = "<group>"; };
 		BF4FA0FA2AD0CCC297CE1E14 /* LevelSolvabilityResultTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LevelSolvabilityResultTests.swift; sourceTree = "<group>"; };
 		C0646091BF269C70E31623CF /* duplicate_node_ids.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = duplicate_node_ids.json; sourceTree = "<group>"; };
+		C7B5D54B02D0E5DA1425B26D /* new_level.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = new_level.json; sourceTree = "<group>"; };
+		C80B2776903487362D5BA5DE /* new_level.solution.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = new_level.solution.json; sourceTree = "<group>"; };
 		C110C9DEB2E44438FDB43C40 /* level_001.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = level_001.json; sourceTree = "<group>"; };
 		C1B022B419A6C15C4612BCB4 /* SwitchNodeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwitchNodeView.swift; sourceTree = "<group>"; };
 		C944525464AD16A3C4C0A32B /* NodeSwitchController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NodeSwitchController.swift; sourceTree = "<group>"; };
@@ -336,6 +340,7 @@
 				F97504C047FC88B1A6992639 /* level_009.json */,
 				05173DE6657F906BBCFD9A89 /* level_010.json */,
 				7D9D065D10943A363563D929 /* level_011.json */,
+				C7B5D54B02D0E5DA1425B26D /* new_level.json */,
 			);
 			path = Levels;
 			sourceTree = "<group>";
@@ -355,6 +360,7 @@
 				F01609CB09C053F483E182C1 /* level_009.solution.json */,
 				11B5E0934131746492AE6EF5 /* level_010.solution.json */,
 				64E809F7F3528D448D259365 /* level_011.solution.json */,
+				C80B2776903487362D5BA5DE /* new_level.solution.json */,
 			);
 			path = LevelSolutions;
 			sourceTree = "<group>";
@@ -631,6 +637,7 @@
 				2344BBF6AD0773F6CCE3C1A7 /* level_009.json in Resources */,
 				41032E78CBA26693D83D3B57 /* level_010.json in Resources */,
 				BC9017EC23AA3B0BF45BBD35 /* level_011.json in Resources */,
+				C10F68C948226E4CE8D9FA40 /* new_level.json in Resources */,
 				90FB242DCE51BE7D683C2A6F /* locked_pin.png in Resources */,
 				1984FCF46DF7EB2A6A94D285 /* play_filled.png in Resources */,
 				E005876E0718234622133904 /* right_arrow.png in Resources */,
@@ -663,6 +670,7 @@
 				54C610B49C57ECA2EE5D6AF6 /* level_009.solution.json in Resources */,
 				6238B2493D56CE0AF091FFBF /* level_010.solution.json in Resources */,
 				B4FBEC8214BD629382909498 /* level_011.solution.json in Resources */,
+				CD00B5549A9647B25522EE65 /* new_level.solution.json in Resources */,
 				E53265452A081C93250A8DB5 /* missing_destination_node.json in Resources */,
 				B8EC3890CA3E8C0634FFC292 /* missing_outgoing_edge_id.json in Resources */,
 				DDDE294585E1F234335F9E82 /* missing_package_node.json in Resources */,

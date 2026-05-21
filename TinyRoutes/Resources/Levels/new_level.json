@@ -1,0 +1,140 @@
+{
+  "id": "new_level",
+  "name": "New Level",
+  "graph": {
+    "nodes": [
+      {
+        "id": "start",
+        "x": 0.0,
+        "y": -1.1222222222222222,
+        "outgoingEdgeIDs": [
+          "edge"
+        ]
+      },
+      {
+        "id": "node",
+        "x": 0.011111111111111112,
+        "y": -0.5277777777777778,
+        "outgoingEdgeIDs": [
+          "edge_1",
+          "edge_5"
+        ]
+      },
+      {
+        "id": "node_1",
+        "x": -0.8055555555555556,
+        "y": -0.5666666666666667,
+        "outgoingEdgeIDs": [
+          "edge_2"
+        ]
+      },
+      {
+        "id": "node_2",
+        "x": -0.7666666666666667,
+        "y": 0.28888888888888886,
+        "outgoingEdgeIDs": [
+          "edge_3"
+        ]
+      },
+      {
+        "id": "node_3",
+        "x": 0.016666666666666666,
+        "y": 0.32222222222222224,
+        "outgoingEdgeIDs": [
+          "edge_4"
+        ]
+      },
+      {
+        "id": "node_4",
+        "x": 0.9166666666666666,
+        "y": -0.5444444444444444,
+        "outgoingEdgeIDs": [
+          "edge_6"
+        ]
+      },
+      {
+        "id": "node_5",
+        "x": 0.8388888888888889,
+        "y": 0.40555555555555556,
+        "outgoingEdgeIDs": [
+          "edge_7"
+        ]
+      },
+      {
+        "id": "package",
+        "x": 0.8388888888888889,
+        "y": 1.05,
+        "outgoingEdgeIDs": [
+          "edge_8"
+        ]
+      },
+      {
+        "id": "destination",
+        "x": 0.8388888888888889,
+        "y": 1.8888888888888888,
+        "outgoingEdgeIDs": []
+      }
+    ],
+    "edges": [
+      {
+        "id": "edge",
+        "fromNodeID": "start",
+        "toNodeID": "node",
+        "roadShape": "horizontalFirst"
+      },
+      {
+        "id": "edge_1",
+        "fromNodeID": "node",
+        "toNodeID": "node_1",
+        "roadShape": "horizontalFirst"
+      },
+      {
+        "id": "edge_2",
+        "fromNodeID": "node_1",
+        "toNodeID": "node_2",
+        "roadShape": "horizontalFirst"
+      },
+      {
+        "id": "edge_3",
+        "fromNodeID": "node_2",
+        "toNodeID": "node_3",
+        "roadShape": "horizontalFirst"
+      },
+      {
+        "id": "edge_4",
+        "fromNodeID": "node_3",
+        "toNodeID": "node",
+        "roadShape": "horizontalFirst"
+      },
+      {
+        "id": "edge_5",
+        "fromNodeID": "node",
+        "toNodeID": "node_4",
+        "roadShape": "horizontalFirst"
+      },
+      {
+        "id": "edge_6",
+        "fromNodeID": "node_4",
+        "toNodeID": "node_5",
+        "roadShape": "horizontalFirst"
+      },
+      {
+        "id": "edge_7",
+        "fromNodeID": "node_5",
+        "toNodeID": "package",
+        "roadShape": "horizontalFirst"
+      },
+      {
+        "id": "edge_8",
+        "fromNodeID": "package",
+        "toNodeID": "destination",
+        "roadShape": "horizontalFirst"
+      }
+    ]
+  },
+  "startNodeID": "start",
+  "packageNodeID": "package",
+  "destinationNodeID": "destination",
+  "timeLimitSeconds": 30,
+  "parTaps": 0
+}

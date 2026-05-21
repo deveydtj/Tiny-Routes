@@ -123,6 +123,77 @@ final class RouteEngineTests: XCTestCase {
         XCTAssertEqual(path.tangent(atProgress: 0), RoadVector(x: 0, y: 1))
     }
 
+    func testRoadPathConnectorInfersPerpendicularTurnBetweenEdges() throws {
+        let incoming = RoadPath.make(from: RoadPoint(x: 0, y: 0), to: RoadPoint(x: 1, y: 0))
+        let outgoing = RoadPath.make(from: RoadPoint(x: 1, y: 0), to: RoadPoint(x: 1, y: 1))
+
+        let connector = try XCTUnwrap(
+            RoadPath.makePerpendicularConnector(
+                at: RoadPoint(x: 1, y: 0),
+                from: incoming,
+                to: outgoing
+            )
+        )
+
+        XCTAssertEqual(connector.entryDistanceAlongIncomingPath, 0.82, accuracy: 0.0001)
+        XCTAssertEqual(connector.exitDistanceAlongOutgoingPath, 0.18, accuracy: 0.0001)
+        XCTAssertEqual(connector.roadPath.segments.map(\.kind), [.smoothTurn])
+        assertRoadPoint(connector.roadPath.segments.first?.start, equals: RoadPoint(x: 0.82, y: 0))
+        assertRoadPoint(connector.roadPath.segments.first?.end, equals: RoadPoint(x: 1, y: 0.18))
+
+        let startTangent = connector.roadPath.tangent(atProgress: 0)
+        XCTAssertEqual(startTangent.x, 1, accuracy: 0.0001)
+        XCTAssertEqual(startTangent.y, 0, accuracy: 0.0001)
+
+        let endTangent = connector.roadPath.tangent(atProgress: 1)
+        XCTAssertEqual(endTangent.x, 0, accuracy: 0.0001)
+        XCTAssertEqual(endTangent.y, 1, accuracy: 0.0001)
+    }
+
+    func testRoadPathConnectorIgnoresStraightThroughEdges() {
+        let incoming = RoadPath.make(from: RoadPoint(x: 0, y: 0), to: RoadPoint(x: 1, y: 0))
+        let outgoing = RoadPath.make(from: RoadPoint(x: 1, y: 0), to: RoadPoint(x: 2, y: 0))
+
+        let connector = RoadPath.makePerpendicularConnector(
+            at: RoadPoint(x: 1, y: 0),
+            from: incoming,
+            to: outgoing
+        )
+
+        XCTAssertNil(connector)
+    }
+
+    func testRoadPathConnectorTrimsPastTinyTerminalJogs() throws {
+        let node = RoadPoint(x: -0.8056, y: -0.5667)
+        let incoming = RoadPath.make(
+            from: RoadPoint(x: 0.0111, y: -0.5278),
+            to: node,
+            shape: .horizontalFirst
+        )
+        let outgoing = RoadPath.make(
+            from: node,
+            to: RoadPoint(x: -0.7667, y: 0.2889),
+            shape: .horizontalFirst
+        )
+
+        let connector = try XCTUnwrap(
+            RoadPath.makePerpendicularConnector(
+                at: node,
+                from: incoming,
+                to: outgoing
+            )
+        )
+
+        let segment = try XCTUnwrap(connector.roadPath.segments.first)
+        XCTAssertEqual(segment.kind, .smoothTurn)
+        XCTAssertEqual(connector.entryDistanceAlongIncomingPath, incoming.totalLength - 0.18, accuracy: 0.0001)
+        XCTAssertEqual(connector.exitDistanceAlongOutgoingPath, 0.18, accuracy: 0.0001)
+        assertRoadPoint(segment.start, equals: incoming.point(atDistance: connector.entryDistanceAlongIncomingPath))
+        assertRoadPoint(segment.end, equals: outgoing.point(atDistance: connector.exitDistanceAlongOutgoingPath))
+        XCTAssertGreaterThan(segment.start.x, node.x)
+        XCTAssertGreaterThan(segment.end.y, node.y)
+    }
+
     // MARK: - Successful build
 
     func testBuildGraphStoresRuntimeGraph() throws {
@@ -263,6 +334,40 @@ final class RouteEngineTests: XCTestCase {
         XCTAssertLessThan(position.x, 1)
         XCTAssertGreaterThan(position.y, 0)
         XCTAssertLessThan(position.y, 0.18)
+    }
+
+    func testUpdateDotDoesNotSmoothThroughSwitchNodes() throws {
+        let nodes = [
+            RouteNode(id: "start", x: 0, y: 0, outgoingEdgeIDs: ["to_switch"]),
+            RouteNode(id: "switch", x: 1, y: 0, outgoingEdgeIDs: ["to_end", "to_dead_end"]),
+            RouteNode(id: "end", x: 1, y: 1, outgoingEdgeIDs: []),
+            RouteNode(id: "dead_end", x: 2, y: 0, outgoingEdgeIDs: [])
+        ]
+        let edges = [
+            RouteEdge(id: "to_switch", fromNodeID: "start", toNodeID: "switch"),
+            RouteEdge(id: "to_end", fromNodeID: "switch", toNodeID: "end"),
+            RouteEdge(id: "to_dead_end", fromNodeID: "switch", toNodeID: "dead_end")
+        ]
+        let level = LevelData(
+            id: "switch_corner",
+            name: "Switch Corner",
+            graph: RouteGraph(nodes: nodes, edges: edges),
+            startNodeID: "start",
+            packageNodeID: "start",
+            destinationNodeID: "end",
+            timeLimitSeconds: 10,
+            parTaps: 1
+        )
+        let engine = RouteEngine(dotSpeed: 1)
+        try engine.buildGraph(from: level)
+        XCTAssertTrue(engine.startDotMovement())
+
+        engine.updateDot(deltaTime: 0.9)
+
+        let dot = try XCTUnwrap(engine.deliveryDot)
+        XCTAssertNil(dot.transition)
+        XCTAssertEqual(dot.currentEdgeID, "to_switch")
+        XCTAssertEqual(dot.progressAlongEdge, 0.9, accuracy: 0.0001)
     }
 
     func testStartDotMovementReturnsFalseAtLeafNode() throws {

@@ -448,8 +448,14 @@ final class RouteEngine {
     }
 
     private func smoothTransition(from edge: RuntimeRouteEdge, in runtimeGraph: RuntimeRouteGraph) -> SmoothTransition? {
-        guard let node = runtimeGraph.nodesByID[edge.toNodeID],
+        guard let node = runtimeGraph.nodesByID[edge.toNodeID] else {
+            return nil
+        }
+
+        let validOutgoingEdgeIDs = runtimeGraph.validOutgoingEdgeIDs(for: node)
+        guard validOutgoingEdgeIDs.count == 1,
               let nextEdgeID = node.activeOutgoingEdgeID,
+              validOutgoingEdgeIDs.contains(nextEdgeID),
               let nextEdge = runtimeGraph.edgesByID[nextEdgeID],
               nextEdge.fromNodeID == node.id else {
             return nil
@@ -461,55 +467,21 @@ final class RouteEngine {
             return nil
         }
 
-        let incoming = edge.roadPath.tangent(atDistance: edgeLength)
-        let outgoing = nextEdge.roadPath.tangent(atDistance: 0)
-        let dotProduct = (incoming.x * outgoing.x) + (incoming.y * outgoing.y)
-        let crossProduct = (incoming.x * outgoing.y) - (incoming.y * outgoing.x)
-
-        guard abs(dotProduct) < 0.0001,
-              abs(crossProduct) > 0.9999 else {
+        guard let connector = RoadPath.makePerpendicularConnector(
+            at: RoadPoint(x: node.x, y: node.y),
+            from: edge.roadPath,
+            to: nextEdge.roadPath
+        ) else {
             return nil
         }
-
-        let radius = min(RoadPath.standardTurnRadius, edgeLength / 2, nextEdgeLength / 2)
-        guard radius > 0 else {
-            return nil
-        }
-
-        let nodePoint = RoadPoint(x: node.x, y: node.y)
-        let start = RoadPoint(
-            x: nodePoint.x - (incoming.x * radius),
-            y: nodePoint.y - (incoming.y * radius)
-        )
-        let end = RoadPoint(
-            x: nodePoint.x + (outgoing.x * radius),
-            y: nodePoint.y + (outgoing.y * radius)
-        )
-        let center = RoadPoint(
-            x: start.x + (outgoing.x * radius),
-            y: start.y + (outgoing.y * radius)
-        )
-        let startAngle = atan2(start.y - center.y, start.x - center.x)
-        let signedAngleDelta = crossProduct > 0 ? Double.pi / 2 : -Double.pi / 2
-        let transitionPath = RoadPath(segments: [
-            RoadSegment(
-                kind: .quarterTurn,
-                start: start,
-                end: end,
-                center: center,
-                radius: radius,
-                startAngle: startAngle,
-                signedAngleDelta: signedAngleDelta
-            )
-        ])
 
         return SmoothTransition(
-            exitDistanceFromCurrentEdge: edgeLength - radius,
+            exitDistanceFromCurrentEdge: connector.entryDistanceAlongIncomingPath,
             dotTransition: DeliveryDotTransition(
                 nodeID: node.id,
                 toEdgeID: nextEdgeID,
-                roadPath: transitionPath,
-                exitDistanceAlongToEdge: radius,
+                roadPath: connector.roadPath,
+                exitDistanceAlongToEdge: connector.exitDistanceAlongOutgoingPath,
                 progressAlongTransition: 0
             )
         )

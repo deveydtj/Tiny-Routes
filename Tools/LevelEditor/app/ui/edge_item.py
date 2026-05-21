@@ -63,13 +63,17 @@ class EdgeItem(QGraphicsItemGroup):
             path.lineTo(point)
         self._path_item.setPath(path)
 
-        arrow_base = points[-2]
-        arrow_tip = points[-1]
+        arrow_segment = self._resolve_arrow_segment(points)
+        if arrow_segment is None:
+            if allow_degenerate:
+                self._arrow_item.setVisible(False)
+                return
+            raise ValueError(f"Cannot draw arrow for degenerate edge segment (edge_id={self.edge_id!r})")
+
+        arrow_base, arrow_tip = arrow_segment
         arrow_dx = arrow_tip.x() - arrow_base.x()
         arrow_dy = arrow_tip.y() - arrow_base.y()
         arrow_length = math.hypot(arrow_dx, arrow_dy)
-        if arrow_length < 1e-6:
-            raise ValueError(f"Cannot draw arrow for degenerate edge segment (edge_id={self.edge_id!r})")
         ux = arrow_dx / arrow_length
         uy = arrow_dy / arrow_length
         arrow_left = QPointF(
@@ -80,6 +84,7 @@ class EdgeItem(QGraphicsItemGroup):
             arrow_tip.x() - self.ARROW_SIZE * (ux + uy * 0.5),
             arrow_tip.y() - self.ARROW_SIZE * (uy - ux * 0.5),
         )
+        self._arrow_item.setVisible(True)
         self._arrow_item.setPolygon(QPolygonF([arrow_tip, arrow_left, arrow_right]))
 
     def _build_path_points(
@@ -111,3 +116,11 @@ class EdgeItem(QGraphicsItemGroup):
         return math.isclose(first.x(), second.x(), abs_tol=1e-6) and math.isclose(
             first.y(), second.y(), abs_tol=1e-6
         )
+
+    def _resolve_arrow_segment(self, points: list[QPointF]) -> tuple[QPointF, QPointF] | None:
+        for index in range(len(points) - 1, 0, -1):
+            arrow_base = points[index - 1]
+            arrow_tip = points[index]
+            if not self._points_are_close(arrow_base, arrow_tip):
+                return arrow_base, arrow_tip
+        return None

@@ -259,6 +259,7 @@ private struct RouteBoardView: View {
                 in: geometry.size,
                 padding: boardPadding
             )
+            let roadPaths = renderedRoadPaths(for: edges, in: runtimeGraph, layout: layout)
             let tapTargetResolver = RouteBoardTapTargetResolver(
                 runtimeGraph: runtimeGraph,
                 layout: layout,
@@ -266,33 +267,10 @@ private struct RouteBoardView: View {
             )
 
             ZStack {
-                ForEach(edges, id: \.id) { edge in
-                    roadPath(for: edge, layout: layout)
-                        .stroke(
-                            roadShadowColor,
-                            style: StrokeStyle(lineWidth: roadOuterWidth + 3, lineCap: .butt, lineJoin: .round)
-                        )
-                        .offset(y: 2)
-
-                    roadPath(for: edge, layout: layout)
-                        .stroke(
-                            roadEdgeColor,
-                            style: StrokeStyle(lineWidth: roadOuterWidth, lineCap: .butt, lineJoin: .round)
-                        )
-
-                    roadPath(for: edge, layout: layout)
-                        .stroke(
-                            roadFillColor,
-                            style: StrokeStyle(lineWidth: roadInnerWidth, lineCap: .butt, lineJoin: .round)
-                        )
-
-                    roadPath(for: edge, layout: layout)
-                        .stroke(
-                            roadHighlightColor,
-                            style: StrokeStyle(lineWidth: roadHighlightWidth, lineCap: .butt, lineJoin: .round)
-                        )
-                        .offset(y: -3)
-                }
+                roadLayer(roadPaths, color: roadShadowColor, lineWidth: roadOuterWidth + 3, yOffset: 2)
+                roadLayer(roadPaths, color: roadEdgeColor, lineWidth: roadOuterWidth)
+                roadLayer(roadPaths, color: roadFillColor, lineWidth: roadInnerWidth)
+                roadLayer(roadPaths, color: roadHighlightColor, lineWidth: roadHighlightWidth, yOffset: -3)
 
                 ForEach(nodes, id: \.id) { node in
                     if let nodePoint = layout.pointsByNodeID[node.id] {
@@ -325,7 +303,22 @@ private struct RouteBoardView: View {
         }
     }
 
-
+    @ViewBuilder
+    private func roadLayer(
+        _ roadPaths: [RenderedRoadPath],
+        color: Color,
+        lineWidth: CGFloat,
+        yOffset: CGFloat = 0
+    ) -> some View {
+        ForEach(roadPaths) { roadPath in
+            roadPath.path
+                .stroke(
+                    color,
+                    style: StrokeStyle(lineWidth: lineWidth, lineCap: .butt, lineJoin: .round)
+                )
+                .offset(y: yOffset)
+        }
+    }
 
     @ViewBuilder
     private func deliveryDotView(isMoving: Bool) -> some View {
@@ -441,15 +434,91 @@ private struct RouteBoardView: View {
         return layout.pointsByNodeID[deliveryDot.currentNodeID]
     }
 
+    private func renderedRoadPaths(
+        for edges: [RuntimeRouteEdge],
+        in runtimeGraph: RuntimeRouteGraph,
+        layout: BoardLayout
+    ) -> [RenderedRoadPath] {
+        let connectorGeometry = inferredConnectorGeometry(for: runtimeGraph, layout: layout)
+        let edgePaths = edges.map { edge in
+            let startDistance = connectorGeometry.startTrimDistanceByEdgeID[edge.id] ?? 0
+            let endDistance = connectorGeometry.endTrimDistanceByEdgeID[edge.id] ?? edge.roadPath.totalLength
+            let visibleRoadPath = edge.roadPath.trimmed(
+                fromDistance: startDistance,
+                toDistance: endDistance
+            )
+            return RenderedRoadPath(id: "edge-\(edge.id)", path: roadPath(for: visibleRoadPath, layout: layout))
+        }
+
+        return edgePaths + connectorGeometry.paths
+    }
+
+    private func inferredConnectorGeometry(
+        for runtimeGraph: RuntimeRouteGraph,
+        layout: BoardLayout
+    ) -> RenderedConnectorGeometry {
+        let nodes = runtimeGraph.nodesByID.values.sorted { $0.id < $1.id }
+        let edges = runtimeGraph.edgesByID.values.sorted { $0.id < $1.id }
+        let incomingEdgesByNodeID = Dictionary(grouping: edges, by: \.toNodeID)
+        var paths: [RenderedRoadPath] = []
+        var startTrimDistanceByEdgeID: [String: Double] = [:]
+        var endTrimDistanceByEdgeID: [String: Double] = [:]
+
+        for node in nodes {
+            let outgoingEdges = runtimeGraph.validOutgoingEdgeIDs(for: node).compactMap { runtimeGraph.edgesByID[$0] }
+            guard let incomingEdges = incomingEdgesByNodeID[node.id],
+                  !incomingEdges.isEmpty,
+                  outgoingEdges.count == 1 else {
+                continue
+            }
+
+            let nodePoint = RoadPoint(x: node.x, y: node.y)
+            for incomingEdge in incomingEdges {
+                for outgoingEdge in outgoingEdges {
+                    guard let connector = RoadPath.makePerpendicularConnector(
+                        at: nodePoint,
+                        from: incomingEdge.roadPath,
+                        to: outgoingEdge.roadPath
+                    ) else {
+                        continue
+                    }
+
+                    endTrimDistanceByEdgeID[incomingEdge.id] = min(
+                        endTrimDistanceByEdgeID[incomingEdge.id] ?? incomingEdge.roadPath.totalLength,
+                        connector.entryDistanceAlongIncomingPath
+                    )
+                    startTrimDistanceByEdgeID[outgoingEdge.id] = max(
+                        startTrimDistanceByEdgeID[outgoingEdge.id] ?? 0,
+                        connector.exitDistanceAlongOutgoingPath
+                    )
+                    paths.append(RenderedRoadPath(
+                        id: "connector-\(incomingEdge.id)-\(outgoingEdge.id)",
+                        path: roadPath(for: connector.roadPath, layout: layout)
+                    ))
+                }
+            }
+        }
+
+        return RenderedConnectorGeometry(
+            paths: paths,
+            startTrimDistanceByEdgeID: startTrimDistanceByEdgeID,
+            endTrimDistanceByEdgeID: endTrimDistanceByEdgeID
+        )
+    }
+
     private func roadPath(for edge: RuntimeRouteEdge, layout: BoardLayout) -> Path {
+        roadPath(for: edge.roadPath, layout: layout)
+    }
+
+    private func roadPath(for roadPath: RoadPath, layout: BoardLayout) -> Path {
         Path { path in
-            guard let firstSegment = edge.roadPath.segments.first,
+            guard let firstSegment = roadPath.segments.first,
                   let startPoint = layout.point(for: firstSegment.start) else {
                 return
             }
 
             path.move(to: startPoint)
-            for segment in edge.roadPath.segments {
+            for segment in roadPath.segments {
                 switch segment.kind {
                 case .straight:
                     if let endPoint = layout.point(for: segment.end) {
@@ -472,11 +541,35 @@ private struct RouteBoardView: View {
                         endAngle: .radians(-(segment.startAngle + segment.signedAngleDelta)),
                         clockwise: segment.signedAngleDelta > 0
                     )
+                case .smoothTurn:
+                    guard let endPoint = layout.point(for: segment.end),
+                          let control1 = segment.control1,
+                          let control2 = segment.control2,
+                          let controlPoint1 = layout.point(for: control1),
+                          let controlPoint2 = layout.point(for: control2) else {
+                        if let endPoint = layout.point(for: segment.end) {
+                            path.addLine(to: endPoint)
+                        }
+                        continue
+                    }
+
+                    path.addCurve(to: endPoint, control1: controlPoint1, control2: controlPoint2)
                 }
             }
         }
     }
 
+}
+
+private struct RenderedRoadPath: Identifiable {
+    let id: String
+    let path: Path
+}
+
+private struct RenderedConnectorGeometry {
+    let paths: [RenderedRoadPath]
+    let startTrimDistanceByEdgeID: [String: Double]
+    let endTrimDistanceByEdgeID: [String: Double]
 }
 
 struct RouteBoardTapTargetResolver {
