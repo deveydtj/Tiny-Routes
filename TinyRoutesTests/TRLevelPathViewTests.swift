@@ -100,7 +100,7 @@ final class TRLevelPathViewTests: XCTestCase {
         XCTAssertEqual(transitions[0].end.x, expectedX, accuracy: 0.001)
     }
 
-    func testRowTransitionEndpointsAnchorToTileEdges() {
+    func testRowTransitionEndpointsAnchorToTileSideCenters() {
         let positions = layout.positions(for: makeLevels(8))
         let states = Dictionary(uniqueKeysWithValues: positions.map { ($0.levelID, TRLevelTileState.current) })
         let endpointInset: CGFloat = 6
@@ -113,8 +113,12 @@ final class TRLevelPathViewTests: XCTestCase {
         )
 
         XCTAssertEqual(transitions.count, 1)
-        let expectedEdgeX = positions.first { $0.levelNumber == 4 }!.center.x + tileWidth / 2 - endpointInset
+        let from = positions.first { $0.levelNumber == 4 }!
+        let to = positions.first { $0.levelNumber == 5 }!
+        let expectedEdgeX = from.center.x + tileWidth / 2 - endpointInset
         XCTAssertEqual(transitions[0].start.x, expectedEdgeX, accuracy: 0.001)
         XCTAssertEqual(transitions[0].end.x, expectedEdgeX, accuracy: 0.001)
+        XCTAssertEqual(transitions[0].start.y, from.center.y, accuracy: 0.001)
+        XCTAssertEqual(transitions[0].end.y, to.center.y, accuracy: 0.001)
     }
 }

@@ -98,12 +98,22 @@ struct LevelSelectScreen: View {
 
     private let layout = TRSerpentineLayout(
         tileSize: TRLevelTile.size,
-        horizontalSpacing: 16,
-        verticalSpacing: 24
+        horizontalSpacing: 8,
+        verticalSpacing: 18
     )
+    private let sideRoadInset: CGFloat = 34
 
     var body: some View {
         let positions = layout.positions(for: levels)
+        let displayPositions = positions.map { position in
+            TRLevelTilePosition(
+                levelID: position.levelID,
+                levelNumber: position.levelNumber,
+                row: position.row,
+                column: position.column,
+                center: CGPoint(x: position.center.x + sideRoadInset, y: position.center.y)
+            )
+        }
         let contentWidth = mapContentWidth(levelCount: levels.count)
         let contentHeight = mapContentHeight(positions: positions)
         let progressSnapshot = TRLevelProgressSnapshot(levels: levels, progressService: progressService)
@@ -114,22 +124,27 @@ struct LevelSelectScreen: View {
 
         return VStack(spacing: 12) {
             HStack {
-                Button("Back", action: onBackTapped)
+                Button(action: onBackTapped) {
+                    Text("Back")
+                        .font(.system(size: 15, weight: .medium))
+                        .padding(.vertical, 8)
+                        .padding(.trailing, 12)
+                }
+                .buttonStyle(.plain)
+                .contentShape(Rectangle())
                 Spacer()
             }
             .overlay {
                 Text("Select a Level")
                     .font(.title2)
                     .fontWeight(.semibold)
+                    .allowsHitTesting(false)
             }
 
-            ScrollView([.vertical, .horizontal], showsIndicators: false) {
+            ScrollView(.vertical, showsIndicators: false) {
                 ZStack(alignment: .topLeading) {
-                    TRMapBackgroundView()
-                        .frame(width: contentWidth, height: contentHeight, alignment: .topLeading)
-
                     TRLevelPathView(
-                        positions: positions,
+                        positions: displayPositions,
                         tileStatesByLevelID: tileStatesByLevelID
                     )
                     .frame(width: contentWidth, height: contentHeight, alignment: .topLeading)
@@ -142,12 +157,13 @@ struct LevelSelectScreen: View {
                         ) {
                             onLevelSelected(position.levelID)
                         }
-                        .position(position.center)
+                        .position(x: position.center.x + sideRoadInset, y: position.center.y)
                     }
                 }
                 .frame(width: contentWidth, height: contentHeight, alignment: .topLeading)
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 4)
+                .padding(.top, 24)
             }
         }
         .padding(.horizontal, 8)
@@ -157,6 +173,7 @@ struct LevelSelectScreen: View {
         let columns = min(max(levelCount, 1), layout.columns)
         return CGFloat(columns) * layout.tileSize.width
             + CGFloat(max(columns - 1, 0)) * layout.horizontalSpacing
+            + sideRoadInset * 2
     }
 
     private func mapContentHeight(positions: [TRLevelTilePosition]) -> CGFloat {

@@ -579,6 +579,37 @@ final class RouteEngineTests: XCTestCase {
         XCTAssertEqual(downTransform.rotationAngle, .pi / 2, accuracy: 0.0001)
     }
 
+    func testSwitchArrowDirectionUsesSelectedTargetNodeWhenRoadsShareInitialTangent() throws {
+        let engine = RouteEngine()
+        try engine.buildGraph(from: makeLevelData())
+
+        var graph = try XCTUnwrap(engine.runtimeGraph)
+        var switchNode = try XCTUnwrap(graph.nodesByID["switch"])
+        XCTAssertEqual(
+            try XCTUnwrap(SwitchArrowDirectionResolver.activeDirectionAngle(for: switchNode, in: graph)),
+            -.pi / 4,
+            accuracy: 0.0001
+        )
+
+        XCTAssertTrue(engine.rotateSwitchNode(nodeID: "switch"))
+        graph = try XCTUnwrap(engine.runtimeGraph)
+        switchNode = try XCTUnwrap(graph.nodesByID["switch"])
+        XCTAssertEqual(
+            try XCTUnwrap(SwitchArrowDirectionResolver.activeDirectionAngle(for: switchNode, in: graph)),
+            .pi / 4,
+            accuracy: 0.0001
+        )
+
+        XCTAssertTrue(engine.rotateSwitchNode(nodeID: "switch"))
+        graph = try XCTUnwrap(engine.runtimeGraph)
+        switchNode = try XCTUnwrap(graph.nodesByID["switch"])
+        XCTAssertEqual(
+            try XCTUnwrap(SwitchArrowDirectionResolver.activeDirectionAngle(for: switchNode, in: graph)),
+            0,
+            accuracy: 0.0001
+        )
+    }
+
     func testBuildGraphInitializesTimerFromLevelData() throws {
         let engine = RouteEngine()
 

@@ -388,7 +388,7 @@ private struct RouteBoardView: View {
                         .stroke(Color.green, lineWidth: 2)
                         .frame(width: specialNodeRingSize, height: specialNodeRingSize)
                 )
-        } else if let activeDirectionAngle = activeDirectionAngle(for: node, in: layout) {
+        } else if let activeDirectionAngle = activeDirectionAngle(for: node) {
             SwitchNodeView(
                 activeDirectionAngle: activeDirectionAngle,
                 spriteSize: switchSpriteSize,
@@ -399,18 +399,8 @@ private struct RouteBoardView: View {
         }
     }
 
-    private func activeDirectionAngle(for node: RuntimeRouteNode, in layout: BoardLayout) -> Double? {
-        let validOutgoingEdgeIDs = runtimeGraph.validOutgoingEdgeIDs(for: node)
-
-        guard validOutgoingEdgeIDs.count > 1,
-              let activeEdgeID = node.activeOutgoingEdgeID,
-              validOutgoingEdgeIDs.contains(activeEdgeID),
-              let activeEdge = runtimeGraph.edgesByID[activeEdgeID] else {
-            return nil
-        }
-
-        let tangent = activeEdge.roadPath.tangent(atProgress: 0)
-        return atan2(-tangent.y, tangent.x)
+    private func activeDirectionAngle(for node: RuntimeRouteNode) -> Double? {
+        SwitchArrowDirectionResolver.activeDirectionAngle(for: node, in: runtimeGraph)
     }
 
     private func deliveryDotPoint(in layout: BoardLayout) -> CGPoint? {
@@ -559,6 +549,30 @@ private struct RouteBoardView: View {
         }
     }
 
+}
+
+struct SwitchArrowDirectionResolver {
+    static func activeDirectionAngle(for node: RuntimeRouteNode, in runtimeGraph: RuntimeRouteGraph) -> Double? {
+        let validOutgoingEdgeIDs = runtimeGraph.validOutgoingEdgeIDs(for: node)
+
+        guard validOutgoingEdgeIDs.count > 1,
+              let activeEdgeID = node.activeOutgoingEdgeID,
+              validOutgoingEdgeIDs.contains(activeEdgeID),
+              let activeEdge = runtimeGraph.edgesByID[activeEdgeID] else {
+            return nil
+        }
+
+        if let targetNode = runtimeGraph.nodesByID[activeEdge.toNodeID] {
+            let dx = targetNode.x - node.x
+            let dy = targetNode.y - node.y
+            if dx != 0 || dy != 0 {
+                return atan2(-dy, dx)
+            }
+        }
+
+        let tangent = activeEdge.roadPath.tangent(atProgress: 0)
+        return atan2(-tangent.y, tangent.x)
+    }
 }
 
 private struct RenderedRoadPath: Identifiable {

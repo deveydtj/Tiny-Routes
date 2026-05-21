@@ -77,8 +77,8 @@ func makeRowTransitionSegments(
         let toState = tileStatesByLevelID[to.levelID] ?? .locked
         let isRightTurn = from.row.isMultiple(of: 2)
         let horizontalDirection: CGFloat = isRightTurn ? 1 : -1
-        let startY = from.center.y + tileSize.height / 2 - endpointInset
-        let endY = to.center.y - tileSize.height / 2 + endpointInset
+        let startY = from.center.y
+        let endY = to.center.y
         let startX = from.center.x + horizontalDirection * (tileSize.width / 2 - endpointInset)
         let endX = to.center.x + horizontalDirection * (tileSize.width / 2 - endpointInset)
         let controlX = startX + horizontalDirection * curveOutset
@@ -98,9 +98,10 @@ struct TRLevelPathView: View {
     let positions: [TRLevelTilePosition]
     let tileStatesByLevelID: [String: TRLevelTileState]
 
-    private let unlockedColor = Color(red: 0.20, green: 0.74, blue: 0.50)
-    private let lockedColor = Color(red: 0.72, green: 0.77, blue: 0.84)
-    private let dashHighlightColor = Color.white.opacity(0.45)
+    private let roadShadowColor = Color.black.opacity(0.18)
+    private let roadEdgeColor = Color(red: 0.31, green: 0.36, blue: 0.43)
+    private let roadFillColor = Color(red: 0.54, green: 0.58, blue: 0.64)
+    private let roadHighlightColor = Color.white.opacity(0.24)
 
     var body: some View {
         let segments = makeHorizontalSegments(
@@ -118,16 +119,25 @@ struct TRLevelPathView: View {
                 path.move(to: segment.start)
                 path.addLine(to: segment.end)
 
-                let baseColor = segment.isUnlocked ? unlockedColor : lockedColor
                 context.stroke(
                     path,
-                    with: .color(baseColor),
+                    with: .color(roadShadowColor),
                     style: StrokeStyle(lineWidth: 16, lineCap: .round, lineJoin: .round)
                 )
                 context.stroke(
                     path,
-                    with: .color(dashHighlightColor),
-                    style: StrokeStyle(lineWidth: 3, lineCap: .round, dash: [8, 12])
+                    with: .color(roadEdgeColor.opacity(segment.isUnlocked ? 1.0 : 0.42)),
+                    style: StrokeStyle(lineWidth: 14, lineCap: .round, lineJoin: .round)
+                )
+                context.stroke(
+                    path,
+                    with: .color(roadFillColor.opacity(segment.isUnlocked ? 1.0 : 0.46)),
+                    style: StrokeStyle(lineWidth: 10, lineCap: .round, lineJoin: .round)
+                )
+                context.stroke(
+                    path,
+                    with: .color(roadHighlightColor),
+                    style: StrokeStyle(lineWidth: 2, lineCap: .round)
                 )
             }
 
@@ -136,16 +146,25 @@ struct TRLevelPathView: View {
                 path.move(to: transition.start)
                 path.addCurve(to: transition.end, control1: transition.control1, control2: transition.control2)
 
-                let baseColor = transition.isUnlocked ? unlockedColor : lockedColor
                 context.stroke(
                     path,
-                    with: .color(baseColor),
+                    with: .color(roadShadowColor),
                     style: StrokeStyle(lineWidth: 16, lineCap: .round, lineJoin: .round)
                 )
                 context.stroke(
                     path,
-                    with: .color(dashHighlightColor),
-                    style: StrokeStyle(lineWidth: 3, lineCap: .round, dash: [8, 12])
+                    with: .color(roadEdgeColor.opacity(transition.isUnlocked ? 1.0 : 0.42)),
+                    style: StrokeStyle(lineWidth: 14, lineCap: .round, lineJoin: .round)
+                )
+                context.stroke(
+                    path,
+                    with: .color(roadFillColor.opacity(transition.isUnlocked ? 1.0 : 0.46)),
+                    style: StrokeStyle(lineWidth: 10, lineCap: .round, lineJoin: .round)
+                )
+                context.stroke(
+                    path,
+                    with: .color(roadHighlightColor),
+                    style: StrokeStyle(lineWidth: 2, lineCap: .round)
                 )
             }
         }

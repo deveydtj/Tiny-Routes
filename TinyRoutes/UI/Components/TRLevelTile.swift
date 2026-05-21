@@ -7,7 +7,7 @@ enum TRLevelTileState {
 }
 
 struct TRLevelTile: View {
-    static let size = CGSize(width: 92, height: 104)
+    static let size = CGSize(width: 64, height: 72)
 
     let levelNumber: Int
     let state: TRLevelTileState
@@ -21,18 +21,18 @@ struct TRLevelTile: View {
             VStack(spacing: 0) {
                 Spacer(minLength: 0)
                 Text("\(levelNumber)")
-                    .font(.system(size: 34, weight: .bold, design: .rounded))
+                    .font(.system(size: 25, weight: .bold, design: .rounded))
                     .foregroundStyle(numberColor)
                 Spacer(minLength: 0)
                 bottomContent
-                    .frame(height: 18)
+                    .frame(height: 14)
             }
-            .padding(.vertical, 12)
+            .padding(.vertical, 8)
             .frame(width: tileSize.width, height: tileSize.height)
             .background(tileFill)
             .overlay(alignment: .top) {
                 if state == .completed {
-                    RoundedRectangle(cornerRadius: 20, style: .continuous)
+                    RoundedRectangle(cornerRadius: 15, style: .continuous)
                         .fill(
                             LinearGradient(
                                 colors: [Color.white.opacity(0.35), Color.white.opacity(0)],
@@ -40,15 +40,15 @@ struct TRLevelTile: View {
                                 endPoint: .bottom
                             )
                         )
-                        .frame(height: 34)
+                        .frame(height: 24)
                         .allowsHitTesting(false)
                 }
             }
             .overlay(
-                RoundedRectangle(cornerRadius: 20, style: .continuous)
-                    .stroke(Color.white, lineWidth: state == .current ? 3 : 2)
+                RoundedRectangle(cornerRadius: 15, style: .continuous)
+                    .stroke(Color.white, lineWidth: state == .current ? 4 : 3)
             )
-            .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
+            .clipShape(RoundedRectangle(cornerRadius: 15, style: .continuous))
             .shadow(
                 color: shadowColor,
                 radius: shadowRadius,
@@ -58,14 +58,14 @@ struct TRLevelTile: View {
             .overlay(alignment: .top) {
                 if state == .current {
                     currentPin
-                        .offset(y: -15)
+                        .offset(y: -11)
                         .allowsHitTesting(false)
                 }
             }
             .overlay(alignment: .topTrailing) {
                 if state == .completed {
                     completedBadge
-                        .offset(x: 8, y: -8)
+                        .offset(x: 7, y: -7)
                 }
             }
         }
@@ -80,13 +80,13 @@ struct TRLevelTile: View {
     private var bottomContent: some View {
         if state == .locked {
             Image(systemName: "lock.fill")
-                .font(.system(size: 12, weight: .semibold))
+                .font(.system(size: 9, weight: .semibold))
                 .foregroundStyle(Color(red: 0.46, green: 0.53, blue: 0.63))
         } else if state == .completed {
             HStack(spacing: 3) {
                 ForEach(0..<3, id: \.self) { index in
                     Image(systemName: "star.fill")
-                        .font(.system(size: 11, weight: .semibold))
+                        .font(.system(size: 8, weight: .semibold))
                         .foregroundStyle(Color(red: 1.0, green: 0.86, blue: 0.20).opacity(index < clampedStarCount ? 1.0 : 0.25))
                 }
             }
@@ -95,7 +95,7 @@ struct TRLevelTile: View {
             HStack(spacing: 3) {
                 ForEach(0..<3, id: \.self) { index in
                     Image(systemName: index < clampedStarCount ? "star.fill" : "star")
-                        .font(.system(size: 11, weight: .semibold))
+                        .font(.system(size: 8, weight: .semibold))
                         .foregroundStyle(
                             index < clampedStarCount
                                 ? Color(red: 1.0, green: 0.86, blue: 0.20)
@@ -126,12 +126,12 @@ struct TRLevelTile: View {
         ZStack {
             Circle()
                 .fill(Color.white)
-                .frame(width: 26, height: 26)
+                .frame(width: 20, height: 20)
             Circle()
                 .fill(Color(red: 0.20, green: 0.74, blue: 0.50))
-                .frame(width: 21, height: 21)
+                .frame(width: 16, height: 16)
             Image(systemName: "checkmark")
-                .font(.system(size: 10, weight: .bold))
+                .font(.system(size: 8, weight: .bold))
                 .foregroundStyle(.white)
         }
         .accessibilityHidden(true)
@@ -139,7 +139,7 @@ struct TRLevelTile: View {
 
     private var currentPin: some View {
         Image(systemName: "mappin.circle.fill")
-            .font(.system(size: 20, weight: .bold))
+            .font(.system(size: 16, weight: .bold))
             .foregroundStyle(.white, Color(red: 0.19, green: 0.48, blue: 0.98))
             .accessibilityHidden(true)
     }
