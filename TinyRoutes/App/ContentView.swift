@@ -69,7 +69,7 @@ struct ContentView: View {
                 }
             }
             .foregroundColor(.black)
-            .padding()
+            .padding(isLevelSelectVisible ? 0 : 16)
             .padding(.bottom, selectedBottomTab == nil ? 0 : bottomNavigationReservedHeight)
 
             if let selectedBottomTab {
@@ -86,6 +86,13 @@ struct ContentView: View {
 
     private var selectedBottomTab: TRBottomTab? {
         coordinator.selectedBottomTab
+    }
+
+    private var isLevelSelectVisible: Bool {
+        if case .levelSelect = coordinator.state {
+            return true
+        }
+        return false
     }
 
     @ViewBuilder
@@ -109,6 +116,7 @@ struct ContentView: View {
                 onLevelSelected: { levelID in
                     coordinator.startGameplay(levelID: levelID)
                 },
+                onSettingsTapped: coordinator.openSettings,
                 progressService: progressService
             )
 

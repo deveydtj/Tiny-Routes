@@ -81,93 +81,60 @@ struct TRLevelProgressSnapshot {
 struct LevelSelectScreen: View {
     let levels: [LevelData]
     let onLevelSelected: (String) -> Void
+    let onSettingsTapped: (() -> Void)?
     private let progressService: ProgressService
 
     init(
         levels: [LevelData],
         onLevelSelected: @escaping (String) -> Void,
+        onSettingsTapped: (() -> Void)? = nil,
         progressService: ProgressService = ProgressService()
     ) {
         self.levels = levels
         self.onLevelSelected = onLevelSelected
+        self.onSettingsTapped = onSettingsTapped
         self.progressService = progressService
     }
 
-    private let layout = TRSerpentineLayout(
-        tileSize: TRLevelTile.size,
-        horizontalSpacing: 8,
-        verticalSpacing: 18
-    )
-    private let sideRoadInset: CGFloat = 34
-
     var body: some View {
-        let positions = layout.positions(for: levels)
-        let displayPositions = positions.map { position in
-            TRLevelTilePosition(
-                levelID: position.levelID,
-                levelNumber: position.levelNumber,
-                row: position.row,
-                column: position.column,
-                center: CGPoint(x: position.center.x + sideRoadInset, y: position.center.y)
-            )
-        }
-        let contentWidth = mapContentWidth(levelCount: levels.count)
-        let contentHeight = mapContentHeight(positions: positions)
-        let progressSnapshot = TRLevelProgressSnapshot(levels: levels, progressService: progressService)
-        let tileStates = positions.enumerated().map { index, position in
-            progressSnapshot.tileState(at: index, levelID: position.levelID)
-        }
-        let tileStatesByLevelID = Dictionary(uniqueKeysWithValues: zip(positions.map(\.levelID), tileStates))
+        ScrollView(.vertical, showsIndicators: false) {
+            VStack(spacing: 16) {
+                TRLevelPageHeader(
+                    onSettingsTapped: {
+                        onSettingsTapped?()
+                    },
+                    onAddCurrencyTapped: {}
+                )
+                .padding(.top, 10)
 
-        return VStack(spacing: 12) {
-            Text("Select a Level")
-                .font(.title2)
-                .fontWeight(.semibold)
-                .padding(.top, 4)
+                TRDailyRoutePlaceholderCard()
 
-            ScrollView(.vertical, showsIndicators: false) {
-                ZStack(alignment: .topLeading) {
-                    TRLevelPathView(
-                        positions: displayPositions,
-                        tileStatesByLevelID: tileStatesByLevelID
-                    )
-                    .frame(width: contentWidth, height: contentHeight, alignment: .topLeading)
+                TRMilestoneRewardsPlaceholderCard()
 
-                    ForEach(Array(positions.enumerated()), id: \.element.levelID) { index, position in
-                        TRLevelTile(
-                            levelNumber: position.levelNumber,
-                            state: tileStates[index],
-                            stars: progressSnapshot.stars(for: position.levelID)
-                        ) {
-                            onLevelSelected(position.levelID)
-                        }
-                        .position(x: position.center.x + sideRoadInset, y: position.center.y)
-                    }
-                }
-                .frame(width: contentWidth, height: contentHeight, alignment: .topLeading)
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, 4)
-                .padding(.top, 24)
+                TRLevelMapSection(
+                    levels: levels,
+                    progressService: progressService,
+                    onLevelSelected: onLevelSelected
+                )
+
+                TRStarCollectorPlaceholderCard()
+                    .padding(.bottom, 12)
             }
+            .padding(.horizontal, 20)
+            .padding(.top, 4)
+            .padding(.bottom, 8)
         }
-        .padding(.horizontal, 8)
-    }
-
-    private func mapContentWidth(levelCount: Int) -> CGFloat {
-        let columns = min(max(levelCount, 1), layout.columns)
-        return CGFloat(columns) * layout.tileSize.width
-            + CGFloat(max(columns - 1, 0)) * layout.horizontalSpacing
-            + sideRoadInset * 2
-    }
-
-    private func mapContentHeight(positions: [TRLevelTilePosition]) -> CGFloat {
-        let rowCount = (positions.map(\.row).max() ?? -1) + 1
-        guard rowCount > 0 else {
-            return 0
+        .background {
+            LinearGradient(
+                colors: [
+                    Color.white.opacity(0.18),
+                    Color(red: 0.72, green: 0.90, blue: 0.78).opacity(0.10)
+                ],
+                startPoint: .top,
+                endPoint: .bottom
+            )
+            .ignoresSafeArea()
         }
-
-        return CGFloat(rowCount) * layout.tileSize.height
-            + CGFloat(max(rowCount - 1, 0)) * layout.verticalSpacing
     }
 }
 
