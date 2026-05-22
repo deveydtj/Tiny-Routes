@@ -33,6 +33,7 @@ class ValidationPanel(QWidget):
         header_row.addStretch()
 
         self._validate_button = QPushButton("Validate")
+        self._validate_button.setToolTip("Validate Level + Solution References")
         self._validate_button.clicked.connect(
             lambda checked=False: self.validate_requested.emit()
         )

@@ -62,8 +62,12 @@ def create_default_level_document() -> LevelDocument:
     )
 
 
-def _collect_reachable_node_ids(level: "LevelDocument", node_ids: set[str]) -> set[str]:
-    if level.startNodeID not in node_ids:
+def _collect_reachable_node_ids(
+    level: "LevelDocument",
+    node_ids: set[str],
+    start_node_id: str,
+) -> set[str]:
+    if start_node_id not in node_ids:
         return set()
 
     adjacency: dict[str, set[str]] = {}
@@ -72,7 +76,7 @@ def _collect_reachable_node_ids(level: "LevelDocument", node_ids: set[str]) -> s
             adjacency.setdefault(edge.fromNodeID, set()).add(edge.toNodeID)
 
     reachable: set[str] = set()
-    stack: list[str] = [level.startNodeID]
+    stack: list[str] = [start_node_id]
     while stack:
         node_id = stack.pop()
         if node_id in reachable:
@@ -125,7 +129,22 @@ def validate(level: "LevelDocument") -> ValidationResult:
             )
         )
 
+    # --- Par taps ---
+    if not (
+        isinstance(level.parTaps, int)
+        and not isinstance(level.parTaps, bool)
+        and level.parTaps >= 0
+    ):
+        messages.append(
+            ValidationMessage(
+                severity=ValidationSeverity.ERROR,
+                code="invalid_par_taps",
+                message="Par taps must be a non-negative integer.",
+            )
+        )
+
     node_ids = {node.id for node in level.graph.nodes}
+    node_by_id = {node.id: node for node in level.graph.nodes}
 
     # --- Exactly one start node ---
     if not level.startNodeID or not level.startNodeID.strip():
@@ -200,6 +219,7 @@ def validate(level: "LevelDocument") -> ValidationResult:
 
     # --- Unique edge IDs ---
     seen_edge_ids: set[str] = set()
+    edge_by_id = {}
     for edge in level.graph.edges:
         if edge.id in seen_edge_ids:
             messages.append(
@@ -210,6 +230,8 @@ def validate(level: "LevelDocument") -> ValidationResult:
                     related_edge_id=edge.id,
                 )
             )
+        else:
+            edge_by_id[edge.id] = edge
         seen_edge_ids.add(edge.id)
 
     # --- Every edge references existing nodes ---
@@ -239,8 +261,71 @@ def validate(level: "LevelDocument") -> ValidationResult:
                 )
             )
 
+    # --- Node outgoing edge lists match graph edges ---
+    for node in level.graph.nodes:
+        seen_outgoing_edge_ids: set[str] = set()
+        for outgoing_edge_id in node.outgoingEdgeIDs:
+            if outgoing_edge_id in seen_outgoing_edge_ids:
+                messages.append(
+                    ValidationMessage(
+                        severity=ValidationSeverity.ERROR,
+                        code="duplicate_outgoing_edge_id",
+                        message=(
+                            f"Node '{node.id}' lists outgoing edge '{outgoing_edge_id}' more than once."
+                        ),
+                        related_node_id=node.id,
+                        related_edge_id=outgoing_edge_id,
+                    )
+                )
+            seen_outgoing_edge_ids.add(outgoing_edge_id)
+
+            edge = edge_by_id.get(outgoing_edge_id)
+            if edge is None:
+                messages.append(
+                    ValidationMessage(
+                        severity=ValidationSeverity.ERROR,
+                        code="outgoing_edge_id_not_found",
+                        message=(
+                            f"Node '{node.id}' lists outgoing edge '{outgoing_edge_id}', but no edge with that ID exists."
+                        ),
+                        related_node_id=node.id,
+                        related_edge_id=outgoing_edge_id,
+                    )
+                )
+                continue
+
+            if edge.fromNodeID != node.id:
+                messages.append(
+                    ValidationMessage(
+                        severity=ValidationSeverity.ERROR,
+                        code="outgoing_edge_wrong_source_node",
+                        message=(
+                            f"Node '{node.id}' lists edge '{edge.id}', but that edge starts at '{edge.fromNodeID}'."
+                        ),
+                        related_node_id=node.id,
+                        related_edge_id=edge.id,
+                    )
+                )
+
+    for edge in level.graph.edges:
+        source_node = node_by_id.get(edge.fromNodeID)
+        if source_node is None:
+            continue
+        if edge.id not in source_node.outgoingEdgeIDs:
+            messages.append(
+                ValidationMessage(
+                    severity=ValidationSeverity.ERROR,
+                    code="edge_missing_from_source_outgoing_ids",
+                    message=(
+                        f"Edge '{edge.id}' starts at node '{edge.fromNodeID}', but the node does not list it in outgoingEdgeIDs."
+                    ),
+                    related_node_id=edge.fromNodeID,
+                    related_edge_id=edge.id,
+                )
+            )
+
     # --- Reachability from start node ---
-    reachable_node_ids = _collect_reachable_node_ids(level, node_ids)
+    reachable_node_ids = _collect_reachable_node_ids(level, node_ids, level.startNodeID)
     if reachable_node_ids:
         if (
             level.packageNodeID in node_ids
@@ -287,5 +372,24 @@ def validate(level: "LevelDocument") -> ValidationResult:
                         related_node_id=node_id,
                     )
                 )
+
+    # --- Required route order reachability ---
+    if level.packageNodeID in node_ids and level.destinationNodeID in node_ids:
+        package_reachable_node_ids = _collect_reachable_node_ids(
+            level,
+            node_ids,
+            level.packageNodeID,
+        )
+        if level.destinationNodeID not in package_reachable_node_ids:
+            messages.append(
+                ValidationMessage(
+                    severity=ValidationSeverity.ERROR,
+                    code="destination_unreachable_from_package_node",
+                    message=(
+                        f"Destination node '{level.destinationNodeID}' is not reachable from package node '{level.packageNodeID}'."
+                    ),
+                    related_node_id=level.destinationNodeID,
+                )
+            )
 
     return ValidationResult(messages=messages)

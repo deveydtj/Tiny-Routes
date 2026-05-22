@@ -1,13 +1,8 @@
 {
-  "levelID": "level_002",
-  "description": "Tap the choice node after the dot reaches the approach.",
+  "levelID": "level_001",
+  "description": "No taps are needed for the first pickup.",
   "expectedOutcome": "completed",
-  "maxTaps": 1,
+  "maxTaps": 0,
   "requiresWithinTimeLimit": true,
-  "actions": [
-    {
-      "timeSeconds": 0.5,
-      "tapNodeID": "choice"
-    }
-  ]
+  "actions": []
 }

@@ -26,11 +26,10 @@ def test_load_solution_reads_valid_solution_file() -> None:
 
     solution = repository.load_solution(FIXTURE_PATH)
 
-    assert solution.levelID == "level_002"
+    assert solution.levelID == "level_001"
     assert solution.expectedOutcome == "completed"
-    assert solution.maxTaps == 1
-    assert len(solution.actions) == 1
-    assert solution.actions[0].tapNodeID == "choice"
+    assert solution.maxTaps == 0
+    assert solution.actions == []
 
 
 def test_save_solution_writes_round_trip_json(tmp_path: Path) -> None:

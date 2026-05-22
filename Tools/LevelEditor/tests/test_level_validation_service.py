@@ -285,6 +285,53 @@ def test_validate_bool_time_limit():
     assert "invalid_time_limit" in codes
 
 
+def test_validate_invalid_par_taps():
+    level = _load_fixture("valid_level.json")
+    level.parTaps = -1
+    result = validate(level)
+    codes = [m.code for m in result.messages]
+    assert "invalid_par_taps" in codes
+
+    level.parTaps = True
+    result = validate(level)
+    codes = [m.code for m in result.messages]
+    assert "invalid_par_taps" in codes
+
+
+def test_validate_duplicate_outgoing_edge_ids():
+    level = _load_fixture("valid_level.json")
+    level.graph.nodes[0].outgoingEdgeIDs.append("e_start_package")
+    result = validate(level)
+    codes = [m.code for m in result.messages]
+    assert "duplicate_outgoing_edge_id" in codes
+
+
+def test_validate_outgoing_edge_id_not_found():
+    level = _load_fixture("valid_level.json")
+    level.graph.nodes[0].outgoingEdgeIDs.append("missing_edge")
+    result = validate(level)
+    codes = [m.code for m in result.messages]
+    assert "outgoing_edge_id_not_found" in codes
+
+
+def test_validate_outgoing_edge_wrong_source_node():
+    level = _load_fixture("valid_level.json")
+    start_node = next(node for node in level.graph.nodes if node.id == "start")
+    start_node.outgoingEdgeIDs.append("e_package_destination")
+    result = validate(level)
+    codes = [m.code for m in result.messages]
+    assert "outgoing_edge_wrong_source_node" in codes
+
+
+def test_validate_edge_missing_from_source_outgoing_ids():
+    level = _load_fixture("valid_level.json")
+    start_node = next(node for node in level.graph.nodes if node.id == "start")
+    start_node.outgoingEdgeIDs.remove("e_start_package")
+    result = validate(level)
+    codes = [m.code for m in result.messages]
+    assert "edge_missing_from_source_outgoing_ids" in codes
+
+
 def test_validate_unreachable_package_produces_error():
     level = _load_fixture("invalid_unreachable_package.json")
     result = validate(level)
@@ -343,6 +390,32 @@ def test_validate_reachable_level_has_no_reachability_messages():
         "unreachable_non_critical_node",
     }
     assert not any(message.code in reachability_codes for message in result.messages)
+
+
+def test_validate_destination_unreachable_from_package_node():
+    level_data = _load_fixture("valid_level.json").to_dict()
+    level_data["graph"] = {
+        "nodes": [
+            {"id": "start", "x": 0.0, "y": 0.0, "outgoingEdgeIDs": ["e_start_package", "e_start_destination"]},
+            {"id": "package", "x": 1.0, "y": 0.0, "outgoingEdgeIDs": []},
+            {"id": "destination", "x": 2.0, "y": 0.0, "outgoingEdgeIDs": []},
+        ],
+        "edges": [
+            {"id": "e_start_package", "fromNodeID": "start", "toNodeID": "package"},
+            {"id": "e_start_destination", "fromNodeID": "start", "toNodeID": "destination"},
+        ],
+    }
+    level = LevelDocument.from_dict(level_data)
+
+    result = validate(level)
+    messages = [
+        message
+        for message in result.messages
+        if message.code == "destination_unreachable_from_package_node"
+    ]
+    assert len(messages) == 1
+    assert messages[0].severity is ValidationSeverity.ERROR
+    assert messages[0].related_node_id == "destination"
 
 
 def test_validate_no_qt_imports():

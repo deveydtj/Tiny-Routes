@@ -4,7 +4,7 @@ from PySide6.QtCore import Qt
 from PySide6.QtGui import QAction, QCloseEvent, QKeySequence
 from PySide6.QtWidgets import QDockWidget, QFileDialog, QMainWindow, QMessageBox, QToolBar
 
-from app.config import get_default_levels_directory
+from app.config import find_repo_root, get_default_levels_directory
 from app.models import LevelDocument, RouteEdgeModel, RouteNodeModel, SolutionModel
 from app.repositories import (
     LevelFileRepository,
@@ -13,7 +13,15 @@ from app.repositories import (
     SolutionFileRepository,
     SolutionFileRepositoryError,
 )
-from app.services import LevelValidationService, create_default_level_document
+from app.services import (
+    LevelValidationService,
+    SolutionValidationService,
+    TestRunnerService,
+    ValidationMessage,
+    ValidationResult,
+    ValidationSeverity,
+    create_default_level_document,
+)
 from app.ui import LevelCanvasView, PiecePalette, PropertiesPanel, SolutionPanel, ValidationPanel
 
 
@@ -29,6 +37,8 @@ class LevelEditorMainWindow(QMainWindow):
         self._repository = LevelFileRepository()
         self._solution_repository = SolutionFileRepository()
         self._validation_service = LevelValidationService()
+        self._solution_validation_service = SolutionValidationService()
+        self._test_runner_service = TestRunnerService(self._resolve_repo_root())
         self._canvas_view = LevelCanvasView()
         self._piece_palette = PiecePalette()
         self._properties_panel = PropertiesPanel()
@@ -121,10 +131,13 @@ class LevelEditorMainWindow(QMainWindow):
         self._tools_menu = menu_bar.addMenu("Tools")
 
         validate_action = self._tools_menu.addAction("Validate")
+        validate_action.setToolTip("Validate Level + Solution References")
         validate_action.triggered.connect(self._validate_current_level)
 
-        run_tests_action = self._tools_menu.addAction("Run Tests")
-        run_tests_action.setEnabled(False)
+        self._run_tests_menu_action = self._tools_menu.addAction("Run Tests")
+        self._run_tests_menu_action.setToolTip("Run Swift Solvability Tests")
+        self._run_tests_menu_action.triggered.connect(self._run_level_tests)
+        self._run_tests_menu_action.setEnabled(False)
 
     def _build_main_toolbar(self) -> None:
         self._main_toolbar = QToolBar("Main Toolbar", self)
@@ -149,6 +162,7 @@ class LevelEditorMainWindow(QMainWindow):
         self._main_toolbar.addSeparator()
 
         validate_action = QAction("Validate", self)
+        validate_action.setToolTip("Validate Level + Solution References")
         validate_action.triggered.connect(self._validate_current_level)
         self._main_toolbar.addAction(validate_action)
 
@@ -163,6 +177,8 @@ class LevelEditorMainWindow(QMainWindow):
         self._main_toolbar.addSeparator()
 
         self._run_tests_action = QAction("Run Tests", self)
+        self._run_tests_action.setToolTip("Run Swift Solvability Tests")
+        self._run_tests_action.triggered.connect(self._run_level_tests)
         self._run_tests_action.setEnabled(False)
         self._main_toolbar.addAction(self._run_tests_action)
 
@@ -195,6 +211,7 @@ class LevelEditorMainWindow(QMainWindow):
         self._properties_panel.clear()
         self._solution_panel.set_solution(self._current_solution)
         self._validation_panel.clear()
+        self._update_run_tests_action_states()
         self._set_dirty(False)
 
     def _new_level(self) -> None:
@@ -208,6 +225,7 @@ class LevelEditorMainWindow(QMainWindow):
         self._properties_panel.clear()
         self._solution_panel.set_solution(self._current_solution)
         self._validation_panel.clear()
+        self._update_run_tests_action_states()
         self._set_dirty(True)
 
     def _save_level(self) -> bool:
@@ -260,8 +278,38 @@ class LevelEditorMainWindow(QMainWindow):
             self._validation_panel.clear()
             return
 
-        result = self._validation_service.validate(self._current_document)
-        self._validation_panel.show_result(result)
+        level_result = self._validation_service.validate(self._current_document)
+        solution_result = self._solution_validation_service.validate(
+            self._current_document,
+            self._current_solution,
+        )
+        combined_result = ValidationResult(
+            messages=[*level_result.messages, *solution_result.messages]
+        )
+        self._validation_panel.show_result(combined_result)
+
+    def _run_level_tests(self) -> None:
+        if self._current_document is None:
+            self._validation_panel.clear()
+            return
+
+        if not self._prompt_to_save_unsaved_changes():
+            return
+
+        result = self._test_runner_service.run_tests()
+        detail = self._summarize_test_runner_output(result.stdout, result.stderr)
+        message_text = result.summary if not detail else f"{result.summary}\n\n{detail}"
+        severity = ValidationSeverity.INFO if result.passed else ValidationSeverity.ERROR
+        validation_result = ValidationResult(
+            messages=[
+                ValidationMessage(
+                    severity=severity,
+                    code="swift_tests_passed" if result.passed else "swift_tests_failed",
+                    message=message_text,
+                )
+            ]
+        )
+        self._validation_panel.show_result(validation_result)
 
     def _focus_validation_message(self, message: object) -> None:
         scene = self._canvas_view.scene()
@@ -288,6 +336,12 @@ class LevelEditorMainWindow(QMainWindow):
         except FileNotFoundError:
             return Path.home()
 
+    def _resolve_repo_root(self) -> Path:
+        try:
+            return find_repo_root()
+        except FileNotFoundError:
+            return Path.cwd()
+
     def _mark_document_dirty(self) -> None:
         if self._current_document is None:
             return
@@ -297,6 +351,10 @@ class LevelEditorMainWindow(QMainWindow):
         if self._current_document is None:
             return
 
+        # Load-time normalization would hide bad sidecar metadata from Validate.
+        # Edit-time normalization is intentional: once the designer changes the
+        # solution in this editor, the sidecar belongs to the open level and
+        # maxTaps tracks the scripted tap count.
         updated_solution.levelID = self._current_document.id
         updated_solution.maxTaps = len(updated_solution.actions)
         self._current_solution = updated_solution
@@ -413,7 +471,12 @@ class LevelEditorMainWindow(QMainWindow):
         self._is_dirty = is_dirty
         self._update_window_title()
 
-    def _build_default_solution(self, document: LevelDocument) -> SolutionModel:
+    def _build_default_solution(
+        self,
+        document: LevelDocument,
+        *,
+        is_placeholder: bool = False,
+    ) -> SolutionModel:
         return SolutionModel(
             levelID=document.id,
             description=f"Solution for {document.name}",
@@ -421,6 +484,7 @@ class LevelEditorMainWindow(QMainWindow):
             maxTaps=0,
             requiresWithinTimeLimit=True,
             actions=[],
+            isPlaceholder=is_placeholder or None,
         )
 
     def _load_solution_for_level(self, level_path: Path, document: LevelDocument) -> SolutionModel:
@@ -428,17 +492,15 @@ class LevelEditorMainWindow(QMainWindow):
         try:
             solution = self._solution_repository.load_solution(solution_path)
         except MissingSolutionFileError:
-            return self._build_default_solution(document)
+            return self._build_default_solution(document, is_placeholder=True)
         except SolutionFileRepositoryError as exc:
             QMessageBox.warning(
                 self,
                 "Failed to Load Solution",
                 f"{exc.message}\n\nA blank solution will be used until the file is saved.",
             )
-            return self._build_default_solution(document)
+            return self._build_default_solution(document, is_placeholder=True)
 
-        solution.levelID = document.id
-        solution.maxTaps = len(solution.actions)
         if solution.description is None:
             solution.description = f"Solution for {document.name}"
         return solution
@@ -450,6 +512,26 @@ class LevelEditorMainWindow(QMainWindow):
             return
         dirty_suffix = " *" if self._is_dirty else ""
         self.setWindowTitle(f"{base_title} — {self._current_document.id}{dirty_suffix}")
+
+    def _update_run_tests_action_states(self) -> None:
+        is_enabled = self._current_document is not None
+        for action_name in ("_run_tests_menu_action", "_run_tests_action"):
+            action = getattr(self, action_name, None)
+            if action is not None:
+                action.setEnabled(is_enabled)
+
+    @staticmethod
+    def _summarize_test_runner_output(stdout: str, stderr: str) -> str:
+        combined_lines = [
+            line.strip()
+            for line in [*stdout.splitlines(), *stderr.splitlines()]
+            if line.strip()
+        ]
+        if not combined_lines:
+            return ""
+
+        tail = combined_lines[-12:]
+        return "\n".join(tail)
 
     def _prompt_to_save_unsaved_changes(self) -> bool:
         if not self._is_dirty or self._current_document is None:

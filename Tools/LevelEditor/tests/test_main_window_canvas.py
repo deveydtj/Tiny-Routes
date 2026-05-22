@@ -20,7 +20,7 @@ if str(LEVEL_EDITOR_ROOT) not in sys.path:
 
 from app.main_window import LevelEditorMainWindow
 from app.models import LevelDocument, RouteEdgeModel, RouteGraphModel, RouteNodeModel, SolutionActionModel, SolutionModel
-from app.services import ValidationMessage, ValidationResult, ValidationSeverity
+from app.services import TestRunnerResult, ValidationMessage, ValidationResult, ValidationSeverity
 from app.ui import (
     EdgeItem,
     LevelCanvasScene,
@@ -317,6 +317,138 @@ def test_open_level_loads_solution_actions_into_solution_panel(
         assert window._solution_panel._table.rowCount() == 1
         assert window._solution_panel._table.item(0, 0).text() == "0.5"
         assert window._solution_panel._table.item(0, 1).text() == "choice"
+    finally:
+        window.close()
+
+
+def test_open_level_does_not_normalize_bad_solution_metadata(
+    qapplication: QApplication,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    window = LevelEditorMainWindow()
+    document = LevelDocument(
+        id="level_002",
+        name="Node Drawing Level",
+        graph=RouteGraphModel(),
+        startNodeID="start",
+        packageNodeID="package",
+        destinationNodeID="destination",
+        timeLimitSeconds=60,
+        parTaps=2,
+    )
+    solution = SolutionModel(
+        levelID="wrong_level",
+        description="Test",
+        expectedOutcome="completed",
+        maxTaps=99,
+        requiresWithinTimeLimit=True,
+        actions=[SolutionActionModel(timeSeconds=0.5, tapNodeID="choice")],
+    )
+
+    monkeypatch.setattr(QFileDialog, "getOpenFileName", lambda *args, **kwargs: ("/tmp/level_002.json", ""))
+    monkeypatch.setattr(window._repository, "load_level", lambda path: document)
+    monkeypatch.setattr(window._solution_repository, "load_solution", lambda path: solution)
+
+    try:
+        window._open_level()
+        assert window._current_solution is not None
+        assert window._current_solution.levelID == "wrong_level"
+        assert window._current_solution.maxTaps == 99
+    finally:
+        window.close()
+
+
+def test_validate_current_level_includes_solution_messages(
+    qapplication: QApplication,
+) -> None:
+    window = LevelEditorMainWindow()
+    document = LevelDocument(
+        id="level_002",
+        name="Solution Validation Level",
+        graph=RouteGraphModel(
+            nodes=[
+                RouteNodeModel(id="start", x=0.0, y=0.0, outgoingEdgeIDs=[]),
+            ],
+            edges=[],
+        ),
+        startNodeID="start",
+        packageNodeID="start",
+        destinationNodeID="start",
+        timeLimitSeconds=60,
+        parTaps=0,
+    )
+    solution = SolutionModel(
+        levelID="wrong_level",
+        description="Test",
+        expectedOutcome="completed",
+        maxTaps=0,
+        requiresWithinTimeLimit=True,
+        actions=[],
+    )
+    window._current_document = document
+    window._current_solution = solution
+
+    try:
+        window._validate_current_level()
+        messages = [
+            window._validation_panel._message_list.item(index).data(Qt.ItemDataRole.UserRole)
+            for index in range(window._validation_panel._message_list.count())
+        ]
+        assert "solution_level_id_mismatch" in [message.code for message in messages]
+    finally:
+        window.close()
+
+
+def test_run_tests_actions_enable_when_level_is_open(qapplication: QApplication) -> None:
+    window = LevelEditorMainWindow()
+    try:
+        assert window._run_tests_action.isEnabled() is False
+        assert window._run_tests_menu_action.isEnabled() is False
+
+        window._new_level()
+
+        assert window._run_tests_action.isEnabled() is True
+        assert window._run_tests_menu_action.isEnabled() is True
+    finally:
+        window.close()
+
+
+def test_run_level_tests_shows_result_in_validation_panel(qapplication: QApplication) -> None:
+    window = LevelEditorMainWindow()
+    document = LevelDocument(
+        id="level_002",
+        name="Run Tests Level",
+        graph=RouteGraphModel(nodes=[RouteNodeModel(id="start", x=0.0, y=0.0, outgoingEdgeIDs=[])]),
+        startNodeID="start",
+        packageNodeID="start",
+        destinationNodeID="start",
+        timeLimitSeconds=60,
+        parTaps=0,
+    )
+    window._current_document = document
+    window._current_solution = SolutionModel(
+        levelID="level_002",
+        description="Test",
+        expectedOutcome="completed",
+        maxTaps=0,
+        requiresWithinTimeLimit=True,
+        actions=[],
+    )
+    window._test_runner_service.run_tests = lambda: TestRunnerResult(
+        command=["xcodebuild", "test"],
+        exit_code=65,
+        stdout="Testing failed",
+        stderr="LevelSolvabilityTests failed",
+        passed=False,
+        summary="Swift solvability tests failed with exit code 65.",
+    )
+
+    try:
+        window._run_level_tests()
+        message = window._validation_panel._message_list.item(0).data(Qt.ItemDataRole.UserRole)
+        assert message.code == "swift_tests_failed"
+        assert message.severity is ValidationSeverity.ERROR
+        assert "LevelSolvabilityTests failed" in message.message
     finally:
         window.close()
 
