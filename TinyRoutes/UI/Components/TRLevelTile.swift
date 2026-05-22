@@ -46,7 +46,7 @@ struct TRLevelTile: View {
             }
             .overlay(
                 RoundedRectangle(cornerRadius: 12, style: .continuous)
-                    .stroke(Color.white, lineWidth: 2)
+                    .stroke(Color.white, lineWidth: 6)
             )
             .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
             .shadow(
