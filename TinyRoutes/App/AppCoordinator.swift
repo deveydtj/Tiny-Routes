@@ -6,6 +6,21 @@ import Foundation
 final class AppCoordinator: ObservableObject {
     @Published private(set) var state: AppState = .boot
 
+    var selectedBottomTab: TRBottomTab? {
+        switch state {
+        case .mainMenu:
+            .home
+        case .levelSelect:
+            .levels
+        case .shop:
+            .shop
+        case .settings:
+            .profile
+        case .boot, .gameplay, .pause, .levelComplete, .levelFailed:
+            nil
+        }
+    }
+
     func launch() {
         state = .mainMenu
     }
@@ -68,6 +83,19 @@ final class AppCoordinator: ObservableObject {
 
     func openSettings() {
         state = .settings
+    }
+
+    func selectTab(_ tab: TRBottomTab) {
+        switch tab {
+        case .home:
+            state = .mainMenu
+        case .levels:
+            state = .levelSelect
+        case .shop:
+            state = .shop
+        case .profile:
+            state = .settings
+        }
     }
 
     func backToMainMenu() {

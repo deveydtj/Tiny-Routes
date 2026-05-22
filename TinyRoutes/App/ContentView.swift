@@ -6,6 +6,7 @@ struct ContentView: View {
     @StateObject private var coordinator = AppCoordinator()
     private let levelRepository = LevelRepository()
     private let progressService = ProgressService()
+    private let bottomNavigationReservedHeight: CGFloat = 96
 
     var body: some View {
         ZStack {
@@ -23,9 +24,7 @@ struct ContentView: View {
 
                 case .mainMenu:
                     HomeScreen(
-                        onPlayTapped: coordinator.openLevelSelect,
-                        onShopTapped: coordinator.openShop,
-                        onSettingsTapped: coordinator.openSettings
+                        onPlayTapped: coordinator.openLevelSelect
                     )
 
                 case .levelSelect:
@@ -63,15 +62,30 @@ struct ContentView: View {
                     )
 
                 case .shop:
-                    ShopScreen(onBackTapped: coordinator.backToMainMenu)
+                    ShopScreen()
 
                 case .settings:
-                    SettingsScreen(onBackTapped: coordinator.backToMainMenu)
+                    SettingsScreen()
                 }
             }
             .foregroundColor(.black)
             .padding()
+            .padding(.bottom, selectedBottomTab == nil ? 0 : bottomNavigationReservedHeight)
+
+            if let selectedBottomTab {
+                VStack {
+                    Spacer()
+                    TRBottomNavigationBar(
+                        selectedTab: selectedBottomTab,
+                        onTabSelected: coordinator.selectTab
+                    )
+                }
+            }
         }
+    }
+
+    private var selectedBottomTab: TRBottomTab? {
+        coordinator.selectedBottomTab
     }
 
     @ViewBuilder
@@ -92,7 +106,6 @@ struct ContentView: View {
         case let .loaded(levels):
             LevelSelectScreen(
                 levels: levels,
-                onBackTapped: coordinator.backToMainMenu,
                 onLevelSelected: { levelID in
                     coordinator.startGameplay(levelID: levelID)
                 },
