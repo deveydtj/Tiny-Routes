@@ -8,6 +8,7 @@ class PiecePalette(QWidget):
     _PALETTE_ITEMS: list[tuple[str, str]] = [
         ("Start", "start"),
         ("Route Node", "route"),
+        ("Switch", "switch"),
         ("Package", "package"),
         ("Destination", "destination"),
     ]

@@ -98,6 +98,36 @@ class LevelCanvasScene(QGraphicsScene):
             -scene_position.y() / self.COORDINATE_SCALE,
         )
 
+    def level_items_bounding_rect(self) -> QRectF | None:
+        level_items = [
+            item
+            for item in self.items()
+            if item.isVisible() and isinstance(item, (NodeItem, EdgeItem, TransitionArcItem))
+        ]
+        if not level_items:
+            return None
+
+        bounding_rect = level_items[0].sceneBoundingRect()
+        for item in level_items[1:]:
+            bounding_rect = bounding_rect.united(item.sceneBoundingRect())
+        return bounding_rect
+
+    def select_node_by_id(self, node_id: str) -> bool:
+        node_item = self._node_items_by_id.get(node_id)
+        if node_item is None:
+            return False
+        self.clearSelection()
+        node_item.setSelected(True)
+        return True
+
+    def select_edge_by_id(self, edge_id: str) -> bool:
+        for item in self.items():
+            if isinstance(item, EdgeItem) and item.edge_id == edge_id:
+                self.clearSelection()
+                item.setSelected(True)
+                return True
+        return False
+
     def handle_node_item_moved(self, item: NodeItem) -> None:
         model_x, model_y = self.scene_to_model_coordinates(item.pos())
         item.model_x = model_x
@@ -412,6 +442,8 @@ class LevelCanvasScene(QGraphicsScene):
             return "destination"
         if node.id.lower() == "finish":
             return "finish"
+        if node.id.lower().startswith("switch"):
+            return "switch"
         if len(node.outgoingEdgeIDs) >= 2:
             return "switch"
         return "route"

@@ -10,7 +10,7 @@ os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 try:
     from PySide6.QtCore import Qt
     from PySide6.QtGui import QColor, QKeyEvent, QPalette
-    from PySide6.QtWidgets import QApplication, QFileDialog, QMessageBox
+    from PySide6.QtWidgets import QApplication, QFileDialog, QMessageBox, QToolBar
 except ImportError as exc:
     pytest.skip(f"PySide6 unavailable in this environment: {exc}", allow_module_level=True)
 
@@ -95,14 +95,7 @@ def test_main_window_uses_canvas_view_as_central_widget(qapplication: QApplicati
 def test_main_window_file_menu_includes_new_level_action(qapplication: QApplication) -> None:
     window = LevelEditorMainWindow()
     try:
-        file_menu = next(
-            (
-                action.menu()
-                for action in window.menuBar().actions()
-                if action.menu() is not None and action.text().replace("&", "") == "File"
-            ),
-            None,
-        )
+        file_menu = window._file_menu
         assert file_menu is not None
         action_texts = [action.text() for action in file_menu.actions()]
         assert "New Level" in action_texts
@@ -130,9 +123,60 @@ def test_piece_palette_lists_all_node_types(qapplication: QApplication) -> None:
     palette = PiecePalette()
     try:
         labels = [palette._list_widget.item(index).text() for index in range(palette._list_widget.count())]
-        assert labels == ["Start", "Route Node", "Package", "Destination"]
+        assert labels == ["Start", "Route Node", "Switch", "Package", "Destination"]
     finally:
         palette.close()
+
+
+def test_piece_palette_double_click_switch_emits_switch(qapplication: QApplication) -> None:
+    palette = PiecePalette()
+    emitted_node_types: list[str] = []
+    palette.node_type_activated.connect(emitted_node_types.append)
+
+    try:
+        switch_item = next(
+            palette._list_widget.item(index)
+            for index in range(palette._list_widget.count())
+            if palette._list_widget.item(index).text() == "Switch"
+        )
+
+        palette._list_widget.itemDoubleClicked.emit(switch_item)
+
+        assert emitted_node_types == ["switch"]
+    finally:
+        palette.close()
+
+
+def test_main_window_has_main_toolbar(qapplication: QApplication) -> None:
+    window = LevelEditorMainWindow()
+    try:
+        toolbar = window.findChild(QToolBar, "mainToolbar")
+        assert toolbar is window._main_toolbar
+    finally:
+        window.close()
+
+
+def test_main_toolbar_contains_common_actions(qapplication: QApplication) -> None:
+    window = LevelEditorMainWindow()
+    try:
+        action_texts = [
+            action.text()
+            for action in window._main_toolbar.actions()
+            if not action.isSeparator()
+        ]
+        assert action_texts == [
+            "New",
+            "Open",
+            "Save",
+            "Validate",
+            "Fit View",
+            "Reset Zoom",
+            "Run Tests",
+        ]
+        run_tests_action = next(action for action in window._main_toolbar.actions() if action.text() == "Run Tests")
+        assert run_tests_action.isEnabled() is False
+    finally:
+        window.close()
 
 
 def test_level_canvas_view_starts_centered_on_origin(qapplication: QApplication) -> None:
@@ -145,6 +189,32 @@ def test_level_canvas_view_starts_centered_on_origin(qapplication: QApplication)
         center_point = view.mapToScene(view.viewport().rect().center())
         assert abs(center_point.x()) < 10
         assert abs(center_point.y()) < 10
+    finally:
+        view.close()
+
+
+def test_canvas_view_reset_zoom_restores_default_transform(qapplication: QApplication) -> None:
+    view = LevelCanvasView()
+    try:
+        view.scale(2.0, 2.0)
+
+        view.reset_zoom()
+
+        assert view.transform().m11() == pytest.approx(1.0)
+        assert view.transform().m22() == pytest.approx(1.0)
+    finally:
+        view.close()
+
+
+def test_canvas_view_fit_level_to_view_handles_empty_scene(qapplication: QApplication) -> None:
+    view = LevelCanvasView()
+    try:
+        view.scene().clear()
+
+        view.fit_level_to_view()
+
+        assert view.transform().m11() == pytest.approx(1.0)
+        assert view.transform().m22() == pytest.approx(1.0)
     finally:
         view.close()
 
@@ -745,6 +815,12 @@ def test_main_window_has_validation_panel(qapplication: QApplication) -> None:
 
 def test_validation_panel_displays_messages_with_icons(qapplication: QApplication) -> None:
     panel = ValidationPanel()
+    warning_message = ValidationMessage(
+        severity=ValidationSeverity.WARNING,
+        code="unreachable_non_critical_node",
+        message="Node 'side' is not reachable from start node 'start'.",
+        related_node_id="side",
+    )
     try:
         panel.show_result(
             ValidationResult(
@@ -754,11 +830,7 @@ def test_validation_panel_displays_messages_with_icons(qapplication: QApplicatio
                         code="missing_level_id",
                         message="Level ID is missing or empty.",
                     ),
-                    ValidationMessage(
-                        severity=ValidationSeverity.WARNING,
-                        code="unreachable_non_critical_node",
-                        message="Node 'side' is not reachable from start node 'start'.",
-                    ),
+                    warning_message,
                     ValidationMessage(
                         severity=ValidationSeverity.INFO,
                         code="ok",
@@ -775,6 +847,30 @@ def test_validation_panel_displays_messages_with_icons(qapplication: QApplicatio
         assert not panel._message_list.item(0).icon().isNull()
         assert not panel._message_list.item(1).icon().isNull()
         assert not panel._message_list.item(2).icon().isNull()
+        assert panel._summary_label.text() == "Errors: 1  Warnings: 1  Info: 1"
+        assert panel._message_list.item(1).data(Qt.ItemDataRole.UserRole) == warning_message
+    finally:
+        panel.close()
+
+
+def test_validation_panel_emits_message_when_double_clicked(qapplication: QApplication) -> None:
+    panel = ValidationPanel()
+    message = ValidationMessage(
+        severity=ValidationSeverity.ERROR,
+        code="missing_node",
+        message="Missing node.",
+        related_node_id="destination",
+    )
+    activated_messages: list[ValidationMessage] = []
+    panel.validation_message_activated.connect(activated_messages.append)
+
+    try:
+        panel.show_result(ValidationResult(messages=[message]))
+        item = panel._message_list.item(0)
+
+        panel._message_list.itemDoubleClicked.emit(item)
+
+        assert activated_messages == [message]
     finally:
         panel.close()
 
@@ -811,6 +907,37 @@ def test_validate_button_runs_validation_service_for_current_level(
             window._validation_panel._message_list.item(0).text()
             == "Node 'side' is not reachable from start node 'start'."
         )
+    finally:
+        window.close()
+
+
+def test_double_clicking_node_validation_message_selects_related_node(
+    qapplication: QApplication,
+) -> None:
+    window = LevelEditorMainWindow()
+    message = ValidationMessage(
+        severity=ValidationSeverity.WARNING,
+        code="unreachable_non_critical_node",
+        message="Node 'destination' is not reachable from start node 'start'.",
+        related_node_id="destination",
+    )
+
+    try:
+        window._current_document = _make_two_node_one_edge_document()
+        window._canvas_view.scene().display_level(window._current_document)
+        window._validation_panel.show_result(ValidationResult(messages=[message]))
+
+        window._validation_panel._message_list.itemDoubleClicked.emit(
+            window._validation_panel._message_list.item(0)
+        )
+        qapplication.processEvents()
+
+        selected_node_items = [
+            item
+            for item in window._canvas_view.scene().selectedItems()
+            if isinstance(item, NodeItem)
+        ]
+        assert [item.node_id for item in selected_node_items] == ["destination"]
     finally:
         window.close()
 
@@ -1058,6 +1185,36 @@ def test_palette_double_click_adds_unique_node_to_canvas_center_and_marks_dirty(
         assert "node_1" in canvas_node_ids
         assert window._is_dirty is True
     finally:
+        window.close()
+
+
+def test_palette_double_click_adds_switch_node_with_switch_style(
+    qapplication: QApplication,
+) -> None:
+    window = LevelEditorMainWindow()
+
+    try:
+        window._new_level()
+        switch_item = next(
+            window._piece_palette._list_widget.item(index)
+            for index in range(window._piece_palette._list_widget.count())
+            if window._piece_palette._list_widget.item(index).text() == "Switch"
+        )
+
+        window._piece_palette._list_widget.itemDoubleClicked.emit(switch_item)
+        qapplication.processEvents()
+
+        assert window._current_document is not None
+        assert any(node.id == "switch" for node in window._current_document.graph.nodes)
+        switch_node_item = next(
+            item
+            for item in window._canvas_view.scene().items()
+            if isinstance(item, NodeItem) and item.node_id == "switch"
+        )
+        assert switch_node_item.node_type == "switch"
+        assert switch_node_item._circle.brush().color().name() == NODE_TYPE_STYLES["switch"].fill_color
+    finally:
+        window._set_dirty(False)
         window.close()
 
 

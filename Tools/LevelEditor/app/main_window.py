@@ -1,8 +1,8 @@
 from pathlib import Path
 
 from PySide6.QtCore import Qt
-from PySide6.QtGui import QCloseEvent, QKeySequence
-from PySide6.QtWidgets import QDockWidget, QFileDialog, QMainWindow, QMessageBox
+from PySide6.QtGui import QAction, QCloseEvent, QKeySequence
+from PySide6.QtWidgets import QDockWidget, QFileDialog, QMainWindow, QMessageBox, QToolBar
 
 from app.config import get_default_levels_directory
 from app.models import LevelDocument, RouteEdgeModel, RouteNodeModel, SolutionModel
@@ -80,31 +80,91 @@ class LevelEditorMainWindow(QMainWindow):
         scene.level_items_deleted.connect(self._on_level_items_deleted)
         scene.placement_message_changed.connect(self.statusBar().showMessage)
         self._validation_panel.validate_requested.connect(self._validate_current_level)
+        self._validation_panel.validation_message_activated.connect(
+            self._focus_validation_message
+        )
         self._piece_palette.node_type_activated.connect(self._add_node_from_palette)
         self._solution_panel.solution_changed.connect(self._on_solution_changed)
 
         self._build_menu_bar()
+        self._build_main_toolbar()
         self._update_window_title()
 
     def _build_menu_bar(self) -> None:
         menu_bar = self.menuBar()
-        file_menu = menu_bar.addMenu("File")
+        self._file_menu = menu_bar.addMenu("File")
 
-        new_action = file_menu.addAction("New Level")
+        new_action = self._file_menu.addAction("New Level")
         new_action.setShortcut(QKeySequence.StandardKey.New)
         new_action.triggered.connect(self._new_level)
 
-        open_action = file_menu.addAction("Open Level...")
+        open_action = self._file_menu.addAction("Open Level...")
         open_action.setShortcut(QKeySequence.StandardKey.Open)
         open_action.triggered.connect(self._open_level)
 
-        save_action = file_menu.addAction("Save Level")
+        save_action = self._file_menu.addAction("Save Level")
         save_action.setShortcut(QKeySequence.StandardKey.Save)
         save_action.triggered.connect(self._save_level)
 
-        save_as_action = file_menu.addAction("Save Level As...")
+        save_as_action = self._file_menu.addAction("Save Level As...")
         save_as_action.setShortcut(QKeySequence.StandardKey.SaveAs)
         save_as_action.triggered.connect(self._save_level_as)
+
+        self._view_menu = menu_bar.addMenu("View")
+
+        fit_view_action = self._view_menu.addAction("Fit View")
+        fit_view_action.triggered.connect(self._canvas_view.fit_level_to_view)
+
+        reset_zoom_action = self._view_menu.addAction("Reset Zoom")
+        reset_zoom_action.triggered.connect(self._canvas_view.reset_zoom)
+
+        self._tools_menu = menu_bar.addMenu("Tools")
+
+        validate_action = self._tools_menu.addAction("Validate")
+        validate_action.triggered.connect(self._validate_current_level)
+
+        run_tests_action = self._tools_menu.addAction("Run Tests")
+        run_tests_action.setEnabled(False)
+
+    def _build_main_toolbar(self) -> None:
+        self._main_toolbar = QToolBar("Main Toolbar", self)
+        self._main_toolbar.setObjectName("mainToolbar")
+        self.addToolBar(self._main_toolbar)
+
+        new_action = QAction("New", self)
+        new_action.setShortcut(QKeySequence.StandardKey.New)
+        new_action.triggered.connect(self._new_level)
+        self._main_toolbar.addAction(new_action)
+
+        open_action = QAction("Open", self)
+        open_action.setShortcut(QKeySequence.StandardKey.Open)
+        open_action.triggered.connect(self._open_level)
+        self._main_toolbar.addAction(open_action)
+
+        save_action = QAction("Save", self)
+        save_action.setShortcut(QKeySequence.StandardKey.Save)
+        save_action.triggered.connect(self._save_level)
+        self._main_toolbar.addAction(save_action)
+
+        self._main_toolbar.addSeparator()
+
+        validate_action = QAction("Validate", self)
+        validate_action.triggered.connect(self._validate_current_level)
+        self._main_toolbar.addAction(validate_action)
+
+        fit_view_action = QAction("Fit View", self)
+        fit_view_action.triggered.connect(self._canvas_view.fit_level_to_view)
+        self._main_toolbar.addAction(fit_view_action)
+
+        reset_zoom_action = QAction("Reset Zoom", self)
+        reset_zoom_action.triggered.connect(self._canvas_view.reset_zoom)
+        self._main_toolbar.addAction(reset_zoom_action)
+
+        self._main_toolbar.addSeparator()
+
+        self._run_tests_action = QAction("Run Tests", self)
+        self._run_tests_action.setEnabled(False)
+        self._main_toolbar.addAction(self._run_tests_action)
 
     def _open_level(self) -> None:
         if not self._prompt_to_save_unsaved_changes():
@@ -202,6 +262,25 @@ class LevelEditorMainWindow(QMainWindow):
 
         result = self._validation_service.validate(self._current_document)
         self._validation_panel.show_result(result)
+
+    def _focus_validation_message(self, message: object) -> None:
+        scene = self._canvas_view.scene()
+        related_node_id = getattr(message, "related_node_id", None)
+        related_edge_id = getattr(message, "related_edge_id", None)
+
+        if isinstance(related_node_id, str) and related_node_id:
+            if scene.select_node_by_id(related_node_id):
+                self._canvas_view.center_on_selected_item()
+                self.statusBar().showMessage(f"Selected node '{related_node_id}'.")
+                return
+
+        if isinstance(related_edge_id, str) and related_edge_id:
+            if scene.select_edge_by_id(related_edge_id):
+                self._canvas_view.center_on_selected_item()
+                self.statusBar().showMessage(f"Selected edge '{related_edge_id}'.")
+                return
+
+        self.statusBar().showMessage("Related validation item was not found on the canvas.")
 
     def _resolve_default_levels_dir(self) -> Path:
         try:

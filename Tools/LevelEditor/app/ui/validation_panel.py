@@ -16,6 +16,7 @@ from app.services import ValidationResult, ValidationSeverity
 
 class ValidationPanel(QWidget):
     validate_requested = Signal()
+    validation_message_activated = Signal(object)
 
     def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent)
@@ -38,6 +39,9 @@ class ValidationPanel(QWidget):
         header_row.addWidget(self._validate_button)
         outer.addLayout(header_row)
 
+        self._summary_label = QLabel("Errors: 0  Warnings: 0  Info: 0")
+        outer.addWidget(self._summary_label)
+
         separator = QFrame()
         separator.setFrameShape(QFrame.Shape.HLine)
         separator.setFrameShadow(QFrame.Shadow.Sunken)
@@ -49,10 +53,12 @@ class ValidationPanel(QWidget):
 
         self._message_list = QListWidget()
         self._message_list.setVisible(False)
+        self._message_list.itemDoubleClicked.connect(self._on_message_item_double_clicked)
         outer.addWidget(self._message_list)
 
     def show_result(self, result: ValidationResult) -> None:
         self._message_list.clear()
+        self._update_summary(result)
 
         if not result.messages:
             self.clear()
@@ -61,6 +67,7 @@ class ValidationPanel(QWidget):
         for message in result.messages:
             item = QListWidgetItem(message.message)
             item.setIcon(self._icon_for_severity(message.severity))
+            item.setData(Qt.ItemDataRole.UserRole, message)
             self._message_list.addItem(item)
 
         self._empty_label.setVisible(False)
@@ -68,8 +75,26 @@ class ValidationPanel(QWidget):
 
     def clear(self) -> None:
         self._message_list.clear()
+        self._summary_label.setText("Errors: 0  Warnings: 0  Info: 0")
         self._empty_label.setVisible(True)
         self._message_list.setVisible(False)
+
+    def _update_summary(self, result: ValidationResult) -> None:
+        error_count = sum(
+            1 for message in result.messages if message.severity is ValidationSeverity.ERROR
+        )
+        warning_count = sum(
+            1 for message in result.messages if message.severity is ValidationSeverity.WARNING
+        )
+        info_count = sum(1 for message in result.messages if message.severity is ValidationSeverity.INFO)
+        self._summary_label.setText(
+            f"Errors: {error_count}  Warnings: {warning_count}  Info: {info_count}"
+        )
+
+    def _on_message_item_double_clicked(self, item: QListWidgetItem) -> None:
+        message = item.data(Qt.ItemDataRole.UserRole)
+        if message is not None:
+            self.validation_message_activated.emit(message)
 
     def _icon_for_severity(self, severity: ValidationSeverity):
         if severity is ValidationSeverity.ERROR:
