@@ -32,7 +32,6 @@
 		2642190DBD1F2E50EAEEA4FE /* GameTimeFormatter.swift in Sources */ = {isa = PBXBuildFile; fileRef = DAE6F8D4B8727D20DEC3BCB7 /* GameTimeFormatter.swift */; };
 		26CA64E5162D5D762A4548BE /* GameplayScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = B18B1BD2DCEA7552CE9DBD3B /* GameplayScreen.swift */; };
 		285F89C6DBFF294EB4D8D160 /* TRMapBackgroundView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC3781828CCF0BB8E4B08BB1 /* TRMapBackgroundView.swift */; };
-		29877DF69957B41474C25FAC /* TRConfettiParticle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B62AB62103AF88A706B1E0C /* TRConfettiParticle.swift */; };
 		2A16A2EB2945E072AF6FA52C /* RouteNode.swift in Sources */ = {isa = PBXBuildFile; fileRef = 86D5601913C689EB5ED4A957 /* RouteNode.swift */; };
 		2A453CAD492368B04874AF3C /* level_001.json in Resources */ = {isa = PBXBuildFile; fileRef = C110C9DEB2E44438FDB43C40 /* level_001.json */; };
 		2B2668ED0E64C49FD1A8008E /* AppState.swift in Sources */ = {isa = PBXBuildFile; fileRef = DB9C673DAD937B5A68706543 /* AppState.swift */; };
@@ -59,9 +58,9 @@
 		54C610B49C57ECA2EE5D6AF6 /* level_009.solution.json in Resources */ = {isa = PBXBuildFile; fileRef = F01609CB09C053F483E182C1 /* level_009.solution.json */; };
 		57666F84E8C1A4D24E7A019F /* edge_unknown_to_node.json in Resources */ = {isa = PBXBuildFile; fileRef = 9E179536AFB50A68B5DD327D /* edge_unknown_to_node.json */; };
 		57C00116975B921DEF53787D /* duplicate_outgoing_edge_ids.json in Resources */ = {isa = PBXBuildFile; fileRef = 1B37E002D44DA1C3F01C3745 /* duplicate_outgoing_edge_ids.json */; };
-		5958BE22082FBECA61AA0829 /* TRConfettiParticleFactoryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0AAFC4DB40F8CB66F7DB47AE /* TRConfettiParticleFactoryTests.swift */; };
 		5E587FEABFB885FC43134C9F /* LevelSolvabilityTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 22D8DF6A90587055693BBE35 /* LevelSolvabilityTests.swift */; };
 		6183D550112AC3B41FAF244A /* TRResultStarRatingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 72FB462BAFD9B1EA776A0BC6 /* TRResultStarRatingView.swift */; };
+		61C40BB8F783021352E29D57 /* confetti_particle.png in Resources */ = {isa = PBXBuildFile; fileRef = F533862E5024A25364F7DC05 /* confetti_particle.png */; };
 		621ED935A7EE610A4D52289E /* TRBottomNavigationItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5F33C1856997830DC8E92C5B /* TRBottomNavigationItem.swift */; };
 		6238B2493D56CE0AF091FFBF /* level_010.solution.json in Resources */ = {isa = PBXBuildFile; fileRef = 11B5E0934131746492AE6EF5 /* level_010.solution.json */; };
 		6386977DD62202C684D99D05 /* level_008.json in Resources */ = {isa = PBXBuildFile; fileRef = 05B0B9D18B16A2D12B14E006 /* level_008.json */; };
@@ -90,6 +89,7 @@
 		90FB242DCE51BE7D683C2A6F /* locked_pin.png in Resources */ = {isa = PBXBuildFile; fileRef = 46F20A76B944EE7DFFA58556 /* locked_pin.png */; };
 		91CDAB6734C4F7252D08DEEC /* DomainModelsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D66F47942EBD89088355D80 /* DomainModelsTests.swift */; };
 		93817F175AC179BF1B16B300 /* new_level.json in Resources */ = {isa = PBXBuildFile; fileRef = 123CD85F8C884A5F1807D304 /* new_level.json */; };
+		96796A7EE4E7C1C1316A7033 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 016927DB2C8F95C37C0EFE86 /* Assets.xcassets */; };
 		9A21AAC34BFA67BB81A01890 /* StreakService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 32AA35B2BC4F9E45955D0ED1 /* StreakService.swift */; };
 		9DB6F736D9A2C1135C6ED70F /* level_006.solution.json in Resources */ = {isa = PBXBuildFile; fileRef = FA3818CA7FFC6923BDFDCD2A /* level_006.solution.json */; };
 		9F49027A4106ECFE52D3D3ED /* LevelSelectLayoutTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F9806F0EE479DCBB7FAB93AA /* LevelSelectLayoutTests.swift */; };
@@ -103,6 +103,7 @@
 		A96831092F654FB2C2E29F01 /* CollisionResolver.swift in Sources */ = {isa = PBXBuildFile; fileRef = BC6EE6C24F31FD317FA05E82 /* CollisionResolver.swift */; };
 		AB0759BEE3EA837542F127ED /* duplicate_edge_ids.json in Resources */ = {isa = PBXBuildFile; fileRef = 95B2F8932D75E47B4D25751E /* duplicate_edge_ids.json */; };
 		AB50103C2414AC2398E81F2B /* TRLevelPathViewTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DB36FE885CC3E6CCDEBA0658 /* TRLevelPathViewTests.swift */; };
+		AB966FA2AE3CE4A1A3BDF464 /* TRConfettiScene.swift in Sources */ = {isa = PBXBuildFile; fileRef = 059373775DF13674AF281937 /* TRConfettiScene.swift */; };
 		AEC42CD55B2D055E6563153F /* shipping_box.png in Resources */ = {isa = PBXBuildFile; fileRef = 94FE558681431822BF195CA5 /* shipping_box.png */; };
 		B04CE8E658635B9547A61051 /* GameplayLevelNumberFormatterTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = ACDA7906BE080836E0D26027 /* GameplayLevelNumberFormatterTests.swift */; };
 		B04EF4A680C930534A0A7924 /* TinyRoutesApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A994D21F5163CDF8D5285EA /* TinyRoutesApp.swift */; };
@@ -135,6 +136,7 @@
 		E1C590601D95F4716729131A /* simple_single_switch.json in Resources */ = {isa = PBXBuildFile; fileRef = 87540AF29D8504011ADE3812 /* simple_single_switch.json */; };
 		E3AE5BDE1D493CB986F3E266 /* TRDailyRoutePlaceholderCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE6FD6A9BE3D0821ACAA7C80 /* TRDailyRoutePlaceholderCard.swift */; };
 		E3B215FACED8A64655F0D52C /* SettingsScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1CC7D005BB054CA1F6F163C2 /* SettingsScreen.swift */; };
+		E3FB663028FB06D051DB81C0 /* TRConfettiEmitterTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CF1DF88BA931FB8DF87A4ABF /* TRConfettiEmitterTests.swift */; };
 		E504B1810CB921FC0811DA8B /* negative_par_taps.json in Resources */ = {isa = PBXBuildFile; fileRef = 58C5DDA73FDF03A33CDC5BAA /* negative_par_taps.json */; };
 		E53265452A081C93250A8DB5 /* missing_destination_node.json in Resources */ = {isa = PBXBuildFile; fileRef = 7A2B8C3AC8E24A49492D5A97 /* missing_destination_node.json */; };
 		E7E9E38DC9513394E5F9B680 /* HomeScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1ED10221512DC80E25D258A7 /* HomeScreen.swift */; };
@@ -144,6 +146,7 @@
 		EC28EA6303B182A0698FAFFF /* TRConfettiEmitter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3EF134C156238A0C9D937219 /* TRConfettiEmitter.swift */; };
 		EDD8334841BEE446825FE614 /* RouteEdge.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43431F22833C9470B99D4FF5 /* RouteEdge.swift */; };
 		EDE8594AA7900E4DE2B81BE2 /* TRLevelTile.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8B897380CF6729C2F1F0345B /* TRLevelTile.swift */; };
+		F1504A4E45C2F8EB67D3BE7A /* LevelCompleteConfetti.sks in Resources */ = {isa = PBXBuildFile; fileRef = F13D58AA79B37FEB5A13B10A /* LevelCompleteConfetti.sks */; };
 		F2CDC9E307FB911EB86227A2 /* TRBottomNavigationBarTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 71C3DCC3950929FB05DC901D /* TRBottomNavigationBarTests.swift */; };
 		F47ED91FDE86BB5A9D017415 /* TRGameplayStyleTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF0CC4388F71CE3B90CBBC80 /* TRGameplayStyleTests.swift */; };
 		F5DA1B86E6BE1D9BDC8DD91D /* EconomyService.swift in Sources */ = {isa = PBXBuildFile; fileRef = DBDF4ED66B8042607FFD6F27 /* EconomyService.swift */; };
@@ -168,13 +171,13 @@
 
 /* Begin PBXFileReference section */
 		003704DD962727D365EAB808 /* LevelValidationIssue.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LevelValidationIssue.swift; sourceTree = "<group>"; };
+		016927DB2C8F95C37C0EFE86 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		05173DE6657F906BBCFD9A89 /* level_010.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = level_010.json; sourceTree = "<group>"; };
+		059373775DF13674AF281937 /* TRConfettiScene.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TRConfettiScene.swift; sourceTree = "<group>"; };
 		05B0B9D18B16A2D12B14E006 /* level_008.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = level_008.json; sourceTree = "<group>"; };
 		05B32D760F6E2D8859F9F9F2 /* settings_gear.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = settings_gear.png; sourceTree = "<group>"; };
 		07D7502FABFF22F936EA1666 /* LevelData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LevelData.swift; sourceTree = "<group>"; };
 		08EDEDC6662C77E816DFB0CE /* missing_start_node.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = missing_start_node.json; sourceTree = "<group>"; };
-		0AAFC4DB40F8CB66F7DB47AE /* TRConfettiParticleFactoryTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TRConfettiParticleFactoryTests.swift; sourceTree = "<group>"; };
-		0B62AB62103AF88A706B1E0C /* TRConfettiParticle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TRConfettiParticle.swift; sourceTree = "<group>"; };
 		0B6634FCA043D2B99D10F4BD /* RouteGraph.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RouteGraph.swift; sourceTree = "<group>"; };
 		0E776E0745037387BBD19195 /* .gitkeep */ = {isa = PBXFileReference; lastKnownFileType = text; path = .gitkeep; sourceTree = "<group>"; };
 		0F881EF170BA7806FA70D13F /* unreachable_destination_from_package.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = unreachable_destination_from_package.json; sourceTree = "<group>"; };
@@ -287,6 +290,7 @@
 		CE27E3BC383758466A258AC9 /* PurchaseAdapter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PurchaseAdapter.swift; sourceTree = "<group>"; };
 		CE6FD6A9BE3D0821ACAA7C80 /* TRDailyRoutePlaceholderCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TRDailyRoutePlaceholderCard.swift; sourceTree = "<group>"; };
 		CEF11510ADC144F44FA76A14 /* star_calendar.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = star_calendar.png; sourceTree = "<group>"; };
+		CF1DF88BA931FB8DF87A4ABF /* TRConfettiEmitterTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TRConfettiEmitterTests.swift; sourceTree = "<group>"; };
 		D38E2EDE9C52958E8C6E10C9 /* level_004.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = level_004.json; sourceTree = "<group>"; };
 		D4C9913C4A5B8AD0D63E024D /* empty_level_id.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = empty_level_id.json; sourceTree = "<group>"; };
 		D9C9F6BC5550F3FE84009D57 /* .gitkeep */ = {isa = PBXFileReference; lastKnownFileType = text; path = .gitkeep; sourceTree = "<group>"; };
@@ -308,9 +312,11 @@
 		EB4DCBD095F5933BDD6BD936 /* TRBottomNavigationBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TRBottomNavigationBar.swift; sourceTree = "<group>"; };
 		F01609CB09C053F483E182C1 /* level_009.solution.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = level_009.solution.json; sourceTree = "<group>"; };
 		F139BB6512B7A9A897A0D611 /* LevelSimulationHarness.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LevelSimulationHarness.swift; sourceTree = "<group>"; };
+		F13D58AA79B37FEB5A13B10A /* LevelCompleteConfetti.sks */ = {isa = PBXFileReference; lastKnownFileType = file.sks; path = LevelCompleteConfetti.sks; sourceTree = "<group>"; };
 		F1B76465F9BAB72AFFB92646 /* AppCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppCoordinator.swift; sourceTree = "<group>"; };
 		F1FB4EDBBFEBB26B3ABF9A9F /* TRResultActionButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TRResultActionButton.swift; sourceTree = "<group>"; };
 		F3254B656FA1479A1C6CEB71 /* ScoreResult.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScoreResult.swift; sourceTree = "<group>"; };
+		F533862E5024A25364F7DC05 /* confetti_particle.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = confetti_particle.png; sourceTree = "<group>"; };
 		F78EA1989721A7F131ADD7E4 /* empty_level_name.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = empty_level_name.json; sourceTree = "<group>"; };
 		F97504C047FC88B1A6992639 /* level_009.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = level_009.json; sourceTree = "<group>"; };
 		F9806F0EE479DCBB7FAB93AA /* LevelSelectLayoutTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LevelSelectLayoutTests.swift; sourceTree = "<group>"; };
@@ -327,6 +333,7 @@
 			children = (
 				EA0CD21DEA8E3A777D065857 /* background.png */,
 				36D0F2D5B2BEDB9890D1635B /* blue_orb.png */,
+				F533862E5024A25364F7DC05 /* confetti_particle.png */,
 				75B7D1DDEE2706290DF4666E /* finish_flag_pin.png */,
 				FFA67F07F905FC42DB952E76 /* glow_ring.png */,
 				DFE6BF59DFA0338A86D55CE0 /* gold_coin.png */,
@@ -542,7 +549,7 @@
 				5F33C1856997830DC8E92C5B /* TRBottomNavigationItem.swift */,
 				E8702E9ED3F38B1A8D2CDE67 /* TRCircularMarkerShell.swift */,
 				3EF134C156238A0C9D937219 /* TRConfettiEmitter.swift */,
-				0B62AB62103AF88A706B1E0C /* TRConfettiParticle.swift */,
+				059373775DF13674AF281937 /* TRConfettiScene.swift */,
 				415F69E291F49F32954A6253 /* TRCurrencyPill.swift */,
 				CE6FD6A9BE3D0821ACAA7C80 /* TRDailyRoutePlaceholderCard.swift */,
 				361B29040D703572B02D178A /* TRGameplayHUD.swift */,
@@ -573,6 +580,8 @@
 		D88E4DA4A34101D0CED29C93 /* Resources */ = {
 			isa = PBXGroup;
 			children = (
+				016927DB2C8F95C37C0EFE86 /* Assets.xcassets */,
+				F13D58AA79B37FEB5A13B10A /* LevelCompleteConfetti.sks */,
 				2CC069E53C0E83CF5BBD8DC4 /* Levels */,
 				0763EA6312AD78EEAC817165 /* Sprites */,
 			);
@@ -621,7 +630,7 @@
 				110E615D1CB962B4C43D1072 /* ScoringAndProgressServiceTests.swift */,
 				DCD9AB8B3D8D1486F7C8FC66 /* SwitchNodeViewTests.swift */,
 				71C3DCC3950929FB05DC901D /* TRBottomNavigationBarTests.swift */,
-				0AAFC4DB40F8CB66F7DB47AE /* TRConfettiParticleFactoryTests.swift */,
+				CF1DF88BA931FB8DF87A4ABF /* TRConfettiEmitterTests.swift */,
 				BF0CC4388F71CE3B90CBBC80 /* TRGameplayStyleTests.swift */,
 				DB36FE885CC3E6CCDEBA0658 /* TRLevelPathViewTests.swift */,
 				11AB4806C5C7E3100BE7283A /* TRResultSummaryTests.swift */,
@@ -711,8 +720,11 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				96796A7EE4E7C1C1316A7033 /* Assets.xcassets in Resources */,
+				F1504A4E45C2F8EB67D3BE7A /* LevelCompleteConfetti.sks in Resources */,
 				3FA709903DD3E1C64A959C6B /* background.png in Resources */,
 				B73BE04DA45F79CAE6666794 /* blue_orb.png in Resources */,
+				61C40BB8F783021352E29D57 /* confetti_particle.png in Resources */,
 				070AC8ED885F8C26F412B12E /* finish_flag_pin.png in Resources */,
 				753214F211A86957C6C4BE9A /* glow_ring.png in Resources */,
 				6F9F55451A0CF391FDC63BC7 /* gold_coin.png in Resources */,
@@ -821,7 +833,7 @@
 				621ED935A7EE610A4D52289E /* TRBottomNavigationItem.swift in Sources */,
 				E98F524CF7F5A2E7CED59352 /* TRCircularMarkerShell.swift in Sources */,
 				EC28EA6303B182A0698FAFFF /* TRConfettiEmitter.swift in Sources */,
-				29877DF69957B41474C25FAC /* TRConfettiParticle.swift in Sources */,
+				AB966FA2AE3CE4A1A3BDF464 /* TRConfettiScene.swift in Sources */,
 				0CAB029FF99DF33C5F43AE41 /* TRCurrencyPill.swift in Sources */,
 				E3AE5BDE1D493CB986F3E266 /* TRDailyRoutePlaceholderCard.swift in Sources */,
 				3A6026DA9B0747F7AF393338 /* TRGameplayHUD.swift in Sources */,
@@ -877,7 +889,7 @@
 				CFFEC17005CB4526654599D2 /* ScoringAndProgressServiceTests.swift in Sources */,
 				B22C95936C3DBB1BAA5C77DC /* SwitchNodeViewTests.swift in Sources */,
 				F2CDC9E307FB911EB86227A2 /* TRBottomNavigationBarTests.swift in Sources */,
-				5958BE22082FBECA61AA0829 /* TRConfettiParticleFactoryTests.swift in Sources */,
+				E3FB663028FB06D051DB81C0 /* TRConfettiEmitterTests.swift in Sources */,
 				F47ED91FDE86BB5A9D017415 /* TRGameplayStyleTests.swift in Sources */,
 				AB50103C2414AC2398E81F2B /* TRLevelPathViewTests.swift in Sources */,
 				6C19A92B9F105B496A8D86B0 /* TRResultSummaryTests.swift in Sources */,

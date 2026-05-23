@@ -96,7 +96,7 @@ struct GameplayScreen: View {
         .onReceive(frameTimer) { frameDate in
             advanceDot(at: frameDate)
         }
-        .onChange(of: isPaused) { paused in
+        .onChange(of: isPaused) { _, paused in
             if paused {
                 lastFrameDate = nil
             }

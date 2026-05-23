@@ -1,4 +1,5 @@
 import SwiftUI
+import UIKit
 
 /// Post-level result screen.
 struct ResultScreen: View {
@@ -25,6 +26,7 @@ struct ResultScreen: View {
     private let summaryFactory: TRResultSummaryFactory
 
     @State private var summary: TRResultSummary
+    @State private var didPlayCompletionFeedback = false
 
     init(
         levelID: String,
@@ -79,8 +81,10 @@ struct ResultScreen: View {
         ZStack {
             TRResultScreenBackground()
 
-            TRConfettiEmitter(mode: confettiMode)
-                .zIndex(1)
+            if result == .completed {
+                TRConfettiEmitter(mode: .success)
+                    .zIndex(3)
+            }
 
             VStack(spacing: 0) {
                 resultHeader
@@ -100,6 +104,9 @@ struct ResultScreen: View {
                 }
             }
             .zIndex(2)
+        }
+        .onAppear {
+            playCompletionFeedbackIfNeeded()
         }
         .task(id: summaryRefreshKey) {
             summary = summaryFactory.makeSummary(
@@ -415,14 +422,17 @@ struct ResultScreen: View {
         }
     }
 
-    private var confettiMode: TRConfettiMode {
-        result == .completed ? .success : .failure
-    }
-
     private var summaryRefreshKey: String {
         let resultKey = result == .completed ? "completed" : "failed"
         let failureKey = failureReason?.message ?? "none"
         return "\(levelID)|\(resultKey)|\(elapsedTime)|\(tapCount)|\(failureKey)"
+    }
+
+    private func playCompletionFeedbackIfNeeded() {
+        guard result == .completed else { return }
+        guard !didPlayCompletionFeedback else { return }
+        didPlayCompletionFeedback = true
+        UINotificationFeedbackGenerator().notificationOccurred(.success)
     }
 
     private var accessibilitySummaryText: String {
