@@ -44,28 +44,24 @@ struct GameplayScreen: View {
     }
 
     var body: some View {
-        VStack(spacing: 16) {
-            VStack(spacing: 8) {
-                Text("Level: \(levelID)")
-                    .font(.headline)
-                Text(isPaused ? "Paused" : "Running")
-                    .foregroundColor(isPaused ? .orange : .green)
-                HStack(spacing: 16) {
-                    Text("Time Left: \(GameTimeFormatter.countdown(timeRemaining))")
-                    Text("Taps: \(tapCount)")
-                }
-                    .font(.subheadline)
-            }
-            .foregroundColor(.white)
-            .frame(maxWidth: .infinity)
-            .padding(.vertical, 12)
-            .background(hudBackground)
+        VStack(spacing: 12) {
+            TRGameplayTopHUD(
+                levelID: levelID,
+                isPaused: isPaused,
+                timeRemaining: timeRemaining,
+                tapCount: tapCount
+            )
+            .padding(.top, 4)
 
             Group {
                 if let loadErrorMessage {
                     Text(loadErrorMessage)
                         .foregroundColor(.red)
                         .multilineTextAlignment(.center)
+                        .padding(16)
+                        .background {
+                            TRGlassCardBackground(cornerRadius: 18)
+                        }
                 } else if let runtimeGraph {
                     RouteBoardView(
                         runtimeGraph: runtimeGraph,
@@ -77,20 +73,22 @@ struct GameplayScreen: View {
                     )
                 } else {
                     ProgressView("Loading board…")
+                        .padding(16)
+                        .background {
+                            TRGlassCardBackground(cornerRadius: 18)
+                        }
                 }
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .padding(.vertical, 8)
+            .padding(.horizontal, 2)
 
-            VStack(spacing: 10) {
-                Button("Restart", action: restartLevel)
-                Button(isPaused ? "Resume" : "Pause", action: onPauseResumeTapped)
-                Button("Exit to Menu", action: onExitTapped)
-            }
-            .foregroundColor(.white)
-            .frame(maxWidth: .infinity)
-            .padding(.vertical, 12)
-            .background(hudBackground)
+            TRGameplayBottomControls(
+                isPaused: isPaused,
+                onRestartTapped: restartLevel,
+                onPauseResumeTapped: onPauseResumeTapped,
+                onExitTapped: onExitTapped
+            )
+            .padding(.bottom, 4)
         }
         .task(id: levelID) {
             loadBoard()
@@ -217,11 +215,6 @@ struct GameplayScreen: View {
         timeRemaining = nil
         hasDispatchedOutcome = false
     }
-
-    private var hudBackground: some View {
-        RoundedRectangle(cornerRadius: 8, style: .continuous)
-            .fill(Color.black.opacity(0.25))
-    }
 }
 
 private struct RouteBoardView: View {
@@ -232,23 +225,21 @@ private struct RouteBoardView: View {
     let hasCollectedPackage: Bool
     let onNodeTapped: (String) -> Void
 
-    private let roadShadowColor = Color.black.opacity(0.25)
-    private let roadEdgeColor = Color(red: 0.31, green: 0.36, blue: 0.43)
-    private let roadFillColor = Color(red: 0.54, green: 0.58, blue: 0.64)
-    private let roadHighlightColor = Color.white.opacity(0.28)
-    private let boardPadding: CGFloat = 20
-    private let switchSpriteSize: CGFloat = 52
-    private let switchRingSize: CGFloat = 28
-    private let specialNodeSize: CGFloat = 74
-    private let specialNodeRingSize: CGFloat = 42
+    private let boardPadding = TRGameplayStyle.Metrics.boardPadding
+    private let switchSpriteSize = TRGameplayStyle.Metrics.switchNodeSize
+    private let switchRingSize = TRGameplayStyle.Metrics.switchCircleSize
+    private let specialNodeSize = TRGameplayStyle.Metrics.packageMarkerSize
+    private let destinationMarkerShellSize = TRGameplayStyle.Metrics.packageMarkerSize * 0.45
+    private let specialNodeIconSize = TRGameplayStyle.Metrics.markerIconSize
+    private let collectedPackageMarkerSize = TRGameplayStyle.Metrics.collectedPackageMarkerSize
     @State private var isPulseExpanded: Bool = false
 
-    private let deliveryDotSize: CGFloat = 46
-    private let deliveryDotRingSize: CGFloat = 28
-    private let deliveryDotHaloSize: CGFloat = 48
-    private let roadOuterWidth: CGFloat = 20
-    private let roadInnerWidth: CGFloat = 15
-    private let roadHighlightWidth: CGFloat = 3
+    private let playerOuterSize = TRGameplayStyle.Metrics.playerOuterSize
+    private let playerCoreSize = TRGameplayStyle.Metrics.playerCoreSize
+    private let playerScale = TRGameplayStyle.Metrics.playerScale
+    private let roadOuterWidth = TRGameplayStyle.Metrics.roadOuterWidth
+    private let roadInnerWidth = TRGameplayStyle.Metrics.roadInnerWidth
+    private let roadHighlightWidth = TRGameplayStyle.Metrics.roadHighlightWidth
 
     var body: some View {
         GeometryReader { geometry in
@@ -267,10 +258,10 @@ private struct RouteBoardView: View {
             )
 
             ZStack {
-                roadLayer(roadPaths, color: roadShadowColor, lineWidth: roadOuterWidth + 3, yOffset: 2)
-                roadLayer(roadPaths, color: roadEdgeColor, lineWidth: roadOuterWidth)
-                roadLayer(roadPaths, color: roadFillColor, lineWidth: roadInnerWidth)
-                roadLayer(roadPaths, color: roadHighlightColor, lineWidth: roadHighlightWidth, yOffset: -3)
+                roadLayer(roadPaths, color: TRGameplayStyle.Colors.roadShadow, lineWidth: roadOuterWidth + 3, yOffset: 2)
+                roadLayer(roadPaths, color: TRGameplayStyle.Colors.roadEdge, lineWidth: roadOuterWidth)
+                roadLayer(roadPaths, color: TRGameplayStyle.Colors.roadFill, lineWidth: roadInnerWidth)
+                roadLayer(roadPaths, color: TRGameplayStyle.Colors.roadHighlight, lineWidth: roadHighlightWidth, yOffset: -3)
 
                 ForEach(nodes, id: \.id) { node in
                     if let nodePoint = layout.pointsByNodeID[node.id] {
@@ -285,11 +276,8 @@ private struct RouteBoardView: View {
                         .allowsHitTesting(false)
                 }
             }
-            .background {
-                SpriteImage(name: "background")
-                    .scaledToFill()
-            }
-            .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+            .frame(width: geometry.size.width, height: geometry.size.height)
+            .background(Color.clear)
             .contentShape(Rectangle())
             .gesture(
                 DragGesture(minimumDistance: 0)
@@ -324,70 +312,68 @@ private struct RouteBoardView: View {
     private func deliveryDotView(isMoving: Bool) -> some View {
         ZStack {
             Circle()
-                .fill(Color.white.opacity(0.4))
-                .frame(width: deliveryDotHaloSize, height: deliveryDotHaloSize)
-                .blur(radius: 6)
-
-            SpriteImage(name: "blue_orb")
-                .scaledToFit()
-                .frame(width: deliveryDotSize, height: deliveryDotSize)
-                .scaleEffect(1.55)
-                .offset(y: 1.5)
+                .fill(TRGameplayStyle.Colors.primaryBlue.opacity(0.22))
+                .frame(width: playerOuterSize + 18, height: playerOuterSize + 18)
+                .blur(radius: 8)
 
             Circle()
-                .stroke(Color.white.opacity(0.95), lineWidth: 2)
-                .frame(width: deliveryDotRingSize, height: deliveryDotRingSize)
-                .shadow(color: Color.white.opacity(0.35), radius: 2, x: 0, y: 0)
+                .fill(Color.white)
+                .frame(width: playerOuterSize, height: playerOuterSize)
+                .shadow(color: Color.black.opacity(0.14), radius: 8, x: 0, y: 4)
+
+            Circle()
+                .fill(
+                    LinearGradient(
+                        colors: [
+                            Color(red: 0.36, green: 0.78, blue: 1.0),
+                            TRGameplayStyle.Colors.primaryBlue
+                        ],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    )
+                )
+                .frame(width: playerCoreSize, height: playerCoreSize)
+                .overlay {
+                    Circle()
+                        .stroke(Color.white.opacity(0.28), lineWidth: 0.5)
+                }
+
+            Circle()
+                .fill(Color.white.opacity(0.40))
+                .frame(width: 9, height: 9)
+                .offset(x: -7, y: -8)
 
             if isMoving {
                 Circle()
-                    .stroke(Color(red: 0.40, green: 0.77, blue: 1.0).opacity(0.75), lineWidth: 3)
+                    .stroke(TRGameplayStyle.Colors.primaryBlue.opacity(0.42), lineWidth: 0)
                     .frame(
-                        width: isPulseExpanded ? deliveryDotRingSize + 14 : deliveryDotRingSize + 4,
-                        height: isPulseExpanded ? deliveryDotRingSize + 14 : deliveryDotRingSize + 4
+                        width: isPulseExpanded ? playerOuterSize + 20 : playerOuterSize + 8,
+                        height: isPulseExpanded ? playerOuterSize + 20 : playerOuterSize + 8
                     )
                     .opacity(isPulseExpanded ? 0.08 : 0.32)
                     .animation(.easeInOut(duration: 0.85).repeatForever(autoreverses: true), value: isPulseExpanded)
             }
         }
-        .shadow(color: Color(red: 0.16, green: 0.52, blue: 0.98).opacity(0.28), radius: 10, x: 0, y: 4)
+        .frame(width: playerOuterSize + 24, height: playerOuterSize + 24)
+        .scaleEffect(playerScale)
         .onAppear {
             isPulseExpanded = true
         }
     }
+
     @ViewBuilder
     private func nodeView(for node: RuntimeRouteNode, layout: BoardLayout) -> some View {
         if node.id == packageNodeID, !hasCollectedPackage {
             SpriteImage(name: "shipping_box")
                 .scaledToFit()
-                .frame(width: specialNodeSize, height: specialNodeSize)
-                .overlay(
-                    Circle()
-                        .stroke(Color.orange, lineWidth: 2)
-                        .frame(width: specialNodeRingSize, height: specialNodeRingSize)
-                )
+                .frame(width: specialNodeIconSize, height: specialNodeIconSize)
+                .scaleEffect(1.10)
         } else if node.id == packageNodeID {
-            Circle()
-                .fill(Color.orange.opacity(0.2))
-                .overlay(
-                    Image(systemName: "checkmark")
-                        .font(.system(size: 14, weight: .bold))
-                        .foregroundColor(.orange)
-                )
-                .overlay(
-                    Circle()
-                        .stroke(Color.orange.opacity(0.6), lineWidth: 2)
-                )
-                .frame(width: specialNodeRingSize, height: specialNodeRingSize)
+            Image(systemName: "checkmark")
+                .font(.system(size: 14, weight: .heavy))
+                .foregroundStyle(TRGameplayStyle.Colors.successGreen)
         } else if node.id == destinationNodeID {
-            SpriteImage(name: "finish_flag_pin")
-                .scaledToFit()
-                .frame(width: specialNodeSize, height: specialNodeSize)
-                .overlay(
-                    Circle()
-                        .stroke(Color.green, lineWidth: 2)
-                        .frame(width: specialNodeRingSize, height: specialNodeRingSize)
-                )
+            destinationMarkerView
         } else if let activeDirectionAngle = activeDirectionAngle(for: node) {
             SwitchNodeView(
                 activeDirectionAngle: activeDirectionAngle,
@@ -396,6 +382,15 @@ private struct RouteBoardView: View {
             )
         } else {
             EmptyView()
+        }
+    }
+
+    private var destinationMarkerView: some View {
+        TRCircularMarkerShell(size: destinationMarkerShellSize) {
+            SpriteImage(name: "finish_flag_pin")
+                .scaledToFit()
+                .frame(width: specialNodeIconSize, height: specialNodeIconSize)
+                .scaleEffect(1.10)
         }
     }
 

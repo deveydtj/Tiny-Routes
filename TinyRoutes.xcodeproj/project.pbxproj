@@ -36,6 +36,7 @@
 		36E6C713306E7C41176B1393 /* ScoreResult.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3254B656FA1479A1C6CEB71 /* ScoreResult.swift */; };
 		37D652FDBF6BBDBBE1663B4F /* level_001.solution.json in Resources */ = {isa = PBXBuildFile; fileRef = 9C4A5BE69FEBDA1DD260AEAE /* level_001.solution.json */; };
 		38515030AB26F2B47263F294 /* level_007.json in Resources */ = {isa = PBXBuildFile; fileRef = 7A2B62C9B574D5F7BBAF1420 /* level_007.json */; };
+		3A6026DA9B0747F7AF393338 /* TRGameplayHUD.swift in Sources */ = {isa = PBXBuildFile; fileRef = 361B29040D703572B02D178A /* TRGameplayHUD.swift */; };
 		3BA316346FA55C1EDDC6BA18 /* RouteEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1AFDFE57C38D02CBE7CAADA9 /* RouteEngine.swift */; };
 		3C735FA8625D783DA8BCC502 /* ResultScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C13BB2799AF7B8830705334 /* ResultScreen.swift */; };
 		3DDE58B9701BB050797CCF70 /* LevelRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5F08C3B9313317816DDFEDFD /* LevelRepository.swift */; };
@@ -93,8 +94,10 @@
 		AB0759BEE3EA837542F127ED /* duplicate_edge_ids.json in Resources */ = {isa = PBXBuildFile; fileRef = 95B2F8932D75E47B4D25751E /* duplicate_edge_ids.json */; };
 		AB50103C2414AC2398E81F2B /* TRLevelPathViewTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DB36FE885CC3E6CCDEBA0658 /* TRLevelPathViewTests.swift */; };
 		AEC42CD55B2D055E6563153F /* shipping_box.png in Resources */ = {isa = PBXBuildFile; fileRef = 94FE558681431822BF195CA5 /* shipping_box.png */; };
+		B04CE8E658635B9547A61051 /* GameplayLevelNumberFormatterTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = ACDA7906BE080836E0D26027 /* GameplayLevelNumberFormatterTests.swift */; };
 		B04EF4A680C930534A0A7924 /* TinyRoutesApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A994D21F5163CDF8D5285EA /* TinyRoutesApp.swift */; };
 		B058F19637D77C249B7421DA /* level_002.json in Resources */ = {isa = PBXBuildFile; fileRef = BD797DABF97371C1E3AC74E2 /* level_002.json */; };
+		B22C95936C3DBB1BAA5C77DC /* SwitchNodeViewTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DCD9AB8B3D8D1486F7C8FC66 /* SwitchNodeViewTests.swift */; };
 		B4182A0F133DA71CE07A8FB4 /* ExperimentalLevelSolverTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1B3768D74CB7A388C10288D0 /* ExperimentalLevelSolverTests.swift */; };
 		B4FBEC8214BD629382909498 /* level_011.solution.json in Resources */ = {isa = PBXBuildFile; fileRef = 64E809F7F3528D448D259365 /* level_011.solution.json */; };
 		B73BE04DA45F79CAE6666794 /* blue_orb.png in Resources */ = {isa = PBXBuildFile; fileRef = 36D0F2D5B2BEDB9890D1635B /* blue_orb.png */; };
@@ -104,6 +107,7 @@
 		BD0DF0D327100566238E104F /* SaveDataRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = 99BBFAA66BFB910BC1BEA096 /* SaveDataRepository.swift */; };
 		BE4A93EADC877472E41000E3 /* ExperimentalLevelSolver.swift in Sources */ = {isa = PBXBuildFile; fileRef = A876C96C4CBEC33CDFFE32C3 /* ExperimentalLevelSolver.swift */; };
 		BE79281A15C128FD8EBC96F3 /* settings_gear.png in Resources */ = {isa = PBXBuildFile; fileRef = 05B32D760F6E2D8859F9F9F2 /* settings_gear.png */; };
+		C6C879E35B0A45FD1A8699A7 /* TRGameplayStyle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 34077F31F2E9880064B46C36 /* TRGameplayStyle.swift */; };
 		CB682E3A5073FD1E5B1A7D8E /* LevelSelectScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8423A86EB968231672776BCD /* LevelSelectScreen.swift */; };
 		CFFEC17005CB4526654599D2 /* ScoringAndProgressServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 110E615D1CB962B4C43D1072 /* ScoringAndProgressServiceTests.swift */; };
 		D19F06BA0A4E8F26B21F0F78 /* ShopScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E972F20245469B0B50038E0 /* ShopScreen.swift */; };
@@ -122,9 +126,11 @@
 		E53265452A081C93250A8DB5 /* missing_destination_node.json in Resources */ = {isa = PBXBuildFile; fileRef = 7A2B8C3AC8E24A49492D5A97 /* missing_destination_node.json */; };
 		E7E9E38DC9513394E5F9B680 /* HomeScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1ED10221512DC80E25D258A7 /* HomeScreen.swift */; };
 		E8B9C8A25B0A06738009CDB2 /* ScoringService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6154D6AD36449F8760CCAEFF /* ScoringService.swift */; };
+		E98F524CF7F5A2E7CED59352 /* TRCircularMarkerShell.swift in Sources */ = {isa = PBXBuildFile; fileRef = E8702E9ED3F38B1A8D2CDE67 /* TRCircularMarkerShell.swift */; };
 		EDD8334841BEE446825FE614 /* RouteEdge.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43431F22833C9470B99D4FF5 /* RouteEdge.swift */; };
 		EDE8594AA7900E4DE2B81BE2 /* TRLevelTile.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8B897380CF6729C2F1F0345B /* TRLevelTile.swift */; };
 		F2CDC9E307FB911EB86227A2 /* TRBottomNavigationBarTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 71C3DCC3950929FB05DC901D /* TRBottomNavigationBarTests.swift */; };
+		F47ED91FDE86BB5A9D017415 /* TRGameplayStyleTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF0CC4388F71CE3B90CBBC80 /* TRGameplayStyleTests.swift */; };
 		F5DA1B86E6BE1D9BDC8DD91D /* EconomyService.swift in Sources */ = {isa = PBXBuildFile; fileRef = DBDF4ED66B8042607FFD6F27 /* EconomyService.swift */; };
 		F9316D9A30EA4723E4CB5BAA /* CosmeticItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 465CFC8159B3613A970FE259 /* CosmeticItem.swift */; };
 		F99E28CEDCB085C9B1AE040D /* non_positive_time_limit.json in Resources */ = {isa = PBXBuildFile; fileRef = A7C0CABC6909C07C15C6120D /* non_positive_time_limit.json */; };
@@ -176,6 +182,8 @@
 		2C686C27E2616FEDD8ADDFFB /* LevelSolutionRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LevelSolutionRepository.swift; sourceTree = "<group>"; };
 		2F7EAE0B5F7024B5C002D119 /* TinyRoutes.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = TinyRoutes.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		32AA35B2BC4F9E45955D0ED1 /* StreakService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StreakService.swift; sourceTree = "<group>"; };
+		34077F31F2E9880064B46C36 /* TRGameplayStyle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TRGameplayStyle.swift; sourceTree = "<group>"; };
+		361B29040D703572B02D178A /* TRGameplayHUD.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TRGameplayHUD.swift; sourceTree = "<group>"; };
 		36D0F2D5B2BEDB9890D1635B /* blue_orb.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = blue_orb.png; sourceTree = "<group>"; };
 		37D41FF0F38C58BCD48358AE /* omitted_outgoing_graph_edge.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = omitted_outgoing_graph_edge.json; sourceTree = "<group>"; };
 		3A775E1E6DB07C2E59BC797E /* level_004.solution.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = level_004.solution.json; sourceTree = "<group>"; };
@@ -230,6 +238,7 @@
 		A3A2EB059F1ED8B1990CD973 /* ProgressService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProgressService.swift; sourceTree = "<group>"; };
 		A7C0CABC6909C07C15C6120D /* non_positive_time_limit.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = non_positive_time_limit.json; sourceTree = "<group>"; };
 		A876C96C4CBEC33CDFFE32C3 /* ExperimentalLevelSolver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExperimentalLevelSolver.swift; sourceTree = "<group>"; };
+		ACDA7906BE080836E0D26027 /* GameplayLevelNumberFormatterTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameplayLevelNumberFormatterTests.swift; sourceTree = "<group>"; };
 		B062DC62792DD750D631C000 /* AdsAdapter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AdsAdapter.swift; sourceTree = "<group>"; };
 		B064034548F2A810BA3D12F6 /* LevelRepositoryTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LevelRepositoryTests.swift; sourceTree = "<group>"; };
 		B18B1BD2DCEA7552CE9DBD3B /* GameplayScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameplayScreen.swift; sourceTree = "<group>"; };
@@ -240,6 +249,7 @@
 		BBF9A119C53A9804C693368D /* AnalyticsAdapter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnalyticsAdapter.swift; sourceTree = "<group>"; };
 		BC6EE6C24F31FD317FA05E82 /* CollisionResolver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CollisionResolver.swift; sourceTree = "<group>"; };
 		BD797DABF97371C1E3AC74E2 /* level_002.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = level_002.json; sourceTree = "<group>"; };
+		BF0CC4388F71CE3B90CBBC80 /* TRGameplayStyleTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TRGameplayStyleTests.swift; sourceTree = "<group>"; };
 		BF4FA0FA2AD0CCC297CE1E14 /* LevelSolvabilityResultTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LevelSolvabilityResultTests.swift; sourceTree = "<group>"; };
 		C0646091BF269C70E31623CF /* duplicate_node_ids.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = duplicate_node_ids.json; sourceTree = "<group>"; };
 		C110C9DEB2E44438FDB43C40 /* level_001.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = level_001.json; sourceTree = "<group>"; };
@@ -260,9 +270,11 @@
 		DB9C673DAD937B5A68706543 /* AppState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppState.swift; sourceTree = "<group>"; };
 		DBDF4ED66B8042607FFD6F27 /* EconomyService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EconomyService.swift; sourceTree = "<group>"; };
 		DC7EF436B12024897B51A9AC /* LevelHumanPlayabilityRules.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LevelHumanPlayabilityRules.swift; sourceTree = "<group>"; };
+		DCD9AB8B3D8D1486F7C8FC66 /* SwitchNodeViewTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwitchNodeViewTests.swift; sourceTree = "<group>"; };
 		DFE6BF59DFA0338A86D55CE0 /* gold_coin.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = gold_coin.png; sourceTree = "<group>"; };
 		E3AEBEAA1D124414570C01B3 /* level_005.solution.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = level_005.solution.json; sourceTree = "<group>"; };
 		E540C87602DF9F761DD5828A /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		E8702E9ED3F38B1A8D2CDE67 /* TRCircularMarkerShell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TRCircularMarkerShell.swift; sourceTree = "<group>"; };
 		EA0CD21DEA8E3A777D065857 /* background.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = background.png; sourceTree = "<group>"; };
 		EB4DCBD095F5933BDD6BD936 /* TRBottomNavigationBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TRBottomNavigationBar.swift; sourceTree = "<group>"; };
 		F01609CB09C053F483E182C1 /* level_009.solution.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = level_009.solution.json; sourceTree = "<group>"; };
@@ -498,7 +510,10 @@
 			children = (
 				EB4DCBD095F5933BDD6BD936 /* TRBottomNavigationBar.swift */,
 				5F33C1856997830DC8E92C5B /* TRBottomNavigationItem.swift */,
+				E8702E9ED3F38B1A8D2CDE67 /* TRCircularMarkerShell.swift */,
 				CE6FD6A9BE3D0821ACAA7C80 /* TRDailyRoutePlaceholderCard.swift */,
+				361B29040D703572B02D178A /* TRGameplayHUD.swift */,
+				34077F31F2E9880064B46C36 /* TRGameplayStyle.swift */,
 				8E20545F7B3660F4E6D38269 /* TRGlassCardBackground.swift */,
 				8ED84D89056B1286C23FE145 /* TRLevelMapSection.swift */,
 				1BB9651A0ED16215305BEFC6 /* TRLevelPageHeader.swift */,
@@ -549,6 +564,7 @@
 			children = (
 				8D66F47942EBD89088355D80 /* DomainModelsTests.swift */,
 				1B3768D74CB7A388C10288D0 /* ExperimentalLevelSolverTests.swift */,
+				ACDA7906BE080836E0D26027 /* GameplayLevelNumberFormatterTests.swift */,
 				49085F9F8941741534FFABA1 /* LevelHumanPlayabilityRulesTests.swift */,
 				B064034548F2A810BA3D12F6 /* LevelRepositoryTests.swift */,
 				F9806F0EE479DCBB7FAB93AA /* LevelSelectLayoutTests.swift */,
@@ -560,7 +576,9 @@
 				FB3E5CC6778A7FA5607D9B52 /* LevelValidationTests.swift */,
 				8120FF4D4CC3F24DCE4CE9BB /* RouteEngineTests.swift */,
 				110E615D1CB962B4C43D1072 /* ScoringAndProgressServiceTests.swift */,
+				DCD9AB8B3D8D1486F7C8FC66 /* SwitchNodeViewTests.swift */,
 				71C3DCC3950929FB05DC901D /* TRBottomNavigationBarTests.swift */,
+				BF0CC4388F71CE3B90CBBC80 /* TRGameplayStyleTests.swift */,
 				DB36FE885CC3E6CCDEBA0658 /* TRLevelPathViewTests.swift */,
 				570E09F240784EF68F83C244 /* Fixtures */,
 				099E18217D3B6F0487246E73 /* Resources */,
@@ -756,7 +774,10 @@
 				060F8145B917BE3159712357 /* SwitchNodeView.swift in Sources */,
 				0E38539A57F9B9EB74FA1AED /* TRBottomNavigationBar.swift in Sources */,
 				621ED935A7EE610A4D52289E /* TRBottomNavigationItem.swift in Sources */,
+				E98F524CF7F5A2E7CED59352 /* TRCircularMarkerShell.swift in Sources */,
 				E3AE5BDE1D493CB986F3E266 /* TRDailyRoutePlaceholderCard.swift in Sources */,
+				3A6026DA9B0747F7AF393338 /* TRGameplayHUD.swift in Sources */,
+				C6C879E35B0A45FD1A8699A7 /* TRGameplayStyle.swift in Sources */,
 				16CD52A3C4F1D5C7E9760F3C /* TRGlassCardBackground.swift in Sources */,
 				81ACE7EA1A2CDFC43E63905F /* TRLevelMapSection.swift in Sources */,
 				45AB8CA928C180CFF418B419 /* TRLevelPageHeader.swift in Sources */,
@@ -777,6 +798,7 @@
 				91CDAB6734C4F7252D08DEEC /* DomainModelsTests.swift in Sources */,
 				BE4A93EADC877472E41000E3 /* ExperimentalLevelSolver.swift in Sources */,
 				B4182A0F133DA71CE07A8FB4 /* ExperimentalLevelSolverTests.swift in Sources */,
+				B04CE8E658635B9547A61051 /* GameplayLevelNumberFormatterTests.swift in Sources */,
 				6B9FD616702BBCDEA08D16E1 /* LevelHumanPlayabilityRules.swift in Sources */,
 				77762CF007173B2FAF91735C /* LevelHumanPlayabilityRulesTests.swift in Sources */,
 				7A3B1263E583C1668B781B0C /* LevelRepositoryTests.swift in Sources */,
@@ -795,7 +817,9 @@
 				A2F99E6A7A6A8B694387F046 /* LevelValidator.swift in Sources */,
 				6EEFAA30620655D48C5F5EB3 /* RouteEngineTests.swift in Sources */,
 				CFFEC17005CB4526654599D2 /* ScoringAndProgressServiceTests.swift in Sources */,
+				B22C95936C3DBB1BAA5C77DC /* SwitchNodeViewTests.swift in Sources */,
 				F2CDC9E307FB911EB86227A2 /* TRBottomNavigationBarTests.swift in Sources */,
+				F47ED91FDE86BB5A9D017415 /* TRGameplayStyleTests.swift in Sources */,
 				AB50103C2414AC2398E81F2B /* TRLevelPathViewTests.swift in Sources */,
 				11C816241E92A32BBEC27B84 /* TestLevelCatalog.swift in Sources */,
 			);
