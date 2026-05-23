@@ -682,7 +682,7 @@ final class LevelRepositoryTests: XCTestCase {
     }
 
     private var expectedBundledLevelIDs: [String] {
-        (1...10).map { String(format: "level_%03d", $0) }
+        (1...11).map { String(format: "level_%03d", $0) } + ["new_level"]
     }
 
     private func nextLevelID(after currentLevelID: String, in sortedLevelIDs: [String]) -> String? {

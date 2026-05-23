@@ -17,6 +17,18 @@ final class ProgressService {
         min(max(bestStarsByLevelID()[levelID] ?? 0, 0), 3)
     }
 
+    func bestStarsSnapshot() -> [String: Int] {
+        bestStarsByLevelID().mapValues { min(max($0, 0), 3) }
+    }
+
+    func totalStars() -> Int {
+        bestStarsSnapshot().values.reduce(0, +)
+    }
+
+    func completedLevelCount() -> Int {
+        bestStarsSnapshot().values.filter { $0 > 0 }.count
+    }
+
     @discardableResult
     func saveBestStars(_ stars: Int, for levelID: String) -> Int {
         guard !levelID.isEmpty else {

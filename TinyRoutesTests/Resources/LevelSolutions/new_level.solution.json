@@ -4,6 +4,7 @@
   "expectedOutcome": "completed",
   "maxTaps": 1,
   "requiresWithinTimeLimit": true,
+  "isPlaceholder": true,
   "actions": [
     {
       "timeSeconds": 0.0,

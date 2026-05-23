@@ -41,10 +41,31 @@ final class TRBottomNavigationBarTests: XCTestCase {
     }
 
     @MainActor
-    func testSelectTabProfileShowsSettings() {
+    func testSelectTabProfileShowsProfile() {
         let coordinator = AppCoordinator()
         coordinator.selectTab(.profile)
+        XCTAssertEqual(coordinator.state, .profile)
+    }
+
+    @MainActor
+    func testOpenProfileShowsProfile() {
+        let coordinator = AppCoordinator()
+        coordinator.openProfile()
+        XCTAssertEqual(coordinator.state, .profile)
+    }
+
+    @MainActor
+    func testOpenSettingsStillShowsSettings() {
+        let coordinator = AppCoordinator()
+        coordinator.openSettings()
         XCTAssertEqual(coordinator.state, .settings)
+    }
+
+    @MainActor
+    func testSelectedBottomTabIsProfileForProfileState() {
+        let coordinator = AppCoordinator()
+        coordinator.openProfile()
+        XCTAssertEqual(coordinator.selectedBottomTab, .profile)
     }
 
     @MainActor

@@ -14,6 +14,8 @@ final class AppCoordinator: ObservableObject {
             .levels
         case .shop:
             .shop
+        case .profile:
+            .profile
         case .settings:
             .profile
         case .boot, .gameplay, .pause, .levelComplete, .levelFailed:
@@ -85,6 +87,10 @@ final class AppCoordinator: ObservableObject {
         state = .shop
     }
 
+    func openProfile() {
+        state = .profile
+    }
+
     func openSettings() {
         state = .settings
     }
@@ -98,7 +104,7 @@ final class AppCoordinator: ObservableObject {
         case .shop:
             state = .shop
         case .profile:
-            state = .settings
+            openProfile()
         }
     }
 

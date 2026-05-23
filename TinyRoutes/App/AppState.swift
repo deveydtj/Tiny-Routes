@@ -10,5 +10,6 @@ enum AppState: Equatable {
     case levelComplete(levelID: String, elapsedTime: TimeInterval, tapCount: Int)
     case levelFailed(levelID: String, reason: LevelFailureReason, elapsedTime: TimeInterval, tapCount: Int)
     case shop
+    case profile
     case settings
 }

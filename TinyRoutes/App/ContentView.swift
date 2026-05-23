@@ -6,6 +6,7 @@ struct ContentView: View {
     @StateObject private var coordinator = AppCoordinator()
     private let levelRepository = LevelRepository()
     private let progressService = ProgressService()
+    private let profileSummaryService = ProfileSummaryService()
     private let bottomNavigationReservedHeight: CGFloat = 96
 
     var body: some View {
@@ -80,6 +81,16 @@ struct ContentView: View {
 
                 case .shop:
                     ShopScreen()
+
+                case .profile:
+                    ProfileScreen(
+                        summary: profileSummaryService.makeSummary(),
+                        onSettingsTapped: coordinator.openSettings,
+                        onAddCurrencyTapped: coordinator.openShop,
+                        onEditProfileTapped: {},
+                        onAchievementsTapped: {},
+                        onCustomizeTapped: coordinator.openShop
+                    )
 
                 case .settings:
                     SettingsScreen()

@@ -5,7 +5,6 @@ struct TestLevelCatalog {
     func loadAllProductionLevels() throws -> [LevelData] {
         let repository = LevelRepository(bundle: try bundledLevelsBundle())
         return try repository.loadAllLevels()
-            .filter { $0.id.hasPrefix("level_") }
             .sorted { $0.id < $1.id }
     }
 
