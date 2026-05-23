@@ -59,6 +59,10 @@ final class AppCoordinator: ObservableObject {
         backToMainMenu()
     }
 
+    func exitGameplayToLevels() {
+        openLevelSelect()
+    }
+
     func completeLevel(elapsedTime: TimeInterval, tapCount: Int) {
         switch state {
         case let .gameplay(levelID), let .pause(levelID):

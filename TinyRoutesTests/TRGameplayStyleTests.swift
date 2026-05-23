@@ -15,4 +15,12 @@ final class TRGameplayStyleTests: XCTestCase {
 
         XCTAssertEqual(TRGameplayStyle.Metrics.playerScale, expectedPlayerScale, accuracy: 0.0001)
     }
+
+    func testResultMetricsArePositiveStaticValues() {
+        XCTAssertGreaterThan(TRGameplayStyle.Metrics.resultCardCornerRadius, 0)
+        XCTAssertGreaterThan(TRGameplayStyle.Metrics.resultPrimaryButtonHeight, 0)
+        XCTAssertGreaterThan(TRGameplayStyle.Metrics.resultSecondaryButtonHeight, 0)
+        XCTAssertGreaterThan(TRGameplayStyle.Metrics.resultStatusBadgeSize, 0)
+        XCTAssertGreaterThan(TRGameplayStyle.Metrics.resultLargeStarSize, 0)
+    }
 }

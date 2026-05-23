@@ -47,18 +47,35 @@ struct ContentView: View {
                             guard let nextLevelID else { return }
                             coordinator.startGameplay(levelID: nextLevelID)
                         },
-                        onExitTapped: coordinator.exitGameplayToMenu
+                        onExitTapped: coordinator.exitGameplayToMenu,
+                        onBackToLevelsTapped: coordinator.exitGameplayToLevels,
+                        onHomeTapped: coordinator.backToMainMenu,
+                        onShareTapped: {}
                     )
 
                 case let .levelFailed(levelID, reason, elapsedTime, tapCount):
+                    let nextLevelID = nextLevelID(after: levelID)
                     ResultScreen(
                         levelID: levelID,
                         result: .failed,
                         elapsedTime: elapsedTime,
                         tapCount: tapCount,
                         failureReason: reason,
+                        canAdvanceToNextLevel: nextLevelID != nil,
                         onRestartTapped: coordinator.restartGameplay,
-                        onExitTapped: coordinator.exitGameplayToMenu
+                        onNextLevelTapped: {
+                            guard let nextLevelID else { return }
+                            coordinator.startGameplay(levelID: nextLevelID)
+                        },
+                        onExitTapped: coordinator.exitGameplayToMenu,
+                        onBackToLevelsTapped: coordinator.exitGameplayToLevels,
+                        onHomeTapped: coordinator.backToMainMenu,
+                        onShareTapped: {},
+                        onUseHintTapped: {},
+                        onSkipLevelTapped: {
+                            guard let nextLevelID else { return }
+                            coordinator.startGameplay(levelID: nextLevelID)
+                        }
                     )
 
                 case .shop:
@@ -69,7 +86,7 @@ struct ContentView: View {
                 }
             }
             .foregroundColor(.black)
-            .padding(isLevelSelectVisible ? 0 : 16)
+            .padding(isFullBleedScreenVisible ? 0 : 16)
             .padding(.bottom, selectedBottomTab == nil ? 0 : bottomNavigationReservedHeight)
 
             if let selectedBottomTab {
@@ -88,11 +105,13 @@ struct ContentView: View {
         coordinator.selectedBottomTab
     }
 
-    private var isLevelSelectVisible: Bool {
-        if case .levelSelect = coordinator.state {
+    private var isFullBleedScreenVisible: Bool {
+        switch coordinator.state {
+        case .levelSelect, .levelComplete, .levelFailed:
             return true
+        default:
+            return false
         }
-        return false
     }
 
     @ViewBuilder
