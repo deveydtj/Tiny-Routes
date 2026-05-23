@@ -81,11 +81,6 @@ struct ResultScreen: View {
         ZStack {
             TRResultScreenBackground()
 
-            if result == .completed {
-                TRConfettiEmitter(mode: .success)
-                    .zIndex(3)
-            }
-
             VStack(spacing: 0) {
                 resultHeader
 
@@ -103,7 +98,14 @@ struct ResultScreen: View {
                     .frame(maxWidth: .infinity)
                 }
             }
-            .zIndex(2)
+            .zIndex(1)
+
+            if result == .completed {
+                TRConfettiEmitter(mode: .success)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .ignoresSafeArea()
+                    .zIndex(2)
+            }
         }
         .onAppear {
             playCompletionFeedbackIfNeeded()

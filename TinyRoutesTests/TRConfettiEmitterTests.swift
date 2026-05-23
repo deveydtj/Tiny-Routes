@@ -12,16 +12,52 @@ final class TRConfettiEmitterTests: XCTestCase {
     func testFailureModeDoesNotAddCelebratoryEmitters() {
         let scene = TRConfettiScene(size: CGSize(width: 390, height: 844))
 
-        scene.play(mode: .failure, reduceMotion: false)
+        let result = scene.play(mode: .failure, reduceMotion: false)
 
+        XCTAssertEqual(result, .intentionallySkipped)
         XCTAssertEqual(scene.children.count, 0)
     }
 
     func testReduceMotionDoesNotAddAnimatedEmitters() {
         let scene = TRConfettiScene(size: CGSize(width: 390, height: 844))
 
-        scene.play(mode: .success, reduceMotion: true)
+        let result = scene.play(mode: .success, reduceMotion: true)
+
+        XCTAssertEqual(result, .intentionallySkipped)
+        XCTAssertEqual(scene.children.count, 0)
+    }
+
+    func testSuccessModeAddsConfettiEmitters() {
+        let scene = TRConfettiScene(size: CGSize(width: 390, height: 844))
+
+        let result = scene.play(mode: .success, reduceMotion: false)
+
+        XCTAssertEqual(result, .played)
+        XCTAssertEqual(scene.children.count, 3)
+        XCTAssertEqual(scene.children.map(\.name), ["confetti.center", "confetti.left", "confetti.right"])
+    }
+
+    func testSuccessModeDoesNotDuplicateEmittersWhenPlayedTwice() {
+        let scene = TRConfettiScene(size: CGSize(width: 390, height: 844))
+
+        let firstResult = scene.play(mode: .success, reduceMotion: false)
+        let secondResult = scene.play(mode: .success, reduceMotion: false)
+
+        XCTAssertEqual(firstResult, .played)
+        XCTAssertEqual(secondResult, .alreadyPlayed)
+        XCTAssertEqual(scene.children.count, 3)
+    }
+
+    func testResetForReplayClearsAndAllowsReplay() {
+        let scene = TRConfettiScene(size: CGSize(width: 390, height: 844))
+
+        XCTAssertEqual(scene.play(mode: .success, reduceMotion: false), .played)
+        XCTAssertEqual(scene.children.count, 3)
+
+        scene.resetForReplay()
 
         XCTAssertEqual(scene.children.count, 0)
+        XCTAssertEqual(scene.play(mode: .success, reduceMotion: false), .played)
+        XCTAssertEqual(scene.children.count, 3)
     }
 }
