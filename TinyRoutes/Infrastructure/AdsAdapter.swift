@@ -4,4 +4,5 @@ import Foundation
 /// Placeholder — implemented in monetization stories.
 final class AdsAdapter {
     // TODO: implement ad loading and display
+    // TODO: store and honor the Remove Ads entitlement before showing interstitials.
 }

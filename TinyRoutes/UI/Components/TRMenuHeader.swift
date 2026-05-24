@@ -2,9 +2,24 @@ import SwiftUI
 
 struct TRMenuHeader: View {
     let pageTitle: String
+    let subtitleOverride: String?
     let coinTotal: Int
     let onSettingsTapped: () -> Void
     let onAddCurrencyTapped: () -> Void
+
+    init(
+        pageTitle: String,
+        subtitleOverride: String? = nil,
+        coinTotal: Int,
+        onSettingsTapped: @escaping () -> Void,
+        onAddCurrencyTapped: @escaping () -> Void
+    ) {
+        self.pageTitle = pageTitle
+        self.subtitleOverride = subtitleOverride
+        self.coinTotal = coinTotal
+        self.onSettingsTapped = onSettingsTapped
+        self.onAddCurrencyTapped = onAddCurrencyTapped
+    }
 
     var body: some View {
         VStack(spacing: 18) {
@@ -21,7 +36,7 @@ struct TRMenuHeader: View {
             }
 
             TRTinyRoutesLogo(
-                subtitle: pageTitle,
+                subtitle: subtitleOverride ?? pageTitle,
                 size: .large,
                 showsPin: false
             )
