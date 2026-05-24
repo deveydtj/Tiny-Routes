@@ -13,11 +13,13 @@ struct ProfileScreen: View {
     var body: some View {
         ScrollView(.vertical, showsIndicators: false) {
             VStack(spacing: 15) {
-                TRProfileHeader(
+                TRMenuHeader(
+                    pageTitle: "Profile",
                     coinTotal: summary.coinTotal,
                     onSettingsTapped: onSettingsTapped,
                     onAddCurrencyTapped: onAddCurrencyTapped
                 )
+                .padding(.top, 10)
                 .padding(.bottom, 2)
 
                 TRProfileHeroCard(summary: summary)

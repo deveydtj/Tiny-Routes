@@ -1,8 +1,20 @@
 import SwiftUI
 
 struct TRCurrencyPill: View {
+    enum Size {
+        case standard
+        case menuHeader
+    }
+
     let coinTotal: Int
     let onAddTapped: () -> Void
+    let size: Size
+
+    init(coinTotal: Int, onAddTapped: @escaping () -> Void, size: Size = .standard) {
+        self.coinTotal = coinTotal
+        self.onAddTapped = onAddTapped
+        self.size = size
+    }
 
     private var formattedCoinTotal: String {
         coinTotal.formatted(.number.grouping(.automatic))
@@ -10,34 +22,34 @@ struct TRCurrencyPill: View {
 
     var body: some View {
         Button(action: onAddTapped) {
-            HStack(spacing: 7) {
+            HStack(spacing: metrics.spacing) {
                 ZStack {
                     Image(systemName: "star.circle.fill")
-                        .font(.system(size: 20, weight: .bold))
+                        .font(.system(size: metrics.coinImageSize - 3, weight: .bold))
                         .foregroundStyle(TRGameplayStyle.Colors.resultGold)
 
                     SpriteImage(name: "gold_coin")
                         .scaledToFit()
-                        .frame(width: 23, height: 23)
+                        .frame(width: metrics.coinImageSize, height: metrics.coinImageSize)
                 }
-                .frame(width: 23, height: 23)
+                .frame(width: metrics.coinImageSize, height: metrics.coinImageSize)
                 .accessibilityHidden(true)
 
                 Text(formattedCoinTotal)
-                    .font(.system(size: 15, weight: .bold, design: .rounded))
+                    .font(.system(size: metrics.textFontSize, weight: .bold, design: .rounded))
                     .foregroundStyle(TRGameplayStyle.Colors.titleNavy)
                     .lineLimit(1)
                     .minimumScaleFactor(0.76)
                     .monospacedDigit()
 
                 Image(systemName: "plus.circle.fill")
-                    .font(.system(size: 18, weight: .bold))
+                    .font(.system(size: metrics.plusIconSize, weight: .bold))
                     .foregroundStyle(TRGameplayStyle.Colors.primaryBlue)
                     .accessibilityHidden(true)
             }
-            .padding(.leading, 11)
-            .padding(.trailing, 9)
-            .frame(height: 42)
+            .padding(.leading, metrics.leadingPadding)
+            .padding(.trailing, metrics.trailingPadding)
+            .frame(height: metrics.height)
             .background {
                 Capsule()
                     .fill(.white.opacity(0.92))
@@ -53,6 +65,41 @@ struct TRCurrencyPill: View {
         .accessibilityLabel(Text("Add currency"))
         .accessibilityValue(Text(formattedCoinTotal))
     }
+
+    private var metrics: CurrencyPillMetrics {
+        switch size {
+        case .standard:
+            return CurrencyPillMetrics(
+                height: 42,
+                leadingPadding: 11,
+                trailingPadding: 9,
+                coinImageSize: 23,
+                textFontSize: 15,
+                plusIconSize: 18,
+                spacing: 7
+            )
+        case .menuHeader:
+            return CurrencyPillMetrics(
+                height: 54,
+                leadingPadding: 15,
+                trailingPadding: 12,
+                coinImageSize: 29,
+                textFontSize: 18,
+                plusIconSize: 23,
+                spacing: 9
+            )
+        }
+    }
+}
+
+private struct CurrencyPillMetrics {
+    let height: CGFloat
+    let leadingPadding: CGFloat
+    let trailingPadding: CGFloat
+    let coinImageSize: CGFloat
+    let textFontSize: CGFloat
+    let plusIconSize: CGFloat
+    let spacing: CGFloat
 }
 
 #Preview("Currency Pill") {
@@ -60,6 +107,9 @@ struct TRCurrencyPill: View {
         Color(red: 0.78, green: 0.90, blue: 0.96)
             .ignoresSafeArea()
 
-        TRCurrencyPill(coinTotal: 1_250, onAddTapped: {})
+        VStack(spacing: 20) {
+            TRCurrencyPill(coinTotal: 1_250, onAddTapped: {})
+            TRCurrencyPill(coinTotal: 12_500, onAddTapped: {}, size: .menuHeader)
+        }
     }
 }

@@ -82,7 +82,11 @@ struct ContentView: View {
                     )
 
                 case .shop:
-                    ShopScreen()
+                    ShopScreen(
+                        coinTotal: currentCoinTotal,
+                        onSettingsTapped: coordinator.openSettings,
+                        onAddCurrencyTapped: coordinator.openShop
+                    )
 
                 case .profile:
                     ProfileScreen(
@@ -112,15 +116,29 @@ struct ContentView: View {
                 }
             }
         }
+        .statusBarHidden(isStandardMenuHeaderScreenVisible)
     }
 
     private var selectedBottomTab: TRBottomTab? {
         coordinator.selectedBottomTab
     }
 
+    private var currentCoinTotal: Int {
+        profileSummaryService.makeSummary().coinTotal
+    }
+
     private var isFullBleedScreenVisible: Bool {
         switch coordinator.state {
-        case .levelSelect, .levelComplete, .levelFailed:
+        case .levelSelect, .shop, .profile, .levelComplete, .levelFailed:
+            return true
+        default:
+            return false
+        }
+    }
+
+    private var isStandardMenuHeaderScreenVisible: Bool {
+        switch coordinator.state {
+        case .levelSelect, .shop, .profile:
             return true
         default:
             return false
@@ -145,10 +163,12 @@ struct ContentView: View {
         case let .loaded(levels):
             LevelSelectScreen(
                 levels: levels,
+                coinTotal: currentCoinTotal,
                 onLevelSelected: { levelID in
                     coordinator.startGameplay(levelID: levelID)
                 },
                 onSettingsTapped: coordinator.openSettings,
+                onAddCurrencyTapped: coordinator.openShop,
                 progressService: progressService
             )
 

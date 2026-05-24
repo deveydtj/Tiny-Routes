@@ -80,30 +80,40 @@ struct TRLevelProgressSnapshot {
 /// Level selection screen.
 struct LevelSelectScreen: View {
     let levels: [LevelData]
+    let coinTotal: Int
     let onLevelSelected: (String) -> Void
     let onSettingsTapped: (() -> Void)?
+    let onAddCurrencyTapped: (() -> Void)?
     private let progressService: ProgressService
 
     init(
         levels: [LevelData],
+        coinTotal: Int = 1_250,
         onLevelSelected: @escaping (String) -> Void,
         onSettingsTapped: (() -> Void)? = nil,
+        onAddCurrencyTapped: (() -> Void)? = nil,
         progressService: ProgressService = ProgressService()
     ) {
         self.levels = levels
+        self.coinTotal = coinTotal
         self.onLevelSelected = onLevelSelected
         self.onSettingsTapped = onSettingsTapped
+        self.onAddCurrencyTapped = onAddCurrencyTapped
         self.progressService = progressService
     }
 
     var body: some View {
         ScrollView(.vertical, showsIndicators: false) {
             VStack(spacing: 16) {
-                TRLevelPageHeader(
+                TRMenuHeader(
+                    pageTitle: "Levels",
+                    coinTotal: coinTotal,
                     onSettingsTapped: {
                         onSettingsTapped?()
                     },
-                    onAddCurrencyTapped: {}
+                    onAddCurrencyTapped: {
+                        onAddCurrencyTapped?()
+                    }
                 )
                 .padding(.top, 10)
 

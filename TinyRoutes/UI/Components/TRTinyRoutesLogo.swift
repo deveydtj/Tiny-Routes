@@ -9,10 +9,12 @@ struct TRTinyRoutesLogo: View {
 
     let subtitle: String?
     let size: Size
+    let showsPin: Bool
 
-    init(subtitle: String? = "One-tap delivery puzzles", size: Size = .large) {
+    init(subtitle: String? = "One-tap delivery puzzles", size: Size = .large, showsPin: Bool = true) {
         self.subtitle = subtitle
         self.size = size
+        self.showsPin = showsPin
     }
 
     var body: some View {
@@ -40,13 +42,15 @@ struct TRTinyRoutesLogo: View {
                 .shadow(color: .white.opacity(0.60), radius: 1, x: 0, y: 1)
                 .shadow(color: Color(red: 0.12, green: 0.45, blue: 0.82).opacity(0.18), radius: metrics.titleShadowRadius, x: 0, y: metrics.titleShadowY)
 
-                Image(systemName: "mappin.circle.fill")
-                    .font(.system(size: metrics.pinSize, weight: .heavy))
-                    .symbolRenderingMode(.palette)
-                    .foregroundStyle(.white, Color(red: 0.13, green: 0.57, blue: 0.97))
-                    .shadow(color: Color(red: 0.04, green: 0.31, blue: 0.72).opacity(0.22), radius: 4, x: 0, y: 3)
-                    .offset(metrics.pinOffset)
-                    .accessibilityHidden(true)
+                if showsPin {
+                    Image(systemName: "mappin.circle.fill")
+                        .font(.system(size: metrics.pinSize, weight: .heavy))
+                        .symbolRenderingMode(.palette)
+                        .foregroundStyle(.white, Color(red: 0.13, green: 0.57, blue: 0.97))
+                        .shadow(color: Color(red: 0.04, green: 0.31, blue: 0.72).opacity(0.22), radius: 4, x: 0, y: 3)
+                        .offset(metrics.pinOffset)
+                        .accessibilityHidden(true)
+                }
             }
 
             if let subtitle {
@@ -134,6 +138,7 @@ private struct LogoMetrics {
         TRTinyRoutesLogo()
         TRTinyRoutesLogo(subtitle: "Levels", size: .medium)
         TRTinyRoutesLogo(subtitle: nil, size: .compact)
+        TRTinyRoutesLogo(subtitle: "Levels", size: .large, showsPin: false)
     }
     .padding(24)
     .background(Color(red: 0.86, green: 0.94, blue: 0.98))

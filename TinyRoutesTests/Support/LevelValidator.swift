@@ -6,6 +6,9 @@ final class LevelValidator {
         var issues: [LevelValidationIssue] = []
         issues += validateIdentity(level: level)
         issues += validateGraph(level: level)
+        guard !hasDuplicateGraphIDs(level) else {
+            return issues
+        }
         issues += validateIntent(level: level)
         issues += validatePlayability(level: level)
         return issues
@@ -164,7 +167,8 @@ final class LevelValidator {
             }
         }
 
-        let nodeByID = Dictionary(uniqueKeysWithValues: level.graph.nodes.map { ($0.id, $0) })
+        let nodeByID = Dictionary(grouping: level.graph.nodes, by: \.id)
+            .compactMapValues(\.first)
         for edge in level.graph.edges {
             guard let sourceNode = nodeByID[edge.fromNodeID] else {
                 continue
@@ -236,6 +240,11 @@ final class LevelValidator {
             .filter { $1.count > 1 }
             .map(\.key)
             .sorted()
+    }
+
+    private func hasDuplicateGraphIDs(_ level: LevelData) -> Bool {
+        !duplicateIDs(in: level.graph.nodes.map(\.id)).isEmpty
+            || !duplicateIDs(in: level.graph.edges.map(\.id)).isEmpty
     }
 
     private func reachableNodeIDs(from startNodeID: String, edges: [RouteEdge]) -> Set<String> {
