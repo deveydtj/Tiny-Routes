@@ -112,6 +112,40 @@ final class LevelSolutionScriptTests: XCTestCase {
         )
     }
 
+    func testSolutionActionTimesAreFinite() throws {
+        let scripts = try LevelSolutionRepository().loadAllScripts()
+
+        let invalidActions = scripts.flatMap { script in
+            script.actions.enumerated().compactMap { index, action in
+                action.timeSeconds.isFinite
+                    ? nil
+                    : "\(script.levelID) action[\(index)] has non-finite time \(action.timeSeconds)"
+            }
+        }
+
+        XCTAssertTrue(
+            invalidActions.isEmpty,
+            "Solution action times must be finite:\n\(invalidActions.joined(separator: "\n"))"
+        )
+    }
+
+    func testSolutionTapNodeIDsAreNonEmpty() throws {
+        let scripts = try LevelSolutionRepository().loadAllScripts()
+
+        let invalidActions = scripts.flatMap { script in
+            script.actions.enumerated().compactMap { index, action in
+                action.tapNodeID.isEmpty
+                    ? "\(script.levelID) action[\(index)] has an empty tapNodeID"
+                    : nil
+            }
+        }
+
+        XCTAssertTrue(
+            invalidActions.isEmpty,
+            "Solution tap node IDs must be non-empty:\n\(invalidActions.joined(separator: "\n"))"
+        )
+    }
+
     func testSolutionActionsAreSortedByTime() throws {
         let scripts = try LevelSolutionRepository().loadAllScripts()
 

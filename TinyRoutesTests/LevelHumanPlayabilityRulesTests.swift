@@ -65,8 +65,12 @@ final class LevelHumanPlayabilityRulesTests: XCTestCase {
             timeRemaining: 0.25,
             tapCount: 1,
             finalNodeID: "destination",
+            currentEdgeID: nil,
+            progressAlongEdge: nil,
             didCollectPackage: true,
-            executedActions: []
+            executedActions: [],
+            stepCount: 60,
+            noProgressStepCount: 0
         )
 
         let violation = LevelHumanPlayabilityRules.completionBufferViolation(level: level, result: result)
@@ -86,8 +90,12 @@ final class LevelHumanPlayabilityRulesTests: XCTestCase {
             timeRemaining: 0.50,
             tapCount: 1,
             finalNodeID: "destination",
+            currentEdgeID: nil,
+            progressAlongEdge: nil,
             didCollectPackage: true,
-            executedActions: []
+            executedActions: [],
+            stepCount: 60,
+            noProgressStepCount: 0
         )
 
         XCTAssertNil(LevelHumanPlayabilityRules.completionBufferViolation(level: level, result: result))
@@ -102,8 +110,12 @@ final class LevelHumanPlayabilityRulesTests: XCTestCase {
             timeRemaining: 0.70 - 0.20,
             tapCount: 1,
             finalNodeID: "destination",
+            currentEdgeID: nil,
+            progressAlongEdge: nil,
             didCollectPackage: true,
-            executedActions: []
+            executedActions: [],
+            stepCount: 60,
+            noProgressStepCount: 0
         )
 
         XCTAssertNil(LevelHumanPlayabilityRules.completionBufferViolation(level: level, result: result))

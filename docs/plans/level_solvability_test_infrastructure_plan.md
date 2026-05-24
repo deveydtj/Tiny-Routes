@@ -6,6 +6,8 @@ Create a reliable, engineer-friendly test infrastructure that proves every produ
 
 This plan intentionally starts from the current Tiny Routes architecture instead of redesigning the entire level format up front. The current level JSON is already usable. The missing piece is a stronger validation and simulation layer that turns each level file into a provable gameplay contract.
 
+Related test-health follow-up: [Level Solvability Hang/Test-Health Fix Plan](level_solvability_hang_fix_plan.md).
+
 ## Recommended Direction
 
 Use the following decisions as the baseline implementation strategy:

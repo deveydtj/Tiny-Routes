@@ -10,8 +10,12 @@ final class LevelSolvabilityResultTests: XCTestCase {
             timeRemaining: 7.5,
             tapCount: 1,
             finalNodeID: "destination",
+            currentEdgeID: nil,
+            progressAlongEdge: nil,
             didCollectPackage: true,
-            executedActions: []
+            executedActions: [],
+            stepCount: 150,
+            noProgressStepCount: 0
         )
 
         XCTAssertEqual(result.levelID, "level_001")
@@ -20,7 +24,11 @@ final class LevelSolvabilityResultTests: XCTestCase {
         XCTAssertEqual(result.timeRemaining, 7.5)
         XCTAssertEqual(result.tapCount, 1)
         XCTAssertEqual(result.finalNodeID, "destination")
+        XCTAssertNil(result.currentEdgeID)
+        XCTAssertNil(result.progressAlongEdge)
         XCTAssertTrue(result.didCollectPackage)
+        XCTAssertEqual(result.stepCount, 150)
+        XCTAssertEqual(result.noProgressStepCount, 0)
     }
 
     func testResultExposesExecutedActionDetails() {
@@ -37,8 +45,12 @@ final class LevelSolvabilityResultTests: XCTestCase {
             timeRemaining: nil,
             tapCount: 2,
             finalNodeID: "dead_end",
+            currentEdgeID: nil,
+            progressAlongEdge: nil,
             didCollectPackage: false,
-            executedActions: [action]
+            executedActions: [action],
+            stepCount: 90,
+            noProgressStepCount: 0
         )
 
         XCTAssertEqual(result.executedActions.count, 1)

@@ -55,6 +55,8 @@ final class RouteEngine {
 
     /// Indicates whether the most recent `updateDot(deltaTime:)` call halted at a dead end.
     private(set) var didHaltAtDeadEnd = false
+    /// Indicates whether the most recent `updateDot(deltaTime:)` call hit its internal traversal guard.
+    private(set) var didHitUpdateSafetyStepLimit = false
     /// Terminal gameplay state reached by the current level run.
     private(set) var levelOutcome: LevelOutcome?
 
@@ -98,6 +100,7 @@ final class RouteEngine {
         tapCount = 0
         levelOutcome = nil
         didHaltAtDeadEnd = false
+        didHitUpdateSafetyStepLimit = false
 
         let graph = levelData.graph
         let nodeIDs = Set(graph.nodes.map(\.id))
@@ -213,6 +216,7 @@ final class RouteEngine {
     /// is discarded for the current update.
     func updateDot(deltaTime: TimeInterval) {
         didHaltAtDeadEnd = false
+        didHitUpdateSafetyStepLimit = false
         guard deltaTime > 0,
               let runtimeGraph,
               var deliveryDot else {
@@ -352,6 +356,7 @@ final class RouteEngine {
         }
 
         if safetyStepCount >= maxSafetyStepCount, remainingDistance > 0 {
+            didHitUpdateSafetyStepLimit = true
             assertionFailure("RouteEngine.updateDot exceeded safety step limit with remaining distance \(remainingDistance).")
         }
 
