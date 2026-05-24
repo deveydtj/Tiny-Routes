@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		00A1A35E76826E31A5726F62 /* TRSettingsRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = F7070B63D64F45F99A58ACF3 /* TRSettingsRow.swift */; };
 		029B2EB9BE8A069959579297 /* level_004.solution.json in Resources */ = {isa = PBXBuildFile; fileRef = 3A775E1E6DB07C2E59BC797E /* level_004.solution.json */; };
 		03C94EDFB47D288D5BAA2E90 /* LevelValidationIssue.swift in Sources */ = {isa = PBXBuildFile; fileRef = 003704DD962727D365EAB808 /* LevelValidationIssue.swift */; };
 		060F8145B917BE3159712357 /* SwitchNodeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1B022B419A6C15C4612BCB4 /* SwitchNodeView.swift */; };
@@ -28,6 +29,7 @@
 		1A74946BF4B6AAC5D061ED0B /* edge_unknown_from_node.json in Resources */ = {isa = PBXBuildFile; fileRef = 8DE971EFF9E8C68D65CA2A87 /* edge_unknown_from_node.json */; };
 		1E5EF5942943E0DF60C12C62 /* LevelValidationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB3E5CC6778A7FA5607D9B52 /* LevelValidationTests.swift */; };
 		1F039950763EE9F4AFCEA19D /* AnalyticsAdapter.swift in Sources */ = {isa = PBXBuildFile; fileRef = BBF9A119C53A9804C693368D /* AnalyticsAdapter.swift */; };
+		20C3785F47268256ABD3B92B /* UserSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = E02F44145D432403FF64D95B /* UserSettings.swift */; };
 		21925B4843B1D29BBA5AA5AD /* level_007.solution.json in Resources */ = {isa = PBXBuildFile; fileRef = 71E4A985E577F112A3286F02 /* level_007.solution.json */; };
 		2344BBF6AD0773F6CCE3C1A7 /* level_009.json in Resources */ = {isa = PBXBuildFile; fileRef = F97504C047FC88B1A6992639 /* level_009.json */; };
 		24DE186D45143F87CD249688 /* TRResultCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = E874F6DEAE742EF2728616FF /* TRResultCard.swift */; };
@@ -44,6 +46,7 @@
 		2E5C97F498E8D1F38D59CDB0 /* TRShopCosmeticGrid.swift in Sources */ = {isa = PBXBuildFile; fileRef = C24FC74DD7D0CB43B370434C /* TRShopCosmeticGrid.swift */; };
 		339A213A09887FD13046BC45 /* TRProfileRewardProgressCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = AFA7A302DFA9D1DB6E867866 /* TRProfileRewardProgressCard.swift */; };
 		36E6C713306E7C41176B1393 /* ScoreResult.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3254B656FA1479A1C6CEB71 /* ScoreResult.swift */; };
+		37070AEAAE1484C0E57688FA /* UserSettingsRepositoryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1CACEEDC98C14DD3B2EEA468 /* UserSettingsRepositoryTests.swift */; };
 		37D652FDBF6BBDBBE1663B4F /* level_001.solution.json in Resources */ = {isa = PBXBuildFile; fileRef = 9C4A5BE69FEBDA1DD260AEAE /* level_001.solution.json */; };
 		38515030AB26F2B47263F294 /* level_007.json in Resources */ = {isa = PBXBuildFile; fileRef = 7A2B62C9B574D5F7BBAF1420 /* level_007.json */; };
 		3A6026DA9B0747F7AF393338 /* TRGameplayHUD.swift in Sources */ = {isa = PBXBuildFile; fileRef = 361B29040D703572B02D178A /* TRGameplayHUD.swift */; };
@@ -62,10 +65,13 @@
 		45AFF398D1918385980ADF4E /* TRShopCategoryPillBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB0A5CB491F18C529CC74603 /* TRShopCategoryPillBar.swift */; };
 		46BAAF3FA88FD7320A54A146 /* TRResultStatsGrid.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27CA44A06CAECB543E0C9CFA /* TRResultStatsGrid.swift */; };
 		46D325479952E85A89192775 /* TRProfileSummaryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = BCC6D9FEE4600AC2F067BA92 /* TRProfileSummaryTests.swift */; };
+		4928E6D6D6AD32AA84CD8E61 /* UserSettingsRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = F4B5563951A5AF431C6F303C /* UserSettingsRepository.swift */; };
 		4986A68A1EF3C9798A30FF7A /* LevelData.swift in Sources */ = {isa = PBXBuildFile; fileRef = 07D7502FABFF22F936EA1666 /* LevelData.swift */; };
+		51801EDE031AE0ED60BB0426 /* TRSettingsHeader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2D01AA2A2675EA2460D25786 /* TRSettingsHeader.swift */; };
 		5252A517CC9259BCBD509B89 /* TRLevelPathView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 438D5D7E05204727C907504D /* TRLevelPathView.swift */; };
 		54A79673924A643EF0F84A46 /* ProfileSummaryServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FFFA3FD891B9AC2E831450D4 /* ProfileSummaryServiceTests.swift */; };
 		54C610B49C57ECA2EE5D6AF6 /* level_009.solution.json in Resources */ = {isa = PBXBuildFile; fileRef = F01609CB09C053F483E182C1 /* level_009.solution.json */; };
+		56D2599C3255A11EB4EE9D39 /* SettingsScreenTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F834A064D57AE4D8C135041C /* SettingsScreenTests.swift */; };
 		57666F84E8C1A4D24E7A019F /* edge_unknown_to_node.json in Resources */ = {isa = PBXBuildFile; fileRef = 9E179536AFB50A68B5DD327D /* edge_unknown_to_node.json */; };
 		57C00116975B921DEF53787D /* duplicate_outgoing_edge_ids.json in Resources */ = {isa = PBXBuildFile; fileRef = 1B37E002D44DA1C3F01C3745 /* duplicate_outgoing_edge_ids.json */; };
 		5E587FEABFB885FC43134C9F /* LevelSolvabilityTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 22D8DF6A90587055693BBE35 /* LevelSolvabilityTests.swift */; };
@@ -86,10 +92,12 @@
 		73DD329B0E0BB4DBE3ED65AC /* AppCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1B76465F9BAB72AFFB92646 /* AppCoordinator.swift */; };
 		74557F64F4BFDAD649DCCD41 /* LevelSolutionScript.swift in Sources */ = {isa = PBXBuildFile; fileRef = 73321172A1F4366197FB39AE /* LevelSolutionScript.swift */; };
 		753214F211A86957C6C4BE9A /* glow_ring.png in Resources */ = {isa = PBXBuildFile; fileRef = FFA67F07F905FC42DB952E76 /* glow_ring.png */; };
+		754EF25E54D6FAB97BF5AC71 /* TRSettingsSectionCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = B15050153CD0E5051D157263 /* TRSettingsSectionCard.swift */; };
 		77762CF007173B2FAF91735C /* LevelHumanPlayabilityRulesTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49085F9F8941741534FFABA1 /* LevelHumanPlayabilityRulesTests.swift */; };
 		780FD4BA60B0CABAD0FD093C /* LevelSimulationHarnessTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 835A241F13DC0ED0992A689F /* LevelSimulationHarnessTests.swift */; };
 		78DC686E7D4786F3690662B1 /* TRProfileCollectionCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = F530A81C06F27BE9DD7B319D /* TRProfileCollectionCard.swift */; };
 		7A3B1263E583C1668B781B0C /* LevelRepositoryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B064034548F2A810BA3D12F6 /* LevelRepositoryTests.swift */; };
+		7ACC6C245639F0DBF8169F3A /* TRSettingsToggleRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41E5D61ED2A0DE43F01D9F13 /* TRSettingsToggleRow.swift */; };
 		7E046318A25C147961C3A41D /* LevelSimulationHarness.swift in Sources */ = {isa = PBXBuildFile; fileRef = F139BB6512B7A9A897A0D611 /* LevelSimulationHarness.swift */; };
 		7E3634FD9DC47EF496B44248 /* level_005.json in Resources */ = {isa = PBXBuildFile; fileRef = B6DCA54413F616C43AD11272 /* level_005.json */; };
 		81ACE7EA1A2CDFC43E63905F /* TRLevelMapSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8ED84D89056B1286C23FE145 /* TRLevelMapSection.swift */; };
@@ -107,6 +115,7 @@
 		96796A7EE4E7C1C1316A7033 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 016927DB2C8F95C37C0EFE86 /* Assets.xcassets */; };
 		99A08ECC3B8474D6D80007C2 /* TRShopRouteThemePreviewCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 06ECC2E70A22D81A946D4C1B /* TRShopRouteThemePreviewCard.swift */; };
 		9A21AAC34BFA67BB81A01890 /* StreakService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 32AA35B2BC4F9E45955D0ED1 /* StreakService.swift */; };
+		9B2F0910007BFD002F35C210 /* TRSettingsSliderRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8ADAC4DC85D57DA6B3A5D421 /* TRSettingsSliderRow.swift */; };
 		9DB6F736D9A2C1135C6ED70F /* level_006.solution.json in Resources */ = {isa = PBXBuildFile; fileRef = FA3818CA7FFC6923BDFDCD2A /* level_006.solution.json */; };
 		9F10A1BA8AEDADEFB8626118 /* ShopCatalogService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9032EFCCDA0E554BE40C5C88 /* ShopCatalogService.swift */; };
 		9F49027A4106ECFE52D3D3ED /* LevelSelectLayoutTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F9806F0EE479DCBB7FAB93AA /* LevelSelectLayoutTests.swift */; };
@@ -123,6 +132,7 @@
 		AB0759BEE3EA837542F127ED /* duplicate_edge_ids.json in Resources */ = {isa = PBXBuildFile; fileRef = 95B2F8932D75E47B4D25751E /* duplicate_edge_ids.json */; };
 		AB50103C2414AC2398E81F2B /* TRLevelPathViewTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DB36FE885CC3E6CCDEBA0658 /* TRLevelPathViewTests.swift */; };
 		AB966FA2AE3CE4A1A3BDF464 /* TRConfettiScene.swift in Sources */ = {isa = PBXBuildFile; fileRef = 059373775DF13674AF281937 /* TRConfettiScene.swift */; };
+		AD07F3F05B219359C0515673 /* UserSettingsService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 293BD2DAB243128D22D1B218 /* UserSettingsService.swift */; };
 		AEC42CD55B2D055E6563153F /* shipping_box.png in Resources */ = {isa = PBXBuildFile; fileRef = 94FE558681431822BF195CA5 /* shipping_box.png */; };
 		B04CE8E658635B9547A61051 /* GameplayLevelNumberFormatterTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = ACDA7906BE080836E0D26027 /* GameplayLevelNumberFormatterTests.swift */; };
 		B04EF4A680C930534A0A7924 /* TinyRoutesApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A994D21F5163CDF8D5285EA /* TinyRoutesApp.swift */; };
@@ -175,12 +185,14 @@
 		EC28EA6303B182A0698FAFFF /* TRConfettiEmitter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3EF134C156238A0C9D937219 /* TRConfettiEmitter.swift */; };
 		EDD8334841BEE446825FE614 /* RouteEdge.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43431F22833C9470B99D4FF5 /* RouteEdge.swift */; };
 		EDE8594AA7900E4DE2B81BE2 /* TRLevelTile.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8B897380CF6729C2F1F0345B /* TRLevelTile.swift */; };
+		EE7D8E4A60027769A959A57E /* TRSettingsDangerRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = FDBA2E698046913782C0F0E6 /* TRSettingsDangerRow.swift */; };
 		F1504A4E45C2F8EB67D3BE7A /* LevelCompleteConfetti.sks in Resources */ = {isa = PBXBuildFile; fileRef = F13D58AA79B37FEB5A13B10A /* LevelCompleteConfetti.sks */; };
 		F2CDC9E307FB911EB86227A2 /* TRBottomNavigationBarTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 71C3DCC3950929FB05DC901D /* TRBottomNavigationBarTests.swift */; };
 		F47ED91FDE86BB5A9D017415 /* TRGameplayStyleTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF0CC4388F71CE3B90CBBC80 /* TRGameplayStyleTests.swift */; };
 		F5DA1B86E6BE1D9BDC8DD91D /* EconomyService.swift in Sources */ = {isa = PBXBuildFile; fileRef = DBDF4ED66B8042607FFD6F27 /* EconomyService.swift */; };
 		F9316D9A30EA4723E4CB5BAA /* CosmeticItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 465CFC8159B3613A970FE259 /* CosmeticItem.swift */; };
 		F99E28CEDCB085C9B1AE040D /* non_positive_time_limit.json in Resources */ = {isa = PBXBuildFile; fileRef = A7C0CABC6909C07C15C6120D /* non_positive_time_limit.json */; };
+		FABC539B70856A6A7E43AC14 /* UserSettingsServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B1F71A0D96F6EE65FC18B50 /* UserSettingsServiceTests.swift */; };
 		FB151F6C289F3AFF860D5F32 /* level_004.json in Resources */ = {isa = PBXBuildFile; fileRef = D38E2EDE9C52958E8C6E10C9 /* level_004.json */; };
 		FD2A2990B91D7217ED8E3789 /* TRMenuButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = B219E6530196E4FB312FDAF4 /* TRMenuButton.swift */; };
 		FE7495D0C01D185ABDF96AB5 /* ProgressService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3A2EB059F1ED8B1990CD973 /* ProgressService.swift */; };
@@ -220,6 +232,7 @@
 		1AFDFE57C38D02CBE7CAADA9 /* RouteEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RouteEngine.swift; sourceTree = "<group>"; };
 		1B3768D74CB7A388C10288D0 /* ExperimentalLevelSolverTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExperimentalLevelSolverTests.swift; sourceTree = "<group>"; };
 		1B37E002D44DA1C3F01C3745 /* duplicate_outgoing_edge_ids.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = duplicate_outgoing_edge_ids.json; sourceTree = "<group>"; };
+		1CACEEDC98C14DD3B2EEA468 /* UserSettingsRepositoryTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserSettingsRepositoryTests.swift; sourceTree = "<group>"; };
 		1CC7D005BB054CA1F6F163C2 /* SettingsScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsScreen.swift; sourceTree = "<group>"; };
 		1DB2727B71275C07A269FAF1 /* CosmeticService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CosmeticService.swift; sourceTree = "<group>"; };
 		1ED10221512DC80E25D258A7 /* HomeScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeScreen.swift; sourceTree = "<group>"; };
@@ -229,9 +242,12 @@
 		2550571C48DE5AA16BA6D20F /* level_003.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = level_003.json; sourceTree = "<group>"; };
 		27CA44A06CAECB543E0C9CFA /* TRResultStatsGrid.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TRResultStatsGrid.swift; sourceTree = "<group>"; };
 		28C9EED11EE340F37A09767C /* level_008.solution.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = level_008.solution.json; sourceTree = "<group>"; };
+		293BD2DAB243128D22D1B218 /* UserSettingsService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserSettingsService.swift; sourceTree = "<group>"; };
 		2A260DC0F35E868D025857A7 /* TRMilestoneRewardsPlaceholderCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TRMilestoneRewardsPlaceholderCard.swift; sourceTree = "<group>"; };
+		2B1F71A0D96F6EE65FC18B50 /* UserSettingsServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserSettingsServiceTests.swift; sourceTree = "<group>"; };
 		2B6B1C733497FAB77F752F53 /* .gitkeep */ = {isa = PBXFileReference; lastKnownFileType = text; path = .gitkeep; sourceTree = "<group>"; };
 		2C686C27E2616FEDD8ADDFFB /* LevelSolutionRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LevelSolutionRepository.swift; sourceTree = "<group>"; };
+		2D01AA2A2675EA2460D25786 /* TRSettingsHeader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TRSettingsHeader.swift; sourceTree = "<group>"; };
 		2F7EAE0B5F7024B5C002D119 /* TinyRoutes.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = TinyRoutes.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		32AA35B2BC4F9E45955D0ED1 /* StreakService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StreakService.swift; sourceTree = "<group>"; };
 		34077F31F2E9880064B46C36 /* TRGameplayStyle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TRGameplayStyle.swift; sourceTree = "<group>"; };
@@ -242,6 +258,7 @@
 		3EF134C156238A0C9D937219 /* TRConfettiEmitter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TRConfettiEmitter.swift; sourceTree = "<group>"; };
 		402F8052D1AC0F0719E01453 /* ShopCatalogItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShopCatalogItem.swift; sourceTree = "<group>"; };
 		415F69E291F49F32954A6253 /* TRCurrencyPill.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TRCurrencyPill.swift; sourceTree = "<group>"; };
+		41E5D61ED2A0DE43F01D9F13 /* TRSettingsToggleRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TRSettingsToggleRow.swift; sourceTree = "<group>"; };
 		42717106079D5B20D6601180 /* LevelSelectProgressSnapshotTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LevelSelectProgressSnapshotTests.swift; sourceTree = "<group>"; };
 		43431F22833C9470B99D4FF5 /* RouteEdge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RouteEdge.swift; sourceTree = "<group>"; };
 		438D5D7E05204727C907504D /* TRLevelPathView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TRLevelPathView.swift; sourceTree = "<group>"; };
@@ -286,6 +303,7 @@
 		84BBA7B3E656CE02C02D1372 /* TRShopGoodiesStrip.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TRShopGoodiesStrip.swift; sourceTree = "<group>"; };
 		86D5601913C689EB5ED4A957 /* RouteNode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RouteNode.swift; sourceTree = "<group>"; };
 		87540AF29D8504011ADE3812 /* simple_single_switch.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = simple_single_switch.json; sourceTree = "<group>"; };
+		8ADAC4DC85D57DA6B3A5D421 /* TRSettingsSliderRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TRSettingsSliderRow.swift; sourceTree = "<group>"; };
 		8B897380CF6729C2F1F0345B /* TRLevelTile.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TRLevelTile.swift; sourceTree = "<group>"; };
 		8CD039BA1E7864D9741A0F27 /* TRStarCollectorPlaceholderCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TRStarCollectorPlaceholderCard.swift; sourceTree = "<group>"; };
 		8D03B5545201A332F81999C9 /* TRResultStatusBadge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TRResultStatusBadge.swift; sourceTree = "<group>"; };
@@ -314,6 +332,7 @@
 		AFA7A302DFA9D1DB6E867866 /* TRProfileRewardProgressCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TRProfileRewardProgressCard.swift; sourceTree = "<group>"; };
 		B062DC62792DD750D631C000 /* AdsAdapter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AdsAdapter.swift; sourceTree = "<group>"; };
 		B064034548F2A810BA3D12F6 /* LevelRepositoryTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LevelRepositoryTests.swift; sourceTree = "<group>"; };
+		B15050153CD0E5051D157263 /* TRSettingsSectionCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TRSettingsSectionCard.swift; sourceTree = "<group>"; };
 		B18B1BD2DCEA7552CE9DBD3B /* GameplayScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameplayScreen.swift; sourceTree = "<group>"; };
 		B219E6530196E4FB312FDAF4 /* TRMenuButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TRMenuButton.swift; sourceTree = "<group>"; };
 		B4B278C7AC0B3341D2A9572E /* right_arrow.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = right_arrow.png; sourceTree = "<group>"; };
@@ -354,6 +373,7 @@
 		DC7EF436B12024897B51A9AC /* LevelHumanPlayabilityRules.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LevelHumanPlayabilityRules.swift; sourceTree = "<group>"; };
 		DCD9AB8B3D8D1486F7C8FC66 /* SwitchNodeViewTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwitchNodeViewTests.swift; sourceTree = "<group>"; };
 		DFE6BF59DFA0338A86D55CE0 /* gold_coin.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = gold_coin.png; sourceTree = "<group>"; };
+		E02F44145D432403FF64D95B /* UserSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserSettings.swift; sourceTree = "<group>"; };
 		E105DE6F4E058FC27220DA8C /* TRProfileAchievementPreviewCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TRProfileAchievementPreviewCard.swift; sourceTree = "<group>"; };
 		E3AEBEAA1D124414570C01B3 /* level_005.solution.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = level_005.solution.json; sourceTree = "<group>"; };
 		E540C87602DF9F761DD5828A /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
@@ -371,15 +391,19 @@
 		F1FB4EDBBFEBB26B3ABF9A9F /* TRResultActionButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TRResultActionButton.swift; sourceTree = "<group>"; };
 		F268635BC9A0004613EA68F4 /* TRShopCosmeticOptionCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TRShopCosmeticOptionCard.swift; sourceTree = "<group>"; };
 		F3254B656FA1479A1C6CEB71 /* ScoreResult.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScoreResult.swift; sourceTree = "<group>"; };
+		F4B5563951A5AF431C6F303C /* UserSettingsRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserSettingsRepository.swift; sourceTree = "<group>"; };
 		F530A81C06F27BE9DD7B319D /* TRProfileCollectionCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TRProfileCollectionCard.swift; sourceTree = "<group>"; };
 		F533862E5024A25364F7DC05 /* confetti_particle.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = confetti_particle.png; sourceTree = "<group>"; };
+		F7070B63D64F45F99A58ACF3 /* TRSettingsRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TRSettingsRow.swift; sourceTree = "<group>"; };
 		F76D2EBA9A7513B255BB85FD /* TRShopSectionHeader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TRShopSectionHeader.swift; sourceTree = "<group>"; };
 		F78EA1989721A7F131ADD7E4 /* empty_level_name.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = empty_level_name.json; sourceTree = "<group>"; };
+		F834A064D57AE4D8C135041C /* SettingsScreenTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsScreenTests.swift; sourceTree = "<group>"; };
 		F97504C047FC88B1A6992639 /* level_009.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = level_009.json; sourceTree = "<group>"; };
 		F9806F0EE479DCBB7FAB93AA /* LevelSelectLayoutTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LevelSelectLayoutTests.swift; sourceTree = "<group>"; };
 		FA3818CA7FFC6923BDFDCD2A /* level_006.solution.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = level_006.solution.json; sourceTree = "<group>"; };
 		FB3E5CC6778A7FA5607D9B52 /* LevelValidationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LevelValidationTests.swift; sourceTree = "<group>"; };
 		FD5279438CA33DB0C19A1CA9 /* TestLevelCatalog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TestLevelCatalog.swift; sourceTree = "<group>"; };
+		FDBA2E698046913782C0F0E6 /* TRSettingsDangerRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TRSettingsDangerRow.swift; sourceTree = "<group>"; };
 		FE2D44D3B9CB219F2E76480E /* PlayerProfile.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlayerProfile.swift; sourceTree = "<group>"; };
 		FFA67F07F905FC42DB952E76 /* glow_ring.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = glow_ring.png; sourceTree = "<group>"; };
 		FFFA3FD891B9AC2E831450D4 /* ProfileSummaryServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileSummaryServiceTests.swift; sourceTree = "<group>"; };
@@ -417,6 +441,7 @@
 				6154D6AD36449F8760CCAEFF /* ScoringService.swift */,
 				9032EFCCDA0E554BE40C5C88 /* ShopCatalogService.swift */,
 				32AA35B2BC4F9E45955D0ED1 /* StreakService.swift */,
+				293BD2DAB243128D22D1B218 /* UserSettingsService.swift */,
 			);
 			path = Services;
 			sourceTree = "<group>";
@@ -544,6 +569,7 @@
 				5F08C3B9313317816DDFEDFD /* LevelRepository.swift */,
 				CE27E3BC383758466A258AC9 /* PurchaseAdapter.swift */,
 				99BBFAA66BFB910BC1BEA096 /* SaveDataRepository.swift */,
+				F4B5563951A5AF431C6F303C /* UserSettingsRepository.swift */,
 			);
 			path = Infrastructure;
 			sourceTree = "<group>";
@@ -586,6 +612,7 @@
 				F3254B656FA1479A1C6CEB71 /* ScoreResult.swift */,
 				402F8052D1AC0F0719E01453 /* ShopCatalogItem.swift */,
 				EED2343CD984E02344DF24A4 /* TRProfileSummary.swift */,
+				E02F44145D432403FF64D95B /* UserSettings.swift */,
 			);
 			path = Domain;
 			sourceTree = "<group>";
@@ -644,6 +671,12 @@
 				27CA44A06CAECB543E0C9CFA /* TRResultStatsGrid.swift */,
 				8D03B5545201A332F81999C9 /* TRResultStatusBadge.swift */,
 				55D4E2A80A364361D0C1AD3D /* TRResultSummary.swift */,
+				FDBA2E698046913782C0F0E6 /* TRSettingsDangerRow.swift */,
+				2D01AA2A2675EA2460D25786 /* TRSettingsHeader.swift */,
+				F7070B63D64F45F99A58ACF3 /* TRSettingsRow.swift */,
+				B15050153CD0E5051D157263 /* TRSettingsSectionCard.swift */,
+				8ADAC4DC85D57DA6B3A5D421 /* TRSettingsSliderRow.swift */,
+				41E5D61ED2A0DE43F01D9F13 /* TRSettingsToggleRow.swift */,
 				BB0A5CB491F18C529CC74603 /* TRShopCategoryPillBar.swift */,
 				C24FC74DD7D0CB43B370434C /* TRShopCosmeticGrid.swift */,
 				F268635BC9A0004613EA68F4 /* TRShopCosmeticOptionCard.swift */,
@@ -711,6 +744,7 @@
 				FFFA3FD891B9AC2E831450D4 /* ProfileSummaryServiceTests.swift */,
 				8120FF4D4CC3F24DCE4CE9BB /* RouteEngineTests.swift */,
 				110E615D1CB962B4C43D1072 /* ScoringAndProgressServiceTests.swift */,
+				F834A064D57AE4D8C135041C /* SettingsScreenTests.swift */,
 				744787CA332B418079A6AA2E /* ShopCatalogServiceTests.swift */,
 				B5F86B1A2F3EEB483AEE1DB3 /* ShopScreenTests.swift */,
 				DCD9AB8B3D8D1486F7C8FC66 /* SwitchNodeViewTests.swift */,
@@ -721,6 +755,8 @@
 				B5A668594640E5A1D7C10886 /* TRMenuHeaderTests.swift */,
 				BCC6D9FEE4600AC2F067BA92 /* TRProfileSummaryTests.swift */,
 				11AB4806C5C7E3100BE7283A /* TRResultSummaryTests.swift */,
+				1CACEEDC98C14DD3B2EEA468 /* UserSettingsRepositoryTests.swift */,
+				2B1F71A0D96F6EE65FC18B50 /* UserSettingsServiceTests.swift */,
 				570E09F240784EF68F83C244 /* Fixtures */,
 				099E18217D3B6F0487246E73 /* Resources */,
 				A2D5663D25FE43F4591636D9 /* Support */,
@@ -957,6 +993,12 @@
 				46BAAF3FA88FD7320A54A146 /* TRResultStatsGrid.swift in Sources */,
 				B4E29B80D3CF1E5337937760 /* TRResultStatusBadge.swift in Sources */,
 				EBED49DED70A7A32155515F8 /* TRResultSummary.swift in Sources */,
+				EE7D8E4A60027769A959A57E /* TRSettingsDangerRow.swift in Sources */,
+				51801EDE031AE0ED60BB0426 /* TRSettingsHeader.swift in Sources */,
+				00A1A35E76826E31A5726F62 /* TRSettingsRow.swift in Sources */,
+				754EF25E54D6FAB97BF5AC71 /* TRSettingsSectionCard.swift in Sources */,
+				9B2F0910007BFD002F35C210 /* TRSettingsSliderRow.swift in Sources */,
+				7ACC6C245639F0DBF8169F3A /* TRSettingsToggleRow.swift in Sources */,
 				45AFF398D1918385980ADF4E /* TRShopCategoryPillBar.swift in Sources */,
 				2E5C97F498E8D1F38D59CDB0 /* TRShopCosmeticGrid.swift in Sources */,
 				C32E88E9AF95F6C6C9818063 /* TRShopCosmeticOptionCard.swift in Sources */,
@@ -969,6 +1011,9 @@
 				FF083C62565C03AFDA125B37 /* TRStarCollectorPlaceholderCard.swift in Sources */,
 				2D4E31D7460E797CF0596E4C /* TRTinyRoutesLogo.swift in Sources */,
 				B04EF4A680C930534A0A7924 /* TinyRoutesApp.swift in Sources */,
+				20C3785F47268256ABD3B92B /* UserSettings.swift in Sources */,
+				4928E6D6D6AD32AA84CD8E61 /* UserSettingsRepository.swift in Sources */,
+				AD07F3F05B219359C0515673 /* UserSettingsService.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -999,6 +1044,7 @@
 				54A79673924A643EF0F84A46 /* ProfileSummaryServiceTests.swift in Sources */,
 				6EEFAA30620655D48C5F5EB3 /* RouteEngineTests.swift in Sources */,
 				CFFEC17005CB4526654599D2 /* ScoringAndProgressServiceTests.swift in Sources */,
+				56D2599C3255A11EB4EE9D39 /* SettingsScreenTests.swift in Sources */,
 				85227B7747FB4B175683C85F /* ShopCatalogServiceTests.swift in Sources */,
 				CA56286BEB85DA883559E80A /* ShopScreenTests.swift in Sources */,
 				B22C95936C3DBB1BAA5C77DC /* SwitchNodeViewTests.swift in Sources */,
@@ -1010,6 +1056,8 @@
 				46D325479952E85A89192775 /* TRProfileSummaryTests.swift in Sources */,
 				6C19A92B9F105B496A8D86B0 /* TRResultSummaryTests.swift in Sources */,
 				11C816241E92A32BBEC27B84 /* TestLevelCatalog.swift in Sources */,
+				37070AEAAE1484C0E57688FA /* UserSettingsRepositoryTests.swift in Sources */,
+				FABC539B70856A6A7E43AC14 /* UserSettingsServiceTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

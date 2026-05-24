@@ -89,4 +89,31 @@ final class ScoringAndProgressServiceTests: XCTestCase {
         let service = ProgressService(userDefaults: defaults)
         XCTAssertEqual(service.bestStars(for: "level_001"), 3)
     }
+
+    func testProgressServiceResetClearsSavedStars() {
+        let suiteName = "ScoringAndProgressServiceTests.\(#function)"
+        let defaults = UserDefaults(suiteName: suiteName)!
+        defaults.removePersistentDomain(forName: suiteName)
+
+        let service = ProgressService(userDefaults: defaults)
+        service.saveBestStars(3, for: "level_001")
+
+        service.resetProgress()
+
+        XCTAssertEqual(service.bestStars(for: "level_001"), 0)
+        XCTAssertEqual(service.totalStars(), 0)
+        XCTAssertEqual(service.completedLevelCount(), 0)
+    }
+
+    func testProgressServiceResetIsSafeWhenNoProgressExists() {
+        let suiteName = "ScoringAndProgressServiceTests.\(#function)"
+        let defaults = UserDefaults(suiteName: suiteName)!
+        defaults.removePersistentDomain(forName: suiteName)
+
+        let service = ProgressService(userDefaults: defaults)
+
+        service.resetProgress()
+
+        XCTAssertEqual(service.bestStarsSnapshot(), [:])
+    }
 }

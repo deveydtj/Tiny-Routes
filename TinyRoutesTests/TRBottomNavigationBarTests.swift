@@ -59,6 +59,7 @@ final class TRBottomNavigationBarTests: XCTestCase {
         let coordinator = AppCoordinator()
         coordinator.openSettings()
         XCTAssertEqual(coordinator.state, .settings)
+        XCTAssertNil(coordinator.selectedBottomTab)
     }
 
     @MainActor
@@ -66,6 +67,50 @@ final class TRBottomNavigationBarTests: XCTestCase {
         let coordinator = AppCoordinator()
         coordinator.openProfile()
         XCTAssertEqual(coordinator.selectedBottomTab, .profile)
+    }
+
+    @MainActor
+    func testCloseSettingsReturnsToLevelsWhenOpenedFromLevels() {
+        let coordinator = AppCoordinator()
+        coordinator.openLevelSelect()
+
+        coordinator.openSettings()
+        coordinator.closeSettings()
+
+        XCTAssertEqual(coordinator.state, .levelSelect)
+    }
+
+    @MainActor
+    func testCloseSettingsReturnsToShopWhenOpenedFromShop() {
+        let coordinator = AppCoordinator()
+        coordinator.openShop()
+
+        coordinator.openSettings()
+        coordinator.closeSettings()
+
+        XCTAssertEqual(coordinator.state, .shop)
+    }
+
+    @MainActor
+    func testCloseSettingsReturnsToProfileWhenOpenedFromProfile() {
+        let coordinator = AppCoordinator()
+        coordinator.openProfile()
+
+        coordinator.openSettings()
+        coordinator.closeSettings()
+
+        XCTAssertEqual(coordinator.state, .profile)
+    }
+
+    @MainActor
+    func testCloseSettingsFallsBackToMainMenuWhenOpenedFromInvalidState() {
+        let coordinator = AppCoordinator()
+        coordinator.startGameplay(levelID: "level_001")
+
+        coordinator.openSettings()
+        coordinator.closeSettings()
+
+        XCTAssertEqual(coordinator.state, .mainMenu)
     }
 
     @MainActor
@@ -84,6 +129,9 @@ final class TRBottomNavigationBarTests: XCTestCase {
 
         coordinator.restartGameplay()
         coordinator.failLevel(reason: .timeExpired, elapsedTime: 45, tapCount: 5)
+        XCTAssertNil(coordinator.selectedBottomTab)
+
+        coordinator.openSettings()
         XCTAssertNil(coordinator.selectedBottomTab)
     }
 

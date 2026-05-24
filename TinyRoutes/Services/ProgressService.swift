@@ -29,6 +29,10 @@ final class ProgressService {
         bestStarsSnapshot().values.filter { $0 > 0 }.count
     }
 
+    func resetProgress() {
+        userDefaults.removeObject(forKey: bestStarsByLevelIDKey)
+    }
+
     @discardableResult
     func saveBestStars(_ stars: Int, for levelID: String) -> Int {
         guard !levelID.isEmpty else {

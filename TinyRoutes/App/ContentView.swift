@@ -7,6 +7,7 @@ struct ContentView: View {
     private let levelRepository = LevelRepository()
     private let progressService = ProgressService()
     private let profileSummaryService = ProfileSummaryService()
+    @StateObject private var settingsService = UserSettingsService()
     private let bottomNavigationReservedHeight: CGFloat = 96
 
     var body: some View {
@@ -99,7 +100,20 @@ struct ContentView: View {
                     )
 
                 case .settings:
-                    SettingsScreen()
+                    SettingsScreen(
+                        settingsService: settingsService,
+                        progressService: progressService,
+                        playerName: profileSummaryService.makeSummary().playerName,
+                        onBackTapped: coordinator.closeSettings,
+                        onEditProfileTapped: {},
+                        onCustomizeTapped: coordinator.openShop,
+                        onRestorePurchasesTapped: {},
+                        onRemoveAdsTapped: {},
+                        onContactSupportTapped: {},
+                        onRateAppTapped: {},
+                        onPrivacyPolicyTapped: {},
+                        onTermsTapped: {}
+                    )
                 }
             }
             .foregroundColor(.black)
@@ -129,7 +143,7 @@ struct ContentView: View {
 
     private var isFullBleedScreenVisible: Bool {
         switch coordinator.state {
-        case .levelSelect, .shop, .profile, .levelComplete, .levelFailed:
+        case .levelSelect, .shop, .profile, .settings, .levelComplete, .levelFailed:
             return true
         default:
             return false
@@ -138,7 +152,7 @@ struct ContentView: View {
 
     private var isStandardMenuHeaderScreenVisible: Bool {
         switch coordinator.state {
-        case .levelSelect, .shop, .profile:
+        case .levelSelect, .shop, .profile, .settings:
             return true
         default:
             return false
