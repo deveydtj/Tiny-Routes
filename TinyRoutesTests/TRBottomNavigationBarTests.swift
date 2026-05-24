@@ -86,4 +86,23 @@ final class TRBottomNavigationBarTests: XCTestCase {
         coordinator.failLevel(reason: .timeExpired, elapsedTime: 45, tapCount: 5)
         XCTAssertNil(coordinator.selectedBottomTab)
     }
+
+    @MainActor
+    func testCompletedRunsReceiveFreshPresentationIDs() {
+        let coordinator = AppCoordinator()
+
+        coordinator.startGameplay(levelID: "level_001")
+        coordinator.completeLevel(elapsedTime: 12, tapCount: 3)
+        guard case let .levelComplete(_, _, _, firstPresentationID) = coordinator.state else {
+            return XCTFail("Expected completed level state")
+        }
+
+        coordinator.restartGameplay()
+        coordinator.completeLevel(elapsedTime: 12, tapCount: 3)
+        guard case let .levelComplete(_, _, _, secondPresentationID) = coordinator.state else {
+            return XCTFail("Expected completed level state")
+        }
+
+        XCTAssertNotEqual(firstPresentationID, secondPresentationID)
+    }
 }

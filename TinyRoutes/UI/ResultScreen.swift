@@ -11,6 +11,7 @@ struct ResultScreen: View {
 
     let levelID: String
     let result: ResultType
+    let presentationID: UUID
     let elapsedTime: TimeInterval
     let tapCount: Int
     let failureReason: LevelFailureReason?
@@ -31,6 +32,7 @@ struct ResultScreen: View {
     init(
         levelID: String,
         result: ResultType,
+        presentationID: UUID = UUID(),
         elapsedTime: TimeInterval,
         tapCount: Int,
         failureReason: LevelFailureReason?,
@@ -55,6 +57,7 @@ struct ResultScreen: View {
 
         self.levelID = levelID
         self.result = result
+        self.presentationID = presentationID
         self.elapsedTime = elapsedTime
         self.tapCount = tapCount
         self.failureReason = failureReason
@@ -101,7 +104,7 @@ struct ResultScreen: View {
             .zIndex(1)
 
             if result == .completed {
-                TRConfettiEmitter(mode: .success)
+                TRConfettiEmitter(mode: .success, playbackID: presentationID)
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
                     .ignoresSafeArea()
                     .zIndex(2)

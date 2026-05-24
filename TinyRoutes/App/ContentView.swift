@@ -34,11 +34,12 @@ struct ContentView: View {
                 case let .gameplay(levelID), let .pause(levelID):
                     gameplayView(levelID: levelID, isPaused: coordinator.state.isPaused)
 
-                case let .levelComplete(levelID, elapsedTime, tapCount):
+                case let .levelComplete(levelID, elapsedTime, tapCount, presentationID):
                     let nextLevelID = nextLevelID(after: levelID)
                     ResultScreen(
                         levelID: levelID,
                         result: .completed,
+                        presentationID: presentationID,
                         elapsedTime: elapsedTime,
                         tapCount: tapCount,
                         failureReason: nil,
@@ -54,11 +55,12 @@ struct ContentView: View {
                         onShareTapped: {}
                     )
 
-                case let .levelFailed(levelID, reason, elapsedTime, tapCount):
+                case let .levelFailed(levelID, reason, elapsedTime, tapCount, presentationID):
                     let nextLevelID = nextLevelID(after: levelID)
                     ResultScreen(
                         levelID: levelID,
                         result: .failed,
+                        presentationID: presentationID,
                         elapsedTime: elapsedTime,
                         tapCount: tapCount,
                         failureReason: reason,

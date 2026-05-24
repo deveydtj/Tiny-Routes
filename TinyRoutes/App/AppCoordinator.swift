@@ -49,8 +49,8 @@ final class AppCoordinator: ObservableObject {
         switch state {
         case let .gameplay(levelID),
              let .pause(levelID),
-             let .levelComplete(levelID, _, _),
-             let .levelFailed(levelID, _, _, _):
+             let .levelComplete(levelID, _, _, _),
+             let .levelFailed(levelID, _, _, _, _):
             state = .gameplay(levelID: levelID)
         default:
             break
@@ -68,7 +68,7 @@ final class AppCoordinator: ObservableObject {
     func completeLevel(elapsedTime: TimeInterval, tapCount: Int) {
         switch state {
         case let .gameplay(levelID), let .pause(levelID):
-            state = .levelComplete(levelID: levelID, elapsedTime: elapsedTime, tapCount: tapCount)
+            state = .levelComplete(levelID: levelID, elapsedTime: elapsedTime, tapCount: tapCount, presentationID: UUID())
         default:
             break
         }
@@ -77,7 +77,7 @@ final class AppCoordinator: ObservableObject {
     func failLevel(reason: LevelFailureReason, elapsedTime: TimeInterval, tapCount: Int) {
         switch state {
         case let .gameplay(levelID), let .pause(levelID):
-            state = .levelFailed(levelID: levelID, reason: reason, elapsedTime: elapsedTime, tapCount: tapCount)
+            state = .levelFailed(levelID: levelID, reason: reason, elapsedTime: elapsedTime, tapCount: tapCount, presentationID: UUID())
         default:
             break
         }
