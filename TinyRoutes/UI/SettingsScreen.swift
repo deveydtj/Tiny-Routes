@@ -15,6 +15,7 @@ struct SettingsScreen: View {
     let onRateAppTapped: () -> Void
     let onPrivacyPolicyTapped: () -> Void
     let onTermsTapped: () -> Void
+    let onProfileChanged: () -> Void
 
     @State private var activeAlert: SettingsAlert?
 
@@ -30,7 +31,8 @@ struct SettingsScreen: View {
         onContactSupportTapped: @escaping () -> Void,
         onRateAppTapped: @escaping () -> Void,
         onPrivacyPolicyTapped: @escaping () -> Void,
-        onTermsTapped: @escaping () -> Void
+        onTermsTapped: @escaping () -> Void,
+        onProfileChanged: @escaping () -> Void = {}
     ) {
         self.settingsService = settingsService
         self.progressService = progressService
@@ -44,6 +46,7 @@ struct SettingsScreen: View {
         self.onRateAppTapped = onRateAppTapped
         self.onPrivacyPolicyTapped = onPrivacyPolicyTapped
         self.onTermsTapped = onTermsTapped
+        self.onProfileChanged = onProfileChanged
     }
 
     var body: some View {
@@ -250,7 +253,7 @@ struct SettingsScreen: View {
         TRSettingsSectionCard(title: "Data") {
             TRSettingsDangerRow(
                 title: "Reset Progress",
-                subtitle: "Clear local level stars only",
+                subtitle: "Clear local level progress",
                 iconSystemName: "exclamationmark.triangle.fill",
                 action: {
                     activeAlert = .resetProgressConfirmation
@@ -396,6 +399,7 @@ struct SettingsScreen: View {
 
     private func resetProgress() {
         progressService.resetProgress()
+        onProfileChanged()
         activeAlert = .resetProgressComplete
     }
 
@@ -408,7 +412,7 @@ struct SettingsScreen: View {
         case .resetProgressConfirmation:
             return Alert(
                 title: Text("Reset Progress?"),
-                message: Text("This clears local level stars only."),
+                message: Text("This clears level stars, completions, and unlocks. Coins and owned cosmetics are kept."),
                 primaryButton: .destructive(Text("Reset"), action: resetProgress),
                 secondaryButton: .cancel()
             )
@@ -499,7 +503,7 @@ private enum SettingsAlert: Identifiable {
         case .credits:
             "Tiny Routes is built as a small delivery puzzle game. More credits are coming soon."
         case .resetProgressComplete:
-            "Local level progress was cleared."
+            "Local level progress was cleared. Coins and owned cosmetics were kept."
         case .resetProgressConfirmation, .resetSettingsConfirmation:
             ""
         }

@@ -23,8 +23,10 @@ struct ResultScreen: View {
     let onShareTapped: () -> Void
     let onUseHintTapped: () -> Void
     let onSkipLevelTapped: (() -> Void)?
+    let onProfileChanged: () -> Void
 
     private let summaryFactory: TRResultSummaryFactory
+    private let nextLevelID: String?
 
     @State private var summary: TRResultSummary
     @State private var didPlayCompletionFeedback = false
@@ -45,14 +47,20 @@ struct ResultScreen: View {
         onShareTapped: @escaping () -> Void = {},
         onUseHintTapped: @escaping () -> Void = {},
         onSkipLevelTapped: (() -> Void)? = nil,
+        onProfileChanged: @escaping () -> Void = {},
+        nextLevelID: String? = nil,
         levelRepository: LevelRepository = LevelRepository(),
         scoringService: ScoringService = ScoringService(),
-        progressService: ProgressService = ProgressService()
+        progressService: ProgressService? = nil,
+        economyService: EconomyService? = nil,
+        saveDataRepository: SaveDataRepository = SaveDataRepository()
     ) {
         let summaryFactory = TRResultSummaryFactory(
             levelRepository: levelRepository,
             scoringService: scoringService,
-            progressService: progressService
+            progressService: progressService,
+            economyService: economyService,
+            saveDataRepository: saveDataRepository
         )
 
         self.levelID = levelID
@@ -69,6 +77,8 @@ struct ResultScreen: View {
         self.onShareTapped = onShareTapped
         self.onUseHintTapped = onUseHintTapped
         self.onSkipLevelTapped = onSkipLevelTapped
+        self.onProfileChanged = onProfileChanged
+        self.nextLevelID = nextLevelID
         self.summaryFactory = summaryFactory
         _summary = State(initialValue: summaryFactory.makeSummary(
             levelID: levelID,
@@ -76,6 +86,7 @@ struct ResultScreen: View {
             elapsedTime: elapsedTime,
             tapCount: tapCount,
             failureReason: failureReason,
+            nextLevelID: nextLevelID,
             persistCompletion: false
         ))
     }
@@ -120,8 +131,12 @@ struct ResultScreen: View {
                 elapsedTime: elapsedTime,
                 tapCount: tapCount,
                 failureReason: failureReason,
+                nextLevelID: nextLevelID,
                 persistCompletion: true
             )
+            if result == .completed {
+                onProfileChanged()
+            }
         }
     }
 

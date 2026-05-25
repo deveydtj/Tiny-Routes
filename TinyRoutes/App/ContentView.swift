@@ -4,11 +4,40 @@ import SwiftUI
 @MainActor
 struct ContentView: View {
     @StateObject private var coordinator = AppCoordinator()
-    private let levelRepository = LevelRepository()
-    private let progressService = ProgressService()
-    private let profileSummaryService = ProfileSummaryService()
     @StateObject private var settingsService = UserSettingsService()
+    @State private var profileRevision = 0
+
+    private let saveDataRepository: SaveDataRepository
+    private let levelRepository: LevelRepository
+    private let progressService: ProgressService
+    private let economyService: EconomyService
+    private let cosmeticService: CosmeticService
+    private let profileSummaryService: ProfileSummaryService
     private let bottomNavigationReservedHeight: CGFloat = 96
+
+    init() {
+        let repository = SaveDataRepository()
+        let levelRepository = LevelRepository()
+        let progressService = ProgressService(repository: repository)
+        let economyService = EconomyService(repository: repository)
+        let cosmeticService = CosmeticService(
+            repository: repository,
+            economyService: economyService
+        )
+
+        self.saveDataRepository = repository
+        self.levelRepository = levelRepository
+        self.progressService = progressService
+        self.economyService = economyService
+        self.cosmeticService = cosmeticService
+        self.profileSummaryService = ProfileSummaryService(
+            repository: repository,
+            progressService: progressService,
+            economyService: economyService,
+            cosmeticService: cosmeticService,
+            levelRepository: levelRepository
+        )
+    }
 
     var body: some View {
         ZStack {
@@ -48,12 +77,18 @@ struct ContentView: View {
                         onRestartTapped: coordinator.restartGameplay,
                         onNextLevelTapped: {
                             guard let nextLevelID else { return }
-                            coordinator.startGameplay(levelID: nextLevelID)
+                            startGameplayIfUnlocked(levelID: nextLevelID)
                         },
                         onExitTapped: coordinator.exitGameplayToMenu,
                         onBackToLevelsTapped: coordinator.exitGameplayToLevels,
                         onHomeTapped: coordinator.backToMainMenu,
-                        onShareTapped: {}
+                        onShareTapped: {},
+                        onProfileChanged: handleProfileChanged,
+                        nextLevelID: nextLevelID,
+                        levelRepository: levelRepository,
+                        progressService: progressService,
+                        economyService: economyService,
+                        saveDataRepository: saveDataRepository
                     )
 
                 case let .levelFailed(levelID, reason, elapsedTime, tapCount, presentationID):
@@ -65,11 +100,11 @@ struct ContentView: View {
                         elapsedTime: elapsedTime,
                         tapCount: tapCount,
                         failureReason: reason,
-                        canAdvanceToNextLevel: nextLevelID != nil,
+                        canAdvanceToNextLevel: nextLevelID.map(progressService.isLevelUnlocked) ?? false,
                         onRestartTapped: coordinator.restartGameplay,
                         onNextLevelTapped: {
                             guard let nextLevelID else { return }
-                            coordinator.startGameplay(levelID: nextLevelID)
+                            startGameplayIfUnlocked(levelID: nextLevelID)
                         },
                         onExitTapped: coordinator.exitGameplayToMenu,
                         onBackToLevelsTapped: coordinator.exitGameplayToLevels,
@@ -78,15 +113,23 @@ struct ContentView: View {
                         onUseHintTapped: {},
                         onSkipLevelTapped: {
                             guard let nextLevelID else { return }
-                            coordinator.startGameplay(levelID: nextLevelID)
-                        }
+                            startGameplayIfUnlocked(levelID: nextLevelID)
+                        },
+                        nextLevelID: nextLevelID,
+                        levelRepository: levelRepository,
+                        progressService: progressService,
+                        economyService: economyService,
+                        saveDataRepository: saveDataRepository
                     )
 
                 case .shop:
                     ShopScreen(
                         coinTotal: currentCoinTotal,
                         onSettingsTapped: coordinator.openSettings,
-                        onAddCurrencyTapped: coordinator.openShop
+                        onAddCurrencyTapped: coordinator.openShop,
+                        cosmeticService: cosmeticService,
+                        economyService: economyService,
+                        onProfileChanged: handleProfileChanged
                     )
 
                 case .profile:
@@ -112,7 +155,8 @@ struct ContentView: View {
                         onContactSupportTapped: {},
                         onRateAppTapped: {},
                         onPrivacyPolicyTapped: {},
-                        onTermsTapped: {}
+                        onTermsTapped: {},
+                        onProfileChanged: handleProfileChanged
                     )
                 }
             }
@@ -138,7 +182,8 @@ struct ContentView: View {
     }
 
     private var currentCoinTotal: Int {
-        profileSummaryService.makeSummary().coinTotal
+        _ = profileRevision
+        return economyService.coinTotal()
     }
 
     private var isFullBleedScreenVisible: Bool {
@@ -178,8 +223,9 @@ struct ContentView: View {
             LevelSelectScreen(
                 levels: levels,
                 coinTotal: currentCoinTotal,
+                currentStreakDays: saveDataRepository.load().currentStreakDays,
                 onLevelSelected: { levelID in
-                    coordinator.startGameplay(levelID: levelID)
+                    startGameplayIfUnlocked(levelID: levelID)
                 },
                 onSettingsTapped: coordinator.openSettings,
                 onAddCurrencyTapped: coordinator.openShop,
@@ -215,6 +261,18 @@ struct ContentView: View {
         }
 
         return levelIDs[nextIndex]
+    }
+
+    private func startGameplayIfUnlocked(levelID: String) {
+        guard progressService.isLevelUnlocked(levelID) else {
+            return
+        }
+
+        coordinator.startGameplay(levelID: levelID)
+    }
+
+    private func handleProfileChanged() {
+        profileRevision += 1
     }
 
     private func loadSortedLevels() throws -> [LevelData] {

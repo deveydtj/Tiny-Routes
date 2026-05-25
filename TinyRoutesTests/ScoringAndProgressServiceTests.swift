@@ -105,6 +105,27 @@ final class ScoringAndProgressServiceTests: XCTestCase {
         XCTAssertEqual(service.completedLevelCount(), 0)
     }
 
+    func testProgressServiceResetKeepsCoinsAndCosmetics() {
+        let suiteName = "ScoringAndProgressServiceTests.\(#function)"
+        let defaults = UserDefaults(suiteName: suiteName)!
+        defaults.removePersistentDomain(forName: suiteName)
+        let repository = SaveDataRepository(userDefaults: defaults)
+        let service = ProgressService(repository: repository)
+        repository.update { profile in
+            profile.coinTotal = 250
+            profile.ownedCosmeticIDs.insert("themeForestPath")
+        }
+        service.saveBestStars(3, for: "level_001")
+
+        service.resetProgress()
+
+        let profile = repository.load()
+        XCTAssertEqual(profile.bestStarsByLevelID, [:])
+        XCTAssertEqual(profile.unlockedLevelIDs, Set(["level_001"]))
+        XCTAssertEqual(profile.coinTotal, 250)
+        XCTAssertTrue(profile.ownedCosmeticIDs.contains("themeForestPath"))
+    }
+
     func testProgressServiceResetIsSafeWhenNoProgressExists() {
         let suiteName = "ScoringAndProgressServiceTests.\(#function)"
         let defaults = UserDefaults(suiteName: suiteName)!
@@ -115,5 +136,67 @@ final class ScoringAndProgressServiceTests: XCTestCase {
         service.resetProgress()
 
         XCTAssertEqual(service.bestStarsSnapshot(), [:])
+    }
+
+    func testCompleteLevelUnlocksNextLevel() {
+        let suiteName = "ScoringAndProgressServiceTests.\(#function)"
+        let defaults = UserDefaults(suiteName: suiteName)!
+        defaults.removePersistentDomain(forName: suiteName)
+        let service = ProgressService(userDefaults: defaults)
+
+        let update = service.completeLevel(
+            levelID: "level_001",
+            earnedStars: 2,
+            nextLevelID: "level_002"
+        )
+
+        XCTAssertEqual(update.bestStars, 2)
+        XCTAssertTrue(update.wasFirstCompletion)
+        XCTAssertEqual(update.unlockedNextLevelID, "level_002")
+        XCTAssertTrue(service.isLevelCompleted("level_001"))
+        XCTAssertTrue(service.isLevelUnlocked("level_002"))
+    }
+
+    func testReplayDoesNotRegressBestStars() {
+        let suiteName = "ScoringAndProgressServiceTests.\(#function)"
+        let defaults = UserDefaults(suiteName: suiteName)!
+        defaults.removePersistentDomain(forName: suiteName)
+        let service = ProgressService(userDefaults: defaults)
+        service.completeLevel(levelID: "level_001", earnedStars: 3, nextLevelID: "level_002")
+
+        let update = service.completeLevel(levelID: "level_001", earnedStars: 1, nextLevelID: "level_002")
+
+        XCTAssertEqual(update.bestStars, 3)
+        XCTAssertFalse(update.wasFirstCompletion)
+        XCTAssertEqual(service.bestStars(for: "level_001"), 3)
+    }
+
+    func testCompletingFinalLevelWithoutNextLevelDoesNotCrash() {
+        let suiteName = "ScoringAndProgressServiceTests.\(#function)"
+        let defaults = UserDefaults(suiteName: suiteName)!
+        defaults.removePersistentDomain(forName: suiteName)
+        let service = ProgressService(userDefaults: defaults)
+
+        let update = service.completeLevel(levelID: "level_011", earnedStars: 1, nextLevelID: nil)
+
+        XCTAssertEqual(update.unlockedNextLevelID, nil)
+        XCTAssertTrue(service.isLevelCompleted("level_011"))
+    }
+
+    func testZeroStarCompletionDoesNotUnlockNextLevel() {
+        let suiteName = "ScoringAndProgressServiceTests.\(#function)"
+        let defaults = UserDefaults(suiteName: suiteName)!
+        defaults.removePersistentDomain(forName: suiteName)
+        let service = ProgressService(userDefaults: defaults)
+
+        let update = service.completeLevel(
+            levelID: "level_001",
+            earnedStars: 0,
+            nextLevelID: "level_002"
+        )
+
+        XCTAssertFalse(update.wasFirstCompletion)
+        XCTAssertFalse(service.isLevelCompleted("level_001"))
+        XCTAssertFalse(service.isLevelUnlocked("level_002"))
     }
 }

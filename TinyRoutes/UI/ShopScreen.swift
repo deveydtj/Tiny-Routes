@@ -4,22 +4,37 @@ struct ShopScreen: View {
     let coinTotal: Int
     let onSettingsTapped: () -> Void
     let onAddCurrencyTapped: () -> Void
+    let onProfileChanged: () -> Void
 
     private let catalogService: ShopCatalogService
+    private let cosmeticService: CosmeticService
+    private let economyService: EconomyService
 
     @State private var selectedCategoryID = ShopCosmeticCategoryID.routeThemes
-    @State private var activePlaceholder: ShopPlaceholderAlert?
+    @State private var activePlaceholder: ShopAlert?
 
     init(
         coinTotal: Int,
         onSettingsTapped: @escaping () -> Void,
         onAddCurrencyTapped: @escaping () -> Void,
-        catalogService: ShopCatalogService = ShopCatalogService()
+        catalogService: ShopCatalogService = ShopCatalogService(),
+        cosmeticService: CosmeticService? = nil,
+        economyService: EconomyService? = nil,
+        onProfileChanged: @escaping () -> Void = {}
     ) {
         self.coinTotal = coinTotal
         self.onSettingsTapped = onSettingsTapped
         self.onAddCurrencyTapped = onAddCurrencyTapped
         self.catalogService = catalogService
+        let repository = SaveDataRepository()
+        let resolvedEconomyService = economyService ?? EconomyService(repository: repository)
+        self.economyService = resolvedEconomyService
+        self.cosmeticService = cosmeticService ?? CosmeticService(
+            repository: repository,
+            economyService: resolvedEconomyService,
+            catalogService: catalogService
+        )
+        self.onProfileChanged = onProfileChanged
     }
 
     var body: some View {
@@ -141,18 +156,17 @@ struct ShopScreen: View {
     }
 
     private var selectedCategoryOptions: [ShopCosmeticOption] {
-        catalogService.options(forCategoryID: selectedCategoryID)
+        cosmeticService.options(forCategoryID: selectedCategoryID)
     }
 
     private var selectedOptionForPreview: ShopCosmeticOption? {
         selectedCategoryOptions.first { $0.isSelected }
             ?? selectedCategoryOptions.first
-            ?? catalogService.options(forCategoryID: ShopCosmeticCategoryID.routeThemes).first { $0.isSelected }
+            ?? cosmeticService.options(forCategoryID: ShopCosmeticCategoryID.routeThemes).first { $0.isSelected }
     }
 
     private func onFeaturedOfferTapped(_ offer: ShopFeaturedOffer) {
-        // TODO: route Starter Pack and Remove Ads purchases through PurchaseAdapter.
-        // TODO: route Remove Ads entitlement through AdsAdapter once monetization is active.
+        // Entitlement flags should change only after real StoreKit purchase or restore succeeds.
         activePlaceholder = .featuredOffer(offer)
     }
 
@@ -160,11 +174,25 @@ struct ShopScreen: View {
         if option.isSelected {
             activePlaceholder = .alreadySelected(option)
         } else if option.isUnlocked {
-            // TODO: connect cosmetic selection to CosmeticService.
-            activePlaceholder = .selectCosmetic(option)
+            switch cosmeticService.selectCosmetic(option) {
+            case .selected:
+                onProfileChanged()
+                activePlaceholder = .selectedCosmetic(option)
+            case .alreadySelected:
+                activePlaceholder = .alreadySelected(option)
+            case .notOwned:
+                activePlaceholder = .notOwned(option)
+            }
         } else {
-            // TODO: spend coins through EconomyService and persist ownership with SaveDataRepository.
-            activePlaceholder = .unlockCosmetic(option)
+            switch cosmeticService.unlockCosmetic(option) {
+            case .unlocked:
+                onProfileChanged()
+                activePlaceholder = .unlockedCosmetic(option)
+            case .alreadyOwned:
+                activePlaceholder = .alreadyOwned(option)
+            case .insufficientCoins:
+                activePlaceholder = .insufficientCoins(option)
+            }
         }
     }
 
@@ -173,11 +201,14 @@ struct ShopScreen: View {
     }
 }
 
-private enum ShopPlaceholderAlert: Identifiable {
+private enum ShopAlert: Identifiable {
     case featuredOffer(ShopFeaturedOffer)
-    case unlockCosmetic(ShopCosmeticOption)
-    case selectCosmetic(ShopCosmeticOption)
+    case unlockedCosmetic(ShopCosmeticOption)
+    case selectedCosmetic(ShopCosmeticOption)
+    case insufficientCoins(ShopCosmeticOption)
+    case alreadyOwned(ShopCosmeticOption)
     case alreadySelected(ShopCosmeticOption)
+    case notOwned(ShopCosmeticOption)
     case goodie(ShopGoodieAction)
 
     var id: String {
@@ -188,11 +219,17 @@ private enum ShopPlaceholderAlert: Identifiable {
         switch self {
         case let .featuredOffer(offer):
             return offer.title
-        case let .unlockCosmetic(option):
+        case let .unlockedCosmetic(option):
             return option.title
-        case let .selectCosmetic(option):
+        case let .selectedCosmetic(option):
+            return option.title
+        case let .insufficientCoins(option):
+            return option.title
+        case let .alreadyOwned(option):
             return option.title
         case let .alreadySelected(option):
+            return option.title
+        case let .notOwned(option):
             return option.title
         case let .goodie(action):
             return action.title
@@ -203,12 +240,18 @@ private enum ShopPlaceholderAlert: Identifiable {
         switch self {
         case .featuredOffer:
             return "Purchases coming soon."
-        case .unlockCosmetic:
-            return "Unlock coming soon."
-        case .selectCosmetic:
-            return "Cosmetic selection coming soon."
+        case .unlockedCosmetic:
+            return "Cosmetic unlocked."
+        case .selectedCosmetic:
+            return "Cosmetic selected."
+        case .insufficientCoins:
+            return "Not enough coins."
+        case .alreadyOwned:
+            return "This cosmetic is already owned."
         case .alreadySelected:
             return "This cosmetic is already selected."
+        case .notOwned:
+            return "Unlock this cosmetic before selecting it."
         case let .goodie(action):
             if action.id == "dailyBonus" {
                 return "Daily bonus coming soon."

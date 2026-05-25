@@ -51,4 +51,21 @@ final class ShopCatalogServiceTests: XCTestCase {
             )
         }
     }
+
+    func testProfileAwareOptionsReflectOwnership() throws {
+        let options = service.options(
+            forCategoryID: ShopCosmeticCategoryID.routeThemes,
+            ownedCosmeticIDs: ["themeOceanDrive", "themeForestPath"],
+            selectedCosmeticIDByCategoryID: [
+                ShopCosmeticCategoryID.routeThemes: "themeForestPath"
+            ]
+        )
+        let forestPath = try XCTUnwrap(options.first { $0.id == "themeForestPath" })
+        let neonNights = try XCTUnwrap(options.first { $0.id == "themeNeonNights" })
+
+        XCTAssertTrue(forestPath.isUnlocked)
+        XCTAssertTrue(forestPath.isSelected)
+        XCTAssertFalse(neonNights.isUnlocked)
+        XCTAssertEqual(options.filter(\.isSelected).map(\.id), ["themeForestPath"])
+    }
 }

@@ -1,10 +1,17 @@
 import SwiftUI
 
 struct TRStarCollectorPlaceholderCard: View {
+    let totalStars: Int
+    let targetStars: Int
+
     private let primaryBlue = Color(red: 0.05, green: 0.48, blue: 0.95)
     private let titleColor = Color(red: 0.05, green: 0.18, blue: 0.43)
     private let mutedTextColor = Color(red: 0.40, green: 0.49, blue: 0.62)
-    private let progress: CGFloat = 102 / 150
+
+    init(totalStars: Int = 0, targetStars: Int = 150) {
+        self.totalStars = totalStars
+        self.targetStars = targetStars
+    }
 
     var body: some View {
         HStack(spacing: 14) {
@@ -25,13 +32,13 @@ struct TRStarCollectorPlaceholderCard: View {
                     .lineLimit(1)
                     .minimumScaleFactor(0.76)
 
-                Text("Collect 150 stars")
+                Text("Collect \(targetStars) stars")
                     .font(.system(size: 13, weight: .semibold, design: .rounded))
                     .foregroundStyle(mutedTextColor)
 
                 progressBar
 
-                Text("102 / 150")
+                Text("\(clampedTotalStars) / \(targetStars)")
                     .font(.system(size: 12, weight: .bold, design: .rounded))
                     .foregroundStyle(mutedTextColor)
             }
@@ -44,7 +51,6 @@ struct TRStarCollectorPlaceholderCard: View {
         .background {
             TRGlassCardBackground()
         }
-        // TODO: Replace the placeholder total with stars from ProgressService when rewards are implemented.
     }
 
     private var progressBar: some View {
@@ -77,6 +83,21 @@ struct TRStarCollectorPlaceholderCard: View {
                 .fill(Color(red: 0.94, green: 0.97, blue: 1.0))
         }
     }
+
+    private var clampedTotalStars: Int {
+        max(totalStars, 0)
+    }
+
+    private var progress: CGFloat {
+        guard targetStars > 0 else { return 0 }
+        return CGFloat(clampedTotalStars).clamped(to: 0...CGFloat(targetStars)) / CGFloat(targetStars)
+    }
+}
+
+private extension CGFloat {
+    func clamped(to range: ClosedRange<CGFloat>) -> CGFloat {
+        Swift.min(Swift.max(self, range.lowerBound), range.upperBound)
+    }
 }
 
 #Preview("Star Collector Placeholder") {
@@ -84,7 +105,7 @@ struct TRStarCollectorPlaceholderCard: View {
         Color(red: 0.78, green: 0.90, blue: 0.96)
             .ignoresSafeArea()
 
-        TRStarCollectorPlaceholderCard()
+        TRStarCollectorPlaceholderCard(totalStars: 102)
             .padding(20)
     }
 }

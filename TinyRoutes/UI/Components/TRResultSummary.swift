@@ -27,15 +27,21 @@ struct TRResultSummaryFactory {
     let levelRepository: LevelRepository
     let scoringService: ScoringService
     let progressService: ProgressService
+    let economyService: EconomyService
+    let saveDataRepository: SaveDataRepository
 
     init(
         levelRepository: LevelRepository = LevelRepository(),
         scoringService: ScoringService = ScoringService(),
-        progressService: ProgressService = ProgressService()
+        progressService: ProgressService? = nil,
+        economyService: EconomyService? = nil,
+        saveDataRepository: SaveDataRepository = SaveDataRepository()
     ) {
         self.levelRepository = levelRepository
         self.scoringService = scoringService
-        self.progressService = progressService
+        self.saveDataRepository = saveDataRepository
+        self.progressService = progressService ?? ProgressService(repository: saveDataRepository)
+        self.economyService = economyService ?? EconomyService(repository: saveDataRepository)
     }
 
     func makeSummary(
@@ -44,9 +50,11 @@ struct TRResultSummaryFactory {
         elapsedTime: TimeInterval,
         tapCount: Int,
         failureReason: LevelFailureReason?,
+        nextLevelID: String? = nil,
         persistCompletion: Bool = true
     ) -> TRResultSummary {
         let levelData = try? levelRepository.loadLevel(id: levelID)
+        let profile = saveDataRepository.load()
         let levelTitle = GameplayLevelNumberFormatter.title(for: levelID)
         let elapsedTimeText = GameTimeFormatter.elapsed(elapsedTime)
         let tapCountText = "\(max(tapCount, 0))"
@@ -61,11 +69,31 @@ struct TRResultSummaryFactory {
                 elapsedTime: elapsedTime,
                 tapCount: tapCount
             )
-            let bestStars = bestStarsAfterCompletion(
-                levelID: levelID,
-                earnedStars: earnedStars,
-                persistCompletion: persistCompletion
-            )
+            let wasFirstCompletion = progressService.isLevelCompleted(levelID) == false
+            let bestStars: Int
+            let coinReward: Int
+
+            if persistCompletion {
+                let progressUpdate = progressService.completeLevel(
+                    levelID: levelID,
+                    earnedStars: earnedStars,
+                    nextLevelID: nextLevelID,
+                    elapsedTime: elapsedTime
+                )
+                bestStars = progressUpdate.bestStars
+                coinReward = economyService.awardLevelCompletionReward(
+                    levelID: levelID,
+                    earnedStars: earnedStars,
+                    isFirstCompletion: progressUpdate.wasFirstCompletion
+                )
+            } else {
+                bestStars = max(progressService.bestStars(for: levelID), earnedStars)
+                coinReward = economyService.previewLevelCompletionReward(
+                    levelID: levelID,
+                    earnedStars: earnedStars,
+                    isFirstCompletion: wasFirstCompletion
+                )
+            }
 
             return TRResultSummary(
                 levelID: levelID,
@@ -78,10 +106,10 @@ struct TRResultSummaryFactory {
                 earnedStars: earnedStars,
                 displayedStars: earnedStars,
                 bestStars: bestStars,
-                coinReward: earnedStars * 50,
-                coinTotal: 1_250,
-                streakDays: 7,
-                streakBonus: 50,
+                coinReward: coinReward,
+                coinTotal: economyService.coinTotal(),
+                streakDays: profile.currentStreakDays,
+                streakBonus: 0,
                 hintCount: 3,
                 timeGoalText: timeGoalText,
                 movesGoalText: movesGoalText,
@@ -104,9 +132,9 @@ struct TRResultSummaryFactory {
                 displayedStars: 1,
                 bestStars: progressService.bestStars(for: levelID),
                 coinReward: 0,
-                coinTotal: 1_250,
-                streakDays: 7,
-                streakBonus: 50,
+                coinTotal: economyService.coinTotal(),
+                streakDays: profile.currentStreakDays,
+                streakBonus: 0,
                 hintCount: 3,
                 timeGoalText: timeGoalText,
                 movesGoalText: movesGoalText,
@@ -137,17 +165,6 @@ struct TRResultSummaryFactory {
         ).stars
     }
 
-    private func bestStarsAfterCompletion(
-        levelID: String,
-        earnedStars: Int,
-        persistCompletion: Bool
-    ) -> Int {
-        if persistCompletion {
-            return progressService.saveBestStars(earnedStars, for: levelID)
-        }
-
-        return max(progressService.bestStars(for: levelID), earnedStars)
-    }
 }
 
 private struct FailureCopy {

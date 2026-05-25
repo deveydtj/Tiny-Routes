@@ -79,7 +79,7 @@ struct TRShopCosmeticOptionCard: View {
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(Text(option.title))
         .accessibilityValue(Text(accessibilityValue))
-        .accessibilityHint(Text(option.isUnlocked ? "Select cosmetic." : "Unlock coming soon."))
+        .accessibilityHint(Text(option.isUnlocked ? "Select cosmetic." : "Unlock cosmetic."))
         .accessibilityAddTraits(option.isSelected ? [.isSelected] : [])
     }
 

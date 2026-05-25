@@ -40,6 +40,7 @@ struct TRLevelMapSection: View {
                     state: tileStates[index],
                     stars: progressSnapshot.stars(for: position.levelID)
                 ) {
+                    guard tileStates[index] != .locked else { return }
                     onLevelSelected(position.levelID)
                 }
                 .position(shifted.center)

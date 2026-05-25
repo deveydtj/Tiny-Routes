@@ -6,10 +6,14 @@ final class TRResultSummaryTests: XCTestCase {
         let suiteName = "TRResultSummaryTests.\(#function)"
         let defaults = UserDefaults(suiteName: suiteName)!
         defaults.removePersistentDomain(forName: suiteName)
-        let progressService = ProgressService(userDefaults: defaults)
+        let saveRepository = SaveDataRepository(userDefaults: defaults)
+        let progressService = ProgressService(repository: saveRepository)
+        let economyService = EconomyService(repository: saveRepository)
         let factory = TRResultSummaryFactory(
             levelRepository: repository(returning: level(id: "level_012", timeLimitSeconds: 60, parTaps: 4)),
-            progressService: progressService
+            progressService: progressService,
+            economyService: economyService,
+            saveDataRepository: saveRepository
         )
 
         let summary = factory.makeSummary(
@@ -27,23 +31,28 @@ final class TRResultSummaryTests: XCTestCase {
         XCTAssertEqual(summary.displayedStars, 3)
         XCTAssertEqual(summary.bestStars, 3)
         XCTAssertEqual(summary.coinReward, 150)
-        XCTAssertEqual(summary.coinTotal, 1_250)
-        XCTAssertEqual(summary.streakDays, 7)
-        XCTAssertEqual(summary.streakBonus, 50)
+        XCTAssertEqual(summary.coinTotal, 150)
+        XCTAssertEqual(summary.streakDays, 0)
+        XCTAssertEqual(summary.streakBonus, 0)
         XCTAssertEqual(summary.hintCount, 3)
         XCTAssertEqual(summary.timeGoalText, "1:00.0")
         XCTAssertEqual(summary.movesGoalText, "4")
         XCTAssertEqual(progressService.bestStars(for: "level_012"), 3)
+        XCTAssertTrue(progressService.isLevelCompleted("level_012"))
     }
 
     func testSuccessSummaryCanPreviewBestStarsWithoutPersisting() throws {
         let suiteName = "TRResultSummaryTests.\(#function)"
         let defaults = UserDefaults(suiteName: suiteName)!
         defaults.removePersistentDomain(forName: suiteName)
-        let progressService = ProgressService(userDefaults: defaults)
+        let saveRepository = SaveDataRepository(userDefaults: defaults)
+        let progressService = ProgressService(repository: saveRepository)
+        let economyService = EconomyService(repository: saveRepository)
         let factory = TRResultSummaryFactory(
             levelRepository: repository(returning: level(id: "level_001", timeLimitSeconds: 30, parTaps: 2)),
-            progressService: progressService
+            progressService: progressService,
+            economyService: economyService,
+            saveDataRepository: saveRepository
         )
 
         let summary = factory.makeSummary(
@@ -56,7 +65,9 @@ final class TRResultSummaryTests: XCTestCase {
         )
 
         XCTAssertEqual(summary.bestStars, 3)
+        XCTAssertEqual(summary.coinReward, 150)
         XCTAssertEqual(progressService.bestStars(for: "level_001"), 0)
+        XCTAssertEqual(economyService.coinTotal(), 0)
     }
 
     func testTimeExpiredFailureCopyIsFriendly() throws {
@@ -90,10 +101,14 @@ final class TRResultSummaryTests: XCTestCase {
         let suiteName = "TRResultSummaryTests.\(#function)"
         let defaults = UserDefaults(suiteName: suiteName)!
         defaults.removePersistentDomain(forName: suiteName)
-        let progressService = ProgressService(userDefaults: defaults)
+        let saveRepository = SaveDataRepository(userDefaults: defaults)
+        let progressService = ProgressService(repository: saveRepository)
+        let economyService = EconomyService(repository: saveRepository)
         let factory = TRResultSummaryFactory(
             levelRepository: repository(returning: level(id: "level_003", timeLimitSeconds: 45, parTaps: 7)),
-            progressService: progressService
+            progressService: progressService,
+            economyService: economyService,
+            saveDataRepository: saveRepository
         )
 
         let summary = factory.makeSummary(
@@ -107,16 +122,92 @@ final class TRResultSummaryTests: XCTestCase {
         XCTAssertEqual(summary.earnedStars, 0)
         XCTAssertEqual(summary.displayedStars, 1)
         XCTAssertEqual(summary.bestStars, 0)
+        XCTAssertEqual(summary.coinReward, 0)
+        XCTAssertEqual(summary.coinTotal, 0)
         XCTAssertEqual(progressService.bestStars(for: "level_003"), 0)
+        XCTAssertEqual(economyService.coinTotal(), 0)
+    }
+
+    func testCompletionUnlocksNextLevelAndAwardsCoinsOnce() throws {
+        let suiteName = "TRResultSummaryTests.\(#function)"
+        let defaults = UserDefaults(suiteName: suiteName)!
+        defaults.removePersistentDomain(forName: suiteName)
+        let saveRepository = SaveDataRepository(userDefaults: defaults)
+        let progressService = ProgressService(repository: saveRepository)
+        let economyService = EconomyService(repository: saveRepository)
+        let factory = TRResultSummaryFactory(
+            levelRepository: repository(returning: level(id: "level_001", timeLimitSeconds: 60, parTaps: 4)),
+            progressService: progressService,
+            economyService: economyService,
+            saveDataRepository: saveRepository
+        )
+
+        let firstSummary = factory.makeSummary(
+            levelID: "level_001",
+            resultType: .completed,
+            elapsedTime: 30,
+            tapCount: 4,
+            failureReason: nil,
+            nextLevelID: "level_002",
+            persistCompletion: true
+        )
+        let duplicateSummary = factory.makeSummary(
+            levelID: "level_001",
+            resultType: .completed,
+            elapsedTime: 30,
+            tapCount: 4,
+            failureReason: nil,
+            nextLevelID: "level_002",
+            persistCompletion: true
+        )
+
+        XCTAssertEqual(firstSummary.coinReward, 150)
+        XCTAssertEqual(duplicateSummary.coinReward, 0)
+        XCTAssertEqual(economyService.coinTotal(), 150)
+        XCTAssertTrue(progressService.isLevelUnlocked("level_002"))
+    }
+
+    func testPreviewSummaryNeverMutatesSavedData() throws {
+        let suiteName = "TRResultSummaryTests.\(#function)"
+        let defaults = UserDefaults(suiteName: suiteName)!
+        defaults.removePersistentDomain(forName: suiteName)
+        let saveRepository = SaveDataRepository(userDefaults: defaults)
+        let progressService = ProgressService(repository: saveRepository)
+        let economyService = EconomyService(repository: saveRepository)
+        let factory = TRResultSummaryFactory(
+            levelRepository: repository(returning: level(id: "level_004", timeLimitSeconds: 60, parTaps: 4)),
+            progressService: progressService,
+            economyService: economyService,
+            saveDataRepository: saveRepository
+        )
+
+        _ = factory.makeSummary(
+            levelID: "level_004",
+            resultType: .completed,
+            elapsedTime: 30,
+            tapCount: 4,
+            failureReason: nil,
+            nextLevelID: "level_005",
+            persistCompletion: false
+        )
+
+        XCTAssertEqual(progressService.bestStars(for: "level_004"), 0)
+        XCTAssertFalse(progressService.isLevelUnlocked("level_005"))
+        XCTAssertEqual(economyService.coinTotal(), 0)
     }
 
     private func failureSummary(reason: LevelFailureReason) -> TRResultSummary {
         let suiteName = "TRResultSummaryTests.\(#function).\(reason.message)"
         let defaults = UserDefaults(suiteName: suiteName)!
         defaults.removePersistentDomain(forName: suiteName)
+        let saveRepository = SaveDataRepository(userDefaults: defaults)
+        let progressService = ProgressService(repository: saveRepository)
+        let economyService = EconomyService(repository: saveRepository)
         let factory = TRResultSummaryFactory(
             levelRepository: repository(returning: level(id: "level_002", timeLimitSeconds: 50, parTaps: 5)),
-            progressService: ProgressService(userDefaults: defaults)
+            progressService: progressService,
+            economyService: economyService,
+            saveDataRepository: saveRepository
         )
 
         return factory.makeSummary(

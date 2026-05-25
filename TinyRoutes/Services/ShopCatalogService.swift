@@ -21,6 +21,28 @@ struct ShopCatalogService {
     func options(forCategoryID categoryID: String) -> [ShopCosmeticOption] {
         cosmeticOptions.filter { $0.categoryID == categoryID }
     }
+
+    func options(
+        forCategoryID categoryID: String,
+        ownedCosmeticIDs: Set<String>,
+        selectedCosmeticIDByCategoryID: [String: String]
+    ) -> [ShopCosmeticOption] {
+        options(forCategoryID: categoryID).map { option in
+            ShopCosmeticOption(
+                id: option.id,
+                categoryID: option.categoryID,
+                title: option.title,
+                price: option.price,
+                isUnlocked: ownedCosmeticIDs.contains(option.id),
+                isSelected: selectedCosmeticIDByCategoryID[option.categoryID] == option.id,
+                accent: option.accent
+            )
+        }
+    }
+
+    func option(withID optionID: String) -> ShopCosmeticOption? {
+        cosmeticOptions.first { $0.id == optionID }
+    }
 }
 
 private extension ShopCatalogService {

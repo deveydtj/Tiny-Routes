@@ -1,10 +1,16 @@
 import SwiftUI
 
 struct TRDailyRoutePlaceholderCard: View {
+    let currentStreakDays: Int
+
     private let primaryBlue = Color(red: 0.05, green: 0.48, blue: 0.95)
     private let titleColor = Color(red: 0.05, green: 0.18, blue: 0.43)
     private let bodyTextColor = Color(red: 0.35, green: 0.43, blue: 0.56)
     private let accentOrange = Color(red: 1.0, green: 0.44, blue: 0.18)
+
+    init(currentStreakDays: Int = 0) {
+        self.currentStreakDays = currentStreakDays
+    }
 
     var body: some View {
         ViewThatFits(in: .horizontal) {
@@ -87,7 +93,7 @@ struct TRDailyRoutePlaceholderCard: View {
 
     private var streakBlock: some View {
         VStack(spacing: 8) {
-            Label("7 Day Streak!", systemImage: "flame.fill")
+            Label(streakTitle, systemImage: "flame.fill")
                 .font(.system(size: 12, weight: .bold, design: .rounded))
                 .foregroundStyle(accentOrange)
                 .lineLimit(1)
@@ -96,7 +102,7 @@ struct TRDailyRoutePlaceholderCard: View {
             HStack(spacing: 4) {
                 ForEach(0..<7, id: \.self) { index in
                     Circle()
-                        .fill(index < 5 ? accentOrange : Color(red: 0.82, green: 0.87, blue: 0.93))
+                        .fill(index < activeStreakDotCount ? accentOrange : Color(red: 0.82, green: 0.87, blue: 0.93))
                         .frame(width: 6, height: 6)
                 }
             }
@@ -123,6 +129,19 @@ struct TRDailyRoutePlaceholderCard: View {
                 .fill(Color(red: 0.94, green: 0.97, blue: 1.0))
         }
     }
+
+    private var clampedStreakDays: Int {
+        max(currentStreakDays, 0)
+    }
+
+    private var activeStreakDotCount: Int {
+        min(clampedStreakDays, 7)
+    }
+
+    private var streakTitle: String {
+        let dayLabel = clampedStreakDays == 1 ? "Day" : "Days"
+        return "\(clampedStreakDays) \(dayLabel) Streak"
+    }
 }
 
 #Preview("Daily Route Placeholder") {
@@ -130,7 +149,7 @@ struct TRDailyRoutePlaceholderCard: View {
         Color(red: 0.78, green: 0.90, blue: 0.96)
             .ignoresSafeArea()
 
-        TRDailyRoutePlaceholderCard()
+        TRDailyRoutePlaceholderCard(currentStreakDays: 5)
             .padding(20)
     }
 }

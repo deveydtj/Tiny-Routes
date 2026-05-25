@@ -38,12 +38,27 @@ final class LevelSelectProgressSnapshotTests: XCTestCase {
         XCTAssertEqual(snapshot.tileState(at: 3, levelID: levels[3].id), .locked)
     }
 
+    func testCompletedFirstLevelShowsSecondCurrent() {
+        let levels = makeLevels(4)
+        let progressService = makeProgressService()
+        progressService.completeLevel(levelID: levels[0].id, earnedStars: 3, nextLevelID: levels[1].id)
+        let snapshot = TRLevelProgressSnapshot(levels: levels, progressService: progressService)
+
+        XCTAssertEqual(snapshot.firstIncompleteIndex, 1)
+        XCTAssertEqual(snapshot.tileState(at: 0, levelID: levels[0].id), .completed)
+        XCTAssertEqual(snapshot.tileState(at: 1, levelID: levels[1].id), .current)
+        XCTAssertEqual(snapshot.tileState(at: 2, levelID: levels[2].id), .locked)
+        XCTAssertEqual(snapshot.tileState(at: 3, levelID: levels[3].id), .locked)
+    }
+
     func testAllCompleteShowsAllCompleted() {
         let levels = makeLevels(4)
         let progressService = makeProgressService()
-        levels.forEach { level in
-            progressService.saveBestStars(3, for: level.id)
+        for (index, level) in levels.enumerated() {
+            let nextLevelID = index + 1 < levels.count ? levels[index + 1].id : nil
+            progressService.completeLevel(levelID: level.id, earnedStars: 3, nextLevelID: nextLevelID)
         }
+
         let snapshot = TRLevelProgressSnapshot(levels: levels, progressService: progressService)
 
         XCTAssertEqual(snapshot.firstIncompleteIndex, levels.count)
@@ -52,18 +67,26 @@ final class LevelSelectProgressSnapshotTests: XCTestCase {
         }
     }
 
-    func testNonContiguousCompletionsKeepCompletedTilesCompleted() {
+    func testUnlockedLaterLevelShowsCurrentEvenWhenEarlierLevelIsLocked() {
         let levels = makeLevels(4)
-        let progressService = makeProgressService()
-        progressService.saveBestStars(3, for: levels[0].id)
-        progressService.saveBestStars(2, for: levels[2].id)
+        let suiteName = "LevelSelectProgressSnapshotTests-\(UUID().uuidString)"
+        let userDefaults = UserDefaults(suiteName: suiteName)!
+        userDefaults.removePersistentDomain(forName: suiteName)
+        addTeardownBlock {
+            userDefaults.removePersistentDomain(forName: suiteName)
+        }
+        let repository = SaveDataRepository(userDefaults: userDefaults)
+        let progressService = ProgressService(repository: repository)
+        repository.update { profile in
+            profile.unlockedLevelIDs.insert(levels[2].id)
+        }
 
         let snapshot = TRLevelProgressSnapshot(levels: levels, progressService: progressService)
 
-        XCTAssertEqual(snapshot.firstIncompleteIndex, 1)
-        XCTAssertEqual(snapshot.tileState(at: 0, levelID: levels[0].id), .completed)
-        XCTAssertEqual(snapshot.tileState(at: 1, levelID: levels[1].id), .current)
-        XCTAssertEqual(snapshot.tileState(at: 2, levelID: levels[2].id), .completed)
+        XCTAssertEqual(snapshot.firstIncompleteIndex, 0)
+        XCTAssertEqual(snapshot.tileState(at: 0, levelID: levels[0].id), .current)
+        XCTAssertEqual(snapshot.tileState(at: 1, levelID: levels[1].id), .locked)
+        XCTAssertEqual(snapshot.tileState(at: 2, levelID: levels[2].id), .current)
         XCTAssertEqual(snapshot.tileState(at: 3, levelID: levels[3].id), .locked)
     }
 }

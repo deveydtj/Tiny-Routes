@@ -50,6 +50,8 @@ struct TRSerpentineLayout {
 
 struct TRLevelProgressSnapshot {
     let bestStarsByLevelID: [String: Int]
+    let unlockedLevelIDs: Set<String>
+    let completedLevelIDs: Set<String>
     let firstIncompleteIndex: Int
 
     init(levels: [LevelData], progressService: ProgressService) {
@@ -60,8 +62,15 @@ struct TRLevelProgressSnapshot {
             starsByLevelID[level.id] = progressService.bestStars(for: level.id)
         }
 
+        let unlockedLevelIDs = progressService.unlockedLevelIDs()
+        let completedLevelIDs = Set(levels.map(\.id).filter { progressService.isLevelCompleted($0) })
+
         self.bestStarsByLevelID = starsByLevelID
-        self.firstIncompleteIndex = levels.firstIndex { (starsByLevelID[$0.id] ?? 0) == 0 } ?? levels.count
+        self.unlockedLevelIDs = unlockedLevelIDs
+        self.completedLevelIDs = completedLevelIDs
+        self.firstIncompleteIndex = levels.firstIndex {
+            unlockedLevelIDs.contains($0.id) && completedLevelIDs.contains($0.id) == false
+        } ?? levels.count
     }
 
     func stars(for levelID: String) -> Int {
@@ -69,8 +78,8 @@ struct TRLevelProgressSnapshot {
     }
 
     func tileState(at index: Int, levelID: String) -> TRLevelTileState {
-        if stars(for: levelID) > 0 { return .completed }
-        if index == firstIncompleteIndex { return .current }
+        if completedLevelIDs.contains(levelID) || stars(for: levelID) > 0 { return .completed }
+        if unlockedLevelIDs.contains(levelID) { return .current }
         return .locked
     }
 }
@@ -81,6 +90,7 @@ struct TRLevelProgressSnapshot {
 struct LevelSelectScreen: View {
     let levels: [LevelData]
     let coinTotal: Int
+    let currentStreakDays: Int
     let onLevelSelected: (String) -> Void
     let onSettingsTapped: (() -> Void)?
     let onAddCurrencyTapped: (() -> Void)?
@@ -89,6 +99,7 @@ struct LevelSelectScreen: View {
     init(
         levels: [LevelData],
         coinTotal: Int = 1_250,
+        currentStreakDays: Int = 0,
         onLevelSelected: @escaping (String) -> Void,
         onSettingsTapped: (() -> Void)? = nil,
         onAddCurrencyTapped: (() -> Void)? = nil,
@@ -96,6 +107,7 @@ struct LevelSelectScreen: View {
     ) {
         self.levels = levels
         self.coinTotal = coinTotal
+        self.currentStreakDays = currentStreakDays
         self.onLevelSelected = onLevelSelected
         self.onSettingsTapped = onSettingsTapped
         self.onAddCurrencyTapped = onAddCurrencyTapped
@@ -117,7 +129,7 @@ struct LevelSelectScreen: View {
                 )
                 .padding(.top, 10)
 
-                TRDailyRoutePlaceholderCard()
+                TRDailyRoutePlaceholderCard(currentStreakDays: currentStreakDays)
 
                 TRMilestoneRewardsPlaceholderCard()
 
@@ -127,7 +139,7 @@ struct LevelSelectScreen: View {
                     onLevelSelected: onLevelSelected
                 )
 
-                TRStarCollectorPlaceholderCard()
+                TRStarCollectorPlaceholderCard(totalStars: progressService.totalStars())
                     .padding(.bottom, 12)
             }
             .padding(.horizontal, 20)
