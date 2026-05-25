@@ -12,10 +12,16 @@ struct TRConfettiEmitter: View {
 
     let mode: TRConfettiMode
     let playbackID: UUID
+    let selectedConfettiOption: ShopCosmeticOption
 
-    init(mode: TRConfettiMode, playbackID: UUID = UUID()) {
+    init(
+        mode: TRConfettiMode,
+        playbackID: UUID = UUID(),
+        selectedConfettiOption: ShopCosmeticOption = GameplayCosmeticLoadout.default.confetti
+    ) {
         self.mode = mode
         self.playbackID = playbackID
+        self.selectedConfettiOption = selectedConfettiOption
     }
 
     var body: some View {
@@ -23,6 +29,7 @@ struct TRConfettiEmitter: View {
             TRConfettiSpriteView(
                 mode: mode,
                 playbackID: playbackID,
+                selectedConfettiOption: selectedConfettiOption,
                 reduceMotion: reduceMotion,
                 containerSize: geometry.size
             )
@@ -36,6 +43,7 @@ struct TRConfettiEmitter: View {
 private struct TRConfettiSpriteView: UIViewRepresentable {
     let mode: TRConfettiMode
     let playbackID: UUID
+    let selectedConfettiOption: ShopCosmeticOption
     let reduceMotion: Bool
     let containerSize: CGSize
 
@@ -61,6 +69,7 @@ private struct TRConfettiSpriteView: UIViewRepresentable {
         context.coordinator.update(
             mode: mode,
             playbackID: playbackID,
+            selectedConfettiOption: selectedConfettiOption,
             reduceMotion: reduceMotion,
             containerSize: containerSize,
             in: uiView
@@ -77,6 +86,7 @@ private struct TRConfettiSpriteView: UIViewRepresentable {
         private struct PlaybackConfig {
             let mode: TRConfettiMode
             let playbackID: UUID
+            let selectedConfettiOption: ShopCosmeticOption
             let reduceMotion: Bool
             let containerSize: CGSize
         }
@@ -89,6 +99,7 @@ private struct TRConfettiSpriteView: UIViewRepresentable {
         func update(
             mode: TRConfettiMode,
             playbackID: UUID,
+            selectedConfettiOption: ShopCosmeticOption,
             reduceMotion: Bool,
             containerSize: CGSize,
             in view: TRConfettiSKView
@@ -96,6 +107,7 @@ private struct TRConfettiSpriteView: UIViewRepresentable {
             config = PlaybackConfig(
                 mode: mode,
                 playbackID: playbackID,
+                selectedConfettiOption: selectedConfettiOption,
                 reduceMotion: reduceMotion,
                 containerSize: containerSize
             )
@@ -130,7 +142,11 @@ private struct TRConfettiSpriteView: UIViewRepresentable {
             guard let scene else { return }
             guard scene.size.width > 0, scene.size.height > 0 else { return }
 
-            let playbackResult = scene.play(mode: config.mode, reduceMotion: config.reduceMotion)
+            let playbackResult = scene.play(
+                mode: config.mode,
+                reduceMotion: config.reduceMotion,
+                selectedConfettiOption: config.selectedConfettiOption
+            )
 
             switch playbackResult {
             case .played, .intentionallySkipped, .alreadyPlayed:

@@ -113,4 +113,19 @@ final class SaveDataRepositoryTests: XCTestCase {
 
         XCTAssertEqual(jsonObject?["schemaVersion"] as? Int, PlayerProfile.currentSchemaVersion)
     }
+
+    func testOlderProfilePayloadWithoutDailyBonusFieldDecodesWithDefault() throws {
+        repository.save(PlayerProfile(coinTotal: 10, lastDailyBonusClaimDay: "2026-05-24"))
+        let data = try XCTUnwrap(defaults.data(forKey: "playerProfile.v1"))
+        var jsonObject = try XCTUnwrap(JSONSerialization.jsonObject(with: data) as? [String: Any])
+        jsonObject.removeValue(forKey: "lastDailyBonusClaimDay")
+        jsonObject["schemaVersion"] = 1
+        let olderPayload = try JSONSerialization.data(withJSONObject: jsonObject)
+        defaults.set(olderPayload, forKey: "playerProfile.v1")
+
+        let profile = repository.load()
+
+        XCTAssertNil(profile.lastDailyBonusClaimDay)
+        XCTAssertEqual(profile.schemaVersion, PlayerProfile.currentSchemaVersion)
+    }
 }

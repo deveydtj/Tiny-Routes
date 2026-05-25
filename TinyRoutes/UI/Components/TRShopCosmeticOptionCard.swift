@@ -79,13 +79,13 @@ struct TRShopCosmeticOptionCard: View {
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(Text(option.title))
         .accessibilityValue(Text(accessibilityValue))
-        .accessibilityHint(Text(option.isUnlocked ? "Select cosmetic." : "Unlock cosmetic."))
+        .accessibilityHint(Text(accessibilityHint))
         .accessibilityAddTraits(option.isSelected ? [.isSelected] : [])
     }
 
     private var accessibilityValue: String {
         if option.isSelected {
-            return "Selected and owned"
+            return "Equipped and owned"
         }
 
         if option.isUnlocked {
@@ -97,6 +97,18 @@ struct TRShopCosmeticOptionCard: View {
         }
 
         return "Locked"
+    }
+
+    private var accessibilityHint: String {
+        if option.isSelected {
+            return "Already equipped."
+        }
+
+        if option.isUnlocked {
+            return "Equip cosmetic."
+        }
+
+        return "Unlock cosmetic."
     }
 }
 
@@ -167,17 +179,19 @@ private struct TRShopMiniCosmeticPreview: View {
     }
 
     private var destinationPreview: some View {
-        ZStack {
+        let visual = TRDestinationMarkerVisual(option: option)
+
+        return ZStack {
             Circle()
                 .fill(.white.opacity(0.92))
                 .frame(width: 42, height: 42)
 
-            if option.id == "destinationFlag" {
+            if visual.usesFinishFlagSprite {
                 SpriteImage(name: "finish_flag_pin")
                     .scaledToFit()
                     .frame(width: 34, height: 34)
             } else {
-                Image(systemName: option.id == "destinationCabin" ? "house.fill" : "mappin.circle.fill")
+                Image(systemName: visual.systemImageName)
                     .font(.system(size: 25, weight: .black))
                     .foregroundStyle(option.accent.routeColor)
             }

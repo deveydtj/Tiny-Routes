@@ -3,6 +3,7 @@ import SwiftUI
 struct GameplayScreen: View {
     let levelID: String
     let isPaused: Bool
+    let cosmeticLoadout: GameplayCosmeticLoadout
     let onPauseResumeTapped: () -> Void
     let onCompleteTapped: (TimeInterval, Int) -> Void
     let onFailTapped: (LevelFailureReason, TimeInterval, Int) -> Void
@@ -26,6 +27,7 @@ struct GameplayScreen: View {
     init(
         levelID: String,
         isPaused: Bool,
+        cosmeticLoadout: GameplayCosmeticLoadout = .default,
         onPauseResumeTapped: @escaping () -> Void,
         onCompleteTapped: @escaping (TimeInterval, Int) -> Void,
         onFailTapped: @escaping (LevelFailureReason, TimeInterval, Int) -> Void,
@@ -35,6 +37,7 @@ struct GameplayScreen: View {
     ) {
         self.levelID = levelID
         self.isPaused = isPaused
+        self.cosmeticLoadout = cosmeticLoadout
         self.onPauseResumeTapped = onPauseResumeTapped
         self.onCompleteTapped = onCompleteTapped
         self.onFailTapped = onFailTapped
@@ -69,6 +72,7 @@ struct GameplayScreen: View {
                         packageNodeID: packageNodeID,
                         destinationNodeID: destinationNodeID,
                         hasCollectedPackage: hasCollectedPackage,
+                        cosmeticLoadout: cosmeticLoadout,
                         onNodeTapped: handleNodeTapped
                     )
                 } else {
@@ -217,12 +221,13 @@ struct GameplayScreen: View {
     }
 }
 
-private struct RouteBoardView: View {
+struct RouteBoardView: View {
     let runtimeGraph: RuntimeRouteGraph
     let deliveryDot: DeliveryDot?
     let packageNodeID: String
     let destinationNodeID: String
     let hasCollectedPackage: Bool
+    let cosmeticLoadout: GameplayCosmeticLoadout
     let onNodeTapped: (String) -> Void
 
     private let boardPadding = TRGameplayStyle.Metrics.boardPadding
@@ -232,7 +237,6 @@ private struct RouteBoardView: View {
     private let destinationMarkerShellSize = TRGameplayStyle.Metrics.packageMarkerSize * 0.45
     private let specialNodeIconSize = TRGameplayStyle.Metrics.markerIconSize
     private let collectedPackageMarkerSize = TRGameplayStyle.Metrics.collectedPackageMarkerSize
-    @State private var isPulseExpanded: Bool = false
 
     private let playerOuterSize = TRGameplayStyle.Metrics.playerOuterSize
     private let playerCoreSize = TRGameplayStyle.Metrics.playerCoreSize
@@ -243,6 +247,7 @@ private struct RouteBoardView: View {
 
     var body: some View {
         GeometryReader { geometry in
+            let cosmeticStyle = TRGameplayCosmeticStyle(loadout: cosmeticLoadout)
             let nodes = runtimeGraph.nodesByID.values.sorted { $0.id < $1.id }
             let edges = runtimeGraph.edgesByID.values.sorted { $0.id < $1.id }
             let layout = BoardLayout.make(
@@ -251,6 +256,9 @@ private struct RouteBoardView: View {
                 padding: boardPadding
             )
             let roadPaths = renderedRoadPaths(for: edges, in: runtimeGraph, layout: layout)
+            let currentRoadPath = renderedCurrentDeliveryRoadPath(in: runtimeGraph, layout: layout)
+            let deliveryDotPoint = deliveryDotPoint(in: layout)
+            let isDeliveryDotMoving = deliveryDot?.currentEdgeID != nil || deliveryDot?.transition != nil
             let tapTargetResolver = RouteBoardTapTargetResolver(
                 runtimeGraph: runtimeGraph,
                 layout: layout,
@@ -258,10 +266,15 @@ private struct RouteBoardView: View {
             )
 
             ZStack {
-                roadLayer(roadPaths, color: TRGameplayStyle.Colors.roadShadow, lineWidth: roadOuterWidth + 3, yOffset: 2)
-                roadLayer(roadPaths, color: TRGameplayStyle.Colors.roadEdge, lineWidth: roadOuterWidth)
-                roadLayer(roadPaths, color: TRGameplayStyle.Colors.roadFill, lineWidth: roadInnerWidth)
-                roadLayer(roadPaths, color: TRGameplayStyle.Colors.roadHighlight, lineWidth: roadHighlightWidth, yOffset: -3)
+                cosmeticStyle.boardOverlayGradient
+                    .opacity(0.16)
+                    .allowsHitTesting(false)
+                    .accessibilityHidden(true)
+
+                roadLayer(roadPaths, color: cosmeticStyle.roadShadowColor, lineWidth: roadOuterWidth + 3, yOffset: 2)
+                roadLayer(roadPaths, color: cosmeticStyle.roadEdgeColor, lineWidth: roadOuterWidth)
+                roadLayer(roadPaths, color: cosmeticStyle.roadFillColor, lineWidth: roadInnerWidth)
+                roadLayer(roadPaths, color: cosmeticStyle.roadHighlightColor, lineWidth: roadHighlightWidth, yOffset: -3)
 
                 ForEach(nodes, id: \.id) { node in
                     if let nodePoint = layout.pointsByNodeID[node.id] {
@@ -270,8 +283,23 @@ private struct RouteBoardView: View {
                     }
                 }
 
-                if let deliveryDotPoint = deliveryDotPoint(in: layout) {
-                    deliveryDotView(isMoving: deliveryDot?.currentEdgeID != nil || deliveryDot?.transition != nil)
+                if let deliveryDotPoint {
+                    TRDeliveryTrailView(
+                        option: cosmeticLoadout.trail,
+                        dotPoint: deliveryDotPoint,
+                        isMoving: isDeliveryDotMoving,
+                        roadPath: currentRoadPath
+                    )
+                    .frame(width: geometry.size.width, height: geometry.size.height)
+                    .allowsHitTesting(false)
+
+                    TRDeliveryDotView(
+                        option: cosmeticLoadout.deliveryDot,
+                        isMoving: isDeliveryDotMoving,
+                        outerSize: playerOuterSize,
+                        coreSize: playerCoreSize,
+                        scale: playerScale
+                    )
                         .position(deliveryDotPoint)
                         .allowsHitTesting(false)
                 }
@@ -309,59 +337,6 @@ private struct RouteBoardView: View {
     }
 
     @ViewBuilder
-    private func deliveryDotView(isMoving: Bool) -> some View {
-        ZStack {
-            Circle()
-                .fill(TRGameplayStyle.Colors.primaryBlue.opacity(0.22))
-                .frame(width: playerOuterSize + 18, height: playerOuterSize + 18)
-                .blur(radius: 8)
-
-            Circle()
-                .fill(Color.white)
-                .frame(width: playerOuterSize, height: playerOuterSize)
-                .shadow(color: Color.black.opacity(0.14), radius: 8, x: 0, y: 4)
-
-            Circle()
-                .fill(
-                    LinearGradient(
-                        colors: [
-                            Color(red: 0.36, green: 0.78, blue: 1.0),
-                            TRGameplayStyle.Colors.primaryBlue
-                        ],
-                        startPoint: .topLeading,
-                        endPoint: .bottomTrailing
-                    )
-                )
-                .frame(width: playerCoreSize, height: playerCoreSize)
-                .overlay {
-                    Circle()
-                        .stroke(Color.white.opacity(0.28), lineWidth: 0.5)
-                }
-
-            Circle()
-                .fill(Color.white.opacity(0.40))
-                .frame(width: 9, height: 9)
-                .offset(x: -7, y: -8)
-
-            if isMoving {
-                Circle()
-                    .stroke(TRGameplayStyle.Colors.primaryBlue.opacity(0.42), lineWidth: 0)
-                    .frame(
-                        width: isPulseExpanded ? playerOuterSize + 20 : playerOuterSize + 8,
-                        height: isPulseExpanded ? playerOuterSize + 20 : playerOuterSize + 8
-                    )
-                    .opacity(isPulseExpanded ? 0.08 : 0.32)
-                    .animation(.easeInOut(duration: 0.85).repeatForever(autoreverses: true), value: isPulseExpanded)
-            }
-        }
-        .frame(width: playerOuterSize + 24, height: playerOuterSize + 24)
-        .scaleEffect(playerScale)
-        .onAppear {
-            isPulseExpanded = true
-        }
-    }
-
-    @ViewBuilder
     private func nodeView(for node: RuntimeRouteNode, layout: BoardLayout) -> some View {
         if node.id == packageNodeID, !hasCollectedPackage {
             SpriteImage(name: "shipping_box")
@@ -373,7 +348,11 @@ private struct RouteBoardView: View {
                 .font(.system(size: 14, weight: .heavy))
                 .foregroundStyle(TRGameplayStyle.Colors.successGreen)
         } else if node.id == destinationNodeID {
-            destinationMarkerView
+            TRDestinationMarkerView(
+                option: cosmeticLoadout.destination,
+                shellSize: destinationMarkerShellSize,
+                iconSize: specialNodeIconSize
+            )
         } else if let activeDirectionAngle = activeDirectionAngle(for: node) {
             SwitchNodeView(
                 activeDirectionAngle: activeDirectionAngle,
@@ -382,15 +361,6 @@ private struct RouteBoardView: View {
             )
         } else {
             EmptyView()
-        }
-    }
-
-    private var destinationMarkerView: some View {
-        TRCircularMarkerShell(size: destinationMarkerShellSize) {
-            SpriteImage(name: "finish_flag_pin")
-                .scaledToFit()
-                .frame(width: specialNodeIconSize, height: specialNodeIconSize)
-                .scaleEffect(1.10)
         }
     }
 
@@ -417,6 +387,22 @@ private struct RouteBoardView: View {
         }
 
         return layout.pointsByNodeID[deliveryDot.currentNodeID]
+    }
+
+    private func renderedCurrentDeliveryRoadPath(
+        in runtimeGraph: RuntimeRouteGraph,
+        layout: BoardLayout
+    ) -> Path? {
+        if let transition = deliveryDot?.transition {
+            return roadPath(for: transition.roadPath, layout: layout)
+        }
+
+        if let currentEdgeID = deliveryDot?.currentEdgeID,
+           let edge = runtimeGraph.edgesByID[currentEdgeID] {
+            return roadPath(for: edge, layout: layout)
+        }
+
+        return nil
     }
 
     private func renderedRoadPaths(

@@ -60,4 +60,44 @@ final class TRConfettiEmitterTests: XCTestCase {
         XCTAssertEqual(scene.play(mode: .success, reduceMotion: false), .played)
         XCTAssertEqual(scene.children.count, 3)
     }
+
+    @MainActor
+    func testConfettiEmitterCanBeConstructedWithEveryConfettiOption() {
+        for option in ShopCatalogService().options(forCategoryID: ShopCosmeticCategoryID.confetti) {
+            let emitter = TRConfettiEmitter(
+                mode: .success,
+                playbackID: UUID(),
+                selectedConfettiOption: option
+            )
+
+            XCTAssertNotNil(emitter)
+        }
+    }
+
+    func testKnownConfettiIDsResolveNonEmptyColorSequences() {
+        let ids = [
+            "confettiStars",
+            "confettiSpark",
+            "confettiGarden",
+            "confettiCandy"
+        ]
+
+        for id in ids {
+            XCTAssertFalse(TRConfettiScene.colors(forConfettiID: id).isEmpty)
+        }
+    }
+
+    func testSuccessModeAcceptsSelectedConfettiOption() throws {
+        let option = try XCTUnwrap(ShopCatalogService().option(withID: "confettiCandy"))
+        let scene = TRConfettiScene(size: CGSize(width: 390, height: 844))
+
+        let result = scene.play(
+            mode: .success,
+            reduceMotion: false,
+            selectedConfettiOption: option
+        )
+
+        XCTAssertEqual(result, .played)
+        XCTAssertEqual(scene.children.count, 3)
+    }
 }

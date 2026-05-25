@@ -68,4 +68,49 @@ final class ShopCatalogServiceTests: XCTestCase {
         XCTAssertFalse(neonNights.isUnlocked)
         XCTAssertEqual(options.filter(\.isSelected).map(\.id), ["themeForestPath"])
     }
+
+    func testEveryDefaultSelectedCosmeticExistsInCatalog() {
+        let catalogIDs = Set(service.cosmeticOptions.map(\.id))
+
+        for cosmeticID in PlayerProfile.defaultSelectedCosmeticIDByCategoryID.values {
+            XCTAssertTrue(catalogIDs.contains(cosmeticID), "\(cosmeticID) should exist in the catalog")
+        }
+    }
+
+    func testEveryDefaultOwnedCosmeticExistsInCatalog() {
+        let catalogIDs = Set(service.cosmeticOptions.map(\.id))
+
+        for cosmeticID in PlayerProfile.defaultOwnedCosmeticIDs {
+            XCTAssertTrue(catalogIDs.contains(cosmeticID), "\(cosmeticID) should exist in the catalog")
+        }
+    }
+
+    func testEveryGameplayCategoryHasExactlyOneDefaultSelectedOption() {
+        let gameplayCategoryIDs = [
+            ShopCosmeticCategoryID.routeThemes,
+            ShopCosmeticCategoryID.deliveryDots,
+            ShopCosmeticCategoryID.trails,
+            ShopCosmeticCategoryID.confetti,
+            ShopCosmeticCategoryID.destinations
+        ]
+
+        for categoryID in gameplayCategoryIDs {
+            let defaultSelectedIDs = PlayerProfile.defaultSelectedCosmeticIDByCategoryID.filter { $0.key == categoryID }
+            let selectedCatalogOptions = service.options(forCategoryID: categoryID).filter(\.isSelected)
+
+            XCTAssertEqual(defaultSelectedIDs.count, 1, "\(categoryID) should have one default selected ID")
+            XCTAssertEqual(selectedCatalogOptions.count, 1, "\(categoryID) should have one selected catalog option")
+            XCTAssertEqual(selectedCatalogOptions.first?.id, defaultSelectedIDs[categoryID])
+        }
+    }
+
+    func testEveryCosmeticCategoryHasAtLeastOneFreeDefaultOwnedOption() {
+        for category in service.categories {
+            let defaultOwnedOptions = service.options(forCategoryID: category.id).filter { option in
+                PlayerProfile.defaultOwnedCosmeticIDs.contains(option.id) && option.price == nil
+            }
+
+            XCTAssertFalse(defaultOwnedOptions.isEmpty, "\(category.title) should have a free default owned option")
+        }
+    }
 }

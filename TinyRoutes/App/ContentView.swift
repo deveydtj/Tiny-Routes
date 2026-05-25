@@ -12,6 +12,7 @@ struct ContentView: View {
     private let progressService: ProgressService
     private let economyService: EconomyService
     private let cosmeticService: CosmeticService
+    private let dailyBonusService: DailyBonusService
     private let profileSummaryService: ProfileSummaryService
     private let bottomNavigationReservedHeight: CGFloat = 96
 
@@ -24,12 +25,17 @@ struct ContentView: View {
             repository: repository,
             economyService: economyService
         )
+        let dailyBonusService = DailyBonusService(
+            repository: repository,
+            economyService: economyService
+        )
 
         self.saveDataRepository = repository
         self.levelRepository = levelRepository
         self.progressService = progressService
         self.economyService = economyService
         self.cosmeticService = cosmeticService
+        self.dailyBonusService = dailyBonusService
         self.profileSummaryService = ProfileSummaryService(
             repository: repository,
             progressService: progressService,
@@ -66,6 +72,7 @@ struct ContentView: View {
 
                 case let .levelComplete(levelID, elapsedTime, tapCount, presentationID):
                     let nextLevelID = nextLevelID(after: levelID)
+                    let cosmeticLoadout = cosmeticService.gameplayLoadout()
                     ResultScreen(
                         levelID: levelID,
                         result: .completed,
@@ -74,6 +81,7 @@ struct ContentView: View {
                         tapCount: tapCount,
                         failureReason: nil,
                         canAdvanceToNextLevel: nextLevelID != nil,
+                        cosmeticLoadout: cosmeticLoadout,
                         onRestartTapped: coordinator.restartGameplay,
                         onNextLevelTapped: {
                             guard let nextLevelID else { return }
@@ -93,6 +101,7 @@ struct ContentView: View {
 
                 case let .levelFailed(levelID, reason, elapsedTime, tapCount, presentationID):
                     let nextLevelID = nextLevelID(after: levelID)
+                    let cosmeticLoadout = cosmeticService.gameplayLoadout()
                     ResultScreen(
                         levelID: levelID,
                         result: .failed,
@@ -101,6 +110,7 @@ struct ContentView: View {
                         tapCount: tapCount,
                         failureReason: reason,
                         canAdvanceToNextLevel: nextLevelID.map(progressService.isLevelUnlocked) ?? false,
+                        cosmeticLoadout: cosmeticLoadout,
                         onRestartTapped: coordinator.restartGameplay,
                         onNextLevelTapped: {
                             guard let nextLevelID else { return }
@@ -129,6 +139,7 @@ struct ContentView: View {
                         onAddCurrencyTapped: coordinator.openShop,
                         cosmeticService: cosmeticService,
                         economyService: economyService,
+                        dailyBonusService: dailyBonusService,
                         onProfileChanged: handleProfileChanged
                     )
 
@@ -206,9 +217,12 @@ struct ContentView: View {
 
     @ViewBuilder
     private func gameplayView(levelID: String, isPaused: Bool) -> some View {
+        let cosmeticLoadout = cosmeticService.gameplayLoadout()
+        let _ = profileRevision
         GameplayScreen(
             levelID: levelID,
             isPaused: isPaused,
+            cosmeticLoadout: cosmeticLoadout,
             onPauseResumeTapped: isPaused ? coordinator.resumeGameplay : coordinator.pauseGameplay,
             onCompleteTapped: coordinator.completeLevel,
             onFailTapped: coordinator.failLevel,

@@ -2,7 +2,7 @@ import Foundation
 
 /// Stores local player progression, currency, cosmetics, and entitlement state.
 struct PlayerProfile: Codable, Equatable {
-    static let currentSchemaVersion = 1
+    static let currentSchemaVersion = 2
 
     static let defaultOwnedCosmeticIDs: Set<String> = [
         "themeClassic",
@@ -44,6 +44,7 @@ struct PlayerProfile: Codable, Equatable {
     var currentStreakDays: Int
     var fastestCompletionTimeByLevelID: [String: TimeInterval]
     var claimedLevelRewardKeys: Set<String>
+    var lastDailyBonusClaimDay: String?
 
     init(
         schemaVersion: Int = PlayerProfile.currentSchemaVersion,
@@ -62,7 +63,8 @@ struct PlayerProfile: Codable, Equatable {
         bestStreakDays: Int = 0,
         currentStreakDays: Int = 0,
         fastestCompletionTimeByLevelID: [String: TimeInterval] = [:],
-        claimedLevelRewardKeys: Set<String> = []
+        claimedLevelRewardKeys: Set<String> = [],
+        lastDailyBonusClaimDay: String? = nil
     ) {
         self.schemaVersion = max(schemaVersion, PlayerProfile.currentSchemaVersion)
         self.playerName = playerName.isEmpty ? "Player One" : playerName
@@ -81,6 +83,7 @@ struct PlayerProfile: Codable, Equatable {
         self.currentStreakDays = currentStreakDays
         self.fastestCompletionTimeByLevelID = fastestCompletionTimeByLevelID
         self.claimedLevelRewardKeys = claimedLevelRewardKeys
+        self.lastDailyBonusClaimDay = lastDailyBonusClaimDay
     }
 
     func normalized() -> PlayerProfile {
@@ -145,6 +148,10 @@ struct PlayerProfile: Codable, Equatable {
             }
         )
         profile.claimedLevelRewardKeys = Set(profile.claimedLevelRewardKeys.filter { !$0.isEmpty })
+        profile.lastDailyBonusClaimDay = profile.lastDailyBonusClaimDay?.trimmingCharacters(in: .whitespacesAndNewlines)
+        if profile.lastDailyBonusClaimDay?.isEmpty == true {
+            profile.lastDailyBonusClaimDay = nil
+        }
 
         return profile
     }

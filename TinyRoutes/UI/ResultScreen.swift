@@ -16,6 +16,7 @@ struct ResultScreen: View {
     let tapCount: Int
     let failureReason: LevelFailureReason?
     let canAdvanceToNextLevel: Bool
+    let cosmeticLoadout: GameplayCosmeticLoadout
     let onRestartTapped: () -> Void
     let onNextLevelTapped: () -> Void
     let onBackToLevelsTapped: () -> Void
@@ -39,6 +40,7 @@ struct ResultScreen: View {
         tapCount: Int,
         failureReason: LevelFailureReason?,
         canAdvanceToNextLevel: Bool = false,
+        cosmeticLoadout: GameplayCosmeticLoadout = .default,
         onRestartTapped: @escaping () -> Void,
         onNextLevelTapped: @escaping () -> Void = {},
         onExitTapped: @escaping () -> Void,
@@ -70,6 +72,7 @@ struct ResultScreen: View {
         self.tapCount = tapCount
         self.failureReason = failureReason
         self.canAdvanceToNextLevel = canAdvanceToNextLevel
+        self.cosmeticLoadout = cosmeticLoadout
         self.onRestartTapped = onRestartTapped
         self.onNextLevelTapped = onNextLevelTapped
         self.onBackToLevelsTapped = onBackToLevelsTapped ?? onExitTapped
@@ -115,7 +118,11 @@ struct ResultScreen: View {
             .zIndex(1)
 
             if result == .completed {
-                TRConfettiEmitter(mode: .success, playbackID: presentationID)
+                TRConfettiEmitter(
+                    mode: .success,
+                    playbackID: presentationID,
+                    selectedConfettiOption: cosmeticLoadout.confetti
+                )
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
                     .ignoresSafeArea()
                     .zIndex(2)

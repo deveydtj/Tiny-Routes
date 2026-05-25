@@ -12,6 +12,14 @@ enum CosmeticSelectionResult: Equatable {
     case notOwned
 }
 
+enum CosmeticUnlockAndSelectResult: Equatable {
+    case unlockedAndSelected
+    case selected
+    case alreadySelected
+    case insufficientCoins
+    case notFound
+}
+
 /// Manages cosmetic item ownership and selection.
 final class CosmeticService {
     private let repository: SaveDataRepository
@@ -53,6 +61,43 @@ final class CosmeticService {
         )
     }
 
+    func gameplayLoadout() -> GameplayCosmeticLoadout {
+        let profile = repository.load()
+        let routeTheme = resolvedSelectedOption(
+            categoryID: ShopCosmeticCategoryID.routeThemes,
+            defaultID: PlayerProfile.defaultSelectedCosmeticIDByCategoryID[ShopCosmeticCategoryID.routeThemes] ?? "themeOceanDrive",
+            profile: profile
+        )
+        let deliveryDot = resolvedSelectedOption(
+            categoryID: ShopCosmeticCategoryID.deliveryDots,
+            defaultID: PlayerProfile.defaultSelectedCosmeticIDByCategoryID[ShopCosmeticCategoryID.deliveryDots] ?? "dotCourierBlue",
+            profile: profile
+        )
+        let trail = resolvedSelectedOption(
+            categoryID: ShopCosmeticCategoryID.trails,
+            defaultID: PlayerProfile.defaultSelectedCosmeticIDByCategoryID[ShopCosmeticCategoryID.trails] ?? "trailClean",
+            profile: profile
+        )
+        let confetti = resolvedSelectedOption(
+            categoryID: ShopCosmeticCategoryID.confetti,
+            defaultID: PlayerProfile.defaultSelectedCosmeticIDByCategoryID[ShopCosmeticCategoryID.confetti] ?? "confettiStars",
+            profile: profile
+        )
+        let destination = resolvedSelectedOption(
+            categoryID: ShopCosmeticCategoryID.destinations,
+            defaultID: PlayerProfile.defaultSelectedCosmeticIDByCategoryID[ShopCosmeticCategoryID.destinations] ?? "destinationFlag",
+            profile: profile
+        )
+
+        return GameplayCosmeticLoadout(
+            routeTheme: routeTheme,
+            deliveryDot: deliveryDot,
+            trail: trail,
+            confetti: confetti,
+            destination: destination
+        )
+    }
+
     @discardableResult
     func unlockCosmetic(_ option: ShopCosmeticOption) -> CosmeticUnlockResult {
         if isOwned(cosmeticID: option.id) {
@@ -85,6 +130,45 @@ final class CosmeticService {
             profile.selectedCosmeticIDByCategoryID[option.categoryID] = option.id
         }
         return .selected
+    }
+
+    @discardableResult
+    func unlockAndSelectCosmetic(_ option: ShopCosmeticOption) -> CosmeticUnlockAndSelectResult {
+        guard let catalogOption = catalogService.option(withID: option.id),
+              catalogOption.categoryID == option.categoryID else {
+            return .notFound
+        }
+
+        let profile = repository.load()
+        let isOwned = profile.ownedCosmeticIDs.contains(catalogOption.id)
+        let isSelected = profile.selectedCosmeticIDByCategoryID[catalogOption.categoryID] == catalogOption.id
+
+        if isOwned, isSelected {
+            return .alreadySelected
+        }
+
+        if isOwned {
+            repository.update { profile in
+                profile.selectedCosmeticIDByCategoryID[catalogOption.categoryID] = catalogOption.id
+            }
+            return .selected
+        }
+
+        let price = catalogOption.price ?? 0
+        guard price <= 0 || profile.coinTotal >= price else {
+            return .insufficientCoins
+        }
+
+        repository.update { profile in
+            if price > 0 {
+                profile.coinTotal -= price
+                profile.lifetimeCoinsSpent += price
+            }
+            profile.ownedCosmeticIDs.insert(catalogOption.id)
+            profile.selectedCosmeticIDByCategoryID[catalogOption.categoryID] = catalogOption.id
+        }
+
+        return .unlockedAndSelected
     }
 
     func selectedCollectionSelections() -> [ProfileCollectionSelection] {
@@ -140,6 +224,43 @@ final class CosmeticService {
             systemImage: systemImage,
             accent: accent,
             isSelected: selectedID != nil
+        )
+    }
+
+    private func resolvedSelectedOption(
+        categoryID: String,
+        defaultID: String,
+        profile: PlayerProfile
+    ) -> ShopCosmeticOption {
+        if let selectedID = profile.selectedCosmeticIDByCategoryID[categoryID],
+           profile.ownedCosmeticIDs.contains(selectedID),
+           let selectedOption = catalogService.option(withID: selectedID),
+           selectedOption.categoryID == categoryID {
+            return selectedOption
+        }
+
+        if profile.ownedCosmeticIDs.contains(defaultID),
+           let defaultOption = catalogService.option(withID: defaultID),
+           defaultOption.categoryID == categoryID {
+            return defaultOption
+        }
+
+        if let ownedOption = catalogService.options(forCategoryID: categoryID).first(where: { profile.ownedCosmeticIDs.contains($0.id) }) {
+            return ownedOption
+        }
+
+        if let categoryOption = catalogService.options(forCategoryID: categoryID).first {
+            return categoryOption
+        }
+
+        return ShopCosmeticOption(
+            id: defaultID,
+            categoryID: categoryID,
+            title: "Default",
+            price: nil,
+            isUnlocked: true,
+            isSelected: true,
+            accent: .classic
         )
     }
 }

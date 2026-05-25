@@ -9,6 +9,7 @@ struct ShopScreen: View {
     private let catalogService: ShopCatalogService
     private let cosmeticService: CosmeticService
     private let economyService: EconomyService
+    private let dailyBonusService: DailyBonusService
 
     @State private var selectedCategoryID = ShopCosmeticCategoryID.routeThemes
     @State private var activePlaceholder: ShopAlert?
@@ -20,6 +21,7 @@ struct ShopScreen: View {
         catalogService: ShopCatalogService = ShopCatalogService(),
         cosmeticService: CosmeticService? = nil,
         economyService: EconomyService? = nil,
+        dailyBonusService: DailyBonusService? = nil,
         onProfileChanged: @escaping () -> Void = {}
     ) {
         self.coinTotal = coinTotal
@@ -29,6 +31,10 @@ struct ShopScreen: View {
         let repository = SaveDataRepository()
         let resolvedEconomyService = economyService ?? EconomyService(repository: repository)
         self.economyService = resolvedEconomyService
+        self.dailyBonusService = dailyBonusService ?? DailyBonusService(
+            repository: repository,
+            economyService: resolvedEconomyService
+        )
         self.cosmeticService = cosmeticService ?? CosmeticService(
             repository: repository,
             economyService: resolvedEconomyService,
@@ -171,44 +177,48 @@ struct ShopScreen: View {
     }
 
     private func onCosmeticOptionTapped(_ option: ShopCosmeticOption) {
-        if option.isSelected {
+        switch cosmeticService.unlockAndSelectCosmetic(option) {
+        case .unlockedAndSelected:
+            onProfileChanged()
+            activePlaceholder = .unlockedAndSelected(option)
+        case .selected:
+            onProfileChanged()
+            activePlaceholder = .selectedCosmetic(option)
+        case .alreadySelected:
             activePlaceholder = .alreadySelected(option)
-        } else if option.isUnlocked {
-            switch cosmeticService.selectCosmetic(option) {
-            case .selected:
-                onProfileChanged()
-                activePlaceholder = .selectedCosmetic(option)
-            case .alreadySelected:
-                activePlaceholder = .alreadySelected(option)
-            case .notOwned:
-                activePlaceholder = .notOwned(option)
-            }
-        } else {
-            switch cosmeticService.unlockCosmetic(option) {
-            case .unlocked:
-                onProfileChanged()
-                activePlaceholder = .unlockedCosmetic(option)
-            case .alreadyOwned:
-                activePlaceholder = .alreadyOwned(option)
-            case .insufficientCoins:
-                activePlaceholder = .insufficientCoins(option)
-            }
+        case .insufficientCoins:
+            activePlaceholder = .insufficientCoins(option)
+        case .notFound:
+            activePlaceholder = .notFound(option)
         }
     }
 
     private func onGoodieTapped(_ action: ShopGoodieAction) {
-        activePlaceholder = .goodie(action)
+        if action.id == "dailyBonus" {
+            switch dailyBonusService.claimDailyBonus() {
+            case let .claimed(amount, _):
+                onProfileChanged()
+                activePlaceholder = .dailyBonusClaimed(amount: amount)
+            case .alreadyClaimed:
+                activePlaceholder = .dailyBonusAlreadyClaimed
+            }
+        } else {
+            activePlaceholder = .goodie(action)
+        }
     }
 }
 
 private enum ShopAlert: Identifiable {
     case featuredOffer(ShopFeaturedOffer)
-    case unlockedCosmetic(ShopCosmeticOption)
+    case unlockedAndSelected(ShopCosmeticOption)
     case selectedCosmetic(ShopCosmeticOption)
     case insufficientCoins(ShopCosmeticOption)
     case alreadyOwned(ShopCosmeticOption)
     case alreadySelected(ShopCosmeticOption)
     case notOwned(ShopCosmeticOption)
+    case notFound(ShopCosmeticOption)
+    case dailyBonusClaimed(amount: Int)
+    case dailyBonusAlreadyClaimed
     case goodie(ShopGoodieAction)
 
     var id: String {
@@ -219,7 +229,7 @@ private enum ShopAlert: Identifiable {
         switch self {
         case let .featuredOffer(offer):
             return offer.title
-        case let .unlockedCosmetic(option):
+        case let .unlockedAndSelected(option):
             return option.title
         case let .selectedCosmetic(option):
             return option.title
@@ -231,6 +241,12 @@ private enum ShopAlert: Identifiable {
             return option.title
         case let .notOwned(option):
             return option.title
+        case let .notFound(option):
+            return option.title
+        case .dailyBonusClaimed:
+            return "Daily Bonus"
+        case .dailyBonusAlreadyClaimed:
+            return "Daily Bonus"
         case let .goodie(action):
             return action.title
         }
@@ -240,23 +256,35 @@ private enum ShopAlert: Identifiable {
         switch self {
         case .featuredOffer:
             return "Purchases coming soon."
-        case .unlockedCosmetic:
-            return "Cosmetic unlocked."
+        case .unlockedAndSelected:
+            return "Unlocked and equipped."
         case .selectedCosmetic:
-            return "Cosmetic selected."
+            return "Now equipped."
         case .insufficientCoins:
-            return "Not enough coins."
+            return "Not enough coins to unlock this cosmetic."
         case .alreadyOwned:
             return "This cosmetic is already owned."
         case .alreadySelected:
-            return "This cosmetic is already selected."
+            return "Already equipped."
         case .notOwned:
             return "Unlock this cosmetic before selecting it."
+        case .notFound:
+            return "This cosmetic is no longer available."
+        case let .dailyBonusClaimed(amount):
+            return "\(amount) coins added."
+        case .dailyBonusAlreadyClaimed:
+            return "Daily bonus already claimed today."
         case let .goodie(action):
-            if action.id == "dailyBonus" {
-                return "Daily bonus coming soon."
+            switch action.id {
+            case "coins":
+                return "Coin packs coming soon."
+            case "gems":
+                return "Gems coming soon."
+            case "dailyDeals":
+                return "Daily deals coming soon."
+            default:
+                return "This shop action is coming soon."
             }
-            return "This shop action is coming soon."
         }
     }
 }

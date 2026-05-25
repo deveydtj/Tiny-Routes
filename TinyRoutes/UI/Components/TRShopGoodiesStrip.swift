@@ -84,7 +84,7 @@ struct TRShopGoodiesStrip: View {
         .buttonStyle(.plain)
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(Text("\(action.title), \(action.subtitle), \(action.buttonTitle)"))
-        .accessibilityHint(Text("Coming soon."))
+        .accessibilityHint(Text(action.id == "dailyBonus" ? "Claim daily coin bonus." : "Coming soon."))
     }
 }
 

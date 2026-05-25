@@ -3,6 +3,7 @@ import Foundation
 enum EconomyChangeReason: Equatable {
     case levelComplete(levelID: String)
     case cosmeticUnlock(cosmeticID: String)
+    case dailyBonus
     case debug
 }
 
