@@ -1,0 +1,53 @@
+{
+  "generationTimestamp": "2026-05-25T05:17:12.362164+00:00",
+  "commandArguments": [
+    "--start",
+    "12",
+    "--count",
+    "1",
+    "--difficulty",
+    "tutorial",
+    "--template",
+    "straight_delivery",
+    "--seed",
+    "1",
+    "--dry-run"
+  ],
+  "repoRoot": "/Users/jake/Developer/Tiny-Routes",
+  "levelsOutputDir": "/Users/jake/Developer/Tiny-Routes/TinyRoutes/Resources/Levels",
+  "solutionsOutputDir": "/Users/jake/Developer/Tiny-Routes/TinyRoutesTests/Resources/LevelSolutions",
+  "difficulty": "tutorial",
+  "template": "straight_delivery",
+  "baseSeed": 1,
+  "dryRun": true,
+  "overwrite": false,
+  "acceptedLevels": [
+    {
+      "levelID": "level_012",
+      "template": "straight_delivery",
+      "seed": 1360917788,
+      "difficulty": "tutorial",
+      "nodes": 4,
+      "edges": 3,
+      "switches": 0,
+      "parTaps": 0,
+      "timeLimit": 30,
+      "requiredTaps": 0,
+      "status": "passed",
+      "notes": []
+    }
+  ],
+  "rejectedCandidateCount": 0,
+  "rejectionReasonCounts": {},
+  "writtenLevelPaths": [],
+  "writtenSolutionPaths": [],
+  "swiftTests": {
+    "run": false,
+    "command": [],
+    "exitCode": null,
+    "passed": null,
+    "summary": "Swift tests were not run."
+  },
+  "messages": [],
+  "xcodegenNote": "project.yml includes resource directories. If checked-in TinyRoutes.xcodeproj does not pick up newly generated JSON files, run `xcodegen generate` before Swift tests."
+}

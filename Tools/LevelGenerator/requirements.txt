@@ -1,0 +1,4 @@
+# Tiny Routes procedural level generation uses only the Python standard library.
+#
+# Unit tests in this repository are written for pytest, but pytest is not a
+# runtime dependency of the generator itself.
