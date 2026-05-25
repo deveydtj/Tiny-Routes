@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import shutil
+import subprocess
 from pathlib import Path
 
 from ..generation_config import GenerationConfig
@@ -68,7 +70,7 @@ class LevelGenerationService:
                     preset=preset,
                     level_output_path=level_path,
                     solution_output_path=solution_path,
-                    overwrite=config.overwrite,
+                    overwrite=config.overwrite or config.dry_run,
                 )
                 if rejection_service.can_save(validation_result):
                     accepted_candidate = candidate
@@ -88,6 +90,7 @@ class LevelGenerationService:
 
         if result.passed and not config.dry_run:
             self._write_generated_files(config, result)
+            result.messages.extend(self._sync_xcode_project(config))
 
         if result.passed and config.run_swift_tests and not config.dry_run:
             result.messages.extend(self._resource_reference_warnings(config, result))
@@ -142,6 +145,45 @@ class LevelGenerationService:
                 )
             )
 
+    def _sync_xcode_project(self, config: GenerationConfig) -> list[str]:
+        if not config.sync_xcode_project:
+            return []
+        if not self._uses_default_output_dirs(config):
+            return []
+
+        repo_root = find_repo_root()
+        project_yml = repo_root / "project.yml"
+        if not project_yml.exists():
+            return ["Skipped xcodegen because project.yml was not found."]
+        if shutil.which("xcodegen") is None:
+            return ["Skipped xcodegen because the xcodegen command was not found."]
+
+        completed = subprocess.run(
+            ["xcodegen", "generate"],
+            cwd=repo_root,
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+        if completed.returncode == 0:
+            return ["Regenerated TinyRoutes.xcodeproj with xcodegen."]
+
+        stderr = completed.stderr.strip()
+        stdout = completed.stdout.strip()
+        detail = stderr or stdout or f"exit code {completed.returncode}"
+        return [f"xcodegen generate failed: {detail}"]
+
+    def _uses_default_output_dirs(self, config: GenerationConfig) -> bool:
+        repo_root = find_repo_root()
+        try:
+            return (
+                config.levels_output_dir.resolve() == (repo_root / "TinyRoutes" / "Resources" / "Levels").resolve()
+                and config.solutions_output_dir.resolve()
+                == (repo_root / "TinyRoutesTests" / "Resources" / "LevelSolutions").resolve()
+            )
+        except FileNotFoundError:
+            return False
+
     def _write_reports(self, config: GenerationConfig, result: GenerationResult) -> None:
         if config.report_path is not None:
             result.report_path = self.report_repository.write_markdown(config.report_path, config, result)
@@ -150,16 +192,7 @@ class LevelGenerationService:
 
     def _resource_reference_warnings(self, config: GenerationConfig, result: GenerationResult) -> list[str]:
         repo_root = find_repo_root()
-        try:
-            levels_is_default = config.levels_output_dir.resolve() == (repo_root / "TinyRoutes" / "Resources" / "Levels").resolve()
-            solutions_is_default = config.solutions_output_dir.resolve() == (
-                repo_root / "TinyRoutesTests" / "Resources" / "LevelSolutions"
-            ).resolve()
-        except FileNotFoundError:
-            levels_is_default = False
-            solutions_is_default = False
-
-        if not (levels_is_default and solutions_is_default):
+        if not self._uses_default_output_dirs(config):
             return []
 
         project_file = repo_root / "TinyRoutes.xcodeproj" / "project.pbxproj"

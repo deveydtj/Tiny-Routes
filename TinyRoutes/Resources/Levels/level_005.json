@@ -1,30 +1,90 @@
 {
   "id": "level_005",
-  "name": "Express Bypass",
+  "name": "Level 005",
   "graph": {
     "nodes": [
-      { "id": "start", "x": 0.0, "y": 0.0, "outgoingEdgeIDs": ["e_start_approach"] },
-      { "id": "approach", "x": 1.0, "y": 0.0, "outgoingEdgeIDs": ["e_approach_express", "e_approach_package"] },
-      { "id": "express", "x": 2.0, "y": 0.0, "outgoingEdgeIDs": ["e_express_destination"] },
-      { "id": "package", "x": 2.0, "y": 1.0, "outgoingEdgeIDs": ["e_package_finish"] },
-      { "id": "finish_switch", "x": 3.0, "y": 1.0, "outgoingEdgeIDs": ["e_finish_buffer", "e_finish_destination"] },
-      { "id": "buffer", "x": 4.0, "y": 1.8, "outgoingEdgeIDs": ["e_buffer_finish"] },
-      { "id": "destination", "x": 4.0, "y": 0.0, "outgoingEdgeIDs": [] }
+      {
+        "id": "start",
+        "x": -1.1,
+        "y": 0.0,
+        "outgoingEdgeIDs": [
+          "e_start_approach"
+        ]
+      },
+      {
+        "id": "approach",
+        "x": -0.55,
+        "y": 0.0,
+        "outgoingEdgeIDs": [
+          "e_approach_choice"
+        ]
+      },
+      {
+        "id": "choice",
+        "x": 0.0,
+        "y": 0.0,
+        "outgoingEdgeIDs": [
+          "e_choice_dead_end_a",
+          "e_choice_package"
+        ]
+      },
+      {
+        "id": "dead_end_a",
+        "x": 0.75,
+        "y": -0.65,
+        "outgoingEdgeIDs": []
+      },
+      {
+        "id": "package",
+        "x": 0.72,
+        "y": 0.55,
+        "outgoingEdgeIDs": [
+          "e_package_destination"
+        ]
+      },
+      {
+        "id": "destination",
+        "x": 1.1,
+        "y": 0.95,
+        "outgoingEdgeIDs": []
+      }
     ],
     "edges": [
-      { "id": "e_start_approach", "fromNodeID": "start", "toNodeID": "approach" },
-      { "id": "e_approach_express", "fromNodeID": "approach", "toNodeID": "express" },
-      { "id": "e_express_destination", "fromNodeID": "express", "toNodeID": "destination" },
-      { "id": "e_approach_package", "fromNodeID": "approach", "toNodeID": "package" },
-      { "id": "e_package_finish", "fromNodeID": "package", "toNodeID": "finish_switch" },
-      { "id": "e_finish_buffer", "fromNodeID": "finish_switch", "toNodeID": "buffer" },
-      { "id": "e_buffer_finish", "fromNodeID": "buffer", "toNodeID": "finish_switch" },
-      { "id": "e_finish_destination", "fromNodeID": "finish_switch", "toNodeID": "destination" }
+      {
+        "id": "e_start_approach",
+        "fromNodeID": "start",
+        "toNodeID": "approach",
+        "roadShape": "horizontalFirst"
+      },
+      {
+        "id": "e_approach_choice",
+        "fromNodeID": "approach",
+        "toNodeID": "choice",
+        "roadShape": "horizontalFirst"
+      },
+      {
+        "id": "e_choice_dead_end_a",
+        "fromNodeID": "choice",
+        "toNodeID": "dead_end_a",
+        "roadShape": "horizontalFirst"
+      },
+      {
+        "id": "e_choice_package",
+        "fromNodeID": "choice",
+        "toNodeID": "package",
+        "roadShape": "horizontalFirst"
+      },
+      {
+        "id": "e_package_destination",
+        "fromNodeID": "package",
+        "toNodeID": "destination",
+        "roadShape": "verticalFirst"
+      }
     ]
   },
   "startNodeID": "start",
   "packageNodeID": "package",
   "destinationNodeID": "destination",
-  "timeLimitSeconds": 46,
-  "parTaps": 2
+  "timeLimitSeconds": 30,
+  "parTaps": 1
 }

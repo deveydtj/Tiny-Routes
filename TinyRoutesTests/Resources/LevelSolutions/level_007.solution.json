@@ -1,13 +1,17 @@
 {
   "levelID": "level_007",
-  "description": "Rotate center once so the post-package path exits to destination.",
+  "description": "Rotate the approach switch to collect the package, then rotate the finish switch to reach destination.",
   "expectedOutcome": "completed",
-  "maxTaps": 1,
+  "maxTaps": 2,
   "requiresWithinTimeLimit": true,
   "actions": [
     {
-      "timeSeconds": 0.1,
-      "tapNodeID": "center"
+      "timeSeconds": 0.4,
+      "tapNodeID": "approach_switch"
+    },
+    {
+      "timeSeconds": 0.8,
+      "tapNodeID": "finish_switch"
     }
   ]
 }

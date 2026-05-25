@@ -34,6 +34,7 @@ class GenerationReportRepository:
             "baseSeed": config.seed,
             "dryRun": config.dry_run,
             "overwrite": config.overwrite,
+            "syncXcodeProject": config.sync_xcode_project,
             "acceptedLevels": [
                 {
                     "levelID": level.level_id,
@@ -64,8 +65,8 @@ class GenerationReportRepository:
             },
             "messages": list(result.messages),
             "xcodegenNote": (
-                "project.yml includes resource directories. If checked-in TinyRoutes.xcodeproj does not "
-                "pick up newly generated JSON files, run `xcodegen generate` before Swift tests."
+                "project.yml includes resource directories. Production generation syncs TinyRoutes.xcodeproj "
+                "with `xcodegen generate` before Swift tests unless `--no-xcodegen` is used."
             ),
         }
 
@@ -80,6 +81,7 @@ class GenerationReportRepository:
             f"- Template mode: `{payload['template']}`",
             f"- Base seed: `{payload['baseSeed']}`",
             f"- Dry run: `{payload['dryRun']}`",
+            f"- Xcode project sync: `{payload['syncXcodeProject']}`",
             f"- Swift tests: `{payload['swiftTests']['summary']}`",
             "",
             "## Accepted Levels",
@@ -117,7 +119,7 @@ class GenerationReportRepository:
                 "",
                 "- Open generated levels in the Level Editor.",
                 "- Run Python validation and Swift solvability before committing production levels.",
-                "- Run `xcodegen generate` if the checked-in Xcode project cannot find new JSON resources.",
+                "- `xcodegen generate` runs automatically for default production output; rerun it manually if resources were deleted outside the generator.",
                 "",
             ]
         )

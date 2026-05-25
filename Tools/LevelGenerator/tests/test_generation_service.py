@@ -42,6 +42,18 @@ def test_generation_service_dry_run_writes_no_levels(tmp_path) -> None:
     assert (tmp_path / "report.md").exists()
 
 
+def test_generation_service_dry_run_ignores_existing_output_files(tmp_path) -> None:
+    (tmp_path / "levels").mkdir()
+    (tmp_path / "solutions").mkdir()
+    (tmp_path / "levels" / "level_012.json").write_text("{}\n", encoding="utf-8")
+    (tmp_path / "solutions" / "level_012.solution.json").write_text("{}\n", encoding="utf-8")
+
+    result = LevelGenerationService().generate(_config(tmp_path, dry_run=True))
+
+    assert result.passed is True
+    assert result.accepted[0].level_id == "level_012"
+
+
 def test_generation_service_refuses_collision_without_overwrite(tmp_path) -> None:
     (tmp_path / "levels").mkdir()
     (tmp_path / "solutions").mkdir()

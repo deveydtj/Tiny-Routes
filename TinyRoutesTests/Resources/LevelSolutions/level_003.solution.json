@@ -1,13 +1,13 @@
 {
   "levelID": "level_003",
-  "description": "Rotate the gate to destination before arrival so the package can be delivered immediately.",
+  "description": "Rotate choice once so the route collects the package before heading to destination.",
   "expectedOutcome": "completed",
   "maxTaps": 1,
   "requiresWithinTimeLimit": true,
   "actions": [
     {
-      "timeSeconds": 0.1,
-      "tapNodeID": "gate"
+      "timeSeconds": 0.4,
+      "tapNodeID": "choice"
     }
   ]
 }

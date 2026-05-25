@@ -309,7 +309,7 @@ final class LevelSolvabilityTests: XCTestCase {
         )
     }
 
-    func testLevel001CompletesWithZeroTaps() throws {
+    func testLevel001CompletesWithProductionScript() throws {
         let entries = try simulationEntries()
         let entry = try XCTUnwrap(
             entries.first(where: { $0.level.id == "level_001" }),
@@ -337,7 +337,16 @@ final class LevelSolvabilityTests: XCTestCase {
                     context: "level_001 expected .completed."
                 )
             )
-            XCTAssertEqual(result.tapCount, 0, "level_001: expected 0 taps but got \(result.tapCount)")
+            XCTAssertLessThanOrEqual(
+                result.tapCount,
+                entry.script.maxTaps,
+                "level_001: tap count \(result.tapCount) exceeds script maxTaps \(entry.script.maxTaps)"
+            )
+            XCTAssertLessThanOrEqual(
+                result.tapCount,
+                entry.level.parTaps,
+                "level_001: tap count \(result.tapCount) exceeds parTaps \(entry.level.parTaps)"
+            )
         }
     }
 

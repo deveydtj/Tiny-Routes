@@ -1,21 +1,13 @@
 {
   "levelID": "level_010",
-  "description": "Route to package at a_switch, then through b_switch and c_switch directly to destination.",
+  "description": "Rotate choice once so the route collects the package before heading to destination.",
   "expectedOutcome": "completed",
-  "maxTaps": 3,
+  "maxTaps": 1,
   "requiresWithinTimeLimit": true,
   "actions": [
     {
       "timeSeconds": 0.4,
-      "tapNodeID": "a_switch"
-    },
-    {
-      "timeSeconds": 0.8,
-      "tapNodeID": "b_switch"
-    },
-    {
-      "timeSeconds": 1.2,
-      "tapNodeID": "c_switch"
+      "tapNodeID": "choice"
     }
   ]
 }

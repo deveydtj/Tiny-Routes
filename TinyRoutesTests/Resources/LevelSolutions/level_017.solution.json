@@ -1,0 +1,21 @@
+{
+  "levelID": "level_017",
+  "description": "Rotate alpha to collect the package, rotate beta onto the return path, then rotate alpha again for destination.",
+  "expectedOutcome": "completed",
+  "maxTaps": 3,
+  "requiresWithinTimeLimit": true,
+  "actions": [
+    {
+      "timeSeconds": 0.4,
+      "tapNodeID": "alpha_switch"
+    },
+    {
+      "timeSeconds": 1.2,
+      "tapNodeID": "beta_switch"
+    },
+    {
+      "timeSeconds": 2.0,
+      "tapNodeID": "alpha_switch"
+    }
+  ]
+}

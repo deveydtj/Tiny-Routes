@@ -1,38 +1,90 @@
 {
   "id": "level_010",
-  "name": "Final Mile",
+  "name": "Level 010",
   "graph": {
     "nodes": [
-      { "id": "start", "x": 0.0, "y": 0.0, "outgoingEdgeIDs": ["e_start_a"] },
-      { "id": "a_switch", "x": 1.0, "y": 0.0, "outgoingEdgeIDs": ["e_a_shortcut", "e_a_package", "e_a_wait"] },
-      { "id": "shortcut", "x": 2.0, "y": 0.0, "outgoingEdgeIDs": ["e_shortcut_destination"] },
-      { "id": "wait", "x": 2.0, "y": -1.0, "outgoingEdgeIDs": ["e_wait_a"] },
-      { "id": "package", "x": 2.0, "y": 1.0, "outgoingEdgeIDs": ["e_package_b"] },
-      { "id": "b_switch", "x": 3.0, "y": 1.0, "outgoingEdgeIDs": ["e_b_loop", "e_b_c"] },
-      { "id": "loop", "x": 3.8, "y": 1.8, "outgoingEdgeIDs": ["e_loop_b"] },
-      { "id": "c_switch", "x": 4.0, "y": 0.4, "outgoingEdgeIDs": ["e_c_a", "e_c_destination", "e_c_dead_end"] },
-      { "id": "dead_end", "x": 5.0, "y": 1.2, "outgoingEdgeIDs": [] },
-      { "id": "destination", "x": 5.2, "y": 0.0, "outgoingEdgeIDs": [] }
+      {
+        "id": "start",
+        "x": -1.1,
+        "y": 0.0,
+        "outgoingEdgeIDs": [
+          "e_start_approach"
+        ]
+      },
+      {
+        "id": "approach",
+        "x": -0.55,
+        "y": 0.0,
+        "outgoingEdgeIDs": [
+          "e_approach_choice"
+        ]
+      },
+      {
+        "id": "choice",
+        "x": 0.0,
+        "y": 0.0,
+        "outgoingEdgeIDs": [
+          "e_choice_dead_end_a",
+          "e_choice_package"
+        ]
+      },
+      {
+        "id": "dead_end_a",
+        "x": 0.75,
+        "y": -0.65,
+        "outgoingEdgeIDs": []
+      },
+      {
+        "id": "package",
+        "x": 0.72,
+        "y": 0.55,
+        "outgoingEdgeIDs": [
+          "e_package_destination"
+        ]
+      },
+      {
+        "id": "destination",
+        "x": 1.1,
+        "y": 0.95,
+        "outgoingEdgeIDs": []
+      }
     ],
     "edges": [
-      { "id": "e_start_a", "fromNodeID": "start", "toNodeID": "a_switch" },
-      { "id": "e_a_shortcut", "fromNodeID": "a_switch", "toNodeID": "shortcut" },
-      { "id": "e_shortcut_destination", "fromNodeID": "shortcut", "toNodeID": "destination" },
-      { "id": "e_a_package", "fromNodeID": "a_switch", "toNodeID": "package" },
-      { "id": "e_a_wait", "fromNodeID": "a_switch", "toNodeID": "wait" },
-      { "id": "e_wait_a", "fromNodeID": "wait", "toNodeID": "a_switch" },
-      { "id": "e_package_b", "fromNodeID": "package", "toNodeID": "b_switch" },
-      { "id": "e_b_loop", "fromNodeID": "b_switch", "toNodeID": "loop" },
-      { "id": "e_loop_b", "fromNodeID": "loop", "toNodeID": "b_switch" },
-      { "id": "e_b_c", "fromNodeID": "b_switch", "toNodeID": "c_switch" },
-      { "id": "e_c_a", "fromNodeID": "c_switch", "toNodeID": "a_switch" },
-      { "id": "e_c_destination", "fromNodeID": "c_switch", "toNodeID": "destination" },
-      { "id": "e_c_dead_end", "fromNodeID": "c_switch", "toNodeID": "dead_end" }
+      {
+        "id": "e_start_approach",
+        "fromNodeID": "start",
+        "toNodeID": "approach",
+        "roadShape": "horizontalFirst"
+      },
+      {
+        "id": "e_approach_choice",
+        "fromNodeID": "approach",
+        "toNodeID": "choice",
+        "roadShape": "horizontalFirst"
+      },
+      {
+        "id": "e_choice_dead_end_a",
+        "fromNodeID": "choice",
+        "toNodeID": "dead_end_a",
+        "roadShape": "horizontalFirst"
+      },
+      {
+        "id": "e_choice_package",
+        "fromNodeID": "choice",
+        "toNodeID": "package",
+        "roadShape": "horizontalFirst"
+      },
+      {
+        "id": "e_package_destination",
+        "fromNodeID": "package",
+        "toNodeID": "destination",
+        "roadShape": "verticalFirst"
+      }
     ]
   },
   "startNodeID": "start",
   "packageNodeID": "package",
   "destinationNodeID": "destination",
-  "timeLimitSeconds": 62,
-  "parTaps": 4
+  "timeLimitSeconds": 30,
+  "parTaps": 1
 }

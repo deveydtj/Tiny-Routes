@@ -1,0 +1,9 @@
+[
+  {
+    "severity": "error",
+    "code": "solution_output_file_exists",
+    "message": "Solution output file already exists: /Users/jake/Developer/Tiny-Routes/TinyRoutesTests/Resources/LevelSolutions/level_001.solution.json",
+    "related_node_id": null,
+    "related_edge_id": null
+  }
+]

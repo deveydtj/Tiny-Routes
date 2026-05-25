@@ -1,21 +1,13 @@
 {
   "levelID": "level_004",
-  "description": "Collect the package, route through the east return lane, then rotate west switch again for destination.",
+  "description": "Rotate choice once so the route collects the package before heading to destination.",
   "expectedOutcome": "completed",
-  "maxTaps": 3,
+  "maxTaps": 1,
   "requiresWithinTimeLimit": true,
   "actions": [
     {
       "timeSeconds": 0.4,
-      "tapNodeID": "west_switch"
-    },
-    {
-      "timeSeconds": 0.8,
-      "tapNodeID": "east_switch"
-    },
-    {
-      "timeSeconds": 5.0,
-      "tapNodeID": "west_switch"
+      "tapNodeID": "choice"
     }
   ]
 }

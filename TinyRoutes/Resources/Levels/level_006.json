@@ -1,31 +1,103 @@
 {
   "id": "level_006",
-  "name": "Priority Loop",
+  "name": "Level 006",
   "graph": {
     "nodes": [
-      { "id": "start", "x": 0.0, "y": 0.0, "outgoingEdgeIDs": ["e_start_alpha"] },
-      { "id": "alpha", "x": 1.0, "y": 0.0, "outgoingEdgeIDs": ["e_alpha_bait", "e_alpha_package"] },
-      { "id": "bait", "x": 2.0, "y": 0.0, "outgoingEdgeIDs": ["e_bait_destination"] },
-      { "id": "package", "x": 2.0, "y": 1.0, "outgoingEdgeIDs": ["e_package_beta"] },
-      { "id": "beta", "x": 3.0, "y": 1.0, "outgoingEdgeIDs": ["e_beta_dead_end", "e_beta_return"] },
-      { "id": "dead_end", "x": 4.0, "y": 1.8, "outgoingEdgeIDs": [] },
-      { "id": "return_lane", "x": 2.0, "y": -1.0, "outgoingEdgeIDs": ["e_return_alpha"] },
-      { "id": "destination", "x": 4.0, "y": 0.0, "outgoingEdgeIDs": [] }
+      {
+        "id": "start",
+        "x": -1.1,
+        "y": 0.25,
+        "outgoingEdgeIDs": [
+          "e_start_approach_switch"
+        ]
+      },
+      {
+        "id": "approach_switch",
+        "x": -0.45,
+        "y": 0.05,
+        "outgoingEdgeIDs": [
+          "e_approach_switch_bypass",
+          "e_approach_switch_package"
+        ]
+      },
+      {
+        "id": "bypass",
+        "x": 0.1,
+        "y": -0.65,
+        "outgoingEdgeIDs": []
+      },
+      {
+        "id": "package",
+        "x": 0.1,
+        "y": 0.65,
+        "outgoingEdgeIDs": [
+          "e_package_finish_switch"
+        ]
+      },
+      {
+        "id": "finish_switch",
+        "x": 0.65,
+        "y": 0.2,
+        "outgoingEdgeIDs": [
+          "e_finish_switch_dead_end_a",
+          "e_finish_switch_destination"
+        ]
+      },
+      {
+        "id": "dead_end_a",
+        "x": 1.1,
+        "y": -0.55,
+        "outgoingEdgeIDs": []
+      },
+      {
+        "id": "destination",
+        "x": 1.1,
+        "y": 0.75,
+        "outgoingEdgeIDs": []
+      }
     ],
     "edges": [
-      { "id": "e_start_alpha", "fromNodeID": "start", "toNodeID": "alpha" },
-      { "id": "e_alpha_bait", "fromNodeID": "alpha", "toNodeID": "bait" },
-      { "id": "e_bait_destination", "fromNodeID": "bait", "toNodeID": "destination" },
-      { "id": "e_alpha_package", "fromNodeID": "alpha", "toNodeID": "package" },
-      { "id": "e_package_beta", "fromNodeID": "package", "toNodeID": "beta" },
-      { "id": "e_beta_dead_end", "fromNodeID": "beta", "toNodeID": "dead_end" },
-      { "id": "e_beta_return", "fromNodeID": "beta", "toNodeID": "return_lane" },
-      { "id": "e_return_alpha", "fromNodeID": "return_lane", "toNodeID": "alpha" }
+      {
+        "id": "e_start_approach_switch",
+        "fromNodeID": "start",
+        "toNodeID": "approach_switch",
+        "roadShape": "horizontalFirst"
+      },
+      {
+        "id": "e_approach_switch_bypass",
+        "fromNodeID": "approach_switch",
+        "toNodeID": "bypass",
+        "roadShape": "verticalFirst"
+      },
+      {
+        "id": "e_approach_switch_package",
+        "fromNodeID": "approach_switch",
+        "toNodeID": "package",
+        "roadShape": "verticalFirst"
+      },
+      {
+        "id": "e_package_finish_switch",
+        "fromNodeID": "package",
+        "toNodeID": "finish_switch",
+        "roadShape": "horizontalFirst"
+      },
+      {
+        "id": "e_finish_switch_dead_end_a",
+        "fromNodeID": "finish_switch",
+        "toNodeID": "dead_end_a",
+        "roadShape": "verticalFirst"
+      },
+      {
+        "id": "e_finish_switch_destination",
+        "fromNodeID": "finish_switch",
+        "toNodeID": "destination",
+        "roadShape": "verticalFirst"
+      }
     ]
   },
   "startNodeID": "start",
   "packageNodeID": "package",
   "destinationNodeID": "destination",
-  "timeLimitSeconds": 42,
-  "parTaps": 3
+  "timeLimitSeconds": 30,
+  "parTaps": 2
 }

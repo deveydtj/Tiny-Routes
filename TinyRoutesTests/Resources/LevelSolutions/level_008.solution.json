@@ -1,21 +1,17 @@
 {
   "levelID": "level_008",
-  "description": "Open split to package, bridge to gate, and gate to destination.",
+  "description": "Rotate the approach switch to collect the package, then rotate the finish switch to reach destination.",
   "expectedOutcome": "completed",
-  "maxTaps": 3,
+  "maxTaps": 2,
   "requiresWithinTimeLimit": true,
   "actions": [
     {
       "timeSeconds": 0.4,
-      "tapNodeID": "split"
+      "tapNodeID": "approach_switch"
     },
     {
       "timeSeconds": 0.8,
-      "tapNodeID": "bridge"
-    },
-    {
-      "timeSeconds": 1.2,
-      "tapNodeID": "gate"
+      "tapNodeID": "finish_switch"
     }
   ]
 }

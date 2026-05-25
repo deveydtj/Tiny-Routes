@@ -1,31 +1,103 @@
 {
   "id": "level_007",
-  "name": "Depot Triangle",
+  "name": "Level 007",
   "graph": {
     "nodes": [
-      { "id": "start", "x": 0.0, "y": 0.0, "outgoingEdgeIDs": ["e_start_west"] },
-      { "id": "west", "x": 1.0, "y": 0.0, "outgoingEdgeIDs": ["e_west_north", "e_west_south"] },
-      { "id": "north", "x": 2.0, "y": 1.0, "outgoingEdgeIDs": ["e_north_package", "e_north_west"] },
-      { "id": "south", "x": 2.0, "y": -1.0, "outgoingEdgeIDs": ["e_south_west"] },
-      { "id": "package", "x": 3.0, "y": 1.0, "outgoingEdgeIDs": ["e_package_center"] },
-      { "id": "center", "x": 3.0, "y": 0.0, "outgoingEdgeIDs": ["e_center_north", "e_center_destination"] },
-      { "id": "destination", "x": 4.2, "y": 0.0, "outgoingEdgeIDs": [] }
+      {
+        "id": "start",
+        "x": -1.1,
+        "y": -0.25,
+        "outgoingEdgeIDs": [
+          "e_start_approach_switch"
+        ]
+      },
+      {
+        "id": "approach_switch",
+        "x": -0.45,
+        "y": -0.05,
+        "outgoingEdgeIDs": [
+          "e_approach_switch_bypass",
+          "e_approach_switch_package"
+        ]
+      },
+      {
+        "id": "bypass",
+        "x": 0.1,
+        "y": 0.65,
+        "outgoingEdgeIDs": []
+      },
+      {
+        "id": "package",
+        "x": 0.1,
+        "y": -0.65,
+        "outgoingEdgeIDs": [
+          "e_package_finish_switch"
+        ]
+      },
+      {
+        "id": "finish_switch",
+        "x": 0.65,
+        "y": -0.2,
+        "outgoingEdgeIDs": [
+          "e_finish_switch_dead_end_a",
+          "e_finish_switch_destination"
+        ]
+      },
+      {
+        "id": "dead_end_a",
+        "x": 1.1,
+        "y": 0.55,
+        "outgoingEdgeIDs": []
+      },
+      {
+        "id": "destination",
+        "x": 1.1,
+        "y": -0.75,
+        "outgoingEdgeIDs": []
+      }
     ],
     "edges": [
-      { "id": "e_start_west", "fromNodeID": "start", "toNodeID": "west" },
-      { "id": "e_west_north", "fromNodeID": "west", "toNodeID": "north" },
-      { "id": "e_west_south", "fromNodeID": "west", "toNodeID": "south" },
-      { "id": "e_south_west", "fromNodeID": "south", "toNodeID": "west" },
-      { "id": "e_north_package", "fromNodeID": "north", "toNodeID": "package" },
-      { "id": "e_north_west", "fromNodeID": "north", "toNodeID": "west" },
-      { "id": "e_package_center", "fromNodeID": "package", "toNodeID": "center" },
-      { "id": "e_center_north", "fromNodeID": "center", "toNodeID": "north" },
-      { "id": "e_center_destination", "fromNodeID": "center", "toNodeID": "destination" }
+      {
+        "id": "e_start_approach_switch",
+        "fromNodeID": "start",
+        "toNodeID": "approach_switch",
+        "roadShape": "horizontalFirst"
+      },
+      {
+        "id": "e_approach_switch_bypass",
+        "fromNodeID": "approach_switch",
+        "toNodeID": "bypass",
+        "roadShape": "verticalFirst"
+      },
+      {
+        "id": "e_approach_switch_package",
+        "fromNodeID": "approach_switch",
+        "toNodeID": "package",
+        "roadShape": "verticalFirst"
+      },
+      {
+        "id": "e_package_finish_switch",
+        "fromNodeID": "package",
+        "toNodeID": "finish_switch",
+        "roadShape": "horizontalFirst"
+      },
+      {
+        "id": "e_finish_switch_dead_end_a",
+        "fromNodeID": "finish_switch",
+        "toNodeID": "dead_end_a",
+        "roadShape": "verticalFirst"
+      },
+      {
+        "id": "e_finish_switch_destination",
+        "fromNodeID": "finish_switch",
+        "toNodeID": "destination",
+        "roadShape": "verticalFirst"
+      }
     ]
   },
   "startNodeID": "start",
   "packageNodeID": "package",
   "destinationNodeID": "destination",
-  "timeLimitSeconds": 48,
-  "parTaps": 1
+  "timeLimitSeconds": 30,
+  "parTaps": 2
 }

@@ -1,13 +1,8 @@
 {
   "levelID": "level_002",
-  "description": "Rotate choice once so the route collects the package before heading to destination.",
+  "description": "No taps required. The default route moves from start to package to destination.",
   "expectedOutcome": "completed",
-  "maxTaps": 1,
+  "maxTaps": 0,
   "requiresWithinTimeLimit": true,
-  "actions": [
-    {
-      "timeSeconds": 0.1,
-      "tapNodeID": "choice"
-    }
-  ]
+  "actions": []
 }

@@ -1,0 +1,76 @@
+{
+  "id": "level_001",
+  "name": "Level 001",
+  "graph": {
+    "nodes": [
+      {
+        "id": "start",
+        "x": -1.1,
+        "y": 0.0,
+        "outgoingEdgeIDs": [
+          "e_start_choice"
+        ]
+      },
+      {
+        "id": "choice",
+        "x": 0.0,
+        "y": 0.0,
+        "outgoingEdgeIDs": [
+          "e_choice_dead_end_a",
+          "e_choice_package"
+        ]
+      },
+      {
+        "id": "dead_end_a",
+        "x": 0.75,
+        "y": -0.65,
+        "outgoingEdgeIDs": []
+      },
+      {
+        "id": "package",
+        "x": 0.72,
+        "y": 0.55,
+        "outgoingEdgeIDs": [
+          "e_package_destination"
+        ]
+      },
+      {
+        "id": "destination",
+        "x": 1.1,
+        "y": 0.95,
+        "outgoingEdgeIDs": []
+      }
+    ],
+    "edges": [
+      {
+        "id": "e_start_choice",
+        "fromNodeID": "start",
+        "toNodeID": "choice",
+        "roadShape": "horizontalFirst"
+      },
+      {
+        "id": "e_choice_dead_end_a",
+        "fromNodeID": "choice",
+        "toNodeID": "dead_end_a",
+        "roadShape": "horizontalFirst"
+      },
+      {
+        "id": "e_choice_package",
+        "fromNodeID": "choice",
+        "toNodeID": "package",
+        "roadShape": "horizontalFirst"
+      },
+      {
+        "id": "e_package_destination",
+        "fromNodeID": "package",
+        "toNodeID": "destination",
+        "roadShape": "verticalFirst"
+      }
+    ]
+  },
+  "startNodeID": "start",
+  "packageNodeID": "package",
+  "destinationNodeID": "destination",
+  "timeLimitSeconds": 30,
+  "parTaps": 1
+}

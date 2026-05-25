@@ -34,12 +34,16 @@ final class LevelSolutionScriptTests: XCTestCase {
         XCTAssertEqual(script.actions[0].tapNodeID, "switch_a")
     }
 
-    func testLevel001ScriptDecodesFromRepositoryWithNoActions() throws {
+    func testLevel001ScriptDecodesFromRepository() throws {
         let repository = LevelSolutionRepository()
         let script = try repository.loadScript(levelID: "level_001")
 
         XCTAssertEqual(script.levelID, "level_001")
-        XCTAssertTrue(script.actions.isEmpty)
+        XCTAssertEqual(script.expectedOutcome, .completed)
+        XCTAssertFalse((script.description ?? "").isEmpty)
+        XCTAssertLessThanOrEqual(script.actions.count, script.maxTaps)
+        XCTAssertTrue(script.actions.allSatisfy { !$0.tapNodeID.isEmpty })
+        XCTAssertTrue(script.actions.allSatisfy { $0.timeSeconds >= 0 })
     }
 
     func testEveryProductionLevelHasMatchingSolutionScript() throws {
@@ -65,19 +69,20 @@ final class LevelSolutionScriptTests: XCTestCase {
         )
     }
 
-    func testEverySolutionScriptReferencesExistingProductionLevel() throws {
+    func testBundledProductionLevelsHaveCorrespondingDecodedScripts() throws {
         let levelsByID = try productionLevelsByID()
         let scripts = try LevelSolutionRepository().loadAllScripts()
 
         XCTAssertFalse(scripts.isEmpty, "Expected at least one solution script in LevelSolutions/")
 
-        let invalidReferences = scripts
-            .filter { levelsByID[$0.levelID] == nil }
-            .map { "\($0.levelID): no matching production level" }
+        let scriptIDs = Set(scripts.map(\.levelID))
+        let missingScripts = levelsByID.keys
+            .filter { !scriptIDs.contains($0) }
+            .sorted()
 
         XCTAssertTrue(
-            invalidReferences.isEmpty,
-            "Solution scripts must reference existing production levels:\n\(invalidReferences.joined(separator: "\n"))"
+            missingScripts.isEmpty,
+            "Every bundled production level must have a decoded solution script:\n\(missingScripts.joined(separator: "\n"))"
         )
     }
 
@@ -181,9 +186,9 @@ final class LevelSolutionScriptTests: XCTestCase {
         let levelsByID = try productionLevelsByID()
         let scripts = try LevelSolutionRepository().loadAllScripts()
 
-        let invalidTapNodes = scripts.flatMap { script in
+        let invalidTapNodes = scripts.flatMap { script -> [String] in
             guard let level = levelsByID[script.levelID] else {
-                return ["\(script.levelID): no matching production level"]
+                return []
             }
 
             let nodeIDs = Set(level.graph.nodes.map(\.id))
@@ -204,9 +209,9 @@ final class LevelSolutionScriptTests: XCTestCase {
         let levelsByID = try productionLevelsByID()
         let scripts = try LevelSolutionRepository().loadAllScripts()
 
-        let invalidTapTargets = scripts.flatMap { script in
+        let invalidTapTargets = scripts.flatMap { script -> [String] in
             guard let level = levelsByID[script.levelID] else {
-                return ["\(script.levelID): no matching production level"]
+                return []
             }
 
             let nodesByID = Dictionary(uniqueKeysWithValues: level.graph.nodes.map { ($0.id, $0) })

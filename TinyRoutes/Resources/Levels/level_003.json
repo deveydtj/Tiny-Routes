@@ -1,28 +1,90 @@
 {
   "id": "level_003",
-  "name": "Return Gate",
+  "name": "Level 003",
   "graph": {
     "nodes": [
-      { "id": "start", "x": 0.0, "y": 0.0, "outgoingEdgeIDs": ["e_start_pickup_switch"] },
-      { "id": "pickup_switch", "x": 1.0, "y": 0.0, "outgoingEdgeIDs": ["e_pickup_package", "e_pickup_delay"] },
-      { "id": "delay", "x": 2.0, "y": -0.9, "outgoingEdgeIDs": ["e_delay_pickup"] },
-      { "id": "package", "x": 2.0, "y": 0.9, "outgoingEdgeIDs": ["e_package_gate"] },
-      { "id": "gate", "x": 3.0, "y": 0.2, "outgoingEdgeIDs": ["e_gate_pickup", "e_gate_destination"] },
-      { "id": "destination", "x": 4.0, "y": 0.0, "outgoingEdgeIDs": [] }
+      {
+        "id": "start",
+        "x": -1.1,
+        "y": 0.0,
+        "outgoingEdgeIDs": [
+          "e_start_approach"
+        ]
+      },
+      {
+        "id": "approach",
+        "x": -0.55,
+        "y": 0.0,
+        "outgoingEdgeIDs": [
+          "e_approach_choice"
+        ]
+      },
+      {
+        "id": "choice",
+        "x": 0.0,
+        "y": 0.0,
+        "outgoingEdgeIDs": [
+          "e_choice_dead_end_a",
+          "e_choice_package"
+        ]
+      },
+      {
+        "id": "dead_end_a",
+        "x": 0.75,
+        "y": -0.65,
+        "outgoingEdgeIDs": []
+      },
+      {
+        "id": "package",
+        "x": 0.72,
+        "y": 0.55,
+        "outgoingEdgeIDs": [
+          "e_package_destination"
+        ]
+      },
+      {
+        "id": "destination",
+        "x": 1.1,
+        "y": 0.95,
+        "outgoingEdgeIDs": []
+      }
     ],
     "edges": [
-      { "id": "e_start_pickup_switch", "fromNodeID": "start", "toNodeID": "pickup_switch" },
-      { "id": "e_pickup_package", "fromNodeID": "pickup_switch", "toNodeID": "package" },
-      { "id": "e_pickup_delay", "fromNodeID": "pickup_switch", "toNodeID": "delay" },
-      { "id": "e_delay_pickup", "fromNodeID": "delay", "toNodeID": "pickup_switch" },
-      { "id": "e_package_gate", "fromNodeID": "package", "toNodeID": "gate" },
-      { "id": "e_gate_pickup", "fromNodeID": "gate", "toNodeID": "pickup_switch" },
-      { "id": "e_gate_destination", "fromNodeID": "gate", "toNodeID": "destination" }
+      {
+        "id": "e_start_approach",
+        "fromNodeID": "start",
+        "toNodeID": "approach",
+        "roadShape": "horizontalFirst"
+      },
+      {
+        "id": "e_approach_choice",
+        "fromNodeID": "approach",
+        "toNodeID": "choice",
+        "roadShape": "horizontalFirst"
+      },
+      {
+        "id": "e_choice_dead_end_a",
+        "fromNodeID": "choice",
+        "toNodeID": "dead_end_a",
+        "roadShape": "horizontalFirst"
+      },
+      {
+        "id": "e_choice_package",
+        "fromNodeID": "choice",
+        "toNodeID": "package",
+        "roadShape": "horizontalFirst"
+      },
+      {
+        "id": "e_package_destination",
+        "fromNodeID": "package",
+        "toNodeID": "destination",
+        "roadShape": "verticalFirst"
+      }
     ]
   },
   "startNodeID": "start",
   "packageNodeID": "package",
   "destinationNodeID": "destination",
-  "timeLimitSeconds": 44,
+  "timeLimitSeconds": 30,
   "parTaps": 1
 }

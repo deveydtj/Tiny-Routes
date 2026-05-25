@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 
 from .paths import (
@@ -20,13 +20,18 @@ class GenerationConfig:
     dry_run: bool = False
     overwrite: bool = False
     run_swift_tests: bool = False
-    levels_output_dir: Path = get_default_levels_directory()
-    solutions_output_dir: Path = get_default_solutions_directory()
-    report_path: Path | None = get_default_reports_directory() / "last_generation_report.md"
-    json_report_path: Path | None = get_default_reports_directory() / "last_generation_report.json"
+    levels_output_dir: Path = field(default_factory=get_default_levels_directory)
+    solutions_output_dir: Path = field(default_factory=get_default_solutions_directory)
+    report_path: Path | None = field(
+        default_factory=lambda: get_default_reports_directory() / "last_generation_report.md"
+    )
+    json_report_path: Path | None = field(
+        default_factory=lambda: get_default_reports_directory() / "last_generation_report.json"
+    )
     debug_failures_dir: Path | None = None
     max_attempts_per_level: int = 100
     swift_timeout_seconds: int = 180
+    sync_xcode_project: bool = True
     command_arguments: list[str] | None = None
 
     def __post_init__(self) -> None:

@@ -1,24 +1,18 @@
 from __future__ import annotations
 
 import argparse
-import json
 import sys
 from pathlib import Path
 
 from .generation_config import GenerationConfig
-from .level_editor_imports import LevelDocument, SolutionModel
-from .models.generated_level import GeneratedLevel
 from .paths import (
-    find_repo_root,
     get_default_levels_directory,
     get_default_reports_directory,
     get_default_solutions_directory,
 )
-from .repositories.generated_level_repository import GeneratedLevelRepository
 from .services.difficulty_service import DifficultyService
-from .services.generated_level_validation_service import GeneratedLevelValidationService
 from .services.level_generation_service import LevelGenerationService
-from .services.swift_test_service import SwiftTestService
+from .services.level_validation_runner_service import ExistingLevelValidationConfig, LevelValidationRunnerService
 from .templates.template_registry import TemplateRegistry
 
 
@@ -47,55 +41,23 @@ def main_validate(argv: list[str] | None = None) -> int:
     except SystemExit as exc:
         return int(exc.code) if isinstance(exc.code, int) else 2
 
-    preset = DifficultyService().get_preset(args.difficulty) if args.difficulty else None
-    repository = GeneratedLevelRepository()
-    validation_service = GeneratedLevelValidationService()
-    levels_dir = Path(args.output_levels)
-    solutions_dir = Path(args.output_solutions)
-    failures: list[str] = []
-    validated: list[str] = []
-
-    for raw_level_id in args.levels:
-        level_id = _normalize_level_id(raw_level_id)
-        level_path = repository.level_path(level_id, levels_dir)
-        solution_path = repository.solution_path(level_id, solutions_dir)
-        try:
-            level = LevelDocument.from_dict(json.loads(level_path.read_text(encoding="utf-8")))
-            solution = SolutionModel.from_dict(json.loads(solution_path.read_text(encoding="utf-8")))
-        except Exception as exc:
-            failures.append(f"{level_id}: could not load level/solution files: {exc}")
-            continue
-        generated = GeneratedLevel(
-            level_document=level,
-            solution=solution,
-            template_name="existing",
-            difficulty=args.difficulty or "unspecified",
-            seed=0,
+    result = LevelValidationRunnerService().validate_existing_levels(
+        ExistingLevelValidationConfig(
+            level_ids=args.levels,
+            difficulty=args.difficulty,
+            run_swift_tests=args.swift_tests,
+            levels_output_dir=Path(args.output_levels),
+            solutions_output_dir=Path(args.output_solutions),
+            swift_timeout_seconds=args.swift_timeout_seconds,
         )
-        validation_result = validation_service.validate(
-            generated,
-            preset=preset,
-            overwrite=True,
-            enforce_difficulty=preset is not None,
-        )
-        if validation_result.has_errors:
-            details = ", ".join(message.code for message in validation_result.messages if message.severity == "error")
-            failures.append(f"{level_id}: validation failed ({details})")
-        else:
-            validated.append(level_id)
+    )
 
-    swift_summary = None
-    if args.swift_tests and not failures:
-        swift_summary = SwiftTestService(find_repo_root(), timeout_seconds=args.swift_timeout_seconds).run()
-        if swift_summary.passed is not True:
-            failures.append(swift_summary.summary)
-
-    for level_id in validated:
+    for level_id in result.validated_level_ids:
         print(f"Validated {level_id}")
-    if swift_summary is not None:
-        print(swift_summary.summary)
-    if failures:
-        for failure in failures:
+    if result.swift_summary.passed is not None:
+        print(result.swift_summary.summary)
+    if result.failures:
+        for failure in result.failures:
             print(failure, file=sys.stderr)
         return 1
     return 0
@@ -132,6 +94,19 @@ def build_generate_parser() -> argparse.ArgumentParser:
     parser.add_argument("--debug-failures", type=Path, default=None, help="Directory for rejected candidate debug files.")
     parser.add_argument("--max-attempts-per-level", type=int, default=100, help="Candidate attempts before failing a level.")
     parser.add_argument("--swift-timeout-seconds", type=int, default=180, help="Timeout for optional Swift tests.")
+    parser.add_argument(
+        "--xcodegen",
+        action="store_true",
+        dest="sync_xcode_project",
+        help="Regenerate TinyRoutes.xcodeproj after writing production resource files. Default: enabled.",
+    )
+    parser.add_argument(
+        "--no-xcodegen",
+        action="store_false",
+        dest="sync_xcode_project",
+        help="Do not regenerate TinyRoutes.xcodeproj after writing production resource files.",
+    )
+    parser.set_defaults(sync_xcode_project=True)
     return parser
 
 
@@ -165,6 +140,7 @@ def _config_from_args(args: argparse.Namespace, argv: list[str] | None) -> Gener
         debug_failures_dir=args.debug_failures,
         max_attempts_per_level=args.max_attempts_per_level,
         swift_timeout_seconds=args.swift_timeout_seconds,
+        sync_xcode_project=args.sync_xcode_project,
         command_arguments=list(argv) if argv is not None else sys.argv[1:],
     )
 
@@ -199,13 +175,3 @@ def _print_generation_result(config: GenerationConfig, result) -> None:
         print(f"JSON report: {result.json_report_path}")
     for message in result.messages:
         print(message, file=sys.stderr)
-
-
-def _normalize_level_id(value: str) -> str:
-    path = Path(value)
-    name = path.name
-    if name.endswith(".solution.json"):
-        name = name[: -len(".solution.json")]
-    elif name.endswith(".json"):
-        name = name[: -len(".json")]
-    return name
