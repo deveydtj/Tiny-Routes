@@ -103,12 +103,14 @@ final class LevelValidator {
 
         let edgeReferenceIssues = validateEdgeReferences(level: level, nodeIDs: nodeIDs)
         let outgoingEdgeConsistencyIssues = validateOutgoingEdgeConsistency(level: level)
+        let switchOutgoingEdgeIssues = validateSwitchOutgoingEdgeCounts(level: level)
 
         return duplicateNodeIssues
             + duplicateEdgeIssues
             + requiredNodeIssues
             + edgeReferenceIssues
             + outgoingEdgeConsistencyIssues
+            + switchOutgoingEdgeIssues
     }
 
     private func validateEdgeReferences(level: LevelData, nodeIDs: Set<String>) -> [LevelValidationIssue] {
@@ -129,6 +131,31 @@ final class LevelValidator {
                 ))
             }
         }
+        return issues
+    }
+
+    private func validateSwitchOutgoingEdgeCounts(level: LevelData) -> [LevelValidationIssue] {
+        var issues: [LevelValidationIssue] = []
+        let edgesByID = Dictionary(grouping: level.graph.edges, by: \.id)
+            .compactMapValues(\.first)
+
+        for node in level.graph.nodes {
+            let validOutgoingEdgeCount = node.outgoingEdgeIDs.filter { edgeID in
+                guard let edge = edgesByID[edgeID] else {
+                    return false
+                }
+                return edge.fromNodeID == node.id
+            }.count
+
+            if validOutgoingEdgeCount > SwitchNodeKind.maximumSupportedOutgoingEdgeCount {
+                issues.append(LevelValidationIssue(
+                    severity: .error,
+                    levelID: level.id,
+                    message: "Node '\(node.id)' has \(validOutgoingEdgeCount) valid outgoing edges; at most \(SwitchNodeKind.maximumSupportedOutgoingEdgeCount) are supported"
+                ))
+            }
+        }
+
         return issues
     }
 

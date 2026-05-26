@@ -7,6 +7,12 @@ from .level_generation_service import LevelGenerationService
 from .level_naming_service import LevelNamingService
 from .road_shape_service import RoadShapeService
 from .solution_builder_service import SolutionBuilderService
+from .switch_classification_service import (
+    MAX_SUPPORTED_OUTGOING_EDGES,
+    SwitchClassificationService,
+    SwitchNodeClassification,
+    SwitchNodeKind,
+)
 from .swift_test_service import SwiftTestService
 
 __all__ = [
@@ -18,7 +24,11 @@ __all__ = [
     "GraphLayoutService",
     "LevelGenerationService",
     "LevelNamingService",
+    "MAX_SUPPORTED_OUTGOING_EDGES",
     "RoadShapeService",
     "SolutionBuilderService",
+    "SwitchClassificationService",
+    "SwitchNodeClassification",
+    "SwitchNodeKind",
     "SwiftTestService",
 ]

@@ -36,4 +36,26 @@ final class SwitchNodeViewTests: XCTestCase {
         XCTAssertEqual(negativeOverflow.xScale, 1)
         XCTAssertEqual(negativeOverflow.rotationAngle, 0, accuracy: 0.0001)
     }
+
+    func testSwitchOptionIndicatorLayoutSupportsTwoThreeAndFourOptions() {
+        XCTAssertEqual(SwitchOptionIndicatorLayout.angles(optionCount: 2, optionAngles: []).count, 2)
+        XCTAssertEqual(SwitchOptionIndicatorLayout.angles(optionCount: 3, optionAngles: []).count, 3)
+        XCTAssertEqual(SwitchOptionIndicatorLayout.angles(optionCount: 4, optionAngles: []).count, 4)
+    }
+
+    func testSwitchOptionIndicatorLayoutUsesProvidedOutgoingDirectionAngles() {
+        let angles = SwitchOptionIndicatorLayout.angles(
+            optionCount: 4,
+            optionAngles: [0, .pi / 2, .pi, -.pi / 2]
+        )
+
+        XCTAssertEqual(angles[0], 0, accuracy: 0.0001)
+        XCTAssertEqual(angles[1], .pi / 2, accuracy: 0.0001)
+        XCTAssertEqual(angles[2], .pi, accuracy: 0.0001)
+        XCTAssertEqual(angles[3], -.pi / 2, accuracy: 0.0001)
+    }
+
+    func testSwitchOptionIndicatorLayoutClampsUnsupportedOptionCounts() {
+        XCTAssertEqual(SwitchOptionIndicatorLayout.angles(optionCount: 5, optionAngles: []).count, 4)
+    }
 }

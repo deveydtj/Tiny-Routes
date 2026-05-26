@@ -19,3 +19,6 @@ class CandidateSignature:
     layout_hash: str
     solution_hash: str
     normalized_positions: tuple[tuple[str, float, float], ...]
+    max_outgoing_edge_count: int = 0
+    has_four_way_switch: bool = False
+    central_switch_revisit_count: int = 0

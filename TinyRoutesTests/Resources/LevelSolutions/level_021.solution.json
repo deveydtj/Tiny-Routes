@@ -1,8 +1,17 @@
 {
   "levelID": "level_021",
-  "description": "Solution for Level 021",
+  "description": "Rotate the central 4-way intersection toward the package, then rotate it toward the destination after the return path.",
   "expectedOutcome": "completed",
-  "maxTaps": 0,
+  "maxTaps": 2,
   "requiresWithinTimeLimit": true,
-  "actions": []
+  "actions": [
+    {
+      "timeSeconds": 0.8,
+      "tapNodeID": "central_switch"
+    },
+    {
+      "timeSeconds": 2.9,
+      "tapNodeID": "central_switch"
+    }
+  ]
 }

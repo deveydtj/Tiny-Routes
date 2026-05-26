@@ -14,6 +14,20 @@ class CandidateSignatureService:
         normalized_edges = self._normalized_edges(level)
         normalized_positions = self._normalized_positions(level)
         tap_node_ids = [action.tapNodeID for action in sorted(solution.actions, key=lambda action: action.timeSeconds)]
+        edges_by_id = {edge.id: edge for edge in level.graph.edges}
+        outgoing_edge_counts = [
+            sum(
+                1
+                for edge_id in node.outgoingEdgeIDs
+                if edge_id in edges_by_id and edges_by_id[edge_id].fromNodeID == node.id
+            )
+            for node in level.graph.nodes
+        ]
+        max_outgoing_edge_count = max(outgoing_edge_counts, default=0)
+        central_switch_revisit_count = max(
+            (tap_node_ids.count(node.id) for node in level.graph.nodes if len(node.outgoingEdgeIDs) > 1),
+            default=0,
+        )
         dead_end_count = sum(
             1
             for node in level.graph.nodes
@@ -24,12 +38,15 @@ class CandidateSignatureService:
             "package": level.packageNodeID,
             "destination": level.destinationNodeID,
             "edges": normalized_edges,
+            "maxOutgoingEdgeCount": max_outgoing_edge_count,
+            "hasFourWaySwitch": max_outgoing_edge_count == 4,
         }
         layout_payload = {
             "positions": normalized_positions,
         }
         solution_payload = {
             "tapNodeIDs": tap_node_ids,
+            "centralSwitchRevisitCount": central_switch_revisit_count,
         }
         return CandidateSignature(
             level_id=generated_level.level_id,
@@ -44,6 +61,9 @@ class CandidateSignatureService:
             layout_hash=self._hash_payload(layout_payload),
             solution_hash=self._hash_payload(solution_payload),
             normalized_positions=normalized_positions,
+            max_outgoing_edge_count=max_outgoing_edge_count,
+            has_four_way_switch=max_outgoing_edge_count == 4,
+            central_switch_revisit_count=central_switch_revisit_count,
         )
 
     def _normalized_edges(self, level_document) -> tuple[tuple[str, str], ...]:

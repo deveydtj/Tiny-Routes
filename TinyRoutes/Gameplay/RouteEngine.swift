@@ -6,6 +6,7 @@ enum RouteEngineError: Error, LocalizedError {
     case missingDestinationNode(id: String)
     case missingStartNode(id: String)
     case edgeReferencesUnknownNode(edgeID: String, nodeID: String)
+    case switchHasTooManyOutgoingEdges(nodeID: String, outgoingEdgeCount: Int)
 
     var errorDescription: String? {
         switch self {
@@ -17,6 +18,8 @@ enum RouteEngineError: Error, LocalizedError {
             return "Start node '\(id)' does not exist in the level graph."
         case let .edgeReferencesUnknownNode(edgeID, nodeID):
             return "Edge '\(edgeID)' references unknown node '\(nodeID)'."
+        case let .switchHasTooManyOutgoingEdges(nodeID, outgoingEdgeCount):
+            return "Node '\(nodeID)' has \(outgoingEdgeCount) valid outgoing edges; at most \(SwitchNodeKind.maximumSupportedOutgoingEdgeCount) are supported."
         }
     }
 }
@@ -131,7 +134,7 @@ final class RouteEngine {
                 x: node.x,
                 y: node.y,
                 outgoingEdgeIDs: node.outgoingEdgeIDs,
-                activeOutgoingEdgeID: node.outgoingEdgeIDs.first
+                activeOutgoingEdgeID: nil
             )
         }
 
@@ -156,7 +159,22 @@ final class RouteEngine {
             )
         }
 
-        let runtimeGraph = RuntimeRouteGraph(nodesByID: nodesByID, edgesByID: edgesByID)
+        var runtimeGraph = RuntimeRouteGraph(nodesByID: nodesByID, edgesByID: edgesByID)
+        for nodeID in runtimeGraph.nodesByID.keys {
+            guard var node = runtimeGraph.nodesByID[nodeID] else {
+                continue
+            }
+            let validOutgoingEdgeIDs = runtimeGraph.validOutgoingEdgeIDs(for: node)
+            if validOutgoingEdgeIDs.count > SwitchNodeKind.maximumSupportedOutgoingEdgeCount {
+                throw RouteEngineError.switchHasTooManyOutgoingEdges(
+                    nodeID: node.id,
+                    outgoingEdgeCount: validOutgoingEdgeIDs.count
+                )
+            }
+            node.activeOutgoingEdgeID = validOutgoingEdgeIDs.first
+            runtimeGraph.nodesByID[nodeID] = node
+        }
+
         var deliveryDot = DeliveryDot(currentNodeID: levelData.startNodeID)
         packageNodeID = levelData.packageNodeID
         destinationNodeID = levelData.destinationNodeID

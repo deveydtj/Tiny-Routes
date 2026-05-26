@@ -33,4 +33,45 @@ struct RuntimeRouteGraph {
             return edge.fromNodeID == node.id
         }
     }
+
+    func switchKind(for node: RuntimeRouteNode) -> SwitchNodeKind {
+        SwitchNodeKind(validOutgoingEdgeCount: validOutgoingEdgeIDs(for: node).count)
+    }
+}
+
+enum SwitchNodeKind: Equatable {
+    case terminal
+    case passThrough
+    case twoWaySwitch
+    case threeWaySwitch
+    case fourWayIntersectionSwitch
+    case invalidTooManyOutgoingEdges(validOutgoingEdgeCount: Int)
+
+    static let maximumSupportedOutgoingEdgeCount = 4
+
+    init(validOutgoingEdgeCount: Int) {
+        switch validOutgoingEdgeCount {
+        case 0:
+            self = .terminal
+        case 1:
+            self = .passThrough
+        case 2:
+            self = .twoWaySwitch
+        case 3:
+            self = .threeWaySwitch
+        case 4:
+            self = .fourWayIntersectionSwitch
+        default:
+            self = .invalidTooManyOutgoingEdges(validOutgoingEdgeCount: validOutgoingEdgeCount)
+        }
+    }
+
+    var isSwitchable: Bool {
+        switch self {
+        case .twoWaySwitch, .threeWaySwitch, .fourWayIntersectionSwitch:
+            return true
+        case .terminal, .passThrough, .invalidTooManyOutgoingEdges:
+            return false
+        }
+    }
 }

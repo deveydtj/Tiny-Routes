@@ -85,6 +85,22 @@ final class LevelSolvabilityTests: XCTestCase {
 
     // MARK: - Tests
 
+    func testLevel021FourWayIntersectionSolutionCompletes() throws {
+        let level = try XCTUnwrap(
+            catalog.loadAllProductionLevels().first { $0.id == "level_021" },
+            "Expected bundled level_021"
+        )
+        let script = try solutionRepository.loadScript(levelID: "level_021")
+
+        let result = try harness.run(level: level, script: script)
+
+        XCTAssertEqual(result.outcome, .completed)
+        XCTAssertEqual(result.tapCount, 2)
+        XCTAssertEqual(result.finalNodeID, level.destinationNodeID)
+        XCTAssertTrue(result.didCollectPackage)
+        XCTAssertEqual(result.executedActions.map(\.didRotate), [true, true])
+    }
+
     func testProductionLevelsWithScriptsAllComplete() throws {
         let entries = try simulationEntries()
         var failures: [String] = []

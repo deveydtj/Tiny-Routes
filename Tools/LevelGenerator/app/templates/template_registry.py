@@ -3,6 +3,7 @@ from __future__ import annotations
 from ..models.difficulty_preset import DifficultyPreset
 from ..random_source import RandomSource
 from .base_template import LevelTemplate
+from .four_way_intersection_template import FourWayIntersectionTemplate
 from .multi_switch_chain_template import MultiSwitchChainTemplate
 from .package_gate_template import PackageGateTemplate
 from .return_loop_template import ReturnLoopTemplate
@@ -22,6 +23,7 @@ class TemplateRegistry:
                 ReturnLoopTemplate(),
                 MultiSwitchChainTemplate(),
                 RingRouteTemplate(),
+                FourWayIntersectionTemplate(),
             ]
         }
 
@@ -82,5 +84,6 @@ class TemplateRegistry:
             "easy": {"single_switch": 5, "package_gate": 3},
             "medium": {"package_gate": 3, "return_loop": 3, "multi_switch_chain": 4},
             "hard": {"multi_switch_chain": 5, "ring_route": 2},
+            "expert": {"four_way_intersection": 5, "multi_switch_chain": 2, "ring_route": 1},
         }
         return weights.get(difficulty_name, {}).get(template_name, 1)

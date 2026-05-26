@@ -41,6 +41,9 @@ class PreviewImageService:
             '<rect width="100%" height="100%" fill="#f8fafc"/>',
             f'<text x="16" y="22" font-family="Arial" font-size="14" fill="#0f172a">{escape(level.id)}</text>',
         ]
+        has_four_way_switch = any(len(node.outgoingEdgeIDs) == 4 for node in nodes)
+        if has_four_way_switch:
+            lines.append('<text x="16" y="42" font-family="Arial" font-size="11" fill="#9a3412">4-way switch</text>')
         for edge in level.graph.edges:
             if edge.fromNodeID not in node_by_id or edge.toNodeID not in node_by_id:
                 continue
@@ -56,6 +59,8 @@ class PreviewImageService:
                 fill = "#f59e0b"
             elif node.id == level.destinationNodeID:
                 fill = "#ef4444"
+            elif len(node.outgoingEdgeIDs) == 4:
+                fill = "#f97316"
             elif len(node.outgoingEdgeIDs) > 1:
                 fill = "#3b82f6"
             lines.append(f'<circle cx="{x:.1f}" cy="{y:.1f}" r="8" fill="{fill}" stroke="#0f172a" stroke-width="1"/>')

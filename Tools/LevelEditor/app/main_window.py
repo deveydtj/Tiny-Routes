@@ -1,3 +1,4 @@
+import math
 from pathlib import Path
 
 from PySide6.QtCore import Qt
@@ -25,6 +26,7 @@ from app.services import (
     LevelIdentityService,
     LevelValidationService,
     SolutionValidationService,
+    SwitchClassificationService,
     TestRunnerService,
     ValidationMessage,
     ValidationResult,
@@ -56,6 +58,7 @@ class LevelEditorMainWindow(QMainWindow):
         self._identity_service = LevelIdentityService()
         self._validation_service = LevelValidationService()
         self._solution_validation_service = SolutionValidationService()
+        self._switch_classification_service = SwitchClassificationService()
         self._test_runner_service = TestRunnerService(self._resolve_repo_root())
         self._canvas_view = LevelCanvasView()
         self._piece_palette = PiecePalette()
@@ -100,7 +103,7 @@ class LevelEditorMainWindow(QMainWindow):
 
         # Wire canvas scene selection signals to the properties panel
         scene = self._canvas_view.scene()
-        scene.node_item_selected.connect(self._properties_panel.show_node)
+        scene.node_item_selected.connect(self._on_node_item_selected)
         scene.edge_item_selected.connect(self._properties_panel.show_edge)
         scene.selection_cleared.connect(self._properties_panel.clear)
         scene.node_item_moved.connect(self._on_node_item_moved)
@@ -112,6 +115,9 @@ class LevelEditorMainWindow(QMainWindow):
             self._focus_validation_message
         )
         self._piece_palette.node_type_activated.connect(self._add_node_from_palette)
+        self._properties_panel.outgoing_edge_order_changed.connect(
+            self._on_outgoing_edge_order_changed
+        )
         self._solution_panel.solution_changed.connect(self._on_solution_changed)
 
         self._build_menu_bar()
@@ -245,6 +251,7 @@ class LevelEditorMainWindow(QMainWindow):
         self._current_solution = self._load_solution_for_level(self._current_file_path, document)
         self._canvas_view.scene().display_level(document)
         self._properties_panel.clear()
+        self._solution_panel.set_level(self._current_document)
         self._solution_panel.set_solution(self._current_solution)
         self._validation_panel.clear()
         self._update_run_tests_action_states()
@@ -259,6 +266,7 @@ class LevelEditorMainWindow(QMainWindow):
         self._current_solution = self._build_default_solution(self._current_document)
         self._canvas_view.scene().display_level(self._current_document)
         self._properties_panel.clear()
+        self._solution_panel.set_level(self._current_document)
         self._solution_panel.set_solution(self._current_solution)
         self._validation_panel.clear()
         self._update_run_tests_action_states()
@@ -510,6 +518,7 @@ class LevelEditorMainWindow(QMainWindow):
         self._current_document.name = result.level_name or result.identity.level_name
         self._current_document.timeLimitSeconds = result.timeLimitSeconds
         self._current_document.parTaps = result.parTaps
+        self._solution_panel.set_level(self._current_document)
         self._solution_panel.set_solution(self._current_solution)
         self._validation_panel.clear()
         self._set_dirty(True)
@@ -751,6 +760,27 @@ class LevelEditorMainWindow(QMainWindow):
         self._validation_panel.clear()
         self._set_dirty(True)
 
+    def _on_node_item_selected(self, node_id: str, node_type: str, model_x: float, model_y: float) -> None:
+        if self._current_document is None:
+            self._properties_panel.show_node(node_id, node_type, model_x, model_y)
+            return
+
+        node = next((node for node in self._current_document.graph.nodes if node.id == node_id), None)
+        if node is None:
+            self._properties_panel.show_node(node_id, node_type, model_x, model_y)
+            return
+
+        edge_by_id = {edge.id: edge for edge in self._current_document.graph.edges}
+        classification = self._switch_classification_service.classify_node(node, edge_by_id)
+        self._properties_panel.show_node(
+            node_id,
+            node_type,
+            model_x,
+            model_y,
+            switch_classification=classification.display_name,
+            outgoing_edge_order=self._outgoing_edge_order_rows(node),
+        )
+
     def _on_node_item_moved(self, node_id: str, model_x: float, model_y: float) -> None:
         if self._current_document is None:
             return
@@ -762,9 +792,34 @@ class LevelEditorMainWindow(QMainWindow):
                 return
             node.x = model_x
             node.y = model_y
+            self._solution_panel.set_level(self._current_document)
             self._validation_panel.clear()
             self._set_dirty(True)
             return
+
+    def _on_outgoing_edge_order_changed(self, node_id: str, ordered_edge_ids: list[str]) -> None:
+        if self._current_document is None:
+            return
+
+        node = next((node for node in self._current_document.graph.nodes if node.id == node_id), None)
+        if node is None:
+            return
+
+        edge_by_id = {edge.id: edge for edge in self._current_document.graph.edges}
+        classification = self._switch_classification_service.classify_node(node, edge_by_id)
+        current_valid_edge_ids = list(classification.valid_outgoing_edge_ids)
+        if sorted(ordered_edge_ids) != sorted(current_valid_edge_ids):
+            return
+
+        remaining_edge_ids = [
+            edge_id for edge_id in node.outgoingEdgeIDs if edge_id not in current_valid_edge_ids
+        ]
+        node.outgoingEdgeIDs = list(ordered_edge_ids) + remaining_edge_ids
+        self._canvas_view.scene().display_level(self._current_document)
+        self._canvas_view.scene().select_node_by_id(node_id)
+        self._solution_panel.set_level(self._current_document)
+        self._validation_panel.clear()
+        self._set_dirty(True)
 
     def _add_node_from_palette(self, node_type: str) -> None:
         if self._current_document is None:
@@ -826,13 +881,66 @@ class LevelEditorMainWindow(QMainWindow):
         )
 
         self._canvas_view.scene().display_level(self._current_document)
+        self._solution_panel.set_level(self._current_document)
         self._validation_panel.clear()
         self._set_dirty(True)
+
+    def _outgoing_edge_order_rows(self, node) -> list[dict[str, object]]:
+        if self._current_document is None:
+            return []
+
+        node_by_id = {node.id: node for node in self._current_document.graph.nodes}
+        edge_by_id = {edge.id: edge for edge in self._current_document.graph.edges}
+        classification = self._switch_classification_service.classify_node(node, edge_by_id)
+        rows: list[dict[str, object]] = []
+        for index, edge_id in enumerate(classification.valid_outgoing_edge_ids):
+            edge = edge_by_id[edge_id]
+            target_node = node_by_id.get(edge.toNodeID)
+            direction_label, clockwise_sort_key = self._direction_label_and_clockwise_sort_key(
+                node,
+                target_node,
+            )
+            rows.append(
+                {
+                    "edge_id": edge_id,
+                    "target_node_id": edge.toNodeID,
+                    "direction_label": direction_label,
+                    "clockwise_sort_key": clockwise_sort_key,
+                    "is_default": index == 0,
+                }
+            )
+        return rows
+
+    def _direction_label_and_clockwise_sort_key(self, source_node, target_node) -> tuple[str, float]:
+        if target_node is None:
+            return "Unknown", 99.0
+
+        dx = float(target_node.x) - float(source_node.x)
+        dy = float(target_node.y) - float(source_node.y)
+        if math.isclose(dx, 0.0, abs_tol=1e-9) and math.isclose(dy, 0.0, abs_tol=1e-9):
+            return "Same", 99.0
+
+        labels = [
+            "Up",
+            "Up-Right",
+            "Right",
+            "Down-Right",
+            "Down",
+            "Down-Left",
+            "Left",
+            "Up-Left",
+        ]
+        clockwise_from_up = math.atan2(dx, dy)
+        if clockwise_from_up < 0:
+            clockwise_from_up += math.tau
+        label_index = int(round(clockwise_from_up / (math.tau / len(labels)))) % len(labels)
+        return labels[label_index], clockwise_from_up
 
     def _on_level_items_deleted(self) -> None:
         if self._current_document is None:
             return
         self._validation_panel.clear()
+        self._solution_panel.set_level(self._current_document)
         self._set_dirty(True)
 
     def _generate_unique_default_node_id(self, node_type: str) -> str:

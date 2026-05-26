@@ -9,6 +9,7 @@ from app.services.level_validation_service import (
     ValidationResult,
     ValidationSeverity,
 )
+from app.services.switch_classification_service import SwitchClassificationService, SwitchNodeKind
 
 
 class SolutionValidationService:
@@ -139,6 +140,8 @@ def validate(
         )
 
     node_by_id = {node.id: node for node in level.graph.nodes}
+    edge_by_id = {edge.id: edge for edge in level.graph.edges}
+    switch_classification_service = SwitchClassificationService()
     previous_time: int | float | None = None
 
     for index, action in enumerate(solution.actions):
@@ -165,17 +168,44 @@ def validate(
                         related_node_id=action.tapNodeID,
                     )
                 )
-            elif len(tapped_node.outgoingEdgeIDs) < 2:
-                messages.append(
-                    ValidationMessage(
-                        severity=ValidationSeverity.WARNING,
-                        code="tap_node_is_not_switchable",
-                        message=(
-                            f"{action_label} taps node '{action.tapNodeID}', but that node has fewer than two outgoing edges."
-                        ),
-                        related_node_id=action.tapNodeID,
+            else:
+                classification = switch_classification_service.classify_node(tapped_node, edge_by_id)
+                if classification.valid_outgoing_edge_count < 2:
+                    messages.append(
+                        ValidationMessage(
+                            severity=ValidationSeverity.WARNING,
+                            code="tap_node_is_not_switchable",
+                            message=(
+                                f"{action_label} taps node '{action.tapNodeID}', but that node has "
+                                f"{classification.valid_outgoing_edge_count} valid outgoing edge(s)."
+                            ),
+                            related_node_id=action.tapNodeID,
+                        )
                     )
-                )
+                elif classification.kind is SwitchNodeKind.INVALID_TOO_MANY_OUTGOING_EDGES:
+                    messages.append(
+                        ValidationMessage(
+                            severity=ValidationSeverity.ERROR,
+                            code="tap_node_has_too_many_outgoing_edges",
+                            message=(
+                                f"{action_label} taps node '{action.tapNodeID}', but that node has "
+                                f"{classification.valid_outgoing_edge_count} valid outgoing edge(s), which is unsupported."
+                            ),
+                            related_node_id=action.tapNodeID,
+                        )
+                    )
+                else:
+                    messages.append(
+                        ValidationMessage(
+                            severity=ValidationSeverity.INFO,
+                            code="tap_node_switch_context",
+                            message=(
+                                f"{action_label} taps {classification.display_name.lower()} "
+                                f"'{action.tapNodeID}' with {classification.valid_outgoing_edge_count} option(s)."
+                            ),
+                            related_node_id=action.tapNodeID,
+                        )
+                    )
 
         if not (
             isinstance(action.timeSeconds, (int, float))

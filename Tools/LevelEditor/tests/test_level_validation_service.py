@@ -15,6 +15,10 @@ from app.services.level_validation_service import (
     create_default_level_document,
     validate,
 )
+from app.services.switch_classification_service import (
+    SwitchClassificationService,
+    SwitchNodeKind,
+)
 
 FIXTURES_DIR = Path(__file__).resolve().parent / "fixtures"
 
@@ -104,6 +108,73 @@ def _load_fixture(filename: str) -> LevelDocument:
 
 def _codes(result: ValidationResult) -> list[str]:
     return [message.code for message in result.messages]
+
+
+def _make_switch_outgoing_count_level(count: int) -> LevelDocument:
+    payload = {
+        "id": "switch_outgoing_count",
+        "name": "Switch Outgoing Count",
+        "graph": {
+            "nodes": [
+                {"id": "start", "x": -1.0, "y": 0.0, "outgoingEdgeIDs": ["e_start_switch"]},
+                {
+                    "id": "switch",
+                    "x": 0.0,
+                    "y": 0.0,
+                    "outgoingEdgeIDs": [f"e_switch_{index}" for index in range(count)],
+                },
+                *[
+                    {"id": f"target_{index}", "x": float(index + 1), "y": 0.0, "outgoingEdgeIDs": []}
+                    for index in range(count)
+                ],
+            ],
+            "edges": [
+                {"id": "e_start_switch", "fromNodeID": "start", "toNodeID": "switch"},
+                *[
+                    {
+                        "id": f"e_switch_{index}",
+                        "fromNodeID": "switch",
+                        "toNodeID": f"target_{index}",
+                    }
+                    for index in range(count)
+                ],
+            ],
+        },
+        "startNodeID": "start",
+        "packageNodeID": "target_0",
+        "destinationNodeID": "target_1" if count > 1 else "target_0",
+        "timeLimitSeconds": 30,
+        "parTaps": 1,
+    }
+    return LevelDocument.from_dict(payload)
+
+
+def test_switch_classification_uses_valid_outgoing_edges() -> None:
+    service = SwitchClassificationService()
+    level = _make_switch_outgoing_count_level(1)
+    node = next(node for node in level.graph.nodes if node.id == "switch")
+    node.outgoingEdgeIDs.extend(["missing", "wrong_source"])
+    edge_by_id = {edge.id: edge for edge in level.graph.edges}
+    edge_by_id["wrong_source"] = level.graph.edges[0]
+
+    classification = service.classify_node(node, edge_by_id)
+
+    assert classification.kind is SwitchNodeKind.PASS_THROUGH
+    assert classification.valid_outgoing_edge_ids == ("e_switch_0",)
+
+
+def test_switch_classification_covers_supported_counts_and_invalid_count() -> None:
+    service = SwitchClassificationService()
+    expected = [
+        SwitchNodeKind.TERMINAL,
+        SwitchNodeKind.PASS_THROUGH,
+        SwitchNodeKind.TWO_WAY_SWITCH,
+        SwitchNodeKind.THREE_WAY_SWITCH,
+        SwitchNodeKind.FOUR_WAY_INTERSECTION_SWITCH,
+        SwitchNodeKind.INVALID_TOO_MANY_OUTGOING_EDGES,
+    ]
+
+    assert [service.kind_for_count(count) for count in range(6)] == expected
 
 
 def test_create_default_level_document_is_minimal_and_valid():
@@ -424,6 +495,39 @@ def test_validate_edge_missing_from_source_outgoing_ids():
     result = validate(level)
     codes = [m.code for m in result.messages]
     assert "edge_missing_from_source_outgoing_ids" in codes
+
+
+def test_validate_allows_four_outgoing_edges() -> None:
+    level = _make_switch_outgoing_count_level(4)
+
+    result = validate(level)
+
+    assert "switch_has_too_many_outgoing_edges" not in _codes(result)
+
+
+def test_validate_rejects_five_outgoing_edges() -> None:
+    level = _make_switch_outgoing_count_level(5)
+
+    result = validate(level)
+    messages = [message for message in result.messages if message.code == "switch_has_too_many_outgoing_edges"]
+
+    assert len(messages) == 1
+    assert messages[0].severity is ValidationSeverity.ERROR
+    assert messages[0].related_node_id == "switch"
+    assert "5 valid outgoing edges" in messages[0].message
+
+
+def test_validate_warns_for_ambiguous_four_way_directions() -> None:
+    level = _make_switch_outgoing_count_level(4)
+    node_by_id = {node.id: node for node in level.graph.nodes}
+    node_by_id["target_0"].x = 1.0
+    node_by_id["target_0"].y = 0.0
+    node_by_id["target_1"].x = 1.0
+    node_by_id["target_1"].y = 0.05
+
+    result = validate(level)
+
+    assert "four_way_switch_ambiguous_angles" in _codes(result)
 
 
 def test_validate_unreachable_package_produces_error():

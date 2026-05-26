@@ -15,6 +15,7 @@ NODE_TYPE_STYLES: dict[str, NodeVisualStyle] = {
     "start": NodeVisualStyle(fill_color="#2e7d32", border_color="#1b5e20"),
     "route": NodeVisualStyle(fill_color="#fafafa", border_color="#424242"),
     "switch": NodeVisualStyle(fill_color="#fff3e0", border_color="#ef6c00"),
+    "four_way_switch": NodeVisualStyle(fill_color="#fff7ed", border_color="#c2410c"),
     "package": NodeVisualStyle(fill_color="#e8f5e9", border_color="#2e7d32"),
     "destination": NodeVisualStyle(fill_color="#e3f2fd", border_color="#1565c0"),
     "finish": NodeVisualStyle(fill_color="#f3e5f5", border_color="#6a1b9a"),
@@ -50,6 +51,13 @@ class NodeItem(QGraphicsItemGroup):
         label_rect = label.boundingRect()
         label.setPos(-label_rect.width() / 2, -label_rect.height() / 2)
         self.addToGroup(label)
+
+        if self.node_type == "four_way_switch":
+            badge = QGraphicsSimpleTextItem("4")
+            badge.setBrush(QColor("#7c2d12"))
+            badge_rect = badge.boundingRect()
+            badge.setPos(radius - badge_rect.width() - 8, -radius + 5)
+            self.addToGroup(badge)
 
     def set_connection_source(self, is_source: bool) -> None:
         self._is_connection_source = is_source

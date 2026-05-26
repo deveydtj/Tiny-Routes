@@ -10,7 +10,7 @@ os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 try:
     from PySide6.QtCore import Qt
     from PySide6.QtGui import QColor, QKeyEvent, QPalette
-    from PySide6.QtWidgets import QApplication, QDialog, QFileDialog, QMessageBox, QToolBar
+    from PySide6.QtWidgets import QApplication, QDialog, QFileDialog, QMessageBox, QPushButton, QToolBar, QWidget
 except ImportError as exc:
     pytest.skip(f"PySide6 unavailable in this environment: {exc}", allow_module_level=True)
 
@@ -346,6 +346,35 @@ def test_open_level_draws_nodes_on_canvas(
         node_items = [item for item in window._canvas_view.scene().items() if isinstance(item, NodeItem)]
         assert {item.node_id for item in node_items} == {"start", "switch_a", "package", "destination"}
         assert all(item.childItems() for item in node_items)
+    finally:
+        window.close()
+
+
+def test_canvas_marks_four_way_switch_nodes_distinctly(qapplication: QApplication) -> None:
+    scene = LevelCanvasScene()
+    scene.display_level(_make_four_way_editor_document())
+
+    node_items = [item for item in scene.items() if isinstance(item, NodeItem)]
+    central_item = next(item for item in node_items if item.node_id == "central")
+
+    assert central_item.node_type == "four_way_switch"
+
+
+def test_main_window_outgoing_edge_reorder_updates_document_and_dirty_state(
+    qapplication: QApplication,
+) -> None:
+    window = LevelEditorMainWindow()
+    document = _make_four_way_editor_document()
+    try:
+        window._current_document = document
+        window._canvas_view.scene().display_level(document)
+        window._set_dirty(False)
+
+        window._on_outgoing_edge_order_changed("central", ["e_right", "e_up", "e_down", "e_left"])
+
+        central = next(node for node in document.graph.nodes if node.id == "central")
+        assert central.outgoingEdgeIDs == ["e_right", "e_up", "e_down", "e_left"]
+        assert window._is_dirty is True
     finally:
         window.close()
 
@@ -900,6 +929,34 @@ def test_solution_panel_can_add_edit_and_remove_actions(qapplication: QApplicati
         panel.close()
 
 
+def test_solution_panel_shows_switch_timeline_for_four_way_taps(qapplication: QApplication) -> None:
+    panel = SolutionPanel()
+    solution = SolutionModel(
+        levelID="level_four_way",
+        description="Test",
+        expectedOutcome="completed",
+        maxTaps=2,
+        requiresWithinTimeLimit=True,
+        actions=[
+            SolutionActionModel(timeSeconds=0.8, tapNodeID="central"),
+            SolutionActionModel(timeSeconds=2.4, tapNodeID="central"),
+        ],
+    )
+
+    try:
+        panel.set_level(_make_four_way_editor_document())
+        panel.set_solution(solution)
+
+        assert panel._timeline_table.rowCount() == 2
+        assert panel._timeline_table.item(0, 1).text() == "e_up"
+        assert panel._timeline_table.item(0, 2).text() == "e_right"
+        assert panel._timeline_table.item(0, 3).text() == "right"
+        assert panel._timeline_table.item(1, 1).text() == "e_right"
+        assert panel._timeline_table.item(1, 2).text() == "e_down"
+    finally:
+        panel.close()
+
+
 def test_solution_changes_mark_main_window_dirty(
     qapplication: QApplication,
     monkeypatch: pytest.MonkeyPatch,
@@ -1236,12 +1293,137 @@ def _make_two_node_one_edge_document() -> LevelDocument:
     )
 
 
+def _make_four_way_editor_document() -> LevelDocument:
+    return LevelDocument(
+        id="level_four_way",
+        name="Four Way Editor Level",
+        graph=RouteGraphModel(
+            nodes=[
+                RouteNodeModel(id="start", x=-1.0, y=0.0, outgoingEdgeIDs=["e_start_central"]),
+                RouteNodeModel(
+                    id="central",
+                    x=0.0,
+                    y=0.0,
+                    outgoingEdgeIDs=["e_up", "e_right", "e_down", "e_left"],
+                ),
+                RouteNodeModel(id="up", x=0.0, y=1.0, outgoingEdgeIDs=[]),
+                RouteNodeModel(id="right", x=1.0, y=0.0, outgoingEdgeIDs=[]),
+                RouteNodeModel(id="down", x=0.0, y=-1.0, outgoingEdgeIDs=[]),
+                RouteNodeModel(id="left", x=-1.0, y=0.0, outgoingEdgeIDs=[]),
+            ],
+            edges=[
+                RouteEdgeModel(id="e_start_central", fromNodeID="start", toNodeID="central"),
+                RouteEdgeModel(id="e_up", fromNodeID="central", toNodeID="up"),
+                RouteEdgeModel(id="e_right", fromNodeID="central", toNodeID="right"),
+                RouteEdgeModel(id="e_down", fromNodeID="central", toNodeID="down"),
+                RouteEdgeModel(id="e_left", fromNodeID="central", toNodeID="left"),
+            ],
+        ),
+        startNodeID="start",
+        packageNodeID="down",
+        destinationNodeID="right",
+        timeLimitSeconds=30,
+        parTaps=2,
+    )
+
+
 def test_main_window_has_properties_panel(qapplication: QApplication) -> None:
     window = LevelEditorMainWindow()
     try:
         assert isinstance(window._properties_panel, PropertiesPanel)
     finally:
         window.close()
+
+
+def test_properties_panel_shows_switch_classification_and_outgoing_order(qapplication: QApplication) -> None:
+    panel = PropertiesPanel()
+    try:
+        panel.show_node(
+            "central",
+            "four_way_switch",
+            0.0,
+            0.0,
+            switch_classification="4-way intersection switch",
+            outgoing_edge_order=[
+                {
+                    "edge_id": "e_up",
+                    "target_node_id": "up",
+                    "direction_label": "Up",
+                    "clockwise_sort_key": 0.0,
+                    "is_default": True,
+                },
+                {
+                    "edge_id": "e_right",
+                    "target_node_id": "right",
+                    "direction_label": "Right",
+                    "clockwise_sort_key": 1.57,
+                    "is_default": False,
+                },
+            ],
+        )
+
+        assert panel._outgoing_table is not None
+        assert panel._outgoing_table.rowCount() == 2
+        assert panel._outgoing_table.item(0, 0).text() == "default"
+        assert panel._outgoing_table.item(1, 2).text() == "right"
+    finally:
+        panel.close()
+
+
+def test_properties_panel_move_down_emits_reordered_outgoing_edges(qapplication: QApplication) -> None:
+    panel = PropertiesPanel()
+    emitted: list[tuple[str, list[str]]] = []
+    panel.outgoing_edge_order_changed.connect(lambda node_id, edge_ids: emitted.append((node_id, edge_ids)))
+    try:
+        panel.show_node(
+            "central",
+            "four_way_switch",
+            0.0,
+            0.0,
+            outgoing_edge_order=[
+                {"edge_id": "e_up", "target_node_id": "up", "direction_label": "Up", "clockwise_sort_key": 0.0},
+                {"edge_id": "e_right", "target_node_id": "right", "direction_label": "Right", "clockwise_sort_key": 1.57},
+            ],
+        )
+        assert panel._outgoing_table is not None
+        panel._outgoing_table.selectRow(0)
+        assert panel._move_down_button is not None
+        panel._move_down_button.click()
+
+        assert emitted[-1] == ("central", ["e_right", "e_up"])
+    finally:
+        panel.close()
+
+
+def test_properties_panel_sort_clockwise_uses_up_right_down_left_order(qapplication: QApplication) -> None:
+    panel = PropertiesPanel()
+    emitted: list[tuple[str, list[str]]] = []
+    panel.outgoing_edge_order_changed.connect(lambda node_id, edge_ids: emitted.append((node_id, edge_ids)))
+    try:
+        panel.show_node(
+            "central",
+            "four_way_switch",
+            0.0,
+            0.0,
+            outgoing_edge_order=[
+                {"edge_id": "e_down", "target_node_id": "down", "direction_label": "Down", "clockwise_sort_key": math.pi},
+                {"edge_id": "e_left", "target_node_id": "left", "direction_label": "Left", "clockwise_sort_key": math.pi * 1.5},
+                {"edge_id": "e_right", "target_node_id": "right", "direction_label": "Right", "clockwise_sort_key": math.pi / 2},
+                {"edge_id": "e_up", "target_node_id": "up", "direction_label": "Up", "clockwise_sort_key": 0.0},
+            ],
+        )
+        sort_button = next(
+            panel._form_layout.itemAt(index).widget()
+            for index in range(panel._form_layout.count())
+            if isinstance(panel._form_layout.itemAt(index).widget(), QWidget)
+            and panel._form_layout.itemAt(index).widget().findChildren(QPushButton)
+        ).findChildren(QPushButton)[2]
+
+        sort_button.click()
+
+        assert emitted[-1] == ("central", ["e_up", "e_right", "e_down", "e_left"])
+    finally:
+        panel.close()
 
 
 def test_main_window_has_validation_panel(qapplication: QApplication) -> None:

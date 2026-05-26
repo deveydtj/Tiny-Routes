@@ -15,7 +15,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from app.models import SolutionActionModel, SolutionModel
+from app.models import LevelDocument, SolutionActionModel, SolutionModel
 
 
 class SolutionPanel(QWidget):
@@ -26,6 +26,7 @@ class SolutionPanel(QWidget):
         self.setMinimumHeight(180)
 
         self._solution: SolutionModel | None = None
+        self._level: LevelDocument | None = None
         self._is_updating_table = False
 
         outer = QVBoxLayout(self)
@@ -67,13 +68,31 @@ class SolutionPanel(QWidget):
         header_view.setStretchLastSection(True)
         outer.addWidget(self._table)
 
+        self._timeline_label = QLabel("Switch Timeline")
+        outer.addWidget(self._timeline_label)
+
+        self._timeline_table = QTableWidget(0, 4)
+        self._timeline_table.setHorizontalHeaderLabels(["Tap Node", "Previous Edge", "Next Edge", "Target"])
+        self._timeline_table.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
+        self._timeline_table.setSelectionMode(QAbstractItemView.SelectionMode.NoSelection)
+        self._timeline_table.setVisible(False)
+        self._timeline_table.horizontalHeader().setStretchLastSection(True)
+        outer.addWidget(self._timeline_table)
+
         self._update_empty_state()
+        self._reload_timeline()
+
+    def set_level(self, level: LevelDocument | None) -> None:
+        self._level = deepcopy(level) if level is not None else None
+        self._reload_timeline()
 
     def set_solution(self, solution: SolutionModel | None) -> None:
         self._solution = deepcopy(solution) if solution is not None else None
         self._reload_table()
+        self._reload_timeline()
 
     def clear(self) -> None:
+        self._level = None
         self.set_solution(None)
 
     def current_solution(self) -> SolutionModel | None:
@@ -92,6 +111,7 @@ class SolutionPanel(QWidget):
 
         self._update_empty_state()
         self._update_button_states()
+        self._reload_timeline()
 
     def _populate_row(self, row_index: int, action: SolutionActionModel) -> None:
         time_item = QTableWidgetItem(self._format_time_value(action.timeSeconds))
@@ -153,6 +173,7 @@ class SolutionPanel(QWidget):
         self._solution.maxTaps = len(self._solution.actions)
         self._update_empty_state()
         self._update_button_states()
+        self._reload_timeline()
         self._emit_solution_changed()
 
     def _on_item_changed(self, item: QTableWidgetItem) -> None:
@@ -190,12 +211,72 @@ class SolutionPanel(QWidget):
             return
 
         self._solution.maxTaps = len(self._solution.actions)
+        self._reload_timeline()
         self._emit_solution_changed()
 
     def _emit_solution_changed(self) -> None:
         if self._solution is None:
             return
         self.solution_changed.emit(deepcopy(self._solution))
+
+    def _reload_timeline(self) -> None:
+        self._timeline_table.setRowCount(0)
+        rows = self._switch_timeline_rows()
+        for row_index, row in enumerate(rows):
+            self._timeline_table.insertRow(row_index)
+            for column_index, value in enumerate(row):
+                self._timeline_table.setItem(row_index, column_index, QTableWidgetItem(value))
+        self._timeline_table.resizeColumnsToContents()
+        self._timeline_label.setVisible(bool(rows))
+        self._timeline_table.setVisible(bool(rows))
+
+    def _switch_timeline_rows(self) -> list[tuple[str, str, str, str]]:
+        if self._level is None or self._solution is None:
+            return []
+
+        node_by_id = {node.id: node for node in self._level.graph.nodes}
+        edge_by_id = {edge.id: edge for edge in self._level.graph.edges}
+        active_edge_by_node_id: dict[str, str | None] = {}
+        rows: list[tuple[str, str, str, str]] = []
+
+        for node in self._level.graph.nodes:
+            valid_edge_ids = [
+                edge_id
+                for edge_id in node.outgoingEdgeIDs
+                if edge_id in edge_by_id and edge_by_id[edge_id].fromNodeID == node.id
+            ]
+            active_edge_by_node_id[node.id] = valid_edge_ids[0] if valid_edge_ids else None
+
+        for action in sorted(self._solution.actions, key=lambda value: float(value.timeSeconds)):
+            node = node_by_id.get(action.tapNodeID)
+            if node is None:
+                continue
+
+            valid_edge_ids = [
+                edge_id
+                for edge_id in node.outgoingEdgeIDs
+                if edge_id in edge_by_id and edge_by_id[edge_id].fromNodeID == node.id
+            ]
+            if len(valid_edge_ids) < 2:
+                continue
+
+            previous_edge_id = active_edge_by_node_id.get(node.id)
+            if previous_edge_id in valid_edge_ids:
+                next_edge_id = valid_edge_ids[(valid_edge_ids.index(previous_edge_id) + 1) % len(valid_edge_ids)]
+            else:
+                next_edge_id = valid_edge_ids[0]
+            active_edge_by_node_id[node.id] = next_edge_id
+            target_node_id = edge_by_id[next_edge_id].toNodeID
+            rows.append(
+                (
+                    action.tapNodeID,
+                    previous_edge_id or "(none)",
+                    next_edge_id,
+                    target_node_id,
+                )
+            )
+
+        return rows
 
     def _reset_item_text(self, item: QTableWidgetItem, text: str) -> None:
         self._is_updating_table = True

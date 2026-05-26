@@ -37,6 +37,86 @@ final class RouteEngineTests: XCTestCase {
         )
     }
 
+    private func makeFourWayIntersectionLevelData() -> LevelData {
+        let nodes = [
+            RouteNode(id: "start", x: -1.0, y: 0.0, outgoingEdgeIDs: ["e_start_entry"]),
+            RouteNode(id: "entry", x: -0.5, y: 0.0, outgoingEdgeIDs: ["e_entry_central"]),
+            RouteNode(
+                id: "central_switch",
+                x: 0.0,
+                y: 0.0,
+                outgoingEdgeIDs: [
+                    "e_central_dead_end",
+                    "e_central_package",
+                    "e_central_destination",
+                    "e_central_side_branch"
+                ]
+            ),
+            RouteNode(id: "dead_end", x: 0.0, y: 0.75, outgoingEdgeIDs: []),
+            RouteNode(id: "package", x: 0.0, y: -0.75, outgoingEdgeIDs: ["e_package_return"]),
+            RouteNode(id: "return_node", x: -0.5, y: -0.75, outgoingEdgeIDs: ["e_return_central"]),
+            RouteNode(id: "destination", x: 0.95, y: 0.0, outgoingEdgeIDs: []),
+            RouteNode(id: "side_branch", x: -0.45, y: 0.62, outgoingEdgeIDs: [])
+        ]
+        let edges = [
+            RouteEdge(id: "e_start_entry", fromNodeID: "start", toNodeID: "entry"),
+            RouteEdge(id: "e_entry_central", fromNodeID: "entry", toNodeID: "central_switch"),
+            RouteEdge(id: "e_central_dead_end", fromNodeID: "central_switch", toNodeID: "dead_end"),
+            RouteEdge(id: "e_central_package", fromNodeID: "central_switch", toNodeID: "package"),
+            RouteEdge(id: "e_package_return", fromNodeID: "package", toNodeID: "return_node"),
+            RouteEdge(id: "e_return_central", fromNodeID: "return_node", toNodeID: "central_switch"),
+            RouteEdge(id: "e_central_destination", fromNodeID: "central_switch", toNodeID: "destination"),
+            RouteEdge(id: "e_central_side_branch", fromNodeID: "central_switch", toNodeID: "side_branch")
+        ]
+        return LevelData(
+            id: "four_way_intersection",
+            name: "Four-Way Intersection",
+            graph: RouteGraph(nodes: nodes, edges: edges),
+            startNodeID: "start",
+            packageNodeID: "package",
+            destinationNodeID: "destination",
+            timeLimitSeconds: 30,
+            parTaps: 2
+        )
+    }
+
+    private func makeRuntimeGraphForSwitchClassification(
+        validOutgoingCount: Int,
+        includeInvalidListedEdgeIDs: Bool = false
+    ) -> (RuntimeRouteGraph, RuntimeRouteNode) {
+        var outgoingEdgeIDs = (0..<validOutgoingCount).map { "e_valid_\($0)" }
+        if includeInvalidListedEdgeIDs {
+            outgoingEdgeIDs.append(contentsOf: ["e_missing", "e_wrong_source"])
+        }
+
+        let node = RuntimeRouteNode(
+            id: "node",
+            x: 0,
+            y: 0,
+            outgoingEdgeIDs: outgoingEdgeIDs,
+            activeOutgoingEdgeID: outgoingEdgeIDs.first
+        )
+        var edgesByID: [String: RuntimeRouteEdge] = [:]
+        for index in 0..<validOutgoingCount {
+            edgesByID["e_valid_\(index)"] = RuntimeRouteEdge(
+                id: "e_valid_\(index)",
+                fromNodeID: "node",
+                toNodeID: "target_\(index)",
+                roadPath: RoadPath.make(from: RoadPoint(x: 0, y: 0), to: RoadPoint(x: Double(index + 1), y: 0))
+            )
+        }
+        if includeInvalidListedEdgeIDs {
+            edgesByID["e_wrong_source"] = RuntimeRouteEdge(
+                id: "e_wrong_source",
+                fromNodeID: "other",
+                toNodeID: "target_wrong",
+                roadPath: RoadPath.make(from: RoadPoint(x: 0, y: 0), to: RoadPoint(x: 1, y: 1))
+            )
+        }
+
+        return (RuntimeRouteGraph(nodesByID: ["node": node], edgesByID: edgesByID), node)
+    }
+
     private func assertPosition(
         _ position: DeliveryDotPosition?,
         equals expected: DeliveryDotPosition,
@@ -508,6 +588,31 @@ final class RouteEngineTests: XCTestCase {
         XCTAssertEqual(resolver.nodeID(at: CGPoint(x: 52, y: 22)), "switch")
     }
 
+    func testRouteBoardTapTargetResolverIdentifiesFourWaySwitch() throws {
+        let engine = RouteEngine()
+        try engine.buildGraph(from: makeFourWayIntersectionLevelData())
+
+        let graph = try XCTUnwrap(engine.runtimeGraph)
+        let resolver = RouteBoardTapTargetResolver(
+            runtimeGraph: graph,
+            layout: makeBoardLayout(
+                pointsByNodeID: [
+                    "start": CGPoint(x: 0, y: 20),
+                    "entry": CGPoint(x: 30, y: 20),
+                    "central_switch": CGPoint(x: 60, y: 20),
+                    "dead_end": CGPoint(x: 60, y: 0),
+                    "package": CGPoint(x: 60, y: 40),
+                    "return_node": CGPoint(x: 30, y: 40),
+                    "destination": CGPoint(x: 100, y: 20),
+                    "side_branch": CGPoint(x: 30, y: 0)
+                ]
+            ),
+            tapRadius: 20
+        )
+
+        XCTAssertEqual(resolver.nodeID(at: CGPoint(x: 61, y: 19)), "central_switch")
+    }
+
     func testRouteBoardTapTargetResolverIgnoresNonSwitchNodes() throws {
         let level = makeLevelData()
         let engine = RouteEngine()
@@ -833,6 +938,33 @@ final class RouteEngineTests: XCTestCase {
 
     // MARK: - Switch direction initialisation
 
+    func testSwitchNodeKindClassifiesByValidOutgoingEdgeCount() {
+        let cases: [(Int, SwitchNodeKind)] = [
+            (0, .terminal),
+            (1, .passThrough),
+            (2, .twoWaySwitch),
+            (3, .threeWaySwitch),
+            (4, .fourWayIntersectionSwitch),
+            (5, .invalidTooManyOutgoingEdges(validOutgoingEdgeCount: 5))
+        ]
+
+        for (validOutgoingCount, expectedKind) in cases {
+            let (graph, node) = makeRuntimeGraphForSwitchClassification(validOutgoingCount: validOutgoingCount)
+
+            XCTAssertEqual(graph.switchKind(for: node), expectedKind)
+        }
+    }
+
+    func testSwitchNodeKindIgnoresMissingAndWrongSourceOutgoingEdgeIDs() {
+        let (graph, node) = makeRuntimeGraphForSwitchClassification(
+            validOutgoingCount: 1,
+            includeInvalidListedEdgeIDs: true
+        )
+
+        XCTAssertEqual(graph.validOutgoingEdgeIDs(for: node), ["e_valid_0"])
+        XCTAssertEqual(graph.switchKind(for: node), .passThrough)
+    }
+
     func testSwitchNodeInitializesWithFirstOutgoingEdge() throws {
         let engine = RouteEngine()
         try engine.buildGraph(from: makeLevelData())
@@ -878,6 +1010,36 @@ final class RouteEngineTests: XCTestCase {
         graph = try XCTUnwrap(engine.runtimeGraph)
         switchNode = try XCTUnwrap(graph.nodesByID["switch"])
         XCTAssertEqual(switchNode.activeOutgoingEdgeID, "e_switch_package")
+    }
+
+    func testFourWaySwitchInitializesAndCyclesThroughAllOutgoingEdges() throws {
+        let engine = RouteEngine()
+        try engine.buildGraph(from: makeFourWayIntersectionLevelData())
+
+        var graph = try XCTUnwrap(engine.runtimeGraph)
+        var switchNode = try XCTUnwrap(graph.nodesByID["central_switch"])
+        XCTAssertEqual(switchNode.activeOutgoingEdgeID, "e_central_dead_end")
+
+        XCTAssertTrue(engine.rotateSwitchNode(nodeID: "central_switch"))
+        graph = try XCTUnwrap(engine.runtimeGraph)
+        switchNode = try XCTUnwrap(graph.nodesByID["central_switch"])
+        XCTAssertEqual(switchNode.activeOutgoingEdgeID, "e_central_package")
+
+        XCTAssertTrue(engine.rotateSwitchNode(nodeID: "central_switch"))
+        graph = try XCTUnwrap(engine.runtimeGraph)
+        switchNode = try XCTUnwrap(graph.nodesByID["central_switch"])
+        XCTAssertEqual(switchNode.activeOutgoingEdgeID, "e_central_destination")
+
+        XCTAssertTrue(engine.rotateSwitchNode(nodeID: "central_switch"))
+        graph = try XCTUnwrap(engine.runtimeGraph)
+        switchNode = try XCTUnwrap(graph.nodesByID["central_switch"])
+        XCTAssertEqual(switchNode.activeOutgoingEdgeID, "e_central_side_branch")
+
+        XCTAssertTrue(engine.rotateSwitchNode(nodeID: "central_switch"))
+        graph = try XCTUnwrap(engine.runtimeGraph)
+        switchNode = try XCTUnwrap(graph.nodesByID["central_switch"])
+        XCTAssertEqual(switchNode.activeOutgoingEdgeID, "e_central_dead_end")
+        XCTAssertEqual(engine.tapCount, 4)
     }
 
     func testBuildGraphInitializesTapCountToZero() throws {
@@ -942,7 +1104,7 @@ final class RouteEngineTests: XCTestCase {
 
         var graph = try XCTUnwrap(engine.runtimeGraph)
         var startNode = try XCTUnwrap(graph.nodesByID["start"])
-        XCTAssertEqual(startNode.activeOutgoingEdgeID, "invalid")
+        XCTAssertEqual(startNode.activeOutgoingEdgeID, "valid")
 
         XCTAssertFalse(engine.rotateSwitchNode(nodeID: "start"))
 
@@ -975,13 +1137,45 @@ final class RouteEngineTests: XCTestCase {
 
         var graph = try XCTUnwrap(engine.runtimeGraph)
         var startNode = try XCTUnwrap(graph.nodesByID["start"])
-        XCTAssertEqual(startNode.activeOutgoingEdgeID, "invalid")
+        XCTAssertNil(startNode.activeOutgoingEdgeID)
 
         XCTAssertFalse(engine.rotateSwitchNode(nodeID: "start"))
 
         graph = try XCTUnwrap(engine.runtimeGraph)
         startNode = try XCTUnwrap(graph.nodesByID["start"])
         XCTAssertNil(startNode.activeOutgoingEdgeID)
+    }
+
+    func testBuildGraphThrowsForFiveWaySwitch() {
+        let outgoingEdgeIDs = (0..<5).map { "e_switch_\($0)" }
+        let targetNodes = (0..<5).map { RouteNode(id: "target_\($0)", x: Double($0 + 1), y: 0, outgoingEdgeIDs: []) }
+        let nodes = [
+            RouteNode(id: "start", x: 0, y: 0, outgoingEdgeIDs: ["e_start_switch"]),
+            RouteNode(id: "switch", x: 1, y: 0, outgoingEdgeIDs: outgoingEdgeIDs)
+        ] + targetNodes
+        let edges = [
+            RouteEdge(id: "e_start_switch", fromNodeID: "start", toNodeID: "switch")
+        ] + (0..<5).map {
+            RouteEdge(id: "e_switch_\($0)", fromNodeID: "switch", toNodeID: "target_\($0)")
+        }
+        let level = LevelData(
+            id: "five_way_switch",
+            name: "Five-Way Switch",
+            graph: RouteGraph(nodes: nodes, edges: edges),
+            startNodeID: "start",
+            packageNodeID: "target_0",
+            destinationNodeID: "target_1",
+            timeLimitSeconds: 10,
+            parTaps: 1
+        )
+
+        XCTAssertThrowsError(try RouteEngine().buildGraph(from: level)) { error in
+            guard case RouteEngineError.switchHasTooManyOutgoingEdges(let nodeID, let outgoingEdgeCount) = error else {
+                return XCTFail("Expected switchHasTooManyOutgoingEdges, got \(error)")
+            }
+            XCTAssertEqual(nodeID, "switch")
+            XCTAssertEqual(outgoingEdgeCount, 5)
+        }
     }
 
     // MARK: - Invalid graph data
@@ -1238,6 +1432,34 @@ final class RouteEngineTests: XCTestCase {
         let dot = try XCTUnwrap(engine.deliveryDot)
         XCTAssertEqual(dot.currentEdgeID, "e_switch_destination",
                        "Dot should follow the newly active direction on its second visit to the switch")
+    }
+
+    func testPlayableFourWaySwitchRoutesToPackageThenDestinationAfterReturn() throws {
+        let engine = RouteEngine(dotSpeed: 1)
+        try engine.buildGraph(from: makeFourWayIntersectionLevelData())
+
+        XCTAssertTrue(engine.rotateSwitchNode(nodeID: "central_switch"))
+        XCTAssertEqual(engine.tapCount, 1)
+        XCTAssertTrue(engine.startDotMovement())
+
+        engine.updateDot(deltaTime: 1.75)
+        var dot = try XCTUnwrap(engine.deliveryDot)
+        XCTAssertEqual(dot.currentNodeID, "package")
+        XCTAssertTrue(dot.hasCollectedPackage)
+        XCTAssertNil(engine.levelOutcome)
+
+        engine.updateDot(deltaTime: 0.70)
+        dot = try XCTUnwrap(engine.deliveryDot)
+        XCTAssertNotEqual(dot.currentNodeID, "central_switch")
+        XCTAssertTrue(engine.rotateSwitchNode(nodeID: "central_switch"))
+        XCTAssertEqual(engine.tapCount, 2)
+
+        engine.updateDot(deltaTime: 2.5)
+
+        dot = try XCTUnwrap(engine.deliveryDot)
+        XCTAssertTrue(dot.hasCollectedPackage)
+        XCTAssertEqual(dot.currentNodeID, "destination")
+        XCTAssertEqual(engine.levelOutcome, .completed)
     }
 
     func testWrongSwitchDirectionSendsDotToDeadEnd() throws {

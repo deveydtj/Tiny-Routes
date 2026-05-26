@@ -11,6 +11,7 @@ from PySide6.QtWidgets import (
 from shiboken6 import isValid
 
 from app.models import LevelDocument, RouteNodeModel
+from app.services.switch_classification_service import SwitchClassificationService, SwitchNodeKind
 
 from .canvas_colors import canvas_grid_color
 from .edge_item import EdgeItem
@@ -442,9 +443,13 @@ class LevelCanvasScene(QGraphicsScene):
             return "destination"
         if node.id.lower() == "finish":
             return "finish"
-        if node.id.lower().startswith("switch"):
+        edge_by_id = {edge.id: edge for edge in document.graph.edges}
+        classification = SwitchClassificationService().classify_node(node, edge_by_id)
+        if classification.kind is SwitchNodeKind.FOUR_WAY_INTERSECTION_SWITCH:
+            return "four_way_switch"
+        if classification.is_switchable:
             return "switch"
-        if len(node.outgoingEdgeIDs) >= 2:
+        if node.id.lower().startswith("switch"):
             return "switch"
         return "route"
 

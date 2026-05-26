@@ -256,6 +256,7 @@ struct RouteBoardView: View {
                 padding: boardPadding
             )
             let roadPaths = renderedRoadPaths(for: edges, in: runtimeGraph, layout: layout)
+            let roadHubs = renderedRoadHubs(for: runtimeGraph, layout: layout)
             let currentRoadPath = renderedCurrentDeliveryRoadPath(in: runtimeGraph, layout: layout)
             let deliveryDotPoint = deliveryDotPoint(in: layout)
             let isDeliveryDotMoving = deliveryDot?.currentEdgeID != nil || deliveryDot?.transition != nil
@@ -275,6 +276,9 @@ struct RouteBoardView: View {
                 roadLayer(roadPaths, color: cosmeticStyle.roadEdgeColor, lineWidth: roadOuterWidth)
                 roadLayer(roadPaths, color: cosmeticStyle.roadFillColor, lineWidth: roadInnerWidth)
                 roadLayer(roadPaths, color: cosmeticStyle.roadHighlightColor, lineWidth: roadHighlightWidth, yOffset: -3)
+                roadHubLayer(roadHubs, color: cosmeticStyle.roadEdgeColor, size: roadOuterWidth * 1.15)
+                roadHubLayer(roadHubs, color: cosmeticStyle.roadFillColor, size: roadInnerWidth * 1.35)
+                roadHubLayer(roadHubs, color: cosmeticStyle.roadHighlightColor, size: roadHighlightWidth * 1.15, yOffset: -3)
 
                 ForEach(nodes, id: \.id) { node in
                     if let nodePoint = layout.pointsByNodeID[node.id] {
@@ -337,6 +341,22 @@ struct RouteBoardView: View {
     }
 
     @ViewBuilder
+    private func roadHubLayer(
+        _ roadHubs: [RenderedRoadHub],
+        color: Color,
+        size: CGFloat,
+        yOffset: CGFloat = 0
+    ) -> some View {
+        ForEach(roadHubs) { roadHub in
+            Circle()
+                .fill(color)
+                .frame(width: size, height: size)
+                .position(roadHub.point)
+                .offset(y: yOffset)
+        }
+    }
+
+    @ViewBuilder
     private func nodeView(for node: RuntimeRouteNode, layout: BoardLayout) -> some View {
         if node.id == packageNodeID, !hasCollectedPackage {
             SpriteImage(name: "shipping_box")
@@ -354,10 +374,13 @@ struct RouteBoardView: View {
                 iconSize: specialNodeIconSize
             )
         } else if let activeDirectionAngle = activeDirectionAngle(for: node) {
+            let validOutgoingEdgeIDs = runtimeGraph.validOutgoingEdgeIDs(for: node)
             SwitchNodeView(
                 activeDirectionAngle: activeDirectionAngle,
                 spriteSize: switchSpriteSize,
-                ringSize: switchRingSize
+                ringSize: switchRingSize,
+                optionCount: validOutgoingEdgeIDs.count,
+                optionAngles: optionAngles(for: node, validOutgoingEdgeIDs: validOutgoingEdgeIDs)
             )
         } else {
             EmptyView()
@@ -366,6 +389,15 @@ struct RouteBoardView: View {
 
     private func activeDirectionAngle(for node: RuntimeRouteNode) -> Double? {
         SwitchArrowDirectionResolver.activeDirectionAngle(for: node, in: runtimeGraph)
+    }
+
+    private func optionAngles(for node: RuntimeRouteNode, validOutgoingEdgeIDs: [String]) -> [Double] {
+        validOutgoingEdgeIDs.compactMap { edgeID in
+            guard let edge = runtimeGraph.edgesByID[edgeID] else {
+                return nil
+            }
+            return SwitchArrowDirectionResolver.directionAngle(for: edge, from: node, in: runtimeGraph)
+        }
     }
 
     private func deliveryDotPoint(in layout: BoardLayout) -> CGPoint? {
@@ -422,6 +454,66 @@ struct RouteBoardView: View {
         }
 
         return edgePaths + connectorGeometry.paths
+    }
+
+    private func renderedRoadHubs(
+        for runtimeGraph: RuntimeRouteGraph,
+        layout: BoardLayout
+    ) -> [RenderedRoadHub] {
+        let incomingEdgesByNodeID = Dictionary(grouping: runtimeGraph.edgesByID.values, by: \.toNodeID)
+        return runtimeGraph.nodesByID.values.compactMap { node in
+            let validOutgoingEdgeIDs = runtimeGraph.validOutgoingEdgeIDs(for: node)
+            guard validOutgoingEdgeIDs.count >= 3,
+                  let point = layout.pointsByNodeID[node.id] else {
+                return nil
+            }
+
+            let incomingEdges = incomingEdgesByNodeID[node.id] ?? []
+            let outgoingEdges = validOutgoingEdgeIDs.compactMap { runtimeGraph.edgesByID[$0] }
+            let directionCount = uniqueRouteDirectionCount(
+                node: node,
+                incomingEdges: incomingEdges,
+                outgoingEdges: outgoingEdges,
+                in: runtimeGraph
+            )
+            guard directionCount >= 3, directionCount <= 4 else {
+                return nil
+            }
+            return RenderedRoadHub(id: node.id, point: point)
+        }
+        .sorted { $0.id < $1.id }
+    }
+
+    private func uniqueRouteDirectionCount(
+        node: RuntimeRouteNode,
+        incomingEdges: [RuntimeRouteEdge],
+        outgoingEdges: [RuntimeRouteEdge],
+        in runtimeGraph: RuntimeRouteGraph
+    ) -> Int {
+        let outgoingAngles = outgoingEdges.compactMap {
+            SwitchArrowDirectionResolver.directionAngle(for: $0, from: node, in: runtimeGraph)
+        }
+        let incomingAngles = incomingEdges.compactMap { edge -> Double? in
+            guard let sourceNode = runtimeGraph.nodesByID[edge.fromNodeID] else {
+                return nil
+            }
+            let dx = sourceNode.x - node.x
+            let dy = sourceNode.y - node.y
+            if dx != 0 || dy != 0 {
+                return atan2(-dy, dx)
+            }
+            let tangent = edge.roadPath.tangent(atProgress: 1)
+            return atan2(tangent.y, -tangent.x)
+        }
+        let directionBuckets = Set((outgoingAngles + incomingAngles).map(cardinalDirectionBucket(for:)))
+        return directionBuckets.count
+    }
+
+    private func cardinalDirectionBucket(for angle: Double) -> Int {
+        let twoPi = 2 * Double.pi
+        let normalized = angle.truncatingRemainder(dividingBy: twoPi)
+        let positiveAngle = normalized < 0 ? normalized + twoPi : normalized
+        return Int((positiveAngle / (.pi / 2)).rounded()) % 4
     }
 
     private func inferredConnectorGeometry(
@@ -535,15 +627,20 @@ struct RouteBoardView: View {
 struct SwitchArrowDirectionResolver {
     static func activeDirectionAngle(for node: RuntimeRouteNode, in runtimeGraph: RuntimeRouteGraph) -> Double? {
         let validOutgoingEdgeIDs = runtimeGraph.validOutgoingEdgeIDs(for: node)
+        let switchKind = runtimeGraph.switchKind(for: node)
 
-        guard validOutgoingEdgeIDs.count > 1,
+        guard switchKind.isSwitchable,
               let activeEdgeID = node.activeOutgoingEdgeID,
               validOutgoingEdgeIDs.contains(activeEdgeID),
               let activeEdge = runtimeGraph.edgesByID[activeEdgeID] else {
             return nil
         }
 
-        if let targetNode = runtimeGraph.nodesByID[activeEdge.toNodeID] {
+        return directionAngle(for: activeEdge, from: node, in: runtimeGraph)
+    }
+
+    static func directionAngle(for edge: RuntimeRouteEdge, from node: RuntimeRouteNode, in runtimeGraph: RuntimeRouteGraph) -> Double {
+        if let targetNode = runtimeGraph.nodesByID[edge.toNodeID] {
             let dx = targetNode.x - node.x
             let dy = targetNode.y - node.y
             if dx != 0 || dy != 0 {
@@ -551,7 +648,7 @@ struct SwitchArrowDirectionResolver {
             }
         }
 
-        let tangent = activeEdge.roadPath.tangent(atProgress: 0)
+        let tangent = edge.roadPath.tangent(atProgress: 0)
         return atan2(-tangent.y, tangent.x)
     }
 }
@@ -567,6 +664,11 @@ private struct RenderedConnectorGeometry {
     let endTrimDistanceByEdgeID: [String: Double]
 }
 
+private struct RenderedRoadHub: Identifiable {
+    let id: String
+    let point: CGPoint
+}
+
 struct RouteBoardTapTargetResolver {
     let runtimeGraph: RuntimeRouteGraph
     let layout: BoardLayout
@@ -577,8 +679,7 @@ struct RouteBoardTapTargetResolver {
 
         return runtimeGraph.nodesByID.values
             .compactMap { node -> (nodeID: String, distanceSquared: CGFloat)? in
-                let validOutgoingEdgeIDs = runtimeGraph.validOutgoingEdgeIDs(for: node)
-                guard validOutgoingEdgeIDs.count > 1,
+                guard runtimeGraph.switchKind(for: node).isSwitchable,
                       let nodePoint = layout.pointsByNodeID[node.id] else {
                     return nil
                 }

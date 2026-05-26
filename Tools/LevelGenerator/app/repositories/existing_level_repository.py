@@ -132,6 +132,9 @@ class ExistingLevelRepository:
                             (node_id, float(x), float(y))
                             for node_id, x, y in entry.get("normalizedPositions", [])
                         ),
+                        max_outgoing_edge_count=int(entry.get("maxOutgoingEdgeCount", 0)),
+                        has_four_way_switch=bool(entry.get("hasFourWaySwitch", False)),
+                        central_switch_revisit_count=int(entry.get("centralSwitchRevisitCount", 0)),
                     )
                 )
             return signatures

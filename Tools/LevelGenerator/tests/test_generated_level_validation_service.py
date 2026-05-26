@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 from app.random_source import RandomSource
+from app.level_editor_imports import LevelDocument, RouteEdgeModel, RouteGraphModel, RouteNodeModel, SolutionModel
+from app.models.generated_level import GeneratedLevel
 from app.services.difficulty_service import DifficultyService
 from app.services.generated_level_validation_service import GeneratedLevelValidationService
 from app.templates.single_switch_template import SingleSwitchTemplate
@@ -36,3 +38,62 @@ def test_generated_level_validation_rejects_important_nodes_too_close() -> None:
     result = GeneratedLevelValidationService().validate(generated, preset=preset, overwrite=True)
 
     assert "important_nodes_too_close" in result.error_codes
+
+
+def test_generated_level_validation_rejects_five_way_switch_for_all_presets() -> None:
+    generated = _generated_switch_with_outgoing_count(5)
+    service = GeneratedLevelValidationService()
+
+    for difficulty in ["tutorial", "easy", "medium", "hard", "expert"]:
+        result = service.validate(
+            generated,
+            preset=DifficultyService().get_preset(difficulty),
+            overwrite=True,
+            enforce_difficulty=False,
+        )
+
+        assert "switch_has_too_many_outgoing_edges" in result.error_codes
+
+
+def _generated_switch_with_outgoing_count(outgoing_count: int) -> GeneratedLevel:
+    level = LevelDocument(
+        id="level_999",
+        name="Switch Count",
+        graph=RouteGraphModel(
+            nodes=[
+                RouteNodeModel(
+                    id="switch",
+                    x=0.0,
+                    y=0.0,
+                    outgoingEdgeIDs=[f"e{index}" for index in range(outgoing_count)],
+                ),
+                *[
+                    RouteNodeModel(id=f"target_{index}", x=float(index + 1), y=0.0, outgoingEdgeIDs=[])
+                    for index in range(outgoing_count)
+                ],
+            ],
+            edges=[
+                RouteEdgeModel(id=f"e{index}", fromNodeID="switch", toNodeID=f"target_{index}")
+                for index in range(outgoing_count)
+            ],
+        ),
+        startNodeID="switch",
+        packageNodeID="target_0",
+        destinationNodeID="target_1",
+        timeLimitSeconds=30,
+        parTaps=0,
+    )
+    return GeneratedLevel(
+        level_document=level,
+        solution=SolutionModel(
+            levelID=level.id,
+            description="No-op",
+            expectedOutcome="completed",
+            maxTaps=0,
+            requiresWithinTimeLimit=True,
+            actions=[],
+        ),
+        template_name="test",
+        difficulty="test",
+        seed=1,
+    )

@@ -77,3 +77,10 @@ def test_different_solution_order_lowers_similarity() -> None:
     changed_score = CandidateUniquenessService().similarity_score(changed_solution, existing)
 
     assert changed_score < exact_score
+
+
+def test_four_way_structure_contributes_to_similarity() -> None:
+    existing = _signature(max_outgoing_edge_count=4, has_four_way_switch=True, central_switch_revisit_count=2)
+    changed = replace(existing, level_id="level_002", max_outgoing_edge_count=3, has_four_way_switch=False)
+
+    assert CandidateUniquenessService().similarity_score(changed, existing) < CandidateUniquenessService().similarity_score(existing, existing)

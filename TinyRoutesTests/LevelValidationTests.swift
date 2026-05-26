@@ -186,6 +186,29 @@ final class LevelValidationTests: XCTestCase {
         )
     }
 
+    func testFourOutgoingSwitchPassesValidation() {
+        let level = makeLevelWithSwitchOutgoingEdgeCount(4)
+        let issues = LevelValidator().validate(level: level)
+
+        XCTAssertFalse(
+            issues.contains { $0.severity == .error && $0.message.contains("at most 4 are supported") },
+            "4-way switches should be valid"
+        )
+    }
+
+    func testFiveOutgoingSwitchProducesValidationError() {
+        let level = makeLevelWithSwitchOutgoingEdgeCount(5)
+        let issues = LevelValidator().validate(level: level)
+
+        XCTAssertTrue(
+            issues.contains {
+                $0.severity == .error
+                    && $0.levelID == level.id
+                    && $0.message == "Node 'switch' has 5 valid outgoing edges; at most 4 are supported"
+            }
+        )
+    }
+
     func testValidationReturnsAllDuplicateIssuesNotOnlyFirst() {
         let level = makeLevelWithMultipleDuplicateIDs()
         let issues = LevelValidator().validate(level: level)
@@ -301,6 +324,33 @@ final class LevelValidationTests: XCTestCase {
             destinationNodeID: "dup_node_b",
             timeLimitSeconds: 30,
             parTaps: 2
+        )
+    }
+
+    private func makeLevelWithSwitchOutgoingEdgeCount(_ outgoingEdgeCount: Int) -> LevelData {
+        let outgoingEdgeIDs = (0..<outgoingEdgeCount).map { "e_switch_\($0)" }
+        let targetNodes = (0..<outgoingEdgeCount).map {
+            RouteNode(id: "target_\($0)", x: Double($0 + 2), y: 0, outgoingEdgeIDs: [])
+        }
+        let nodes = [
+            RouteNode(id: "start", x: 0, y: 0, outgoingEdgeIDs: ["e_start_switch"]),
+            RouteNode(id: "switch", x: 1, y: 0, outgoingEdgeIDs: outgoingEdgeIDs)
+        ] + targetNodes
+        let edges = [
+            RouteEdge(id: "e_start_switch", fromNodeID: "start", toNodeID: "switch")
+        ] + (0..<outgoingEdgeCount).map {
+            RouteEdge(id: "e_switch_\($0)", fromNodeID: "switch", toNodeID: "target_\($0)")
+        }
+
+        return LevelData(
+            id: "switch_outgoing_count",
+            name: "Switch Outgoing Count",
+            graph: RouteGraph(nodes: nodes, edges: edges),
+            startNodeID: "start",
+            packageNodeID: "target_0",
+            destinationNodeID: outgoingEdgeCount > 1 ? "target_1" : "target_0",
+            timeLimitSeconds: 30,
+            parTaps: 1
         )
     }
 }

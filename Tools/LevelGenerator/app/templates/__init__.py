@@ -1,4 +1,5 @@
 from .base_template import LevelTemplate
+from .four_way_intersection_template import FourWayIntersectionTemplate
 from .package_gate_template import PackageGateTemplate
 from .multi_switch_chain_template import MultiSwitchChainTemplate
 from .return_loop_template import ReturnLoopTemplate
@@ -9,6 +10,7 @@ from .template_registry import TemplateRegistry
 
 __all__ = [
     "LevelTemplate",
+    "FourWayIntersectionTemplate",
     "PackageGateTemplate",
     "MultiSwitchChainTemplate",
     "ReturnLoopTemplate",

@@ -130,11 +130,17 @@ class CandidateUniquenessService:
             score += 0.04
         if candidate.dead_end_count == existing.dead_end_count:
             score += 0.04
+        if candidate.max_outgoing_edge_count == existing.max_outgoing_edge_count:
+            score += 0.03
+        if candidate.has_four_way_switch == existing.has_four_way_switch:
+            score += 0.03
+        if candidate.central_switch_revisit_count == existing.central_switch_revisit_count:
+            score += 0.03
         if candidate.topology_hash == existing.topology_hash:
-            score += 0.28
+            score += 0.25
         if candidate.solution_hash == existing.solution_hash:
-            score += 0.13
-        score += 0.27 * self._layout_similarity(candidate, existing)
+            score += 0.11
+        score += 0.23 * self._layout_similarity(candidate, existing)
         return round(min(score, 1.0), 4)
 
     def _layout_similarity(self, candidate: CandidateSignature, existing: CandidateSignature) -> float:

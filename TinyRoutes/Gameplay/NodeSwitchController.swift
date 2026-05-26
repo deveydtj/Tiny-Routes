@@ -18,8 +18,9 @@ final class NodeSwitchController {
         }
 
         let validOutgoingEdgeIDs = runtimeGraph.validOutgoingEdgeIDs(for: node)
+        let switchKind = runtimeGraph.switchKind(for: node)
 
-        guard validOutgoingEdgeIDs.count > 1 else {
+        guard switchKind.isSwitchable else {
             let normalizedActiveEdgeID = validOutgoingEdgeIDs.first
             if node.activeOutgoingEdgeID != normalizedActiveEdgeID {
                 node.activeOutgoingEdgeID = normalizedActiveEdgeID

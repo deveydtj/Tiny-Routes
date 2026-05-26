@@ -136,17 +136,22 @@ class PythonSolutionSimulatorService:
         valid_edges = self._valid_outgoing_edge_ids(node, edges)
         if len(valid_edges) <= 1:
             return self._failed("tap_node_is_not_switchable", steps, state)
+        if len(valid_edges) > 4:
+            return self._failed("switch_has_too_many_outgoing_edges", steps, state)
         current_edge_id = active_edges.get(node_id)
         next_index = 0
         if current_edge_id in valid_edges:
             next_index = (valid_edges.index(current_edge_id) + 1) % len(valid_edges)
+        previous_edge_id = active_edges.get(node_id)
         active_edges[node_id] = valid_edges[next_index]
+        target_node_id = edges[active_edges[node_id]].toNodeID
         steps.append(
             SimulationStep(
                 time_seconds=round(state.elapsed_time_seconds, 3),
                 event="tap_switch",
                 node_id=node_id,
                 edge_id=active_edges[node_id],
+                detail=f"{previous_edge_id or '(none)'} -> {active_edges[node_id]} -> {target_node_id}",
             )
         )
         return None

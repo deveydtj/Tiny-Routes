@@ -9,6 +9,11 @@ from .difficulty_service import DifficultyService
 from .graph_layout_service import BoundingBox, GraphLayoutService
 from .python_solution_simulator_service import PythonSolutionSimulatorService
 from .road_shape_service import RoadShapeService
+from .switch_classification_service import (
+    MAX_SUPPORTED_OUTGOING_EDGES,
+    SwitchClassificationService,
+    SwitchNodeKind,
+)
 
 
 @dataclass(frozen=True)
@@ -40,6 +45,7 @@ class GeneratedLevelValidationService:
         self.difficulty_service = DifficultyService()
         self.road_shape_service = RoadShapeService()
         self.solution_simulator = PythonSolutionSimulatorService()
+        self.switch_classification_service = SwitchClassificationService()
 
     def validate(
         self,
@@ -104,6 +110,11 @@ class GeneratedLevelValidationService:
         solution = generated_level.solution
         messages: list[GeneratorValidationMessage] = []
         node_by_id = {node.id: node for node in level.graph.nodes}
+        edge_by_id = {edge.id: edge for edge in level.graph.edges}
+        classifications_by_node_id = {
+            node.id: self.switch_classification_service.classify_node(node, edge_by_id)
+            for node in level.graph.nodes
+        }
 
         for edge in level.graph.edges:
             if not self.road_shape_service.is_allowed(edge.roadShape):
@@ -124,6 +135,21 @@ class GeneratedLevelValidationService:
                         code="zero_length_edge",
                         message=f"Edge '{edge.id}' has identical from/to coordinates.",
                         related_edge_id=edge.id,
+                    )
+                )
+
+        for node in level.graph.nodes:
+            classification = classifications_by_node_id[node.id]
+            if classification.kind is SwitchNodeKind.INVALID_TOO_MANY_OUTGOING_EDGES:
+                messages.append(
+                    GeneratorValidationMessage(
+                        severity="error",
+                        code="switch_has_too_many_outgoing_edges",
+                        message=(
+                            f"Node '{node.id}' has {classification.valid_outgoing_edge_count} valid outgoing edges; "
+                            f"at most {MAX_SUPPORTED_OUTGOING_EDGES} are supported."
+                        ),
+                        related_node_id=node.id,
                     )
                 )
 
@@ -183,7 +209,7 @@ class GeneratedLevelValidationService:
 
         for action in solution.actions:
             node = node_by_id.get(action.tapNodeID)
-            if node is not None and len(node.outgoingEdgeIDs) < 2:
+            if node is not None and classifications_by_node_id[node.id].valid_outgoing_edge_count < 2:
                 messages.append(
                     GeneratorValidationMessage(
                         severity="error",
@@ -192,6 +218,8 @@ class GeneratedLevelValidationService:
                         related_node_id=action.tapNodeID,
                     )
                 )
+
+        messages.extend(self._four_way_solution_complexity_messages(level, solution, classifications_by_node_id, preset))
 
         try:
             simulation = self.solution_simulator.simulate(generated_level)
@@ -219,12 +247,63 @@ class GeneratedLevelValidationService:
 
         return messages
 
+    def _four_way_solution_complexity_messages(
+        self,
+        level,
+        solution,
+        classifications_by_node_id,
+        preset: DifficultyPreset | None,
+    ) -> list[GeneratorValidationMessage]:
+        messages: list[GeneratorValidationMessage] = []
+        four_way_node_ids = {
+            node_id
+            for node_id, classification in classifications_by_node_id.items()
+            if classification.kind is SwitchNodeKind.FOUR_WAY_INTERSECTION_SWITCH
+        }
+        if not four_way_node_ids:
+            return messages
+
+        actions_by_node_id: dict[str, list[float]] = {}
+        for action in solution.actions:
+            if action.tapNodeID in four_way_node_ids:
+                actions_by_node_id.setdefault(action.tapNodeID, []).append(float(action.timeSeconds))
+
+        max_four_way_taps = 3 if preset is None or preset.name != "expert" else 4
+        minimum_spacing = (preset.min_tap_spacing_seconds if preset is not None else 0.4) * 1.5
+        for node_id, times in actions_by_node_id.items():
+            if len(times) > max_four_way_taps:
+                messages.append(
+                    GeneratorValidationMessage(
+                        severity="error",
+                        code="four_way_switch_requires_too_many_taps",
+                        message=f"4-way switch '{node_id}' requires {len(times)} taps in the solution.",
+                        related_node_id=node_id,
+                    )
+                )
+            sorted_times = sorted(times)
+            for previous, current in zip(sorted_times, sorted_times[1:]):
+                if current - previous < minimum_spacing:
+                    messages.append(
+                        GeneratorValidationMessage(
+                            severity="error",
+                            code="four_way_switch_taps_too_close",
+                            message=(
+                                f"4-way switch '{node_id}' has taps only "
+                                f"{current - previous:.2f}s apart."
+                            ),
+                            related_node_id=node_id,
+                        )
+                    )
+
+        return messages
+
     def _simulation_difficulty_messages(self, simulation, preset: DifficultyPreset) -> list[GeneratorValidationMessage]:
         ranges = {
             "tutorial": (0.2, 8.0),
             "easy": (0.8, 12.0),
             "medium": (1.2, 16.0),
             "hard": (1.8, 22.0),
+            "expert": (2.0, 26.0),
         }
         minimum, maximum = ranges.get(preset.name, (0.0, 999.0))
         if minimum <= simulation.elapsed_time_seconds <= maximum:

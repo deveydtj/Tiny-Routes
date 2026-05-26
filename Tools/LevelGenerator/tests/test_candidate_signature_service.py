@@ -5,6 +5,7 @@ from copy import deepcopy
 from app.random_source import RandomSource
 from app.services.candidate_signature_service import CandidateSignatureService
 from app.services.difficulty_service import DifficultyService
+from app.templates.four_way_intersection_template import FourWayIntersectionTemplate
 from app.templates.package_gate_template import PackageGateTemplate
 from app.templates.single_switch_template import SingleSwitchTemplate
 
@@ -46,3 +47,14 @@ def test_changing_solution_tap_order_changes_solution_hash() -> None:
     service = CandidateSignatureService()
 
     assert service.signature_for(generated).solution_hash != service.signature_for(changed).solution_hash
+
+
+def test_four_way_signature_records_outgoing_and_revisit_shape() -> None:
+    preset = DifficultyService().get_preset("expert")
+    generated = FourWayIntersectionTemplate().generate("level_099", 99, preset, RandomSource(1))
+
+    signature = CandidateSignatureService().signature_for(generated)
+
+    assert signature.max_outgoing_edge_count == 4
+    assert signature.has_four_way_switch is True
+    assert signature.central_switch_revisit_count == 2

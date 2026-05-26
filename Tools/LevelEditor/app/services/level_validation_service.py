@@ -2,10 +2,16 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from enum import Enum
+import math
 from pathlib import Path
 
 from app.models import LevelDocument, RouteGraphModel, RouteNodeModel
 from app.services.level_identity_service import LevelIdentityService
+from app.services.switch_classification_service import (
+    MAX_SUPPORTED_OUTGOING_EDGES,
+    SwitchClassificationService,
+    SwitchNodeKind,
+)
 
 
 class ValidationSeverity(str, Enum):
@@ -417,6 +423,33 @@ def validate(
                 )
             )
 
+    switch_classification_service = SwitchClassificationService()
+    for node in level.graph.nodes:
+        classification = switch_classification_service.classify_node(node, edge_by_id)
+        if classification.kind is SwitchNodeKind.INVALID_TOO_MANY_OUTGOING_EDGES:
+            messages.append(
+                ValidationMessage(
+                    severity=ValidationSeverity.ERROR,
+                    code="switch_has_too_many_outgoing_edges",
+                    message=(
+                        f"Node '{node.id}' has {classification.valid_outgoing_edge_count} valid outgoing edges; "
+                        f"at most {MAX_SUPPORTED_OUTGOING_EDGES} are supported."
+                    ),
+                    related_node_id=node.id,
+                )
+            )
+            continue
+
+        if classification.kind is SwitchNodeKind.FOUR_WAY_INTERSECTION_SWITCH:
+            messages.extend(
+                _four_way_readability_messages(
+                    node,
+                    classification.valid_outgoing_edge_ids,
+                    node_by_id,
+                    edge_by_id,
+                )
+            )
+
     # --- Reachability from start node ---
     reachable_node_ids = _collect_reachable_node_ids(level, node_ids, level.startNodeID)
     if reachable_node_ids:
@@ -486,3 +519,63 @@ def validate(
             )
 
     return ValidationResult(messages=messages)
+
+
+def _four_way_readability_messages(
+    node: RouteNodeModel,
+    valid_outgoing_edge_ids: tuple[str, ...],
+    node_by_id: dict[str, RouteNodeModel],
+    edge_by_id: dict[str, object],
+) -> list[ValidationMessage]:
+    messages: list[ValidationMessage] = []
+    angles: list[tuple[str, float]] = []
+    minimum_edge_length = 0.35
+
+    for edge_id in valid_outgoing_edge_ids:
+        edge = edge_by_id[edge_id]
+        target_node = node_by_id.get(edge.toNodeID)
+        if target_node is None:
+            continue
+
+        dx = float(target_node.x) - float(node.x)
+        dy = float(target_node.y) - float(node.y)
+        distance = math.hypot(dx, dy)
+        if distance < minimum_edge_length:
+            messages.append(
+                ValidationMessage(
+                    severity=ValidationSeverity.WARNING,
+                    code="four_way_switch_short_outgoing_edge",
+                    message=(
+                        f"4-way switch '{node.id}' has a very short outgoing edge '{edge_id}' "
+                        f"to '{target_node.id}'."
+                    ),
+                    related_node_id=node.id,
+                    related_edge_id=edge_id,
+                )
+            )
+        if distance > 0:
+            angles.append((edge_id, math.atan2(dy, dx)))
+
+    if len(angles) < 2:
+        return messages
+
+    sorted_angles = sorted(angles, key=lambda item: item[1])
+    min_separation = math.radians(20)
+    for index, (edge_id, angle) in enumerate(sorted_angles):
+        next_edge_id, next_angle = sorted_angles[(index + 1) % len(sorted_angles)]
+        separation = (next_angle - angle) % (math.pi * 2)
+        if separation < min_separation:
+            messages.append(
+                ValidationMessage(
+                    severity=ValidationSeverity.WARNING,
+                    code="four_way_switch_ambiguous_angles",
+                    message=(
+                        f"4-way switch '{node.id}' has near-overlapping outgoing directions "
+                        f"for '{edge_id}' and '{next_edge_id}'."
+                    ),
+                    related_node_id=node.id,
+                    related_edge_id=edge_id,
+                )
+            )
+
+    return messages

@@ -3,6 +3,7 @@ from __future__ import annotations
 from collections import Counter
 
 from ..models.difficulty_preset import DifficultyPreset
+from .switch_classification_service import SwitchClassificationService
 
 
 class DifficultyService:
@@ -57,6 +58,19 @@ class DifficultyService:
                 time_limit_padding_seconds=18,
                 allow_ring_routes=True,
             ),
+            "expert": DifficultyPreset(
+                name="expert",
+                node_count_range=(7, 12),
+                switch_count_range=(1, 5),
+                required_tap_range=(2, 6),
+                dead_end_count_range=(1, 4),
+                max_outgoing_edges_per_switch=4,
+                allow_return_loops=True,
+                allow_repeated_switch_taps=True,
+                min_tap_spacing_seconds=0.45,
+                time_limit_padding_seconds=20,
+                allow_ring_routes=True,
+            ),
         }
 
     @property
@@ -79,7 +93,17 @@ class DifficultyService:
     ) -> list[str]:
         messages: list[str] = []
         node_count = len(level_document.graph.nodes)
-        switch_nodes = [node for node in level_document.graph.nodes if len(node.outgoingEdgeIDs) > 1]
+        edge_by_id = {edge.id: edge for edge in level_document.graph.edges}
+        switch_classification_service = SwitchClassificationService()
+        classifications_by_node_id = {
+            node.id: switch_classification_service.classify_node(node, edge_by_id)
+            for node in level_document.graph.nodes
+        }
+        switch_nodes = [
+            node
+            for node in level_document.graph.nodes
+            if classifications_by_node_id[node.id].is_switchable
+        ]
         tap_count = len(solution.actions)
         dead_end_count = sum(
             1
@@ -98,8 +122,9 @@ class DifficultyService:
             self._check_range("required_tap_count", tap_count, preset.required_tap_range, messages)
             self._check_range("dead_end_count", dead_end_count, preset.dead_end_count_range, messages)
 
-        for node in switch_nodes:
-            if len(node.outgoingEdgeIDs) > preset.max_outgoing_edges_per_switch:
+        for node in level_document.graph.nodes:
+            valid_outgoing_count = classifications_by_node_id[node.id].valid_outgoing_edge_count
+            if valid_outgoing_count > preset.max_outgoing_edges_per_switch:
                 messages.append(f"switch_too_many_outgoing_edges:{node.id}")
         if repeated_taps and not preset.allow_repeated_switch_taps:
             messages.append(f"repeated_switch_taps_not_allowed:{','.join(sorted(repeated_taps))}")

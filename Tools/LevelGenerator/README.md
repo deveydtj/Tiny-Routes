@@ -127,6 +127,7 @@ Supported difficulty presets:
 - `easy`
 - `medium`
 - `hard`
+- `expert`
 - `auto`
 
 Supported templates:
@@ -137,6 +138,7 @@ Supported templates:
 - `return_loop`
 - `multi_switch_chain`
 - `ring_route`
+- `four_way_intersection`
 - `mixed`
 
 `mixed` filters templates by difficulty and prefers safer templates for beginner presets.
