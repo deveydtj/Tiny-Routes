@@ -3,6 +3,8 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Any
 
+from .candidate_signature import CandidateSignature
+
 
 @dataclass
 class GeneratedLevel:
@@ -14,6 +16,7 @@ class GeneratedLevel:
     rejection_messages: list[str] = field(default_factory=list)
     generation_notes: list[str] = field(default_factory=list)
     requires_swift_validation: bool = False
+    candidate_signature: CandidateSignature | None = None
 
     @property
     def level_id(self) -> str:

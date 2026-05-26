@@ -47,6 +47,7 @@ class GenerationReportRepository:
                     "parTaps": level.level_document.parTaps,
                     "timeLimit": level.level_document.timeLimitSeconds,
                     "requiredTaps": level.required_tap_count,
+                    "signature": self._signature_payload(level),
                     "status": "passed",
                     "notes": level.generation_notes,
                 }
@@ -86,16 +87,27 @@ class GenerationReportRepository:
             "",
             "## Accepted Levels",
             "",
-            "| Level | Template | Seed | Difficulty | Nodes | Edges | Switches | Par Taps | Time Limit | Status |",
-            "|---|---|---:|---|---:|---:|---:|---:|---:|---|",
+            "| Level | Template | Seed | Difficulty | Nodes | Edges | Switches | Par Taps | Time Limit | Signatures | Status |",
+            "|---|---|---:|---|---:|---:|---:|---:|---:|---|---|",
         ]
         for level in payload["acceptedLevels"]:
+            signature = level["signature"]
+            signature_summary = ""
+            if signature:
+                signature_summary = (
+                    f"T:{signature['topologyHashShort']} "
+                    f"L:{signature['layoutHashShort']} "
+                    f"S:{signature['solutionHashShort']}"
+                )
             lines.append(
                 "| `{levelID}` | `{template}` | {seed} | {difficulty} | {nodes} | {edges} | {switches} | "
-                "{parTaps} | {timeLimit} | {status} |".format(**level)
+                "{parTaps} | {timeLimit} | `{signature_summary}` | {status} |".format(
+                    signature_summary=signature_summary,
+                    **level,
+                )
             )
         if not payload["acceptedLevels"]:
-            lines.append("| _None_ |  |  |  |  |  |  |  |  | failed |")
+            lines.append("| _None_ |  |  |  |  |  |  |  |  |  | failed |")
 
         lines.extend(["", "## Rejections", ""])
         lines.append(f"- Rejected candidates: `{payload['rejectedCandidateCount']}`")
@@ -124,3 +136,25 @@ class GenerationReportRepository:
             ]
         )
         return "\n".join(lines)
+
+    def _signature_payload(self, level) -> dict[str, Any] | None:
+        signature = getattr(level, "candidate_signature", None)
+        if signature is None:
+            return None
+        return {
+            "levelID": signature.level_id,
+            "template": signature.template_name,
+            "difficulty": signature.difficulty,
+            "nodeCount": signature.node_count,
+            "edgeCount": signature.edge_count,
+            "switchCount": signature.switch_count,
+            "requiredTapCount": signature.required_tap_count,
+            "deadEndCount": signature.dead_end_count,
+            "topologyHash": signature.topology_hash,
+            "topologyHashShort": signature.topology_hash[:8],
+            "layoutHash": signature.layout_hash,
+            "layoutHashShort": signature.layout_hash[:8],
+            "solutionHash": signature.solution_hash,
+            "solutionHashShort": signature.solution_hash[:8],
+            "normalizedPositions": list(signature.normalized_positions),
+        }

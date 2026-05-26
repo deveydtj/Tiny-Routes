@@ -21,34 +21,27 @@ class SingleSwitchTemplate(LevelTemplate):
     ) -> GeneratedLevel:
         builder = self.builder()
         include_approach = preset.name != "tutorial"
-        positions = {
-            "start": (-1.1, 0.0),
-            "approach": (-0.55, 0.0),
-            "choice": (0.0, 0.0),
-            "dead_end_a": (0.75, -0.65),
-            "package": (0.72, 0.55),
-            "destination": (1.1, 0.95),
-        }
+        variant = rng.choice(["classic", "upper_package", "lower_package", "short_dead_end"])
+        positions, switch_id, dead_end_id, route = _variant_spec(variant, include_approach)
         if rng.bool(0.5):
             positions = {node_id: (x, -y) for node_id, (x, y) in positions.items()}
 
         node_ids = ["start"]
         if include_approach:
             node_ids.append("approach")
-        node_ids.extend(["choice", "dead_end_a", "package", "destination"])
+        node_ids.extend([switch_id, dead_end_id, "package", "destination"])
         for node_id in node_ids:
             builder.add_node(node_id, *positions[node_id])
 
         if include_approach:
             builder.add_edge("start", "approach")
-            builder.add_edge("approach", "choice")
+            builder.add_edge("approach", switch_id)
         else:
-            builder.add_edge("start", "choice")
-        builder.add_edge("choice", "dead_end_a")
-        builder.add_edge("choice", "package")
+            builder.add_edge("start", switch_id)
+        builder.add_edge(switch_id, dead_end_id)
+        builder.add_edge(switch_id, "package")
         builder.add_edge("package", "destination")
 
-        route = ["start"] + (["approach"] if include_approach else []) + ["choice", "package", "destination"]
         time_limit = self.calculate_time_limit([positions[node_id] for node_id in route], preset)
         level = builder.build_level_document(
             level_id=level_id,
@@ -61,9 +54,61 @@ class SingleSwitchTemplate(LevelTemplate):
         )
         solution = self.solution_builder.build_tap_solution(
             level_id,
-            ["choice"],
+            [switch_id],
             preset,
             "Rotate choice once so the route collects the package before heading to destination.",
             times=[0.4],
         )
-        return self.generated(level, solution, preset, rng.seed)
+        return self.generated(level, solution, preset, rng.seed, notes=[f"Template variant: {variant}"])
+
+
+def _variant_spec(
+    variant: str,
+    include_approach: bool,
+) -> tuple[dict[str, tuple[float, float]], str, str, list[str]]:
+    if variant == "upper_package":
+        switch_id = "upper_choice"
+        dead_end_id = "upper_dead_end"
+        positions = {
+            "start": (-1.1, -0.15),
+            "approach": (-0.55, -0.05),
+            switch_id: (0.0, 0.08),
+            dead_end_id: (0.78, -0.68),
+            "package": (0.7, 0.6),
+            "destination": (1.08, 0.9),
+        }
+    elif variant == "lower_package":
+        switch_id = "lower_choice"
+        dead_end_id = "lower_dead_end"
+        positions = {
+            "start": (-1.1, 0.18),
+            "approach": (-0.56, 0.08),
+            switch_id: (0.0, -0.08),
+            dead_end_id: (0.78, 0.68),
+            "package": (0.7, -0.6),
+            "destination": (1.08, -0.9),
+        }
+    elif variant == "short_dead_end":
+        switch_id = "short_choice"
+        dead_end_id = "short_dead_end"
+        positions = {
+            "start": (-1.1, 0.02),
+            "approach": (-0.58, 0.02),
+            switch_id: (-0.04, 0.02),
+            dead_end_id: (0.48, -0.4),
+            "package": (0.78, 0.46),
+            "destination": (1.12, 0.82),
+        }
+    else:
+        switch_id = "choice"
+        dead_end_id = "dead_end_a"
+        positions = {
+            "start": (-1.1, 0.0),
+            "approach": (-0.55, 0.0),
+            switch_id: (0.0, 0.0),
+            dead_end_id: (0.75, -0.65),
+            "package": (0.72, 0.55),
+            "destination": (1.1, 0.95),
+        }
+    route = ["start"] + (["approach"] if include_approach else []) + [switch_id, "package", "destination"]
+    return positions, switch_id, dead_end_id, route

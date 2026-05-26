@@ -13,6 +13,8 @@ from ..repositories.generated_level_repository import GeneratedLevelRepository
 from ..repositories.generation_report_repository import GenerationReportRepository
 from ..templates.template_registry import TemplateRegistry
 from .candidate_rejection_service import CandidateRejectionService
+from .candidate_signature_service import CandidateSignatureService
+from .candidate_uniqueness_service import CandidateUniquenessService
 from .difficulty_service import DifficultyService
 from .generated_level_validation_service import GeneratedLevelValidationService
 from .swift_test_service import SwiftTestService
@@ -25,6 +27,8 @@ class LevelGenerationService:
         self.validation_service = GeneratedLevelValidationService()
         self.generated_level_repository = GeneratedLevelRepository()
         self.report_repository = GenerationReportRepository()
+        self.signature_service = CandidateSignatureService()
+        self.uniqueness_service = CandidateUniquenessService()
 
     def generate(self, config: GenerationConfig) -> GenerationResult:
         result = GenerationResult()
@@ -40,6 +44,7 @@ class LevelGenerationService:
 
         rejection_service = CandidateRejectionService()
         base_rng = RandomSource(config.base_seed)
+        accepted_signatures = []
 
         for offset in range(config.count):
             level_number = config.start_level_number + offset
@@ -73,7 +78,24 @@ class LevelGenerationService:
                     overwrite=config.overwrite or config.dry_run,
                 )
                 if rejection_service.can_save(validation_result):
+                    candidate_signature = self.signature_service.signature_for(candidate)
+                    duplicate_result = self.uniqueness_service.check_duplicate(
+                        candidate_signature,
+                        accepted_signatures,
+                    )
+                    if duplicate_result.is_duplicate:
+                        message = rejection_service.record_custom_rejection(
+                            candidate,
+                            "candidate_too_similar_to_batch",
+                            duplicate_result.message,
+                            config.debug_failures_dir,
+                        )
+                        result.messages.append(message)
+                        continue
+
+                    candidate.candidate_signature = candidate_signature
                     accepted_candidate = candidate
+                    accepted_signatures.append(candidate_signature)
                     break
 
                 rejection_service.record_rejection(candidate, validation_result, config.debug_failures_dir)

@@ -20,29 +20,16 @@ class ReturnLoopTemplate(LevelTemplate):
         rng: RandomSource,
     ) -> GeneratedLevel:
         builder = self.builder()
-        positions = {
-            "start": (-1.1, 0.0),
-            "alpha_switch": (-0.45, 0.0),
-            "package": (0.1, 0.75),
-            "beta_switch": (0.75, 0.75),
-            "return_a": (0.75, -0.55),
-            "destination": (-0.05, -1.05),
-            "dead_end_a": (1.15, 0.15),
-        }
+        variant = rng.choice(["classic", "upper_loop", "lower_loop"])
+        positions, edges, tap_node_ids, route = _variant_spec(variant)
         if rng.bool(0.5):
             positions = {node_id: (-x, y) for node_id, (x, y) in positions.items()}
 
         for node_id in positions:
             builder.add_node(node_id, *positions[node_id])
-        builder.add_edge("start", "alpha_switch")
-        builder.add_edge("alpha_switch", "destination")
-        builder.add_edge("alpha_switch", "package")
-        builder.add_edge("package", "beta_switch")
-        builder.add_edge("beta_switch", "dead_end_a")
-        builder.add_edge("beta_switch", "return_a")
-        builder.add_edge("return_a", "alpha_switch")
+        for from_node_id, to_node_id in edges:
+            builder.add_edge(from_node_id, to_node_id)
 
-        route = ["start", "alpha_switch", "package", "beta_switch", "return_a", "alpha_switch", "destination"]
         time_limit = self.calculate_time_limit([positions[node_id] for node_id in route], preset)
         level = builder.build_level_document(
             level_id=level_id,
@@ -55,9 +42,104 @@ class ReturnLoopTemplate(LevelTemplate):
         )
         solution = self.solution_builder.build_tap_solution(
             level_id,
-            ["alpha_switch", "beta_switch", "alpha_switch"],
+            tap_node_ids,
             preset,
             "Rotate alpha to collect the package, rotate beta onto the return path, then rotate alpha again for destination.",
             times=[0.4, 1.2, 2.0],
         )
-        return self.generated(level, solution, preset, rng.seed)
+        return self.generated(level, solution, preset, rng.seed, notes=[f"Template variant: {variant}"])
+
+
+def _variant_spec(
+    variant: str,
+) -> tuple[
+    dict[str, tuple[float, float]],
+    list[tuple[str, str]],
+    list[str],
+    list[str],
+]:
+    if variant == "upper_loop":
+        positions = {
+            "start": (-1.1, -0.18),
+            "upper_alpha_switch": (-0.5, -0.05),
+            "package": (0.05, 0.82),
+            "upper_beta_switch": (0.68, 0.72),
+            "upper_return": (0.82, -0.48),
+            "destination": (-0.08, -1.08),
+            "upper_dead_end": (1.12, 0.2),
+        }
+        edges = [
+            ("start", "upper_alpha_switch"),
+            ("upper_alpha_switch", "destination"),
+            ("upper_alpha_switch", "package"),
+            ("package", "upper_beta_switch"),
+            ("upper_beta_switch", "upper_dead_end"),
+            ("upper_beta_switch", "upper_return"),
+            ("upper_return", "upper_alpha_switch"),
+        ]
+        return positions, edges, ["upper_alpha_switch", "upper_beta_switch", "upper_alpha_switch"], [
+            "start",
+            "upper_alpha_switch",
+            "package",
+            "upper_beta_switch",
+            "upper_return",
+            "upper_alpha_switch",
+            "destination",
+        ]
+
+    if variant == "lower_loop":
+        positions = {
+            "start": (-1.05, 0.2),
+            "lower_alpha_switch": (-0.48, 0.02),
+            "package": (0.1, -0.78),
+            "lower_beta_switch": (0.72, -0.7),
+            "lower_return": (0.78, 0.5),
+            "destination": (-0.12, 0.95),
+            "lower_dead_end": (1.12, -0.12),
+        }
+        edges = [
+            ("start", "lower_alpha_switch"),
+            ("lower_alpha_switch", "destination"),
+            ("lower_alpha_switch", "package"),
+            ("package", "lower_beta_switch"),
+            ("lower_beta_switch", "lower_dead_end"),
+            ("lower_beta_switch", "lower_return"),
+            ("lower_return", "lower_alpha_switch"),
+        ]
+        return positions, edges, ["lower_alpha_switch", "lower_beta_switch", "lower_alpha_switch"], [
+            "start",
+            "lower_alpha_switch",
+            "package",
+            "lower_beta_switch",
+            "lower_return",
+            "lower_alpha_switch",
+            "destination",
+        ]
+
+    positions = {
+        "start": (-1.1, 0.0),
+        "alpha_switch": (-0.45, 0.0),
+        "package": (0.1, 0.75),
+        "beta_switch": (0.75, 0.75),
+        "return_a": (0.75, -0.55),
+        "destination": (-0.05, -1.05),
+        "dead_end_a": (1.15, 0.15),
+    }
+    edges = [
+        ("start", "alpha_switch"),
+        ("alpha_switch", "destination"),
+        ("alpha_switch", "package"),
+        ("package", "beta_switch"),
+        ("beta_switch", "dead_end_a"),
+        ("beta_switch", "return_a"),
+        ("return_a", "alpha_switch"),
+    ]
+    return positions, edges, ["alpha_switch", "beta_switch", "alpha_switch"], [
+        "start",
+        "alpha_switch",
+        "package",
+        "beta_switch",
+        "return_a",
+        "alpha_switch",
+        "destination",
+    ]

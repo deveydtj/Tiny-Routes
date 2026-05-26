@@ -1,0 +1,21 @@
+from __future__ import annotations
+
+from dataclasses import dataclass
+
+
+@dataclass(frozen=True)
+class CandidateSignature:
+    """Stable fingerprint used for duplicate and similarity checks."""
+
+    level_id: str
+    template_name: str
+    difficulty: str
+    node_count: int
+    edge_count: int
+    switch_count: int
+    required_tap_count: int
+    dead_end_count: int
+    topology_hash: str
+    layout_hash: str
+    solution_hash: str
+    normalized_positions: tuple[tuple[str, float, float], ...]

@@ -1,14 +1,16 @@
 from __future__ import annotations
 
 from app.generation_config import GenerationConfig
+from app.random_source import RandomSource
 from app.services.generated_level_validation_service import GeneratorValidationMessage, GeneratorValidationResult
 from app.services.level_generation_service import LevelGenerationService
+from app.templates.single_switch_template import SingleSwitchTemplate
 
 
 def _config(tmp_path, **kwargs) -> GenerationConfig:
     return GenerationConfig(
         start_level_number=12,
-        count=1,
+        count=kwargs.pop("count", 1),
         difficulty=kwargs.pop("difficulty", "tutorial"),
         template_name=kwargs.pop("template_name", "straight_delivery"),
         seed=kwargs.pop("seed", 1),
@@ -92,3 +94,55 @@ def test_generation_service_retries_after_rejected_candidate(tmp_path) -> None:
     assert result.passed is True
     assert result.rejection_reason_counts["forced_failure"] == 1
     assert calls["count"] == 2
+
+
+def test_generation_service_rejects_duplicate_batch_candidates(tmp_path) -> None:
+    service = LevelGenerationService()
+
+    class FixedSingleSwitchTemplate:
+        requires_swift_validation = False
+
+        def generate(self, level_id, level_number, preset, rng):
+            return SingleSwitchTemplate().generate(level_id, level_number, preset, RandomSource(2))
+
+    service.template_registry.choose = lambda *args, **kwargs: FixedSingleSwitchTemplate()
+
+    result = service.generate(
+        _config(
+            tmp_path,
+            difficulty="easy",
+            template_name="single_switch",
+            count=2,
+            max_attempts_per_level=2,
+            dry_run=True,
+        )
+    )
+
+    assert result.passed is False
+    assert result.accepted[0].level_id == "level_012"
+    assert result.rejection_reason_counts["candidate_too_similar_to_batch"] == 2
+
+
+def test_generation_service_generates_unique_medium_mixed_batch(tmp_path) -> None:
+    result = LevelGenerationService().generate(
+        _config(
+            tmp_path,
+            difficulty="medium",
+            template_name="mixed",
+            count=10,
+            seed=20260525,
+            dry_run=True,
+        )
+    )
+    signatures = {
+        (
+            level.candidate_signature.topology_hash,
+            level.candidate_signature.layout_hash,
+            level.candidate_signature.solution_hash,
+        )
+        for level in result.accepted
+    }
+
+    assert result.passed is True
+    assert len(result.accepted) == 10
+    assert len(signatures) == len(result.accepted)

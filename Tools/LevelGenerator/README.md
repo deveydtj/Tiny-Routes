@@ -28,6 +28,21 @@ Dry-run one tutorial level:
 python Tools/LevelGenerator/generate_levels.py --start 12 --count 1 --difficulty tutorial --template straight_delivery --seed 1 --dry-run
 ```
 
+## Smoke Test
+
+Start with this deterministic dry run when setting up or changing the generator:
+
+```bash
+python Tools/LevelGenerator/generate_levels.py --start 99 --count 2 --difficulty easy --template mixed --seed 123 --dry-run
+```
+
+Expected behavior:
+
+- The command exits successfully.
+- It prints accepted candidates.
+- It writes reports if report paths are configured.
+- It does not write level or solution files in dry-run mode.
+
 Write one tutorial level and matching solution:
 
 ```bash

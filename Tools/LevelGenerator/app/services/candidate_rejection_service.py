@@ -4,7 +4,7 @@ import json
 from collections import Counter
 from pathlib import Path
 
-from .generated_level_validation_service import GeneratorValidationResult
+from .generated_level_validation_service import GeneratorValidationMessage, GeneratorValidationResult
 
 
 class CandidateRejectionService:
@@ -31,6 +31,35 @@ class CandidateRejectionService:
         generated_level.rejection_messages.append(message)
         if debug_failures_dir is not None:
             self._save_debug_candidate(generated_level, validation_result, debug_failures_dir)
+        return message
+
+    def record_custom_rejection(
+        self,
+        generated_level,
+        reason: str,
+        detail: str,
+        debug_failures_dir: Path | None = None,
+    ) -> str:
+        self.reason_counts[reason] += 1
+        message = (
+            f"Rejected candidate {generated_level.level_id} seed={generated_level.seed} "
+            f"template={generated_level.template_name} reason={reason} detail={detail}"
+        )
+        generated_level.rejection_messages.append(message)
+        if debug_failures_dir is not None:
+            self._save_debug_candidate(
+                generated_level,
+                GeneratorValidationResult(
+                    messages=[
+                        GeneratorValidationMessage(
+                            severity="error",
+                            code=reason,
+                            message=detail,
+                        )
+                    ]
+                ),
+                debug_failures_dir,
+            )
         return message
 
     def _save_debug_candidate(self, generated_level, validation_result: GeneratorValidationResult, directory: Path) -> None:
