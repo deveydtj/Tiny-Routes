@@ -1,6 +1,9 @@
 from __future__ import annotations
 
+from pathlib import Path
+
 from app.models import LevelDocument, SolutionModel
+from app.services.level_identity_service import LevelIdentityService
 from app.services.level_validation_service import (
     ValidationMessage,
     ValidationResult,
@@ -21,13 +24,15 @@ class SolutionValidationService:
         self,
         level: LevelDocument,
         solution: SolutionModel | None,
+        file_path: Path | None = None,
     ) -> ValidationResult:
-        return validate(level, solution)
+        return validate(level, solution, file_path=file_path)
 
 
 def validate(
     level: LevelDocument,
     solution: SolutionModel | None,
+    file_path: Path | None = None,
 ) -> ValidationResult:
     """Validate a solution script's metadata, action timing, and node references."""
 
@@ -54,6 +59,23 @@ def validate(
                 ),
             )
         )
+
+    if file_path is not None:
+        identity_service = LevelIdentityService()
+        level_number = identity_service.try_parse_number_from_level_filename(file_path)
+        if level_number is not None:
+            identity = identity_service.build_from_number(level_number)
+            if solution.levelID != identity.level_id:
+                messages.append(
+                    ValidationMessage(
+                        severity=ValidationSeverity.ERROR,
+                        code="solution_level_id_filename_mismatch",
+                        message=(
+                            f"Solution levelID '{solution.levelID}' does not match "
+                            f"corrected production ID '{identity.level_id}'."
+                        ),
+                    )
+                )
 
     if solution.expectedOutcome != "completed":
         messages.append(

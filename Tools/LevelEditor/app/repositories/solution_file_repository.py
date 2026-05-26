@@ -5,6 +5,7 @@ from pathlib import Path
 
 from app.config import find_repo_root
 from app.models import SolutionModel
+from app.services.level_identity_service import LevelIdentityService
 
 
 class SolutionFileRepositoryError(Exception):
@@ -83,3 +84,18 @@ class SolutionFileRepository:
         level_file_path = Path(level_path)
         filename = f"{level_file_path.stem}.solution.json"
         return find_repo_root() / "TinyRoutesTests" / "Resources" / "LevelSolutions" / filename
+
+    def solution_path_for_level_id(self, level_id: str) -> Path:
+        identity_service = LevelIdentityService()
+        level_number = identity_service.try_parse_number_from_level_id(level_id)
+        if level_number is None:
+            raise ValueError(f"Level ID '{level_id}' is not production-like.")
+
+        identity = identity_service.build_from_number(level_number)
+        return (
+            find_repo_root()
+            / "TinyRoutesTests"
+            / "Resources"
+            / "LevelSolutions"
+            / identity.solution_filename
+        )

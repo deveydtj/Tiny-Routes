@@ -1,6 +1,6 @@
 {
-  "levelID": "new_level",
-  "description": "Solution for New Level",
+  "levelID": "level_021",
+  "description": "Solution for Level 021",
   "expectedOutcome": "completed",
   "maxTaps": 0,
   "requiresWithinTimeLimit": true,

@@ -1,6 +1,6 @@
 {
-  "id": "new_level",
-  "name": "New Level",
+  "id": "level_021",
+  "name": "Level 021",
   "graph": {
     "nodes": [
       {
@@ -24,8 +24,8 @@
         "x": 0.0,
         "y": 3.073018391975512,
         "outgoingEdgeIDs": [
-          "edge_1",
           "edge_3",
+          "edge_1",
           "edge_8"
         ]
       },
@@ -56,7 +56,9 @@
         "id": "node_2",
         "x": -1.412882019299086,
         "y": 6.428613187810843,
-        "outgoingEdgeIDs": []
+        "outgoingEdgeIDs": [
+          "edge_12"
+        ]
       },
       {
         "id": "node_3",
@@ -79,7 +81,8 @@
         "x": 3.3732558210765693,
         "y": 3.1260014676992283,
         "outgoingEdgeIDs": [
-          "edge_11"
+          "edge_11",
+          "edge_13"
         ]
       },
       {
@@ -168,6 +171,18 @@
         "id": "edge_11",
         "fromNodeID": "switch_2",
         "toNodeID": "destination",
+        "roadShape": "horizontalFirst"
+      },
+      {
+        "id": "edge_12",
+        "fromNodeID": "node_2",
+        "toNodeID": "destination",
+        "roadShape": "horizontalFirst"
+      },
+      {
+        "id": "edge_13",
+        "fromNodeID": "switch_2",
+        "toNodeID": "node_5",
         "roadShape": "horizontalFirst"
       }
     ]

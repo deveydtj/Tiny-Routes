@@ -2,8 +2,10 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from enum import Enum
+from pathlib import Path
 
 from app.models import LevelDocument, RouteGraphModel, RouteNodeModel
+from app.services.level_identity_service import LevelIdentityService
 
 
 class ValidationSeverity(str, Enum):
@@ -35,8 +37,12 @@ class ValidationResult:
 
 
 class LevelValidationService:
-    def validate(self, level: "LevelDocument") -> ValidationResult:
-        return validate(level)
+    def validate(
+        self,
+        level: "LevelDocument",
+        file_path: Path | None = None,
+    ) -> ValidationResult:
+        return validate(level, file_path=file_path)
 
 
 def create_default_level_document() -> LevelDocument:
@@ -87,13 +93,100 @@ def _collect_reachable_node_ids(
     return reachable
 
 
-def validate(level: "LevelDocument") -> ValidationResult:
+def _is_production_levels_path(file_path: Path) -> bool:
+    parent_parts = file_path.parent.parts
+    return len(parent_parts) >= 3 and parent_parts[-3:] == (
+        "TinyRoutes",
+        "Resources",
+        "Levels",
+    )
+
+
+def _add_metadata_validation_messages(
+    messages: list[ValidationMessage],
+    level: "LevelDocument",
+    file_path: Path | None,
+) -> None:
+    identity_service = LevelIdentityService()
+    level_number = identity_service.try_parse_number_from_level_id(level.id)
+    if level_number is not None and not identity_service.is_padded_production_level_id(level.id):
+        normalized_identity = identity_service.build_from_number(level_number)
+        messages.append(
+            ValidationMessage(
+                severity=ValidationSeverity.WARNING,
+                code="non_padded_level_id",
+                message=(
+                    f"Level ID '{level.id}' should be normalized to "
+                    f"'{normalized_identity.level_id}'."
+                ),
+            )
+        )
+
+    if (
+        identity_service.is_padded_production_level_id(level.id)
+        and level.name == "New Level"
+    ):
+        messages.append(
+            ValidationMessage(
+                severity=ValidationSeverity.WARNING,
+                code="default_level_name_in_production_level",
+                message=(
+                    f"Production level '{level.id}' still has the default name 'New Level'."
+                ),
+            )
+        )
+
+    if file_path is None:
+        return
+
+    level_file_number = identity_service.try_parse_number_from_level_filename(file_path)
+    if level_file_number is not None:
+        normalized_identity = identity_service.build_from_number(level_file_number)
+        if file_path.name != normalized_identity.level_filename:
+            messages.append(
+                ValidationMessage(
+                    severity=ValidationSeverity.WARNING,
+                    code="non_padded_level_filename",
+                    message=(
+                        f"Level filename '{file_path.name}' should be normalized to "
+                        f"'{normalized_identity.level_filename}'."
+                    ),
+                )
+            )
+
+        if file_path.stem != level.id:
+            messages.append(
+                ValidationMessage(
+                    severity=ValidationSeverity.ERROR,
+                    code="level_id_filename_mismatch",
+                    message=f"File is named '{file_path.name}' but level ID is '{level.id}'.",
+                )
+            )
+
+    if _is_production_levels_path(file_path) and identity_service.is_draft_level_id(level.id):
+        messages.append(
+            ValidationMessage(
+                severity=ValidationSeverity.ERROR,
+                code="draft_level_id_in_production_path",
+                message=(
+                    "Draft level ID 'new_level' should not be saved in the production "
+                    "Levels directory."
+                ),
+            )
+        )
+
+
+def validate(
+    level: "LevelDocument",
+    file_path: Path | None = None,
+) -> ValidationResult:
     """Run all core structural validation rules against a LevelDocument.
 
     Returns a ValidationResult containing any errors, warnings, or info
     messages found.  No Qt modules are used here.
     """
     messages: list[ValidationMessage] = []
+    _add_metadata_validation_messages(messages, level, file_path)
 
     # --- Level ID ---
     if not level.id or not level.id.strip():

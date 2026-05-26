@@ -37,7 +37,6 @@
 		20C3785F47268256ABD3B92B /* UserSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = E02F44145D432403FF64D95B /* UserSettings.swift */; };
 		21925B4843B1D29BBA5AA5AD /* level_007.solution.json in Resources */ = {isa = PBXBuildFile; fileRef = 71E4A985E577F112A3286F02 /* level_007.solution.json */; };
 		2344BBF6AD0773F6CCE3C1A7 /* level_009.json in Resources */ = {isa = PBXBuildFile; fileRef = F97504C047FC88B1A6992639 /* level_009.json */; };
-		23A24D082FC5309700A685E3 /* new_level.json in Resources */ = {isa = PBXBuildFile; fileRef = 23A24D072FC5309700A685E3 /* new_level.json */; };
 		2455CB9ECC694065D4C15C4C /* SaveDataRepositoryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAE4354ADF7FBB27382D141A /* SaveDataRepositoryTests.swift */; };
 		24DE186D45143F87CD249688 /* TRResultCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = E874F6DEAE742EF2728616FF /* TRResultCard.swift */; };
 		25E2CB8489BBDE3010BB2057 /* TRResultRouteStrip.swift in Sources */ = {isa = PBXBuildFile; fileRef = DC7506DFBF3B06D1BE0ADBE2 /* TRResultRouteStrip.swift */; };
@@ -50,6 +49,7 @@
 		2B2668ED0E64C49FD1A8008E /* AppState.swift in Sources */ = {isa = PBXBuildFile; fileRef = DB9C673DAD937B5A68706543 /* AppState.swift */; };
 		2BF99CA96CE5149BFEB26032 /* DotMovementController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43AEFC681671D4E071796810 /* DotMovementController.swift */; };
 		2D4E31D7460E797CF0596E4C /* TRTinyRoutesLogo.swift in Sources */ = {isa = PBXBuildFile; fileRef = 63F32ABE2ED4121568C097D2 /* TRTinyRoutesLogo.swift */; };
+		2DA39BCFEEFF2F0E9E095E44 /* level_021.json in Resources */ = {isa = PBXBuildFile; fileRef = 9330087E3ED41784AD2E22DC /* level_021.json */; };
 		2E5C97F498E8D1F38D59CDB0 /* TRShopCosmeticGrid.swift in Sources */ = {isa = PBXBuildFile; fileRef = C24FC74DD7D0CB43B370434C /* TRShopCosmeticGrid.swift */; };
 		2F14A3CF9DE45529EE7BB9D9 /* GameplayCosmeticLoadout.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8DFE5D9480972F04F714A31C /* GameplayCosmeticLoadout.swift */; };
 		339A213A09887FD13046BC45 /* TRProfileRewardProgressCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = AFA7A302DFA9D1DB6E867866 /* TRProfileRewardProgressCard.swift */; };
@@ -222,6 +222,7 @@
 		F40347CC47469D3834CCC9CC /* PurchaseServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 805CC5AC1460E4D01DADF479 /* PurchaseServiceTests.swift */; };
 		F47ED91FDE86BB5A9D017415 /* TRGameplayStyleTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF0CC4388F71CE3B90CBBC80 /* TRGameplayStyleTests.swift */; };
 		F5DA1B86E6BE1D9BDC8DD91D /* EconomyService.swift in Sources */ = {isa = PBXBuildFile; fileRef = DBDF4ED66B8042607FFD6F27 /* EconomyService.swift */; };
+		F7D0426F1A5931A3DD68CFE5 /* level_021.solution.json in Resources */ = {isa = PBXBuildFile; fileRef = D1036EF2EDB330A69FECDED3 /* level_021.solution.json */; };
 		F9316D9A30EA4723E4CB5BAA /* CosmeticItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 465CFC8159B3613A970FE259 /* CosmeticItem.swift */; };
 		F99E28CEDCB085C9B1AE040D /* non_positive_time_limit.json in Resources */ = {isa = PBXBuildFile; fileRef = A7C0CABC6909C07C15C6120D /* non_positive_time_limit.json */; };
 		FABC539B70856A6A7E43AC14 /* UserSettingsServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B1F71A0D96F6EE65FC18B50 /* UserSettingsServiceTests.swift */; };
@@ -273,7 +274,6 @@
 		1ED10221512DC80E25D258A7 /* HomeScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeScreen.swift; sourceTree = "<group>"; };
 		1F9B94553540F5DEADB9944D /* RuntimeRouteGraph.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RuntimeRouteGraph.swift; sourceTree = "<group>"; };
 		22D8DF6A90587055693BBE35 /* LevelSolvabilityTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LevelSolvabilityTests.swift; sourceTree = "<group>"; };
-		23A24D072FC5309700A685E3 /* new_level.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = new_level.json; sourceTree = "<group>"; };
 		2529D5D1E0B42C1EF442262D /* missing_package_node.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = missing_package_node.json; sourceTree = "<group>"; };
 		2550571C48DE5AA16BA6D20F /* level_003.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = level_003.json; sourceTree = "<group>"; };
 		2570025AF6F195915E62AB5D /* level_017.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = level_017.json; sourceTree = "<group>"; };
@@ -366,6 +366,7 @@
 		9032EFCCDA0E554BE40C5C88 /* ShopCatalogService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShopCatalogService.swift; sourceTree = "<group>"; };
 		9270D46D1A770A624E55E2F9 /* TRShopFeaturedCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TRShopFeaturedCard.swift; sourceTree = "<group>"; };
 		92F93BEAB8BCF1B8EA9C4E95 /* ProfileCollectionSelection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileCollectionSelection.swift; sourceTree = "<group>"; };
+		9330087E3ED41784AD2E22DC /* level_021.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = level_021.json; sourceTree = "<group>"; };
 		94FE558681431822BF195CA5 /* shipping_box.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = shipping_box.png; sourceTree = "<group>"; };
 		95B2F8932D75E47B4D25751E /* duplicate_edge_ids.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = duplicate_edge_ids.json; sourceTree = "<group>"; };
 		98CA2B48A90F09500EF5C4D2 /* level_006.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = level_006.json; sourceTree = "<group>"; };
@@ -421,6 +422,7 @@
 		CE6FD6A9BE3D0821ACAA7C80 /* TRDailyRoutePlaceholderCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TRDailyRoutePlaceholderCard.swift; sourceTree = "<group>"; };
 		CEF11510ADC144F44FA76A14 /* star_calendar.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = star_calendar.png; sourceTree = "<group>"; };
 		CF1DF88BA931FB8DF87A4ABF /* TRConfettiEmitterTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TRConfettiEmitterTests.swift; sourceTree = "<group>"; };
+		D1036EF2EDB330A69FECDED3 /* level_021.solution.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = level_021.solution.json; sourceTree = "<group>"; };
 		D3775B6DDA2F25C7A97B8F0A /* DailyBonusService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DailyBonusService.swift; sourceTree = "<group>"; };
 		D38E2EDE9C52958E8C6E10C9 /* level_004.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = level_004.json; sourceTree = "<group>"; };
 		D4C9913C4A5B8AD0D63E024D /* empty_level_id.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = empty_level_id.json; sourceTree = "<group>"; };
@@ -550,7 +552,6 @@
 		2CC069E53C0E83CF5BBD8DC4 /* Levels */ = {
 			isa = PBXGroup;
 			children = (
-				23A24D072FC5309700A685E3 /* new_level.json */,
 				C110C9DEB2E44438FDB43C40 /* level_001.json */,
 				BD797DABF97371C1E3AC74E2 /* level_002.json */,
 				2550571C48DE5AA16BA6D20F /* level_003.json */,
@@ -571,6 +572,7 @@
 				57041D58C883F065A7E52BE3 /* level_018.json */,
 				AD7ADBC6E847708756B9511A /* level_019.json */,
 				1A8BDD2BCD84D43209839A4B /* level_020.json */,
+				9330087E3ED41784AD2E22DC /* level_021.json */,
 			);
 			path = Levels;
 			sourceTree = "<group>";
@@ -599,6 +601,7 @@
 				ADDB53C775CF9B7B041BF35E /* level_018.solution.json */,
 				CE2E452BC4DD36B19AECAA8E /* level_019.solution.json */,
 				81C9FCCFBEBD0C94705FE55A /* level_020.solution.json */,
+				D1036EF2EDB330A69FECDED3 /* level_021.solution.json */,
 			);
 			path = LevelSolutions;
 			sourceTree = "<group>";
@@ -970,11 +973,11 @@
 				C3044013241D35FFF4BB716F /* level_018.json in Resources */,
 				FC2A7D83FFD76E394BA0D6CB /* level_019.json in Resources */,
 				7D8DEE1F6FB67C46B3753660 /* level_020.json in Resources */,
+				2DA39BCFEEFF2F0E9E095E44 /* level_021.json in Resources */,
 				90FB242DCE51BE7D683C2A6F /* locked_pin.png in Resources */,
 				1984FCF46DF7EB2A6A94D285 /* play_filled.png in Resources */,
 				E005876E0718234622133904 /* right_arrow.png in Resources */,
 				BE79281A15C128FD8EBC96F3 /* settings_gear.png in Resources */,
-				23A24D082FC5309700A685E3 /* new_level.json in Resources */,
 				AEC42CD55B2D055E6563153F /* shipping_box.png in Resources */,
 				821EDF223A81645B4E3DF399 /* shop_bag.png in Resources */,
 				906B1ED9BC4833E969362B53 /* star_calendar.png in Resources */,
@@ -1012,6 +1015,7 @@
 				A29DC038447B13BF37952A5F /* level_018.solution.json in Resources */,
 				7C1811CCC56262D3F7104089 /* level_019.solution.json in Resources */,
 				096E8750545B2788F46E0737 /* level_020.solution.json in Resources */,
+				F7D0426F1A5931A3DD68CFE5 /* level_021.solution.json in Resources */,
 				E53265452A081C93250A8DB5 /* missing_destination_node.json in Resources */,
 				B8EC3890CA3E8C0634FFC292 /* missing_outgoing_edge_id.json in Resources */,
 				DDDE294585E1F234335F9E82 /* missing_package_node.json in Resources */,

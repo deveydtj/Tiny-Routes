@@ -10,7 +10,7 @@ os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 try:
     from PySide6.QtCore import Qt
     from PySide6.QtGui import QColor, QKeyEvent, QPalette
-    from PySide6.QtWidgets import QApplication, QFileDialog, QMessageBox, QToolBar
+    from PySide6.QtWidgets import QApplication, QDialog, QFileDialog, QMessageBox, QToolBar
 except ImportError as exc:
     pytest.skip(f"PySide6 unavailable in this environment: {exc}", allow_module_level=True)
 
@@ -18,13 +18,21 @@ LEVEL_EDITOR_ROOT = Path(__file__).resolve().parents[1]
 if str(LEVEL_EDITOR_ROOT) not in sys.path:
     sys.path.insert(0, str(LEVEL_EDITOR_ROOT))
 
+import app.main_window as main_window_module
 from app.main_window import LevelEditorMainWindow
 from app.models import LevelDocument, RouteEdgeModel, RouteGraphModel, RouteNodeModel, SolutionActionModel, SolutionModel
-from app.services import TestRunnerResult, ValidationMessage, ValidationResult, ValidationSeverity
+from app.services import (
+    LevelIdentityService,
+    TestRunnerResult,
+    ValidationMessage,
+    ValidationResult,
+    ValidationSeverity,
+)
 from app.ui import (
     EdgeItem,
     LevelCanvasScene,
     LevelCanvasView,
+    LevelMetadataResult,
     NodeItem,
     PiecePalette,
     PropertiesPanel,
@@ -49,6 +57,41 @@ def qapplication() -> QApplication:
     if app is None:
         app = QApplication([])
     return app
+
+
+@pytest.fixture(autouse=True)
+def default_message_boxes(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(
+        QMessageBox,
+        "question",
+        lambda *args, **kwargs: QMessageBox.StandardButton.Discard,
+    )
+    monkeypatch.setattr(QMessageBox, "information", lambda *args, **kwargs: None)
+    monkeypatch.setattr(QMessageBox, "warning", lambda *args, **kwargs: None)
+
+
+def _metadata_result(level_number: int = 21) -> LevelMetadataResult:
+    identity = LevelIdentityService().build_from_number(level_number)
+    return LevelMetadataResult(
+        identity=identity,
+        level_name=identity.level_name,
+        timeLimitSeconds=30,
+        parTaps=0,
+    )
+
+
+class _AcceptedMetadataDialog:
+    captured_kwargs: dict[str, object] = {}
+    result = _metadata_result()
+
+    def __init__(self, *args, **kwargs) -> None:
+        type(self).captured_kwargs = kwargs
+
+    def exec(self):
+        return QDialog.DialogCode.Accepted
+
+    def metadata_result(self) -> LevelMetadataResult:
+        return type(self).result
 
 
 def test_canvas_colors_use_higher_contrast_light_palette(qapplication: QApplication) -> None:
@@ -99,6 +142,29 @@ def test_main_window_file_menu_includes_new_level_action(qapplication: QApplicat
         assert file_menu is not None
         action_texts = [action.text() for action in file_menu.actions()]
         assert "New Level" in action_texts
+    finally:
+        window.close()
+
+
+def test_main_window_tools_menu_includes_metadata_actions(qapplication: QApplication) -> None:
+    window = LevelEditorMainWindow()
+    try:
+        action_texts = [action.text() for action in window._tools_menu.actions()]
+        assert "Edit Level Metadata..." in action_texts
+        assert "Promote Draft to Production Level..." in action_texts
+        assert "Repair Current Level Metadata..." in action_texts
+    finally:
+        window.close()
+
+
+def test_metadata_actions_are_disabled_when_no_level_is_loaded(
+    qapplication: QApplication,
+) -> None:
+    window = LevelEditorMainWindow()
+    try:
+        assert window._edit_metadata_action.isEnabled() is False
+        assert window._promote_draft_action.isEnabled() is False
+        assert window._repair_metadata_action.isEnabled() is False
     finally:
         window.close()
 
@@ -399,6 +465,97 @@ def test_validate_current_level_includes_solution_messages(
         window.close()
 
 
+def test_validate_current_level_shows_production_metadata_consistent_info(
+    qapplication: QApplication,
+) -> None:
+    window = LevelEditorMainWindow()
+    document = _make_two_node_one_edge_document()
+    document.id = "level_021"
+    document.name = "Level 021"
+    window._current_document = document
+    window._current_file_path = Path("/tmp/level_021.json")
+    window._current_solution = SolutionModel(
+        levelID="level_021",
+        description="Test",
+        expectedOutcome="completed",
+        maxTaps=0,
+        requiresWithinTimeLimit=True,
+        actions=[],
+    )
+
+    try:
+        window._validate_current_level()
+        messages = [
+            window._validation_panel._message_list.item(index).data(Qt.ItemDataRole.UserRole)
+            for index in range(window._validation_panel._message_list.count())
+        ]
+        assert "production_metadata_consistent" in [message.code for message in messages]
+    finally:
+        window.close()
+
+
+def test_validate_current_level_suppresses_metadata_consistent_info_when_invalid(
+    qapplication: QApplication,
+) -> None:
+    window = LevelEditorMainWindow()
+    document = _make_two_node_one_edge_document()
+    document.id = "level_021"
+    document.name = "Level 021"
+    window._current_document = document
+    window._current_file_path = Path("/tmp/level_021.json")
+    window._current_solution = SolutionModel(
+        levelID="wrong_level",
+        description="Test",
+        expectedOutcome="completed",
+        maxTaps=0,
+        requiresWithinTimeLimit=True,
+        actions=[],
+    )
+
+    try:
+        window._validate_current_level()
+        messages = [
+            window._validation_panel._message_list.item(index).data(Qt.ItemDataRole.UserRole)
+            for index in range(window._validation_panel._message_list.count())
+        ]
+        assert "solution_level_id_mismatch" in [message.code for message in messages]
+        assert "production_metadata_consistent" not in [message.code for message in messages]
+    finally:
+        window.close()
+
+
+def test_validate_current_level_keeps_structural_errors_with_metadata_messages(
+    qapplication: QApplication,
+) -> None:
+    window = LevelEditorMainWindow()
+    document = _make_two_node_one_edge_document()
+    document.id = "level_021"
+    document.name = "Level 021"
+    document.startNodeID = ""
+    window._current_document = document
+    window._current_file_path = Path("/tmp/level_021.json")
+    window._current_solution = SolutionModel(
+        levelID="level_021",
+        description="Test",
+        expectedOutcome="completed",
+        maxTaps=0,
+        requiresWithinTimeLimit=True,
+        actions=[],
+    )
+
+    try:
+        window._validate_current_level()
+        messages = [
+            window._validation_panel._message_list.item(index).data(Qt.ItemDataRole.UserRole)
+            for index in range(window._validation_panel._message_list.count())
+        ]
+        codes = [message.code for message in messages]
+        assert "missing_start_node" in codes
+        assert "production_metadata_consistent" not in codes
+    finally:
+        window.close()
+
+
 def test_run_tests_actions_enable_when_level_is_open(qapplication: QApplication) -> None:
     window = LevelEditorMainWindow()
     try:
@@ -409,6 +566,156 @@ def test_run_tests_actions_enable_when_level_is_open(qapplication: QApplication)
 
         assert window._run_tests_action.isEnabled() is True
         assert window._run_tests_menu_action.isEnabled() is True
+    finally:
+        window.close()
+
+
+def test_metadata_actions_enable_after_new_level(qapplication: QApplication) -> None:
+    window = LevelEditorMainWindow()
+    try:
+        window._new_level()
+
+        assert window._edit_metadata_action.isEnabled() is True
+        assert window._promote_draft_action.isEnabled() is True
+        assert window._repair_metadata_action.isEnabled() is True
+    finally:
+        window.close()
+
+
+def test_edit_metadata_action_applies_identity_and_clears_validation(
+    qapplication: QApplication,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    window = LevelEditorMainWindow()
+    _AcceptedMetadataDialog.result = _metadata_result(21)
+    monkeypatch.setattr(main_window_module, "LevelMetadataDialog", _AcceptedMetadataDialog)
+
+    try:
+        window._new_level()
+        assert window._current_document is not None
+        assert window._current_solution is not None
+        window._set_dirty(False)
+        window._validation_panel.show_result(
+            ValidationResult(
+                messages=[
+                    ValidationMessage(
+                        severity=ValidationSeverity.ERROR,
+                        code="old_message",
+                        message="Old validation message.",
+                    )
+                ]
+            )
+        )
+
+        window._edit_level_metadata()
+
+        assert window._current_document.id == "level_021"
+        assert window._current_document.name == "Level 021"
+        assert window._current_solution.levelID == "level_021"
+        assert window._is_dirty is True
+        assert window._validation_panel._message_list.count() == 0
+    finally:
+        window.close()
+
+
+def test_repair_opened_non_padded_level_suggests_padded_identity(
+    qapplication: QApplication,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    window = LevelEditorMainWindow()
+    _AcceptedMetadataDialog.result = _metadata_result(21)
+    monkeypatch.setattr(main_window_module, "LevelMetadataDialog", _AcceptedMetadataDialog)
+    monkeypatch.setattr(window, "_confirm_production_overwrite", lambda *args: True)
+    monkeypatch.setattr(window, "_confirm_metadata_repair", lambda result: True)
+    monkeypatch.setattr(window, "_save_level", lambda: True)
+
+    try:
+        window._current_document = _make_two_node_one_edge_document()
+        window._current_document.id = "new_level"
+        window._current_file_path = Path("/tmp/level_21.json")
+        window._current_solution = SolutionModel(
+            levelID="new_level",
+            description="Test",
+            expectedOutcome="completed",
+            maxTaps=0,
+            requiresWithinTimeLimit=True,
+            actions=[],
+        )
+
+        window._repair_current_level_metadata()
+
+        assert _AcceptedMetadataDialog.captured_kwargs["suggested_level_number"] == 21
+        assert window._current_document.id == "level_021"
+    finally:
+        window.close()
+
+
+def test_repair_new_level_uses_user_selected_level_number(
+    qapplication: QApplication,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    window = LevelEditorMainWindow()
+    _AcceptedMetadataDialog.result = _metadata_result(21)
+    monkeypatch.setattr(main_window_module, "LevelMetadataDialog", _AcceptedMetadataDialog)
+    monkeypatch.setattr(window, "_find_next_available_level_number", lambda: 21)
+    monkeypatch.setattr(window, "_confirm_production_overwrite", lambda *args: True)
+    monkeypatch.setattr(window, "_confirm_metadata_repair", lambda result: True)
+    monkeypatch.setattr(window, "_save_level", lambda: True)
+
+    try:
+        window._new_level()
+        window._current_file_path = Path("/tmp/new_level.json")
+
+        window._repair_current_level_metadata()
+
+        assert _AcceptedMetadataDialog.captured_kwargs["suggested_level_number"] == 21
+        assert window._current_document is not None
+        assert window._current_document.id == "level_021"
+    finally:
+        window.close()
+
+
+def test_repair_updates_metadata_and_saves_normalized_files(
+    qapplication: QApplication,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    window = LevelEditorMainWindow()
+    _AcceptedMetadataDialog.result = _metadata_result(21)
+    saved_current_paths: list[Path | None] = []
+    monkeypatch.setattr(main_window_module, "LevelMetadataDialog", _AcceptedMetadataDialog)
+    monkeypatch.setattr(window, "_confirm_production_overwrite", lambda *args: True)
+    monkeypatch.setattr(window, "_confirm_metadata_repair", lambda result: True)
+    monkeypatch.setattr(QMessageBox, "information", lambda *args, **kwargs: None)
+
+    def fake_save() -> bool:
+        saved_current_paths.append(window._current_file_path)
+        window._set_dirty(False)
+        return True
+
+    monkeypatch.setattr(window, "_save_level", fake_save)
+
+    try:
+        window._current_document = _make_two_node_one_edge_document()
+        window._current_document.id = "new_level"
+        window._current_document.name = "New Level"
+        window._current_file_path = Path("/tmp/level_21.json")
+        window._current_solution = SolutionModel(
+            levelID="new_level",
+            description="Test",
+            expectedOutcome="completed",
+            maxTaps=0,
+            requiresWithinTimeLimit=True,
+            actions=[],
+        )
+
+        window._repair_current_level_metadata()
+
+        assert window._current_document.id == "level_021"
+        assert window._current_document.name == "Level 021"
+        assert window._current_solution is not None
+        assert window._current_solution.levelID == "level_021"
+        assert saved_current_paths[-1] is not None
+        assert saved_current_paths[-1].name == "level_021.json"
     finally:
         window.close()
 
@@ -837,7 +1144,7 @@ def test_canvas_scene_draws_smooth_transition_arc_for_perpendicular_default_hand
     assert path.elementAt(0).x == pytest.approx(LevelCanvasScene.COORDINATE_SCALE - radius)
     assert path.elementAt(0).y == pytest.approx(0)
     assert path.elementAt(path.elementCount() - 1).x == pytest.approx(LevelCanvasScene.COORDINATE_SCALE)
-    assert path.elementAt(path.elementCount() - 1).y == pytest.approx(radius)
+    assert path.elementAt(path.elementCount() - 1).y == pytest.approx(-radius)
 
 
 def test_canvas_scene_does_not_draw_transition_arc_for_straight_handoff(
@@ -1014,7 +1321,7 @@ def test_validate_button_runs_validation_service_for_current_level(
     document = _make_two_node_one_edge_document()
     received: list[LevelDocument] = []
 
-    def fake_validate(level: LevelDocument) -> ValidationResult:
+    def fake_validate(level: LevelDocument, file_path: Path | None = None) -> ValidationResult:
         received.append(level)
         return ValidationResult(
             messages=[
@@ -1027,6 +1334,14 @@ def test_validate_button_runs_validation_service_for_current_level(
         )
 
     window._current_document = document
+    window._current_solution = SolutionModel(
+        levelID=document.id,
+        description="Test",
+        expectedOutcome="completed",
+        maxTaps=0,
+        requiresWithinTimeLimit=True,
+        actions=[],
+    )
     window._validation_service.validate = fake_validate
 
     try:
@@ -1491,6 +1806,243 @@ def test_save_level_as_prompts_for_new_path_and_updates_current_path(
         assert window._save_level_as() is True
         assert received == [(save_path, document)]
         assert window._current_file_path == save_path
+        assert window._is_dirty is False
+    finally:
+        window.close()
+
+
+def test_save_level_as_level_021_updates_document_and_solution_metadata(
+    qapplication: QApplication,
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    window = LevelEditorMainWindow()
+    save_path = tmp_path / "level_021.json"
+    saved_level: dict[str, object] = {}
+    saved_solution: dict[str, object] = {}
+
+    monkeypatch.setattr(QFileDialog, "getSaveFileName", lambda *args, **kwargs: (str(save_path), ""))
+    monkeypatch.setattr(
+        window._solution_repository,
+        "find_solution_path",
+        lambda path: tmp_path / "level_021.solution.json",
+    )
+
+    def fake_save_level(path: Path, level_document: LevelDocument) -> None:
+        saved_level["path"] = path
+        saved_level["document"] = level_document
+
+    def fake_save_solution(path: Path, solution: SolutionModel) -> None:
+        saved_solution["path"] = path
+        saved_solution["solution"] = solution
+
+    window._repository.save_level = fake_save_level
+    window._solution_repository.save_solution = fake_save_solution
+
+    try:
+        window._new_level()
+        assert window._save_level_as() is True
+
+        assert window._current_document is not None
+        assert window._current_solution is not None
+        assert window._current_document.id == "level_021"
+        assert window._current_document.name == "Level 021"
+        assert window._current_solution.levelID == "level_021"
+        assert saved_level["path"] == save_path
+        assert saved_solution["path"] == tmp_path / "level_021.solution.json"
+    finally:
+        window.close()
+
+
+def test_save_level_as_level_21_normalizes_to_level_021(
+    qapplication: QApplication,
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    window = LevelEditorMainWindow()
+    selected_path = tmp_path / "level_21.json"
+    normalized_path = tmp_path / "level_021.json"
+    saved_paths: list[Path] = []
+    info_messages: list[str] = []
+
+    monkeypatch.setattr(QFileDialog, "getSaveFileName", lambda *args, **kwargs: (str(selected_path), ""))
+    monkeypatch.setattr(QMessageBox, "information", lambda *args, **kwargs: info_messages.append(args[2]))
+    monkeypatch.setattr(
+        window._solution_repository,
+        "find_solution_path",
+        lambda path: tmp_path / "level_021.solution.json",
+    )
+    window._repository.save_level = lambda path, document: saved_paths.append(path)
+    window._solution_repository.save_solution = lambda path, solution: None
+
+    try:
+        window._new_level()
+        assert window._save_level_as() is True
+
+        assert saved_paths == [normalized_path]
+        assert window._current_file_path == normalized_path
+        assert window._current_document is not None
+        assert window._current_document.id == "level_021"
+        assert any("level_021.json" in message for message in info_messages)
+    finally:
+        window.close()
+
+
+def test_save_level_as_new_level_in_production_directory_is_blocked(
+    qapplication: QApplication,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    window = LevelEditorMainWindow()
+    production_path = (
+        LEVEL_EDITOR_ROOT.parent.parent
+        / "TinyRoutes"
+        / "Resources"
+        / "Levels"
+        / "new_level.json"
+    )
+    warnings: list[str] = []
+    save_attempted = False
+
+    monkeypatch.setattr(QFileDialog, "getSaveFileName", lambda *args, **kwargs: (str(production_path), ""))
+    monkeypatch.setattr(QMessageBox, "warning", lambda *args, **kwargs: warnings.append(args[2]))
+
+    def fail_save(path: Path, document: LevelDocument) -> None:
+        nonlocal save_attempted
+        save_attempted = True
+
+    window._repository.save_level = fail_save
+
+    try:
+        window._new_level()
+        assert window._save_level_as() is False
+
+        assert window._current_file_path is None
+        assert window._is_dirty is True
+        assert save_attempted is False
+        assert any("level_021.json" in warning for warning in warnings)
+    finally:
+        window.close()
+
+
+def test_save_level_as_non_production_draft_outside_production_still_saves(
+    qapplication: QApplication,
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    window = LevelEditorMainWindow()
+    draft_path = tmp_path / "draft_level.json"
+    saved_paths: list[Path] = []
+
+    monkeypatch.setattr(QFileDialog, "getSaveFileName", lambda *args, **kwargs: (str(draft_path), ""))
+    monkeypatch.setattr(
+        window._solution_repository,
+        "find_solution_path",
+        lambda path: tmp_path / "draft_level.solution.json",
+    )
+    window._repository.save_level = lambda path, document: saved_paths.append(path)
+    window._solution_repository.save_solution = lambda path, solution: None
+
+    try:
+        window._new_level()
+        assert window._save_level_as() is True
+
+        assert saved_paths == [draft_path]
+        assert window._current_file_path == draft_path
+        assert window._current_document is not None
+        assert window._current_document.id == "new_level"
+    finally:
+        window.close()
+
+
+def test_existing_level_target_blocks_save_unless_confirmed(
+    qapplication: QApplication,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    window = LevelEditorMainWindow()
+    target_path = (
+        LEVEL_EDITOR_ROOT.parent.parent
+        / "TinyRoutes"
+        / "Resources"
+        / "Levels"
+        / "level_001.json"
+    )
+    save_attempted = False
+
+    monkeypatch.setattr(QFileDialog, "getSaveFileName", lambda *args, **kwargs: (str(target_path), ""))
+    monkeypatch.setattr(QMessageBox, "question", lambda *args, **kwargs: QMessageBox.StandardButton.Cancel)
+
+    def fail_save(path: Path, document: LevelDocument) -> None:
+        nonlocal save_attempted
+        save_attempted = True
+
+    window._repository.save_level = fail_save
+
+    try:
+        window._new_level()
+        assert window._save_level_as() is False
+
+        assert window._current_file_path is None
+        assert window._is_dirty is True
+        assert window._current_document is not None
+        assert window._current_document.id == "new_level"
+        assert save_attempted is False
+    finally:
+        window.close()
+
+
+def test_existing_solution_target_blocks_save_unless_confirmed(
+    qapplication: QApplication,
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    window = LevelEditorMainWindow()
+    target_level_path = tmp_path / "level_021.json"
+    target_solution_path = tmp_path / "level_021.solution.json"
+    target_solution_path.write_text("{}", encoding="utf-8")
+
+    monkeypatch.setattr(QMessageBox, "question", lambda *args, **kwargs: QMessageBox.StandardButton.Cancel)
+
+    try:
+        window._new_level()
+        assert (
+            window._confirm_production_overwrite(target_level_path, target_solution_path)
+            is False
+        )
+        assert window._current_file_path is None
+        assert window._is_dirty is True
+    finally:
+        window.close()
+
+
+def test_confirm_overwrite_saves_level_and_solution(
+    qapplication: QApplication,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    window = LevelEditorMainWindow()
+    target_path = (
+        LEVEL_EDITOR_ROOT.parent.parent
+        / "TinyRoutes"
+        / "Resources"
+        / "Levels"
+        / "level_001.json"
+    )
+    saved_level_paths: list[Path] = []
+    saved_solution_paths: list[Path] = []
+
+    monkeypatch.setattr(QFileDialog, "getSaveFileName", lambda *args, **kwargs: (str(target_path), ""))
+    monkeypatch.setattr(QMessageBox, "question", lambda *args, **kwargs: QMessageBox.StandardButton.Yes)
+    window._repository.save_level = lambda path, document: saved_level_paths.append(path)
+    window._solution_repository.save_solution = (
+        lambda path, solution: saved_solution_paths.append(path)
+    )
+
+    try:
+        window._new_level()
+        assert window._save_level_as() is True
+
+        assert saved_level_paths == [target_path]
+        assert saved_solution_paths[-1].name == "level_001.solution.json"
+        assert window._current_file_path == target_path
         assert window._is_dirty is False
     finally:
         window.close()

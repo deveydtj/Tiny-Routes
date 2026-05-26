@@ -102,6 +102,10 @@ def _load_fixture(filename: str) -> LevelDocument:
     return LevelDocument.from_dict(data)
 
 
+def _codes(result: ValidationResult) -> list[str]:
+    return [message.code for message in result.messages]
+
+
 def test_create_default_level_document_is_minimal_and_valid():
     level = create_default_level_document()
 
@@ -124,6 +128,96 @@ def test_validate_valid_fixture_produces_no_errors():
     level = _load_fixture("valid_level.json")
     result = validate(level)
     assert not result.has_errors, [m.message for m in result.messages if m.severity == ValidationSeverity.ERROR]
+
+
+def test_validate_callers_without_file_path_still_work():
+    level = _load_fixture("valid_level.json")
+
+    result = validate(level)
+
+    assert isinstance(result, ValidationResult)
+    assert "level_id_filename_mismatch" not in _codes(result)
+
+
+def test_validate_non_padded_level_id_produces_warning():
+    level = _load_fixture("valid_level.json")
+    level.id = "level_21"
+
+    result = validate(level)
+
+    messages = [message for message in result.messages if message.code == "non_padded_level_id"]
+    assert len(messages) == 1
+    assert messages[0].severity is ValidationSeverity.WARNING
+    assert "level_021" in messages[0].message
+
+
+def test_validate_non_padded_level_filename_produces_warning():
+    level = _load_fixture("valid_level.json")
+    level.id = "level_21"
+
+    result = validate(level, Path("level_21.json"))
+
+    messages = [
+        message
+        for message in result.messages
+        if message.code == "non_padded_level_filename"
+    ]
+    assert len(messages) == 1
+    assert messages[0].severity is ValidationSeverity.WARNING
+    assert "level_021.json" in messages[0].message
+
+
+def test_validate_level_id_filename_mismatch_produces_error():
+    level = _load_fixture("valid_level.json")
+    level.id = "new_level"
+
+    result = validate(level, Path("level_021.json"))
+
+    messages = [
+        message
+        for message in result.messages
+        if message.code == "level_id_filename_mismatch"
+    ]
+    assert len(messages) == 1
+    assert messages[0].severity is ValidationSeverity.ERROR
+
+
+def test_validate_draft_id_in_production_path_produces_error():
+    level = _load_fixture("valid_level.json")
+    level.id = "new_level"
+    production_path = (
+        LEVEL_EDITOR_ROOT.parent.parent
+        / "TinyRoutes"
+        / "Resources"
+        / "Levels"
+        / "new_level.json"
+    )
+
+    result = validate(level, production_path)
+
+    messages = [
+        message
+        for message in result.messages
+        if message.code == "draft_level_id_in_production_path"
+    ]
+    assert len(messages) == 1
+    assert messages[0].severity is ValidationSeverity.ERROR
+
+
+def test_validate_default_name_in_production_level_produces_warning():
+    level = _load_fixture("valid_level.json")
+    level.id = "level_021"
+    level.name = "New Level"
+
+    result = validate(level)
+
+    messages = [
+        message
+        for message in result.messages
+        if message.code == "default_level_name_in_production_level"
+    ]
+    assert len(messages) == 1
+    assert messages[0].severity is ValidationSeverity.WARNING
 
 
 def test_validate_invalid_fixture_produces_errors():

@@ -2,7 +2,14 @@ from pathlib import Path
 
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QAction, QCloseEvent, QKeySequence
-from PySide6.QtWidgets import QDockWidget, QFileDialog, QMainWindow, QMessageBox, QToolBar
+from PySide6.QtWidgets import (
+    QDialog,
+    QDockWidget,
+    QFileDialog,
+    QMainWindow,
+    QMessageBox,
+    QToolBar,
+)
 
 from app.config import find_repo_root, get_default_levels_directory
 from app.models import LevelDocument, RouteEdgeModel, RouteNodeModel, SolutionModel
@@ -14,6 +21,8 @@ from app.repositories import (
     SolutionFileRepositoryError,
 )
 from app.services import (
+    LevelIdentity,
+    LevelIdentityService,
     LevelValidationService,
     SolutionValidationService,
     TestRunnerService,
@@ -22,7 +31,15 @@ from app.services import (
     ValidationSeverity,
     create_default_level_document,
 )
-from app.ui import LevelCanvasView, PiecePalette, PropertiesPanel, SolutionPanel, ValidationPanel
+from app.ui import (
+    LevelCanvasView,
+    LevelMetadataDialog,
+    LevelMetadataResult,
+    PiecePalette,
+    PropertiesPanel,
+    SolutionPanel,
+    ValidationPanel,
+)
 
 
 class LevelEditorMainWindow(QMainWindow):
@@ -36,6 +53,7 @@ class LevelEditorMainWindow(QMainWindow):
         self._is_dirty = False
         self._repository = LevelFileRepository()
         self._solution_repository = SolutionFileRepository()
+        self._identity_service = LevelIdentityService()
         self._validation_service = LevelValidationService()
         self._solution_validation_service = SolutionValidationService()
         self._test_runner_service = TestRunnerService(self._resolve_repo_root())
@@ -129,6 +147,24 @@ class LevelEditorMainWindow(QMainWindow):
         reset_zoom_action.triggered.connect(self._canvas_view.reset_zoom)
 
         self._tools_menu = menu_bar.addMenu("Tools")
+
+        self._edit_metadata_action = self._tools_menu.addAction("Edit Level Metadata...")
+        self._edit_metadata_action.triggered.connect(self._edit_level_metadata)
+        self._edit_metadata_action.setEnabled(False)
+
+        self._promote_draft_action = self._tools_menu.addAction(
+            "Promote Draft to Production Level..."
+        )
+        self._promote_draft_action.triggered.connect(self._promote_draft_to_production_level)
+        self._promote_draft_action.setEnabled(False)
+
+        self._repair_metadata_action = self._tools_menu.addAction(
+            "Repair Current Level Metadata..."
+        )
+        self._repair_metadata_action.triggered.connect(self._repair_current_level_metadata)
+        self._repair_metadata_action.setEnabled(False)
+
+        self._tools_menu.addSeparator()
 
         validate_action = self._tools_menu.addAction("Validate")
         validate_action.setToolTip("Validate Level + Solution References")
@@ -235,6 +271,9 @@ class LevelEditorMainWindow(QMainWindow):
         if self._current_file_path is None:
             return self._save_level_as()
 
+        if not self._can_save_current_path():
+            return False
+
         try:
             self._repository.save_level(self._current_file_path, self._current_document)
         except LevelFileRepositoryError as exc:
@@ -242,7 +281,7 @@ class LevelEditorMainWindow(QMainWindow):
             return False
 
         if self._current_solution is not None:
-            solution_path = self._solution_repository.find_solution_path(self._current_file_path)
+            solution_path = self._solution_path_for_current_save()
             try:
                 self._solution_repository.save_solution(solution_path, self._current_solution)
             except SolutionFileRepositoryError as exc:
@@ -270,7 +309,51 @@ class LevelEditorMainWindow(QMainWindow):
         if not file_path:
             return False
 
-        self._current_file_path = Path(file_path)
+        selected_path = Path(file_path)
+        previous_path = self._current_file_path
+
+        production_number = self._identity_service.try_parse_number_from_level_filename(
+            selected_path
+        )
+        if production_number is not None:
+            identity = self._identity_service.build_from_number(production_number)
+            target_path = selected_path.with_name(identity.level_filename)
+            target_solution_path = self._solution_repository.solution_path_for_level_id(
+                identity.level_id
+            )
+
+            if selected_path.name != identity.level_filename:
+                QMessageBox.information(
+                    self,
+                    "Production Filename Normalized",
+                    (
+                        "Tiny Routes production levels use three digits. This will "
+                        f"be saved as {identity.level_filename} instead."
+                    ),
+                )
+
+            if self._is_path_in_default_levels_dir(target_path):
+                if not self._confirm_production_overwrite(target_path, target_solution_path):
+                    return False
+
+            self._identity_service.apply_identity(
+                self._current_document,
+                self._current_solution,
+                identity,
+            )
+            self._current_file_path = target_path
+            return self._save_level()
+
+        if self._is_path_in_default_levels_dir(selected_path):
+            QMessageBox.warning(
+                self,
+                "Production Filename Required",
+                "Production levels must use a filename like level_021.json.",
+            )
+            self._current_file_path = previous_path
+            return False
+
+        self._current_file_path = selected_path
         return self._save_level()
 
     def _validate_current_level(self) -> None:
@@ -278,13 +361,21 @@ class LevelEditorMainWindow(QMainWindow):
             self._validation_panel.clear()
             return
 
-        level_result = self._validation_service.validate(self._current_document)
+        level_result = self._validation_service.validate(
+            self._current_document,
+            self._current_file_path,
+        )
         solution_result = self._solution_validation_service.validate(
             self._current_document,
             self._current_solution,
+            self._current_file_path,
         )
+        messages = [*level_result.messages, *solution_result.messages]
+        consistency_message = self._build_production_metadata_consistency_message(messages)
+        if consistency_message is not None:
+            messages.append(consistency_message)
         combined_result = ValidationResult(
-            messages=[*level_result.messages, *solution_result.messages]
+            messages=messages
         )
         self._validation_panel.show_result(combined_result)
 
@@ -310,6 +401,305 @@ class LevelEditorMainWindow(QMainWindow):
             ]
         )
         self._validation_panel.show_result(validation_result)
+
+    def _edit_level_metadata(self) -> None:
+        if self._current_document is None:
+            return
+
+        result = self._show_metadata_dialog(
+            title="Edit Level Metadata",
+            suggested_level_number=self._suggested_level_number_for_current_document(),
+        )
+        if result is None:
+            return
+
+        self._apply_metadata_result(result)
+
+    def _promote_draft_to_production_level(self) -> None:
+        if self._current_document is None:
+            return
+
+        result = self._show_metadata_dialog(
+            title="Promote Draft to Production Level",
+            suggested_level_number=self._suggested_level_number_for_current_document(),
+        )
+        if result is None:
+            return
+
+        target_level_path = self._level_path_for_identity(result.identity)
+        target_solution_path = self._solution_repository.solution_path_for_level_id(
+            result.identity.level_id
+        )
+        if not self._confirm_production_overwrite(target_level_path, target_solution_path):
+            return
+
+        self._apply_metadata_result(result)
+        self._current_file_path = target_level_path
+        self._update_window_title()
+
+    def _repair_current_level_metadata(self) -> None:
+        if self._current_document is None:
+            return
+
+        suggested_number = self._suggested_level_number_for_repair()
+        result = self._show_metadata_dialog(
+            title="Repair Current Level Metadata",
+            suggested_level_number=suggested_number,
+        )
+        if result is None:
+            return
+
+        target_level_path = self._level_path_for_identity(result.identity)
+        target_solution_path = self._solution_repository.solution_path_for_level_id(
+            result.identity.level_id
+        )
+        if not self._confirm_production_overwrite(target_level_path, target_solution_path):
+            return
+
+        if not self._confirm_metadata_repair(result):
+            return
+
+        old_paths = self._old_paths_for_repair(target_level_path, target_solution_path)
+        self._apply_metadata_result(result)
+        self._current_file_path = target_level_path
+        self._set_dirty(True)
+
+        if not self._save_level():
+            return
+
+        if old_paths:
+            old_path_list = "\n".join(str(path) for path in old_paths)
+            QMessageBox.information(
+                self,
+                "Repair Complete",
+                (
+                    "Repaired files were saved to normalized production paths.\n\n"
+                    "After verifying the new files, these old files can be deleted manually:\n"
+                    f"{old_path_list}"
+                ),
+            )
+
+    def _show_metadata_dialog(
+        self,
+        *,
+        title: str,
+        suggested_level_number: int,
+    ) -> LevelMetadataResult | None:
+        if self._current_document is None:
+            return None
+
+        dialog = LevelMetadataDialog(
+            self._current_document,
+            suggested_level_number=suggested_level_number,
+            title=title,
+            parent=self,
+        )
+        if dialog.exec() != QDialog.DialogCode.Accepted:
+            return None
+        return dialog.metadata_result()
+
+    def _apply_metadata_result(self, result: LevelMetadataResult) -> None:
+        if self._current_document is None:
+            return
+
+        self._identity_service.apply_identity(
+            self._current_document,
+            self._current_solution,
+            result.identity,
+        )
+        self._current_document.name = result.level_name or result.identity.level_name
+        self._current_document.timeLimitSeconds = result.timeLimitSeconds
+        self._current_document.parTaps = result.parTaps
+        self._solution_panel.set_solution(self._current_solution)
+        self._validation_panel.clear()
+        self._set_dirty(True)
+
+    def _suggested_level_number_for_current_document(self) -> int:
+        if self._current_document is not None:
+            parsed_document_number = self._identity_service.try_parse_number_from_level_id(
+                self._current_document.id
+            )
+            if parsed_document_number is not None:
+                return parsed_document_number
+
+        if self._current_file_path is not None:
+            parsed_file_number = self._identity_service.try_parse_number_from_level_filename(
+                self._current_file_path
+            )
+            if parsed_file_number is not None:
+                return parsed_file_number
+
+        return self._find_next_available_level_number()
+
+    def _suggested_level_number_for_repair(self) -> int:
+        if self._current_file_path is not None:
+            parsed_file_number = self._identity_service.try_parse_number_from_level_filename(
+                self._current_file_path
+            )
+            if parsed_file_number is not None:
+                return parsed_file_number
+        return self._suggested_level_number_for_current_document()
+
+    def _find_next_available_level_number(self) -> int:
+        levels_dir = self._resolve_default_levels_dir()
+        if not levels_dir.is_dir():
+            return 1
+
+        highest_level_number = 0
+        for level_path in levels_dir.iterdir():
+            if not level_path.is_file():
+                continue
+            if not self._is_strict_production_level_filename(level_path.name):
+                continue
+            level_number = self._identity_service.try_parse_number_from_level_filename(level_path)
+            if level_number is not None:
+                highest_level_number = max(highest_level_number, level_number)
+
+        return highest_level_number + 1 if highest_level_number else 1
+
+    def _level_path_for_identity(self, identity: LevelIdentity) -> Path:
+        return self._resolve_default_levels_dir() / identity.level_filename
+
+    def _solution_path_for_current_save(self) -> Path:
+        if self._current_document is None or self._current_file_path is None:
+            raise ValueError("No current level path is available.")
+
+        if (
+            self._is_path_in_default_levels_dir(self._current_file_path)
+            and self._identity_service.is_padded_production_level_id(self._current_document.id)
+            and self._current_file_path.name == f"{self._current_document.id}.json"
+        ):
+            return self._solution_repository.solution_path_for_level_id(
+                self._current_document.id
+            )
+
+        return self._solution_repository.find_solution_path(self._current_file_path)
+
+    def _confirm_production_overwrite(
+        self,
+        target_level_path: Path,
+        target_solution_path: Path,
+    ) -> bool:
+        current_level_path = self._current_file_path
+        if target_level_path.exists() and not self._same_path(
+            target_level_path,
+            current_level_path,
+        ):
+            selection = QMessageBox.question(
+                self,
+                "Overwrite Production Level?",
+                f"The level file already exists:\n{target_level_path}\n\nOverwrite it?",
+                QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.Cancel,
+                QMessageBox.StandardButton.Cancel,
+            )
+            if selection != QMessageBox.StandardButton.Yes:
+                return False
+
+        current_solution_path = (
+            self._solution_repository.find_solution_path(current_level_path)
+            if current_level_path is not None
+            else None
+        )
+        if target_solution_path.exists() and not self._same_path(
+            target_solution_path,
+            current_solution_path,
+        ):
+            selection = QMessageBox.question(
+                self,
+                "Overwrite Production Solution?",
+                (
+                    "The solution sidecar already exists:\n"
+                    f"{target_solution_path}\n\nOverwrite it?"
+                ),
+                QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.Cancel,
+                QMessageBox.StandardButton.Cancel,
+            )
+            if selection != QMessageBox.StandardButton.Yes:
+                return False
+
+        return True
+
+    def _confirm_metadata_repair(self, result: LevelMetadataResult) -> bool:
+        if self._current_document is None:
+            return False
+
+        current_solution_id = (
+            self._current_solution.levelID if self._current_solution is not None else "(none)"
+        )
+        message = (
+            "Repair current level metadata?\n\n"
+            f"Current ID: {self._current_document.id}\n"
+            f"Current Name: {self._current_document.name}\n"
+            f"Current Solution levelID: {current_solution_id}\n\n"
+            f"Repaired ID: {result.identity.level_id}\n"
+            f"Repaired Name: {result.level_name or result.identity.level_name}\n"
+            f"Repaired Solution levelID: {result.identity.level_id}"
+        )
+        selection = QMessageBox.question(
+            self,
+            "Repair Level Metadata",
+            message,
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.Cancel,
+            QMessageBox.StandardButton.Cancel,
+        )
+        return selection == QMessageBox.StandardButton.Yes
+
+    def _old_paths_for_repair(
+        self,
+        target_level_path: Path,
+        target_solution_path: Path,
+    ) -> list[Path]:
+        old_paths: list[Path] = []
+        if self._current_file_path is not None and not self._same_path(
+            self._current_file_path,
+            target_level_path,
+        ):
+            old_paths.append(self._current_file_path)
+
+            old_solution_path = self._solution_repository.find_solution_path(
+                self._current_file_path
+            )
+            if not self._same_path(old_solution_path, target_solution_path):
+                old_paths.append(old_solution_path)
+
+        return old_paths
+
+    def _build_production_metadata_consistency_message(
+        self,
+        existing_messages: list[ValidationMessage],
+    ) -> ValidationMessage | None:
+        if (
+            self._current_document is None
+            or self._current_solution is None
+            or self._current_file_path is None
+        ):
+            return None
+        if any(message.severity is ValidationSeverity.ERROR for message in existing_messages):
+            return None
+
+        level_number = self._identity_service.try_parse_number_from_level_filename(
+            self._current_file_path
+        )
+        if level_number is None:
+            return None
+
+        identity = self._identity_service.build_from_number(level_number)
+        if self._current_file_path.name != identity.level_filename:
+            return None
+        if self._current_document.id != identity.level_id:
+            return None
+        if self._current_solution.levelID != identity.level_id:
+            return None
+
+        return ValidationMessage(
+            severity=ValidationSeverity.INFO,
+            code="production_metadata_consistent",
+            message=(
+                "Production metadata is consistent: "
+                f"{identity.level_filename}, id {identity.level_id}, "
+                f"solution levelID {identity.level_id}."
+            ),
+        )
 
     def _focus_validation_message(self, message: object) -> None:
         scene = self._canvas_view.scene()
@@ -519,6 +909,61 @@ class LevelEditorMainWindow(QMainWindow):
             action = getattr(self, action_name, None)
             if action is not None:
                 action.setEnabled(is_enabled)
+
+        for action_name in (
+            "_edit_metadata_action",
+            "_promote_draft_action",
+            "_repair_metadata_action",
+        ):
+            action = getattr(self, action_name, None)
+            if action is not None:
+                action.setEnabled(is_enabled)
+
+    def _can_save_current_path(self) -> bool:
+        if self._current_document is None or self._current_file_path is None:
+            return False
+
+        if not self._is_path_in_default_levels_dir(self._current_file_path):
+            return True
+
+        if not self._is_strict_production_level_filename(self._current_file_path.name):
+            QMessageBox.warning(
+                self,
+                "Production Filename Required",
+                "Production levels must use a filename like level_021.json.",
+            )
+            return False
+
+        if self._identity_service.is_draft_level_id(self._current_document.id):
+            QMessageBox.warning(
+                self,
+                "Production Metadata Required",
+                (
+                    "Draft level ID 'new_level' cannot be saved in the production "
+                    "Levels directory. Use Edit Level Metadata or Promote Draft first."
+                ),
+            )
+            return False
+
+        return True
+
+    def _is_path_in_default_levels_dir(self, path: Path) -> bool:
+        return self._same_path(path.parent, self._resolve_default_levels_dir())
+
+    def _is_strict_production_level_filename(self, filename: str) -> bool:
+        level_number = self._identity_service.try_parse_number_from_level_filename(
+            Path(filename)
+        )
+        if level_number is None:
+            return False
+        identity = self._identity_service.build_from_number(level_number)
+        return filename == identity.level_filename
+
+    @staticmethod
+    def _same_path(left: Path | None, right: Path | None) -> bool:
+        if left is None or right is None:
+            return False
+        return left.resolve(strict=False) == right.resolve(strict=False)
 
     @staticmethod
     def _summarize_test_runner_output(stdout: str, stderr: str) -> str:

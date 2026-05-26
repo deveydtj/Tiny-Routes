@@ -58,6 +58,37 @@ def test_find_solution_path_uses_matching_level_id_in_solution_resources() -> No
     )
 
 
+def test_solution_path_for_level_id_uses_normalized_padded_id() -> None:
+    repository = SolutionFileRepository()
+
+    solution_path = repository.solution_path_for_level_id("level_021")
+
+    assert solution_path == (
+        LEVEL_EDITOR_ROOT.parent.parent
+        / "TinyRoutesTests"
+        / "Resources"
+        / "LevelSolutions"
+        / "level_021.solution.json"
+    )
+
+
+def test_solution_path_for_level_id_normalizes_non_padded_id() -> None:
+    repository = SolutionFileRepository()
+
+    solution_path = repository.solution_path_for_level_id("level_21")
+
+    assert solution_path.name == "level_021.solution.json"
+
+
+def test_find_solution_path_keeps_legacy_filename_behavior() -> None:
+    repository = SolutionFileRepository()
+    level_path = LEVEL_EDITOR_ROOT.parent.parent / "TinyRoutes" / "Resources" / "Levels" / "level_21.json"
+
+    solution_path = repository.find_solution_path(level_path)
+
+    assert solution_path.name == "level_21.solution.json"
+
+
 def test_load_solution_raises_structured_error_for_missing_file(tmp_path: Path) -> None:
     repository = SolutionFileRepository()
     missing_path = tmp_path / "does_not_exist.solution.json"

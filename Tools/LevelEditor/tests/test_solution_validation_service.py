@@ -52,6 +52,21 @@ def test_solution_level_id_mismatch_is_reported() -> None:
     assert "solution_level_id_mismatch" in _codes(result)
 
 
+def test_solution_level_id_filename_mismatch_is_reported() -> None:
+    level = _load_level_fixture()
+    level.id = "new_level"
+    solution = _load_solution_fixture()
+    solution.levelID = "new_level"
+
+    result = SolutionValidationService().validate(
+        level,
+        solution,
+        Path("level_21.json"),
+    )
+
+    assert "solution_level_id_filename_mismatch" in _codes(result)
+
+
 def test_invalid_expected_outcome_is_reported() -> None:
     solution = _load_solution_fixture()
     solution.expectedOutcome = "failed"

@@ -1,6 +1,7 @@
 from .canvas_scene import LevelCanvasScene
 from .canvas_view import LevelCanvasView
 from .edge_item import EdgeItem
+from .level_metadata_dialog import LevelMetadataDialog, LevelMetadataResult
 from .node_item import NodeItem
 from .piece_palette import PiecePalette
 from .properties_panel import PropertiesPanel
@@ -12,6 +13,8 @@ __all__ = [
     "EdgeItem",
     "LevelCanvasScene",
     "LevelCanvasView",
+    "LevelMetadataDialog",
+    "LevelMetadataResult",
     "NodeItem",
     "PiecePalette",
     "PropertiesPanel",
