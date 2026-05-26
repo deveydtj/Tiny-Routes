@@ -6,46 +6,46 @@
       {
         "id": "start",
         "x": -1.1,
-        "y": 0.0,
+        "y": 0.02,
         "outgoingEdgeIDs": [
           "e_start_approach"
         ]
       },
       {
         "id": "approach",
-        "x": -0.55,
-        "y": 0.0,
+        "x": -0.58,
+        "y": 0.02,
         "outgoingEdgeIDs": [
-          "e_approach_choice"
+          "e_approach_short_choice"
         ]
       },
       {
-        "id": "choice",
-        "x": 0.0,
-        "y": 0.0,
+        "id": "short_choice",
+        "x": -0.04,
+        "y": 0.02,
         "outgoingEdgeIDs": [
-          "e_choice_dead_end_a",
-          "e_choice_package"
+          "e_short_choice_short_dead_end",
+          "e_short_choice_package"
         ]
       },
       {
-        "id": "dead_end_a",
-        "x": 0.75,
-        "y": -0.65,
+        "id": "short_dead_end",
+        "x": 0.48,
+        "y": -0.4,
         "outgoingEdgeIDs": []
       },
       {
         "id": "package",
-        "x": 0.72,
-        "y": 0.55,
+        "x": 0.78,
+        "y": 0.46,
         "outgoingEdgeIDs": [
           "e_package_destination"
         ]
       },
       {
         "id": "destination",
-        "x": 1.1,
-        "y": 0.95,
+        "x": 1.12,
+        "y": 0.82,
         "outgoingEdgeIDs": []
       }
     ],
@@ -57,20 +57,20 @@
         "roadShape": "horizontalFirst"
       },
       {
-        "id": "e_approach_choice",
+        "id": "e_approach_short_choice",
         "fromNodeID": "approach",
-        "toNodeID": "choice",
+        "toNodeID": "short_choice",
         "roadShape": "horizontalFirst"
       },
       {
-        "id": "e_choice_dead_end_a",
-        "fromNodeID": "choice",
-        "toNodeID": "dead_end_a",
+        "id": "e_short_choice_short_dead_end",
+        "fromNodeID": "short_choice",
+        "toNodeID": "short_dead_end",
         "roadShape": "horizontalFirst"
       },
       {
-        "id": "e_choice_package",
-        "fromNodeID": "choice",
+        "id": "e_short_choice_package",
+        "fromNodeID": "short_choice",
         "toNodeID": "package",
         "roadShape": "horizontalFirst"
       },

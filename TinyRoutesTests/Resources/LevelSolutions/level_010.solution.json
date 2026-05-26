@@ -6,8 +6,8 @@
   "requiresWithinTimeLimit": true,
   "actions": [
     {
-      "timeSeconds": 0.4,
-      "tapNodeID": "choice"
+      "timeSeconds": 0.86,
+      "tapNodeID": "short_choice"
     }
   ]
 }

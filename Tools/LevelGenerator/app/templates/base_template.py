@@ -6,6 +6,7 @@ from ..models.difficulty_preset import DifficultyPreset
 from ..models.generated_level import GeneratedLevel
 from ..random_source import RandomSource
 from ..services.graph_builder_service import GraphBuilderService
+from ..services.layout_variant_service import LayoutVariantResult, LayoutVariantService
 from ..services.level_naming_service import LevelNamingService
 from ..services.solution_builder_service import SolutionBuilderService
 
@@ -17,6 +18,7 @@ class LevelTemplate(ABC):
     def __init__(self) -> None:
         self.solution_builder = SolutionBuilderService()
         self.naming = LevelNamingService()
+        self.layout_variants = LayoutVariantService()
 
     @abstractmethod
     def supports_difficulty(self, preset: DifficultyPreset) -> bool:
@@ -34,6 +36,14 @@ class LevelTemplate(ABC):
 
     def builder(self) -> GraphBuilderService:
         return GraphBuilderService()
+
+    def apply_layout_variant(
+        self,
+        positions: dict[str, tuple[float, float]],
+        preset: DifficultyPreset,
+        rng: RandomSource,
+    ) -> LayoutVariantResult:
+        return self.layout_variants.apply_random_variant(positions, rng, preset)
 
     def calculate_time_limit(self, route_positions: list[tuple[float, float]], preset: DifficultyPreset) -> int:
         if len(route_positions) < 2:

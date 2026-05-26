@@ -1,0 +1,90 @@
+{
+  "id": "level_004",
+  "name": "Level 004",
+  "graph": {
+    "nodes": [
+      {
+        "id": "start",
+        "x": -1.0,
+        "y": -0.1,
+        "outgoingEdgeIDs": [
+          "e_start_approach"
+        ]
+      },
+      {
+        "id": "approach",
+        "x": -0.45,
+        "y": -0.1,
+        "outgoingEdgeIDs": [
+          "e_approach_choice"
+        ]
+      },
+      {
+        "id": "choice",
+        "x": 0.1,
+        "y": -0.1,
+        "outgoingEdgeIDs": [
+          "e_choice_dead_end_a",
+          "e_choice_package"
+        ]
+      },
+      {
+        "id": "dead_end_a",
+        "x": 0.85,
+        "y": -0.75,
+        "outgoingEdgeIDs": []
+      },
+      {
+        "id": "package",
+        "x": 0.8,
+        "y": 0.45,
+        "outgoingEdgeIDs": [
+          "e_package_destination"
+        ]
+      },
+      {
+        "id": "destination",
+        "x": 1.2,
+        "y": 0.85,
+        "outgoingEdgeIDs": []
+      }
+    ],
+    "edges": [
+      {
+        "id": "e_start_approach",
+        "fromNodeID": "start",
+        "toNodeID": "approach",
+        "roadShape": "horizontalFirst"
+      },
+      {
+        "id": "e_approach_choice",
+        "fromNodeID": "approach",
+        "toNodeID": "choice",
+        "roadShape": "horizontalFirst"
+      },
+      {
+        "id": "e_choice_dead_end_a",
+        "fromNodeID": "choice",
+        "toNodeID": "dead_end_a",
+        "roadShape": "horizontalFirst"
+      },
+      {
+        "id": "e_choice_package",
+        "fromNodeID": "choice",
+        "toNodeID": "package",
+        "roadShape": "horizontalFirst"
+      },
+      {
+        "id": "e_package_destination",
+        "fromNodeID": "package",
+        "toNodeID": "destination",
+        "roadShape": "verticalFirst"
+      }
+    ]
+  },
+  "startNodeID": "start",
+  "packageNodeID": "package",
+  "destinationNodeID": "destination",
+  "timeLimitSeconds": 30,
+  "parTaps": 1
+}

@@ -7,15 +7,15 @@
   "actions": [
     {
       "timeSeconds": 0.4,
-      "tapNodeID": "switch_a"
+      "tapNodeID": "multi_switch_chain_stair_step_switch_a"
     },
     {
-      "timeSeconds": 0.8,
-      "tapNodeID": "switch_b"
+      "timeSeconds": 2.6,
+      "tapNodeID": "multi_switch_chain_stair_step_switch_b"
     },
     {
-      "timeSeconds": 1.2,
-      "tapNodeID": "switch_c"
+      "timeSeconds": 3.2,
+      "tapNodeID": "multi_switch_chain_stair_step_switch_c"
     }
   ]
 }

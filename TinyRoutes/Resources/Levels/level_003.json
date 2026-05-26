@@ -6,7 +6,7 @@
       {
         "id": "start",
         "x": -1.1,
-        "y": 0.0,
+        "y": -0.35,
         "outgoingEdgeIDs": [
           "e_start_approach"
         ]
@@ -14,7 +14,7 @@
       {
         "id": "approach",
         "x": -0.55,
-        "y": 0.0,
+        "y": -0.35,
         "outgoingEdgeIDs": [
           "e_approach_choice"
         ]
@@ -22,7 +22,7 @@
       {
         "id": "choice",
         "x": 0.0,
-        "y": 0.0,
+        "y": -0.35,
         "outgoingEdgeIDs": [
           "e_choice_dead_end_a",
           "e_choice_package"
@@ -31,13 +31,13 @@
       {
         "id": "dead_end_a",
         "x": 0.75,
-        "y": -0.65,
+        "y": -1.2,
         "outgoingEdgeIDs": []
       },
       {
         "id": "package",
-        "x": 0.72,
-        "y": 0.55,
+        "x": 0.75,
+        "y": 0.4,
         "outgoingEdgeIDs": [
           "e_package_destination"
         ]
@@ -45,7 +45,7 @@
       {
         "id": "destination",
         "x": 1.1,
-        "y": 0.95,
+        "y": 0.9,
         "outgoingEdgeIDs": []
       }
     ],
@@ -66,7 +66,7 @@
         "id": "e_choice_dead_end_a",
         "fromNodeID": "choice",
         "toNodeID": "dead_end_a",
-        "roadShape": "horizontalFirst"
+        "roadShape": "verticalFirst"
       },
       {
         "id": "e_choice_package",

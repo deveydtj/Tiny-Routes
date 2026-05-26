@@ -41,6 +41,25 @@ class SolutionBuilderService:
             isPlaceholder=None,
         )
 
+    def build_route_timed_tap_solution(
+        self,
+        level_id: str,
+        tap_node_ids: list[str],
+        route_node_ids: list[str],
+        positions: dict[str, tuple[float, float]],
+        preset: DifficultyPreset,
+        description: str,
+        lead_time_seconds: float = 0.2,
+    ) -> SolutionModel:
+        times = self._times_before_route_arrivals(
+            tap_node_ids,
+            route_node_ids,
+            positions,
+            preset,
+            lead_time_seconds,
+        )
+        return self.build_tap_solution(level_id, tap_node_ids, preset, description, times=times)
+
     def _resolve_action_pairs(
         self,
         tap_node_ids: list[str],
@@ -75,3 +94,54 @@ class SolutionBuilderService:
                         raise ValueError("repeated switch taps are closer than the minimum tap spacing")
                     previous_node_time = time
         return action_pairs
+
+    def _times_before_route_arrivals(
+        self,
+        tap_node_ids: list[str],
+        route_node_ids: list[str],
+        positions: dict[str, tuple[float, float]],
+        preset: DifficultyPreset,
+        lead_time_seconds: float,
+    ) -> list[float]:
+        arrival_times = self._route_arrival_times(route_node_ids, positions)
+        times: list[float] = []
+        search_start = 0
+        previous_time: float | None = None
+        for tap_node_id in tap_node_ids:
+            route_index = self._find_next_route_index(route_node_ids, tap_node_id, search_start)
+            if route_index is None:
+                raise ValueError(f"tap node {tap_node_id} is not on the expected route")
+            raw_time = max(0.1, arrival_times[route_index] - lead_time_seconds)
+            if previous_time is not None and raw_time - previous_time < preset.min_tap_spacing_seconds:
+                raw_time = previous_time + preset.min_tap_spacing_seconds
+            times.append(round(raw_time, 2))
+            previous_time = raw_time
+            search_start = route_index + 1
+        return times
+
+    def _route_arrival_times(
+        self,
+        route_node_ids: list[str],
+        positions: dict[str, tuple[float, float]],
+    ) -> list[float]:
+        if not route_node_ids:
+            return []
+        arrival_times = [0.0]
+        elapsed = 0.0
+        for from_node_id, to_node_id in zip(route_node_ids, route_node_ids[1:]):
+            from_position = positions[from_node_id]
+            to_position = positions[to_node_id]
+            elapsed += abs(from_position[0] - to_position[0]) + abs(from_position[1] - to_position[1])
+            arrival_times.append(elapsed)
+        return arrival_times
+
+    def _find_next_route_index(
+        self,
+        route_node_ids: list[str],
+        tap_node_id: str,
+        search_start: int,
+    ) -> int | None:
+        for index in range(search_start, len(route_node_ids)):
+            if route_node_ids[index] == tap_node_id:
+                return index
+        return None

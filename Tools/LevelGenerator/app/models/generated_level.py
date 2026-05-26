@@ -1,9 +1,12 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from pathlib import Path
 from typing import Any
 
 from .candidate_signature import CandidateSignature
+from .generation_quality import GenerationQualityScore
+from .simulation import SimulationResult
 
 
 @dataclass
@@ -17,6 +20,9 @@ class GeneratedLevel:
     generation_notes: list[str] = field(default_factory=list)
     requires_swift_validation: bool = False
     candidate_signature: CandidateSignature | None = None
+    simulation_result: SimulationResult | None = None
+    quality_score: GenerationQualityScore | None = None
+    preview_path: Path | None = None
 
     @property
     def level_id(self) -> str:

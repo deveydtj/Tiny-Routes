@@ -4,6 +4,7 @@ from pathlib import Path
 
 from ..generation_config import GenerationConfig
 from ..models.generation_result import GenerationResult, SwiftTestSummary
+from ..repositories.generated_level_repository import GeneratedLevelRepository
 from ..services.level_generation_service import LevelGenerationService
 from ..services.level_validation_runner_service import (
     ExistingLevelValidationConfig,
@@ -11,6 +12,7 @@ from ..services.level_validation_runner_service import (
     LevelValidationRunnerService,
     normalize_level_id,
 )
+from ..services.level_resource_sync_service import LevelResourceSyncService, parse_level_selectors
 from .gui_state import GuiGenerationState, parse_positive_int, to_generation_config
 
 
@@ -22,6 +24,8 @@ class GuiController:
     ) -> None:
         self.generation_service = generation_service or LevelGenerationService()
         self.validation_service = validation_service or LevelValidationRunnerService()
+        self.resource_sync_service = LevelResourceSyncService()
+        self.generated_level_repository = GeneratedLevelRepository()
 
     def generate_from_state(self, state: GuiGenerationState) -> GenerationResult:
         config = to_generation_config(state)
@@ -56,6 +60,44 @@ class GuiController:
             )
         )
 
+    def delete_levels(
+        self,
+        *,
+        selectors_text: str,
+        levels_output_dir: str,
+        solutions_output_dir: str,
+        dry_run: bool = True,
+        run_xcodegen: bool = False,
+    ):
+        selectors = selectors_text.replace(",", " ").split()
+        if not selectors:
+            raise ValueError("Enter at least one level ID, number, or range to delete.")
+        return self.resource_sync_service.delete_levels(
+            parse_level_selectors(selectors),
+            Path(levels_output_dir).expanduser(),
+            Path(solutions_output_dir).expanduser(),
+            dry_run=dry_run,
+            run_xcodegen=run_xcodegen,
+        )
+
+    def write_approved_levels(
+        self,
+        candidates,
+        *,
+        levels_output_dir: str,
+        solutions_output_dir: str,
+        overwrite: bool,
+    ) -> list[Path]:
+        written: list[Path] = []
+        levels_dir = Path(levels_output_dir).expanduser()
+        solutions_dir = Path(solutions_output_dir).expanduser()
+        for candidate in candidates:
+            level_path = self.generated_level_repository.level_path(candidate.level_id, levels_dir)
+            solution_path = self.generated_level_repository.solution_path(candidate.level_id, solutions_dir)
+            written.append(self.generated_level_repository.write_level(candidate.level_document, level_path, overwrite=overwrite))
+            written.append(self.generated_level_repository.write_solution(candidate.solution, solution_path, overwrite=overwrite))
+        return written
+
 
 def parse_level_ids(value: str) -> list[str]:
     parts = value.replace(",", " ").split()
@@ -68,9 +110,10 @@ def format_generation_result(result: GenerationResult) -> str:
     if result.accepted:
         lines.append("Accepted levels:")
         for level in result.accepted:
+            quality = f" quality={level.quality_score.total:.2f}" if level.quality_score is not None else ""
             lines.append(
                 "  {level_id}: template={template} seed={seed} nodes={nodes} edges={edges} "
-                "switches={switches} taps={taps}".format(
+                "switches={switches} taps={taps}{quality}".format(
                     level_id=level.level_id,
                     template=level.template_name,
                     seed=level.seed,
@@ -78,6 +121,7 @@ def format_generation_result(result: GenerationResult) -> str:
                     edges=level.edge_count,
                     switches=level.switch_count,
                     taps=level.required_tap_count,
+                    quality=quality,
                 )
             )
             for note in level.generation_notes:

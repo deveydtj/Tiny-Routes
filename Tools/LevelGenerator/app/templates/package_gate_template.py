@@ -2,12 +2,23 @@ from __future__ import annotations
 
 from ..models.difficulty_preset import DifficultyPreset
 from ..models.generated_level import GeneratedLevel
+from ..models.template_variant_spec import TemplateVariantSpec
 from ..random_source import RandomSource
 from .base_template import LevelTemplate
 
 
 class PackageGateTemplate(LevelTemplate):
     name = "package_gate"
+    variant_specs = [
+        TemplateVariantSpec("package_gate_classic", name, ("easy", "medium")),
+        TemplateVariantSpec("package_gate_left_entry", name, ("easy", "medium")),
+        TemplateVariantSpec("package_gate_right_entry", name, ("easy", "medium")),
+        TemplateVariantSpec("package_gate_crossing_avoidance", name, ("easy", "medium")),
+        TemplateVariantSpec("package_gate_upper_package", name, ("easy", "medium")),
+        TemplateVariantSpec("package_gate_lower_package", name, ("easy", "medium")),
+        TemplateVariantSpec("package_gate_long_gate", name, ("medium",)),
+        TemplateVariantSpec("package_gate_double_choice", name, ("medium",)),
+    ]
 
     def supports_difficulty(self, preset: DifficultyPreset) -> bool:
         return preset.name in {"easy", "medium"}
@@ -20,10 +31,10 @@ class PackageGateTemplate(LevelTemplate):
         rng: RandomSource,
     ) -> GeneratedLevel:
         builder = self.builder()
-        variant = rng.choice(_variants_for(preset.name))
+        variant = rng.choice([spec.name for spec in self.variant_specs if spec.supports_difficulty(preset.name)])
         positions, edges, tap_node_ids, route = _variant_spec(variant)
-        if rng.bool(0.4):
-            positions = {node_id: (x, -y) for node_id, (x, y) in positions.items()}
+        layout_variant = self.apply_layout_variant(positions, preset, rng)
+        positions = layout_variant.positions
 
         for node_id in positions:
             builder.add_node(node_id, *positions[node_id])
@@ -38,22 +49,36 @@ class PackageGateTemplate(LevelTemplate):
             package_node_id="package",
             destination_node_id="destination",
             time_limit_seconds=time_limit,
-            par_taps=2,
+            par_taps=len(tap_node_ids),
         )
-        solution = self.solution_builder.build_tap_solution(
+        solution = self.solution_builder.build_route_timed_tap_solution(
             level_id,
             tap_node_ids,
+            route,
+            positions,
             preset,
             "Rotate the approach switch to collect the package, then rotate the finish switch to reach destination.",
-            times=[0.4, 0.8],
         )
-        return self.generated(level, solution, preset, rng.seed, notes=[f"Template variant: {variant}"])
+        return self.generated(
+            level,
+            solution,
+            preset,
+            rng.seed,
+            notes=[f"Template variant: {variant}", f"Layout variant: {layout_variant.name}"],
+        )
 
 
 def _variants_for(difficulty_name: str) -> list[str]:
-    variants = ["classic", "upper_package", "lower_package", "left_entry", "right_entry", "short_gate"]
+    variants = [
+        "package_gate_classic",
+        "package_gate_upper_package",
+        "package_gate_lower_package",
+        "package_gate_left_entry",
+        "package_gate_right_entry",
+        "package_gate_crossing_avoidance",
+    ]
     if difficulty_name == "medium":
-        variants.append("long_gate")
+        variants.extend(["package_gate_long_gate", "package_gate_double_choice"])
     return variants
 
 
@@ -65,7 +90,7 @@ def _variant_spec(
     list[str],
     list[str],
 ]:
-    if variant == "upper_package":
+    if variant == "package_gate_upper_package":
         positions = {
             "start": (-1.1, -0.2),
             "upper_entry_switch": (-0.5, -0.05),
@@ -91,7 +116,7 @@ def _variant_spec(
             "destination",
         ]
 
-    if variant == "lower_package":
+    if variant == "package_gate_lower_package":
         positions = {
             "start": (-1.05, 0.38),
             "lower_entry_switch": (-0.5, 0.18),
@@ -117,7 +142,7 @@ def _variant_spec(
             "destination",
         ]
 
-    if variant == "long_gate":
+    if variant == "package_gate_long_gate":
         positions = {
             "start": (-1.1, 0.25),
             "long_entry_switch": (-0.62, 0.05),
@@ -146,7 +171,7 @@ def _variant_spec(
             "destination",
         ]
 
-    if variant == "left_entry":
+    if variant == "package_gate_left_entry":
         positions = {
             "start": (-1.1, -0.35),
             "left_entry_switch": (-0.6, -0.18),
@@ -172,7 +197,7 @@ def _variant_spec(
             "destination",
         ]
 
-    if variant == "right_entry":
+    if variant == "package_gate_right_entry":
         positions = {
             "start": (-1.1, 0.45),
             "right_entry_switch": (-0.58, 0.18),
@@ -198,7 +223,7 @@ def _variant_spec(
             "destination",
         ]
 
-    if variant == "short_gate":
+    if variant == "package_gate_crossing_avoidance":
         positions = {
             "start": (-1.1, 0.12),
             "short_entry_switch": (-0.52, 0.02),
@@ -221,6 +246,37 @@ def _variant_spec(
             "short_entry_switch",
             "package",
             "short_finish_switch",
+            "destination",
+        ]
+
+    if variant == "package_gate_double_choice":
+        positions = {
+            "start": (-1.1, -0.25),
+            "double_entry_switch": (-0.62, -0.08),
+            "double_bypass": (-0.1, -0.82),
+            "package": (-0.02, 0.68),
+            "double_mid_switch": (0.42, 0.42),
+            "double_dead_end_a": (0.76, -0.46),
+            "double_finish_switch": (0.84, 0.18),
+            "double_dead_end_b": (1.15, -0.72),
+            "destination": (1.12, 0.82),
+        }
+        edges = [
+            ("start", "double_entry_switch"),
+            ("double_entry_switch", "double_bypass"),
+            ("double_entry_switch", "package"),
+            ("package", "double_mid_switch"),
+            ("double_mid_switch", "double_dead_end_a"),
+            ("double_mid_switch", "double_finish_switch"),
+            ("double_finish_switch", "double_dead_end_b"),
+            ("double_finish_switch", "destination"),
+        ]
+        return positions, edges, ["double_entry_switch", "double_mid_switch", "double_finish_switch"], [
+            "start",
+            "double_entry_switch",
+            "package",
+            "double_mid_switch",
+            "double_finish_switch",
             "destination",
         ]
 

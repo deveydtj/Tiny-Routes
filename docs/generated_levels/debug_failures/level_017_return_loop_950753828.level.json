@@ -1,0 +1,111 @@
+{
+  "id": "level_017",
+  "name": "Level 017",
+  "graph": {
+    "nodes": [
+      {
+        "id": "start",
+        "x": -1.05,
+        "y": 0.0,
+        "outgoingEdgeIDs": [
+          "e_start_alpha_switch"
+        ]
+      },
+      {
+        "id": "alpha_switch",
+        "x": -0.45,
+        "y": 0.0,
+        "outgoingEdgeIDs": [
+          "e_alpha_switch_destination",
+          "e_alpha_switch_package"
+        ]
+      },
+      {
+        "id": "package",
+        "x": 0.1,
+        "y": 0.8,
+        "outgoingEdgeIDs": [
+          "e_package_beta_switch"
+        ]
+      },
+      {
+        "id": "beta_switch",
+        "x": 0.7,
+        "y": 0.8,
+        "outgoingEdgeIDs": [
+          "e_beta_switch_dead_end_a",
+          "e_beta_switch_return_a"
+        ]
+      },
+      {
+        "id": "return_a",
+        "x": 0.7,
+        "y": -0.6,
+        "outgoingEdgeIDs": [
+          "e_return_a_alpha_switch"
+        ]
+      },
+      {
+        "id": "destination",
+        "x": -0.05,
+        "y": -1.1,
+        "outgoingEdgeIDs": []
+      },
+      {
+        "id": "dead_end_a",
+        "x": 1.1,
+        "y": 0.15,
+        "outgoingEdgeIDs": []
+      }
+    ],
+    "edges": [
+      {
+        "id": "e_start_alpha_switch",
+        "fromNodeID": "start",
+        "toNodeID": "alpha_switch",
+        "roadShape": "horizontalFirst"
+      },
+      {
+        "id": "e_alpha_switch_destination",
+        "fromNodeID": "alpha_switch",
+        "toNodeID": "destination",
+        "roadShape": "verticalFirst"
+      },
+      {
+        "id": "e_alpha_switch_package",
+        "fromNodeID": "alpha_switch",
+        "toNodeID": "package",
+        "roadShape": "verticalFirst"
+      },
+      {
+        "id": "e_package_beta_switch",
+        "fromNodeID": "package",
+        "toNodeID": "beta_switch",
+        "roadShape": "horizontalFirst"
+      },
+      {
+        "id": "e_beta_switch_dead_end_a",
+        "fromNodeID": "beta_switch",
+        "toNodeID": "dead_end_a",
+        "roadShape": "verticalFirst"
+      },
+      {
+        "id": "e_beta_switch_return_a",
+        "fromNodeID": "beta_switch",
+        "toNodeID": "return_a",
+        "roadShape": "verticalFirst"
+      },
+      {
+        "id": "e_return_a_alpha_switch",
+        "fromNodeID": "return_a",
+        "toNodeID": "alpha_switch",
+        "roadShape": "horizontalFirst"
+      }
+    ]
+  },
+  "startNodeID": "start",
+  "packageNodeID": "package",
+  "destinationNodeID": "destination",
+  "timeLimitSeconds": 30,
+  "parTaps": 3
+}

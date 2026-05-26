@@ -5,8 +5,8 @@
     "nodes": [
       {
         "id": "start",
-        "x": -1.0,
-        "y": 0.45,
+        "x": -0.95,
+        "y": 0.5,
         "outgoingEdgeIDs": [
           "e_start_node_a"
         ]
@@ -21,16 +21,16 @@
       },
       {
         "id": "package",
-        "x": 0.9,
-        "y": -0.65,
+        "x": 0.85,
+        "y": -0.7,
         "outgoingEdgeIDs": [
           "e_package_destination"
         ]
       },
       {
         "id": "destination",
-        "x": 1.1,
-        "y": -0.95,
+        "x": 1.05,
+        "y": -1.0,
         "outgoingEdgeIDs": []
       }
     ],

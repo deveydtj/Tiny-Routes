@@ -3,6 +3,7 @@ from __future__ import annotations
 import threading
 import tkinter as tk
 import traceback
+import subprocess
 from pathlib import Path
 from tkinter import messagebox, scrolledtext, ttk
 
@@ -42,8 +43,11 @@ class LevelGeneratorGui:
     def __init__(self, root: tk.Tk) -> None:
         self.root = root
         self.controller = GuiController()
-        self.difficulty_names = DifficultyService().valid_names
+        self.difficulty_names = [*DifficultyService().valid_names, "auto"]
         self.template_names = TemplateRegistry().valid_names
+        self.latest_result = None
+        self.approved_candidates = []
+        self.cancel_requested = False
 
         self._create_variables()
         self._build_window()
@@ -60,16 +64,19 @@ class LevelGeneratorGui:
         self.template_var = tk.StringVar(value="mixed")
         self.seed_var = tk.StringVar(value="")
         self.max_attempts_var = tk.StringVar(value="100")
+        self.candidate_pool_var = tk.StringVar(value="1")
 
         self.dry_run_var = tk.BooleanVar(value=True)
         self.overwrite_var = tk.BooleanVar(value=False)
         self.swift_tests_var = tk.BooleanVar(value=False)
+        self.compare_existing_var = tk.BooleanVar(value=True)
         self.swift_timeout_var = tk.StringVar(value="180")
 
         self.levels_output_var = tk.StringVar(value=try_get_default_levels_directory())
         self.solutions_output_var = tk.StringVar(value=try_get_default_solutions_directory())
         self.report_path_var = tk.StringVar(value=try_get_default_markdown_report_path())
         self.json_report_path_var = tk.StringVar(value=try_get_default_json_report_path())
+        self.map_seed_path_var = tk.StringVar(value="")
         self.debug_failures_var = tk.StringVar(value=try_get_default_debug_failures_directory())
 
         self.validation_level_ids_var = tk.StringVar(value="")
@@ -112,6 +119,7 @@ class LevelGeneratorGui:
         self._build_validation_section(right_column)
         self._build_command_preview(root_frame)
         self._build_summary_section(root_frame)
+        self._build_preview_section(root_frame)
         self._build_log_panel(root_frame)
 
     def _build_generation_section(self, parent: ttk.Frame) -> None:
@@ -125,6 +133,7 @@ class LevelGeneratorGui:
         add_labeled_combobox(frame, "Template", self.template_var, self.template_names, 3)
         add_labeled_entry(frame, "Seed", self.seed_var, 4)
         add_labeled_entry(frame, "Max attempts per level", self.max_attempts_var, 5)
+        add_labeled_entry(frame, "Candidate pool size", self.candidate_pool_var, 6)
 
     def _build_options_section(self, parent: ttk.Frame) -> None:
         frame = ttk.LabelFrame(parent, text="Options", padding=8)
@@ -139,7 +148,13 @@ class LevelGeneratorGui:
             sticky="w",
             pady=3,
         )
-        add_labeled_entry(frame, "Swift timeout seconds", self.swift_timeout_var, 3)
+        ttk.Checkbutton(frame, text="Avoid similar existing levels", variable=self.compare_existing_var).grid(
+            row=3,
+            column=0,
+            sticky="w",
+            pady=3,
+        )
+        add_labeled_entry(frame, "Swift timeout seconds", self.swift_timeout_var, 4)
 
     def _build_actions_section(self, parent: ttk.Frame) -> None:
         frame = ttk.LabelFrame(parent, text="Actions", padding=8)
@@ -160,6 +175,16 @@ class LevelGeneratorGui:
         self.open_solutions_button = ttk.Button(frame, text="Open Solutions Folder", command=self._on_open_solutions_folder)
         self.open_solutions_button.grid(row=2, column=1, sticky="ew", padx=(4, 0), pady=3)
 
+        self.cancel_button = ttk.Button(frame, text="Cancel", command=self._on_cancel)
+        self.cancel_button.grid(row=3, column=0, sticky="ew", padx=(0, 4), pady=3)
+        ttk.Button(frame, text="Level Editor", command=self._on_open_level_editor).grid(
+            row=3,
+            column=1,
+            sticky="ew",
+            padx=(4, 0),
+            pady=3,
+        )
+
     def _build_output_section(self, parent: ttk.Frame) -> None:
         frame = ttk.LabelFrame(parent, text="Output Settings", padding=8)
         frame.grid(row=0, column=0, sticky="ew", pady=(0, 8))
@@ -169,7 +194,8 @@ class LevelGeneratorGui:
         add_path_picker(frame, "Solutions output directory", self.solutions_output_var, 1, pick_directory=True)
         add_path_picker(frame, "Markdown report path", self.report_path_var, 2, pick_directory=False, file_extension=".md")
         add_path_picker(frame, "JSON report path", self.json_report_path_var, 3, pick_directory=False, file_extension=".json")
-        add_path_picker(frame, "Debug failures directory", self.debug_failures_var, 4, pick_directory=True)
+        add_path_picker(frame, "Map seed path", self.map_seed_path_var, 4, pick_directory=False, file_extension=".json")
+        add_path_picker(frame, "Debug failures directory", self.debug_failures_var, 5, pick_directory=True)
 
     def _build_validation_section(self, parent: ttk.Frame) -> None:
         frame = ttk.LabelFrame(parent, text="Validate Existing Levels", padding=8)
@@ -212,10 +238,39 @@ class LevelGeneratorGui:
         ttk.Label(frame, textvariable=self.rejected_var).grid(row=0, column=2, sticky="w", padx=(0, 8))
         ttk.Label(frame, textvariable=self.swift_summary_var).grid(row=0, column=3, sticky="w")
 
+    def _build_preview_section(self, parent: ttk.Frame) -> None:
+        frame = ttk.LabelFrame(parent, text="Generation Preview", padding=8)
+        frame.grid(row=4, column=0, sticky="nsew", pady=(0, 8))
+        frame.grid_columnconfigure(0, weight=1)
+        frame.grid_columnconfigure(1, weight=1)
+
+        columns = ("difficulty", "template", "variant", "seed", "nodes", "quality")
+        self.preview_tree = ttk.Treeview(frame, columns=columns, show="headings", height=6)
+        self.preview_tree.heading("difficulty", text="Difficulty")
+        self.preview_tree.heading("template", text="Template")
+        self.preview_tree.heading("variant", text="Variant")
+        self.preview_tree.heading("seed", text="Seed")
+        self.preview_tree.heading("nodes", text="Nodes")
+        self.preview_tree.heading("quality", text="Quality")
+        self.preview_tree.grid(row=0, column=0, sticky="nsew", padx=(0, 8))
+        self.preview_tree.bind("<<TreeviewSelect>>", lambda _event: self._draw_selected_preview())
+
+        self.preview_canvas = tk.Canvas(frame, width=320, height=190, background="#f8fafc")
+        self.preview_canvas.grid(row=0, column=1, sticky="nsew")
+
+        button_frame = ttk.Frame(frame)
+        button_frame.grid(row=1, column=0, columnspan=2, sticky="ew", pady=(8, 0))
+        for column in range(4):
+            button_frame.grid_columnconfigure(column, weight=1)
+        ttk.Button(button_frame, text="Approve Selected", command=self._on_approve_selected).grid(row=0, column=0, sticky="ew", padx=(0, 4))
+        ttk.Button(button_frame, text="Reject Selected", command=self._on_reject_selected).grid(row=0, column=1, sticky="ew", padx=4)
+        ttk.Button(button_frame, text="Regenerate Selected", command=self._on_regenerate_selected).grid(row=0, column=2, sticky="ew", padx=4)
+        ttk.Button(button_frame, text="Write Approved", command=self._on_write_approved).grid(row=0, column=3, sticky="ew", padx=(4, 0))
+
     def _build_log_panel(self, parent: ttk.Frame) -> None:
         self.log_text = scrolledtext.ScrolledText(parent, wrap=tk.WORD, height=14)
-        self.log_text.grid(row=4, column=0, sticky="nsew")
-        parent.grid_rowconfigure(4, weight=1)
+        self.log_text.grid(row=5, column=0, sticky="nsew")
+        parent.grid_rowconfigure(5, weight=1)
 
     def _bind_preview_updates(self) -> None:
         variables = [
@@ -225,14 +280,17 @@ class LevelGeneratorGui:
             self.template_var,
             self.seed_var,
             self.max_attempts_var,
+            self.candidate_pool_var,
             self.dry_run_var,
             self.overwrite_var,
             self.swift_tests_var,
+            self.compare_existing_var,
             self.swift_timeout_var,
             self.levels_output_var,
             self.solutions_output_var,
             self.report_path_var,
             self.json_report_path_var,
+            self.map_seed_path_var,
             self.debug_failures_var,
         ]
         for variable in variables:
@@ -251,17 +309,21 @@ class LevelGeneratorGui:
             dry_run=self.dry_run_var.get(),
             overwrite=self.overwrite_var.get(),
             run_swift_tests=self.swift_tests_var.get(),
+            compare_against_existing=self.compare_existing_var.get(),
             levels_output_dir=self.levels_output_var.get(),
             solutions_output_dir=self.solutions_output_var.get(),
             report_path=self.report_path_var.get(),
             json_report_path=self.json_report_path_var.get(),
+            map_seed_path=self.map_seed_path_var.get(),
             debug_failures_dir=self.debug_failures_var.get(),
             max_attempts_per_level=self.max_attempts_var.get(),
+            candidate_pool_size=self.candidate_pool_var.get(),
             swift_timeout_seconds=self.swift_timeout_var.get(),
         )
 
     def _on_generate(self) -> None:
         state = self._current_state()
+        self.cancel_requested = False
         self.generate_button.configure(state=tk.DISABLED)
         self._set_status("Running...", "running")
         self.append_log("Running generation...")
@@ -284,6 +346,13 @@ class LevelGeneratorGui:
         threading.Thread(target=worker, daemon=True).start()
 
     def _finish_generation(self, result, summary: str) -> None:
+        if self.cancel_requested:
+            self.append_log("Generation finished after cancellation request; results were ignored.")
+            self.generate_button.configure(state=tk.NORMAL)
+            self._set_status("Ready", "ready")
+            return
+        self.latest_result = result
+        self.approved_candidates = list(result.accepted)
         self.append_log(summary)
         self._set_status("Passed" if result.passed else "Failed", "passed" if result.passed else "failed")
         self.accepted_var.set(f"Accepted: {len(result.accepted)}")
@@ -291,6 +360,7 @@ class LevelGeneratorGui:
         self.swift_summary_var.set(self._summary_label_for_swift(result.swift_test_summary))
         self.generate_button.configure(state=tk.NORMAL)
         self._refresh_open_buttons()
+        self._populate_preview_table(result.accepted)
 
     def _on_validate(self) -> None:
         self.validate_button.configure(state=tk.DISABLED)
@@ -378,6 +448,132 @@ class LevelGeneratorGui:
     def _on_open_solutions_folder(self) -> None:
         self._open_configured_directory(self.solutions_output_var.get(), "Solutions output folder")
 
+    def _on_cancel(self) -> None:
+        self.cancel_requested = True
+        self._set_status("Cancel requested", "running")
+        self.append_log("Cancel requested. The current worker result will be ignored when it finishes.")
+
+    def _on_open_level_editor(self) -> None:
+        try:
+            subprocess.Popen(["python", "Tools/LevelEditor/run_level_editor.py"], cwd=Path(__file__).resolve().parents[4])
+        except Exception as exc:
+            messagebox.showerror("Could not open Level Editor", str(exc))
+
+    def _populate_preview_table(self, candidates) -> None:
+        for item in self.preview_tree.get_children():
+            self.preview_tree.delete(item)
+        for candidate in candidates:
+            variant = next((note.split(":", 1)[1].strip() for note in candidate.generation_notes if note.startswith("Template variant:")), "")
+            quality = f"{candidate.quality_score.total:.2f}" if candidate.quality_score is not None else ""
+            self.preview_tree.insert(
+                "",
+                tk.END,
+                iid=candidate.level_id,
+                values=(
+                    candidate.difficulty,
+                    candidate.template_name,
+                    variant,
+                    candidate.seed,
+                    f"{candidate.node_count}/{candidate.edge_count}",
+                    quality,
+                ),
+            )
+        children = self.preview_tree.get_children()
+        if children:
+            self.preview_tree.selection_set(children[0])
+            self._draw_selected_preview()
+
+    def _selected_candidate(self):
+        if self.latest_result is None:
+            return None
+        selection = self.preview_tree.selection()
+        if not selection:
+            return None
+        level_id = selection[0]
+        return next((candidate for candidate in self.latest_result.accepted if candidate.level_id == level_id), None)
+
+    def _draw_selected_preview(self) -> None:
+        candidate = self._selected_candidate()
+        self.preview_canvas.delete("all")
+        if candidate is None:
+            return
+        level = candidate.level_document
+        nodes = level.graph.nodes
+        if not nodes:
+            return
+        width = int(self.preview_canvas["width"])
+        height = int(self.preview_canvas["height"])
+        margin = 18
+        xs = [node.x for node in nodes]
+        ys = [node.y for node in nodes]
+        min_x, max_x = min(xs), max(xs)
+        min_y, max_y = min(ys), max(ys)
+        span_x = max(max_x - min_x, 1e-9)
+        span_y = max(max_y - min_y, 1e-9)
+        node_by_id = {node.id: node for node in nodes}
+
+        def point(node_id: str) -> tuple[float, float]:
+            node = node_by_id[node_id]
+            x = margin + ((node.x - min_x) / span_x * (width - (2 * margin)))
+            y = height - (margin + ((node.y - min_y) / span_y * (height - (2 * margin))))
+            return x, y
+
+        for edge in level.graph.edges:
+            if edge.fromNodeID in node_by_id and edge.toNodeID in node_by_id:
+                x1, y1 = point(edge.fromNodeID)
+                x2, y2 = point(edge.toNodeID)
+                self.preview_canvas.create_line(x1, y1, x2, y2, fill="#64748b", width=2)
+        for node in nodes:
+            x, y = point(node.id)
+            fill = "#94a3b8"
+            if node.id == level.startNodeID:
+                fill = "#22c55e"
+            elif node.id == level.packageNodeID:
+                fill = "#f59e0b"
+            elif node.id == level.destinationNodeID:
+                fill = "#ef4444"
+            elif len(node.outgoingEdgeIDs) > 1:
+                fill = "#3b82f6"
+            self.preview_canvas.create_oval(x - 5, y - 5, x + 5, y + 5, fill=fill, outline="#0f172a")
+            self.preview_canvas.create_text(x + 8, y - 8, text=node.id, anchor="w", font=("TkDefaultFont", 8))
+
+    def _on_approve_selected(self) -> None:
+        candidate = self._selected_candidate()
+        if candidate is not None and candidate not in self.approved_candidates:
+            self.approved_candidates.append(candidate)
+            self.append_log(f"Approved {candidate.level_id}.")
+
+    def _on_reject_selected(self) -> None:
+        candidate = self._selected_candidate()
+        if candidate is None:
+            return
+        self.approved_candidates = [approved for approved in self.approved_candidates if approved.level_id != candidate.level_id]
+        self.append_log(f"Rejected {candidate.level_id} from approved candidates.")
+
+    def _on_regenerate_selected(self) -> None:
+        candidate = self._selected_candidate()
+        if candidate is None:
+            return
+        self.start_var.set(candidate.level_id.removeprefix("level_").lstrip("0") or "1")
+        self.count_var.set("1")
+        self._on_generate()
+
+    def _on_write_approved(self) -> None:
+        if not self.approved_candidates:
+            messagebox.showerror("No approved candidates", "Approve at least one candidate before writing.")
+            return
+        try:
+            written = self.controller.write_approved_levels(
+                self.approved_candidates,
+                levels_output_dir=self.levels_output_var.get(),
+                solutions_output_dir=self.solutions_output_var.get(),
+                overwrite=self.overwrite_var.get(),
+            )
+        except Exception as exc:
+            messagebox.showerror("Write failed", str(exc))
+            return
+        self.append_log("Wrote approved files:\n" + "\n".join(f"  {path}" for path in written))
+
     def _open_configured_directory(self, value: str, label: str) -> None:
         if not value.strip():
             messagebox.showerror("Folder not configured", f"{label} is not configured.")
@@ -397,14 +593,17 @@ class LevelGeneratorGui:
         self.template_var.set("mixed")
         self.seed_var.set("")
         self.max_attempts_var.set("100")
+        self.candidate_pool_var.set("1")
         self.dry_run_var.set(True)
         self.overwrite_var.set(False)
         self.swift_tests_var.set(False)
+        self.compare_existing_var.set(True)
         self.swift_timeout_var.set("180")
         self.levels_output_var.set(try_get_default_levels_directory())
         self.solutions_output_var.set(try_get_default_solutions_directory())
         self.report_path_var.set(try_get_default_markdown_report_path())
         self.json_report_path_var.set(try_get_default_json_report_path())
+        self.map_seed_path_var.set("")
         self.debug_failures_var.set(try_get_default_debug_failures_directory())
         self.validation_level_ids_var.set("")
         self.validation_difficulty_var.set("")

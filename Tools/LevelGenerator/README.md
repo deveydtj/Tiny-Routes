@@ -55,10 +55,34 @@ Generate multiple levels:
 python Tools/LevelGenerator/generate_levels.py --start 12 --count 5 --difficulty easy --template mixed --seed 1234
 ```
 
+Generate along the default campaign curve:
+
+```bash
+python Tools/LevelGenerator/generate_levels.py --start 1 --count 30 --difficulty auto --template mixed --seed 1234 --dry-run
+```
+
 Validate generated files:
 
 ```bash
 python Tools/LevelGenerator/validate_generated_levels.py --levels level_012 level_013
+```
+
+Delete generated levels and matching solution sidecars:
+
+```bash
+python Tools/LevelGenerator/delete_levels.py 31-35 --dry-run
+```
+
+Rebuild the production manifest:
+
+```bash
+python Tools/LevelGenerator/rebuild_manifest.py
+```
+
+Run the local generator check suite:
+
+```bash
+python Tools/LevelGenerator/run_all_generator_checks.py
 ```
 
 ## Simple GUI
@@ -83,6 +107,18 @@ Use a Python 3.10+ interpreter with Tkinter enabled.
 
 `--swift-tests` runs the real Swift solvability tests after files are written. `--no-swift-tests` skips them.
 
+`--compare-existing` rejects candidates that are too similar to existing level files in the configured output folders. This is enabled by default; use `--no-compare-existing` for scratch experiments.
+
+`--candidate-pool-size` scores multiple valid candidates for each level and accepts the highest-scoring one. Reports include quality and simulation details.
+
+`--difficulty auto` uses the default campaign curve: levels 1-3 tutorial, 4-10 easy, 11-25 medium, and 26+ hard.
+
+`--map-seed-path` applies a saved map seed JSON to generated node positions. Map import is separate from production generation:
+
+```bash
+python Tools/LevelGenerator/import_map_seed.py --place "Imperial, Missouri, USA" --output /tmp/imperial-seed.json --cache-dir /tmp/tiny-routes-map-cache
+```
+
 ## Difficulty and Templates
 
 Supported difficulty presets:
@@ -91,6 +127,7 @@ Supported difficulty presets:
 - `easy`
 - `medium`
 - `hard`
+- `auto`
 
 Supported templates:
 
@@ -136,3 +173,13 @@ If `xcodebuild` is missing, install Xcode or run generation with `--no-swift-tes
 - Run Swift solvability tests when available.
 - Play the level manually in simulator before committing.
 - Commit level JSON and solution JSON together.
+
+## Developer Workflow
+
+- Work one task at a time and keep generated production files out of tests.
+- Use scratch directories or `--dry-run` for experiments.
+- Add or update tests with every service change.
+- Keep `completion_status.md` current when finishing generator work.
+- Run `python Tools/LevelGenerator/run_all_generator_checks.py` before relying on a production batch.
+
+Good generated levels have readable routes, clear start/package/destination placement, intentional dead ends, difficulty-appropriate decision counts, and a non-placeholder solution sidecar. Confusing levels usually have crossing-heavy routes, clustered important nodes, or tap timing that only works by accident; reject those during review even when validation passes.

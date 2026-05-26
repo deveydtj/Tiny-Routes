@@ -28,10 +28,13 @@ class GenerationConfig:
     json_report_path: Path | None = field(
         default_factory=lambda: get_default_reports_directory() / "last_generation_report.json"
     )
+    map_seed_path: Path | None = None
     debug_failures_dir: Path | None = None
     max_attempts_per_level: int = 100
+    candidate_pool_size: int = 1
     swift_timeout_seconds: int = 180
     sync_xcode_project: bool = True
+    compare_against_existing: bool = True
     command_arguments: list[str] | None = None
 
     def __post_init__(self) -> None:
@@ -41,6 +44,8 @@ class GenerationConfig:
             raise ValueError("count must be greater than zero")
         if self.max_attempts_per_level <= 0:
             raise ValueError("max_attempts_per_level must be greater than zero")
+        if self.candidate_pool_size <= 0:
+            raise ValueError("candidate_pool_size must be greater than zero")
 
         object.__setattr__(self, "difficulty", self.difficulty.strip().lower())
         object.__setattr__(self, "template_name", self.template_name.strip().lower())
@@ -50,6 +55,8 @@ class GenerationConfig:
             object.__setattr__(self, "report_path", Path(self.report_path))
         if self.json_report_path is not None:
             object.__setattr__(self, "json_report_path", Path(self.json_report_path))
+        if self.map_seed_path is not None:
+            object.__setattr__(self, "map_seed_path", Path(self.map_seed_path))
         if self.debug_failures_dir is not None:
             object.__setattr__(self, "debug_failures_dir", Path(self.debug_failures_dir))
 

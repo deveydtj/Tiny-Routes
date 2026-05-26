@@ -42,3 +42,24 @@ def test_repeated_tap_solution_rejects_too_close_times() -> None:
             "Repeat alpha.",
             times=[0.4, 0.5],
         )
+
+
+def test_build_route_timed_tap_solution_schedules_before_switch_arrivals() -> None:
+    preset = DifficultyService().get_preset("easy")
+    solution = SolutionBuilderService().build_route_timed_tap_solution(
+        "level_001",
+        ["switch_a", "switch_b"],
+        ["start", "switch_a", "package", "switch_b", "destination"],
+        {
+            "start": (0.0, 0.0),
+            "switch_a": (1.0, 0.0),
+            "package": (2.0, 0.0),
+            "switch_b": (3.0, 0.0),
+            "destination": (4.0, 0.0),
+        },
+        preset,
+        "test",
+        lead_time_seconds=0.2,
+    )
+
+    assert [action.timeSeconds for action in solution.actions] == [0.8, 2.8]

@@ -24,3 +24,15 @@ def test_generated_level_validation_rejects_placeholder_solution() -> None:
     result = GeneratedLevelValidationService().validate(generated, preset=preset, overwrite=True)
 
     assert "solution_marked_placeholder" in result.error_codes
+
+
+def test_generated_level_validation_rejects_important_nodes_too_close() -> None:
+    preset = DifficultyService().get_preset("easy")
+    generated = SingleSwitchTemplate().generate("level_012", 12, preset, RandomSource(9))
+    node_by_id = {node.id: node for node in generated.level_document.graph.nodes}
+    node_by_id[generated.level_document.packageNodeID].x = node_by_id[generated.level_document.startNodeID].x
+    node_by_id[generated.level_document.packageNodeID].y = node_by_id[generated.level_document.startNodeID].y + 0.01
+
+    result = GeneratedLevelValidationService().validate(generated, preset=preset, overwrite=True)
+
+    assert "important_nodes_too_close" in result.error_codes

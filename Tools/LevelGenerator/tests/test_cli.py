@@ -59,6 +59,33 @@ def test_cli_invalid_difficulty_returns_2() -> None:
     assert code == 2
 
 
+def test_cli_auto_difficulty_dry_run(tmp_path) -> None:
+    code = main_generate(
+        [
+            "--start",
+            "9",
+            "--count",
+            "2",
+            "--difficulty",
+            "auto",
+            "--template",
+            "mixed",
+            "--dry-run",
+            "--no-compare-existing",
+            "--output-levels",
+            str(tmp_path / "levels"),
+            "--output-solutions",
+            str(tmp_path / "solutions"),
+            "--report",
+            str(tmp_path / "report.md"),
+            "--json-report",
+            str(tmp_path / "report.json"),
+        ]
+    )
+
+    assert code == 0
+
+
 def test_validate_cli_validates_written_files(tmp_path) -> None:
     generate_code = main_generate(
         [

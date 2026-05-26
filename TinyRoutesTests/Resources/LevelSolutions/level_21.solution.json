@@ -1,0 +1,8 @@
+{
+  "levelID": "new_level",
+  "description": "Solution for New Level",
+  "expectedOutcome": "completed",
+  "maxTaps": 0,
+  "requiresWithinTimeLimit": true,
+  "actions": []
+}

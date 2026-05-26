@@ -1,0 +1,21 @@
+{
+  "levelID": "level_017",
+  "description": "Rotate the approach switch to collect the package, then rotate the finish switch to reach destination.",
+  "expectedOutcome": "completed",
+  "maxTaps": 3,
+  "requiresWithinTimeLimit": true,
+  "actions": [
+    {
+      "timeSeconds": 0.4,
+      "tapNodeID": "double_entry_switch"
+    },
+    {
+      "timeSeconds": 2.45,
+      "tapNodeID": "double_mid_switch"
+    },
+    {
+      "timeSeconds": 3.1,
+      "tapNodeID": "double_finish_switch"
+    }
+  ]
+}

@@ -64,7 +64,7 @@ def main_validate(argv: list[str] | None = None) -> int:
 
 
 def build_generate_parser() -> argparse.ArgumentParser:
-    difficulty_names = DifficultyService().valid_names
+    difficulty_names = [*DifficultyService().valid_names, "auto"]
     template_names = TemplateRegistry().valid_names
     parser = argparse.ArgumentParser(description="Generate Tiny Routes level and solution JSON files.")
     parser.add_argument("--start", type=int, required=True, help="First level number to generate, e.g. 12 for level_012.")
@@ -91,9 +91,24 @@ def build_generate_parser() -> argparse.ArgumentParser:
         default=get_default_reports_directory() / "last_generation_report.json",
         help="Machine-readable generation report path.",
     )
+    parser.add_argument("--map-seed-path", type=Path, default=None, help="Optional simplified map seed JSON path.")
     parser.add_argument("--debug-failures", type=Path, default=None, help="Directory for rejected candidate debug files.")
     parser.add_argument("--max-attempts-per-level", type=int, default=100, help="Candidate attempts before failing a level.")
+    parser.add_argument("--candidate-pool-size", type=int, default=1, help="Valid candidates to score before choosing the best one.")
     parser.add_argument("--swift-timeout-seconds", type=int, default=180, help="Timeout for optional Swift tests.")
+    parser.add_argument(
+        "--compare-existing",
+        action="store_true",
+        dest="compare_against_existing",
+        help="Reject candidates that are too similar to existing levels in the output folders. Default: enabled.",
+    )
+    parser.add_argument(
+        "--no-compare-existing",
+        action="store_false",
+        dest="compare_against_existing",
+        help="Skip similarity checks against existing levels.",
+    )
+    parser.set_defaults(compare_against_existing=True)
     parser.add_argument(
         "--xcodegen",
         action="store_true",
@@ -137,10 +152,13 @@ def _config_from_args(args: argparse.Namespace, argv: list[str] | None) -> Gener
         solutions_output_dir=args.output_solutions,
         report_path=args.report,
         json_report_path=args.json_report,
+        map_seed_path=args.map_seed_path,
         debug_failures_dir=args.debug_failures,
         max_attempts_per_level=args.max_attempts_per_level,
+        candidate_pool_size=args.candidate_pool_size,
         swift_timeout_seconds=args.swift_timeout_seconds,
         sync_xcode_project=args.sync_xcode_project,
+        compare_against_existing=args.compare_against_existing,
         command_arguments=list(argv) if argv is not None else sys.argv[1:],
     )
 

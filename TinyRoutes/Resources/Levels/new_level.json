@@ -1,0 +1,180 @@
+{
+  "id": "new_level",
+  "name": "New Level",
+  "graph": {
+    "nodes": [
+      {
+        "id": "start",
+        "x": 0.0,
+        "y": 0.0,
+        "outgoingEdgeIDs": [
+          "edge"
+        ]
+      },
+      {
+        "id": "node",
+        "x": 0.0,
+        "y": 1.6888888888888889,
+        "outgoingEdgeIDs": [
+          "edge_2"
+        ]
+      },
+      {
+        "id": "switch",
+        "x": 0.0,
+        "y": 3.073018391975512,
+        "outgoingEdgeIDs": [
+          "edge_1",
+          "edge_3",
+          "edge_8"
+        ]
+      },
+      {
+        "id": "package",
+        "x": -2.5608486599795937,
+        "y": 5.210002446165381,
+        "outgoingEdgeIDs": [
+          "edge_6"
+        ]
+      },
+      {
+        "id": "switch_1",
+        "x": -1.3952209940578477,
+        "y": 4.309290158862212,
+        "outgoingEdgeIDs": [
+          "edge_4",
+          "edge_5"
+        ]
+      },
+      {
+        "id": "node_1",
+        "x": -5.881121405332447,
+        "y": 3.0200353162517977,
+        "outgoingEdgeIDs": []
+      },
+      {
+        "id": "node_2",
+        "x": -1.412882019299086,
+        "y": 6.428613187810843,
+        "outgoingEdgeIDs": []
+      },
+      {
+        "id": "node_3",
+        "x": -2.5255266094971165,
+        "y": 6.44627421305208,
+        "outgoingEdgeIDs": [
+          "edge_7"
+        ]
+      },
+      {
+        "id": "node_4",
+        "x": 1.6534969391252279,
+        "y": 3.077400550114354,
+        "outgoingEdgeIDs": [
+          "edge_9"
+        ]
+      },
+      {
+        "id": "switch_2",
+        "x": 3.3732558210765693,
+        "y": 3.1260014676992283,
+        "outgoingEdgeIDs": [
+          "edge_11"
+        ]
+      },
+      {
+        "id": "node_5",
+        "x": 3.3555947958353296,
+        "y": -0.98901741350936,
+        "outgoingEdgeIDs": [
+          "edge_10"
+        ]
+      },
+      {
+        "id": "destination",
+        "x": 7.258681374149058,
+        "y": 3.055357366734273,
+        "outgoingEdgeIDs": []
+      }
+    ],
+    "edges": [
+      {
+        "id": "edge",
+        "fromNodeID": "start",
+        "toNodeID": "node",
+        "roadShape": "horizontalFirst"
+      },
+      {
+        "id": "edge_1",
+        "fromNodeID": "switch",
+        "toNodeID": "node_1",
+        "roadShape": "horizontalFirst"
+      },
+      {
+        "id": "edge_2",
+        "fromNodeID": "node",
+        "toNodeID": "switch",
+        "roadShape": "horizontalFirst"
+      },
+      {
+        "id": "edge_3",
+        "fromNodeID": "switch",
+        "toNodeID": "switch_1",
+        "roadShape": "horizontalFirst"
+      },
+      {
+        "id": "edge_4",
+        "fromNodeID": "switch_1",
+        "toNodeID": "package",
+        "roadShape": "horizontalFirst"
+      },
+      {
+        "id": "edge_5",
+        "fromNodeID": "switch_1",
+        "toNodeID": "node_2",
+        "roadShape": "horizontalFirst"
+      },
+      {
+        "id": "edge_6",
+        "fromNodeID": "package",
+        "toNodeID": "node_3",
+        "roadShape": "horizontalFirst"
+      },
+      {
+        "id": "edge_7",
+        "fromNodeID": "node_3",
+        "toNodeID": "node_2",
+        "roadShape": "horizontalFirst"
+      },
+      {
+        "id": "edge_8",
+        "fromNodeID": "switch",
+        "toNodeID": "node_4",
+        "roadShape": "horizontalFirst"
+      },
+      {
+        "id": "edge_9",
+        "fromNodeID": "node_4",
+        "toNodeID": "switch_2",
+        "roadShape": "horizontalFirst"
+      },
+      {
+        "id": "edge_10",
+        "fromNodeID": "node_5",
+        "toNodeID": "switch_2",
+        "roadShape": "horizontalFirst"
+      },
+      {
+        "id": "edge_11",
+        "fromNodeID": "switch_2",
+        "toNodeID": "destination",
+        "roadShape": "horizontalFirst"
+      }
+    ]
+  },
+  "startNodeID": "start",
+  "packageNodeID": "package",
+  "destinationNodeID": "destination",
+  "timeLimitSeconds": 30,
+  "parTaps": 0
+}

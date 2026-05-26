@@ -1,16 +1,17 @@
 {
-  "generationTimestamp": "2026-05-25T17:31:58.942084+00:00",
+  "generationTimestamp": "2026-05-26T01:22:40.607250+00:00",
   "commandArguments": [
     "--start",
-    "11",
+    "21",
     "--count",
     "10",
     "--difficulty",
-    "medium",
+    "hard",
     "--template",
     "mixed",
     "--overwrite",
     "--no-swift-tests",
+    "--compare-existing",
     "--output-levels",
     "/Users/jake/Developer/Tiny-Routes/TinyRoutes/Resources/Levels",
     "--output-solutions",
@@ -23,185 +24,949 @@
     "/Users/jake/Developer/Tiny-Routes/docs/generated_levels/debug_failures",
     "--max-attempts-per-level",
     "100",
+    "--candidate-pool-size",
+    "1",
     "--swift-timeout-seconds",
     "180"
   ],
   "repoRoot": "/Users/jake/Developer/Tiny-Routes",
   "levelsOutputDir": "/Users/jake/Developer/Tiny-Routes/TinyRoutes/Resources/Levels",
   "solutionsOutputDir": "/Users/jake/Developer/Tiny-Routes/TinyRoutesTests/Resources/LevelSolutions",
-  "difficulty": "medium",
+  "difficulty": "hard",
   "template": "mixed",
   "baseSeed": null,
   "dryRun": false,
   "overwrite": true,
+  "syncXcodeProject": true,
+  "compareAgainstExisting": true,
+  "candidatePoolSize": 1,
   "acceptedLevels": [
     {
-      "levelID": "level_011",
+      "levelID": "level_021",
       "template": "multi_switch_chain",
-      "seed": 950753041,
-      "difficulty": "medium",
+      "seed": 4047084156,
+      "difficulty": "hard",
+      "nodes": 11,
+      "edges": 10,
+      "switches": 4,
+      "parTaps": 4,
+      "timeLimit": 30,
+      "requiredTaps": 4,
+      "signature": {
+        "levelID": "level_021",
+        "template": "multi_switch_chain",
+        "difficulty": "hard",
+        "nodeCount": 11,
+        "edgeCount": 10,
+        "switchCount": 4,
+        "requiredTapCount": 4,
+        "deadEndCount": 4,
+        "topologyHash": "2da0b5dc9eb5ff8f93771fe8f35a096844d530fa315ee0468e772583927e9902",
+        "topologyHashShort": "2da0b5dc",
+        "layoutHash": "9e5460507b10176b434809af420314d44150ed47dd54c37dba4a5762fd4aab41",
+        "layoutHashShort": "9e546050",
+        "solutionHash": "aa7219f6d4a8fa50ec97bede4248bb03d0a8df940f5623b46809008dd68547f1",
+        "solutionHashShort": "aa7219f6",
+        "normalizedPositions": [
+          [
+            "destination",
+            1.0,
+            0.325
+          ],
+          [
+            "multi_switch_chain_split_dead_ends_dead_end_a",
+            0.1667,
+            1.0
+          ],
+          [
+            "multi_switch_chain_split_dead_ends_dead_end_b",
+            0.5,
+            0.0
+          ],
+          [
+            "multi_switch_chain_split_dead_ends_dead_end_c",
+            0.6667,
+            1.0
+          ],
+          [
+            "multi_switch_chain_split_dead_ends_dead_end_d",
+            0.8333,
+            0.0
+          ],
+          [
+            "multi_switch_chain_split_dead_ends_switch_a",
+            0.1667,
+            0.65
+          ],
+          [
+            "multi_switch_chain_split_dead_ends_switch_b",
+            0.5,
+            0.65
+          ],
+          [
+            "multi_switch_chain_split_dead_ends_switch_c",
+            0.6667,
+            0.425
+          ],
+          [
+            "multi_switch_chain_split_dead_ends_switch_d",
+            0.8333,
+            0.65
+          ],
+          [
+            "package",
+            0.3333,
+            0.8
+          ],
+          [
+            "start",
+            0.0,
+            0.425
+          ]
+        ]
+      },
+      "quality": {
+        "total": 0.948,
+        "readability": 1.0,
+        "uniqueness": 0.7921,
+        "difficultyFit": 1.0,
+        "routeInterest": 1.0,
+        "penalties": [],
+        "details": {
+          "overlaps": 0,
+          "crossings": 0,
+          "edgeSpacingIssues": 0,
+          "maxSimilarity": 0.2079,
+          "nodeCount": 11,
+          "edgeCount": 10,
+          "switchCount": 4,
+          "requiredTapCount": 4
+        }
+      },
+      "simulation": {
+        "passed": true,
+        "outcome": "completed",
+        "failureReason": null,
+        "elapsedTimeSeconds": 4.7,
+        "tapCount": 4,
+        "reachedPackage": true,
+        "reachedDestination": true
+      },
+      "previewPath": "/Users/jake/Developer/Tiny-Routes/docs/generated_levels/previews/level_021.svg",
+      "status": "passed",
+      "notes": [
+        "Template variant: multi_switch_chain_split_dead_ends",
+        "Layout variant: tall"
+      ]
+    },
+    {
+      "levelID": "level_022",
+      "template": "multi_switch_chain",
+      "seed": 4047084287,
+      "difficulty": "hard",
+      "nodes": 11,
+      "edges": 10,
+      "switches": 4,
+      "parTaps": 4,
+      "timeLimit": 30,
+      "requiredTaps": 4,
+      "signature": {
+        "levelID": "level_022",
+        "template": "multi_switch_chain",
+        "difficulty": "hard",
+        "nodeCount": 11,
+        "edgeCount": 10,
+        "switchCount": 4,
+        "requiredTapCount": 4,
+        "deadEndCount": 4,
+        "topologyHash": "48410b41691220c3613e78d6a13292af0951bf7363066aa4f4fe3bd67429174c",
+        "topologyHashShort": "48410b41",
+        "layoutHash": "2de46848e24744278921c7704bf10bc148d1fd94a42e73e10ff1957d247ad2fa",
+        "layoutHashShort": "2de46848",
+        "solutionHash": "0f206e7e04ab4424cd32fa339114b67982ec2b618b3754231457e6df4342ac62",
+        "solutionHashShort": "0f206e7e",
+        "normalizedPositions": [
+          [
+            "destination",
+            1.0,
+            0.7619
+          ],
+          [
+            "multi_switch_chain_stair_step_dead_end_a",
+            0.1591,
+            0.0
+          ],
+          [
+            "multi_switch_chain_stair_step_dead_end_b",
+            0.5,
+            1.0
+          ],
+          [
+            "multi_switch_chain_stair_step_dead_end_c",
+            0.6591,
+            0.0
+          ],
+          [
+            "multi_switch_chain_stair_step_dead_end_d",
+            0.8182,
+            1.0
+          ],
+          [
+            "multi_switch_chain_stair_step_switch_a",
+            0.1591,
+            0.3333
+          ],
+          [
+            "multi_switch_chain_stair_step_switch_b",
+            0.5,
+            0.5
+          ],
+          [
+            "multi_switch_chain_stair_step_switch_c",
+            0.6591,
+            0.5714
+          ],
+          [
+            "multi_switch_chain_stair_step_switch_d",
+            0.8182,
+            0.6667
+          ],
+          [
+            "package",
+            0.3182,
+            0.7857
+          ],
+          [
+            "start",
+            0.0,
+            0.2619
+          ]
+        ]
+      },
+      "quality": {
+        "total": 0.9115,
+        "readability": 1.0,
+        "uniqueness": 0.6459,
+        "difficultyFit": 1.0,
+        "routeInterest": 1.0,
+        "penalties": [],
+        "details": {
+          "overlaps": 0,
+          "crossings": 0,
+          "edgeSpacingIssues": 0,
+          "maxSimilarity": 0.3541,
+          "nodeCount": 11,
+          "edgeCount": 10,
+          "switchCount": 4,
+          "requiredTapCount": 4
+        }
+      },
+      "simulation": {
+        "passed": true,
+        "outcome": "completed",
+        "failureReason": null,
+        "elapsedTimeSeconds": 4.45,
+        "tapCount": 4,
+        "reachedPackage": true,
+        "reachedDestination": true
+      },
+      "previewPath": "/Users/jake/Developer/Tiny-Routes/docs/generated_levels/previews/level_022.svg",
+      "status": "passed",
+      "notes": [
+        "Template variant: multi_switch_chain_stair_step",
+        "Layout variant: offset"
+      ]
+    },
+    {
+      "levelID": "level_023",
+      "template": "multi_switch_chain",
+      "seed": 4047084419,
+      "difficulty": "hard",
       "nodes": 9,
       "edges": 8,
       "switches": 3,
       "parTaps": 3,
       "timeLimit": 30,
       "requiredTaps": 3,
+      "signature": {
+        "levelID": "level_023",
+        "template": "multi_switch_chain",
+        "difficulty": "hard",
+        "nodeCount": 9,
+        "edgeCount": 8,
+        "switchCount": 3,
+        "requiredTapCount": 3,
+        "deadEndCount": 3,
+        "topologyHash": "3baff2acf583f034d942b0d1c710fecebb6afb265cc9e4dbb55064e4eb063ae0",
+        "topologyHashShort": "3baff2ac",
+        "layoutHash": "cd8860aae64741d6f8447e36d7dd2902b9924576782e6b86adc7264828cbad8e",
+        "layoutHashShort": "cd8860aa",
+        "solutionHash": "a2db1a76b3a10561fa0b91e8ea6e0be278354755f5356901927e8467ed88c2b8",
+        "solutionHashShort": "a2db1a76",
+        "normalizedPositions": [
+          [
+            "destination",
+            1.0,
+            0.6842
+          ],
+          [
+            "multi_switch_chain_zigzag_dead_end_a",
+            0.2,
+            1.0
+          ],
+          [
+            "multi_switch_chain_zigzag_dead_end_b",
+            0.6,
+            1.0
+          ],
+          [
+            "multi_switch_chain_zigzag_dead_end_c",
+            0.8,
+            0.0
+          ],
+          [
+            "multi_switch_chain_zigzag_switch_a",
+            0.2,
+            0.4053
+          ],
+          [
+            "multi_switch_chain_zigzag_switch_b",
+            0.6,
+            0.4053
+          ],
+          [
+            "multi_switch_chain_zigzag_switch_c",
+            0.8,
+            0.5947
+          ],
+          [
+            "package",
+            0.4,
+            0.8053
+          ],
+          [
+            "start",
+            0.0,
+            0.5947
+          ]
+        ]
+      },
+      "quality": {
+        "total": 0.9343,
+        "readability": 1.0,
+        "uniqueness": 0.7373,
+        "difficultyFit": 1.0,
+        "routeInterest": 1.0,
+        "penalties": [],
+        "details": {
+          "overlaps": 0,
+          "crossings": 0,
+          "edgeSpacingIssues": 0,
+          "maxSimilarity": 0.2627,
+          "nodeCount": 9,
+          "edgeCount": 8,
+          "switchCount": 3,
+          "requiredTapCount": 3
+        }
+      },
+      "simulation": {
+        "passed": true,
+        "outcome": "completed",
+        "failureReason": null,
+        "elapsedTimeSeconds": 4.61,
+        "tapCount": 3,
+        "reachedPackage": true,
+        "reachedDestination": true
+      },
+      "previewPath": "/Users/jake/Developer/Tiny-Routes/docs/generated_levels/previews/level_023.svg",
       "status": "passed",
-      "notes": []
+      "notes": [
+        "Template variant: multi_switch_chain_zigzag",
+        "Layout variant: normal"
+      ]
     },
     {
-      "levelID": "level_012",
-      "template": "return_loop",
-      "seed": 950753172,
-      "difficulty": "medium",
-      "nodes": 7,
-      "edges": 7,
-      "switches": 2,
-      "parTaps": 3,
-      "timeLimit": 30,
-      "requiredTaps": 3,
-      "status": "passed",
-      "notes": []
-    },
-    {
-      "levelID": "level_013",
-      "template": "package_gate",
-      "seed": 950753303,
-      "difficulty": "medium",
-      "nodes": 7,
-      "edges": 6,
-      "switches": 2,
-      "parTaps": 2,
-      "timeLimit": 30,
-      "requiredTaps": 2,
-      "status": "passed",
-      "notes": []
-    },
-    {
-      "levelID": "level_014",
+      "levelID": "level_024",
       "template": "multi_switch_chain",
-      "seed": 950753434,
-      "difficulty": "medium",
-      "nodes": 7,
-      "edges": 6,
-      "switches": 2,
-      "parTaps": 2,
-      "timeLimit": 30,
-      "requiredTaps": 2,
-      "status": "passed",
-      "notes": []
-    },
-    {
-      "levelID": "level_015",
-      "template": "package_gate",
-      "seed": 950753565,
-      "difficulty": "medium",
-      "nodes": 7,
-      "edges": 6,
-      "switches": 2,
-      "parTaps": 2,
-      "timeLimit": 30,
-      "requiredTaps": 2,
-      "status": "passed",
-      "notes": []
-    },
-    {
-      "levelID": "level_016",
-      "template": "multi_switch_chain",
-      "seed": 950753696,
-      "difficulty": "medium",
+      "seed": 4047084549,
+      "difficulty": "hard",
       "nodes": 9,
       "edges": 8,
       "switches": 3,
       "parTaps": 3,
       "timeLimit": 30,
       "requiredTaps": 3,
+      "signature": {
+        "levelID": "level_024",
+        "template": "multi_switch_chain",
+        "difficulty": "hard",
+        "nodeCount": 9,
+        "edgeCount": 8,
+        "switchCount": 3,
+        "requiredTapCount": 3,
+        "deadEndCount": 3,
+        "topologyHash": "b1dc8b402d3e94d5cea5e8d6f3fe22812d57604afb35de4e4a426194f6260a1b",
+        "topologyHashShort": "b1dc8b40",
+        "layoutHash": "873a846b66fbfcf5bbfa254a6ff6c03d2c59aaa770f8e0e53baf46d31abe8982",
+        "layoutHashShort": "873a846b",
+        "solutionHash": "c58e3e09ba30beebe7411ac671af3be18c55f82fb40721d50125743af3e209ea",
+        "solutionHashShort": "c58e3e09",
+        "normalizedPositions": [
+          [
+            "destination",
+            1.0,
+            0.775
+          ],
+          [
+            "multi_switch_chain_stair_step_dead_end_a",
+            0.1905,
+            0.0
+          ],
+          [
+            "multi_switch_chain_stair_step_dead_end_b",
+            0.5952,
+            1.0
+          ],
+          [
+            "multi_switch_chain_stair_step_dead_end_c",
+            0.8095,
+            0.0
+          ],
+          [
+            "multi_switch_chain_stair_step_switch_a",
+            0.1905,
+            0.35
+          ],
+          [
+            "multi_switch_chain_stair_step_switch_b",
+            0.5952,
+            0.55
+          ],
+          [
+            "multi_switch_chain_stair_step_switch_c",
+            0.8095,
+            0.65
+          ],
+          [
+            "package",
+            0.4048,
+            0.8
+          ],
+          [
+            "start",
+            0.0,
+            0.25
+          ]
+        ]
+      },
+      "quality": {
+        "total": 0.7807,
+        "readability": 1.0,
+        "uniqueness": 0.1228,
+        "difficultyFit": 1.0,
+        "routeInterest": 1.0,
+        "penalties": [
+          "similar_to_existing_candidate"
+        ],
+        "details": {
+          "overlaps": 0,
+          "crossings": 0,
+          "edgeSpacingIssues": 0,
+          "maxSimilarity": 0.8772,
+          "nodeCount": 9,
+          "edgeCount": 8,
+          "switchCount": 3,
+          "requiredTapCount": 3
+        }
+      },
+      "simulation": {
+        "passed": true,
+        "outcome": "completed",
+        "failureReason": null,
+        "elapsedTimeSeconds": 4.15,
+        "tapCount": 3,
+        "reachedPackage": true,
+        "reachedDestination": true
+      },
+      "previewPath": "/Users/jake/Developer/Tiny-Routes/docs/generated_levels/previews/level_024.svg",
       "status": "passed",
-      "notes": []
+      "notes": [
+        "Template variant: multi_switch_chain_stair_step",
+        "Layout variant: tall"
+      ]
     },
     {
-      "levelID": "level_017",
-      "template": "return_loop",
-      "seed": 950753827,
-      "difficulty": "medium",
-      "nodes": 7,
-      "edges": 7,
-      "switches": 2,
-      "parTaps": 3,
-      "timeLimit": 30,
-      "requiredTaps": 3,
-      "status": "passed",
-      "notes": []
-    },
-    {
-      "levelID": "level_018",
+      "levelID": "level_025",
       "template": "multi_switch_chain",
-      "seed": 950753958,
-      "difficulty": "medium",
+      "seed": 4047084680,
+      "difficulty": "hard",
+      "nodes": 11,
+      "edges": 10,
+      "switches": 4,
+      "parTaps": 4,
+      "timeLimit": 30,
+      "requiredTaps": 4,
+      "signature": {
+        "levelID": "level_025",
+        "template": "multi_switch_chain",
+        "difficulty": "hard",
+        "nodeCount": 11,
+        "edgeCount": 10,
+        "switchCount": 4,
+        "requiredTapCount": 4,
+        "deadEndCount": 4,
+        "topologyHash": "03d5be018944538f8c8f8703d6bb508d38b58b9235c23275a4670c1887ed5cbd",
+        "topologyHashShort": "03d5be01",
+        "layoutHash": "cd4ace5d1aa1602deabd27d36954cdf12cf8660f764eecbd70864ca008db55e7",
+        "layoutHashShort": "cd4ace5d",
+        "solutionHash": "94604c681826aae5848b76ee71733dd2164e85b5d25b5cdbc86664421656577b",
+        "solutionHashShort": "94604c68",
+        "normalizedPositions": [
+          [
+            "destination",
+            1.0,
+            0.675
+          ],
+          [
+            "multi_switch_chain_zigzag_dead_end_a",
+            0.1667,
+            1.0
+          ],
+          [
+            "multi_switch_chain_zigzag_dead_end_b",
+            0.5,
+            1.0
+          ],
+          [
+            "multi_switch_chain_zigzag_dead_end_c",
+            0.6667,
+            0.0
+          ],
+          [
+            "multi_switch_chain_zigzag_dead_end_d",
+            0.8333,
+            1.0
+          ],
+          [
+            "multi_switch_chain_zigzag_switch_a",
+            0.1667,
+            0.4
+          ],
+          [
+            "multi_switch_chain_zigzag_switch_b",
+            0.5,
+            0.4
+          ],
+          [
+            "multi_switch_chain_zigzag_switch_c",
+            0.6667,
+            0.6
+          ],
+          [
+            "multi_switch_chain_zigzag_switch_d",
+            0.8333,
+            0.4
+          ],
+          [
+            "package",
+            0.3333,
+            0.8
+          ],
+          [
+            "start",
+            0.0,
+            0.6
+          ]
+        ]
+      },
+      "quality": {
+        "total": 0.9087,
+        "readability": 1.0,
+        "uniqueness": 0.6347,
+        "difficultyFit": 1.0,
+        "routeInterest": 1.0,
+        "penalties": [],
+        "details": {
+          "overlaps": 0,
+          "crossings": 0,
+          "edgeSpacingIssues": 0,
+          "maxSimilarity": 0.3653,
+          "nodeCount": 11,
+          "edgeCount": 10,
+          "switchCount": 4,
+          "requiredTapCount": 4
+        }
+      },
+      "simulation": {
+        "passed": true,
+        "outcome": "completed",
+        "failureReason": null,
+        "elapsedTimeSeconds": 5.45,
+        "tapCount": 4,
+        "reachedPackage": true,
+        "reachedDestination": true
+      },
+      "previewPath": "/Users/jake/Developer/Tiny-Routes/docs/generated_levels/previews/level_025.svg",
+      "status": "passed",
+      "notes": [
+        "Template variant: multi_switch_chain_zigzag",
+        "Layout variant: tall"
+      ]
+    },
+    {
+      "levelID": "level_026",
+      "template": "multi_switch_chain",
+      "seed": 4047084813,
+      "difficulty": "hard",
+      "nodes": 11,
+      "edges": 10,
+      "switches": 4,
+      "parTaps": 4,
+      "timeLimit": 30,
+      "requiredTaps": 4,
+      "signature": {
+        "levelID": "level_026",
+        "template": "multi_switch_chain",
+        "difficulty": "hard",
+        "nodeCount": 11,
+        "edgeCount": 10,
+        "switchCount": 4,
+        "requiredTapCount": 4,
+        "deadEndCount": 4,
+        "topologyHash": "9eb7b453ae9affeebf3c40d25becf811cad21197f10f536a0fd69b7bc26830cb",
+        "topologyHashShort": "9eb7b453",
+        "layoutHash": "815c9ca83d0ceba9c03c024e80b920ad5ef6ec1dff5aa81e8aa25d8cb7896d82",
+        "layoutHashShort": "815c9ca8",
+        "solutionHash": "e332c73d04d853e1030eff188c458fab1503dca63cfc52792ff2cf3f8b6dd1b7",
+        "solutionHashShort": "e332c73d",
+        "normalizedPositions": [
+          [
+            "destination",
+            1.0,
+            0.325
+          ],
+          [
+            "multi_switch_chain_double_gate_dead_end_a",
+            0.1667,
+            1.0
+          ],
+          [
+            "multi_switch_chain_double_gate_dead_end_b",
+            0.5,
+            0.0
+          ],
+          [
+            "multi_switch_chain_double_gate_dead_end_c",
+            0.6667,
+            1.0
+          ],
+          [
+            "multi_switch_chain_double_gate_dead_end_d",
+            0.8333,
+            0.0
+          ],
+          [
+            "multi_switch_chain_double_gate_switch_a",
+            0.1667,
+            0.65
+          ],
+          [
+            "multi_switch_chain_double_gate_switch_b",
+            0.5,
+            0.65
+          ],
+          [
+            "multi_switch_chain_double_gate_switch_c",
+            0.6667,
+            0.425
+          ],
+          [
+            "multi_switch_chain_double_gate_switch_d",
+            0.8333,
+            0.65
+          ],
+          [
+            "package",
+            0.3333,
+            0.8
+          ],
+          [
+            "start",
+            0.0,
+            0.425
+          ]
+        ]
+      },
+      "quality": {
+        "total": 0.9016,
+        "readability": 1.0,
+        "uniqueness": 0.6064,
+        "difficultyFit": 1.0,
+        "routeInterest": 1.0,
+        "penalties": [],
+        "details": {
+          "overlaps": 0,
+          "crossings": 0,
+          "edgeSpacingIssues": 0,
+          "maxSimilarity": 0.3936,
+          "nodeCount": 11,
+          "edgeCount": 10,
+          "switchCount": 4,
+          "requiredTapCount": 4
+        }
+      },
+      "simulation": {
+        "passed": true,
+        "outcome": "completed",
+        "failureReason": null,
+        "elapsedTimeSeconds": 4.7,
+        "tapCount": 4,
+        "reachedPackage": true,
+        "reachedDestination": true
+      },
+      "previewPath": "/Users/jake/Developer/Tiny-Routes/docs/generated_levels/previews/level_026.svg",
+      "status": "passed",
+      "notes": [
+        "Template variant: multi_switch_chain_double_gate",
+        "Layout variant: tall"
+      ]
+    },
+    {
+      "levelID": "level_027",
+      "template": "multi_switch_chain",
+      "seed": 4047084946,
+      "difficulty": "hard",
       "nodes": 9,
       "edges": 8,
       "switches": 3,
       "parTaps": 3,
       "timeLimit": 30,
       "requiredTaps": 3,
+      "signature": {
+        "levelID": "level_027",
+        "template": "multi_switch_chain",
+        "difficulty": "hard",
+        "nodeCount": 9,
+        "edgeCount": 8,
+        "switchCount": 3,
+        "requiredTapCount": 3,
+        "deadEndCount": 3,
+        "topologyHash": "d039033a6f798fbec55c6f75d797fa27dfb5cc0efc8eb7d8f8aea8b46870a9fe",
+        "topologyHashShort": "d039033a",
+        "layoutHash": "b680095c8b5e074e85b0154a84950d68befbdde8d10251b1f56e80644e77b7b7",
+        "layoutHashShort": "b680095c",
+        "solutionHash": "799f7a526f687b00683ebbdd13a30a83bdf90aa178520554f7e12759a3d666ba",
+        "solutionHashShort": "799f7a52",
+        "normalizedPositions": [
+          [
+            "destination",
+            1.0,
+            0.3333
+          ],
+          [
+            "multi_switch_chain_split_dead_ends_dead_end_a",
+            0.1957,
+            1.0
+          ],
+          [
+            "multi_switch_chain_split_dead_ends_dead_end_b",
+            0.6087,
+            0.0
+          ],
+          [
+            "multi_switch_chain_split_dead_ends_dead_end_c",
+            0.8043,
+            1.0
+          ],
+          [
+            "multi_switch_chain_split_dead_ends_switch_a",
+            0.1957,
+            0.6389
+          ],
+          [
+            "multi_switch_chain_split_dead_ends_switch_b",
+            0.6087,
+            0.6389
+          ],
+          [
+            "multi_switch_chain_split_dead_ends_switch_c",
+            0.8043,
+            0.4444
+          ],
+          [
+            "package",
+            0.3913,
+            0.8056
+          ],
+          [
+            "start",
+            0.0,
+            0.4444
+          ]
+        ]
+      },
+      "quality": {
+        "total": 0.7805,
+        "readability": 1.0,
+        "uniqueness": 0.1219,
+        "difficultyFit": 1.0,
+        "routeInterest": 1.0,
+        "penalties": [
+          "similar_to_existing_candidate"
+        ],
+        "details": {
+          "overlaps": 0,
+          "crossings": 0,
+          "edgeSpacingIssues": 0,
+          "maxSimilarity": 0.8781,
+          "nodeCount": 9,
+          "edgeCount": 8,
+          "switchCount": 3,
+          "requiredTapCount": 3
+        }
+      },
+      "simulation": {
+        "passed": true,
+        "outcome": "completed",
+        "failureReason": null,
+        "elapsedTimeSeconds": 3.8,
+        "tapCount": 3,
+        "reachedPackage": true,
+        "reachedDestination": true
+      },
+      "previewPath": "/Users/jake/Developer/Tiny-Routes/docs/generated_levels/previews/level_027.svg",
       "status": "passed",
-      "notes": []
+      "notes": [
+        "Template variant: multi_switch_chain_split_dead_ends",
+        "Layout variant: wide"
+      ]
     },
     {
-      "levelID": "level_019",
-      "template": "package_gate",
-      "seed": 950754089,
-      "difficulty": "medium",
-      "nodes": 7,
-      "edges": 6,
-      "switches": 2,
-      "parTaps": 2,
-      "timeLimit": 30,
-      "requiredTaps": 2,
-      "status": "passed",
-      "notes": []
-    },
-    {
-      "levelID": "level_020",
+      "levelID": "level_028",
       "template": "multi_switch_chain",
-      "seed": 950770071,
-      "difficulty": "medium",
-      "nodes": 9,
-      "edges": 8,
-      "switches": 3,
-      "parTaps": 3,
+      "seed": 4047085078,
+      "difficulty": "hard",
+      "nodes": 11,
+      "edges": 10,
+      "switches": 4,
+      "parTaps": 4,
       "timeLimit": 30,
-      "requiredTaps": 3,
+      "requiredTaps": 4,
+      "signature": {
+        "levelID": "level_028",
+        "template": "multi_switch_chain",
+        "difficulty": "hard",
+        "nodeCount": 11,
+        "edgeCount": 10,
+        "switchCount": 4,
+        "requiredTapCount": 4,
+        "deadEndCount": 4,
+        "topologyHash": "2737ca360202bf02acf2c2f76e24d1cf9697b178614674f9224b20e6c8a6997f",
+        "topologyHashShort": "2737ca36",
+        "layoutHash": "d092785b1f725afb46f9af80ec33cf349fa7bfe6a63857494300bfdd61c4d89d",
+        "layoutHashShort": "d092785b",
+        "solutionHash": "3352efc5c666cf775bcdd075ab420d0a49bd3632f4bebaa0f1e3e935cd77057f",
+        "solutionHashShort": "3352efc5",
+        "normalizedPositions": [
+          [
+            "destination",
+            1.0,
+            0.6944
+          ],
+          [
+            "multi_switch_chain_four_switch_dead_end_a",
+            0.1522,
+            1.0
+          ],
+          [
+            "multi_switch_chain_four_switch_dead_end_b",
+            0.5,
+            1.0
+          ],
+          [
+            "multi_switch_chain_four_switch_dead_end_c",
+            0.6739,
+            0.0
+          ],
+          [
+            "multi_switch_chain_four_switch_dead_end_d",
+            0.8478,
+            1.0
+          ],
+          [
+            "multi_switch_chain_four_switch_switch_a",
+            0.1522,
+            0.4167
+          ],
+          [
+            "multi_switch_chain_four_switch_switch_b",
+            0.5,
+            0.4167
+          ],
+          [
+            "multi_switch_chain_four_switch_switch_c",
+            0.6739,
+            0.5833
+          ],
+          [
+            "multi_switch_chain_four_switch_switch_d",
+            0.8478,
+            0.4167
+          ],
+          [
+            "package",
+            0.3261,
+            0.8056
+          ],
+          [
+            "start",
+            0.0,
+            0.5833
+          ]
+        ]
+      },
+      "quality": {
+        "total": 0.9023,
+        "readability": 1.0,
+        "uniqueness": 0.6092,
+        "difficultyFit": 1.0,
+        "routeInterest": 1.0,
+        "penalties": [],
+        "details": {
+          "overlaps": 0,
+          "crossings": 0,
+          "edgeSpacingIssues": 0,
+          "maxSimilarity": 0.3908,
+          "nodeCount": 11,
+          "edgeCount": 10,
+          "switchCount": 4,
+          "requiredTapCount": 4
+        }
+      },
+      "simulation": {
+        "passed": true,
+        "outcome": "completed",
+        "failureReason": null,
+        "elapsedTimeSeconds": 5.1,
+        "tapCount": 4,
+        "reachedPackage": true,
+        "reachedDestination": true
+      },
+      "previewPath": "/Users/jake/Developer/Tiny-Routes/docs/generated_levels/previews/level_028.svg",
       "status": "passed",
-      "notes": []
+      "notes": [
+        "Template variant: multi_switch_chain_four_switch",
+        "Layout variant: wide"
+      ]
     }
   ],
-  "rejectedCandidateCount": 0,
-  "rejectionReasonCounts": {},
-  "writtenLevelPaths": [
-    "/Users/jake/Developer/Tiny-Routes/TinyRoutes/Resources/Levels/level_011.json",
-    "/Users/jake/Developer/Tiny-Routes/TinyRoutes/Resources/Levels/level_012.json",
-    "/Users/jake/Developer/Tiny-Routes/TinyRoutes/Resources/Levels/level_013.json",
-    "/Users/jake/Developer/Tiny-Routes/TinyRoutes/Resources/Levels/level_014.json",
-    "/Users/jake/Developer/Tiny-Routes/TinyRoutes/Resources/Levels/level_015.json",
-    "/Users/jake/Developer/Tiny-Routes/TinyRoutes/Resources/Levels/level_016.json",
-    "/Users/jake/Developer/Tiny-Routes/TinyRoutes/Resources/Levels/level_017.json",
-    "/Users/jake/Developer/Tiny-Routes/TinyRoutes/Resources/Levels/level_018.json",
-    "/Users/jake/Developer/Tiny-Routes/TinyRoutes/Resources/Levels/level_019.json",
-    "/Users/jake/Developer/Tiny-Routes/TinyRoutes/Resources/Levels/level_020.json"
-  ],
-  "writtenSolutionPaths": [
-    "/Users/jake/Developer/Tiny-Routes/TinyRoutesTests/Resources/LevelSolutions/level_011.solution.json",
-    "/Users/jake/Developer/Tiny-Routes/TinyRoutesTests/Resources/LevelSolutions/level_012.solution.json",
-    "/Users/jake/Developer/Tiny-Routes/TinyRoutesTests/Resources/LevelSolutions/level_013.solution.json",
-    "/Users/jake/Developer/Tiny-Routes/TinyRoutesTests/Resources/LevelSolutions/level_014.solution.json",
-    "/Users/jake/Developer/Tiny-Routes/TinyRoutesTests/Resources/LevelSolutions/level_015.solution.json",
-    "/Users/jake/Developer/Tiny-Routes/TinyRoutesTests/Resources/LevelSolutions/level_016.solution.json",
-    "/Users/jake/Developer/Tiny-Routes/TinyRoutesTests/Resources/LevelSolutions/level_017.solution.json",
-    "/Users/jake/Developer/Tiny-Routes/TinyRoutesTests/Resources/LevelSolutions/level_018.solution.json",
-    "/Users/jake/Developer/Tiny-Routes/TinyRoutesTests/Resources/LevelSolutions/level_019.solution.json",
-    "/Users/jake/Developer/Tiny-Routes/TinyRoutesTests/Resources/LevelSolutions/level_020.solution.json"
-  ],
+  "rejectedCandidateCount": 112,
+  "rejectionReasonCounts": {
+    "candidate_too_similar_to_batch": 111,
+    "candidate_too_similar_to_existing": 1
+  },
+  "writtenLevelPaths": [],
+  "writtenSolutionPaths": [],
   "swiftTests": {
     "run": false,
     "command": [],
@@ -209,6 +974,121 @@
     "passed": null,
     "summary": "Swift tests were not run."
   },
-  "messages": [],
-  "xcodegenNote": "project.yml includes resource directories. If checked-in TinyRoutes.xcodeproj does not pick up newly generated JSON files, run `xcodegen generate` before Swift tests."
+  "messages": [
+    "Loaded 20 existing level signatures for similarity checks.",
+    "Rejected candidate level_023 seed=4047084418 template=multi_switch_chain reason=candidate_too_similar_to_batch detail=matches level_021: same template/topology and layout similarity 0.98",
+    "Rejected candidate level_026 seed=4047084811 template=multi_switch_chain reason=candidate_too_similar_to_batch detail=matches level_021: same topology, solution, and layout (2da0b5dc/aa7219f6)",
+    "Rejected candidate level_026 seed=4047084812 template=multi_switch_chain reason=candidate_too_similar_to_batch detail=matches level_022: same template/topology and layout similarity 0.99",
+    "Rejected candidate level_027 seed=4047084942 template=multi_switch_chain reason=candidate_too_similar_to_batch detail=matches level_026: same template/topology and layout similarity 0.99",
+    "Rejected candidate level_027 seed=4047084943 template=multi_switch_chain reason=candidate_too_similar_to_existing detail=matches level_018: same topology, solution, and layout (d039033a/799f7a52)",
+    "Rejected candidate level_027 seed=4047084944 template=multi_switch_chain reason=candidate_too_similar_to_batch detail=matches level_022: same template/topology and layout similarity 0.99",
+    "Rejected candidate level_027 seed=4047084945 template=multi_switch_chain reason=candidate_too_similar_to_batch detail=matches level_025: same template/topology and layout similarity 0.99",
+    "Rejected candidate level_028 seed=4047085073 template=multi_switch_chain reason=candidate_too_similar_to_batch detail=matches level_022: same template/topology and layout similarity 0.99",
+    "Rejected candidate level_028 seed=4047085074 template=multi_switch_chain reason=candidate_too_similar_to_batch detail=matches level_022: same template/topology and layout similarity 0.99",
+    "Rejected candidate level_028 seed=4047085075 template=multi_switch_chain reason=candidate_too_similar_to_batch detail=matches level_024: same template/topology and layout similarity 0.98",
+    "Rejected candidate level_028 seed=4047085076 template=multi_switch_chain reason=candidate_too_similar_to_batch detail=matches level_021: same template/topology and layout similarity 0.99",
+    "Rejected candidate level_028 seed=4047085077 template=multi_switch_chain reason=candidate_too_similar_to_batch detail=matches level_025: same topology, solution, and layout (03d5be01/94604c68)",
+    "Rejected candidate level_029 seed=4047085204 template=multi_switch_chain reason=candidate_too_similar_to_batch detail=matches level_028: similarity 0.90 >= 0.88",
+    "Rejected candidate level_029 seed=4047085205 template=multi_switch_chain reason=candidate_too_similar_to_batch detail=matches level_021: same topology, solution, and layout (2da0b5dc/aa7219f6)",
+    "Rejected candidate level_029 seed=4047085206 template=multi_switch_chain reason=candidate_too_similar_to_batch detail=matches level_025: same template/topology and layout similarity 0.99",
+    "Rejected candidate level_029 seed=4047085207 template=multi_switch_chain reason=candidate_too_similar_to_batch detail=matches level_024: same template/topology and layout similarity 0.99",
+    "Rejected candidate level_029 seed=4047085208 template=multi_switch_chain reason=candidate_too_similar_to_batch detail=matches level_022: similarity 0.89 >= 0.88",
+    "Rejected candidate level_029 seed=4047085209 template=multi_switch_chain reason=candidate_too_similar_to_batch detail=matches level_022: same template/topology and layout similarity 0.99",
+    "Rejected candidate level_029 seed=4047085210 template=multi_switch_chain reason=candidate_too_similar_to_batch detail=matches level_028: same template/topology and layout similarity 0.98",
+    "Rejected candidate level_029 seed=4047085211 template=multi_switch_chain reason=candidate_too_similar_to_batch detail=matches level_028: same topology, solution, and layout (2737ca36/3352efc5)",
+    "Rejected candidate level_029 seed=4047085212 template=multi_switch_chain reason=candidate_too_similar_to_batch detail=matches level_022: same template/topology and layout similarity 0.99",
+    "Rejected candidate level_029 seed=4047085213 template=multi_switch_chain reason=candidate_too_similar_to_batch detail=matches level_028: similarity 0.90 >= 0.88",
+    "Rejected candidate level_029 seed=1887184495 template=multi_switch_chain reason=candidate_too_similar_to_batch detail=matches level_025: similarity 0.90 >= 0.88",
+    "Rejected candidate level_029 seed=1887184496 template=multi_switch_chain reason=candidate_too_similar_to_batch detail=matches level_025: similarity 0.90 >= 0.88",
+    "Rejected candidate level_029 seed=1887184497 template=multi_switch_chain reason=candidate_too_similar_to_batch detail=matches level_026: same template/topology and layout similarity 0.99",
+    "Rejected candidate level_029 seed=1887184498 template=multi_switch_chain reason=candidate_too_similar_to_batch detail=matches level_021: similarity 0.89 >= 0.88",
+    "Rejected candidate level_029 seed=1887184499 template=multi_switch_chain reason=candidate_too_similar_to_batch detail=matches level_026: same template/topology and layout similarity 0.99",
+    "Rejected candidate level_029 seed=1887184500 template=multi_switch_chain reason=candidate_too_similar_to_batch detail=matches level_028: same template/topology and layout similarity 0.99",
+    "Rejected candidate level_029 seed=1887184501 template=multi_switch_chain reason=candidate_too_similar_to_batch detail=matches level_021: same template/topology and layout similarity 0.99",
+    "Rejected candidate level_029 seed=1887184502 template=multi_switch_chain reason=candidate_too_similar_to_batch detail=matches level_024: same template/topology and layout similarity 0.99",
+    "Rejected candidate level_029 seed=1887184503 template=multi_switch_chain reason=candidate_too_similar_to_batch detail=matches level_021: same template/topology and layout similarity 0.99",
+    "Rejected candidate level_029 seed=1887184504 template=multi_switch_chain reason=candidate_too_similar_to_batch detail=matches level_028: same template/topology and layout similarity 0.99",
+    "Rejected candidate level_029 seed=1887184626 template=multi_switch_chain reason=candidate_too_similar_to_batch detail=matches level_024: same template/topology and layout similarity 0.99",
+    "Rejected candidate level_029 seed=1887184627 template=multi_switch_chain reason=candidate_too_similar_to_batch detail=matches level_028: same template/topology and layout similarity 0.99",
+    "Rejected candidate level_029 seed=1887184628 template=multi_switch_chain reason=candidate_too_similar_to_batch detail=matches level_025: same template/topology and layout similarity 0.99",
+    "Rejected candidate level_029 seed=1887184629 template=multi_switch_chain reason=candidate_too_similar_to_batch detail=matches level_028: same template/topology and layout similarity 0.99",
+    "Rejected candidate level_029 seed=1887184630 template=multi_switch_chain reason=candidate_too_similar_to_batch detail=matches level_027: same topology, solution, and layout (d039033a/799f7a52)",
+    "Rejected candidate level_029 seed=1887184631 template=multi_switch_chain reason=candidate_too_similar_to_batch detail=matches level_027: same template/topology and layout similarity 0.99",
+    "Rejected candidate level_029 seed=1887184632 template=multi_switch_chain reason=candidate_too_similar_to_batch detail=matches level_021: same template/topology and layout similarity 1.00",
+    "Rejected candidate level_029 seed=1887184633 template=multi_switch_chain reason=candidate_too_similar_to_batch detail=matches level_028: same template/topology and layout similarity 0.99",
+    "Rejected candidate level_029 seed=1887184634 template=multi_switch_chain reason=candidate_too_similar_to_batch detail=matches level_028: same template/topology and layout similarity 0.99",
+    "Rejected candidate level_029 seed=1887184635 template=multi_switch_chain reason=candidate_too_similar_to_batch detail=matches level_028: similarity 0.90 >= 0.88",
+    "Rejected candidate level_029 seed=1887184757 template=multi_switch_chain reason=candidate_too_similar_to_batch detail=matches level_026: same topology, solution, and layout (9eb7b453/e332c73d)",
+    "Rejected candidate level_029 seed=1887184758 template=multi_switch_chain reason=candidate_too_similar_to_batch detail=matches level_026: same template/topology and layout similarity 0.99",
+    "Rejected candidate level_029 seed=1887184759 template=multi_switch_chain reason=candidate_too_similar_to_batch detail=matches level_024: same template/topology and layout similarity 0.98",
+    "Rejected candidate level_029 seed=1887184760 template=multi_switch_chain reason=candidate_too_similar_to_batch detail=matches level_028: same template/topology and layout similarity 0.99",
+    "Rejected candidate level_029 seed=1887184761 template=multi_switch_chain reason=candidate_too_similar_to_batch detail=matches level_026: same topology, solution, and layout (9eb7b453/e332c73d)",
+    "Rejected candidate level_029 seed=1887184762 template=multi_switch_chain reason=candidate_too_similar_to_batch detail=matches level_025: same template/topology and layout similarity 1.00",
+    "Rejected candidate level_029 seed=1887184763 template=multi_switch_chain reason=candidate_too_similar_to_batch detail=matches level_023: same template/topology and layout similarity 0.99",
+    "Rejected candidate level_029 seed=1887184764 template=multi_switch_chain reason=candidate_too_similar_to_batch detail=matches level_023: same topology, solution, and layout (3baff2ac/a2db1a76)",
+    "Rejected candidate level_029 seed=1887184765 template=multi_switch_chain reason=candidate_too_similar_to_batch detail=matches level_027: same template/topology and layout similarity 0.99",
+    "Rejected candidate level_029 seed=1887184766 template=multi_switch_chain reason=candidate_too_similar_to_batch detail=matches level_026: similarity 0.90 >= 0.88",
+    "Rejected candidate level_029 seed=1887184888 template=multi_switch_chain reason=candidate_too_similar_to_batch detail=matches level_024: same template/topology and layout similarity 0.99",
+    "Rejected candidate level_029 seed=1887184889 template=multi_switch_chain reason=candidate_too_similar_to_batch detail=matches level_028: same topology, solution, and layout (2737ca36/3352efc5)",
+    "Rejected candidate level_029 seed=1887184890 template=multi_switch_chain reason=candidate_too_similar_to_batch detail=matches level_026: same template/topology and layout similarity 0.99",
+    "Rejected candidate level_029 seed=1887184891 template=multi_switch_chain reason=candidate_too_similar_to_batch detail=matches level_024: same template/topology and layout similarity 0.98",
+    "Rejected candidate level_029 seed=1887184892 template=multi_switch_chain reason=candidate_too_similar_to_batch detail=matches level_025: same template/topology and layout similarity 0.98",
+    "Rejected candidate level_029 seed=1887184893 template=multi_switch_chain reason=candidate_too_similar_to_batch detail=matches level_021: same template/topology and layout similarity 0.99",
+    "Rejected candidate level_029 seed=1887184894 template=multi_switch_chain reason=candidate_too_similar_to_batch detail=matches level_024: same template/topology and layout similarity 0.99",
+    "Rejected candidate level_029 seed=1887184895 template=multi_switch_chain reason=candidate_too_similar_to_batch detail=matches level_028: same topology, solution, and layout (2737ca36/3352efc5)",
+    "Rejected candidate level_029 seed=1887184896 template=multi_switch_chain reason=candidate_too_similar_to_batch detail=matches level_025: same template/topology and layout similarity 0.99",
+    "Rejected candidate level_029 seed=1887184897 template=multi_switch_chain reason=candidate_too_similar_to_batch detail=matches level_022: same topology, solution, and layout (48410b41/0f206e7e)",
+    "Rejected candidate level_029 seed=1887185019 template=multi_switch_chain reason=candidate_too_similar_to_batch detail=matches level_028: same template/topology and layout similarity 0.99",
+    "Rejected candidate level_029 seed=1887185020 template=multi_switch_chain reason=candidate_too_similar_to_batch detail=matches level_026: same template/topology and layout similarity 0.99",
+    "Rejected candidate level_029 seed=1887185021 template=multi_switch_chain reason=candidate_too_similar_to_batch detail=matches level_023: same template/topology and layout similarity 0.99",
+    "Rejected candidate level_029 seed=1887185022 template=multi_switch_chain reason=candidate_too_similar_to_batch detail=matches level_026: same template/topology and layout similarity 0.99",
+    "Rejected candidate level_029 seed=1887185023 template=multi_switch_chain reason=candidate_too_similar_to_batch detail=matches level_027: same template/topology and layout similarity 0.99",
+    "Rejected candidate level_029 seed=1887185024 template=multi_switch_chain reason=candidate_too_similar_to_batch detail=matches level_025: same template/topology and layout similarity 1.00",
+    "Rejected candidate level_029 seed=1887185025 template=multi_switch_chain reason=candidate_too_similar_to_batch detail=matches level_024: same topology, solution, and layout (b1dc8b40/c58e3e09)",
+    "Rejected candidate level_029 seed=1887185026 template=multi_switch_chain reason=candidate_too_similar_to_batch detail=matches level_028: same template/topology and layout similarity 0.98",
+    "Rejected candidate level_029 seed=1887185027 template=multi_switch_chain reason=candidate_too_similar_to_batch detail=matches level_028: same template/topology and layout similarity 0.98",
+    "Rejected candidate level_029 seed=1887185028 template=multi_switch_chain reason=candidate_too_similar_to_batch detail=matches level_028: same topology, solution, and layout (2737ca36/3352efc5)",
+    "Rejected candidate level_029 seed=1887185150 template=multi_switch_chain reason=candidate_too_similar_to_batch detail=matches level_027: similarity 0.90 >= 0.88",
+    "Rejected candidate level_029 seed=1887185151 template=multi_switch_chain reason=candidate_too_similar_to_batch detail=matches level_024: same topology, solution, and layout (b1dc8b40/c58e3e09)",
+    "Rejected candidate level_029 seed=1887185152 template=multi_switch_chain reason=candidate_too_similar_to_batch detail=matches level_025: similarity 0.90 >= 0.88",
+    "Rejected candidate level_029 seed=1887185153 template=multi_switch_chain reason=candidate_too_similar_to_batch detail=matches level_022: similarity 0.90 >= 0.88",
+    "Rejected candidate level_029 seed=1887185154 template=multi_switch_chain reason=candidate_too_similar_to_batch detail=matches level_023: similarity 0.89 >= 0.88",
+    "Rejected candidate level_029 seed=1887185155 template=multi_switch_chain reason=candidate_too_similar_to_batch detail=matches level_021: same template/topology and layout similarity 1.00",
+    "Rejected candidate level_029 seed=1887185156 template=multi_switch_chain reason=candidate_too_similar_to_batch detail=matches level_026: same template/topology and layout similarity 1.00",
+    "Rejected candidate level_029 seed=1887185157 template=multi_switch_chain reason=candidate_too_similar_to_batch detail=matches level_025: same template/topology and layout similarity 0.99",
+    "Rejected candidate level_029 seed=1887185158 template=multi_switch_chain reason=candidate_too_similar_to_batch detail=matches level_021: similarity 0.89 >= 0.88",
+    "Rejected candidate level_029 seed=1887185159 template=multi_switch_chain reason=candidate_too_similar_to_batch detail=matches level_028: same template/topology and layout similarity 0.99",
+    "Rejected candidate level_029 seed=1887185281 template=multi_switch_chain reason=candidate_too_similar_to_batch detail=matches level_022: same template/topology and layout similarity 0.98",
+    "Rejected candidate level_029 seed=1887185282 template=multi_switch_chain reason=candidate_too_similar_to_batch detail=matches level_028: same topology, solution, and layout (2737ca36/3352efc5)",
+    "Rejected candidate level_029 seed=1887185283 template=multi_switch_chain reason=candidate_too_similar_to_batch detail=matches level_022: same template/topology and layout similarity 0.98",
+    "Rejected candidate level_029 seed=1887185284 template=multi_switch_chain reason=candidate_too_similar_to_batch detail=matches level_021: same template/topology and layout similarity 0.99",
+    "Rejected candidate level_029 seed=1887185285 template=multi_switch_chain reason=candidate_too_similar_to_batch detail=matches level_028: same topology, solution, and layout (2737ca36/3352efc5)",
+    "Rejected candidate level_029 seed=1887185286 template=multi_switch_chain reason=candidate_too_similar_to_batch detail=matches level_022: same template/topology and layout similarity 0.99",
+    "Rejected candidate level_029 seed=1887185287 template=multi_switch_chain reason=candidate_too_similar_to_batch detail=matches level_026: same topology, solution, and layout (9eb7b453/e332c73d)",
+    "Rejected candidate level_029 seed=1887185288 template=multi_switch_chain reason=candidate_too_similar_to_batch detail=matches level_024: similarity 0.89 >= 0.88",
+    "Rejected candidate level_029 seed=1887185289 template=multi_switch_chain reason=candidate_too_similar_to_batch detail=matches level_022: same template/topology and layout similarity 0.98",
+    "Rejected candidate level_029 seed=1887185290 template=multi_switch_chain reason=candidate_too_similar_to_batch detail=matches level_022: same template/topology and layout similarity 0.99",
+    "Rejected candidate level_029 seed=1887185412 template=multi_switch_chain reason=candidate_too_similar_to_batch detail=matches level_025: same template/topology and layout similarity 1.00",
+    "Rejected candidate level_029 seed=1887185413 template=multi_switch_chain reason=candidate_too_similar_to_batch detail=matches level_028: same template/topology and layout similarity 0.99",
+    "Rejected candidate level_029 seed=1887185414 template=multi_switch_chain reason=candidate_too_similar_to_batch detail=matches level_022: similarity 0.89 >= 0.88",
+    "Rejected candidate level_029 seed=1887185415 template=multi_switch_chain reason=candidate_too_similar_to_batch detail=matches level_028: same template/topology and layout similarity 0.99",
+    "Rejected candidate level_029 seed=1887185416 template=multi_switch_chain reason=candidate_too_similar_to_batch detail=matches level_026: similarity 0.90 >= 0.88",
+    "Rejected candidate level_029 seed=1887185417 template=multi_switch_chain reason=candidate_too_similar_to_batch detail=matches level_028: same template/topology and layout similarity 0.99",
+    "Rejected candidate level_029 seed=1887185418 template=multi_switch_chain reason=candidate_too_similar_to_batch detail=matches level_021: similarity 0.89 >= 0.88",
+    "Rejected candidate level_029 seed=1887185419 template=multi_switch_chain reason=candidate_too_similar_to_batch detail=matches level_023: same template/topology and layout similarity 0.99",
+    "Rejected candidate level_029 seed=1887185420 template=multi_switch_chain reason=candidate_too_similar_to_batch detail=matches level_026: same template/topology and layout similarity 0.99",
+    "Rejected candidate level_029 seed=1887185421 template=multi_switch_chain reason=candidate_too_similar_to_batch detail=matches level_026: same template/topology and layout similarity 1.00",
+    "Rejected candidate level_029 seed=1887185543 template=multi_switch_chain reason=candidate_too_similar_to_batch detail=matches level_026: same template/topology and layout similarity 0.99",
+    "Rejected candidate level_029 seed=1887185544 template=multi_switch_chain reason=candidate_too_similar_to_batch detail=matches level_027: same topology, solution, and layout (d039033a/799f7a52)",
+    "Rejected candidate level_029 seed=1887185545 template=multi_switch_chain reason=candidate_too_similar_to_batch detail=matches level_026: same template/topology and layout similarity 0.99",
+    "Rejected candidate level_029 seed=1887185546 template=multi_switch_chain reason=candidate_too_similar_to_batch detail=matches level_027: similarity 0.89 >= 0.88",
+    "Rejected candidate level_029 seed=1887185547 template=multi_switch_chain reason=candidate_too_similar_to_batch detail=matches level_028: same template/topology and layout similarity 0.99",
+    "Rejected candidate level_029 seed=1887185548 template=multi_switch_chain reason=candidate_too_similar_to_batch detail=matches level_023: same template/topology and layout similarity 0.99",
+    "Rejected candidate level_029 seed=1887185549 template=multi_switch_chain reason=candidate_too_similar_to_batch detail=matches level_022: similarity 0.89 >= 0.88",
+    "Rejected candidate level_029 seed=1887185550 template=multi_switch_chain reason=candidate_too_similar_to_batch detail=matches level_025: same topology, solution, and layout (03d5be01/94604c68)",
+    "Rejected candidate level_029 seed=1887185551 template=multi_switch_chain reason=candidate_too_similar_to_batch detail=matches level_026: same template/topology and layout similarity 0.99",
+    "Rejected candidate level_029 seed=1887185552 template=multi_switch_chain reason=candidate_too_similar_to_batch detail=matches level_021: similarity 0.89 >= 0.88",
+    "Could not generate valid level_029 after 100 attempts."
+  ],
+  "xcodegenNote": "project.yml includes resource directories. Production generation syncs TinyRoutes.xcodeproj with `xcodegen generate` before Swift tests unless `--no-xcodegen` is used."
 }

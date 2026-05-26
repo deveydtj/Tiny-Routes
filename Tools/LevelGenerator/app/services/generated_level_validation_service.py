@@ -7,6 +7,7 @@ from ..level_editor_imports import LevelValidationService, SolutionValidationSer
 from ..models.difficulty_preset import DifficultyPreset
 from .difficulty_service import DifficultyService
 from .graph_layout_service import BoundingBox, GraphLayoutService
+from .python_solution_simulator_service import PythonSolutionSimulatorService
 from .road_shape_service import RoadShapeService
 
 
@@ -38,6 +39,7 @@ class GeneratedLevelValidationService:
         self.solution_validation_service = SolutionValidationService()
         self.difficulty_service = DifficultyService()
         self.road_shape_service = RoadShapeService()
+        self.solution_simulator = PythonSolutionSimulatorService()
 
     def validate(
         self,
@@ -151,6 +153,7 @@ class GeneratedLevelValidationService:
                             related_node_id=detail[0] if detail else None,
                         )
                     )
+                messages.extend(self._readability_messages(level, layout, preset))
 
             previous_time: float | None = None
             tolerance = 1e-9
@@ -190,6 +193,88 @@ class GeneratedLevelValidationService:
                     )
                 )
 
+        try:
+            simulation = self.solution_simulator.simulate(generated_level)
+        except Exception as exc:
+            simulation = None
+            messages.append(
+                GeneratorValidationMessage(
+                    severity="error",
+                    code="solution_simulation_failed",
+                    message=f"Python solution simulation failed: {exc}",
+                )
+            )
+        else:
+            generated_level.simulation_result = simulation
+            if not simulation.passed:
+                messages.append(
+                    GeneratorValidationMessage(
+                        severity="error",
+                        code="solution_simulation_failed",
+                        message=f"Python solution simulation failed: {simulation.failure_reason}",
+                    )
+                )
+            elif preset is not None and enforce_difficulty:
+                messages.extend(self._simulation_difficulty_messages(simulation, preset))
+
+        return messages
+
+    def _simulation_difficulty_messages(self, simulation, preset: DifficultyPreset) -> list[GeneratorValidationMessage]:
+        ranges = {
+            "tutorial": (0.2, 8.0),
+            "easy": (0.8, 12.0),
+            "medium": (1.2, 16.0),
+            "hard": (1.8, 22.0),
+        }
+        minimum, maximum = ranges.get(preset.name, (0.0, 999.0))
+        if minimum <= simulation.elapsed_time_seconds <= maximum:
+            return []
+        return [
+            GeneratorValidationMessage(
+                severity="error",
+                code="route_length_outside_difficulty_range",
+                message=(
+                    f"Simulated route time {simulation.elapsed_time_seconds}s is outside "
+                    f"{preset.name} range {minimum}-{maximum}s."
+                ),
+            )
+        ]
+
+    def _readability_messages(self, level, layout: GraphLayoutService, preset: DifficultyPreset) -> list[GeneratorValidationMessage]:
+        positions = {node.id: (node.x, node.y) for node in level.graph.nodes}
+        edges = [(edge.fromNodeID, edge.toNodeID, edge.id) for edge in level.graph.edges]
+        summary = layout.readability_summary(positions, edges)
+        messages: list[GeneratorValidationMessage] = []
+        if summary["crossings"] > 1:
+            messages.append(
+                GeneratorValidationMessage(
+                    severity="error",
+                    code="too_many_edge_crossings",
+                    message=f"Layout has too many crossing edges: {summary['crossings']}.",
+                )
+            )
+        if summary["edgeSpacingIssues"] > 3:
+            messages.append(
+                GeneratorValidationMessage(
+                    severity="error",
+                    code="too_many_tight_edge_spacing_issues",
+                    message=f"Layout has too many tight edge spacing issues: {summary['edgeSpacingIssues']}.",
+                )
+            )
+        important_node_ids = [level.startNodeID, level.packageNodeID, level.destinationNodeID]
+        for index, first_id in enumerate(important_node_ids):
+            for second_id in important_node_ids[index + 1:]:
+                if first_id in positions and second_id in positions:
+                    distance = layout.point_distance(positions[first_id], positions[second_id])
+                    if distance < preset.minimum_node_distance * 1.5:
+                        messages.append(
+                            GeneratorValidationMessage(
+                                severity="error",
+                                code="important_nodes_too_close",
+                                message=f"Important nodes are too close: {first_id} and {second_id}.",
+                                related_node_id=first_id,
+                            )
+                        )
         return messages
 
 

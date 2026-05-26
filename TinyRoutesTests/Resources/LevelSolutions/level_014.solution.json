@@ -6,12 +6,12 @@
   "requiresWithinTimeLimit": true,
   "actions": [
     {
-      "timeSeconds": 0.4,
-      "tapNodeID": "switch_a"
+      "timeSeconds": 0.75,
+      "tapNodeID": "multi_switch_chain_split_dead_ends_switch_a"
     },
     {
-      "timeSeconds": 0.8,
-      "tapNodeID": "switch_b"
+      "timeSeconds": 2.45,
+      "tapNodeID": "multi_switch_chain_split_dead_ends_switch_b"
     }
   ]
 }

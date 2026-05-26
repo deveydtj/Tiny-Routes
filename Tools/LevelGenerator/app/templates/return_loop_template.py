@@ -2,12 +2,18 @@ from __future__ import annotations
 
 from ..models.difficulty_preset import DifficultyPreset
 from ..models.generated_level import GeneratedLevel
+from ..models.template_variant_spec import TemplateVariantSpec
 from ..random_source import RandomSource
 from .base_template import LevelTemplate
 
 
 class ReturnLoopTemplate(LevelTemplate):
     name = "return_loop"
+    variant_specs = [
+        TemplateVariantSpec("return_loop_classic", name, ("medium",)),
+        TemplateVariantSpec("return_loop_upper", name, ("medium",)),
+        TemplateVariantSpec("return_loop_lower", name, ("medium",)),
+    ]
 
     def supports_difficulty(self, preset: DifficultyPreset) -> bool:
         return preset.name == "medium" and preset.allow_return_loops and preset.allow_repeated_switch_taps
@@ -20,10 +26,10 @@ class ReturnLoopTemplate(LevelTemplate):
         rng: RandomSource,
     ) -> GeneratedLevel:
         builder = self.builder()
-        variant = rng.choice(["classic", "upper_loop", "lower_loop"])
+        variant = rng.choice([spec.name for spec in self.variant_specs if spec.supports_difficulty(preset.name)])
         positions, edges, tap_node_ids, route = _variant_spec(variant)
-        if rng.bool(0.5):
-            positions = {node_id: (-x, y) for node_id, (x, y) in positions.items()}
+        layout_variant = self.apply_layout_variant(positions, preset, rng)
+        positions = layout_variant.positions
 
         for node_id in positions:
             builder.add_node(node_id, *positions[node_id])
@@ -40,14 +46,21 @@ class ReturnLoopTemplate(LevelTemplate):
             time_limit_seconds=time_limit,
             par_taps=3,
         )
-        solution = self.solution_builder.build_tap_solution(
+        solution = self.solution_builder.build_route_timed_tap_solution(
             level_id,
             tap_node_ids,
+            route,
+            positions,
             preset,
             "Rotate alpha to collect the package, rotate beta onto the return path, then rotate alpha again for destination.",
-            times=[0.4, 1.2, 2.0],
         )
-        return self.generated(level, solution, preset, rng.seed, notes=[f"Template variant: {variant}"])
+        return self.generated(
+            level,
+            solution,
+            preset,
+            rng.seed,
+            notes=[f"Template variant: {variant}", f"Layout variant: {layout_variant.name}"],
+        )
 
 
 def _variant_spec(
@@ -58,7 +71,7 @@ def _variant_spec(
     list[str],
     list[str],
 ]:
-    if variant == "upper_loop":
+    if variant == "return_loop_upper":
         positions = {
             "start": (-1.1, -0.18),
             "upper_alpha_switch": (-0.5, -0.05),
@@ -87,7 +100,7 @@ def _variant_spec(
             "destination",
         ]
 
-    if variant == "lower_loop":
+    if variant == "return_loop_lower":
         positions = {
             "start": (-1.05, 0.2),
             "lower_alpha_switch": (-0.48, 0.02),

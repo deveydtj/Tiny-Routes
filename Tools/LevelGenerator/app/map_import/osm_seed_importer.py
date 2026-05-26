@@ -15,6 +15,13 @@ class MapSeedNode:
     y: float
     metadata: dict[str, Any] = field(default_factory=dict)
 
+    def to_dict(self) -> dict[str, Any]:
+        return {"id": self.id, "x": self.x, "y": self.y, "metadata": dict(self.metadata)}
+
+    @classmethod
+    def from_dict(cls, data: dict[str, Any]) -> "MapSeedNode":
+        return cls(id=str(data["id"]), x=float(data["x"]), y=float(data["y"]), metadata=dict(data.get("metadata", {})))
+
 
 @dataclass(frozen=True)
 class MapSeedEdge:
@@ -23,12 +30,44 @@ class MapSeedEdge:
     to_node_id: str
     metadata: dict[str, Any] = field(default_factory=dict)
 
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "id": self.id,
+            "fromNodeID": self.from_node_id,
+            "toNodeID": self.to_node_id,
+            "metadata": dict(self.metadata),
+        }
+
+    @classmethod
+    def from_dict(cls, data: dict[str, Any]) -> "MapSeedEdge":
+        return cls(
+            id=str(data["id"]),
+            from_node_id=str(data["fromNodeID"]),
+            to_node_id=str(data["toNodeID"]),
+            metadata=dict(data.get("metadata", {})),
+        )
+
 
 @dataclass(frozen=True)
 class MapSeedGraph:
     nodes: list[MapSeedNode]
     edges: list[MapSeedEdge]
     attribution: str = "Contains information from OpenStreetMap."
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "attribution": self.attribution,
+            "nodes": [node.to_dict() for node in self.nodes],
+            "edges": [edge.to_dict() for edge in self.edges],
+        }
+
+    @classmethod
+    def from_dict(cls, data: dict[str, Any]) -> "MapSeedGraph":
+        return cls(
+            nodes=[MapSeedNode.from_dict(node) for node in data.get("nodes", [])],
+            edges=[MapSeedEdge.from_dict(edge) for edge in data.get("edges", [])],
+            attribution=str(data.get("attribution", "Contains information from OpenStreetMap.")),
+        )
 
 
 class OSMSeedImporter:

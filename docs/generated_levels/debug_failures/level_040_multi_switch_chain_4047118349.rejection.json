@@ -1,0 +1,9 @@
+[
+  {
+    "severity": "error",
+    "code": "candidate_too_similar_to_batch",
+    "message": "matches level_035: same topology, solution, and layout (48410b41/0f206e7e)",
+    "related_node_id": null,
+    "related_edge_id": null
+  }
+]

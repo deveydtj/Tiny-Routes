@@ -1,0 +1,157 @@
+{
+  "id": "level_029",
+  "name": "Level 029",
+  "graph": {
+    "nodes": [
+      {
+        "id": "start",
+        "x": -1.15,
+        "y": -0.1,
+        "outgoingEdgeIDs": [
+          "e_start_multi_switch_chain_split_dead_ends_switch_a"
+        ]
+      },
+      {
+        "id": "multi_switch_chain_split_dead_ends_switch_a",
+        "x": -0.8,
+        "y": 0.25,
+        "outgoingEdgeIDs": [
+          "e_multi_switch_chain_split_dead_ends_switch_a_multi_switch_chain_split_dead_ends_dead_end_a",
+          "e_multi_switch_chain_split_dead_ends_switch_a_package"
+        ]
+      },
+      {
+        "id": "package",
+        "x": -0.4,
+        "y": 0.55,
+        "outgoingEdgeIDs": [
+          "e_package_multi_switch_chain_split_dead_ends_switch_b"
+        ]
+      },
+      {
+        "id": "multi_switch_chain_split_dead_ends_switch_b",
+        "x": 0.0,
+        "y": 0.25,
+        "outgoingEdgeIDs": [
+          "e_multi_switch_chain_split_dead_ends_switch_b_multi_switch_chain_split_dead_ends_dead_end_b",
+          "e_multi_switch_chain_split_dead_ends_switch_b_multi_switch_chain_split_dead_ends_switch_c"
+        ]
+      },
+      {
+        "id": "multi_switch_chain_split_dead_ends_switch_c",
+        "x": 0.4,
+        "y": -0.1,
+        "outgoingEdgeIDs": [
+          "e_multi_switch_chain_split_dead_ends_switch_c_multi_switch_chain_split_dead_ends_dead_end_c",
+          "e_multi_switch_chain_split_dead_ends_switch_c_multi_switch_chain_split_dead_ends_switch_d"
+        ]
+      },
+      {
+        "id": "multi_switch_chain_split_dead_ends_switch_d",
+        "x": 0.8,
+        "y": 0.25,
+        "outgoingEdgeIDs": [
+          "e_multi_switch_chain_split_dead_ends_switch_d_multi_switch_chain_split_dead_ends_dead_end_d",
+          "e_multi_switch_chain_split_dead_ends_switch_d_destination"
+        ]
+      },
+      {
+        "id": "destination",
+        "x": 1.15,
+        "y": -0.3,
+        "outgoingEdgeIDs": []
+      },
+      {
+        "id": "multi_switch_chain_split_dead_ends_dead_end_a",
+        "x": -0.8,
+        "y": 0.9,
+        "outgoingEdgeIDs": []
+      },
+      {
+        "id": "multi_switch_chain_split_dead_ends_dead_end_b",
+        "x": 0.0,
+        "y": -0.9,
+        "outgoingEdgeIDs": []
+      },
+      {
+        "id": "multi_switch_chain_split_dead_ends_dead_end_c",
+        "x": 0.4,
+        "y": 0.9,
+        "outgoingEdgeIDs": []
+      },
+      {
+        "id": "multi_switch_chain_split_dead_ends_dead_end_d",
+        "x": 0.8,
+        "y": -0.9,
+        "outgoingEdgeIDs": []
+      }
+    ],
+    "edges": [
+      {
+        "id": "e_start_multi_switch_chain_split_dead_ends_switch_a",
+        "fromNodeID": "start",
+        "toNodeID": "multi_switch_chain_split_dead_ends_switch_a",
+        "roadShape": "verticalFirst"
+      },
+      {
+        "id": "e_multi_switch_chain_split_dead_ends_switch_a_multi_switch_chain_split_dead_ends_dead_end_a",
+        "fromNodeID": "multi_switch_chain_split_dead_ends_switch_a",
+        "toNodeID": "multi_switch_chain_split_dead_ends_dead_end_a",
+        "roadShape": "verticalFirst"
+      },
+      {
+        "id": "e_multi_switch_chain_split_dead_ends_switch_a_package",
+        "fromNodeID": "multi_switch_chain_split_dead_ends_switch_a",
+        "toNodeID": "package",
+        "roadShape": "horizontalFirst"
+      },
+      {
+        "id": "e_package_multi_switch_chain_split_dead_ends_switch_b",
+        "fromNodeID": "package",
+        "toNodeID": "multi_switch_chain_split_dead_ends_switch_b",
+        "roadShape": "horizontalFirst"
+      },
+      {
+        "id": "e_multi_switch_chain_split_dead_ends_switch_b_multi_switch_chain_split_dead_ends_dead_end_b",
+        "fromNodeID": "multi_switch_chain_split_dead_ends_switch_b",
+        "toNodeID": "multi_switch_chain_split_dead_ends_dead_end_b",
+        "roadShape": "verticalFirst"
+      },
+      {
+        "id": "e_multi_switch_chain_split_dead_ends_switch_b_multi_switch_chain_split_dead_ends_switch_c",
+        "fromNodeID": "multi_switch_chain_split_dead_ends_switch_b",
+        "toNodeID": "multi_switch_chain_split_dead_ends_switch_c",
+        "roadShape": "horizontalFirst"
+      },
+      {
+        "id": "e_multi_switch_chain_split_dead_ends_switch_c_multi_switch_chain_split_dead_ends_dead_end_c",
+        "fromNodeID": "multi_switch_chain_split_dead_ends_switch_c",
+        "toNodeID": "multi_switch_chain_split_dead_ends_dead_end_c",
+        "roadShape": "verticalFirst"
+      },
+      {
+        "id": "e_multi_switch_chain_split_dead_ends_switch_c_multi_switch_chain_split_dead_ends_switch_d",
+        "fromNodeID": "multi_switch_chain_split_dead_ends_switch_c",
+        "toNodeID": "multi_switch_chain_split_dead_ends_switch_d",
+        "roadShape": "horizontalFirst"
+      },
+      {
+        "id": "e_multi_switch_chain_split_dead_ends_switch_d_multi_switch_chain_split_dead_ends_dead_end_d",
+        "fromNodeID": "multi_switch_chain_split_dead_ends_switch_d",
+        "toNodeID": "multi_switch_chain_split_dead_ends_dead_end_d",
+        "roadShape": "verticalFirst"
+      },
+      {
+        "id": "e_multi_switch_chain_split_dead_ends_switch_d_destination",
+        "fromNodeID": "multi_switch_chain_split_dead_ends_switch_d",
+        "toNodeID": "destination",
+        "roadShape": "verticalFirst"
+      }
+    ]
+  },
+  "startNodeID": "start",
+  "packageNodeID": "package",
+  "destinationNodeID": "destination",
+  "timeLimitSeconds": 30,
+  "parTaps": 4
+}

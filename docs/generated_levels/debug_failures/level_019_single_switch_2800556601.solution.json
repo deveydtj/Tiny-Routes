@@ -1,0 +1,13 @@
+{
+  "levelID": "level_019",
+  "description": "Rotate choice once so the route collects the package before heading to destination.",
+  "expectedOutcome": "completed",
+  "maxTaps": 1,
+  "requiresWithinTimeLimit": true,
+  "actions": [
+    {
+      "timeSeconds": 0.8,
+      "tapNodeID": "short_choice"
+    }
+  ]
+}

@@ -2,12 +2,20 @@ from __future__ import annotations
 
 from ..models.difficulty_preset import DifficultyPreset
 from ..models.generated_level import GeneratedLevel
+from ..models.template_variant_spec import TemplateVariantSpec
 from ..random_source import RandomSource
 from .base_template import LevelTemplate
 
 
 class MultiSwitchChainTemplate(LevelTemplate):
     name = "multi_switch_chain"
+    variant_specs = [
+        TemplateVariantSpec("multi_switch_chain_zigzag", name, ("medium", "hard")),
+        TemplateVariantSpec("multi_switch_chain_stair_step", name, ("medium", "hard")),
+        TemplateVariantSpec("multi_switch_chain_split_dead_ends", name, ("medium", "hard")),
+        TemplateVariantSpec("multi_switch_chain_four_switch", name, ("hard",)),
+        TemplateVariantSpec("multi_switch_chain_double_gate", name, ("hard",)),
+    ]
 
     def supports_difficulty(self, preset: DifficultyPreset) -> bool:
         return preset.name in {"medium", "hard"}
@@ -19,8 +27,11 @@ class MultiSwitchChainTemplate(LevelTemplate):
         preset: DifficultyPreset,
         rng: RandomSource,
     ) -> GeneratedLevel:
-        variant = rng.choice(["zigzag", "stair_step", "split_dead_ends"])
-        required_switch_count = rng.randint(2, 3) if preset.name == "medium" else rng.randint(3, 4)
+        variant = rng.choice([spec.name for spec in self.variant_specs if spec.supports_difficulty(preset.name)])
+        if variant in {"multi_switch_chain_four_switch", "multi_switch_chain_double_gate"}:
+            required_switch_count = 4
+        else:
+            required_switch_count = rng.randint(2, 3) if preset.name == "medium" else rng.randint(3, 4)
         switch_ids = [f"{variant}_switch_{chr(ord('a') + index)}" for index in range(required_switch_count)]
         builder = self.builder()
 
@@ -39,6 +50,9 @@ class MultiSwitchChainTemplate(LevelTemplate):
             switch_x, switch_y = positions[switch_id]
             dead_y = _dead_end_y_for_variant(variant, index, switch_y)
             positions[dead_id] = (switch_x, dead_y)
+
+        layout_variant = self.apply_layout_variant(positions, preset, rng)
+        positions = layout_variant.positions
 
         for node_id in positions:
             builder.add_node(node_id, *positions[node_id])
@@ -65,38 +79,44 @@ class MultiSwitchChainTemplate(LevelTemplate):
             time_limit_seconds=time_limit,
             par_taps=required_switch_count,
         )
-        tap_times = [round(0.4 + (index * preset.min_tap_spacing_seconds), 2) for index in range(required_switch_count)]
-        solution = self.solution_builder.build_tap_solution(
+        solution = self.solution_builder.build_route_timed_tap_solution(
             level_id,
             switch_ids,
+            core_route,
+            positions,
             preset,
             "Rotate each chain switch once so the route avoids dead ends and completes delivery.",
-            times=tap_times,
         )
-        return self.generated(level, solution, preset, rng.seed, notes=[f"Template variant: {variant}"])
+        return self.generated(
+            level,
+            solution,
+            preset,
+            rng.seed,
+            notes=[f"Template variant: {variant}", f"Layout variant: {layout_variant.name}"],
+        )
 
 
 def _route_y_for_variant(variant: str, index: int, route_length: int) -> float:
-    if variant == "stair_step":
+    if "stair_step" in variant:
         if route_length <= 1:
             return 0.0
         return round(-0.45 + (index * (0.9 / (route_length - 1))), 4)
-    if variant == "split_dead_ends":
+    if "split_dead_ends" in variant or "double_gate" in variant:
         return -0.12 if index % 2 == 0 else 0.28
     return 0.18 if index % 2 == 0 else -0.18
 
 
 def _destination_y_for_variant(variant: str) -> float:
-    if variant == "stair_step":
+    if "stair_step" in variant:
         return 0.52
-    if variant == "split_dead_ends":
+    if "split_dead_ends" in variant or "double_gate" in variant:
         return -0.32
     return 0.35
 
 
 def _dead_end_y_for_variant(variant: str, index: int, switch_y: float) -> float:
-    if variant == "split_dead_ends":
+    if "split_dead_ends" in variant or "double_gate" in variant:
         return 0.92 if index % 2 == 0 else -0.92
-    if variant == "stair_step":
+    if "stair_step" in variant:
         return -0.95 if index % 2 == 0 else 0.95
     return -0.95 if switch_y >= 0 else 0.95

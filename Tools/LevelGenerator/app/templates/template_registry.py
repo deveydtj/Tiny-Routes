@@ -50,6 +50,7 @@ class TemplateRegistry:
         preset: DifficultyPreset,
         rng: RandomSource,
         include_swift_required: bool = True,
+        weights_override: dict[str, int] | None = None,
     ) -> LevelTemplate:
         key = name.strip().lower()
         if key != "mixed":
@@ -61,14 +62,21 @@ class TemplateRegistry:
             return template
 
         weighted = [
-            (template, self._weight_for(template.name, preset.name))
+            (template, self._weight_for(template.name, preset.name, weights_override))
             for template in self.supported_templates(preset, include_swift_required=include_swift_required)
         ]
         if not weighted:
             raise ValueError(f"No templates support difficulty '{preset.name}'")
         return rng.weighted_choice(weighted)
 
-    def _weight_for(self, template_name: str, difficulty_name: str) -> int:
+    def _weight_for(
+        self,
+        template_name: str,
+        difficulty_name: str,
+        weights_override: dict[str, int] | None = None,
+    ) -> int:
+        if weights_override is not None and template_name in weights_override:
+            return weights_override[template_name]
         weights = {
             "tutorial": {"straight_delivery": 5, "single_switch": 3},
             "easy": {"single_switch": 5, "package_gate": 3},

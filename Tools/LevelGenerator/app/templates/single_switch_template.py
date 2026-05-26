@@ -2,12 +2,19 @@ from __future__ import annotations
 
 from ..models.difficulty_preset import DifficultyPreset
 from ..models.generated_level import GeneratedLevel
+from ..models.template_variant_spec import TemplateVariantSpec
 from ..random_source import RandomSource
 from .base_template import LevelTemplate
 
 
 class SingleSwitchTemplate(LevelTemplate):
     name = "single_switch"
+    variant_specs = [
+        TemplateVariantSpec("single_switch_classic", name, ("tutorial", "easy")),
+        TemplateVariantSpec("single_switch_upper_package", name, ("easy",)),
+        TemplateVariantSpec("single_switch_lower_package", name, ("easy",)),
+        TemplateVariantSpec("single_switch_short_dead_end", name, ("easy",)),
+    ]
 
     def supports_difficulty(self, preset: DifficultyPreset) -> bool:
         return preset.name in {"tutorial", "easy"}
@@ -21,10 +28,10 @@ class SingleSwitchTemplate(LevelTemplate):
     ) -> GeneratedLevel:
         builder = self.builder()
         include_approach = preset.name != "tutorial"
-        variant = rng.choice(["classic", "upper_package", "lower_package", "short_dead_end"])
+        variant = rng.choice([spec.name for spec in self.variant_specs if spec.supports_difficulty(preset.name)])
         positions, switch_id, dead_end_id, route = _variant_spec(variant, include_approach)
-        if rng.bool(0.5):
-            positions = {node_id: (x, -y) for node_id, (x, y) in positions.items()}
+        layout_variant = self.apply_layout_variant(positions, preset, rng)
+        positions = layout_variant.positions
 
         node_ids = ["start"]
         if include_approach:
@@ -52,21 +59,28 @@ class SingleSwitchTemplate(LevelTemplate):
             time_limit_seconds=time_limit,
             par_taps=1,
         )
-        solution = self.solution_builder.build_tap_solution(
+        solution = self.solution_builder.build_route_timed_tap_solution(
             level_id,
             [switch_id],
+            route,
+            positions,
             preset,
             "Rotate choice once so the route collects the package before heading to destination.",
-            times=[0.4],
         )
-        return self.generated(level, solution, preset, rng.seed, notes=[f"Template variant: {variant}"])
+        return self.generated(
+            level,
+            solution,
+            preset,
+            rng.seed,
+            notes=[f"Template variant: {variant}", f"Layout variant: {layout_variant.name}"],
+        )
 
 
 def _variant_spec(
     variant: str,
     include_approach: bool,
 ) -> tuple[dict[str, tuple[float, float]], str, str, list[str]]:
-    if variant == "upper_package":
+    if variant == "single_switch_upper_package":
         switch_id = "upper_choice"
         dead_end_id = "upper_dead_end"
         positions = {
@@ -77,7 +91,7 @@ def _variant_spec(
             "package": (0.7, 0.6),
             "destination": (1.08, 0.9),
         }
-    elif variant == "lower_package":
+    elif variant == "single_switch_lower_package":
         switch_id = "lower_choice"
         dead_end_id = "lower_dead_end"
         positions = {
@@ -88,7 +102,7 @@ def _variant_spec(
             "package": (0.7, -0.6),
             "destination": (1.08, -0.9),
         }
-    elif variant == "short_dead_end":
+    elif variant == "single_switch_short_dead_end":
         switch_id = "short_choice"
         dead_end_id = "short_dead_end"
         positions = {

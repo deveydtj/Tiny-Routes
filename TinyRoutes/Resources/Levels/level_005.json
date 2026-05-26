@@ -5,47 +5,47 @@
     "nodes": [
       {
         "id": "start",
-        "x": -1.1,
-        "y": 0.0,
+        "x": -1.0,
+        "y": 0.25,
         "outgoingEdgeIDs": [
           "e_start_approach"
         ]
       },
       {
         "id": "approach",
-        "x": -0.55,
-        "y": 0.0,
+        "x": -0.5,
+        "y": 0.15,
         "outgoingEdgeIDs": [
-          "e_approach_choice"
+          "e_approach_lower_choice"
         ]
       },
       {
-        "id": "choice",
-        "x": 0.0,
+        "id": "lower_choice",
+        "x": 0.1,
         "y": 0.0,
         "outgoingEdgeIDs": [
-          "e_choice_dead_end_a",
-          "e_choice_package"
+          "e_lower_choice_lower_dead_end",
+          "e_lower_choice_package"
         ]
       },
       {
-        "id": "dead_end_a",
-        "x": 0.75,
-        "y": -0.65,
+        "id": "lower_dead_end",
+        "x": 0.85,
+        "y": 0.75,
         "outgoingEdgeIDs": []
       },
       {
         "id": "package",
-        "x": 0.72,
-        "y": 0.55,
+        "x": 0.8,
+        "y": -0.5,
         "outgoingEdgeIDs": [
           "e_package_destination"
         ]
       },
       {
         "id": "destination",
-        "x": 1.1,
-        "y": 0.95,
+        "x": 1.15,
+        "y": -0.8,
         "outgoingEdgeIDs": []
       }
     ],
@@ -57,20 +57,20 @@
         "roadShape": "horizontalFirst"
       },
       {
-        "id": "e_approach_choice",
+        "id": "e_approach_lower_choice",
         "fromNodeID": "approach",
-        "toNodeID": "choice",
+        "toNodeID": "lower_choice",
         "roadShape": "horizontalFirst"
       },
       {
-        "id": "e_choice_dead_end_a",
-        "fromNodeID": "choice",
-        "toNodeID": "dead_end_a",
+        "id": "e_lower_choice_lower_dead_end",
+        "fromNodeID": "lower_choice",
+        "toNodeID": "lower_dead_end",
         "roadShape": "horizontalFirst"
       },
       {
-        "id": "e_choice_package",
-        "fromNodeID": "choice",
+        "id": "e_lower_choice_package",
+        "fromNodeID": "lower_choice",
         "toNodeID": "package",
         "roadShape": "horizontalFirst"
       },
@@ -78,7 +78,7 @@
         "id": "e_package_destination",
         "fromNodeID": "package",
         "toNodeID": "destination",
-        "roadShape": "verticalFirst"
+        "roadShape": "horizontalFirst"
       }
     ]
   },

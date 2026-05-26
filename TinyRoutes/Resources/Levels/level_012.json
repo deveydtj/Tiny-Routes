@@ -5,7 +5,7 @@
     "nodes": [
       {
         "id": "start",
-        "x": 1.1,
+        "x": -1.1,
         "y": 0.0,
         "outgoingEdgeIDs": [
           "e_start_alpha_switch"
@@ -13,8 +13,8 @@
       },
       {
         "id": "alpha_switch",
-        "x": 0.45,
-        "y": 0.0,
+        "x": -0.5,
+        "y": -0.05,
         "outgoingEdgeIDs": [
           "e_alpha_switch_destination",
           "e_alpha_switch_package"
@@ -22,7 +22,7 @@
       },
       {
         "id": "package",
-        "x": -0.1,
+        "x": 0.1,
         "y": 0.75,
         "outgoingEdgeIDs": [
           "e_package_beta_switch"
@@ -30,8 +30,8 @@
       },
       {
         "id": "beta_switch",
-        "x": -0.75,
-        "y": 0.75,
+        "x": 0.75,
+        "y": 0.7,
         "outgoingEdgeIDs": [
           "e_beta_switch_dead_end_a",
           "e_beta_switch_return_a"
@@ -39,7 +39,7 @@
       },
       {
         "id": "return_a",
-        "x": -0.75,
+        "x": 0.75,
         "y": -0.55,
         "outgoingEdgeIDs": [
           "e_return_a_alpha_switch"
@@ -47,13 +47,13 @@
       },
       {
         "id": "destination",
-        "x": 0.05,
+        "x": -0.05,
         "y": -1.05,
         "outgoingEdgeIDs": []
       },
       {
         "id": "dead_end_a",
-        "x": -1.15,
+        "x": 1.15,
         "y": 0.15,
         "outgoingEdgeIDs": []
       }

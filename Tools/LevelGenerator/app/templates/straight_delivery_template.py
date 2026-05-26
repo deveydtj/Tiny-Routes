@@ -33,8 +33,8 @@ class StraightDeliveryTemplate(LevelTemplate):
             (1.1, -0.95),
         ]
         positions = _spread_positions(route_ids, base_positions)
-        if rng.bool(0.35):
-            positions = {node_id: (x, -y) for node_id, (x, y) in positions.items()}
+        layout_variant = self.apply_layout_variant(positions, preset, rng)
+        positions = layout_variant.positions
 
         for node_id in route_ids:
             builder.add_node(node_id, *positions[node_id])
@@ -52,7 +52,7 @@ class StraightDeliveryTemplate(LevelTemplate):
             par_taps=0,
         )
         solution = self.solution_builder.build_no_tap_solution(level_id)
-        return self.generated(level, solution, preset, rng.seed)
+        return self.generated(level, solution, preset, rng.seed, notes=[f"Layout variant: {layout_variant.name}"])
 
 
 def _spread_positions(route_ids: list[str], base_positions: list[tuple[float, float]]) -> dict[str, tuple[float, float]]:

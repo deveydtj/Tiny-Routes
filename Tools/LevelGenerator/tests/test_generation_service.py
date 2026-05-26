@@ -1,7 +1,12 @@
 from __future__ import annotations
 
+import json
+
 from app.generation_config import GenerationConfig
+from app.models.generation_quality import GenerationQualityScore
+from app.map_import.osm_seed_importer import MapSeedEdge, MapSeedGraph, MapSeedNode
 from app.random_source import RandomSource
+from app.repositories.generated_level_repository import GeneratedLevelRepository
 from app.services.generated_level_validation_service import GeneratorValidationMessage, GeneratorValidationResult
 from app.services.level_generation_service import LevelGenerationService
 from app.templates.single_switch_template import SingleSwitchTemplate
@@ -9,7 +14,7 @@ from app.templates.single_switch_template import SingleSwitchTemplate
 
 def _config(tmp_path, **kwargs) -> GenerationConfig:
     return GenerationConfig(
-        start_level_number=12,
+        start_level_number=kwargs.pop("start_level_number", 12),
         count=kwargs.pop("count", 1),
         difficulty=kwargs.pop("difficulty", "tutorial"),
         template_name=kwargs.pop("template_name", "straight_delivery"),
@@ -146,3 +151,156 @@ def test_generation_service_generates_unique_medium_mixed_batch(tmp_path) -> Non
     assert result.passed is True
     assert len(result.accepted) == 10
     assert len(signatures) == len(result.accepted)
+
+
+def test_generation_service_rejects_candidates_similar_to_existing_levels(tmp_path) -> None:
+    preset_result = LevelGenerationService()
+    preset = preset_result.difficulty_service.get_preset("easy")
+    existing = SingleSwitchTemplate().generate("level_001", 1, preset, RandomSource(2))
+    writer = GeneratedLevelRepository()
+    writer.write_level(existing.level_document, tmp_path / "levels" / "level_001.json")
+    writer.write_solution(existing.solution, tmp_path / "solutions" / "level_001.solution.json")
+
+    service = LevelGenerationService()
+
+    class FixedSingleSwitchTemplate:
+        requires_swift_validation = False
+
+        def generate(self, level_id, level_number, preset, rng):
+            return SingleSwitchTemplate().generate(level_id, level_number, preset, RandomSource(2))
+
+    service.template_registry.choose = lambda *args, **kwargs: FixedSingleSwitchTemplate()
+
+    result = service.generate(
+        _config(
+            tmp_path,
+            difficulty="easy",
+            template_name="single_switch",
+            max_attempts_per_level=1,
+            dry_run=True,
+        )
+    )
+
+    assert result.passed is False
+    assert result.rejection_reason_counts["candidate_too_similar_to_existing"] == 1
+    assert "matches level_001" in result.messages[-2]
+
+
+def test_generation_service_can_skip_existing_similarity_check(tmp_path) -> None:
+    preset_result = LevelGenerationService()
+    preset = preset_result.difficulty_service.get_preset("easy")
+    existing = SingleSwitchTemplate().generate("level_001", 1, preset, RandomSource(2))
+    writer = GeneratedLevelRepository()
+    writer.write_level(existing.level_document, tmp_path / "levels" / "level_001.json")
+    writer.write_solution(existing.solution, tmp_path / "solutions" / "level_001.solution.json")
+
+    service = LevelGenerationService()
+    service.template_registry.choose = lambda *args, **kwargs: SingleSwitchTemplate()
+
+    result = service.generate(
+        _config(
+            tmp_path,
+            difficulty="easy",
+            template_name="single_switch",
+            seed=2,
+            dry_run=True,
+            compare_against_existing=False,
+        )
+    )
+
+    assert result.passed is True
+    assert result.rejection_reason_counts.get("candidate_too_similar_to_existing") is None
+
+
+def test_generation_service_selects_highest_quality_candidate_from_pool(tmp_path) -> None:
+    service = LevelGenerationService()
+    seeds = iter([2, 3])
+
+    class SequenceTemplate:
+        requires_swift_validation = False
+
+        def generate(self, level_id, level_number, preset, rng):
+            return SingleSwitchTemplate().generate(level_id, level_number, preset, RandomSource(next(seeds)))
+
+    class FakeQualityService:
+        def score(self, candidate, preset, comparison_signatures):
+            total = 0.9 if candidate.seed == 3 else 0.1
+            return GenerationQualityScore(
+                total=total,
+                readability=total,
+                uniqueness=1,
+                difficulty_fit=1,
+                route_interest=total,
+            )
+
+    service.template_registry.choose = lambda *args, **kwargs: SequenceTemplate()
+    service.quality_service = FakeQualityService()
+
+    result = service.generate(
+        _config(
+            tmp_path,
+            difficulty="easy",
+            template_name="single_switch",
+            dry_run=True,
+            compare_against_existing=False,
+            candidate_pool_size=2,
+        )
+    )
+
+    assert result.passed is True
+    assert result.accepted[0].seed == 3
+    assert result.accepted[0].quality_score.total == 0.9
+
+
+def test_generation_service_auto_difficulty_reports_actual_difficulty(tmp_path) -> None:
+    result = LevelGenerationService().generate(
+        _config(
+            tmp_path,
+            start_level_number=9,
+            count=4,
+            difficulty="auto",
+            template_name="mixed",
+            dry_run=True,
+            compare_against_existing=False,
+        )
+    )
+
+    assert result.passed is True
+    assert [level.difficulty for level in result.accepted] == ["easy", "easy", "medium", "medium"]
+
+
+def test_generation_service_applies_map_seed_path(tmp_path) -> None:
+    map_seed_path = tmp_path / "seed.json"
+    seed_graph = MapSeedGraph(
+        nodes=[
+            MapSeedNode("a", 0, 0),
+            MapSeedNode("b", 1, 0),
+            MapSeedNode("c", 2, 1),
+            MapSeedNode("d", 3, 1),
+            MapSeedNode("e", 4, 0),
+            MapSeedNode("f", 5, 0),
+        ],
+        edges=[
+            MapSeedEdge("e1", "a", "b"),
+            MapSeedEdge("e2", "b", "c"),
+            MapSeedEdge("e3", "c", "d"),
+            MapSeedEdge("e4", "d", "e"),
+            MapSeedEdge("e5", "e", "f"),
+        ],
+        attribution="test map",
+    )
+    map_seed_path.write_text(json.dumps(seed_graph.to_dict()) + "\n", encoding="utf-8")
+
+    result = LevelGenerationService().generate(
+        _config(
+            tmp_path,
+            difficulty="easy",
+            template_name="single_switch",
+            dry_run=True,
+            compare_against_existing=False,
+            map_seed_path=map_seed_path,
+        )
+    )
+
+    assert result.passed is True
+    assert any("Map attribution" in note for note in result.accepted[0].generation_notes)

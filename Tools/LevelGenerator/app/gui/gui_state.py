@@ -17,12 +17,15 @@ class GuiGenerationState:
     dry_run: bool = True
     overwrite: bool = False
     run_swift_tests: bool = False
+    compare_against_existing: bool = True
     levels_output_dir: str = ""
     solutions_output_dir: str = ""
     report_path: str = ""
     json_report_path: str = ""
+    map_seed_path: str = ""
     debug_failures_dir: str = ""
     max_attempts_per_level: str = "100"
+    candidate_pool_size: str = "1"
     swift_timeout_seconds: str = "180"
 
 
@@ -43,6 +46,7 @@ def to_generation_config(state: GuiGenerationState) -> GenerationConfig:
     start_level_number = parse_positive_int(state.start_level_number, "Start level number")
     count = parse_positive_int(state.count, "Count")
     max_attempts_per_level = parse_positive_int(state.max_attempts_per_level, "Max attempts per level")
+    candidate_pool_size = parse_positive_int(state.candidate_pool_size, "Candidate pool size")
     swift_timeout_seconds = parse_positive_int(state.swift_timeout_seconds, "Swift timeout seconds")
     seed = _parse_optional_int(state.seed, "Seed")
 
@@ -66,6 +70,7 @@ def to_generation_config(state: GuiGenerationState) -> GenerationConfig:
         count=count,
         seed=seed,
         max_attempts_per_level=max_attempts_per_level,
+        candidate_pool_size=candidate_pool_size,
         swift_timeout_seconds=swift_timeout_seconds,
         levels_output_dir=levels_output_dir,
         solutions_output_dir=solutions_output_dir,
@@ -82,12 +87,15 @@ def to_generation_config(state: GuiGenerationState) -> GenerationConfig:
         dry_run=state.dry_run,
         overwrite=state.overwrite,
         run_swift_tests=state.run_swift_tests,
+        compare_against_existing=state.compare_against_existing,
         levels_output_dir=levels_output_dir,
         solutions_output_dir=solutions_output_dir,
         report_path=report_path,
         json_report_path=json_report_path,
+        map_seed_path=Path(state.map_seed_path).expanduser() if state.map_seed_path.strip() else None,
         debug_failures_dir=Path(state.debug_failures_dir).expanduser() if state.debug_failures_dir.strip() else None,
         max_attempts_per_level=max_attempts_per_level,
+        candidate_pool_size=candidate_pool_size,
         swift_timeout_seconds=swift_timeout_seconds,
         command_arguments=command_arguments,
     )
@@ -108,12 +116,18 @@ def build_command_preview(state: GuiGenerationState) -> str:
         args.append("--swift-tests")
     else:
         args.append("--no-swift-tests")
+    if state.compare_against_existing:
+        args.append("--compare-existing")
+    else:
+        args.append("--no-compare-existing")
     _append_pair(args, "--output-levels", state.levels_output_dir)
     _append_pair(args, "--output-solutions", state.solutions_output_dir)
     _append_pair(args, "--report", state.report_path)
     _append_pair(args, "--json-report", state.json_report_path)
+    _append_pair(args, "--map-seed-path", state.map_seed_path)
     _append_pair(args, "--debug-failures", state.debug_failures_dir)
     _append_pair(args, "--max-attempts-per-level", state.max_attempts_per_level)
+    _append_pair(args, "--candidate-pool-size", state.candidate_pool_size)
     _append_pair(args, "--swift-timeout-seconds", state.swift_timeout_seconds)
     return " ".join(_quote_command_part(part) for part in args)
 
@@ -141,6 +155,7 @@ def _build_command_arguments(
     count: int,
     seed: int | None,
     max_attempts_per_level: int,
+    candidate_pool_size: int,
     swift_timeout_seconds: int,
     levels_output_dir: Path,
     solutions_output_dir: Path,
@@ -164,6 +179,7 @@ def _build_command_arguments(
     if state.overwrite:
         args.append("--overwrite")
     args.append("--swift-tests" if state.run_swift_tests else "--no-swift-tests")
+    args.append("--compare-existing" if state.compare_against_existing else "--no-compare-existing")
     args.extend(
         [
             "--output-levels",
@@ -178,7 +194,10 @@ def _build_command_arguments(
     )
     if state.debug_failures_dir.strip():
         args.extend(["--debug-failures", str(Path(state.debug_failures_dir).expanduser())])
+    if state.map_seed_path.strip():
+        args.extend(["--map-seed-path", str(Path(state.map_seed_path).expanduser())])
     args.extend(["--max-attempts-per-level", str(max_attempts_per_level)])
+    args.extend(["--candidate-pool-size", str(candidate_pool_size)])
     args.extend(["--swift-timeout-seconds", str(swift_timeout_seconds)])
     return args
 

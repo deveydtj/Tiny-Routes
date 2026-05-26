@@ -6,35 +6,50 @@ from pathlib import Path
 
 from ..generation_config import GenerationConfig
 from ..level_numbering import format_level_id
+from ..map_import.map_seed_to_template_adapter import MapSeedToTemplateAdapter
+from ..map_import.osm_seed_importer import MapSeedGraph
 from ..models.generation_result import GenerationResult
-from ..paths import find_repo_root
+from ..paths import find_repo_root, get_default_reports_directory
 from ..random_source import RandomSource
+from ..repositories.existing_level_repository import ExistingLevelRepository
 from ..repositories.generated_level_repository import GeneratedLevelRepository
 from ..repositories.generation_report_repository import GenerationReportRepository
 from ..templates.template_registry import TemplateRegistry
 from .candidate_rejection_service import CandidateRejectionService
 from .candidate_signature_service import CandidateSignatureService
 from .candidate_uniqueness_service import CandidateUniquenessService
+from .difficulty_curve_service import DifficultyCurveService
 from .difficulty_service import DifficultyService
 from .generated_level_validation_service import GeneratedLevelValidationService
+from .generation_quality_service import GenerationQualityService
+from .level_resource_sync_service import LevelResourceSyncService
 from .swift_test_service import SwiftTestService
 
 
 class LevelGenerationService:
     def __init__(self) -> None:
         self.difficulty_service = DifficultyService()
+        self.difficulty_curve_service = DifficultyCurveService()
         self.template_registry = TemplateRegistry()
         self.validation_service = GeneratedLevelValidationService()
         self.generated_level_repository = GeneratedLevelRepository()
         self.report_repository = GenerationReportRepository()
         self.signature_service = CandidateSignatureService()
+        self.existing_level_repository = ExistingLevelRepository(self.signature_service)
         self.uniqueness_service = CandidateUniquenessService()
+        self.quality_service = GenerationQualityService()
+        self.map_seed_adapter = MapSeedToTemplateAdapter()
+        self.resource_sync_service = LevelResourceSyncService()
 
     def generate(self, config: GenerationConfig) -> GenerationResult:
         result = GenerationResult()
         try:
-            preset = self.difficulty_service.get_preset(config.difficulty)
-            self._validate_template(config.template_name, preset, config)
+            batch_plan = self.difficulty_curve_service.build_plan(
+                config.start_level_number,
+                config.count,
+                config.difficulty,
+            )
+            self._validate_template(config.template_name, config)
             self._preflight_output_collisions(config)
         except Exception as exc:
             result.passed = False
@@ -45,14 +60,28 @@ class LevelGenerationService:
         rejection_service = CandidateRejectionService()
         base_rng = RandomSource(config.base_seed)
         accepted_signatures = []
+        target_level_ids = {
+            format_level_id(config.start_level_number + offset)
+            for offset in range(config.count)
+        }
+        existing_signatures = self._load_existing_signatures(config, result, target_level_ids)
+        map_seed_graph = self._load_map_seed_graph(config, result)
+        if config.map_seed_path is not None and map_seed_graph is None:
+            result.passed = False
+            self._write_reports(config, result)
+            return result
 
         for offset in range(config.count):
-            level_number = config.start_level_number + offset
-            level_id = format_level_id(level_number)
+            plan_entry = batch_plan.entries[offset]
+            level_number = plan_entry.level_number
+            level_id = plan_entry.level_id
+            preset = self.difficulty_service.get_preset(plan_entry.difficulty)
             accepted_candidate = None
+            candidate_pool = []
+            candidate_pool_signatures = []
 
             for attempt in range(config.max_attempts_per_level):
-                candidate_seed = base_rng.child_seed(config.difficulty, config.template_name, level_id, attempt)
+                candidate_seed = base_rng.child_seed(plan_entry.difficulty, config.template_name, level_id, attempt)
                 rng = RandomSource(candidate_seed)
                 try:
                     include_swift_required = config.run_swift_tests or config.dry_run
@@ -61,8 +90,11 @@ class LevelGenerationService:
                         preset,
                         rng,
                         include_swift_required=include_swift_required,
+                        weights_override=plan_entry.template_weights if config.difficulty == "auto" else None,
                     )
                     candidate = template.generate(level_id, level_number, preset, rng)
+                    if map_seed_graph is not None:
+                        candidate = self.map_seed_adapter.apply_to_generated_level(map_seed_graph, candidate, rng)
                 except Exception as exc:
                     rejection_service.reason_counts["candidate_generation_error"] += 1
                     result.messages.append(f"Rejected candidate {level_id} attempt={attempt}: {exc}")
@@ -81,7 +113,7 @@ class LevelGenerationService:
                     candidate_signature = self.signature_service.signature_for(candidate)
                     duplicate_result = self.uniqueness_service.check_duplicate(
                         candidate_signature,
-                        accepted_signatures,
+                        [*accepted_signatures, *candidate_pool_signatures],
                     )
                     if duplicate_result.is_duplicate:
                         message = rejection_service.record_custom_rejection(
@@ -93,12 +125,45 @@ class LevelGenerationService:
                         result.messages.append(message)
                         continue
 
+                    if config.compare_against_existing:
+                        existing_duplicate_result = self.uniqueness_service.check_duplicate(
+                            candidate_signature,
+                            existing_signatures,
+                        )
+                        if existing_duplicate_result.is_duplicate:
+                            message = rejection_service.record_custom_rejection(
+                                candidate,
+                                "candidate_too_similar_to_existing",
+                                existing_duplicate_result.message,
+                                config.debug_failures_dir,
+                            )
+                            result.messages.append(message)
+                            continue
+
                     candidate.candidate_signature = candidate_signature
-                    accepted_candidate = candidate
-                    accepted_signatures.append(candidate_signature)
-                    break
+                    candidate.quality_score = self.quality_service.score(
+                        candidate,
+                        preset,
+                        [
+                            *accepted_signatures,
+                            *candidate_pool_signatures,
+                            *(existing_signatures if config.compare_against_existing else []),
+                        ],
+                    )
+                    candidate_pool.append(candidate)
+                    candidate_pool_signatures.append(candidate_signature)
+                    if len(candidate_pool) >= config.candidate_pool_size:
+                        break
+                    continue
 
                 rejection_service.record_rejection(candidate, validation_result, config.debug_failures_dir)
+
+            if candidate_pool:
+                accepted_candidate = max(
+                    candidate_pool,
+                    key=lambda candidate: candidate.quality_score.total if candidate.quality_score is not None else 0,
+                )
+                accepted_signatures.append(accepted_candidate.candidate_signature)
 
             if accepted_candidate is None:
                 result.passed = False
@@ -125,9 +190,15 @@ class LevelGenerationService:
         self._write_reports(config, result)
         return result
 
-    def _validate_template(self, template_name: str, preset, config: GenerationConfig) -> None:
+    def _validate_template(self, template_name: str, config: GenerationConfig) -> None:
         if template_name not in self.template_registry.valid_names:
             raise ValueError(f"Unknown template: {template_name}")
+        if config.difficulty != "auto":
+            preset = self.difficulty_service.get_preset(config.difficulty)
+        elif template_name != "mixed":
+            return
+        else:
+            return
         if template_name != "mixed":
             include_swift_required = config.run_swift_tests or config.dry_run
             self.template_registry.choose(template_name, preset, RandomSource(config.base_seed), include_swift_required)
@@ -147,6 +218,45 @@ class LevelGenerationService:
         if collisions:
             formatted = "\n".join(str(path) for path in collisions)
             raise FileExistsError(f"Refusing to overwrite existing output files:\n{formatted}")
+
+    def _load_existing_signatures(
+        self,
+        config: GenerationConfig,
+        result: GenerationResult,
+        target_level_ids: set[str],
+    ):
+        if not config.compare_against_existing:
+            return []
+
+        existing_result = self.existing_level_repository.load_existing_levels(
+            config.levels_output_dir,
+            config.solutions_output_dir,
+            get_default_reports_directory() / "production_manifest.json",
+        )
+        result.messages.extend(existing_result.warnings)
+        signatures = [
+            signature
+            for signature in existing_result.signatures
+            if signature.level_id not in target_level_ids
+        ]
+        if signatures:
+            result.messages.append(f"Loaded {len(signatures)} existing level signatures for similarity checks.")
+        return signatures
+
+    def _load_map_seed_graph(self, config: GenerationConfig, result: GenerationResult) -> MapSeedGraph | None:
+        if config.map_seed_path is None:
+            return None
+        import json
+
+        try:
+            payload = json.loads(config.map_seed_path.read_text(encoding="utf-8"))
+            graph_payload = payload.get("simplifiedGraph", payload)
+            graph = MapSeedGraph.from_dict(graph_payload)
+        except Exception as exc:
+            result.messages.append(f"Could not load map seed {config.map_seed_path}: {exc}")
+            return None
+        result.messages.append(f"Loaded map seed from {config.map_seed_path}.")
+        return graph
 
     def _write_generated_files(self, config: GenerationConfig, result: GenerationResult) -> None:
         for generated_level in result.accepted:
@@ -213,24 +323,11 @@ class LevelGenerationService:
             result.json_report_path = self.report_repository.write_json(config.json_report_path, config, result)
 
     def _resource_reference_warnings(self, config: GenerationConfig, result: GenerationResult) -> list[str]:
-        repo_root = find_repo_root()
         if not self._uses_default_output_dirs(config):
             return []
 
-        project_file = repo_root / "TinyRoutes.xcodeproj" / "project.pbxproj"
-        if not project_file.exists():
-            return ["TinyRoutes.xcodeproj was not found, so generated resource inclusion could not be checked."]
-
-        project_text = project_file.read_text(encoding="utf-8")
-        missing: list[str] = []
-        for generated_level in result.accepted:
-            for filename in [f"{generated_level.level_id}.json", f"{generated_level.level_id}.solution.json"]:
-                if filename not in project_text:
-                    missing.append(filename)
-
-        if not missing:
-            return []
-        return [
-            "Generated files are not referenced by TinyRoutes.xcodeproj: "
-            f"{', '.join(missing)}. Run `xcodegen generate` before relying on Swift solvability for these files."
-        ]
+        sync_result = self.resource_sync_service.check_project_references(
+            config.levels_output_dir,
+            config.solutions_output_dir,
+        )
+        return [*sync_result.errors, *sync_result.warnings]
