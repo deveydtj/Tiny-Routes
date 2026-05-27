@@ -1,8 +1,17 @@
 {
   "levelID": "level_022",
-  "description": "Solution for New Level",
+  "description": "Collect the package, rotate the return switch toward the right node, then rotate the right node toward destination.",
   "expectedOutcome": "completed",
-  "maxTaps": 0,
+  "maxTaps": 2,
   "requiresWithinTimeLimit": true,
-  "actions": []
+  "actions": [
+    {
+      "timeSeconds": 4.0,
+      "tapNodeID": "switch"
+    },
+    {
+      "timeSeconds": 13.0,
+      "tapNodeID": "node"
+    }
+  ]
 }

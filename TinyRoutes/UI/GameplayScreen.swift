@@ -334,7 +334,7 @@ struct RouteBoardView: View {
             roadPath.path
                 .stroke(
                     color,
-                    style: StrokeStyle(lineWidth: lineWidth, lineCap: .butt, lineJoin: .round)
+                    style: StrokeStyle(lineWidth: lineWidth, lineCap: .round, lineJoin: .round)
                 )
                 .offset(y: yOffset)
         }
@@ -359,10 +359,12 @@ struct RouteBoardView: View {
     @ViewBuilder
     private func nodeView(for node: RuntimeRouteNode, layout: BoardLayout) -> some View {
         if node.id == packageNodeID, !hasCollectedPackage {
-            SpriteImage(name: "shipping_box")
-                .scaledToFit()
-                .frame(width: specialNodeIconSize, height: specialNodeIconSize)
-                .scaleEffect(1.10)
+            TRCircularMarkerShell(size: specialNodeSize) {
+                SpriteImage(name: "shipping_box")
+                    .scaledToFit()
+                    .frame(width: specialNodeIconSize, height: specialNodeIconSize)
+                    .scaleEffect(1.10)
+            }
         } else if node.id == packageNodeID {
             Image(systemName: "checkmark")
                 .font(.system(size: 14, weight: .heavy))

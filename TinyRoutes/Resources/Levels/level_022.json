@@ -94,5 +94,5 @@
   "packageNodeID": "package",
   "destinationNodeID": "destination",
   "timeLimitSeconds": 30,
-  "parTaps": 0
+  "parTaps": 2
 }
