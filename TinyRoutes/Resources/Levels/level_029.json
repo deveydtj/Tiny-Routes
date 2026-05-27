@@ -1,19 +1,19 @@
 {
-  "id": "level_017",
-  "name": "Level 017",
+  "id": "level_029",
+  "name": "Level 029",
   "graph": {
     "nodes": [
       {
         "id": "start",
-        "x": -1.15,
-        "y": -0.15,
+        "x": -1.05,
+        "y": -0.2,
         "outgoingEdgeIDs": [
           "e_start_upper_alpha_switch"
         ]
       },
       {
         "id": "upper_alpha_switch",
-        "x": -0.55,
+        "x": -0.5,
         "y": -0.05,
         "outgoingEdgeIDs": [
           "e_upper_alpha_switch_destination",
@@ -23,15 +23,15 @@
       {
         "id": "package",
         "x": 0.05,
-        "y": 0.8,
+        "y": 0.85,
         "outgoingEdgeIDs": [
           "e_package_upper_beta_switch"
         ]
       },
       {
         "id": "upper_beta_switch",
-        "x": 0.7,
-        "y": 0.7,
+        "x": 0.65,
+        "y": 0.75,
         "outgoingEdgeIDs": [
           "e_upper_beta_switch_upper_dead_end",
           "e_upper_beta_switch_upper_return"
@@ -39,8 +39,8 @@
       },
       {
         "id": "upper_return",
-        "x": 0.85,
-        "y": -0.45,
+        "x": 0.8,
+        "y": -0.5,
         "outgoingEdgeIDs": [
           "e_upper_return_upper_alpha_switch"
         ]
@@ -48,12 +48,12 @@
       {
         "id": "destination",
         "x": -0.1,
-        "y": -1.05,
+        "y": -1.15,
         "outgoingEdgeIDs": []
       },
       {
         "id": "upper_dead_end",
-        "x": 1.2,
+        "x": 1.1,
         "y": 0.2,
         "outgoingEdgeIDs": []
       }
@@ -87,7 +87,7 @@
         "id": "e_upper_beta_switch_upper_dead_end",
         "fromNodeID": "upper_beta_switch",
         "toNodeID": "upper_dead_end",
-        "roadShape": "horizontalFirst"
+        "roadShape": "verticalFirst"
       },
       {
         "id": "e_upper_beta_switch_upper_return",

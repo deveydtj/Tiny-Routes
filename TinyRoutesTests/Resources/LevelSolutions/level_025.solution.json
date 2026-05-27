@@ -1,0 +1,17 @@
+{
+  "levelID": "level_025",
+  "description": "Rotate each chain switch once so the route avoids dead ends and completes delivery.",
+  "expectedOutcome": "completed",
+  "maxTaps": 2,
+  "requiresWithinTimeLimit": true,
+  "actions": [
+    {
+      "timeSeconds": 0.65,
+      "tapNodeID": "multi_switch_chain_zigzag_switch_a"
+    },
+    {
+      "timeSeconds": 3.25,
+      "tapNodeID": "multi_switch_chain_zigzag_switch_b"
+    }
+  ]
+}

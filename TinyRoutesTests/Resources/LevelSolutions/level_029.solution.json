@@ -1,5 +1,5 @@
 {
-  "levelID": "level_017",
+  "levelID": "level_029",
   "description": "Rotate alpha to collect the package, rotate beta onto the return path, then rotate alpha again for destination.",
   "expectedOutcome": "completed",
   "maxTaps": 3,
@@ -10,7 +10,7 @@
       "tapNodeID": "upper_alpha_switch"
     },
     {
-      "timeSeconds": 2.7,
+      "timeSeconds": 2.65,
       "tapNodeID": "upper_beta_switch"
     },
     {

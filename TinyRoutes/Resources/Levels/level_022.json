@@ -4,88 +4,93 @@
   "graph": {
     "nodes": [
       {
-        "id": "switch",
-        "x": 0.011111111111111112,
-        "y": 1.9222222222222223,
+        "id": "start",
+        "x": -1.1,
+        "y": 0.2,
         "outgoingEdgeIDs": [
-          "edge_1",
-          "edge_2",
-          "edge_6"
+          "e_start_approach_switch"
         ]
+      },
+      {
+        "id": "approach_switch",
+        "x": -0.45,
+        "y": 0.05,
+        "outgoingEdgeIDs": [
+          "e_approach_switch_bypass",
+          "e_approach_switch_package"
+        ]
+      },
+      {
+        "id": "bypass",
+        "x": 0.1,
+        "y": -0.6,
+        "outgoingEdgeIDs": []
       },
       {
         "id": "package",
-        "x": -2.15,
-        "y": 4.216666666666667,
+        "x": 0.05,
+        "y": 0.7,
         "outgoingEdgeIDs": [
-          "edge_4"
+          "e_package_finish_switch"
         ]
       },
       {
-        "id": "node",
-        "x": 3.077777777777778,
-        "y": 1.9444444444444444,
+        "id": "finish_switch",
+        "x": 0.65,
+        "y": 0.15,
         "outgoingEdgeIDs": [
-          "edge_3",
-          "edge_5"
+          "e_finish_switch_dead_end_a",
+          "e_finish_switch_destination"
         ]
       },
       {
-        "id": "start",
-        "x": -0.027999999999999955,
-        "y": -1.3860000000000001,
-        "outgoingEdgeIDs": [
-          "edge"
-        ]
+        "id": "dead_end_a",
+        "x": 1.05,
+        "y": -0.55,
+        "outgoingEdgeIDs": []
       },
       {
         "id": "destination",
-        "x": 3.0519999999999996,
-        "y": -0.896,
+        "x": 1.1,
+        "y": 0.75,
         "outgoingEdgeIDs": []
       }
     ],
     "edges": [
       {
-        "id": "edge_4",
-        "fromNodeID": "package",
-        "toNodeID": "switch",
-        "roadShape": "horizontalFirst"
-      },
-      {
-        "id": "edge_1",
-        "fromNodeID": "switch",
-        "toNodeID": "package",
-        "roadShape": "horizontalFirst"
-      },
-      {
-        "id": "edge_2",
-        "fromNodeID": "switch",
-        "toNodeID": "node",
-        "roadShape": "horizontalFirst"
-      },
-      {
-        "id": "edge_3",
-        "fromNodeID": "node",
-        "toNodeID": "switch",
-        "roadShape": "horizontalFirst"
-      },
-      {
-        "id": "edge",
+        "id": "e_start_approach_switch",
         "fromNodeID": "start",
-        "toNodeID": "switch",
+        "toNodeID": "approach_switch",
+        "roadShape": "horizontalFirst"
+      },
+      {
+        "id": "e_approach_switch_bypass",
+        "fromNodeID": "approach_switch",
+        "toNodeID": "bypass",
         "roadShape": "verticalFirst"
       },
       {
-        "id": "edge_5",
-        "fromNodeID": "node",
+        "id": "e_approach_switch_package",
+        "fromNodeID": "approach_switch",
+        "toNodeID": "package",
+        "roadShape": "verticalFirst"
+      },
+      {
+        "id": "e_package_finish_switch",
+        "fromNodeID": "package",
+        "toNodeID": "finish_switch",
+        "roadShape": "horizontalFirst"
+      },
+      {
+        "id": "e_finish_switch_dead_end_a",
+        "fromNodeID": "finish_switch",
+        "toNodeID": "dead_end_a",
+        "roadShape": "verticalFirst"
+      },
+      {
+        "id": "e_finish_switch_destination",
+        "fromNodeID": "finish_switch",
         "toNodeID": "destination",
-        "roadShape": "verticalFirst"
-      },
-      {
-        "id": "edge_6",
-        "fromNodeID": "switch",
-        "toNodeID": "start",
         "roadShape": "verticalFirst"
       }
     ]

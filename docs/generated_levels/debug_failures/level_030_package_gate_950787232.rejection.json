@@ -1,9 +1,0 @@
-[
-  {
-    "severity": "error",
-    "code": "candidate_too_similar_to_existing",
-    "message": "matches level_014: same topology, solution, and layout (74b636ad/4cc055b5)",
-    "related_node_id": null,
-    "related_edge_id": null
-  }
-]

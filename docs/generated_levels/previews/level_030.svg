@@ -1,25 +1,29 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="420" height="320" viewBox="0 0 420 320">
 <rect width="100%" height="100%" fill="#f8fafc"/>
 <text x="16" y="22" font-family="Arial" font-size="14" fill="#0f172a">level_030</text>
-<line x1="30.0" y1="142.7" x2="124.6" y2="169.8" stroke="#64748b" stroke-width="3"/>
-<line x1="124.6" y1="169.8" x2="184.3" y2="30.0" stroke="#64748b" stroke-width="3"/>
-<line x1="124.6" y1="169.8" x2="220.8" y2="290.0" stroke="#64748b" stroke-width="3"/>
-<line x1="220.8" y1="290.0" x2="323.6" y2="278.0" stroke="#64748b" stroke-width="3"/>
-<line x1="323.6" y1="278.0" x2="390.0" y2="190.8" stroke="#64748b" stroke-width="3"/>
-<line x1="323.6" y1="278.0" x2="333.6" y2="97.6" stroke="#64748b" stroke-width="3"/>
-<line x1="333.6" y1="97.6" x2="124.6" y2="169.8" stroke="#64748b" stroke-width="3"/>
-<circle cx="30.0" cy="142.7" r="8" fill="#22c55e" stroke="#0f172a" stroke-width="1"/>
-<text x="40.0" y="132.7" font-family="Arial" font-size="11" fill="#0f172a">start</text>
-<circle cx="124.6" cy="169.8" r="8" fill="#3b82f6" stroke="#0f172a" stroke-width="1"/>
-<text x="134.6" y="159.8" font-family="Arial" font-size="11" fill="#0f172a">3</text>
-<circle cx="220.8" cy="290.0" r="8" fill="#f59e0b" stroke="#0f172a" stroke-width="1"/>
-<text x="230.8" y="280.0" font-family="Arial" font-size="11" fill="#0f172a">package</text>
-<circle cx="323.6" cy="278.0" r="8" fill="#3b82f6" stroke="#0f172a" stroke-width="1"/>
-<text x="333.6" y="268.0" font-family="Arial" font-size="11" fill="#0f172a">2</text>
-<circle cx="333.6" cy="97.6" r="8" fill="#94a3b8" stroke="#0f172a" stroke-width="1"/>
-<text x="343.6" y="87.6" font-family="Arial" font-size="11" fill="#0f172a">lower_return</text>
-<circle cx="184.3" cy="30.0" r="8" fill="#ef4444" stroke="#0f172a" stroke-width="1"/>
-<text x="194.3" y="20.0" font-family="Arial" font-size="11" fill="#0f172a">destination</text>
-<circle cx="390.0" cy="190.8" r="8" fill="#94a3b8" stroke="#0f172a" stroke-width="1"/>
-<text x="400.0" y="180.8" font-family="Arial" font-size="11" fill="#0f172a">lower_dead_end</text>
+<text x="16" y="42" font-family="Arial" font-size="11" fill="#9a3412">4-way switch</text>
+<line x1="210.0" y1="290.0" x2="210.0" y2="218.5" stroke="#64748b" stroke-width="3"/>
+<line x1="210.0" y1="218.5" x2="210.0" y2="153.5" stroke="#64748b" stroke-width="3"/>
+<line x1="210.0" y1="153.5" x2="390.0" y2="153.5" stroke="#64748b" stroke-width="3"/>
+<line x1="210.0" y1="153.5" x2="30.0" y2="153.5" stroke="#64748b" stroke-width="3"/>
+<line x1="210.0" y1="153.5" x2="210.0" y2="30.0" stroke="#64748b" stroke-width="3"/>
+<line x1="210.0" y1="153.5" x2="353.1" y2="212.0" stroke="#64748b" stroke-width="3"/>
+<line x1="30.0" y1="153.5" x2="30.0" y2="218.5" stroke="#64748b" stroke-width="3"/>
+<line x1="30.0" y1="218.5" x2="210.0" y2="153.5" stroke="#64748b" stroke-width="3"/>
+<circle cx="210.0" cy="290.0" r="8" fill="#22c55e" stroke="#0f172a" stroke-width="1"/>
+<text x="220.0" y="280.0" font-family="Arial" font-size="11" fill="#0f172a">start</text>
+<circle cx="210.0" cy="218.5" r="8" fill="#94a3b8" stroke="#0f172a" stroke-width="1"/>
+<text x="220.0" y="208.5" font-family="Arial" font-size="11" fill="#0f172a">entry</text>
+<circle cx="210.0" cy="153.5" r="8" fill="#f97316" stroke="#0f172a" stroke-width="1"/>
+<text x="220.0" y="143.5" font-family="Arial" font-size="11" fill="#0f172a">2</text>
+<circle cx="390.0" cy="153.5" r="8" fill="#94a3b8" stroke="#0f172a" stroke-width="1"/>
+<text x="400.0" y="143.5" font-family="Arial" font-size="11" fill="#0f172a">dead_end</text>
+<circle cx="30.0" cy="153.5" r="8" fill="#f59e0b" stroke="#0f172a" stroke-width="1"/>
+<text x="40.0" y="143.5" font-family="Arial" font-size="11" fill="#0f172a">package</text>
+<circle cx="30.0" cy="218.5" r="8" fill="#94a3b8" stroke="#0f172a" stroke-width="1"/>
+<text x="40.0" y="208.5" font-family="Arial" font-size="11" fill="#0f172a">return_node</text>
+<circle cx="210.0" cy="30.0" r="8" fill="#ef4444" stroke="#0f172a" stroke-width="1"/>
+<text x="220.0" y="20.0" font-family="Arial" font-size="11" fill="#0f172a">destination</text>
+<circle cx="353.1" cy="212.0" r="8" fill="#94a3b8" stroke="#0f172a" stroke-width="1"/>
+<text x="363.1" y="202.0" font-family="Arial" font-size="11" fill="#0f172a">side_branch</text>
 </svg>

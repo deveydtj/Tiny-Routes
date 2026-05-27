@@ -1,9 +1,0 @@
-[
-  {
-    "severity": "error",
-    "code": "candidate_too_similar_to_batch",
-    "message": "matches level_028: similarity 0.90 >= 0.88",
-    "related_node_id": null,
-    "related_edge_id": null
-  }
-]

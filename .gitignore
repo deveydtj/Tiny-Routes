@@ -10,3 +10,10 @@ DerivedData/
 xcuserdata/
 __pycache__/
 *.pyc
+rejection.json
+*.rejection.json
+
+# Generated debug artifacts from level tooling
+docs/generated_levels/debug_failures/*.level.json
+docs/generated_levels/debug_failures/*.solution.json
+docs/generated_levels/debug_failures/*.rejection.json
