@@ -74,19 +74,19 @@
         "id": "edge",
         "fromNodeID": "start",
         "toNodeID": "switch",
-        "roadShape": "horizontalFirst"
+        "roadShape": "verticalFirst"
       },
       {
         "id": "edge_5",
         "fromNodeID": "node",
         "toNodeID": "destination",
-        "roadShape": "horizontalFirst"
+        "roadShape": "verticalFirst"
       },
       {
         "id": "edge_6",
         "fromNodeID": "switch",
         "toNodeID": "start",
-        "roadShape": "horizontalFirst"
+        "roadShape": "verticalFirst"
       }
     ]
   },

@@ -490,20 +490,11 @@ struct RouteBoardView: View {
         outgoingEdges: [RuntimeRouteEdge],
         in runtimeGraph: RuntimeRouteGraph
     ) -> Int {
-        let outgoingAngles = outgoingEdges.compactMap {
+        let outgoingAngles = outgoingEdges.map {
             SwitchArrowDirectionResolver.directionAngle(for: $0, from: node, in: runtimeGraph)
         }
-        let incomingAngles = incomingEdges.compactMap { edge -> Double? in
-            guard let sourceNode = runtimeGraph.nodesByID[edge.fromNodeID] else {
-                return nil
-            }
-            let dx = sourceNode.x - node.x
-            let dy = sourceNode.y - node.y
-            if dx != 0 || dy != 0 {
-                return atan2(-dy, dx)
-            }
-            let tangent = edge.roadPath.tangent(atProgress: 1)
-            return atan2(tangent.y, -tangent.x)
+        let incomingAngles = incomingEdges.map { edge in
+            SwitchArrowDirectionResolver.incomingDirectionAngle(for: edge, toward: node, in: runtimeGraph)
         }
         let directionBuckets = Set((outgoingAngles + incomingAngles).map(cardinalDirectionBucket(for:)))
         return directionBuckets.count
@@ -625,6 +616,8 @@ struct RouteBoardView: View {
 }
 
 struct SwitchArrowDirectionResolver {
+    private static let vectorMagnitudeTolerance = 0.000_001
+
     static func activeDirectionAngle(for node: RuntimeRouteNode, in runtimeGraph: RuntimeRouteGraph) -> Double? {
         let validOutgoingEdgeIDs = runtimeGraph.validOutgoingEdgeIDs(for: node)
         let switchKind = runtimeGraph.switchKind(for: node)
@@ -640,16 +633,63 @@ struct SwitchArrowDirectionResolver {
     }
 
     static func directionAngle(for edge: RuntimeRouteEdge, from node: RuntimeRouteNode, in runtimeGraph: RuntimeRouteGraph) -> Double {
+        // Switch arrows describe the rendered road exit direction. The target-node vector is only
+        // a fallback for malformed or legacy edge data that cannot provide path geometry.
+        let tangent = edge.roadPath.tangent(atProgress: 0)
+        if hasUsableMagnitude(tangent) {
+            return snappedAxisAngle(for: tangent)
+        }
+
         if let targetNode = runtimeGraph.nodesByID[edge.toNodeID] {
-            let dx = targetNode.x - node.x
-            let dy = targetNode.y - node.y
-            if dx != 0 || dy != 0 {
-                return atan2(-dy, dx)
+            let fallbackVector = RoadVector(
+                x: targetNode.x - node.x,
+                y: targetNode.y - node.y
+            )
+
+            if hasUsableMagnitude(fallbackVector) {
+                return snappedAxisAngle(for: fallbackVector)
             }
         }
 
-        let tangent = edge.roadPath.tangent(atProgress: 0)
-        return atan2(-tangent.y, tangent.x)
+        return 0
+    }
+
+    static func incomingDirectionAngle(
+        for edge: RuntimeRouteEdge,
+        toward node: RuntimeRouteNode,
+        in runtimeGraph: RuntimeRouteGraph
+    ) -> Double {
+        let tangent = edge.roadPath.tangent(atProgress: 1)
+        let incomingVector = RoadVector(x: -tangent.x, y: -tangent.y)
+
+        if hasUsableMagnitude(incomingVector) {
+            return snappedAxisAngle(for: incomingVector)
+        }
+
+        if let sourceNode = runtimeGraph.nodesByID[edge.fromNodeID] {
+            let fallbackVector = RoadVector(
+                x: sourceNode.x - node.x,
+                y: sourceNode.y - node.y
+            )
+
+            if hasUsableMagnitude(fallbackVector) {
+                return snappedAxisAngle(for: fallbackVector)
+            }
+        }
+
+        return 0
+    }
+
+    private static func hasUsableMagnitude(_ vector: RoadVector) -> Bool {
+        hypot(vector.x, vector.y) > vectorMagnitudeTolerance
+    }
+
+    private static func snappedAxisAngle(for vector: RoadVector) -> Double {
+        if abs(vector.x) >= abs(vector.y) {
+            return vector.x >= 0 ? 0 : .pi
+        }
+
+        return vector.y >= 0 ? -.pi / 2 : .pi / 2
     }
 }
 

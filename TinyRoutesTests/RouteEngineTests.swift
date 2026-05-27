@@ -117,6 +117,63 @@ final class RouteEngineTests: XCTestCase {
         return (RuntimeRouteGraph(nodesByID: ["node": node], edgesByID: edgesByID), node)
     }
 
+    private func makeSwitchRuntimeGraphForTarget(
+        _ target: RoadPoint,
+        roadShape: RoadShape
+    ) -> (RuntimeRouteGraph, RuntimeRouteNode) {
+        let switchNode = RuntimeRouteNode(
+            id: "switch",
+            x: 0,
+            y: 0,
+            outgoingEdgeIDs: ["e_switch_target", "e_switch_alternate"],
+            activeOutgoingEdgeID: "e_switch_target"
+        )
+        let targetNode = RuntimeRouteNode(
+            id: "target",
+            x: target.x,
+            y: target.y,
+            outgoingEdgeIDs: [],
+            activeOutgoingEdgeID: nil
+        )
+        let alternateNode = RuntimeRouteNode(
+            id: "alternate",
+            x: 2,
+            y: 0,
+            outgoingEdgeIDs: [],
+            activeOutgoingEdgeID: nil
+        )
+        let graph = RuntimeRouteGraph(
+            nodesByID: [
+                switchNode.id: switchNode,
+                targetNode.id: targetNode,
+                alternateNode.id: alternateNode
+            ],
+            edgesByID: [
+                "e_switch_target": RuntimeRouteEdge(
+                    id: "e_switch_target",
+                    fromNodeID: switchNode.id,
+                    toNodeID: targetNode.id,
+                    roadPath: RoadPath.make(
+                        from: RoadPoint(x: switchNode.x, y: switchNode.y),
+                        to: target,
+                        shape: roadShape
+                    )
+                ),
+                "e_switch_alternate": RuntimeRouteEdge(
+                    id: "e_switch_alternate",
+                    fromNodeID: switchNode.id,
+                    toNodeID: alternateNode.id,
+                    roadPath: RoadPath.make(
+                        from: RoadPoint(x: switchNode.x, y: switchNode.y),
+                        to: RoadPoint(x: alternateNode.x, y: alternateNode.y)
+                    )
+                )
+            ]
+        )
+
+        return (graph, switchNode)
+    }
+
     private func assertPosition(
         _ position: DeliveryDotPosition?,
         equals expected: DeliveryDotPosition,
@@ -684,35 +741,184 @@ final class RouteEngineTests: XCTestCase {
         XCTAssertEqual(downTransform.rotationAngle, .pi / 2, accuracy: 0.0001)
     }
 
-    func testSwitchArrowDirectionUsesSelectedTargetNodeWhenRoadsShareInitialTangent() throws {
+    func testSwitchArrowDirectionUsesRoadExitDirectionForHorizontalFirstElbow() throws {
+        let (graph, switchNode) = makeSwitchRuntimeGraphForTarget(
+            RoadPoint(x: 1, y: 1),
+            roadShape: .horizontalFirst
+        )
+
+        let angle = try XCTUnwrap(SwitchArrowDirectionResolver.activeDirectionAngle(for: switchNode, in: graph))
+
+        XCTAssertEqual(angle, 0, accuracy: 0.0001)
+    }
+
+    func testSwitchArrowDirectionUsesRoadExitDirectionForVerticalFirstElbow() throws {
+        let (graph, switchNode) = makeSwitchRuntimeGraphForTarget(
+            RoadPoint(x: 1, y: 1),
+            roadShape: .verticalFirst
+        )
+
+        let angle = try XCTUnwrap(SwitchArrowDirectionResolver.activeDirectionAngle(for: switchNode, in: graph))
+
+        XCTAssertEqual(angle, -.pi / 2, accuracy: 0.0001)
+    }
+
+    func testSwitchArrowDirectionSnapsHorizontalFirstLeftExitToWest() throws {
+        let (graph, switchNode) = makeSwitchRuntimeGraphForTarget(
+            RoadPoint(x: -1, y: 1),
+            roadShape: .horizontalFirst
+        )
+
+        let angle = try XCTUnwrap(SwitchArrowDirectionResolver.activeDirectionAngle(for: switchNode, in: graph))
+
+        XCTAssertEqual(angle, .pi, accuracy: 0.0001)
+    }
+
+    func testSwitchArrowDirectionSnapsVerticalFirstDownExitToSouth() throws {
+        let (graph, switchNode) = makeSwitchRuntimeGraphForTarget(
+            RoadPoint(x: 1, y: -1),
+            roadShape: .verticalFirst
+        )
+
+        let angle = try XCTUnwrap(SwitchArrowDirectionResolver.activeDirectionAngle(for: switchNode, in: graph))
+
+        XCTAssertEqual(angle, .pi / 2, accuracy: 0.0001)
+    }
+
+    func testSwitchArrowDirectionFallbackSnapsTargetVectorToCardinalAxis() throws {
+        let switchNode = RuntimeRouteNode(
+            id: "switch",
+            x: 0,
+            y: 0,
+            outgoingEdgeIDs: ["e_switch_target"],
+            activeOutgoingEdgeID: "e_switch_target"
+        )
+        let targetNode = RuntimeRouteNode(
+            id: "target",
+            x: 1,
+            y: 1,
+            outgoingEdgeIDs: [],
+            activeOutgoingEdgeID: nil
+        )
+        let edge = RuntimeRouteEdge(
+            id: "e_switch_target",
+            fromNodeID: switchNode.id,
+            toNodeID: targetNode.id,
+            roadPath: RoadPath(segments: [])
+        )
+        let graph = RuntimeRouteGraph(
+            nodesByID: [
+                switchNode.id: switchNode,
+                targetNode.id: targetNode
+            ],
+            edgesByID: [edge.id: edge]
+        )
+
+        let angle = SwitchArrowDirectionResolver.directionAngle(for: edge, from: switchNode, in: graph)
+
+        XCTAssertEqual(angle, 0, accuracy: 0.0001)
+    }
+
+    func testLevel021CentralSideBranchArrowUsesHorizontalExitDirection() throws {
+        let level = try XCTUnwrap(
+            TestLevelCatalog().loadAllProductionLevels().first { $0.id == "level_021" }
+        )
         let engine = RouteEngine()
-        try engine.buildGraph(from: makeLevelData())
+        try engine.buildGraph(from: level)
+        let graph = try XCTUnwrap(engine.runtimeGraph)
+        let centralSwitch = try XCTUnwrap(graph.nodesByID["central_switch"])
+        let sideBranchEdge = try XCTUnwrap(graph.edgesByID["e_central_side_branch"])
 
-        var graph = try XCTUnwrap(engine.runtimeGraph)
-        var switchNode = try XCTUnwrap(graph.nodesByID["switch"])
-        XCTAssertEqual(
-            try XCTUnwrap(SwitchArrowDirectionResolver.activeDirectionAngle(for: switchNode, in: graph)),
-            -.pi / 4,
-            accuracy: 0.0001
+        let angle = SwitchArrowDirectionResolver.directionAngle(for: sideBranchEdge, from: centralSwitch, in: graph)
+
+        XCTAssertEqual(angle, .pi, accuracy: 0.0001)
+    }
+
+    func testLevel022BacktrackAndDestinationArrowsUseVerticalExitDirection() throws {
+        let level = try XCTUnwrap(
+            TestLevelCatalog().loadAllProductionLevels().first { $0.id == "level_022" }
+        )
+        let engine = RouteEngine()
+        try engine.buildGraph(from: level)
+        let graph = try XCTUnwrap(engine.runtimeGraph)
+        let switchNode = try XCTUnwrap(graph.nodesByID["switch"])
+        let rightNode = try XCTUnwrap(graph.nodesByID["node"])
+        let expectedAnglesByEdgeID: [String: (node: RuntimeRouteNode, angle: Double)] = [
+            "edge_1": (switchNode, .pi),
+            "edge_2": (switchNode, 0),
+            "edge_6": (switchNode, .pi / 2),
+            "edge_3": (rightNode, .pi),
+            "edge_5": (rightNode, .pi / 2)
+        ]
+
+        for (edgeID, expectation) in expectedAnglesByEdgeID {
+            let edge = try XCTUnwrap(graph.edgesByID[edgeID])
+            let angle = SwitchArrowDirectionResolver.directionAngle(
+                for: edge,
+                from: expectation.node,
+                in: graph
+            )
+
+            XCTAssertEqual(angle, expectation.angle, accuracy: 0.0001, "Unexpected angle for \(edgeID)")
+        }
+    }
+
+    func testFourWaySwitchOutgoingOptionAnglesAreCardinal() throws {
+        let engine = RouteEngine()
+        try engine.buildGraph(from: makeFourWayIntersectionLevelData())
+        let graph = try XCTUnwrap(engine.runtimeGraph)
+        let centralSwitch = try XCTUnwrap(graph.nodesByID["central_switch"])
+        let expectedAnglesByEdgeID: [String: Double] = [
+            "e_central_dead_end": -.pi / 2,
+            "e_central_package": .pi / 2,
+            "e_central_destination": 0,
+            "e_central_side_branch": .pi
+        ]
+
+        for (edgeID, expectedAngle) in expectedAnglesByEdgeID {
+            let edge = try XCTUnwrap(graph.edgesByID[edgeID])
+            let angle = SwitchArrowDirectionResolver.directionAngle(for: edge, from: centralSwitch, in: graph)
+
+            XCTAssertEqual(angle, expectedAngle, accuracy: 0.0001, "Unexpected angle for \(edgeID)")
+        }
+    }
+
+    func testIncomingDirectionAngleUsesRoadEntryDirectionForElbow() throws {
+        let sourceNode = RuntimeRouteNode(
+            id: "source",
+            x: 0,
+            y: 0,
+            outgoingEdgeIDs: ["e_source_target"],
+            activeOutgoingEdgeID: "e_source_target"
+        )
+        let targetNode = RuntimeRouteNode(
+            id: "target",
+            x: 1,
+            y: 1,
+            outgoingEdgeIDs: [],
+            activeOutgoingEdgeID: nil
+        )
+        let edge = RuntimeRouteEdge(
+            id: "e_source_target",
+            fromNodeID: sourceNode.id,
+            toNodeID: targetNode.id,
+            roadPath: RoadPath.make(
+                from: RoadPoint(x: sourceNode.x, y: sourceNode.y),
+                to: RoadPoint(x: targetNode.x, y: targetNode.y),
+                shape: .horizontalFirst
+            )
+        )
+        let graph = RuntimeRouteGraph(
+            nodesByID: [
+                sourceNode.id: sourceNode,
+                targetNode.id: targetNode
+            ],
+            edgesByID: [edge.id: edge]
         )
 
-        XCTAssertTrue(engine.rotateSwitchNode(nodeID: "switch"))
-        graph = try XCTUnwrap(engine.runtimeGraph)
-        switchNode = try XCTUnwrap(graph.nodesByID["switch"])
-        XCTAssertEqual(
-            try XCTUnwrap(SwitchArrowDirectionResolver.activeDirectionAngle(for: switchNode, in: graph)),
-            .pi / 4,
-            accuracy: 0.0001
-        )
+        let angle = SwitchArrowDirectionResolver.incomingDirectionAngle(for: edge, toward: targetNode, in: graph)
 
-        XCTAssertTrue(engine.rotateSwitchNode(nodeID: "switch"))
-        graph = try XCTUnwrap(engine.runtimeGraph)
-        switchNode = try XCTUnwrap(graph.nodesByID["switch"])
-        XCTAssertEqual(
-            try XCTUnwrap(SwitchArrowDirectionResolver.activeDirectionAngle(for: switchNode, in: graph)),
-            0,
-            accuracy: 0.0001
-        )
+        XCTAssertEqual(angle, .pi / 2, accuracy: 0.0001)
     }
 
     func testBuildGraphInitializesTimerFromLevelData() throws {
