@@ -18,6 +18,17 @@ final class ShopScreenTests: XCTestCase {
     }
 
     @MainActor
+    func testShopPinnedBalanceBarCanBeConstructed() {
+        let bar = TRShopPinnedBalanceBar(
+            coinTotal: 1_250,
+            onSettingsTapped: {},
+            onAddCurrencyTapped: {}
+        )
+
+        XCTAssertNotNil(bar)
+    }
+
+    @MainActor
     func testCategoryPillBarCanBeConstructed() {
         let pillBar = TRShopCategoryPillBar(
             categories: service.categories,

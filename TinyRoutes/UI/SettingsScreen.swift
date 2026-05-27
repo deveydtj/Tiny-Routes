@@ -85,10 +85,26 @@ struct SettingsScreen: View {
         .alert(item: $activeAlert) { alert in
             makeAlert(alert)
         }
+        .simultaneousGesture(edgeSwipeBackGesture)
     }
 
     private var settings: UserSettings {
         settingsService.settings
+    }
+
+    private var edgeSwipeBackGesture: some Gesture {
+        DragGesture(minimumDistance: 18, coordinateSpace: .local)
+            .onEnded { value in
+                guard TREdgeSwipeBackPolicy.shouldTriggerBack(
+                    startLocation: value.startLocation,
+                    translation: value.translation,
+                    predictedEndTranslation: value.predictedEndTranslation
+                ) else {
+                    return
+                }
+
+                onBackTapped()
+            }
     }
 
     private var playerSection: some View {

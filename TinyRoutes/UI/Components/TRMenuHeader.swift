@@ -24,7 +24,7 @@ struct TRMenuHeader: View {
     var body: some View {
         VStack(spacing: 18) {
             HStack(alignment: .center) {
-                settingsButton
+                TRMenuSettingsButton(action: onSettingsTapped)
 
                 Spacer(minLength: 12)
 
@@ -35,35 +35,12 @@ struct TRMenuHeader: View {
                 )
             }
 
-            TRTinyRoutesLogo(
-                subtitle: subtitleOverride ?? pageTitle,
-                size: .large,
-                showsPin: false
+            TRMenuTitleLogo(
+                pageTitle: pageTitle,
+                subtitleOverride: subtitleOverride
             )
-            .frame(maxWidth: .infinity)
-            .accessibilityAddTraits(.isHeader)
         }
         .padding(.top, 8)
-    }
-
-    private var settingsButton: some View {
-        Button(action: onSettingsTapped) {
-            Image(systemName: "gearshape.fill")
-                .font(.system(size: 28, weight: .bold))
-                .foregroundStyle(TRGameplayStyle.Colors.primaryBlue)
-                .frame(width: 64, height: 64)
-                .background {
-                    Circle()
-                        .fill(.white.opacity(0.92))
-                        .overlay {
-                            Circle()
-                                .stroke(.white.opacity(0.75), lineWidth: 1)
-                        }
-                        .shadow(color: .black.opacity(0.08), radius: 10, x: 0, y: 5)
-                }
-        }
-        .buttonStyle(.plain)
-        .accessibilityLabel(Text("Settings"))
     }
 }
 

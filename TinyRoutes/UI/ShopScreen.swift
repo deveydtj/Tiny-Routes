@@ -46,12 +46,9 @@ struct ShopScreen: View {
     var body: some View {
         ScrollView(.vertical, showsIndicators: false) {
             VStack(spacing: 16) {
-                TRMenuHeader(
+                TRMenuTitleLogo(
                     pageTitle: "Shop",
-                    subtitleOverride: "Customize your journey",
-                    coinTotal: coinTotal,
-                    onSettingsTapped: onSettingsTapped,
-                    onAddCurrencyTapped: onAddCurrencyTapped
+                    subtitleOverride: "Customize your journey"
                 )
                 .padding(.top, 10)
 
@@ -67,6 +64,13 @@ struct ShopScreen: View {
             .padding(.horizontal, 20)
             .padding(.top, 4)
             .padding(.bottom, 26)
+        }
+        .safeAreaInset(edge: .top, spacing: 0) {
+            TRShopPinnedBalanceBar(
+                coinTotal: coinTotal,
+                onSettingsTapped: onSettingsTapped,
+                onAddCurrencyTapped: onAddCurrencyTapped
+            )
         }
         .background {
             LinearGradient(

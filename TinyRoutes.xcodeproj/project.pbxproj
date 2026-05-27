@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		00A1A35E76826E31A5726F62 /* TRSettingsRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = F7070B63D64F45F99A58ACF3 /* TRSettingsRow.swift */; };
+		02DD4D6095A243448CE1B8C8 /* TREdgeSwipeBackPolicy.swift in Sources */ = {isa = PBXBuildFile; fileRef = 54501006C7444F5E8CE49EFC /* TREdgeSwipeBackPolicy.swift */; };
 		029B2EB9BE8A069959579297 /* level_004.solution.json in Resources */ = {isa = PBXBuildFile; fileRef = 3A775E1E6DB07C2E59BC797E /* level_004.solution.json */; };
 		03C94EDFB47D288D5BAA2E90 /* LevelValidationIssue.swift in Sources */ = {isa = PBXBuildFile; fileRef = 003704DD962727D365EAB808 /* LevelValidationIssue.swift */; };
 		060F8145B917BE3159712357 /* SwitchNodeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1B022B419A6C15C4612BCB4 /* SwitchNodeView.swift */; };
@@ -37,6 +38,7 @@
 		20C3785F47268256ABD3B92B /* UserSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = E02F44145D432403FF64D95B /* UserSettings.swift */; };
 		21925B4843B1D29BBA5AA5AD /* level_007.solution.json in Resources */ = {isa = PBXBuildFile; fileRef = 71E4A985E577F112A3286F02 /* level_007.solution.json */; };
 		2344BBF6AD0773F6CCE3C1A7 /* level_009.json in Resources */ = {isa = PBXBuildFile; fileRef = F97504C047FC88B1A6992639 /* level_009.json */; };
+		2396FAA22FC6796B003AA416 /* level_022.json in Resources */ = {isa = PBXBuildFile; fileRef = 2396FAA12FC6796B003AA416 /* level_022.json */; };
 		2455CB9ECC694065D4C15C4C /* SaveDataRepositoryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAE4354ADF7FBB27382D141A /* SaveDataRepositoryTests.swift */; };
 		24DE186D45143F87CD249688 /* TRResultCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = E874F6DEAE742EF2728616FF /* TRResultCard.swift */; };
 		25E2CB8489BBDE3010BB2057 /* TRResultRouteStrip.swift in Sources */ = {isa = PBXBuildFile; fileRef = DC7506DFBF3B06D1BE0ADBE2 /* TRResultRouteStrip.swift */; };
@@ -114,6 +116,7 @@
 		791852151987820601808983 /* level_017.json in Resources */ = {isa = PBXBuildFile; fileRef = 2570025AF6F195915E62AB5D /* level_017.json */; };
 		7A3B1263E583C1668B781B0C /* LevelRepositoryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B064034548F2A810BA3D12F6 /* LevelRepositoryTests.swift */; };
 		7ACC6C245639F0DBF8169F3A /* TRSettingsToggleRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41E5D61ED2A0DE43F01D9F13 /* TRSettingsToggleRow.swift */; };
+		6E967817F29C4B29AF301438 /* TRShopPinnedBalanceBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 248BEAD5A3174039914C84FF /* TRShopPinnedBalanceBar.swift */; };
 		7C1811CCC56262D3F7104089 /* level_019.solution.json in Resources */ = {isa = PBXBuildFile; fileRef = CE2E452BC4DD36B19AECAA8E /* level_019.solution.json */; };
 		7D8DEE1F6FB67C46B3753660 /* level_020.json in Resources */ = {isa = PBXBuildFile; fileRef = 1A8BDD2BCD84D43209839A4B /* level_020.json */; };
 		7E046318A25C147961C3A41D /* LevelSimulationHarness.swift in Sources */ = {isa = PBXBuildFile; fileRef = F139BB6512B7A9A897A0D611 /* LevelSimulationHarness.swift */; };
@@ -177,6 +180,7 @@
 		C10DC0D854640531C19E0E1A /* level_015.solution.json in Resources */ = {isa = PBXBuildFile; fileRef = 15BF7C69DA170A7F9E9F6785 /* level_015.solution.json */; };
 		C3044013241D35FFF4BB716F /* level_018.json in Resources */ = {isa = PBXBuildFile; fileRef = 57041D58C883F065A7E52BE3 /* level_018.json */; };
 		C32E88E9AF95F6C6C9818063 /* TRShopCosmeticOptionCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = F268635BC9A0004613EA68F4 /* TRShopCosmeticOptionCard.swift */; };
+		CD6B56A7A386462BB6238F71 /* TRMenuTitleLogo.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5C7F97B0D889494DB4B3F6D9 /* TRMenuTitleLogo.swift */; };
 		C61908F46D67D6B0C2C43DC1 /* TRDestinationMarkerViewTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA159D82008BBEE377BE7CDA /* TRDestinationMarkerViewTests.swift */; };
 		C6C879E35B0A45FD1A8699A7 /* TRGameplayStyle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 34077F31F2E9880064B46C36 /* TRGameplayStyle.swift */; };
 		CA56286BEB85DA883559E80A /* ShopScreenTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5F86B1A2F3EEB483AEE1DB3 /* ShopScreenTests.swift */; };
@@ -230,6 +234,8 @@
 		FC2A7D83FFD76E394BA0D6CB /* level_019.json in Resources */ = {isa = PBXBuildFile; fileRef = AD7ADBC6E847708756B9511A /* level_019.json */; };
 		FD2A2990B91D7217ED8E3789 /* TRMenuButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = B219E6530196E4FB312FDAF4 /* TRMenuButton.swift */; };
 		FE7495D0C01D185ABDF96AB5 /* ProgressService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3A2EB059F1ED8B1990CD973 /* ProgressService.swift */; };
+		49FD6E7AF1D74F0EAD5D56C9 /* TREdgeSwipeBackPolicyTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 862C57BE33434AF3A0028C88 /* TREdgeSwipeBackPolicyTests.swift */; };
+		9CF2F7552D6640FF9BD51AE3 /* TRMenuSettingsButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 852E902BFB6D46C5A7DD48B9 /* TRMenuSettingsButton.swift */; };
 		FF04D88C3A93FB2A97C1A8A6 /* DeliveryDot.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6352EEEB57FB978CCB578FA1 /* DeliveryDot.swift */; };
 		FF083C62565C03AFDA125B37 /* TRStarCollectorPlaceholderCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8CD039BA1E7864D9741A0F27 /* TRStarCollectorPlaceholderCard.swift */; };
 /* End PBXBuildFile section */
@@ -274,6 +280,8 @@
 		1ED10221512DC80E25D258A7 /* HomeScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeScreen.swift; sourceTree = "<group>"; };
 		1F9B94553540F5DEADB9944D /* RuntimeRouteGraph.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RuntimeRouteGraph.swift; sourceTree = "<group>"; };
 		22D8DF6A90587055693BBE35 /* LevelSolvabilityTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LevelSolvabilityTests.swift; sourceTree = "<group>"; };
+		2396FAA12FC6796B003AA416 /* level_022.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = level_022.json; sourceTree = "<group>"; };
+		248BEAD5A3174039914C84FF /* TRShopPinnedBalanceBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TRShopPinnedBalanceBar.swift; sourceTree = "<group>"; };
 		2529D5D1E0B42C1EF442262D /* missing_package_node.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = missing_package_node.json; sourceTree = "<group>"; };
 		2550571C48DE5AA16BA6D20F /* level_003.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = level_003.json; sourceTree = "<group>"; };
 		2570025AF6F195915E62AB5D /* level_017.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = level_017.json; sourceTree = "<group>"; };
@@ -314,12 +322,14 @@
 		4C13BB2799AF7B8830705334 /* ResultScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResultScreen.swift; sourceTree = "<group>"; };
 		507A4B3C1073E4C9899D941B /* TRProfileHeroCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TRProfileHeroCard.swift; sourceTree = "<group>"; };
 		5254F1F1936DDD4415D5AF0E /* level_016.solution.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = level_016.solution.json; sourceTree = "<group>"; };
+		54501006C7444F5E8CE49EFC /* TREdgeSwipeBackPolicy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TREdgeSwipeBackPolicy.swift; sourceTree = "<group>"; };
 		55D4E2A80A364361D0C1AD3D /* TRResultSummary.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TRResultSummary.swift; sourceTree = "<group>"; };
 		563D441318FC6043290F5415 /* LevelValidator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LevelValidator.swift; sourceTree = "<group>"; };
 		57041D58C883F065A7E52BE3 /* level_018.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = level_018.json; sourceTree = "<group>"; };
 		58B0439944A237B461C753B6 /* TRResultScreenBackground.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TRResultScreenBackground.swift; sourceTree = "<group>"; };
 		58C5DDA73FDF03A33CDC5BAA /* negative_par_taps.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = negative_par_taps.json; sourceTree = "<group>"; };
 		5CFEC1EFC483410914708AE6 /* level_013.solution.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = level_013.solution.json; sourceTree = "<group>"; };
+		5C7F97B0D889494DB4B3F6D9 /* TRMenuTitleLogo.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TRMenuTitleLogo.swift; sourceTree = "<group>"; };
 		5E972F20245469B0B50038E0 /* ShopScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShopScreen.swift; sourceTree = "<group>"; };
 		5F08C3B9313317816DDFEDFD /* LevelRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LevelRepository.swift; sourceTree = "<group>"; };
 		5F33C1856997830DC8E92C5B /* TRBottomNavigationItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TRBottomNavigationItem.swift; sourceTree = "<group>"; };
@@ -349,8 +359,10 @@
 		835A241F13DC0ED0992A689F /* LevelSimulationHarnessTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LevelSimulationHarnessTests.swift; sourceTree = "<group>"; };
 		8423A86EB968231672776BCD /* LevelSelectScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LevelSelectScreen.swift; sourceTree = "<group>"; };
 		8490DEADA9A1FC3AB3F8F0E2 /* shop_bag.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = shop_bag.png; sourceTree = "<group>"; };
+		852E902BFB6D46C5A7DD48B9 /* TRMenuSettingsButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TRMenuSettingsButton.swift; sourceTree = "<group>"; };
 		84BBA7B3E656CE02C02D1372 /* TRShopGoodiesStrip.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TRShopGoodiesStrip.swift; sourceTree = "<group>"; };
 		86A6858B9DF28FFF58B64B89 /* PurchaseService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PurchaseService.swift; sourceTree = "<group>"; };
+		862C57BE33434AF3A0028C88 /* TREdgeSwipeBackPolicyTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TREdgeSwipeBackPolicyTests.swift; sourceTree = "<group>"; };
 		86D5601913C689EB5ED4A957 /* RouteNode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RouteNode.swift; sourceTree = "<group>"; };
 		87540AF29D8504011ADE3812 /* simple_single_switch.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = simple_single_switch.json; sourceTree = "<group>"; };
 		8ADAC4DC85D57DA6B3A5D421 /* TRSettingsSliderRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TRSettingsSliderRow.swift; sourceTree = "<group>"; };
@@ -552,6 +564,7 @@
 		2CC069E53C0E83CF5BBD8DC4 /* Levels */ = {
 			isa = PBXGroup;
 			children = (
+				2396FAA12FC6796B003AA416 /* level_022.json */,
 				C110C9DEB2E44438FDB43C40 /* level_001.json */,
 				BD797DABF97371C1E3AC74E2 /* level_002.json */,
 				2550571C48DE5AA16BA6D20F /* level_003.json */,
@@ -736,6 +749,7 @@
 				8B6D699A9C78F07EBC037154 /* TRDeliveryDotView.swift */,
 				C1884FA3191EADB5F9673AA3 /* TRDeliveryTrailView.swift */,
 				A1D5824298090FADAB8A6259 /* TRDestinationMarkerView.swift */,
+				54501006C7444F5E8CE49EFC /* TREdgeSwipeBackPolicy.swift */,
 				6C596DA5340849D282DD6B4E /* TRGameplayCosmeticStyle.swift */,
 				361B29040D703572B02D178A /* TRGameplayHUD.swift */,
 				34077F31F2E9880064B46C36 /* TRGameplayStyle.swift */,
@@ -746,6 +760,8 @@
 				CC3781828CCF0BB8E4B08BB1 /* TRMapBackgroundView.swift */,
 				B219E6530196E4FB312FDAF4 /* TRMenuButton.swift */,
 				9DAED5C09C2607B2276F1D93 /* TRMenuHeader.swift */,
+				852E902BFB6D46C5A7DD48B9 /* TRMenuSettingsButton.swift */,
+				5C7F97B0D889494DB4B3F6D9 /* TRMenuTitleLogo.swift */,
 				2A260DC0F35E868D025857A7 /* TRMilestoneRewardsPlaceholderCard.swift */,
 				E105DE6F4E058FC27220DA8C /* TRProfileAchievementPreviewCard.swift */,
 				EED2692EFA7D34A03E5F840E /* TRProfileActionButtons.swift */,
@@ -776,6 +792,7 @@
 				9270D46D1A770A624E55E2F9 /* TRShopFeaturedCard.swift */,
 				84BBA7B3E656CE02C02D1372 /* TRShopGoodiesStrip.swift */,
 				C63499908293A2DBC881A1CE /* TRShopIconViews.swift */,
+				248BEAD5A3174039914C84FF /* TRShopPinnedBalanceBar.swift */,
 				9D6C15F716688976FE0FC98A /* TRShopRoutePreviewView.swift */,
 				06ECC2E70A22D81A946D4C1B /* TRShopRouteThemePreviewCard.swift */,
 				F76D2EBA9A7513B255BB85FD /* TRShopSectionHeader.swift */,
@@ -852,6 +869,7 @@
 				BCAE6FF35E76DFDBADE30054 /* TRDeliveryDotViewTests.swift */,
 				29CCDB5DCEA604E7F0496B48 /* TRDeliveryTrailViewTests.swift */,
 				DA159D82008BBEE377BE7CDA /* TRDestinationMarkerViewTests.swift */,
+				862C57BE33434AF3A0028C88 /* TREdgeSwipeBackPolicyTests.swift */,
 				BF0CC4388F71CE3B90CBBC80 /* TRGameplayStyleTests.swift */,
 				DB36FE885CC3E6CCDEBA0658 /* TRLevelPathViewTests.swift */,
 				B5A668594640E5A1D7C10886 /* TRMenuHeaderTests.swift */,
@@ -970,6 +988,7 @@
 				35B4FF237960A49055271F4A /* level_015.json in Resources */,
 				65D03FE03097FA5F489A4EF5 /* level_016.json in Resources */,
 				791852151987820601808983 /* level_017.json in Resources */,
+				2396FAA22FC6796B003AA416 /* level_022.json in Resources */,
 				C3044013241D35FFF4BB716F /* level_018.json in Resources */,
 				FC2A7D83FFD76E394BA0D6CB /* level_019.json in Resources */,
 				7D8DEE1F6FB67C46B3753660 /* level_020.json in Resources */,
@@ -1091,6 +1110,7 @@
 				5C1E48E7F514D551B80D2A85 /* TRDeliveryDotView.swift in Sources */,
 				A66817DF09A53BC6DB3FB2A0 /* TRDeliveryTrailView.swift in Sources */,
 				E8D44C7479C5D499E15E00EC /* TRDestinationMarkerView.swift in Sources */,
+				02DD4D6095A243448CE1B8C8 /* TREdgeSwipeBackPolicy.swift in Sources */,
 				115613DA07053A34DB94DB55 /* TRGameplayCosmeticStyle.swift in Sources */,
 				3A6026DA9B0747F7AF393338 /* TRGameplayHUD.swift in Sources */,
 				C6C879E35B0A45FD1A8699A7 /* TRGameplayStyle.swift in Sources */,
@@ -1101,6 +1121,8 @@
 				285F89C6DBFF294EB4D8D160 /* TRMapBackgroundView.swift in Sources */,
 				FD2A2990B91D7217ED8E3789 /* TRMenuButton.swift in Sources */,
 				171FED8DA43F03D6EF30AC6A /* TRMenuHeader.swift in Sources */,
+				9CF2F7552D6640FF9BD51AE3 /* TRMenuSettingsButton.swift in Sources */,
+				CD6B56A7A386462BB6238F71 /* TRMenuTitleLogo.swift in Sources */,
 				0973147C78B4DDD1B2D70B72 /* TRMilestoneRewardsPlaceholderCard.swift in Sources */,
 				D5B4DD78E155F0062DD3595B /* TRProfileAchievementPreviewCard.swift in Sources */,
 				E6AA81C9990F8364F66970D4 /* TRProfileActionButtons.swift in Sources */,
@@ -1132,6 +1154,7 @@
 				E4A5B0BBABD72DAE24399369 /* TRShopFeaturedCard.swift in Sources */,
 				A663BC94DC78F2D4CD7937A1 /* TRShopGoodiesStrip.swift in Sources */,
 				29BE029930880B2786B69EA4 /* TRShopIconViews.swift in Sources */,
+				6E967817F29C4B29AF301438 /* TRShopPinnedBalanceBar.swift in Sources */,
 				73B9A7F7B281A5F33D9D91F7 /* TRShopRoutePreviewView.swift in Sources */,
 				99A08ECC3B8474D6D80007C2 /* TRShopRouteThemePreviewCard.swift in Sources */,
 				90C9CFF145F57B0F5EDA37F2 /* TRShopSectionHeader.swift in Sources */,
@@ -1186,6 +1209,7 @@
 				8F7D01504DDF30EA83929D74 /* TRDeliveryDotViewTests.swift in Sources */,
 				CE004A72F0F151745BD9A85B /* TRDeliveryTrailViewTests.swift in Sources */,
 				C61908F46D67D6B0C2C43DC1 /* TRDestinationMarkerViewTests.swift in Sources */,
+				49FD6E7AF1D74F0EAD5D56C9 /* TREdgeSwipeBackPolicyTests.swift in Sources */,
 				F47ED91FDE86BB5A9D017415 /* TRGameplayStyleTests.swift in Sources */,
 				AB50103C2414AC2398E81F2B /* TRLevelPathViewTests.swift in Sources */,
 				DFF7BE618702FB3D310420CD /* TRMenuHeaderTests.swift in Sources */,

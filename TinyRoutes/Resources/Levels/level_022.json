@@ -1,0 +1,98 @@
+{
+  "id": "level_022",
+  "name": "Level 022",
+  "graph": {
+    "nodes": [
+      {
+        "id": "switch",
+        "x": 0.011111111111111112,
+        "y": 1.9222222222222223,
+        "outgoingEdgeIDs": [
+          "edge_1",
+          "edge_2",
+          "edge_6"
+        ]
+      },
+      {
+        "id": "package",
+        "x": -2.15,
+        "y": 4.216666666666667,
+        "outgoingEdgeIDs": [
+          "edge_4"
+        ]
+      },
+      {
+        "id": "node",
+        "x": 3.077777777777778,
+        "y": 1.9444444444444444,
+        "outgoingEdgeIDs": [
+          "edge_3",
+          "edge_5"
+        ]
+      },
+      {
+        "id": "start",
+        "x": -0.027999999999999955,
+        "y": -1.3860000000000001,
+        "outgoingEdgeIDs": [
+          "edge"
+        ]
+      },
+      {
+        "id": "destination",
+        "x": 3.0519999999999996,
+        "y": -0.896,
+        "outgoingEdgeIDs": []
+      }
+    ],
+    "edges": [
+      {
+        "id": "edge_4",
+        "fromNodeID": "package",
+        "toNodeID": "switch",
+        "roadShape": "horizontalFirst"
+      },
+      {
+        "id": "edge_1",
+        "fromNodeID": "switch",
+        "toNodeID": "package",
+        "roadShape": "horizontalFirst"
+      },
+      {
+        "id": "edge_2",
+        "fromNodeID": "switch",
+        "toNodeID": "node",
+        "roadShape": "horizontalFirst"
+      },
+      {
+        "id": "edge_3",
+        "fromNodeID": "node",
+        "toNodeID": "switch",
+        "roadShape": "horizontalFirst"
+      },
+      {
+        "id": "edge",
+        "fromNodeID": "start",
+        "toNodeID": "switch",
+        "roadShape": "horizontalFirst"
+      },
+      {
+        "id": "edge_5",
+        "fromNodeID": "node",
+        "toNodeID": "destination",
+        "roadShape": "horizontalFirst"
+      },
+      {
+        "id": "edge_6",
+        "fromNodeID": "switch",
+        "toNodeID": "start",
+        "roadShape": "horizontalFirst"
+      }
+    ]
+  },
+  "startNodeID": "start",
+  "packageNodeID": "package",
+  "destinationNodeID": "destination",
+  "timeLimitSeconds": 30,
+  "parTaps": 0
+}

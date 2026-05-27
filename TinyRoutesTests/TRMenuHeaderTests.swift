@@ -29,6 +29,23 @@ final class TRMenuHeaderTests: XCTestCase {
     }
 
     @MainActor
+    func testMenuSettingsButtonCanBeCreated() {
+        let button = TRMenuSettingsButton(action: {})
+
+        XCTAssertNotNil(button)
+    }
+
+    @MainActor
+    func testMenuTitleLogoCanBeCreated() {
+        let logo = TRMenuTitleLogo(
+            pageTitle: "Shop",
+            subtitleOverride: "Customize your journey"
+        )
+
+        XCTAssertNotNil(logo)
+    }
+
+    @MainActor
     func testShopScreenCanBeCreatedWithStandardHeaderInputs() {
         let screen = ShopScreen(
             coinTotal: 1_250,
