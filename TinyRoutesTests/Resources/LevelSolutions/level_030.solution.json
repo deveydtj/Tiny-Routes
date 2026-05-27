@@ -1,17 +1,25 @@
 {
   "levelID": "level_030",
-  "description": "Rotate the approach switch to collect the package, then rotate the finish switch to reach destination.",
+  "description": "Rotate each chain switch once so the route avoids dead ends and completes delivery.",
   "expectedOutcome": "completed",
-  "maxTaps": 2,
+  "maxTaps": 4,
   "requiresWithinTimeLimit": true,
   "actions": [
     {
-      "timeSeconds": 0.5,
-      "tapNodeID": "lower_entry_switch"
+      "timeSeconds": 0.32,
+      "tapNodeID": "multi_switch_chain_four_switch_switch_a"
     },
     {
-      "timeSeconds": 3.15,
-      "tapNodeID": "lower_finish_switch"
+      "timeSeconds": 2.52,
+      "tapNodeID": "multi_switch_chain_four_switch_switch_b"
+    },
+    {
+      "timeSeconds": 3.2,
+      "tapNodeID": "multi_switch_chain_four_switch_switch_c"
+    },
+    {
+      "timeSeconds": 3.92,
+      "tapNodeID": "multi_switch_chain_four_switch_switch_d"
     }
   ]
 }

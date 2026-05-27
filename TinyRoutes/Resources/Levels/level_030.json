@@ -5,91 +5,145 @@
     "nodes": [
       {
         "id": "start",
-        "x": -1.0,
-        "y": 0.4,
+        "x": -1.1,
+        "y": -0.2,
         "outgoingEdgeIDs": [
-          "e_start_lower_entry_switch"
+          "e_start_multi_switch_chain_four_switch_switch_a"
         ]
       },
       {
-        "id": "lower_entry_switch",
-        "x": -0.5,
+        "id": "multi_switch_chain_four_switch_switch_a",
+        "x": -0.75,
         "y": 0.2,
         "outgoingEdgeIDs": [
-          "e_lower_entry_switch_lower_bypass",
-          "e_lower_entry_switch_package"
+          "e_multi_switch_chain_four_switch_switch_a_multi_switch_chain_four_switch_dead_end_a",
+          "e_multi_switch_chain_four_switch_switch_a_package"
         ]
-      },
-      {
-        "id": "lower_bypass",
-        "x": 0.1,
-        "y": 0.85,
-        "outgoingEdgeIDs": []
       },
       {
         "id": "package",
+        "x": -0.35,
+        "y": -0.6,
+        "outgoingEdgeIDs": [
+          "e_package_multi_switch_chain_four_switch_switch_b"
+        ]
+      },
+      {
+        "id": "multi_switch_chain_four_switch_switch_b",
         "x": 0.0,
-        "y": -0.75,
+        "y": 0.2,
         "outgoingEdgeIDs": [
-          "e_package_lower_finish_switch"
+          "e_multi_switch_chain_four_switch_switch_b_multi_switch_chain_four_switch_dead_end_b",
+          "e_multi_switch_chain_four_switch_switch_b_multi_switch_chain_four_switch_switch_c"
         ]
       },
       {
-        "id": "lower_finish_switch",
-        "x": 0.6,
-        "y": -0.15,
+        "id": "multi_switch_chain_four_switch_switch_c",
+        "x": 0.35,
+        "y": -0.2,
         "outgoingEdgeIDs": [
-          "e_lower_finish_switch_lower_dead_end",
-          "e_lower_finish_switch_destination"
+          "e_multi_switch_chain_four_switch_switch_c_multi_switch_chain_four_switch_dead_end_c",
+          "e_multi_switch_chain_four_switch_switch_c_multi_switch_chain_four_switch_switch_d"
         ]
       },
       {
-        "id": "lower_dead_end",
-        "x": 1.0,
-        "y": 0.5,
-        "outgoingEdgeIDs": []
+        "id": "multi_switch_chain_four_switch_switch_d",
+        "x": 0.75,
+        "y": 0.2,
+        "outgoingEdgeIDs": [
+          "e_multi_switch_chain_four_switch_switch_d_multi_switch_chain_four_switch_dead_end_d",
+          "e_multi_switch_chain_four_switch_switch_d_destination"
+        ]
       },
       {
         "id": "destination",
-        "x": 1.05,
-        "y": -0.9,
+        "x": 1.1,
+        "y": -0.35,
+        "outgoingEdgeIDs": []
+      },
+      {
+        "id": "multi_switch_chain_four_switch_dead_end_a",
+        "x": -0.75,
+        "y": -0.95,
+        "outgoingEdgeIDs": []
+      },
+      {
+        "id": "multi_switch_chain_four_switch_dead_end_b",
+        "x": 0.0,
+        "y": -0.95,
+        "outgoingEdgeIDs": []
+      },
+      {
+        "id": "multi_switch_chain_four_switch_dead_end_c",
+        "x": 0.35,
+        "y": 0.95,
+        "outgoingEdgeIDs": []
+      },
+      {
+        "id": "multi_switch_chain_four_switch_dead_end_d",
+        "x": 0.75,
+        "y": -0.95,
         "outgoingEdgeIDs": []
       }
     ],
     "edges": [
       {
-        "id": "e_start_lower_entry_switch",
+        "id": "e_start_multi_switch_chain_four_switch_switch_a",
         "fromNodeID": "start",
-        "toNodeID": "lower_entry_switch",
-        "roadShape": "horizontalFirst"
-      },
-      {
-        "id": "e_lower_entry_switch_lower_bypass",
-        "fromNodeID": "lower_entry_switch",
-        "toNodeID": "lower_bypass",
+        "toNodeID": "multi_switch_chain_four_switch_switch_a",
         "roadShape": "verticalFirst"
       },
       {
-        "id": "e_lower_entry_switch_package",
-        "fromNodeID": "lower_entry_switch",
+        "id": "e_multi_switch_chain_four_switch_switch_a_multi_switch_chain_four_switch_dead_end_a",
+        "fromNodeID": "multi_switch_chain_four_switch_switch_a",
+        "toNodeID": "multi_switch_chain_four_switch_dead_end_a",
+        "roadShape": "verticalFirst"
+      },
+      {
+        "id": "e_multi_switch_chain_four_switch_switch_a_package",
+        "fromNodeID": "multi_switch_chain_four_switch_switch_a",
         "toNodeID": "package",
         "roadShape": "verticalFirst"
       },
       {
-        "id": "e_package_lower_finish_switch",
+        "id": "e_package_multi_switch_chain_four_switch_switch_b",
         "fromNodeID": "package",
-        "toNodeID": "lower_finish_switch",
-        "roadShape": "horizontalFirst"
-      },
-      {
-        "id": "e_lower_finish_switch_lower_dead_end",
-        "fromNodeID": "lower_finish_switch",
-        "toNodeID": "lower_dead_end",
+        "toNodeID": "multi_switch_chain_four_switch_switch_b",
         "roadShape": "verticalFirst"
       },
       {
-        "id": "e_lower_finish_switch_destination",
-        "fromNodeID": "lower_finish_switch",
+        "id": "e_multi_switch_chain_four_switch_switch_b_multi_switch_chain_four_switch_dead_end_b",
+        "fromNodeID": "multi_switch_chain_four_switch_switch_b",
+        "toNodeID": "multi_switch_chain_four_switch_dead_end_b",
+        "roadShape": "verticalFirst"
+      },
+      {
+        "id": "e_multi_switch_chain_four_switch_switch_b_multi_switch_chain_four_switch_switch_c",
+        "fromNodeID": "multi_switch_chain_four_switch_switch_b",
+        "toNodeID": "multi_switch_chain_four_switch_switch_c",
+        "roadShape": "verticalFirst"
+      },
+      {
+        "id": "e_multi_switch_chain_four_switch_switch_c_multi_switch_chain_four_switch_dead_end_c",
+        "fromNodeID": "multi_switch_chain_four_switch_switch_c",
+        "toNodeID": "multi_switch_chain_four_switch_dead_end_c",
+        "roadShape": "verticalFirst"
+      },
+      {
+        "id": "e_multi_switch_chain_four_switch_switch_c_multi_switch_chain_four_switch_switch_d",
+        "fromNodeID": "multi_switch_chain_four_switch_switch_c",
+        "toNodeID": "multi_switch_chain_four_switch_switch_d",
+        "roadShape": "horizontalFirst"
+      },
+      {
+        "id": "e_multi_switch_chain_four_switch_switch_d_multi_switch_chain_four_switch_dead_end_d",
+        "fromNodeID": "multi_switch_chain_four_switch_switch_d",
+        "toNodeID": "multi_switch_chain_four_switch_dead_end_d",
+        "roadShape": "verticalFirst"
+      },
+      {
+        "id": "e_multi_switch_chain_four_switch_switch_d_destination",
+        "fromNodeID": "multi_switch_chain_four_switch_switch_d",
         "toNodeID": "destination",
         "roadShape": "verticalFirst"
       }
@@ -99,5 +153,5 @@
   "packageNodeID": "package",
   "destinationNodeID": "destination",
   "timeLimitSeconds": 30,
-  "parTaps": 2
+  "parTaps": 4
 }

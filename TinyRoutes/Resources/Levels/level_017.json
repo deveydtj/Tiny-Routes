@@ -5,100 +5,119 @@
     "nodes": [
       {
         "id": "start",
-        "x": -1.15,
-        "y": -0.15,
+        "x": -1.05,
+        "y": 0.2,
         "outgoingEdgeIDs": [
-          "e_start_upper_alpha_switch"
+          "e_start_multi_switch_chain_zigzag_switch_a"
         ]
       },
       {
-        "id": "upper_alpha_switch",
-        "x": -0.55,
-        "y": -0.05,
+        "id": "multi_switch_chain_zigzag_switch_a",
+        "x": -0.65,
+        "y": -0.2,
         "outgoingEdgeIDs": [
-          "e_upper_alpha_switch_destination",
-          "e_upper_alpha_switch_package"
+          "e_multi_switch_chain_zigzag_switch_a_multi_switch_chain_zigzag_dead_end_a",
+          "e_multi_switch_chain_zigzag_switch_a_package"
         ]
       },
       {
         "id": "package",
-        "x": 0.05,
-        "y": 0.8,
+        "x": -0.2,
+        "y": 0.6,
         "outgoingEdgeIDs": [
-          "e_package_upper_beta_switch"
+          "e_package_multi_switch_chain_zigzag_switch_b"
         ]
       },
       {
-        "id": "upper_beta_switch",
-        "x": 0.7,
-        "y": 0.7,
+        "id": "multi_switch_chain_zigzag_switch_b",
+        "x": 0.2,
+        "y": -0.2,
         "outgoingEdgeIDs": [
-          "e_upper_beta_switch_upper_dead_end",
-          "e_upper_beta_switch_upper_return"
+          "e_multi_switch_chain_zigzag_switch_b_multi_switch_chain_zigzag_dead_end_b",
+          "e_multi_switch_chain_zigzag_switch_b_multi_switch_chain_zigzag_switch_c"
         ]
       },
       {
-        "id": "upper_return",
-        "x": 0.85,
-        "y": -0.45,
+        "id": "multi_switch_chain_zigzag_switch_c",
+        "x": 0.65,
+        "y": 0.2,
         "outgoingEdgeIDs": [
-          "e_upper_return_upper_alpha_switch"
+          "e_multi_switch_chain_zigzag_switch_c_multi_switch_chain_zigzag_dead_end_c",
+          "e_multi_switch_chain_zigzag_switch_c_destination"
         ]
       },
       {
         "id": "destination",
-        "x": -0.1,
-        "y": -1.05,
+        "x": 1.05,
+        "y": 0.35,
         "outgoingEdgeIDs": []
       },
       {
-        "id": "upper_dead_end",
-        "x": 1.2,
-        "y": 0.2,
+        "id": "multi_switch_chain_zigzag_dead_end_a",
+        "x": -0.65,
+        "y": 1.0,
+        "outgoingEdgeIDs": []
+      },
+      {
+        "id": "multi_switch_chain_zigzag_dead_end_b",
+        "x": 0.2,
+        "y": 1.0,
+        "outgoingEdgeIDs": []
+      },
+      {
+        "id": "multi_switch_chain_zigzag_dead_end_c",
+        "x": 0.65,
+        "y": -1.0,
         "outgoingEdgeIDs": []
       }
     ],
     "edges": [
       {
-        "id": "e_start_upper_alpha_switch",
+        "id": "e_start_multi_switch_chain_zigzag_switch_a",
         "fromNodeID": "start",
-        "toNodeID": "upper_alpha_switch",
+        "toNodeID": "multi_switch_chain_zigzag_switch_a",
         "roadShape": "horizontalFirst"
       },
       {
-        "id": "e_upper_alpha_switch_destination",
-        "fromNodeID": "upper_alpha_switch",
-        "toNodeID": "destination",
+        "id": "e_multi_switch_chain_zigzag_switch_a_multi_switch_chain_zigzag_dead_end_a",
+        "fromNodeID": "multi_switch_chain_zigzag_switch_a",
+        "toNodeID": "multi_switch_chain_zigzag_dead_end_a",
         "roadShape": "verticalFirst"
       },
       {
-        "id": "e_upper_alpha_switch_package",
-        "fromNodeID": "upper_alpha_switch",
+        "id": "e_multi_switch_chain_zigzag_switch_a_package",
+        "fromNodeID": "multi_switch_chain_zigzag_switch_a",
         "toNodeID": "package",
         "roadShape": "verticalFirst"
       },
       {
-        "id": "e_package_upper_beta_switch",
+        "id": "e_package_multi_switch_chain_zigzag_switch_b",
         "fromNodeID": "package",
-        "toNodeID": "upper_beta_switch",
-        "roadShape": "horizontalFirst"
-      },
-      {
-        "id": "e_upper_beta_switch_upper_dead_end",
-        "fromNodeID": "upper_beta_switch",
-        "toNodeID": "upper_dead_end",
-        "roadShape": "horizontalFirst"
-      },
-      {
-        "id": "e_upper_beta_switch_upper_return",
-        "fromNodeID": "upper_beta_switch",
-        "toNodeID": "upper_return",
+        "toNodeID": "multi_switch_chain_zigzag_switch_b",
         "roadShape": "verticalFirst"
       },
       {
-        "id": "e_upper_return_upper_alpha_switch",
-        "fromNodeID": "upper_return",
-        "toNodeID": "upper_alpha_switch",
+        "id": "e_multi_switch_chain_zigzag_switch_b_multi_switch_chain_zigzag_dead_end_b",
+        "fromNodeID": "multi_switch_chain_zigzag_switch_b",
+        "toNodeID": "multi_switch_chain_zigzag_dead_end_b",
+        "roadShape": "verticalFirst"
+      },
+      {
+        "id": "e_multi_switch_chain_zigzag_switch_b_multi_switch_chain_zigzag_switch_c",
+        "fromNodeID": "multi_switch_chain_zigzag_switch_b",
+        "toNodeID": "multi_switch_chain_zigzag_switch_c",
+        "roadShape": "horizontalFirst"
+      },
+      {
+        "id": "e_multi_switch_chain_zigzag_switch_c_multi_switch_chain_zigzag_dead_end_c",
+        "fromNodeID": "multi_switch_chain_zigzag_switch_c",
+        "toNodeID": "multi_switch_chain_zigzag_dead_end_c",
+        "roadShape": "verticalFirst"
+      },
+      {
+        "id": "e_multi_switch_chain_zigzag_switch_c_destination",
+        "fromNodeID": "multi_switch_chain_zigzag_switch_c",
+        "toNodeID": "destination",
         "roadShape": "horizontalFirst"
       }
     ]

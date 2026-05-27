@@ -53,6 +53,7 @@ class ReturnLoopTemplate(LevelTemplate):
             positions,
             preset,
             "Rotate alpha to collect the package, rotate beta onto the return path, then rotate alpha again for destination.",
+            route_edge_shapes=self.route_edge_shapes_for(level, route),
         )
         return self.generated(
             level,

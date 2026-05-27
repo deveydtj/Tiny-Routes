@@ -24,6 +24,10 @@ class SwiftTestService:
             "-destination",
             "platform=iOS Simulator,name=iPhone 16,OS=18.5",
             "-only-testing:TinyRoutesTests/LevelSolvabilityTests",
+            "-only-testing:TinyRoutesTests/LevelSimulationHarnessTests",
+            "-only-testing:TinyRoutesTests/LevelSolutionScriptTests",
+            "-only-testing:TinyRoutesTests/RouteEngineTests",
+            "-only-testing:TinyRoutesTests/SwitchNodeViewTests",
         ]
 
     def is_available(self) -> bool:

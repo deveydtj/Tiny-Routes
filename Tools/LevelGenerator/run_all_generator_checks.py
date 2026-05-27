@@ -43,7 +43,10 @@ def main(argv: list[str] | None = None) -> int:
             ]
         )
     if not args.skip_production_validation:
-        level_ids = [f"level_{number:03d}" for number in range(1, 21)]
+        level_ids = sorted(
+            path.stem
+            for path in (repo_root / "TinyRoutes" / "Resources" / "Levels").glob("level_*.json")
+        )
         commands.append(
             [
                 args.python,

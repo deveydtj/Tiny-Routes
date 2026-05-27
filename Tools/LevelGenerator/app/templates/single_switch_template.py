@@ -66,6 +66,7 @@ class SingleSwitchTemplate(LevelTemplate):
             positions,
             preset,
             "Rotate choice once so the route collects the package before heading to destination.",
+            route_edge_shapes=self.route_edge_shapes_for(level, route),
         )
         return self.generated(
             level,

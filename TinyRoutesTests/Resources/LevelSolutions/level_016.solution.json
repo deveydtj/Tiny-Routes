@@ -6,11 +6,11 @@
   "requiresWithinTimeLimit": true,
   "actions": [
     {
-      "timeSeconds": 0.75,
+      "timeSeconds": 0.54,
       "tapNodeID": "multi_switch_chain_zigzag_switch_a"
     },
     {
-      "timeSeconds": 3.35,
+      "timeSeconds": 2.98,
       "tapNodeID": "multi_switch_chain_zigzag_switch_b"
     }
   ]

@@ -4,9 +4,13 @@ from collections import Counter
 
 from ..level_editor_imports import SolutionActionModel, SolutionModel
 from ..models.difficulty_preset import DifficultyPreset
+from .route_timing_service import RouteTimingService
 
 
 class SolutionBuilderService:
+    def __init__(self) -> None:
+        self.route_timing = RouteTimingService()
+
     def build_no_tap_solution(self, level_id: str, description: str | None = None) -> SolutionModel:
         return SolutionModel(
             levelID=level_id,
@@ -49,7 +53,8 @@ class SolutionBuilderService:
         positions: dict[str, tuple[float, float]],
         preset: DifficultyPreset,
         description: str,
-        lead_time_seconds: float = 0.2,
+        lead_time_seconds: float = 0.35,
+        route_edge_shapes: dict[tuple[str, str], str | None] | None = None,
     ) -> SolutionModel:
         times = self._times_before_route_arrivals(
             tap_node_ids,
@@ -57,6 +62,7 @@ class SolutionBuilderService:
             positions,
             preset,
             lead_time_seconds,
+            route_edge_shapes,
         )
         return self.build_tap_solution(level_id, tap_node_ids, preset, description, times=times)
 
@@ -102,8 +108,9 @@ class SolutionBuilderService:
         positions: dict[str, tuple[float, float]],
         preset: DifficultyPreset,
         lead_time_seconds: float,
+        route_edge_shapes: dict[tuple[str, str], str | None] | None,
     ) -> list[float]:
-        arrival_times = self._route_arrival_times(route_node_ids, positions)
+        arrival_times = self._route_arrival_times(route_node_ids, positions, route_edge_shapes)
         times: list[float] = []
         search_start = 0
         previous_time: float | None = None
@@ -114,7 +121,7 @@ class SolutionBuilderService:
             raw_time = max(0.1, arrival_times[route_index] - lead_time_seconds)
             if previous_time is not None and raw_time - previous_time < preset.min_tap_spacing_seconds:
                 raw_time = previous_time + preset.min_tap_spacing_seconds
-            times.append(round(raw_time, 2))
+            times.append(raw_time)
             previous_time = raw_time
             search_start = route_index + 1
         return times
@@ -123,17 +130,9 @@ class SolutionBuilderService:
         self,
         route_node_ids: list[str],
         positions: dict[str, tuple[float, float]],
+        route_edge_shapes: dict[tuple[str, str], str | None] | None,
     ) -> list[float]:
-        if not route_node_ids:
-            return []
-        arrival_times = [0.0]
-        elapsed = 0.0
-        for from_node_id, to_node_id in zip(route_node_ids, route_node_ids[1:]):
-            from_position = positions[from_node_id]
-            to_position = positions[to_node_id]
-            elapsed += abs(from_position[0] - to_position[0]) + abs(from_position[1] - to_position[1])
-            arrival_times.append(elapsed)
-        return arrival_times
+        return self.route_timing.route_arrival_times(route_node_ids, positions, edges_by_route_pair=route_edge_shapes)
 
     def _find_next_route_index(
         self,

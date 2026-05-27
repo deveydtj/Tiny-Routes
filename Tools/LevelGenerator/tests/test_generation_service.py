@@ -128,6 +128,20 @@ def test_generation_service_rejects_duplicate_batch_candidates(tmp_path) -> None
     assert result.rejection_reason_counts["candidate_too_similar_to_batch"] == 2
 
 
+def test_generation_service_requires_swift_tests_for_hard_mixed_production_writes(tmp_path) -> None:
+    result = LevelGenerationService().generate(
+        _config(
+            tmp_path,
+            difficulty="hard",
+            template_name="mixed",
+            dry_run=False,
+        )
+    )
+
+    assert result.passed is False
+    assert "--swift-tests" in result.messages[0]
+
+
 def test_generation_service_generates_unique_medium_mixed_batch(tmp_path) -> None:
     result = LevelGenerationService().generate(
         _config(

@@ -7,11 +7,13 @@ from typing import Any
 
 from ..paths import find_repo_root
 from ..services.preview_image_service import PreviewImageService
+from ..services.route_timing_service import RouteTimingService
 
 
 class GenerationReportRepository:
     def __init__(self) -> None:
         self.preview_image_service = PreviewImageService()
+        self.route_timing = RouteTimingService()
 
     def write_markdown(self, path: Path, config, result) -> Path:
         path = Path(path)
@@ -43,6 +45,7 @@ class GenerationReportRepository:
             "syncXcodeProject": config.sync_xcode_project,
             "compareAgainstExisting": config.compare_against_existing,
             "candidatePoolSize": config.candidate_pool_size,
+            "passed": getattr(result, "passed", True),
             "acceptedLevels": [
                 {
                     "levelID": level.level_id,
@@ -58,9 +61,11 @@ class GenerationReportRepository:
                     "signature": self._signature_payload(level),
                     "quality": self._quality_payload(level),
                     "simulation": self._simulation_payload(level),
+                    "switchPreview": self._switch_preview_payload(level),
                     "previewPath": str(level.preview_path) if level.preview_path else None,
                     "status": "passed",
                     "notes": level.generation_notes,
+                    "warnings": list(getattr(level, "warning_messages", [])),
                 }
                 for level in result.accepted
             ],
@@ -76,6 +81,7 @@ class GenerationReportRepository:
                 "summary": result.swift_test_summary.summary,
             },
             "messages": list(result.messages),
+            "recommendations": self._recommendations(config, result),
             "xcodegenNote": (
                 "project.yml includes resource directories. Production generation syncs TinyRoutes.xcodeproj "
                 "with `xcodegen generate` before Swift tests unless `--no-xcodegen` is used."
@@ -126,6 +132,27 @@ class GenerationReportRepository:
         if not payload["acceptedLevels"]:
             lines.append("| _None_ |  |  |  |  |  |  |  |  |  |  |  | failed |")
 
+        if payload["acceptedLevels"]:
+            lines.extend(["", "## Level Details", ""])
+            for level in payload["acceptedLevels"]:
+                lines.append(f"### `{level['levelID']}`")
+                for switch in level["switchPreview"]:
+                    transition_summary = ", ".join(
+                        (
+                            f"tap {transition['tapSequence']} @ {transition['timeSeconds']:.2f}s"
+                            f" -> `{transition['targetEdgeID']}` ({transition['postTapArrowDirection']})"
+                        )
+                        for transition in switch["tapTransitions"]
+                    ) or "no scripted taps"
+                    lines.append(
+                        f"- Switch `{switch['switchID']}` starts on `{switch['initialActiveEdgeID']}` "
+                        f"({switch['initialArrowDirection']}); {transition_summary}."
+                    )
+                for warning in level["warnings"]:
+                    lines.append(f"- Warning: {warning}")
+                if not level["switchPreview"] and not level["warnings"]:
+                    lines.append("- No switch-specific review notes.")
+
         lines.extend(["", "## Rejections", ""])
         lines.append(f"- Rejected candidates: `{payload['rejectedCandidateCount']}`")
         for reason, count in sorted(payload["rejectionReasonCounts"].items()):
@@ -135,6 +162,11 @@ class GenerationReportRepository:
             lines.extend(["", "## Messages", ""])
             for message in payload["messages"]:
                 lines.append(f"- {message}")
+
+        if payload["recommendations"]:
+            lines.extend(["", "## Recommendations", ""])
+            for recommendation in payload["recommendations"]:
+                lines.append(f"- {recommendation}")
 
         lines.extend(
             [
@@ -214,3 +246,88 @@ class GenerationReportRepository:
             "reachedPackage": simulation.reached_package,
             "reachedDestination": simulation.reached_destination,
         }
+
+    def _switch_preview_payload(self, level) -> list[dict[str, Any]]:
+        level_document = level.level_document
+        node_by_id = {node.id: node for node in level_document.graph.nodes}
+        edge_by_id = {edge.id: edge for edge in level_document.graph.edges}
+        actions_by_node_id: dict[str, list[Any]] = {}
+        for action in sorted(level.solution.actions, key=lambda action: float(action.timeSeconds)):
+            actions_by_node_id.setdefault(action.tapNodeID, []).append(action)
+
+        switch_previews: list[dict[str, Any]] = []
+        for node in level_document.graph.nodes:
+            valid_edges = [
+                edge_by_id[edge_id]
+                for edge_id in node.outgoingEdgeIDs
+                if edge_id in edge_by_id and edge_by_id[edge_id].fromNodeID == node.id
+            ]
+            if len(valid_edges) < 2:
+                continue
+
+            active_index = 0
+            initial_edge = valid_edges[active_index]
+            switch_preview = {
+                "switchID": node.id,
+                "initialActiveEdgeID": initial_edge.id,
+                "initialTargetNodeID": initial_edge.toNodeID,
+                "initialArrowDirection": self._edge_direction_label(initial_edge, node_by_id),
+                "tapTransitions": [],
+            }
+
+            for tap_index, action in enumerate(actions_by_node_id.get(node.id, []), start=1):
+                active_index = (active_index + 1) % len(valid_edges)
+                target_edge = valid_edges[active_index]
+                switch_preview["tapTransitions"].append(
+                    {
+                        "tapSequence": tap_index,
+                        "timeSeconds": float(action.timeSeconds),
+                        "targetEdgeID": target_edge.id,
+                        "targetNodeID": target_edge.toNodeID,
+                        "postTapArrowDirection": self._edge_direction_label(target_edge, node_by_id),
+                    }
+                )
+
+            switch_previews.append(switch_preview)
+        return switch_previews
+
+    def _edge_direction_label(self, edge, node_by_id) -> str:
+        from_node = node_by_id.get(edge.fromNodeID)
+        to_node = node_by_id.get(edge.toNodeID)
+        if from_node is None or to_node is None:
+            return "east"
+        angle = self.route_timing.direction_angle(
+            (from_node.x, from_node.y),
+            (to_node.x, to_node.y),
+            edge.roadShape,
+        )
+        return self.route_timing.direction_label(angle)
+
+    def _recommendations(self, config, result) -> list[str]:
+        if getattr(result, "passed", True):
+            return []
+        rejection_counts = dict(getattr(result, "rejection_reason_counts", {}))
+        if not rejection_counts:
+            return []
+
+        most_common_reason = max(rejection_counts.items(), key=lambda item: item[1])[0]
+        recommendations: list[str] = [f"Most common rejection: `{most_common_reason}`."]
+        if most_common_reason == "candidate_too_similar_to_batch":
+            recommendations.extend(
+                [
+                    "Increase `--candidate-pool-size`.",
+                    "Enable more hard templates with `--swift-tests`.",
+                    "Use `--difficulty auto` instead of hard-only.",
+                    "Generate fewer levels per batch.",
+                    "Add a new hard template variant.",
+                ]
+            )
+        elif most_common_reason == "solution_tap_not_before_switch_arrival":
+            recommendations.extend(
+                [
+                    "Increase timed-tap lead time or route the switch earlier in the path.",
+                    "Review switch preview metadata for dead-end-first defaults.",
+                    "Run with `--swift-tests` before writing production files.",
+                ]
+            )
+        return recommendations

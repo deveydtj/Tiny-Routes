@@ -85,7 +85,7 @@ final class LevelSolvabilityTests: XCTestCase {
 
     // MARK: - Tests
 
-    func testLevel021FourWayIntersectionSolutionCompletes() throws {
+    func testLevel021CompletesWithProductionScript() throws {
         let level = try XCTUnwrap(
             catalog.loadAllProductionLevels().first { $0.id == "level_021" },
             "Expected bundled level_021"
@@ -95,10 +95,10 @@ final class LevelSolvabilityTests: XCTestCase {
         let result = try harness.run(level: level, script: script)
 
         XCTAssertEqual(result.outcome, .completed)
-        XCTAssertEqual(result.tapCount, 2)
         XCTAssertEqual(result.finalNodeID, level.destinationNodeID)
         XCTAssertTrue(result.didCollectPackage)
-        XCTAssertEqual(result.executedActions.map(\.didRotate), [true, true])
+        XCTAssertEqual(result.tapCount, script.maxTaps)
+        XCTAssertTrue(result.executedActions.allSatisfy(\.didRotate))
     }
 
     func testProductionLevelsWithScriptsAllComplete() throws {
@@ -214,6 +214,43 @@ final class LevelSolvabilityTests: XCTestCase {
         XCTAssertTrue(
             failures.isEmpty,
             "Levels exceeded script maxTaps:\n\(failures.joined(separator: "\n"))"
+        )
+    }
+
+    func testProductionSolutionActionsAllRotateSwitches() throws {
+        let entries = try simulationEntries()
+        var failures: [String] = []
+
+        for entry in entries {
+            switch entry.outcome {
+            case .failure(let error):
+                failures.append(
+                    describeFailure(
+                        level: entry.level,
+                        script: entry.script,
+                        error: error,
+                        context: "Harness threw before verifying switch rotations."
+                    )
+                )
+            case .success(let result):
+                for (index, action) in result.executedActions.enumerated() where !action.didRotate {
+                    let previousAction = index > 0 ? result.executedActions[index - 1] : nil
+                    failures.append(
+                        describeFailure(
+                            level: entry.level,
+                            script: entry.script,
+                            result: result,
+                            context:
+                                "Scripted tap did not rotate. node=\(action.nodeID) requestedTime=\(format(action.requestedTime))s previousAction=\(previousAction.map(describeAction) ?? "nil")"
+                        )
+                    )
+                }
+            }
+        }
+
+        XCTAssertTrue(
+            failures.isEmpty,
+            "Production solution scripts contained ignored taps:\n\(failures.joined(separator: "\n"))"
         )
     }
 

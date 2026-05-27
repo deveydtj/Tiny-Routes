@@ -1,21 +1,21 @@
 {
   "levelID": "level_029",
-  "description": "Rotate alpha to collect the package, rotate beta onto the return path, then rotate alpha again for destination.",
+  "description": "Rotate hub to collect the package, rotate the ring exit, then open the destination gate.",
   "expectedOutcome": "completed",
   "maxTaps": 3,
   "requiresWithinTimeLimit": true,
   "actions": [
     {
-      "timeSeconds": 0.5,
-      "tapNodeID": "upper_alpha_switch"
+      "timeSeconds": 0.2,
+      "tapNodeID": "hub"
     },
     {
-      "timeSeconds": 2.65,
-      "tapNodeID": "upper_beta_switch"
+      "timeSeconds": 3.52,
+      "tapNodeID": "ring_b"
     },
     {
-      "timeSeconds": 5.8,
-      "tapNodeID": "upper_alpha_switch"
+      "timeSeconds": 4.75,
+      "tapNodeID": "gate"
     }
   ]
 }

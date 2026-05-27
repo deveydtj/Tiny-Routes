@@ -9,6 +9,7 @@ from .difficulty_service import DifficultyService
 from .graph_layout_service import BoundingBox, GraphLayoutService
 from .python_solution_simulator_service import PythonSolutionSimulatorService
 from .road_shape_service import RoadShapeService
+from .route_timing_service import RouteTimingService
 from .switch_classification_service import (
     MAX_SUPPORTED_OUTGOING_EDGES,
     SwitchClassificationService,
@@ -39,6 +40,8 @@ class GeneratorValidationResult:
 
 
 class GeneratedLevelValidationService:
+    minimum_pre_arrival_tap_buffer_seconds = 0.15
+
     def __init__(self) -> None:
         self.level_validation_service = LevelValidationService()
         self.solution_validation_service = SolutionValidationService()
@@ -46,6 +49,7 @@ class GeneratedLevelValidationService:
         self.road_shape_service = RoadShapeService()
         self.solution_simulator = PythonSolutionSimulatorService()
         self.switch_classification_service = SwitchClassificationService()
+        self.route_timing = RouteTimingService()
 
     def validate(
         self,
@@ -152,6 +156,7 @@ class GeneratedLevelValidationService:
                         related_node_id=node.id,
                     )
                 )
+        messages.extend(self._switch_direction_messages(level, node_by_id, edge_by_id))
 
         if preset is not None:
             bounds = BoundingBox(*preset.coordinate_bounds)
@@ -219,6 +224,7 @@ class GeneratedLevelValidationService:
                     )
                 )
 
+        messages.extend(self._timed_tap_arrival_messages(generated_level))
         messages.extend(self._four_way_solution_complexity_messages(level, solution, classifications_by_node_id, preset))
 
         try:
@@ -239,7 +245,7 @@ class GeneratedLevelValidationService:
                     GeneratorValidationMessage(
                         severity="error",
                         code="solution_simulation_failed",
-                        message=f"Python solution simulation failed: {simulation.failure_reason}",
+                        message=f"Python solution simulation failed: {self._simulation_failure_detail(simulation)}",
                     )
                 )
             elif preset is not None and enforce_difficulty:
@@ -355,6 +361,94 @@ class GeneratedLevelValidationService:
                             )
                         )
         return messages
+
+    def _timed_tap_arrival_messages(self, generated_level) -> list[GeneratorValidationMessage]:
+        solution = generated_level.solution
+        messages: list[GeneratorValidationMessage] = []
+        tolerance = 1e-9
+        sorted_actions = sorted(solution.actions, key=lambda action: float(action.timeSeconds))
+        for index, action in enumerate(sorted_actions):
+            try:
+                arrival_time = self.solution_simulator.arrival_time_for_action(generated_level, index)
+            except Exception:
+                continue
+            if arrival_time is None:
+                continue
+            arrival_buffer = arrival_time - float(action.timeSeconds)
+            if arrival_buffer + tolerance >= self.minimum_pre_arrival_tap_buffer_seconds:
+                continue
+            messages.append(
+                GeneratorValidationMessage(
+                    severity="error",
+                    code="solution_tap_not_before_switch_arrival",
+                    message=(
+                        f"Solution action at {float(action.timeSeconds):.2f}s for '{action.tapNodeID}' leaves only "
+                        f"{arrival_buffer:.2f}s before arrival at {arrival_time:.2f}s; minimum buffer is "
+                        f"{self.minimum_pre_arrival_tap_buffer_seconds:.2f}s."
+                    ),
+                    related_node_id=action.tapNodeID,
+                )
+            )
+        return messages
+
+    def _switch_direction_messages(self, level, node_by_id, edge_by_id) -> list[GeneratorValidationMessage]:
+        messages: list[GeneratorValidationMessage] = []
+        for node in level.graph.nodes:
+            valid_edges = [
+                edge_by_id[edge_id]
+                for edge_id in node.outgoingEdgeIDs
+                if edge_id in edge_by_id and edge_by_id[edge_id].fromNodeID == node.id
+            ]
+            if len(valid_edges) < 2:
+                continue
+
+            outgoing_angles: list[tuple[str, float]] = []
+            for edge in valid_edges:
+                target_node = node_by_id.get(edge.toNodeID)
+                if target_node is None:
+                    continue
+                outgoing_angles.append(
+                    (
+                        edge.id,
+                        self.route_timing.direction_angle(
+                            (node.x, node.y),
+                            (target_node.x, target_node.y),
+                            edge.roadShape,
+                        ),
+                    )
+                )
+
+            for index, (first_edge_id, first_angle) in enumerate(outgoing_angles):
+                for second_edge_id, second_angle in outgoing_angles[index + 1:]:
+                    if not self.route_timing.angles_match(first_angle, second_angle):
+                        continue
+                    direction_label = self.route_timing.direction_label(first_angle)
+                    messages.append(
+                        GeneratorValidationMessage(
+                            severity="warning",
+                            code="switch_choices_visually_ambiguous",
+                            message=(
+                                f"Switch '{node.id}' has visually ambiguous choices: "
+                                f"'{first_edge_id}' and '{second_edge_id}' both render as {direction_label}."
+                            ),
+                            related_node_id=node.id,
+                        )
+                    )
+                    break
+                else:
+                    continue
+                break
+        return messages
+
+    def _simulation_failure_detail(self, simulation) -> str:
+        detail = simulation.failure_reason or "unknown_failure"
+        last_tap_step = next((step for step in reversed(simulation.steps) if step.event == "tap_switch"), None)
+        if last_tap_step is None:
+            return detail
+        return (
+            f"{detail} at {last_tap_step.time_seconds:.3f}s "
+            f"node={last_tap_step.node_id or '(none)'} {last_tap_step.detail}"
+        )
 
 
 def _convert_editor_message(message) -> GeneratorValidationMessage:

@@ -6,6 +6,11 @@ from app.services.python_solution_simulator_service import PythonSolutionSimulat
 from app.templates.package_gate_template import PackageGateTemplate
 from app.templates.four_way_intersection_template import FourWayIntersectionTemplate
 from app.templates.single_switch_template import SingleSwitchTemplate
+from .late_tap_chain_fixture import (
+    build_late_tap_chain_generated_level,
+    late_tap_chain_new_times,
+    late_tap_chain_old_times,
+)
 
 
 def test_python_solution_simulator_completes_generated_solution() -> None:
@@ -40,4 +45,19 @@ def test_python_solution_simulator_records_four_way_switch_timeline_details() ->
     tap_steps = [step for step in result.steps if step.event == "tap_switch"]
     assert result.passed is True
     assert len(tap_steps) == 2
-    assert "->" in tap_steps[0].detail
+    assert "previousEdge=" in tap_steps[0].detail
+    assert "blockedBecauseCurrentEdgeStartsAtTappedNode=false" in tap_steps[0].detail
+
+
+def test_python_solution_simulator_rejects_late_switch_tap_after_runtime_commitment() -> None:
+    simulator = PythonSolutionSimulatorService()
+
+    late_result = simulator.simulate(build_late_tap_chain_generated_level(late_tap_chain_old_times()))
+    early_result = simulator.simulate(build_late_tap_chain_generated_level(late_tap_chain_new_times()))
+
+    assert late_result.passed is False
+    assert late_result.failure_reason == "tap_ignored_current_edge"
+    late_tap_steps = [step for step in late_result.steps if step.event == "tap_switch"]
+    assert late_tap_steps[1].node_id == "switch_b"
+    assert "blockedBecauseCurrentEdgeStartsAtTappedNode=true" in late_tap_steps[1].detail
+    assert early_result.passed is True

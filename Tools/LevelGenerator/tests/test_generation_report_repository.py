@@ -76,3 +76,39 @@ def test_generation_report_repository_writes_candidate_signatures(tmp_path) -> N
     signature = payload["acceptedLevels"][0]["signature"]
     assert signature["topologyHashShort"] == generated.candidate_signature.topology_hash[:8]
     assert "Signatures" in config.report_path.read_text(encoding="utf-8")
+    assert payload["acceptedLevels"][0]["switchPreview"]
+
+
+def test_generation_report_repository_adds_duplicate_exhaustion_recommendations(tmp_path) -> None:
+    config = GenerationConfig(
+        start_level_number=29,
+        count=1,
+        difficulty="hard",
+        template_name="mixed",
+        levels_output_dir=tmp_path / "levels",
+        solutions_output_dir=tmp_path / "solutions",
+        report_path=tmp_path / "report.md",
+        json_report_path=tmp_path / "report.json",
+    )
+    result = type(
+        "Result",
+        (),
+        {
+            "accepted": [],
+            "rejected_candidate_count": 100,
+            "rejection_reason_counts": {"candidate_too_similar_to_batch": 87},
+            "written_level_paths": [],
+            "written_solution_paths": [],
+            "swift_test_summary": type("Swift", (), {"passed": None, "command": [], "exit_code": None, "summary": "not run"})(),
+            "messages": ["Could not generate valid level_029 after 100 attempts."],
+            "passed": False,
+        },
+    )()
+
+    GenerationReportRepository().write_markdown(config.report_path, config, result)
+    GenerationReportRepository().write_json(config.json_report_path, config, result)
+
+    markdown = config.report_path.read_text(encoding="utf-8")
+    payload = json.loads(config.json_report_path.read_text(encoding="utf-8"))
+    assert "## Recommendations" in markdown
+    assert payload["recommendations"][0] == "Most common rejection: `candidate_too_similar_to_batch`."

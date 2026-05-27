@@ -86,6 +86,7 @@ class MultiSwitchChainTemplate(LevelTemplate):
             positions,
             preset,
             "Rotate each chain switch once so the route avoids dead ends and completes delivery.",
+            route_edge_shapes=self.route_edge_shapes_for(level, core_route),
         )
         return self.generated(
             level,

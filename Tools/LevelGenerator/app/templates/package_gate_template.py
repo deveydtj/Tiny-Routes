@@ -58,6 +58,7 @@ class PackageGateTemplate(LevelTemplate):
             positions,
             preset,
             "Rotate the approach switch to collect the package, then rotate the finish switch to reach destination.",
+            route_edge_shapes=self.route_edge_shapes_for(level, route),
         )
         return self.generated(
             level,

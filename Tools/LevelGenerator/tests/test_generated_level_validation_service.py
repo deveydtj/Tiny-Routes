@@ -6,6 +6,7 @@ from app.models.generated_level import GeneratedLevel
 from app.services.difficulty_service import DifficultyService
 from app.services.generated_level_validation_service import GeneratedLevelValidationService
 from app.templates.single_switch_template import SingleSwitchTemplate
+from .late_tap_chain_fixture import build_late_tap_chain_generated_level, late_tap_chain_new_times, late_tap_chain_old_times
 
 
 def test_generated_level_validation_rejects_invalid_road_shape() -> None:
@@ -53,6 +54,30 @@ def test_generated_level_validation_rejects_five_way_switch_for_all_presets() ->
         )
 
         assert "switch_has_too_many_outgoing_edges" in result.error_codes
+
+
+def test_generated_level_validation_rejects_tap_that_is_not_before_switch_arrival_buffer() -> None:
+    preset = DifficultyService().get_preset("hard")
+
+    result = GeneratedLevelValidationService().validate(
+        build_late_tap_chain_generated_level(late_tap_chain_old_times()),
+        preset=preset,
+        overwrite=True,
+    )
+
+    assert "solution_tap_not_before_switch_arrival" in result.error_codes
+
+
+def test_generated_level_validation_accepts_regenerated_earlier_tap_times() -> None:
+    preset = DifficultyService().get_preset("hard")
+
+    result = GeneratedLevelValidationService().validate(
+        build_late_tap_chain_generated_level(late_tap_chain_new_times()),
+        preset=preset,
+        overwrite=True,
+    )
+
+    assert "solution_tap_not_before_switch_arrival" not in result.error_codes
 
 
 def _generated_switch_with_outgoing_count(outgoing_count: int) -> GeneratedLevel:

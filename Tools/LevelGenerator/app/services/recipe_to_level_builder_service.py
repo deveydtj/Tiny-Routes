@@ -46,6 +46,10 @@ class RecipeToLevelBuilderService:
                 positions,
                 preset,
                 description,
+                route_edge_shapes={
+                    (edge.fromNodeID, edge.toNodeID): edge.roadShape
+                    for edge in level.graph.edges
+                },
             )
         except ValueError:
             solution = self.solution_builder.build_tap_solution(

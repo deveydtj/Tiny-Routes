@@ -279,7 +279,7 @@
 		07D7502FABFF22F936EA1666 /* LevelData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LevelData.swift; sourceTree = "<group>"; };
 		08EDEDC6662C77E816DFB0CE /* missing_start_node.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = missing_start_node.json; sourceTree = "<group>"; };
 		0B6634FCA043D2B99D10F4BD /* RouteGraph.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RouteGraph.swift; sourceTree = "<group>"; };
-		0E776E0745037387BBD19195 /* .gitkeep */ = {isa = PBXFileReference; lastKnownFileType = text; path = .gitkeep; sourceTree = "<group>"; };
+		0E776E0745037387BBD19195 /* .gitkeep */ = {isa = PBXFileReference; path = .gitkeep; sourceTree = "<group>"; };
 		0F881EF170BA7806FA70D13F /* unreachable_destination_from_package.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = unreachable_destination_from_package.json; sourceTree = "<group>"; };
 		110E615D1CB962B4C43D1072 /* ScoringAndProgressServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScoringAndProgressServiceTests.swift; sourceTree = "<group>"; };
 		1187D14C011B6BEE0687EE71 /* ProfileScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileScreen.swift; sourceTree = "<group>"; };
@@ -311,10 +311,10 @@
 		29CCDB5DCEA604E7F0496B48 /* TRDeliveryTrailViewTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TRDeliveryTrailViewTests.swift; sourceTree = "<group>"; };
 		2A260DC0F35E868D025857A7 /* TRMilestoneRewardsPlaceholderCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TRMilestoneRewardsPlaceholderCard.swift; sourceTree = "<group>"; };
 		2B1F71A0D96F6EE65FC18B50 /* UserSettingsServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserSettingsServiceTests.swift; sourceTree = "<group>"; };
-		2B6B1C733497FAB77F752F53 /* .gitkeep */ = {isa = PBXFileReference; lastKnownFileType = text; path = .gitkeep; sourceTree = "<group>"; };
+		2B6B1C733497FAB77F752F53 /* .gitkeep */ = {isa = PBXFileReference; path = .gitkeep; sourceTree = "<group>"; };
 		2C686C27E2616FEDD8ADDFFB /* LevelSolutionRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LevelSolutionRepository.swift; sourceTree = "<group>"; };
 		2D01AA2A2675EA2460D25786 /* TRSettingsHeader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TRSettingsHeader.swift; sourceTree = "<group>"; };
-		2F7EAE0B5F7024B5C002D119 /* TinyRoutes.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = TinyRoutes.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		2F7EAE0B5F7024B5C002D119 /* TinyRoutes.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = TinyRoutes.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		32AA35B2BC4F9E45955D0ED1 /* StreakService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StreakService.swift; sourceTree = "<group>"; };
 		34077F31F2E9880064B46C36 /* TRGameplayStyle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TRGameplayStyle.swift; sourceTree = "<group>"; };
 		361B29040D703572B02D178A /* TRGameplayHUD.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TRGameplayHUD.swift; sourceTree = "<group>"; };
@@ -467,7 +467,7 @@
 		D38E2EDE9C52958E8C6E10C9 /* level_004.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = level_004.json; sourceTree = "<group>"; };
 		D4C9913C4A5B8AD0D63E024D /* empty_level_id.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = empty_level_id.json; sourceTree = "<group>"; };
 		D8005A5B530ED56637A85639 /* level_016.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = level_016.json; sourceTree = "<group>"; };
-		D9C9F6BC5550F3FE84009D57 /* .gitkeep */ = {isa = PBXFileReference; lastKnownFileType = text; path = .gitkeep; sourceTree = "<group>"; };
+		D9C9F6BC5550F3FE84009D57 /* .gitkeep */ = {isa = PBXFileReference; path = .gitkeep; sourceTree = "<group>"; };
 		DA046EE210E3C1613BAE5CFB /* LevelSolutionScriptTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LevelSolutionScriptTests.swift; sourceTree = "<group>"; };
 		DA159D82008BBEE377BE7CDA /* TRDestinationMarkerViewTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TRDestinationMarkerViewTests.swift; sourceTree = "<group>"; };
 		DAE6F8D4B8727D20DEC3BCB7 /* GameTimeFormatter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameTimeFormatter.swift; sourceTree = "<group>"; };
@@ -1307,7 +1307,6 @@
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_ASSET_PATHS = "";
-				DEVELOPMENT_TEAM = JM23Z9GG95;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = TinyRoutes/Resources/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -1468,7 +1467,6 @@
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_ASSET_PATHS = "";
-				DEVELOPMENT_TEAM = JM23Z9GG95;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = TinyRoutes/Resources/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (

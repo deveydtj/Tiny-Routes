@@ -66,6 +66,7 @@ class RingRouteTemplate(LevelTemplate):
             positions,
             preset,
             "Rotate hub to collect the package, rotate the ring exit, then open the destination gate.",
+            route_edge_shapes=self.route_edge_shapes_for(level, route),
         )
         return self.generated(
             level,

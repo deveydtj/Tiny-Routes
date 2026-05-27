@@ -1,13 +1,17 @@
 {
   "levelID": "level_010",
-  "description": "Rotate choice once so the route collects the package before heading to destination.",
+  "description": "Rotate the approach switch to collect the package, then rotate the finish switch to reach destination.",
   "expectedOutcome": "completed",
-  "maxTaps": 1,
+  "maxTaps": 2,
   "requiresWithinTimeLimit": true,
   "actions": [
     {
-      "timeSeconds": 0.86,
-      "tapNodeID": "short_choice"
+      "timeSeconds": 0.28,
+      "tapNodeID": "upper_entry_switch"
+    },
+    {
+      "timeSeconds": 2.42,
+      "tapNodeID": "upper_finish_switch"
     }
   ]
 }

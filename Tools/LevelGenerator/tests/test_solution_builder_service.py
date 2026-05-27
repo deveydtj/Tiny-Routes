@@ -4,6 +4,13 @@ import pytest
 
 from app.services.difficulty_service import DifficultyService
 from app.services.solution_builder_service import SolutionBuilderService
+from .late_tap_chain_fixture import (
+    late_tap_chain_new_times,
+    late_tap_chain_positions,
+    late_tap_chain_route,
+    late_tap_chain_route_edge_shapes,
+    late_tap_chain_tap_nodes,
+)
 
 
 def test_no_tap_solution() -> None:
@@ -59,7 +66,22 @@ def test_build_route_timed_tap_solution_schedules_before_switch_arrivals() -> No
         },
         preset,
         "test",
-        lead_time_seconds=0.2,
     )
 
-    assert [action.timeSeconds for action in solution.actions] == [0.8, 2.8]
+    assert [action.timeSeconds for action in solution.actions] == [0.65, 2.65]
+
+
+def test_build_route_timed_tap_solution_uses_rounded_path_timing_for_late_tap_chain() -> None:
+    preset = DifficultyService().get_preset("hard")
+
+    solution = SolutionBuilderService().build_route_timed_tap_solution(
+        "level_028",
+        late_tap_chain_tap_nodes(),
+        late_tap_chain_route(),
+        late_tap_chain_positions(),
+        preset,
+        "test",
+        route_edge_shapes=late_tap_chain_route_edge_shapes(),
+    )
+
+    assert [action.timeSeconds for action in solution.actions] == late_tap_chain_new_times()

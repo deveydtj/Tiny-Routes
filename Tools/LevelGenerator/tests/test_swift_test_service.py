@@ -10,6 +10,10 @@ def test_swift_test_command_is_targeted(tmp_path) -> None:
     command = SwiftTestService(tmp_path).build_command()
 
     assert "-only-testing:TinyRoutesTests/LevelSolvabilityTests" in command
+    assert "-only-testing:TinyRoutesTests/LevelSimulationHarnessTests" in command
+    assert "-only-testing:TinyRoutesTests/LevelSolutionScriptTests" in command
+    assert "-only-testing:TinyRoutesTests/RouteEngineTests" in command
+    assert "-only-testing:TinyRoutesTests/SwitchNodeViewTests" in command
 
 
 def test_swift_test_service_reports_missing_xcodebuild(tmp_path) -> None:

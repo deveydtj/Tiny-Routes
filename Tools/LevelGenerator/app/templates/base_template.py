@@ -8,6 +8,7 @@ from ..random_source import RandomSource
 from ..services.graph_builder_service import GraphBuilderService
 from ..services.layout_variant_service import LayoutVariantResult, LayoutVariantService
 from ..services.level_naming_service import LevelNamingService
+from ..services.route_timing_service import RouteTimingService
 from ..services.solution_builder_service import SolutionBuilderService
 
 
@@ -19,6 +20,7 @@ class LevelTemplate(ABC):
         self.solution_builder = SolutionBuilderService()
         self.naming = LevelNamingService()
         self.layout_variants = LayoutVariantService()
+        self.route_timing = RouteTimingService()
 
     @abstractmethod
     def supports_difficulty(self, preset: DifficultyPreset) -> bool:
@@ -52,6 +54,17 @@ class LevelTemplate(ABC):
         for first, second in zip(route_positions, route_positions[1:]):
             distance += abs(first[0] - second[0]) + abs(first[1] - second[1])
         return max(30, int(round(distance + preset.time_limit_padding_seconds + 6)))
+
+    def route_edge_shapes_for(self, level_document, route_node_ids: list[str]) -> dict[tuple[str, str], str | None]:
+        edge_shapes_by_pair = {
+            (edge.fromNodeID, edge.toNodeID): edge.roadShape
+            for edge in level_document.graph.edges
+        }
+        return {
+            (from_node_id, to_node_id): edge_shapes_by_pair[(from_node_id, to_node_id)]
+            for from_node_id, to_node_id in zip(route_node_ids, route_node_ids[1:])
+            if (from_node_id, to_node_id) in edge_shapes_by_pair
+        }
 
     def generated(
         self,

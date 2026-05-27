@@ -30,6 +30,61 @@ final class LevelSimulationHarnessTests: XCTestCase {
         )
     }
 
+    private func makeLateTapRegressionLevel() -> LevelData {
+        let nodes = [
+            RouteNode(id: "start", x: 0.0, y: 0.0, outgoingEdgeIDs: ["e_start_switch_a"]),
+            RouteNode(id: "switch_a", x: 0.6, y: 0.6, outgoingEdgeIDs: ["e_switch_a_dead_end", "e_switch_a_package"]),
+            RouteNode(id: "package", x: 1.2, y: 0.0, outgoingEdgeIDs: ["e_package_switch_b"]),
+            RouteNode(id: "switch_b", x: 1.8, y: 0.6, outgoingEdgeIDs: ["e_switch_b_dead_end", "e_switch_b_switch_c"]),
+            RouteNode(id: "switch_c", x: 2.4, y: 0.0, outgoingEdgeIDs: ["e_switch_c_dead_end", "e_switch_c_switch_d"]),
+            RouteNode(id: "switch_d", x: 3.0, y: 0.6, outgoingEdgeIDs: ["e_switch_d_dead_end", "e_switch_d_destination"]),
+            RouteNode(id: "destination", x: 3.6, y: 0.0, outgoingEdgeIDs: []),
+            RouteNode(id: "dead_end_a", x: 0.6, y: -0.6, outgoingEdgeIDs: []),
+            RouteNode(id: "dead_end_b", x: 1.8, y: 1.4, outgoingEdgeIDs: []),
+            RouteNode(id: "dead_end_c", x: 2.4, y: -0.8, outgoingEdgeIDs: []),
+            RouteNode(id: "dead_end_d", x: 3.0, y: 1.4, outgoingEdgeIDs: [])
+        ]
+        let edges = [
+            RouteEdge(id: "e_start_switch_a", fromNodeID: "start", toNodeID: "switch_a", roadShape: .horizontalFirst),
+            RouteEdge(id: "e_switch_a_dead_end", fromNodeID: "switch_a", toNodeID: "dead_end_a", roadShape: .verticalFirst),
+            RouteEdge(id: "e_switch_a_package", fromNodeID: "switch_a", toNodeID: "package", roadShape: .horizontalFirst),
+            RouteEdge(id: "e_package_switch_b", fromNodeID: "package", toNodeID: "switch_b", roadShape: .horizontalFirst),
+            RouteEdge(id: "e_switch_b_dead_end", fromNodeID: "switch_b", toNodeID: "dead_end_b", roadShape: .verticalFirst),
+            RouteEdge(id: "e_switch_b_switch_c", fromNodeID: "switch_b", toNodeID: "switch_c", roadShape: .horizontalFirst),
+            RouteEdge(id: "e_switch_c_dead_end", fromNodeID: "switch_c", toNodeID: "dead_end_c", roadShape: .verticalFirst),
+            RouteEdge(id: "e_switch_c_switch_d", fromNodeID: "switch_c", toNodeID: "switch_d", roadShape: .horizontalFirst),
+            RouteEdge(id: "e_switch_d_dead_end", fromNodeID: "switch_d", toNodeID: "dead_end_d", roadShape: .verticalFirst),
+            RouteEdge(id: "e_switch_d_destination", fromNodeID: "switch_d", toNodeID: "destination", roadShape: .horizontalFirst)
+        ]
+
+        return LevelData(
+            id: "late_tap_regression",
+            name: "Late Tap Regression",
+            graph: RouteGraph(nodes: nodes, edges: edges),
+            startNodeID: "start",
+            packageNodeID: "package",
+            destinationNodeID: "destination",
+            timeLimitSeconds: 30,
+            parTaps: 4
+        )
+    }
+
+    private func makeLateTapRegressionScript(times: [TimeInterval]) -> LevelSolutionScript {
+        LevelSolutionScript(
+            levelID: "late_tap_regression",
+            description: "Rotate each switch before arrival.",
+            expectedOutcome: .completed,
+            maxTaps: 4,
+            requiresWithinTimeLimit: true,
+            actions: [
+                LevelSolutionAction(timeSeconds: times[0], tapNodeID: "switch_a"),
+                LevelSolutionAction(timeSeconds: times[1], tapNodeID: "switch_b"),
+                LevelSolutionAction(timeSeconds: times[2], tapNodeID: "switch_c"),
+                LevelSolutionAction(timeSeconds: times[3], tapNodeID: "switch_d")
+            ]
+        )
+    }
+
     func testRunCompletesLevel001WithProductionScript() throws {
         let level = try XCTUnwrap(
             TestLevelCatalog().loadAllProductionLevels().first(where: { $0.id == "level_001" })
@@ -213,5 +268,33 @@ final class LevelSimulationHarnessTests: XCTestCase {
         XCTAssertEqual(result.executedActions[1].actualTapCountAfterAction, 2)
         XCTAssertEqual(result.outcome, .failed(reason: .reachedDestinationWithoutPackage))
         XCTAssertGreaterThan(result.stepCount, 0)
+    }
+
+    func testLateTapAfterSwitchDepartureDoesNotRotate() throws {
+        let level = makeLateTapRegressionLevel()
+        let script = makeLateTapRegressionScript(times: [1.0, 3.40, 4.60, 5.80])
+        let harness = LevelSimulationHarness()
+
+        let result = try harness.run(level: level, script: script)
+
+        XCTAssertEqual(result.outcome, .failed(reason: .deadEnd))
+        XCTAssertEqual(result.executedActions.count, 2)
+        XCTAssertTrue(result.executedActions[0].didRotate)
+        XCTAssertFalse(result.executedActions[1].didRotate)
+        XCTAssertEqual(result.executedActions[1].nodeID, "switch_b")
+        XCTAssertEqual(result.finalNodeID, "dead_end_b")
+    }
+
+    func testEarlierTapBeforeSwitchArrivalRotatesAndCompletes() throws {
+        let level = makeLateTapRegressionLevel()
+        let script = makeLateTapRegressionScript(times: [0.77, 3.02, 4.14, 5.26])
+        let harness = LevelSimulationHarness()
+
+        let result = try harness.run(level: level, script: script)
+
+        XCTAssertEqual(result.outcome, .completed)
+        XCTAssertEqual(result.finalNodeID, "destination")
+        XCTAssertTrue(result.didCollectPackage)
+        XCTAssertEqual(result.executedActions.map(\.didRotate), [true, true, true, true])
     }
 }

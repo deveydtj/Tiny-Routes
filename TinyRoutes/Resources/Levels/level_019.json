@@ -5,93 +5,93 @@
     "nodes": [
       {
         "id": "start",
-        "x": -1.05,
+        "x": 1.1,
+        "y": -0.45,
+        "outgoingEdgeIDs": [
+          "e_start_multi_switch_chain_stair_step_switch_a"
+        ]
+      },
+      {
+        "id": "multi_switch_chain_stair_step_switch_a",
+        "x": 0.55,
         "y": -0.2,
         "outgoingEdgeIDs": [
-          "e_start_upper_entry_switch"
+          "e_multi_switch_chain_stair_step_switch_a_multi_switch_chain_stair_step_dead_end_a",
+          "e_multi_switch_chain_stair_step_switch_a_package"
         ]
-      },
-      {
-        "id": "upper_entry_switch",
-        "x": -0.5,
-        "y": -0.05,
-        "outgoingEdgeIDs": [
-          "e_upper_entry_switch_upper_bypass",
-          "e_upper_entry_switch_package"
-        ]
-      },
-      {
-        "id": "upper_bypass",
-        "x": 0.1,
-        "y": -0.8,
-        "outgoingEdgeIDs": []
       },
       {
         "id": "package",
-        "x": 0.05,
-        "y": 0.75,
+        "x": 0.0,
+        "y": 0.6,
         "outgoingEdgeIDs": [
-          "e_package_upper_finish_switch"
+          "e_package_multi_switch_chain_stair_step_switch_b"
         ]
       },
       {
-        "id": "upper_finish_switch",
-        "x": 0.6,
+        "id": "multi_switch_chain_stair_step_switch_b",
+        "x": -0.55,
         "y": 0.2,
         "outgoingEdgeIDs": [
-          "e_upper_finish_switch_upper_dead_end",
-          "e_upper_finish_switch_destination"
+          "e_multi_switch_chain_stair_step_switch_b_multi_switch_chain_stair_step_dead_end_b",
+          "e_multi_switch_chain_stair_step_switch_b_destination"
         ]
-      },
-      {
-        "id": "upper_dead_end",
-        "x": 1.05,
-        "y": -0.5,
-        "outgoingEdgeIDs": []
       },
       {
         "id": "destination",
-        "x": 1.0,
-        "y": 0.85,
+        "x": -1.1,
+        "y": 0.5,
+        "outgoingEdgeIDs": []
+      },
+      {
+        "id": "multi_switch_chain_stair_step_dead_end_a",
+        "x": 0.55,
+        "y": -0.95,
+        "outgoingEdgeIDs": []
+      },
+      {
+        "id": "multi_switch_chain_stair_step_dead_end_b",
+        "x": -0.55,
+        "y": 0.95,
         "outgoingEdgeIDs": []
       }
     ],
     "edges": [
       {
-        "id": "e_start_upper_entry_switch",
+        "id": "e_start_multi_switch_chain_stair_step_switch_a",
         "fromNodeID": "start",
-        "toNodeID": "upper_entry_switch",
+        "toNodeID": "multi_switch_chain_stair_step_switch_a",
         "roadShape": "horizontalFirst"
       },
       {
-        "id": "e_upper_entry_switch_upper_bypass",
-        "fromNodeID": "upper_entry_switch",
-        "toNodeID": "upper_bypass",
+        "id": "e_multi_switch_chain_stair_step_switch_a_multi_switch_chain_stair_step_dead_end_a",
+        "fromNodeID": "multi_switch_chain_stair_step_switch_a",
+        "toNodeID": "multi_switch_chain_stair_step_dead_end_a",
         "roadShape": "verticalFirst"
       },
       {
-        "id": "e_upper_entry_switch_package",
-        "fromNodeID": "upper_entry_switch",
+        "id": "e_multi_switch_chain_stair_step_switch_a_package",
+        "fromNodeID": "multi_switch_chain_stair_step_switch_a",
         "toNodeID": "package",
         "roadShape": "verticalFirst"
       },
       {
-        "id": "e_package_upper_finish_switch",
+        "id": "e_package_multi_switch_chain_stair_step_switch_b",
         "fromNodeID": "package",
-        "toNodeID": "upper_finish_switch",
+        "toNodeID": "multi_switch_chain_stair_step_switch_b",
+        "roadShape": "horizontalFirst"
+      },
+      {
+        "id": "e_multi_switch_chain_stair_step_switch_b_multi_switch_chain_stair_step_dead_end_b",
+        "fromNodeID": "multi_switch_chain_stair_step_switch_b",
+        "toNodeID": "multi_switch_chain_stair_step_dead_end_b",
         "roadShape": "verticalFirst"
       },
       {
-        "id": "e_upper_finish_switch_upper_dead_end",
-        "fromNodeID": "upper_finish_switch",
-        "toNodeID": "upper_dead_end",
-        "roadShape": "verticalFirst"
-      },
-      {
-        "id": "e_upper_finish_switch_destination",
-        "fromNodeID": "upper_finish_switch",
+        "id": "e_multi_switch_chain_stair_step_switch_b_destination",
+        "fromNodeID": "multi_switch_chain_stair_step_switch_b",
         "toNodeID": "destination",
-        "roadShape": "verticalFirst"
+        "roadShape": "horizontalFirst"
       }
     ]
   },

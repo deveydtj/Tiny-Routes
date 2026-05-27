@@ -5,100 +5,141 @@
     "nodes": [
       {
         "id": "start",
-        "x": -1.05,
-        "y": -0.2,
+        "x": 1.1,
+        "y": 0.0,
         "outgoingEdgeIDs": [
-          "e_start_upper_alpha_switch"
+          "e_start_hub"
         ]
       },
       {
-        "id": "upper_alpha_switch",
-        "x": -0.5,
-        "y": -0.05,
+        "id": "hub",
+        "x": 0.55,
+        "y": 0.0,
         "outgoingEdgeIDs": [
-          "e_upper_alpha_switch_destination",
-          "e_upper_alpha_switch_package"
+          "e_hub_ring_a",
+          "e_hub_package"
+        ]
+      },
+      {
+        "id": "ring_a",
+        "x": 0.2,
+        "y": 0.6,
+        "outgoingEdgeIDs": [
+          "e_ring_a_ring_b"
+        ]
+      },
+      {
+        "id": "ring_b",
+        "x": -0.5,
+        "y": 0.6,
+        "outgoingEdgeIDs": [
+          "e_ring_b_ring_a",
+          "e_ring_b_gate",
+          "e_ring_b_dead_end_a"
         ]
       },
       {
         "id": "package",
-        "x": 0.05,
-        "y": 0.85,
+        "x": 0.3,
+        "y": -0.9,
         "outgoingEdgeIDs": [
-          "e_package_upper_beta_switch"
+          "e_package_ring_b"
         ]
       },
       {
-        "id": "upper_beta_switch",
-        "x": 0.65,
-        "y": 0.75,
+        "id": "gate",
+        "x": -0.8,
+        "y": -0.4,
         "outgoingEdgeIDs": [
-          "e_upper_beta_switch_upper_dead_end",
-          "e_upper_beta_switch_upper_return"
-        ]
-      },
-      {
-        "id": "upper_return",
-        "x": 0.8,
-        "y": -0.5,
-        "outgoingEdgeIDs": [
-          "e_upper_return_upper_alpha_switch"
+          "e_gate_dead_end_b",
+          "e_gate_destination",
+          "e_gate_ring_a"
         ]
       },
       {
         "id": "destination",
-        "x": -0.1,
-        "y": -1.15,
+        "x": -1.15,
+        "y": 0.25,
         "outgoingEdgeIDs": []
       },
       {
-        "id": "upper_dead_end",
-        "x": 1.1,
-        "y": 0.2,
+        "id": "dead_end_a",
+        "x": -0.95,
+        "y": 1.0,
+        "outgoingEdgeIDs": []
+      },
+      {
+        "id": "dead_end_b",
+        "x": -1.15,
+        "y": -0.9,
         "outgoingEdgeIDs": []
       }
     ],
     "edges": [
       {
-        "id": "e_start_upper_alpha_switch",
+        "id": "e_start_hub",
         "fromNodeID": "start",
-        "toNodeID": "upper_alpha_switch",
+        "toNodeID": "hub",
         "roadShape": "horizontalFirst"
       },
       {
-        "id": "e_upper_alpha_switch_destination",
-        "fromNodeID": "upper_alpha_switch",
-        "toNodeID": "destination",
+        "id": "e_hub_ring_a",
+        "fromNodeID": "hub",
+        "toNodeID": "ring_a",
         "roadShape": "verticalFirst"
       },
       {
-        "id": "e_upper_alpha_switch_package",
-        "fromNodeID": "upper_alpha_switch",
+        "id": "e_hub_package",
+        "fromNodeID": "hub",
         "toNodeID": "package",
         "roadShape": "verticalFirst"
       },
       {
-        "id": "e_package_upper_beta_switch",
-        "fromNodeID": "package",
-        "toNodeID": "upper_beta_switch",
+        "id": "e_ring_a_ring_b",
+        "fromNodeID": "ring_a",
+        "toNodeID": "ring_b",
         "roadShape": "horizontalFirst"
       },
       {
-        "id": "e_upper_beta_switch_upper_dead_end",
-        "fromNodeID": "upper_beta_switch",
-        "toNodeID": "upper_dead_end",
+        "id": "e_ring_b_ring_a",
+        "fromNodeID": "ring_b",
+        "toNodeID": "ring_a",
+        "roadShape": "horizontalFirst"
+      },
+      {
+        "id": "e_ring_b_gate",
+        "fromNodeID": "ring_b",
+        "toNodeID": "gate",
         "roadShape": "verticalFirst"
       },
       {
-        "id": "e_upper_beta_switch_upper_return",
-        "fromNodeID": "upper_beta_switch",
-        "toNodeID": "upper_return",
+        "id": "e_ring_b_dead_end_a",
+        "fromNodeID": "ring_b",
+        "toNodeID": "dead_end_a",
+        "roadShape": "horizontalFirst"
+      },
+      {
+        "id": "e_package_ring_b",
+        "fromNodeID": "package",
+        "toNodeID": "ring_b",
         "roadShape": "verticalFirst"
       },
       {
-        "id": "e_upper_return_upper_alpha_switch",
-        "fromNodeID": "upper_return",
-        "toNodeID": "upper_alpha_switch",
+        "id": "e_gate_dead_end_b",
+        "fromNodeID": "gate",
+        "toNodeID": "dead_end_b",
+        "roadShape": "verticalFirst"
+      },
+      {
+        "id": "e_gate_destination",
+        "fromNodeID": "gate",
+        "toNodeID": "destination",
+        "roadShape": "verticalFirst"
+      },
+      {
+        "id": "e_gate_ring_a",
+        "fromNodeID": "gate",
+        "toNodeID": "ring_a",
         "roadShape": "horizontalFirst"
       }
     ]

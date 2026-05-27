@@ -109,6 +109,11 @@ class LevelGenerationService:
                     solution_output_path=solution_path,
                     overwrite=config.overwrite or config.dry_run,
                 )
+                candidate.warning_messages = [
+                    f"{message.code}: {message.message}"
+                    for message in validation_result.messages
+                    if message.severity != "error"
+                ]
                 if rejection_service.can_save(validation_result):
                     candidate_signature = self.signature_service.signature_for(candidate)
                     duplicate_result = self.uniqueness_service.check_duplicate(
@@ -193,6 +198,35 @@ class LevelGenerationService:
     def _validate_template(self, template_name: str, config: GenerationConfig) -> None:
         if template_name not in self.template_registry.valid_names:
             raise ValueError(f"Unknown template: {template_name}")
+        if (
+            template_name == "mixed"
+            and config.difficulty == "hard"
+            and not config.dry_run
+            and not config.run_swift_tests
+        ):
+            preset = self.difficulty_service.get_preset("hard")
+            eligible_without_swift = self.template_registry.supported_templates(
+                preset,
+                include_swift_required=False,
+            )
+            eligible_with_swift = self.template_registry.supported_templates(
+                preset,
+                include_swift_required=True,
+            )
+            if len(eligible_without_swift) <= 1 and len(eligible_with_swift) > len(eligible_without_swift):
+                without_swift_names = ", ".join(sorted(template.name for template in eligible_without_swift)) or "none"
+                swift_only_names = ", ".join(
+                    sorted(
+                        template.name
+                        for template in eligible_with_swift
+                        if template.name not in {candidate.name for candidate in eligible_without_swift}
+                    )
+                )
+                raise ValueError(
+                    "Hard mixed production generation is too narrow without Swift validation. "
+                    f"Eligible without `--swift-tests`: {without_swift_names}. "
+                    f"Enable `--swift-tests` to unlock: {swift_only_names}."
+                )
         if config.difficulty != "auto":
             preset = self.difficulty_service.get_preset(config.difficulty)
         elif template_name != "mixed":

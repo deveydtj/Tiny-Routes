@@ -6,11 +6,11 @@
   "requiresWithinTimeLimit": true,
   "actions": [
     {
-      "timeSeconds": 0.6,
+      "timeSeconds": 0.39,
       "tapNodeID": "right_entry_switch"
     },
     {
-      "timeSeconds": 3.0,
+      "timeSeconds": 2.63,
       "tapNodeID": "right_finish_switch"
     }
   ]
