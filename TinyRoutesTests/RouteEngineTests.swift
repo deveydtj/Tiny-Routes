@@ -109,6 +109,26 @@ final class RouteEngineTests: XCTestCase {
         )
     }
 
+    private func loadSwitchArrowBugLevelFixture() throws -> LevelData {
+        let url = switchArrowBugFixtureURL(named: "level_028_style_switch_arrow_mismatch.json")
+        let data = try Data(contentsOf: url)
+        return try JSONDecoder().decode(LevelData.self, from: data)
+    }
+
+    private func loadSwitchArrowBugSolutionFixture() throws -> LevelSolutionScript {
+        let url = switchArrowBugFixtureURL(named: "level_028_style_switch_arrow_mismatch.solution.json")
+        let data = try Data(contentsOf: url)
+        return try JSONDecoder().decode(LevelSolutionScript.self, from: data)
+    }
+
+    private func switchArrowBugFixtureURL(named filename: String) -> URL {
+        URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .appendingPathComponent("Fixtures")
+            .appendingPathComponent("SwitchArrowBug")
+            .appendingPathComponent(filename)
+    }
+
     private func makeRuntimeGraphForSwitchClassification(
         validOutgoingCount: Int,
         includeInvalidListedEdgeIDs: Bool = false
@@ -881,6 +901,47 @@ final class RouteEngineTests: XCTestCase {
                 from: expectation.node,
                 in: graph
             )
+
+            XCTAssertEqual(angle, expectation.angle, accuracy: 0.0001, "Unexpected angle for \(edgeID)")
+        }
+    }
+
+    func testLevel028StyleFixtureSwitchArrowsUseRoadStartTangents() throws {
+        let level = try loadSwitchArrowBugLevelFixture()
+        let solution = try loadSwitchArrowBugSolutionFixture()
+        XCTAssertEqual(solution.levelID, level.id)
+
+        let engine = RouteEngine()
+        try engine.buildGraph(from: level)
+        let graph = try XCTUnwrap(engine.runtimeGraph)
+        let expectedAnglesByEdgeID: [String: (sourceNodeID: String, angle: Double)] = [
+            "e_multi_switch_chain_zigzag_switch_a_package": (
+                "multi_switch_chain_zigzag_switch_a",
+                -.pi / 2
+            ),
+            "e_multi_switch_chain_zigzag_switch_b_multi_switch_chain_zigzag_switch_c": (
+                "multi_switch_chain_zigzag_switch_b",
+                -.pi / 2
+            ),
+            "e_multi_switch_chain_zigzag_switch_c_multi_switch_chain_zigzag_switch_d": (
+                "multi_switch_chain_zigzag_switch_c",
+                .pi / 2
+            ),
+            "e_multi_switch_chain_zigzag_switch_d_destination": (
+                "multi_switch_chain_zigzag_switch_d",
+                -.pi / 2
+            )
+        ]
+
+        for (edgeID, expectation) in expectedAnglesByEdgeID {
+            let edge = try XCTUnwrap(graph.edgesByID[edgeID])
+            let sourceNode = try XCTUnwrap(graph.nodesByID[expectation.sourceNodeID])
+            let targetNode = try XCTUnwrap(graph.nodesByID[edge.toNodeID])
+
+            XCTAssertNotEqual(targetNode.x, sourceNode.x, "Fixture edge \(edgeID) should have a diagonal target vector")
+            XCTAssertNotEqual(targetNode.y, sourceNode.y, "Fixture edge \(edgeID) should have a diagonal target vector")
+
+            let angle = SwitchArrowDirectionResolver.directionAngle(for: edge, from: sourceNode, in: graph)
 
             XCTAssertEqual(angle, expectation.angle, accuracy: 0.0001, "Unexpected angle for \(edgeID)")
         }

@@ -30,6 +30,47 @@ However, the current setup still behaves mostly like a template generator. The n
 mechanic recipe -> abstract solver -> layout planner -> road shape planner -> visual validator -> runtime-parity simulator -> quality scorer -> human review -> production write
 ```
 
+## Phase 0 Baseline Snapshot
+
+Current templates:
+
+- `straight_delivery`
+- `single_switch`
+- `package_gate`
+- `return_loop`
+- `multi_switch_chain`
+- `ring_route`
+- `four_way_intersection`
+- `mixed`, which filters and weights the concrete templates by difficulty
+
+Current validators:
+
+- Swift-side production level decoding and graph construction through `LevelRepository` and `RouteEngine`.
+- Swift level validation support in `TinyRoutesTests/Support/LevelValidator.swift`.
+- Python generated-level validation in `GeneratedLevelValidationService`, including structural checks and solution simulation.
+- `LevelValidationRunnerService` for invoking Swift validation from generator workflows when available.
+- Candidate uniqueness checks against the current batch and existing production levels.
+
+Current simulation behavior:
+
+- The Python simulator replays timed tap actions, switch rotations, package collection, destination arrival, max-step guards, and time-limit success/failure.
+- The Swift runtime remains the source of truth for in-app movement through `RouteEngine`, `RuntimeRouteGraph`, and `RoadPath`.
+- `SolutionBuilderService` derives solution timing from route events for generated sidecars.
+
+Current report/preview behavior:
+
+- Markdown and JSON generation reports include accepted candidates, rejected candidates, seeds, template/variant notes, candidate signatures, quality details, and simulation details.
+- Preview SVGs are generated under `docs/generated_levels/previews`.
+- `production_manifest_service.py` maintains generated-level manifest data.
+- The Tkinter generator GUI uses the same generation services and can show candidate lists and visual previews before writing approved levels.
+
+Known limitations:
+
+- The generator still primarily emits template-shaped levels rather than solved mechanic recipes.
+- Fixed or lightly varied layouts can still produce visually similar levels.
+- Switch visual clarity is not yet enforced by a Python-side validation gate.
+- Runtime-parity switch arrow tests now exist, and a level-028-style fixture is preserved under `TinyRoutesTests/Fixtures/SwitchArrowBug`, but generator rejection of confusing switch exits remains future Phase 1 work.
+
 ## Core Principle
 
 Generated levels must pass three gates:
