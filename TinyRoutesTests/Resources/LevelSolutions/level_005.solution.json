@@ -6,7 +6,7 @@
   "requiresWithinTimeLimit": true,
   "actions": [
     {
-      "timeSeconds": 1.15,
+      "timeSeconds": 0.95,
       "tapNodeID": "lower_choice"
     }
   ]

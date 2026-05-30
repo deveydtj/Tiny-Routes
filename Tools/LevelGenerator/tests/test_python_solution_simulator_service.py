@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import pytest
+
 from app.random_source import RandomSource
 from app.services.difficulty_service import DifficultyService
 from app.services.python_solution_simulator_service import PythonSolutionSimulatorService
@@ -47,6 +49,15 @@ def test_python_solution_simulator_records_four_way_switch_timeline_details() ->
     assert len(tap_steps) == 2
     assert "previousEdge=" in tap_steps[0].detail
     assert "blockedBecauseCurrentEdgeStartsAtTappedNode=false" in tap_steps[0].detail
+
+
+def test_python_solution_simulator_arrival_time_for_repeated_switch_tap_uses_next_visit() -> None:
+    preset = DifficultyService().get_preset("expert")
+    generated = FourWayIntersectionTemplate().generate("level_099", 99, preset, RandomSource(4))
+    simulator = PythonSolutionSimulatorService()
+
+    assert simulator.arrival_time_for_action(generated, 0) == pytest.approx(1.05, abs=0.001)
+    assert simulator.arrival_time_for_action(generated, 1) == pytest.approx(3.533, abs=0.001)
 
 
 def test_python_solution_simulator_rejects_late_switch_tap_after_runtime_commitment() -> None:

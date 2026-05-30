@@ -62,7 +62,14 @@ class PythonSolutionSimulatorService:
                 return None
             state.tap_count += 1
 
-        return self._advance_until_node(
+        action_time = float(target_action.timeSeconds)
+        if action_time < state.elapsed_time_seconds:
+            return None
+        terminal = self._advance_to_time(level, nodes, edges, active_edges, state, action_time, steps, max_step_count)
+        if terminal is not None:
+            return None
+
+        return self._arrival_time_from_current_state(
             level,
             nodes,
             edges,
@@ -294,6 +301,47 @@ class PythonSolutionSimulatorService:
             terminal = self._advance_across_current_edge(level, nodes, edges, state, steps)
             if terminal is not None and state.current_node_id != target_node_id:
                 return None
+
+    def _arrival_time_from_current_state(
+        self,
+        level,
+        nodes,
+        edges,
+        active_edges,
+        state,
+        target_node_id: str,
+        steps: list[SimulationStep],
+        max_step_count: int,
+    ) -> float | None:
+        if target_node_id not in nodes:
+            return None
+
+        if state.current_edge_id is None and state.current_node_id == target_node_id:
+            return state.elapsed_time_seconds
+
+        if state.current_edge_id is not None:
+            edge = edges.get(state.current_edge_id)
+            if edge is None:
+                return None
+            if edge.fromNodeID == target_node_id:
+                return self._last_arrival_time_for_node(steps, target_node_id)
+
+        return self._advance_until_node(
+            level,
+            nodes,
+            edges,
+            active_edges,
+            state,
+            target_node_id,
+            steps,
+            max_step_count,
+        )
+
+    def _last_arrival_time_for_node(self, steps: list[SimulationStep], node_id: str) -> float | None:
+        for step in reversed(steps):
+            if step.event == "arrive_node" and step.node_id == node_id:
+                return float(step.time_seconds)
+        return None
 
     def _tap_detail(
         self,

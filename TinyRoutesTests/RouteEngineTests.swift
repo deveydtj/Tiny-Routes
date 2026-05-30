@@ -80,6 +80,35 @@ final class RouteEngineTests: XCTestCase {
         )
     }
 
+    private func makeArrowDirectionFixtureLevelData() -> LevelData {
+        let nodes = [
+            RouteNode(id: "start", x: -2.0, y: 0.0, outgoingEdgeIDs: ["edge_0"]),
+            RouteNode(id: "switch", x: 0.0, y: 0.0, outgoingEdgeIDs: ["edge_1", "edge_2", "edge_6"]),
+            RouteNode(id: "left_target", x: -1.0, y: 0.0, outgoingEdgeIDs: []),
+            RouteNode(id: "node", x: 1.0, y: 0.0, outgoingEdgeIDs: ["edge_3", "edge_5"]),
+            RouteNode(id: "switch_down_target", x: 1.0, y: -1.0, outgoingEdgeIDs: []),
+            RouteNode(id: "node_down_target", x: 1.0, y: -1.5, outgoingEdgeIDs: [])
+        ]
+        let edges = [
+            RouteEdge(id: "edge_0", fromNodeID: "start", toNodeID: "switch"),
+            RouteEdge(id: "edge_1", fromNodeID: "switch", toNodeID: "left_target"),
+            RouteEdge(id: "edge_2", fromNodeID: "switch", toNodeID: "node"),
+            RouteEdge(id: "edge_6", fromNodeID: "switch", toNodeID: "switch_down_target", roadShape: .verticalFirst),
+            RouteEdge(id: "edge_3", fromNodeID: "node", toNodeID: "switch"),
+            RouteEdge(id: "edge_5", fromNodeID: "node", toNodeID: "node_down_target")
+        ]
+        return LevelData(
+            id: "arrow_direction_fixture",
+            name: "Arrow Direction Fixture",
+            graph: RouteGraph(nodes: nodes, edges: edges),
+            startNodeID: "start",
+            packageNodeID: "switch_down_target",
+            destinationNodeID: "node_down_target",
+            timeLimitSeconds: 20,
+            parTaps: 0
+        )
+    }
+
     private func makeRuntimeGraphForSwitchClassification(
         validOutgoingCount: Int,
         includeInvalidListedEdgeIDs: Bool = false
@@ -820,11 +849,8 @@ final class RouteEngineTests: XCTestCase {
     }
 
     func testLevel021CentralSideBranchArrowUsesHorizontalExitDirection() throws {
-        let level = try XCTUnwrap(
-            TestLevelCatalog().loadAllProductionLevels().first { $0.id == "level_021" }
-        )
         let engine = RouteEngine()
-        try engine.buildGraph(from: level)
+        try engine.buildGraph(from: makeFourWayIntersectionLevelData())
         let graph = try XCTUnwrap(engine.runtimeGraph)
         let centralSwitch = try XCTUnwrap(graph.nodesByID["central_switch"])
         let sideBranchEdge = try XCTUnwrap(graph.edgesByID["e_central_side_branch"])
@@ -835,11 +861,8 @@ final class RouteEngineTests: XCTestCase {
     }
 
     func testLevel022BacktrackAndDestinationArrowsUseVerticalExitDirection() throws {
-        let level = try XCTUnwrap(
-            TestLevelCatalog().loadAllProductionLevels().first { $0.id == "level_022" }
-        )
         let engine = RouteEngine()
-        try engine.buildGraph(from: level)
+        try engine.buildGraph(from: makeArrowDirectionFixtureLevelData())
         let graph = try XCTUnwrap(engine.runtimeGraph)
         let switchNode = try XCTUnwrap(graph.nodesByID["switch"])
         let rightNode = try XCTUnwrap(graph.nodesByID["node"])
