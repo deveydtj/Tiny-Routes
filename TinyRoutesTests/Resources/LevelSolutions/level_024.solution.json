@@ -1,17 +1,21 @@
 {
   "levelID": "level_024",
-  "description": "Rotate the approach switch to collect the package, then rotate the finish switch to reach destination.",
+  "description": "Follow the generated graph recipe route and rotate each switch before arrival.",
   "expectedOutcome": "completed",
-  "maxTaps": 2,
+  "maxTaps": 3,
   "requiresWithinTimeLimit": true,
   "actions": [
     {
-      "timeSeconds": 0.46,
-      "tapNodeID": "approach_switch"
+      "timeSeconds": 0.1,
+      "tapNodeID": "double_entry_switch"
     },
     {
-      "timeSeconds": 2.45,
-      "tapNodeID": "finish_switch"
+      "timeSeconds": 1.5,
+      "tapNodeID": "double_mid_switch"
+    },
+    {
+      "timeSeconds": 1.9,
+      "tapNodeID": "double_finish_switch"
     }
   ]
 }

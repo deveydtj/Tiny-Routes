@@ -37,15 +37,23 @@ class DifficultyCurveService:
 
     def template_weights_for_level(self, level_number: int, difficulty: str) -> dict[str, int]:
         if difficulty == "tutorial":
+            if level_number <= 1:
+                return {"straight_delivery": 7}
             return {"straight_delivery": 5, "single_switch": 2}
         if difficulty == "easy":
-            return {"single_switch": 5, "package_gate": 3}
+            if level_number <= 5:
+                return {"single_switch": 5, "package_gate": 1}
+            return {"single_switch": 4, "package_gate": 3}
         if difficulty == "medium":
             if level_number <= 15:
-                return {"package_gate": 4, "multi_switch_chain": 3, "return_loop": 1}
+                return {"package_gate": 5, "multi_switch_chain": 2}
             return {"package_gate": 2, "multi_switch_chain": 4, "return_loop": 3}
         if difficulty == "hard":
-            return {"multi_switch_chain": 5, "ring_route": 2}
+            if level_number <= 30:
+                return {"multi_switch_chain": 5, "return_loop": 2, "ring_route": 1}
+            return {"multi_switch_chain": 4, "return_loop": 1, "ring_route": 3}
         if difficulty == "expert":
+            if level_number <= 45:
+                return {"four_way_intersection": 3, "multi_switch_chain": 3, "ring_route": 2}
             return {"four_way_intersection": 5, "multi_switch_chain": 2, "ring_route": 2}
         return {}

@@ -644,48 +644,48 @@ Make levels feel like a smooth campaign instead of random valid puzzles.
 
 ## Tasks
 
-- [ ] Expand difficulty metrics:
-  - [ ] required tap count
-  - [ ] switch count
-  - [ ] four-way switch count
-  - [ ] repeated tap count
-  - [ ] solution path length
-  - [ ] false branch count
-  - [ ] loop count
-  - [ ] average time between required taps
-  - [ ] minimum reaction window before a required switch
-  - [ ] visual complexity score
-  - [ ] route crossing score
-  - [ ] package detour complexity
-- [ ] Define difficulty bands:
-  - [ ] tutorial
-  - [ ] easy
-  - [ ] medium
-  - [ ] hard
-  - [ ] expert
-- [ ] Add feature unlock gates:
-  - [ ] no switches before tutorial introduces movement
-  - [ ] single switch before multi-switch
-  - [ ] package gate before return loop
-  - [ ] return loop before ring route
-  - [ ] two-way switches before four-way intersections
-  - [ ] four-way intersections only after clear tutorial/supporting levels
-- [ ] Add campaign curve rules:
-  - [ ] avoid sudden tap-count spikes
-  - [ ] avoid back-to-back levels with same recipe family
-  - [ ] alternate dense levels with simpler breather levels
-  - [ ] introduce new mechanics with low visual complexity
-  - [ ] repeat mechanic with variation before increasing complexity
-- [ ] Add batch-level scoring:
-  - [ ] compare level to previous campaign levels
-  - [ ] reject adjacent levels with too-similar signatures
-  - [ ] reject difficulty cliffs
-  - [ ] penalize repeated recipe family streaks
-- [ ] Add tests:
-  - [ ] auto curve outputs expected difficulty bands
-  - [ ] hard levels have meaningful complexity
-  - [ ] tutorial levels stay simple
-  - [ ] adjacent duplicate mechanics are penalized
+- [x] Expand difficulty metrics:
+  - [x] required tap count
+  - [x] switch count
+  - [x] four-way switch count
+  - [x] repeated tap count
+  - [x] solution path length
+  - [x] false branch count
+  - [x] loop count
+  - [x] average time between required taps
+  - [x] minimum reaction window before a required switch
+  - [x] visual complexity score
+  - [x] route crossing score
+  - [x] package detour complexity
+- [x] Define difficulty bands:
+  - [x] tutorial
+  - [x] easy
+  - [x] medium
+  - [x] hard
+  - [x] expert
+- [x] Add feature unlock gates:
+  - [x] no switches before tutorial introduces movement
+  - [x] single switch before multi-switch
+  - [x] package gate before return loop
+  - [x] return loop before ring route
+  - [x] two-way switches before four-way intersections
+  - [x] four-way intersections only after clear tutorial/supporting levels
+- [x] Add campaign curve rules:
+  - [x] avoid sudden tap-count spikes
+  - [x] avoid back-to-back levels with same recipe family
+  - [x] alternate dense levels with simpler breather levels
+  - [x] introduce new mechanics with low visual complexity
+  - [x] repeat mechanic with variation before increasing complexity
+- [x] Add batch-level scoring:
+  - [x] compare level to previous campaign levels
+  - [x] reject adjacent levels with too-similar signatures
+  - [x] reject difficulty cliffs
+  - [x] penalize repeated recipe family streaks
+- [x] Add tests:
+  - [x] auto curve outputs expected difficulty bands
+  - [x] hard levels have meaningful complexity
+  - [x] tutorial levels stay simple
+  - [x] adjacent duplicate mechanics are penalized
 
 ## Do
 
@@ -703,9 +703,9 @@ Make levels feel like a smooth campaign instead of random valid puzzles.
 
 ## Acceptance Criteria
 
-- [ ] Difficulty scoring explains why a level belongs in its band.
-- [ ] Auto generation produces smoother campaign batches.
-- [ ] Reports show mechanical and visual difficulty separately.
+- [x] Difficulty scoring explains why a level belongs in its band.
+- [x] Auto generation produces smoother campaign batches.
+- [x] Reports show mechanical and visual difficulty separately.
 
 ---
 

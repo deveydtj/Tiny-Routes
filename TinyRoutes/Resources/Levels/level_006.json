@@ -5,91 +5,78 @@
     "nodes": [
       {
         "id": "start",
-        "x": -1.1,
-        "y": -0.1,
+        "x": -1.0,
+        "y": 0.0,
         "outgoingEdgeIDs": [
-          "e_start_short_entry_switch"
+          "e_start_approach"
         ]
       },
       {
-        "id": "short_entry_switch",
+        "id": "approach",
         "x": -0.5,
         "y": 0.0,
         "outgoingEdgeIDs": [
-          "e_short_entry_switch_short_bypass",
-          "e_short_entry_switch_package"
+          "e_approach_choice"
         ]
       },
       {
-        "id": "short_bypass",
+        "id": "choice",
         "x": 0.0,
-        "y": 0.5,
+        "y": -0.2,
+        "outgoingEdgeIDs": [
+          "e_choice_dead_end_a",
+          "e_choice_package"
+        ]
+      },
+      {
+        "id": "dead_end_a",
+        "x": 0.0,
+        "y": 0.4,
         "outgoingEdgeIDs": []
       },
       {
         "id": "package",
-        "x": 0.1,
-        "y": -0.5,
+        "x": 0.5,
+        "y": 0.4,
         "outgoingEdgeIDs": [
-          "e_package_short_finish_switch"
+          "e_package_destination"
         ]
-      },
-      {
-        "id": "short_finish_switch",
-        "x": 0.6,
-        "y": -0.2,
-        "outgoingEdgeIDs": [
-          "e_short_finish_switch_short_dead_end",
-          "e_short_finish_switch_destination"
-        ]
-      },
-      {
-        "id": "short_dead_end",
-        "x": 1.0,
-        "y": 0.3,
-        "outgoingEdgeIDs": []
       },
       {
         "id": "destination",
-        "x": 1.1,
-        "y": -0.6,
+        "x": 1.0,
+        "y": -0.3,
         "outgoingEdgeIDs": []
       }
     ],
     "edges": [
       {
-        "id": "e_start_short_entry_switch",
+        "id": "e_start_approach",
         "fromNodeID": "start",
-        "toNodeID": "short_entry_switch",
+        "toNodeID": "approach",
         "roadShape": "horizontalFirst"
       },
       {
-        "id": "e_short_entry_switch_short_bypass",
-        "fromNodeID": "short_entry_switch",
-        "toNodeID": "short_bypass",
+        "id": "e_approach_choice",
+        "fromNodeID": "approach",
+        "toNodeID": "choice",
         "roadShape": "horizontalFirst"
       },
       {
-        "id": "e_short_entry_switch_package",
-        "fromNodeID": "short_entry_switch",
+        "id": "e_choice_dead_end_a",
+        "fromNodeID": "choice",
+        "toNodeID": "dead_end_a",
+        "roadShape": "horizontalFirst"
+      },
+      {
+        "id": "e_choice_package",
+        "fromNodeID": "choice",
         "toNodeID": "package",
-        "roadShape": "verticalFirst"
-      },
-      {
-        "id": "e_package_short_finish_switch",
-        "fromNodeID": "package",
-        "toNodeID": "short_finish_switch",
         "roadShape": "horizontalFirst"
       },
       {
-        "id": "e_short_finish_switch_short_dead_end",
-        "fromNodeID": "short_finish_switch",
-        "toNodeID": "short_dead_end",
-        "roadShape": "verticalFirst"
-      },
-      {
-        "id": "e_short_finish_switch_destination",
-        "fromNodeID": "short_finish_switch",
+        "id": "e_package_destination",
+        "fromNodeID": "package",
         "toNodeID": "destination",
         "roadShape": "horizontalFirst"
       }
@@ -99,5 +86,5 @@
   "packageNodeID": "package",
   "destinationNodeID": "destination",
   "timeLimitSeconds": 30,
-  "parTaps": 2
+  "parTaps": 1
 }

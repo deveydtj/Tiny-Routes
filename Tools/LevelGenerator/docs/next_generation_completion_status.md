@@ -405,3 +405,53 @@ xcodebuild test -project TinyRoutes.xcodeproj -scheme TinyRoutes -destination 'p
 ```
 
 Result: `TEST SUCCEEDED`; 19 selected Swift tests ran, with the external generated-level validation test skipped because no generated level IDs were requested through environment variables.
+
+## Phase 8 - Difficulty Model and Campaign Progression
+
+Completed:
+
+- [x] Added expanded `DifficultyMetrics` output for generated levels:
+  - [x] required tap count
+  - [x] switch count
+  - [x] four-way switch count
+  - [x] repeated tap count
+  - [x] solution path length
+  - [x] false branch count
+  - [x] loop count
+  - [x] average time between required taps
+  - [x] minimum reaction window before a required switch
+  - [x] visual complexity score
+  - [x] route crossing score
+  - [x] package detour complexity
+- [x] Added explanatory difficulty-band estimates for tutorial, easy, medium, hard, and expert.
+- [x] Updated auto campaign weights to enforce mechanic unlock order:
+  - [x] movement-only level 1
+  - [x] single-switch before multi-switch
+  - [x] package gate before return loop
+  - [x] return loop before ring-route emphasis
+  - [x] two-way switch families before four-way intersection emphasis
+- [x] Added `CampaignPacingService` for batch-level scoring against previous campaign levels.
+- [x] Penalized tap-count spikes, adjacent duplicate mechanics, repeated recipe-family streaks, and difficulty cliffs in generation quality.
+- [x] Added mechanical difficulty, visual difficulty, estimated band, campaign pacing, and full metrics to JSON reports.
+- [x] Added mechanical/visual difficulty summary lines to Markdown reports.
+- [x] Added tests covering auto curve bands, unlock gates, simple tutorial metrics, hard-level complexity, and adjacent duplicate mechanic penalties.
+
+Verification:
+
+```bash
+/Library/Frameworks/Python.framework/Versions/3.13/bin/python3 -m pytest Tools/LevelGenerator/tests/test_difficulty_curve_service.py Tools/LevelGenerator/tests/test_difficulty_service.py Tools/LevelGenerator/tests/test_generation_quality_service.py Tools/LevelGenerator/tests/test_generation_service.py::test_generation_service_recipe_first_mode_generates_recipe_metadata -q
+```
+
+Result: `14 passed`.
+
+```bash
+/Library/Frameworks/Python.framework/Versions/3.13/bin/python3 -m pytest Tools/LevelGenerator/tests -q
+```
+
+Result: `194 passed`.
+
+```bash
+/Library/Frameworks/Python.framework/Versions/3.13/bin/python3 Tools/LevelGenerator/run_all_generator_checks.py --python /Library/Frameworks/Python.framework/Versions/3.13/bin/python3
+```
+
+Result: passed. The check suite ran Python tests, smoke dry-run generation, and validation for production levels `level_001` through `level_030` with Swift tests disabled by the script.

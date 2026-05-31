@@ -196,6 +196,13 @@ class GenerationReportRepository:
                             f"{abstract['alternatePathCount']} alternate paths, "
                             f"{abstract['deadEndCount']} dead ends, {abstract['loopCount']} loops."
                         )
+                if level["quality"]:
+                    quality = level["quality"]
+                    lines.append(
+                        f"- Difficulty model: estimated `{quality['estimatedDifficultyBand']}`, "
+                        f"mechanical `{quality['mechanicalDifficulty']}`, "
+                        f"visual `{quality['visualDifficulty']}`, campaign pacing `{quality['campaignPacing']}`."
+                    )
                 for switch in level["switchPreview"]:
                     transition_summary = ", ".join(
                         (
@@ -304,6 +311,10 @@ class GenerationReportRepository:
             "uniqueness": quality.uniqueness,
             "difficultyFit": quality.difficulty_fit,
             "routeInterest": quality.route_interest,
+            "campaignPacing": quality.campaign_pacing,
+            "mechanicalDifficulty": quality.mechanical_difficulty,
+            "visualDifficulty": quality.visual_difficulty,
+            "estimatedDifficultyBand": quality.estimated_difficulty_band,
             "penalties": list(quality.penalties),
             "details": quality.details,
         }

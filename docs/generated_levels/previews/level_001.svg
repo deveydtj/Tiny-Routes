@@ -1,18 +1,12 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="420" height="320" viewBox="0 0 420 320">
 <rect width="100%" height="100%" fill="#f8fafc"/>
 <text x="16" y="22" font-family="Arial" font-size="14" fill="#0f172a">level_001</text>
-<line x1="30.0" y1="184.8" x2="210.0" y2="184.8" stroke="#64748b" stroke-width="3"/>
-<line x1="210.0" y1="184.8" x2="332.7" y2="290.0" stroke="#64748b" stroke-width="3"/>
-<line x1="210.0" y1="184.8" x2="324.5" y2="91.9" stroke="#64748b" stroke-width="3"/>
-<line x1="324.5" y1="91.9" x2="390.0" y2="30.0" stroke="#64748b" stroke-width="3"/>
-<circle cx="30.0" cy="184.8" r="8" fill="#22c55e" stroke="#0f172a" stroke-width="1"/>
-<text x="40.0" y="174.8" font-family="Arial" font-size="11" fill="#0f172a">start</text>
-<circle cx="210.0" cy="184.8" r="8" fill="#3b82f6" stroke="#0f172a" stroke-width="1"/>
-<text x="220.0" y="174.8" font-family="Arial" font-size="11" fill="#0f172a">1</text>
-<circle cx="332.7" cy="290.0" r="8" fill="#94a3b8" stroke="#0f172a" stroke-width="1"/>
-<text x="342.7" y="280.0" font-family="Arial" font-size="11" fill="#0f172a">dead_end_a</text>
-<circle cx="324.5" cy="91.9" r="8" fill="#f59e0b" stroke="#0f172a" stroke-width="1"/>
-<text x="334.5" y="81.9" font-family="Arial" font-size="11" fill="#0f172a">package</text>
-<circle cx="390.0" cy="30.0" r="8" fill="#ef4444" stroke="#0f172a" stroke-width="1"/>
-<text x="400.0" y="20.0" font-family="Arial" font-size="11" fill="#0f172a">destination</text>
+<line x1="30.0" y1="178.6" x2="210.0" y2="30.0" stroke="#64748b" stroke-width="3"/>
+<line x1="210.0" y1="30.0" x2="390.0" y2="290.0" stroke="#64748b" stroke-width="3"/>
+<circle cx="30.0" cy="178.6" r="8" fill="#22c55e" stroke="#0f172a" stroke-width="1"/>
+<text x="40.0" y="168.6" font-family="Arial" font-size="11" fill="#0f172a">start</text>
+<circle cx="210.0" cy="30.0" r="8" fill="#f59e0b" stroke="#0f172a" stroke-width="1"/>
+<text x="220.0" y="20.0" font-family="Arial" font-size="11" fill="#0f172a">package</text>
+<circle cx="390.0" cy="290.0" r="8" fill="#ef4444" stroke="#0f172a" stroke-width="1"/>
+<text x="400.0" y="280.0" font-family="Arial" font-size="11" fill="#0f172a">destination</text>
 </svg>

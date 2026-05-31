@@ -1,12 +1,17 @@
 from __future__ import annotations
 
 from collections import Counter
+import math
 
 from ..models.difficulty_preset import DifficultyPreset
+from ..models.generation_quality import DifficultyMetrics
+from .graph_layout_service import GraphLayoutService
 from .switch_classification_service import SwitchClassificationService
 
 
 class DifficultyService:
+    band_order = ("tutorial", "easy", "medium", "hard", "expert")
+
     def __init__(self) -> None:
         self._presets = {
             "tutorial": DifficultyPreset(
@@ -130,7 +135,215 @@ class DifficultyService:
             messages.append(f"repeated_switch_taps_not_allowed:{','.join(sorted(repeated_taps))}")
         return messages
 
+    def metrics_for_generated_level(self, generated_level) -> DifficultyMetrics:
+        return self.metrics_for_level(
+            generated_level.level_document,
+            generated_level.solution,
+            abstract_solution_metadata=getattr(generated_level, "abstract_solution_metadata", None),
+            simulation_result=getattr(generated_level, "simulation_result", None),
+            road_shape_metadata=getattr(generated_level, "road_shape_metadata", None) or {},
+        )
+
+    def metrics_for_level(
+        self,
+        level_document,
+        solution,
+        *,
+        abstract_solution_metadata=None,
+        simulation_result=None,
+        road_shape_metadata: dict | None = None,
+    ) -> DifficultyMetrics:
+        edge_by_id = {edge.id: edge for edge in level_document.graph.edges}
+        switch_classifier = SwitchClassificationService()
+        switch_classifications = [
+            switch_classifier.classify_node(node, edge_by_id)
+            for node in level_document.graph.nodes
+        ]
+        switch_count = sum(1 for classification in switch_classifications if classification.is_switchable)
+        four_way_switch_count = sum(
+            1
+            for classification in switch_classifications
+            if classification.valid_outgoing_edge_count == 4
+        )
+        tap_counts = Counter(action.tapNodeID for action in solution.actions)
+        repeated_tap_count = sum(count - 1 for count in tap_counts.values() if count > 1)
+        sorted_actions = sorted(solution.actions, key=lambda action: float(action.timeSeconds))
+        tap_times = [float(action.timeSeconds) for action in sorted_actions]
+        average_tap_spacing = None
+        minimum_tap_spacing = None
+        if len(tap_times) >= 2:
+            spacings = [current - previous for previous, current in zip(tap_times, tap_times[1:])]
+            average_tap_spacing = round(sum(spacings) / len(spacings), 4)
+            minimum_tap_spacing = round(min(spacings), 4)
+
+        solution_path_length = 0
+        false_branch_count = 0
+        loop_count = 0
+        if abstract_solution_metadata is not None:
+            solution_path_length = max(0, len(abstract_solution_metadata.required_path) - 1)
+            false_branch_count = abstract_solution_metadata.false_route_count
+            loop_count = abstract_solution_metadata.loop_count
+        elif simulation_result is not None:
+            traversed_edges = [
+                step.edge_id
+                for step in simulation_result.steps
+                if step.event in {"enter_edge", "begin_transition"} and step.edge_id
+            ]
+            solution_path_length = len(traversed_edges)
+        if solution_path_length == 0:
+            solution_path_length = self._shortest_package_route_length(level_document)
+
+        layout_summary = GraphLayoutService().readability_summary(
+            {node.id: (node.x, node.y) for node in level_document.graph.nodes},
+            [(edge.fromNodeID, edge.toNodeID, edge.id) for edge in level_document.graph.edges],
+        )
+        crossing_count = int((road_shape_metadata or {}).get("crossingCount", layout_summary["crossings"]))
+        route_crossing_score = self._clamp(crossing_count / 4)
+        visual_complexity_score = self._clamp(
+            (len(level_document.graph.nodes) * 0.045)
+            + (len(level_document.graph.edges) * 0.035)
+            + (switch_count * 0.08)
+            + (four_way_switch_count * 0.18)
+            + (layout_summary["edgeSpacingIssues"] * 0.06)
+            + (route_crossing_score * 0.18)
+        )
+        package_detour_complexity = self._package_detour_complexity(level_document)
+        mechanical_score = self._clamp(
+            (len(solution.actions) * 0.11)
+            + (switch_count * 0.10)
+            + (four_way_switch_count * 0.18)
+            + (repeated_tap_count * 0.12)
+            + (solution_path_length * 0.045)
+            + (false_branch_count * 0.05)
+            + (loop_count * 0.12)
+            + (package_detour_complexity * 0.14)
+        )
+        estimated_band = self.band_for_scores(mechanical_score, visual_complexity_score)
+        explanations = self.explain_metrics(
+            mechanical_score=mechanical_score,
+            visual_score=visual_complexity_score,
+            tap_count=len(solution.actions),
+            switch_count=switch_count,
+            four_way_switch_count=four_way_switch_count,
+            repeated_tap_count=repeated_tap_count,
+            loop_count=loop_count,
+            false_branch_count=false_branch_count,
+        )
+        return DifficultyMetrics(
+            required_tap_count=len(solution.actions),
+            switch_count=switch_count,
+            four_way_switch_count=four_way_switch_count,
+            repeated_tap_count=repeated_tap_count,
+            solution_path_length=solution_path_length,
+            false_branch_count=false_branch_count,
+            loop_count=loop_count,
+            average_time_between_required_taps=average_tap_spacing,
+            minimum_reaction_window_before_required_switch=minimum_tap_spacing,
+            visual_complexity_score=round(visual_complexity_score, 4),
+            route_crossing_score=round(route_crossing_score, 4),
+            package_detour_complexity=round(package_detour_complexity, 4),
+            mechanical_score=round(mechanical_score, 4),
+            visual_score=round(visual_complexity_score, 4),
+            estimated_band=estimated_band,
+            explanations=explanations,
+        )
+
+    def band_for_scores(self, mechanical_score: float, visual_score: float) -> str:
+        combined = (mechanical_score * 0.7) + (visual_score * 0.3)
+        if combined < 0.18:
+            return "tutorial"
+        if combined < 0.34:
+            return "easy"
+        if combined < 0.54:
+            return "medium"
+        if combined < 0.74:
+            return "hard"
+        return "expert"
+
+    def band_index(self, band: str) -> int:
+        return self.band_order.index(band) if band in self.band_order else -1
+
+    def explain_metrics(
+        self,
+        *,
+        mechanical_score: float,
+        visual_score: float,
+        tap_count: int,
+        switch_count: int,
+        four_way_switch_count: int,
+        repeated_tap_count: int,
+        loop_count: int,
+        false_branch_count: int,
+    ) -> tuple[str, ...]:
+        explanations: list[str] = [
+            f"mechanical_score={mechanical_score:.2f}",
+            f"visual_score={visual_score:.2f}",
+        ]
+        if tap_count == 0:
+            explanations.append("no_required_taps")
+        elif tap_count >= 4:
+            explanations.append("high_required_tap_count")
+        if switch_count >= 3:
+            explanations.append("multiple_switches")
+        if four_way_switch_count:
+            explanations.append("four_way_switch_present")
+        if repeated_tap_count:
+            explanations.append("repeated_switch_taps")
+        if loop_count:
+            explanations.append("loop_route")
+        if false_branch_count >= 2:
+            explanations.append("multiple_false_branches")
+        return tuple(explanations)
+
     def _check_range(self, name: str, value: int, value_range: tuple[int, int], messages: list[str]) -> None:
         minimum, maximum = value_range
         if value < minimum or value > maximum:
             messages.append(f"{name}_outside_difficulty_range:{value}:{minimum}-{maximum}")
+
+    def _shortest_package_route_length(self, level_document) -> int:
+        start_to_package = self._shortest_edge_count(
+            level_document,
+            level_document.startNodeID,
+            level_document.packageNodeID,
+        )
+        package_to_destination = self._shortest_edge_count(
+            level_document,
+            level_document.packageNodeID,
+            level_document.destinationNodeID,
+        )
+        if start_to_package is None or package_to_destination is None:
+            return 0
+        return start_to_package + package_to_destination
+
+    def _shortest_edge_count(self, level_document, start_id: str, destination_id: str) -> int | None:
+        adjacency: dict[str, list[str]] = {}
+        for edge in level_document.graph.edges:
+            adjacency.setdefault(edge.fromNodeID, []).append(edge.toNodeID)
+        frontier = [(start_id, 0)]
+        visited = {start_id}
+        for node_id, distance in frontier:
+            if node_id == destination_id:
+                return distance
+            for next_id in adjacency.get(node_id, []):
+                if next_id not in visited:
+                    visited.add(next_id)
+                    frontier.append((next_id, distance + 1))
+        return None
+
+    def _package_detour_complexity(self, level_document) -> float:
+        node_by_id = {node.id: node for node in level_document.graph.nodes}
+        try:
+            start = node_by_id[level_document.startNodeID]
+            package = node_by_id[level_document.packageNodeID]
+            destination = node_by_id[level_document.destinationNodeID]
+        except KeyError:
+            return 0.0
+        direct = max(math.hypot(destination.x - start.x, destination.y - start.y), 1e-9)
+        via_package = (
+            math.hypot(package.x - start.x, package.y - start.y)
+            + math.hypot(destination.x - package.x, destination.y - package.y)
+        )
+        return self._clamp((via_package / direct - 1.0) / 1.5)
+
+    def _clamp(self, value: float) -> float:
+        return max(0.0, min(1.0, value))

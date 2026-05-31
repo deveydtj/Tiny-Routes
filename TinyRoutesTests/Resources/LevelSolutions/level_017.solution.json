@@ -1,21 +1,17 @@
 {
   "levelID": "level_017",
-  "description": "Rotate alpha to collect the package, rotate beta onto the return path, then rotate alpha again for destination.",
+  "description": "Follow the generated graph recipe route and rotate each switch before arrival.",
   "expectedOutcome": "completed",
-  "maxTaps": 3,
+  "maxTaps": 2,
   "requiresWithinTimeLimit": true,
   "actions": [
     {
-      "timeSeconds": 0.33,
-      "tapNodeID": "upper_alpha_switch"
+      "timeSeconds": 0.15,
+      "tapNodeID": "left_entry_switch"
     },
     {
-      "timeSeconds": 2.43,
-      "tapNodeID": "upper_beta_switch"
-    },
-    {
-      "timeSeconds": 5.3,
-      "tapNodeID": "upper_alpha_switch"
+      "timeSeconds": 1.8,
+      "tapNodeID": "left_finish_switch"
     }
   ]
 }

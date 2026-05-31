@@ -1,13 +1,13 @@
 {
   "levelID": "level_010",
-  "description": "Rotate choice once so the route collects the package before heading to destination.",
+  "description": "Follow the generated graph recipe route and rotate each switch before arrival.",
   "expectedOutcome": "completed",
   "maxTaps": 1,
   "requiresWithinTimeLimit": true,
   "actions": [
     {
-      "timeSeconds": 0.71,
-      "tapNodeID": "short_choice"
+      "timeSeconds": 0.65,
+      "tapNodeID": "upper_choice"
     }
   ]
 }

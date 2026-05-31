@@ -3,6 +3,9 @@ from __future__ import annotations
 import pytest
 
 from app.services.difficulty_service import DifficultyService
+from app.random_source import RandomSource
+from app.templates.straight_delivery_template import StraightDeliveryTemplate
+from app.templates.multi_switch_chain_template import MultiSwitchChainTemplate
 
 
 def test_all_difficulty_presets_are_available() -> None:
@@ -66,3 +69,30 @@ def test_only_expert_allows_four_outgoing_edges() -> None:
         service.get_preset("expert"),
         allow_range_exceptions=True,
     )
+
+
+def test_difficulty_metrics_keep_tutorial_levels_simple() -> None:
+    service = DifficultyService()
+    preset = service.get_preset("tutorial")
+    generated = StraightDeliveryTemplate().generate("level_001", 1, preset, RandomSource(1))
+
+    metrics = service.metrics_for_generated_level(generated)
+
+    assert metrics.estimated_band == "tutorial"
+    assert metrics.required_tap_count == 0
+    assert metrics.switch_count == 0
+    assert metrics.visual_complexity_score < 0.4
+    assert "no_required_taps" in metrics.explanations
+
+
+def test_hard_level_metrics_have_meaningful_complexity() -> None:
+    service = DifficultyService()
+    preset = service.get_preset("hard")
+    generated = MultiSwitchChainTemplate().generate("level_032", 32, preset, RandomSource(6))
+
+    metrics = service.metrics_for_generated_level(generated)
+
+    assert metrics.required_tap_count >= 3
+    assert metrics.switch_count >= 3
+    assert metrics.mechanical_score >= 0.5
+    assert metrics.estimated_band in {"medium", "hard", "expert"}

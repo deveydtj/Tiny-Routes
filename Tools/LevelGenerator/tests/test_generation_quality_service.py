@@ -36,6 +36,21 @@ def test_generation_quality_penalizes_similar_candidates() -> None:
     assert "similar_to_existing_candidate" in score.penalties
 
 
+def test_generation_quality_penalizes_adjacent_duplicate_mechanics() -> None:
+    preset = DifficultyService().get_preset("easy")
+    first = SingleSwitchTemplate().generate("level_012", 12, preset, RandomSource(2))
+    second = SingleSwitchTemplate().generate("level_013", 13, preset, RandomSource(3))
+    signature_service = CandidateSignatureService()
+    first.candidate_signature = signature_service.signature_for(first)
+    second.candidate_signature = signature_service.signature_for(second)
+
+    score = GenerationQualityService().score(second, preset, [first.candidate_signature])
+
+    assert score.campaign_pacing < 1
+    assert "campaign_repeated_recipe_family" in score.penalties
+    assert score.details["campaignPacing"]["previousLevelID"] == "level_012"
+
+
 def test_generation_quality_visual_clarity_warnings_lower_readability_score() -> None:
     preset = DifficultyService().get_preset("easy")
     generated = _parallel_warning_generated_level()
@@ -43,6 +58,8 @@ def test_generation_quality_visual_clarity_warnings_lower_readability_score() ->
     score = GenerationQualityService().score(generated, preset)
 
     assert score.details["visualClarityScore"] < 1
+    assert "difficultyMetrics" in score.details
+    assert score.estimated_difficulty_band is not None
     assert score.readability < 1
     assert "long_parallel_road_segments_visually_merge" in score.penalties
 

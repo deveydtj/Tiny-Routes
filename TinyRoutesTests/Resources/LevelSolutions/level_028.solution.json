@@ -1,24 +1,24 @@
 {
   "levelID": "level_028",
-  "description": "Rotate each chain switch once so the route avoids dead ends and completes delivery.",
+  "description": "Follow the generated graph recipe route and rotate each switch before arrival.",
   "expectedOutcome": "completed",
   "maxTaps": 4,
   "requiresWithinTimeLimit": true,
   "actions": [
     {
-      "timeSeconds": 0.32,
+      "timeSeconds": 0.16,
       "tapNodeID": "multi_switch_chain_zigzag_switch_a"
     },
     {
-      "timeSeconds": 2.47,
+      "timeSeconds": 1.12,
       "tapNodeID": "multi_switch_chain_zigzag_switch_b"
     },
     {
-      "timeSeconds": 3.15,
+      "timeSeconds": 1.8,
       "tapNodeID": "multi_switch_chain_zigzag_switch_c"
     },
     {
-      "timeSeconds": 3.82,
+      "timeSeconds": 2.43,
       "tapNodeID": "multi_switch_chain_zigzag_switch_d"
     }
   ]

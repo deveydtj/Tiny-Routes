@@ -5,31 +5,59 @@
     "nodes": [
       {
         "id": "start",
-        "x": -0.95,
-        "y": 0.5,
+        "x": -1.0,
+        "y": 0.0,
         "outgoingEdgeIDs": [
-          "e_start_package"
+          "e_start_node_a"
+        ]
+      },
+      {
+        "id": "node_a",
+        "x": -0.5,
+        "y": 0.0,
+        "outgoingEdgeIDs": [
+          "e_node_a_node_b"
+        ]
+      },
+      {
+        "id": "node_b",
+        "x": 0.0,
+        "y": 0.0,
+        "outgoingEdgeIDs": [
+          "e_node_b_package"
         ]
       },
       {
         "id": "package",
-        "x": 0.25,
-        "y": -0.25,
+        "x": 0.5,
+        "y": 0.4,
         "outgoingEdgeIDs": [
           "e_package_destination"
         ]
       },
       {
         "id": "destination",
-        "x": 1.05,
-        "y": -1.0,
+        "x": 1.0,
+        "y": -0.3,
         "outgoingEdgeIDs": []
       }
     ],
     "edges": [
       {
-        "id": "e_start_package",
+        "id": "e_start_node_a",
         "fromNodeID": "start",
+        "toNodeID": "node_a",
+        "roadShape": "horizontalFirst"
+      },
+      {
+        "id": "e_node_a_node_b",
+        "fromNodeID": "node_a",
+        "toNodeID": "node_b",
+        "roadShape": "horizontalFirst"
+      },
+      {
+        "id": "e_node_b_package",
+        "fromNodeID": "node_b",
         "toNodeID": "package",
         "roadShape": "horizontalFirst"
       },

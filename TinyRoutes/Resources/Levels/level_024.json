@@ -1,12 +1,12 @@
 {
-  "id": "level_014",
-  "name": "Level 014",
+  "id": "level_024",
+  "name": "Level 024",
   "graph": {
     "nodes": [
       {
         "id": "start",
         "x": -1.0,
-        "y": -0.1,
+        "y": 0.1,
         "outgoingEdgeIDs": [
           "e_start_double_entry_switch"
         ]
@@ -14,7 +14,7 @@
       {
         "id": "double_entry_switch",
         "x": -0.6,
-        "y": -0.1,
+        "y": 0.1,
         "outgoingEdgeIDs": [
           "e_double_entry_switch_double_bypass",
           "e_double_entry_switch_package"
@@ -23,13 +23,13 @@
       {
         "id": "double_bypass",
         "x": -0.6,
-        "y": 0.8,
+        "y": -0.8,
         "outgoingEdgeIDs": []
       },
       {
         "id": "package",
         "x": -0.2,
-        "y": 0.3,
+        "y": -0.3,
         "outgoingEdgeIDs": [
           "e_package_double_mid_switch"
         ]
@@ -37,7 +37,7 @@
       {
         "id": "double_mid_switch",
         "x": 0.2,
-        "y": -0.1,
+        "y": 0.1,
         "outgoingEdgeIDs": [
           "e_double_mid_switch_double_dead_end_a",
           "e_double_mid_switch_double_finish_switch"
@@ -46,13 +46,13 @@
       {
         "id": "double_dead_end_a",
         "x": 0.2,
-        "y": 0.8,
+        "y": -0.8,
         "outgoingEdgeIDs": []
       },
       {
         "id": "double_finish_switch",
         "x": 0.6,
-        "y": -0.1,
+        "y": 0.1,
         "outgoingEdgeIDs": [
           "e_double_finish_switch_double_dead_end_b",
           "e_double_finish_switch_destination"
@@ -61,13 +61,13 @@
       {
         "id": "double_dead_end_b",
         "x": 0.6,
-        "y": 0.4,
+        "y": -0.4,
         "outgoingEdgeIDs": []
       },
       {
         "id": "destination",
         "x": 1.0,
-        "y": -0.1,
+        "y": 0.1,
         "outgoingEdgeIDs": []
       }
     ],

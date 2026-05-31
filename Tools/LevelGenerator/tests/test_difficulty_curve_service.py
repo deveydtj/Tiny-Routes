@@ -31,11 +31,25 @@ def test_difficulty_curve_expert_template_weights() -> None:
     service = DifficultyCurveService()
 
     assert service.template_weights_for_level(41, "expert") == {
+        "four_way_intersection": 3,
+        "multi_switch_chain": 3,
+        "ring_route": 2,
+    }
+    assert service.template_weights_for_level(46, "expert") == {
         "four_way_intersection": 5,
         "multi_switch_chain": 2,
         "ring_route": 2,
     }
-    assert service.template_weights_for_level(40, "hard") == {
+    assert service.template_weights_for_level(28, "hard") == {
         "multi_switch_chain": 5,
-        "ring_route": 2,
+        "return_loop": 2,
+        "ring_route": 1,
     }
+
+
+def test_difficulty_curve_feature_unlock_gates() -> None:
+    service = DifficultyCurveService()
+
+    assert service.template_weights_for_level(1, "tutorial") == {"straight_delivery": 7}
+    assert "return_loop" not in service.template_weights_for_level(15, "medium")
+    assert service.template_weights_for_level(31, "hard")["ring_route"] > service.template_weights_for_level(28, "hard")["ring_route"]
