@@ -45,6 +45,7 @@ class LevelGeneratorGui:
         self.controller = GuiController()
         self.difficulty_names = [*DifficultyService().valid_names, "auto"]
         self.template_names = TemplateRegistry().valid_names
+        self.generation_modes = ["legacy_template", "recipe_first", "hybrid"]
         self.latest_result = None
         self.approved_candidates = []
         self.cancel_requested = False
@@ -62,6 +63,10 @@ class LevelGeneratorGui:
         self.count_var = tk.StringVar(value="1")
         self.difficulty_var = tk.StringVar(value="tutorial")
         self.template_var = tk.StringVar(value="mixed")
+        self.generation_mode_var = tk.StringVar(value="legacy_template")
+        self.recipe_pool_var = tk.StringVar(value="1")
+        self.layouts_per_recipe_var = tk.StringVar(value="1")
+        self.road_shapes_per_layout_var = tk.StringVar(value="1")
         self.seed_var = tk.StringVar(value="")
         self.max_attempts_var = tk.StringVar(value="100")
         self.candidate_pool_var = tk.StringVar(value="1")
@@ -131,9 +136,13 @@ class LevelGeneratorGui:
         add_labeled_entry(frame, "Count", self.count_var, 1)
         add_labeled_combobox(frame, "Difficulty", self.difficulty_var, self.difficulty_names, 2)
         add_labeled_combobox(frame, "Template", self.template_var, self.template_names, 3)
-        add_labeled_entry(frame, "Seed", self.seed_var, 4)
-        add_labeled_entry(frame, "Max attempts per level", self.max_attempts_var, 5)
-        add_labeled_entry(frame, "Candidate pool size", self.candidate_pool_var, 6)
+        add_labeled_combobox(frame, "Generation mode", self.generation_mode_var, self.generation_modes, 4)
+        add_labeled_entry(frame, "Recipe pool size", self.recipe_pool_var, 5)
+        add_labeled_entry(frame, "Layouts per recipe", self.layouts_per_recipe_var, 6)
+        add_labeled_entry(frame, "Road shapes per layout", self.road_shapes_per_layout_var, 7)
+        add_labeled_entry(frame, "Seed", self.seed_var, 8)
+        add_labeled_entry(frame, "Max attempts per level", self.max_attempts_var, 9)
+        add_labeled_entry(frame, "Candidate pool size", self.candidate_pool_var, 10)
 
     def _build_options_section(self, parent: ttk.Frame) -> None:
         frame = ttk.LabelFrame(parent, text="Options", padding=8)
@@ -278,6 +287,10 @@ class LevelGeneratorGui:
             self.count_var,
             self.difficulty_var,
             self.template_var,
+            self.generation_mode_var,
+            self.recipe_pool_var,
+            self.layouts_per_recipe_var,
+            self.road_shapes_per_layout_var,
             self.seed_var,
             self.max_attempts_var,
             self.candidate_pool_var,
@@ -305,6 +318,10 @@ class LevelGeneratorGui:
             count=self.count_var.get(),
             difficulty=self.difficulty_var.get(),
             template_name=self.template_var.get(),
+            generation_mode=self.generation_mode_var.get(),
+            recipe_pool_size=self.recipe_pool_var.get(),
+            layouts_per_recipe=self.layouts_per_recipe_var.get(),
+            road_shapes_per_layout=self.road_shapes_per_layout_var.get(),
             seed=self.seed_var.get(),
             dry_run=self.dry_run_var.get(),
             overwrite=self.overwrite_var.get(),

@@ -67,7 +67,7 @@
         "id": "e_multi_switch_chain_zigzag_switch_a_multi_switch_chain_zigzag_dead_end_a",
         "fromNodeID": "multi_switch_chain_zigzag_switch_a",
         "toNodeID": "multi_switch_chain_zigzag_dead_end_a",
-        "roadShape": "verticalFirst"
+        "roadShape": "horizontalFirst"
       },
       {
         "id": "e_multi_switch_chain_zigzag_switch_a_package",
@@ -91,7 +91,7 @@
         "id": "e_multi_switch_chain_zigzag_switch_b_destination",
         "fromNodeID": "multi_switch_chain_zigzag_switch_b",
         "toNodeID": "destination",
-        "roadShape": "verticalFirst"
+        "roadShape": "horizontalFirst"
       }
     ]
   },

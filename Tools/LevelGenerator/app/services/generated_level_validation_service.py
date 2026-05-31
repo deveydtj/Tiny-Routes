@@ -9,12 +9,12 @@ from .difficulty_service import DifficultyService
 from .graph_layout_service import BoundingBox, GraphLayoutService
 from .python_solution_simulator_service import PythonSolutionSimulatorService
 from .road_shape_service import RoadShapeService
-from .route_timing_service import RouteTimingService
 from .switch_classification_service import (
     MAX_SUPPORTED_OUTGOING_EDGES,
     SwitchClassificationService,
     SwitchNodeKind,
 )
+from .switch_visual_clarity_service import SwitchVisualClarityService
 
 
 @dataclass(frozen=True)
@@ -49,7 +49,7 @@ class GeneratedLevelValidationService:
         self.road_shape_service = RoadShapeService()
         self.solution_simulator = PythonSolutionSimulatorService()
         self.switch_classification_service = SwitchClassificationService()
-        self.route_timing = RouteTimingService()
+        self.switch_visual_clarity_service = SwitchVisualClarityService()
 
     def validate(
         self,
@@ -156,7 +156,7 @@ class GeneratedLevelValidationService:
                         related_node_id=node.id,
                     )
                 )
-        messages.extend(self._switch_direction_messages(level, node_by_id, edge_by_id))
+        messages.extend(self._switch_visual_clarity_messages(level, solution))
 
         if preset is not None:
             bounds = BoundingBox(*preset.coordinate_bounds)
@@ -391,54 +391,17 @@ class GeneratedLevelValidationService:
             )
         return messages
 
-    def _switch_direction_messages(self, level, node_by_id, edge_by_id) -> list[GeneratorValidationMessage]:
-        messages: list[GeneratorValidationMessage] = []
-        for node in level.graph.nodes:
-            valid_edges = [
-                edge_by_id[edge_id]
-                for edge_id in node.outgoingEdgeIDs
-                if edge_id in edge_by_id and edge_by_id[edge_id].fromNodeID == node.id
-            ]
-            if len(valid_edges) < 2:
-                continue
-
-            outgoing_angles: list[tuple[str, float]] = []
-            for edge in valid_edges:
-                target_node = node_by_id.get(edge.toNodeID)
-                if target_node is None:
-                    continue
-                outgoing_angles.append(
-                    (
-                        edge.id,
-                        self.route_timing.direction_angle(
-                            (node.x, node.y),
-                            (target_node.x, target_node.y),
-                            edge.roadShape,
-                        ),
-                    )
-                )
-
-            for index, (first_edge_id, first_angle) in enumerate(outgoing_angles):
-                for second_edge_id, second_angle in outgoing_angles[index + 1:]:
-                    if not self.route_timing.angles_match(first_angle, second_angle):
-                        continue
-                    direction_label = self.route_timing.direction_label(first_angle)
-                    messages.append(
-                        GeneratorValidationMessage(
-                            severity="warning",
-                            code="switch_choices_visually_ambiguous",
-                            message=(
-                                f"Switch '{node.id}' has visually ambiguous choices: "
-                                f"'{first_edge_id}' and '{second_edge_id}' both render as {direction_label}."
-                            ),
-                            related_node_id=node.id,
-                        )
-                    )
-                    break
-                else:
-                    continue
-                break
-        return messages
+    def _switch_visual_clarity_messages(self, level, solution) -> list[GeneratorValidationMessage]:
+        return [
+            GeneratorValidationMessage(
+                severity="error",
+                code=issue.code,
+                message=issue.message,
+                related_node_id=issue.node_id,
+                related_edge_id=issue.edge_id,
+            )
+            for issue in self.switch_visual_clarity_service.issues_for_level(level, solution)
+        ]
 
     def _simulation_failure_detail(self, simulation) -> str:
         detail = simulation.failure_reason or "unknown_failure"

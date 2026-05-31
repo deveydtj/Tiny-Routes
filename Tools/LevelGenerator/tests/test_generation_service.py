@@ -283,6 +283,83 @@ def test_generation_service_auto_difficulty_reports_actual_difficulty(tmp_path) 
     assert [level.difficulty for level in result.accepted] == ["easy", "easy", "medium", "medium"]
 
 
+def test_generation_service_recipe_first_mode_generates_recipe_metadata(tmp_path) -> None:
+    result = LevelGenerationService().generate(
+        _config(
+            tmp_path,
+            difficulty="easy",
+            template_name="single_switch",
+            dry_run=True,
+            generation_mode="recipe_first",
+        )
+    )
+
+    assert result.passed is True
+    assert result.accepted[0].recipe_family == "single_switch"
+    assert result.accepted[0].recipe_variant is not None
+    assert result.accepted[0].abstract_graph_signature is not None
+    assert result.accepted[0].selected_layout_variant is not None
+    assert result.accepted[0].selected_road_shape_strategy == "auto"
+
+
+def test_generation_service_recipe_first_supports_current_recipe_families(tmp_path) -> None:
+    specs = [
+        ("tutorial", "straight_delivery"),
+        ("easy", "single_switch"),
+        ("easy", "package_gate"),
+        ("medium", "return_loop"),
+        ("medium", "multi_switch_chain"),
+        ("hard", "ring_route"),
+        ("expert", "four_way_intersection"),
+    ]
+
+    for index, (difficulty, template_name) in enumerate(specs):
+        result = LevelGenerationService().generate(
+            _config(
+                tmp_path / template_name,
+                start_level_number=90 + index,
+                difficulty=difficulty,
+                template_name=template_name,
+                generation_mode="recipe_first",
+                recipe_pool_size=2,
+                layouts_per_recipe=2,
+                road_shapes_per_layout=2,
+                dry_run=True,
+                compare_against_existing=False,
+            )
+        )
+
+        assert result.passed is True, (difficulty, template_name, result.rejection_reason_counts, result.messages)
+        assert result.accepted[0].recipe_family == template_name
+
+
+def test_generation_service_hybrid_mode_keeps_legacy_templates_available(tmp_path) -> None:
+    service = LevelGenerationService()
+    config = _config(
+        tmp_path,
+        difficulty="easy",
+        template_name="single_switch",
+        generation_mode="hybrid",
+        recipe_pool_size=1,
+        layouts_per_recipe=1,
+        road_shapes_per_layout=1,
+        dry_run=True,
+        compare_against_existing=False,
+    )
+    preset = service.difficulty_service.get_preset("easy")
+    candidates = service._generate_raw_candidates(
+        config=config,
+        level_id="level_012",
+        level_number=12,
+        preset=preset,
+        rng=RandomSource(12),
+        plan_template_weights={},
+    )
+
+    assert len(candidates) == 2
+    assert {candidate.recipe_family for candidate in candidates} == {"single_switch", None}
+
+
 def test_generation_service_applies_map_seed_path(tmp_path) -> None:
     map_seed_path = tmp_path / "seed.json"
     seed_graph = MapSeedGraph(

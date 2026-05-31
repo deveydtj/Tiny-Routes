@@ -14,6 +14,7 @@ from ..random_source import RandomSource
 from ..repositories.existing_level_repository import ExistingLevelRepository
 from ..repositories.generated_level_repository import GeneratedLevelRepository
 from ..repositories.generation_report_repository import GenerationReportRepository
+from ..recipes.recipe_family_registry import RecipeFamilyRegistry
 from ..templates.template_registry import TemplateRegistry
 from .candidate_rejection_service import CandidateRejectionService
 from .candidate_signature_service import CandidateSignatureService
@@ -23,6 +24,8 @@ from .difficulty_service import DifficultyService
 from .generated_level_validation_service import GeneratedLevelValidationService
 from .generation_quality_service import GenerationQualityService
 from .level_resource_sync_service import LevelResourceSyncService
+from .layout_variant_service import LayoutVariantService
+from .recipe_to_level_builder_service import RecipeToLevelBuilderService
 from .swift_test_service import SwiftTestService
 
 
@@ -31,6 +34,7 @@ class LevelGenerationService:
         self.difficulty_service = DifficultyService()
         self.difficulty_curve_service = DifficultyCurveService()
         self.template_registry = TemplateRegistry()
+        self.recipe_family_registry = RecipeFamilyRegistry()
         self.validation_service = GeneratedLevelValidationService()
         self.generated_level_repository = GeneratedLevelRepository()
         self.report_repository = GenerationReportRepository()
@@ -40,6 +44,8 @@ class LevelGenerationService:
         self.quality_service = GenerationQualityService()
         self.map_seed_adapter = MapSeedToTemplateAdapter()
         self.resource_sync_service = LevelResourceSyncService()
+        self.recipe_to_level_builder = RecipeToLevelBuilderService()
+        self.layout_variant_service = LayoutVariantService()
 
     def generate(self, config: GenerationConfig) -> GenerationResult:
         result = GenerationResult()
@@ -49,6 +55,7 @@ class LevelGenerationService:
                 config.count,
                 config.difficulty,
             )
+            self._validate_generation_mode(config)
             self._validate_template(config.template_name, config)
             self._preflight_output_collisions(config)
         except Exception as exc:
@@ -84,84 +91,89 @@ class LevelGenerationService:
                 candidate_seed = base_rng.child_seed(plan_entry.difficulty, config.template_name, level_id, attempt)
                 rng = RandomSource(candidate_seed)
                 try:
-                    include_swift_required = config.run_swift_tests or config.dry_run
-                    template = self.template_registry.choose(
-                        config.template_name,
-                        preset,
-                        rng,
-                        include_swift_required=include_swift_required,
-                        weights_override=plan_entry.template_weights if config.difficulty == "auto" else None,
+                    candidates = self._generate_raw_candidates(
+                        config=config,
+                        level_id=level_id,
+                        level_number=level_number,
+                        preset=preset,
+                        rng=rng,
+                        plan_template_weights=plan_entry.template_weights,
                     )
-                    candidate = template.generate(level_id, level_number, preset, rng)
-                    if map_seed_graph is not None:
-                        candidate = self.map_seed_adapter.apply_to_generated_level(map_seed_graph, candidate, rng)
                 except Exception as exc:
                     rejection_service.reason_counts["candidate_generation_error"] += 1
                     result.messages.append(f"Rejected candidate {level_id} attempt={attempt}: {exc}")
                     continue
 
-                level_path = self.generated_level_repository.level_path(level_id, config.levels_output_dir)
-                solution_path = self.generated_level_repository.solution_path(level_id, config.solutions_output_dir)
-                validation_result = self.validation_service.validate(
-                    candidate,
-                    preset=preset,
-                    level_output_path=level_path,
-                    solution_output_path=solution_path,
-                    overwrite=config.overwrite or config.dry_run,
-                )
-                candidate.warning_messages = [
-                    f"{message.code}: {message.message}"
-                    for message in validation_result.messages
-                    if message.severity != "error"
-                ]
-                if rejection_service.can_save(validation_result):
-                    candidate_signature = self.signature_service.signature_for(candidate)
-                    duplicate_result = self.uniqueness_service.check_duplicate(
-                        candidate_signature,
-                        [*accepted_signatures, *candidate_pool_signatures],
-                    )
-                    if duplicate_result.is_duplicate:
-                        message = rejection_service.record_custom_rejection(
-                            candidate,
-                            "candidate_too_similar_to_batch",
-                            duplicate_result.message,
-                            config.debug_failures_dir,
-                        )
-                        result.messages.append(message)
-                        continue
+                for candidate_index, candidate in enumerate(candidates):
+                    candidate_rng = RandomSource(base_rng.child_seed(level_id, attempt, candidate_index, "map"))
+                    if map_seed_graph is not None:
+                        candidate = self.map_seed_adapter.apply_to_generated_level(map_seed_graph, candidate, candidate_rng)
 
-                    if config.compare_against_existing:
-                        existing_duplicate_result = self.uniqueness_service.check_duplicate(
+                    level_path = self.generated_level_repository.level_path(level_id, config.levels_output_dir)
+                    solution_path = self.generated_level_repository.solution_path(level_id, config.solutions_output_dir)
+                    validation_result = self.validation_service.validate(
+                        candidate,
+                        preset=preset,
+                        level_output_path=level_path,
+                        solution_output_path=solution_path,
+                        overwrite=config.overwrite or config.dry_run,
+                    )
+                    candidate.warning_messages = [
+                        f"{message.code}: {message.message}"
+                        for message in validation_result.messages
+                        if message.severity != "error"
+                    ]
+                    if rejection_service.can_save(validation_result):
+                        candidate_signature = self.signature_service.signature_for(candidate)
+                        duplicate_result = self.uniqueness_service.check_duplicate(
                             candidate_signature,
-                            existing_signatures,
+                            [*accepted_signatures, *candidate_pool_signatures],
                         )
-                        if existing_duplicate_result.is_duplicate:
+                        if duplicate_result.is_duplicate:
                             message = rejection_service.record_custom_rejection(
                                 candidate,
-                                "candidate_too_similar_to_existing",
-                                existing_duplicate_result.message,
+                                "candidate_too_similar_to_batch",
+                                duplicate_result.message,
                                 config.debug_failures_dir,
                             )
                             result.messages.append(message)
                             continue
 
-                    candidate.candidate_signature = candidate_signature
-                    candidate.quality_score = self.quality_service.score(
-                        candidate,
-                        preset,
-                        [
-                            *accepted_signatures,
-                            *candidate_pool_signatures,
-                            *(existing_signatures if config.compare_against_existing else []),
-                        ],
-                    )
-                    candidate_pool.append(candidate)
-                    candidate_pool_signatures.append(candidate_signature)
-                    if len(candidate_pool) >= config.candidate_pool_size:
-                        break
-                    continue
+                        if config.compare_against_existing:
+                            existing_duplicate_result = self.uniqueness_service.check_duplicate(
+                                candidate_signature,
+                                existing_signatures,
+                            )
+                            if existing_duplicate_result.is_duplicate:
+                                message = rejection_service.record_custom_rejection(
+                                    candidate,
+                                    "candidate_too_similar_to_existing",
+                                    existing_duplicate_result.message,
+                                    config.debug_failures_dir,
+                                )
+                                result.messages.append(message)
+                                continue
 
-                rejection_service.record_rejection(candidate, validation_result, config.debug_failures_dir)
+                        candidate.candidate_signature = candidate_signature
+                        candidate.quality_score = self.quality_service.score(
+                            candidate,
+                            preset,
+                            [
+                                *accepted_signatures,
+                                *candidate_pool_signatures,
+                                *(existing_signatures if config.compare_against_existing else []),
+                            ],
+                        )
+                        candidate_pool.append(candidate)
+                        candidate_pool_signatures.append(candidate_signature)
+                        if len(candidate_pool) >= config.candidate_pool_size:
+                            break
+                        continue
+
+                    rejection_service.record_rejection(candidate, validation_result, config.debug_failures_dir)
+
+                if len(candidate_pool) >= config.candidate_pool_size:
+                    break
 
             if candidate_pool:
                 accepted_candidate = max(
@@ -195,7 +207,15 @@ class LevelGenerationService:
         self._write_reports(config, result)
         return result
 
+    def _validate_generation_mode(self, config: GenerationConfig) -> None:
+        if config.generation_mode == "legacy_template":
+            return
+        if config.template_name not in self.recipe_family_registry.valid_family_names():
+            raise ValueError(f"Unknown recipe family: {config.template_name}")
+
     def _validate_template(self, template_name: str, config: GenerationConfig) -> None:
+        if not config.uses_legacy_templates:
+            return
         if template_name not in self.template_registry.valid_names:
             raise ValueError(f"Unknown template: {template_name}")
         if (
@@ -236,6 +256,125 @@ class LevelGenerationService:
         if template_name != "mixed":
             include_swift_required = config.run_swift_tests or config.dry_run
             self.template_registry.choose(template_name, preset, RandomSource(config.base_seed), include_swift_required)
+
+    def _generate_raw_candidates(
+        self,
+        *,
+        config: GenerationConfig,
+        level_id: str,
+        level_number: int,
+        preset,
+        rng: RandomSource,
+        plan_template_weights: dict[str, int],
+    ):
+        include_swift_required = config.run_swift_tests or config.dry_run
+        if config.generation_mode == "legacy_template":
+            return [
+                self._generate_legacy_candidate(
+                    config=config,
+                    level_id=level_id,
+                    level_number=level_number,
+                    preset=preset,
+                    rng=rng,
+                    include_swift_required=include_swift_required,
+                    plan_template_weights=plan_template_weights,
+                )
+            ]
+
+        candidates = self._generate_recipe_candidates(
+            config=config,
+            level_id=level_id,
+            level_number=level_number,
+            preset=preset,
+            rng=rng,
+            include_swift_required=include_swift_required,
+            plan_template_weights=plan_template_weights,
+        )
+        if config.generation_mode == "hybrid":
+            legacy_seed = rng.child_seed("legacy", len(candidates))
+            candidates.append(
+                self._generate_legacy_candidate(
+                    config=config,
+                    level_id=level_id,
+                    level_number=level_number,
+                    preset=preset,
+                    rng=RandomSource(legacy_seed),
+                    include_swift_required=include_swift_required,
+                    plan_template_weights=plan_template_weights,
+                )
+            )
+        return candidates
+
+    def _generate_legacy_candidate(
+        self,
+        *,
+        config: GenerationConfig,
+        level_id: str,
+        level_number: int,
+        preset,
+        rng: RandomSource,
+        include_swift_required: bool,
+        plan_template_weights: dict[str, int],
+    ):
+        template = self.template_registry.choose(
+            config.template_name,
+            preset,
+            rng,
+            include_swift_required=include_swift_required,
+            weights_override=plan_template_weights if config.difficulty == "auto" else None,
+        )
+        return template.generate(level_id, level_number, preset, rng)
+
+    def _generate_recipe_candidates(
+        self,
+        *,
+        config: GenerationConfig,
+        level_id: str,
+        level_number: int,
+        preset,
+        rng: RandomSource,
+        include_swift_required: bool,
+        plan_template_weights: dict[str, int],
+    ):
+        candidates = []
+        layout_names = self._layout_variant_names(config.layouts_per_recipe)
+        road_shape_strategies = self._road_shape_strategies(config.road_shapes_per_layout)
+        for recipe_index in range(config.recipe_pool_size):
+            recipe_seed = rng.child_seed("recipe", recipe_index)
+            recipe_rng = RandomSource(recipe_seed)
+            family = self.recipe_family_registry.choose_family(
+                config.template_name,
+                preset,
+                recipe_rng,
+                include_swift_required=include_swift_required,
+                weights_override=plan_template_weights if config.difficulty == "auto" else None,
+            )
+            recipe = family.generate_recipe(level_id, preset, recipe_rng)
+            recipe_issues = recipe.validate()
+            if recipe_issues:
+                raise ValueError(f"Invalid solved recipe candidate: {', '.join(recipe_issues)}")
+
+            for layout_index, layout_name in enumerate(layout_names):
+                for road_index, road_shape_strategy in enumerate(road_shape_strategies):
+                    candidate_seed = rng.child_seed("layout", recipe_index, layout_index, road_index)
+                    candidate = self.recipe_to_level_builder.build_level(
+                        recipe,
+                        level_number,
+                        seed=candidate_seed,
+                        layout_variant_name=layout_name,
+                        road_shape_strategy=road_shape_strategy,
+                    )
+                    candidate.requires_swift_validation = family.requires_swift_validation
+                    candidates.append(candidate)
+        return candidates
+
+    def _layout_variant_names(self, count: int) -> list[str]:
+        names = list(self.layout_variant_service.variant_names)
+        return [names[index % len(names)] for index in range(count)]
+
+    def _road_shape_strategies(self, count: int) -> list[str]:
+        names = ["auto", "horizontal_first", "vertical_first", "alternating"]
+        return [names[index % len(names)] for index in range(count)]
 
     def _preflight_output_collisions(self, config: GenerationConfig) -> None:
         if config.overwrite or config.dry_run:

@@ -2,8 +2,15 @@ from __future__ import annotations
 
 from ..models.generated_level import GeneratedLevel
 from ..models.graph_recipe import GraphRecipe
+from ..random_source import RandomSource
+from ..templates.four_way_intersection_template import _variant_spec as four_way_variant_spec
+from ..templates.package_gate_template import _variant_spec as package_gate_variant_spec
+from ..templates.return_loop_template import _variant_spec as return_loop_variant_spec
+from ..templates.ring_route_template import _positions_for_variant as ring_route_positions_for_variant
+from ..templates.single_switch_template import _variant_spec as single_switch_variant_spec
 from .difficulty_service import DifficultyService
 from .graph_builder_service import GraphBuilderService
+from .layout_variant_service import LayoutVariantService
 from .level_naming_service import LevelNamingService
 from .solution_builder_service import SolutionBuilderService
 
@@ -13,19 +20,34 @@ class RecipeToLevelBuilderService:
         self.difficulty = DifficultyService()
         self.naming = LevelNamingService()
         self.solution_builder = SolutionBuilderService()
+        self.layout_variants = LayoutVariantService()
 
-    def build_level(self, recipe: GraphRecipe, level_number: int, seed: int = 0) -> GeneratedLevel:
+    def build_level(
+        self,
+        recipe: GraphRecipe,
+        level_number: int,
+        seed: int = 0,
+        layout_variant_name: str = "normal",
+        road_shape_strategy: str = "auto",
+    ) -> GeneratedLevel:
         issues = recipe.validate()
         if issues:
             raise ValueError(f"Invalid graph recipe: {', '.join(issues)}")
 
         preset = self.difficulty.get_preset(recipe.difficulty)
-        positions = self._assign_positions(recipe)
+        rng = RandomSource(seed)
+        base_positions = self._assign_positions(recipe)
+        layout_variant = self.layout_variants.apply_variant(layout_variant_name, base_positions, rng, preset)
+        positions = layout_variant.positions
         builder = GraphBuilderService()
         for node in recipe.nodes:
             builder.add_node(node.id, *positions[node.id])
-        for edge in recipe.edges:
-            builder.add_edge(edge.from_node_id, edge.to_node_id)
+        for edge_index, edge in enumerate(recipe.edges):
+            builder.add_edge(
+                edge.from_node_id,
+                edge.to_node_id,
+                road_shape=self._road_shape_for_strategy(road_shape_strategy, edge_index),
+            )
 
         time_limit = self._time_limit(recipe.required_path, positions, preset.time_limit_padding_seconds)
         level = builder.build_level_document(
@@ -61,13 +83,27 @@ class RecipeToLevelBuilderService:
         return GeneratedLevel(
             level_document=level,
             solution=solution,
-            template_name="graph_recipe",
+            template_name=recipe.family_name,
             difficulty=recipe.difficulty,
             seed=seed,
-            generation_notes=list(recipe.notes),
+            generation_notes=[
+                *recipe.notes,
+                f"Abstract graph signature: {recipe.abstract_signature[:12]}",
+                f"Selected layout variant: {layout_variant.name}",
+                f"Selected road-shape strategy: {road_shape_strategy}",
+            ],
+            recipe_family=recipe.family_name,
+            recipe_variant=recipe.variant_name,
+            abstract_graph_signature=recipe.abstract_signature,
+            selected_layout_variant=layout_variant.name,
+            selected_road_shape_strategy=road_shape_strategy,
         )
 
     def _assign_positions(self, recipe: GraphRecipe) -> dict[str, tuple[float, float]]:
+        template_positions = self._template_positions_for_recipe(recipe)
+        if template_positions is not None:
+            return template_positions
+
         route = list(recipe.required_path)
         x_step = 2.2 / max(len(route) - 1, 1)
         positions: dict[str, tuple[float, float]] = {}
@@ -92,6 +128,30 @@ class RecipeToLevelBuilderService:
             positions[edge.to_node_id] = (parent_position[0], round(parent_position[1] + y_offset, 4))
         return positions
 
+    def _template_positions_for_recipe(self, recipe: GraphRecipe) -> dict[str, tuple[float, float]] | None:
+        try:
+            if recipe.family_name == "single_switch":
+                include_approach = "approach" in {node.id for node in recipe.nodes}
+                positions, _switch_id, _dead_end_id, _route = single_switch_variant_spec(
+                    recipe.variant_name,
+                    include_approach,
+                )
+                return positions
+            if recipe.family_name == "package_gate":
+                positions, _edges, _taps, _route = package_gate_variant_spec(recipe.variant_name)
+                return positions
+            if recipe.family_name == "return_loop":
+                positions, _edges, _taps, _route = return_loop_variant_spec(recipe.variant_name)
+                return positions
+            if recipe.family_name == "ring_route":
+                return ring_route_positions_for_variant(recipe.variant_name)
+            if recipe.family_name == "four_way_intersection":
+                positions, _edges, _taps, _route = four_way_variant_spec(recipe.variant_name)
+                return positions
+        except Exception:
+            return None
+        return None
+
     def _time_limit(
         self,
         route_node_ids: tuple[str, ...],
@@ -104,3 +164,15 @@ class RecipeToLevelBuilderService:
             to_position = positions[to_node_id]
             distance += abs(from_position[0] - to_position[0]) + abs(from_position[1] - to_position[1])
         return max(30, int(round(distance + padding_seconds + 6)))
+
+    def _road_shape_for_strategy(self, strategy: str, edge_index: int) -> str | None:
+        normalized = strategy.strip().lower().replace("-", "_")
+        if normalized in {"", "auto"}:
+            return None
+        if normalized == "horizontal_first":
+            return "horizontalFirst"
+        if normalized == "vertical_first":
+            return "verticalFirst"
+        if normalized == "alternating":
+            return "horizontalFirst" if edge_index % 2 == 0 else "verticalFirst"
+        raise ValueError(f"Unknown road-shape strategy: {strategy}")

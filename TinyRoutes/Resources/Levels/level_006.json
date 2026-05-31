@@ -73,7 +73,7 @@
         "id": "e_short_entry_switch_package",
         "fromNodeID": "short_entry_switch",
         "toNodeID": "package",
-        "roadShape": "horizontalFirst"
+        "roadShape": "verticalFirst"
       },
       {
         "id": "e_package_short_finish_switch",

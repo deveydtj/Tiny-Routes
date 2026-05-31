@@ -8,12 +8,14 @@ from typing import Any
 from ..paths import find_repo_root
 from ..services.preview_image_service import PreviewImageService
 from ..services.route_timing_service import RouteTimingService
+from ..services.switch_visual_clarity_service import SwitchVisualClarityService
 
 
 class GenerationReportRepository:
     def __init__(self) -> None:
         self.preview_image_service = PreviewImageService()
         self.route_timing = RouteTimingService()
+        self.switch_visual_clarity = SwitchVisualClarityService()
 
     def write_markdown(self, path: Path, config, result) -> Path:
         path = Path(path)
@@ -39,6 +41,10 @@ class GenerationReportRepository:
             "solutionsOutputDir": str(config.solutions_output_dir),
             "difficulty": config.difficulty,
             "template": config.template_name,
+            "generationMode": config.generation_mode,
+            "recipePoolSize": config.recipe_pool_size,
+            "layoutsPerRecipe": config.layouts_per_recipe,
+            "roadShapesPerLayout": config.road_shapes_per_layout,
             "baseSeed": config.seed,
             "dryRun": config.dry_run,
             "overwrite": config.overwrite,
@@ -50,6 +56,14 @@ class GenerationReportRepository:
                 {
                     "levelID": level.level_id,
                     "template": level.template_name,
+                    "recipeFamily": level.recipe_family,
+                    "recipeVariant": level.recipe_variant,
+                    "abstractGraphSignature": level.abstract_graph_signature,
+                    "abstractGraphSignatureShort": (
+                        level.abstract_graph_signature[:12] if level.abstract_graph_signature else None
+                    ),
+                    "selectedLayoutVariant": level.selected_layout_variant,
+                    "selectedRoadShapeStrategy": level.selected_road_shape_strategy,
                     "seed": level.seed,
                     "difficulty": level.difficulty,
                     "nodes": level.node_count,
@@ -97,16 +111,20 @@ class GenerationReportRepository:
             f"- Repo root: `{payload['repoRoot']}`",
             f"- Difficulty: `{payload['difficulty']}`",
             f"- Template mode: `{payload['template']}`",
+            f"- Generation mode: `{payload['generationMode']}`",
             f"- Base seed: `{payload['baseSeed']}`",
             f"- Dry run: `{payload['dryRun']}`",
             f"- Compare existing levels: `{payload['compareAgainstExisting']}`",
             f"- Candidate pool size: `{payload['candidatePoolSize']}`",
+            f"- Recipe pool size: `{payload['recipePoolSize']}`",
+            f"- Layouts per recipe: `{payload['layoutsPerRecipe']}`",
+            f"- Road shapes per layout: `{payload['roadShapesPerLayout']}`",
             f"- Xcode project sync: `{payload['syncXcodeProject']}`",
             f"- Swift tests: `{payload['swiftTests']['summary']}`",
             "",
             "## Accepted Levels",
             "",
-            "| Level | Template | Seed | Difficulty | Nodes | Edges | Switches | Par Taps | Time Limit | Quality | Preview | Signatures | Status |",
+            "| Level | Source | Seed | Difficulty | Nodes | Edges | Switches | Par Taps | Time Limit | Quality | Preview | Signatures | Status |",
             "|---|---|---:|---|---:|---:|---:|---:|---:|---:|---|---|---|",
         ]
         for level in payload["acceptedLevels"]:
@@ -120,9 +138,13 @@ class GenerationReportRepository:
                 )
             quality_summary = level["quality"]["total"] if level["quality"] else ""
             preview = f"[SVG]({level['previewPath']})" if level["previewPath"] else ""
+            source = level["template"]
+            if level["recipeFamily"]:
+                source = f"{level['recipeFamily']} / {level['recipeVariant']}"
             lines.append(
-                "| `{levelID}` | `{template}` | {seed} | {difficulty} | {nodes} | {edges} | {switches} | "
+                "| `{levelID}` | `{source}` | {seed} | {difficulty} | {nodes} | {edges} | {switches} | "
                 "{parTaps} | {timeLimit} | {quality_summary} | {preview} | `{signature_summary}` | {status} |".format(
+                    source=source,
                     quality_summary=quality_summary,
                     preview=preview,
                     signature_summary=signature_summary,
@@ -136,6 +158,15 @@ class GenerationReportRepository:
             lines.extend(["", "## Level Details", ""])
             for level in payload["acceptedLevels"]:
                 lines.append(f"### `{level['levelID']}`")
+                if level["recipeFamily"]:
+                    lines.append(
+                        f"- Recipe: `{level['recipeFamily']}` variant `{level['recipeVariant']}`; "
+                        f"abstract signature `{level['abstractGraphSignatureShort']}`."
+                    )
+                    lines.append(
+                        f"- Layout: `{level['selectedLayoutVariant']}`; "
+                        f"road shapes: `{level['selectedRoadShapeStrategy']}`."
+                    )
                 for switch in level["switchPreview"]:
                     transition_summary = ", ".join(
                         (
@@ -251,6 +282,15 @@ class GenerationReportRepository:
         level_document = level.level_document
         node_by_id = {node.id: node for node in level_document.graph.nodes}
         edge_by_id = {edge.id: edge for edge in level_document.graph.edges}
+        visual_reports_by_switch_id = {
+            report.switch_id: report
+            for report in self.switch_visual_clarity.report_for_level(level_document)
+        }
+        direction_by_edge_id = {
+            direction.edge_id: direction
+            for report in visual_reports_by_switch_id.values()
+            for direction in report.directions
+        }
         actions_by_node_id: dict[str, list[Any]] = {}
         for action in sorted(level.solution.actions, key=lambda action: float(action.timeSeconds)):
             actions_by_node_id.setdefault(action.tapNodeID, []).append(action)
@@ -267,11 +307,23 @@ class GenerationReportRepository:
 
             active_index = 0
             initial_edge = valid_edges[active_index]
+            visual_report = visual_reports_by_switch_id.get(node.id)
             switch_preview = {
                 "switchID": node.id,
                 "initialActiveEdgeID": initial_edge.id,
                 "initialTargetNodeID": initial_edge.toNodeID,
-                "initialArrowDirection": self._edge_direction_label(initial_edge, node_by_id),
+                "initialArrowDirection": self._edge_direction_label(initial_edge, direction_by_edge_id, node_by_id),
+                "visualDirectionBuckets": [
+                    {
+                        "edgeID": direction.edge_id,
+                        "targetNodeID": direction.target_node_id,
+                        "bucket": direction.bucket,
+                        "angle": direction.angle,
+                        "ambiguous": direction.is_ambiguous,
+                        "ambiguousReason": direction.ambiguous_reason,
+                    }
+                    for direction in (visual_report.directions if visual_report is not None else [])
+                ],
                 "tapTransitions": [],
             }
 
@@ -284,14 +336,21 @@ class GenerationReportRepository:
                         "timeSeconds": float(action.timeSeconds),
                         "targetEdgeID": target_edge.id,
                         "targetNodeID": target_edge.toNodeID,
-                        "postTapArrowDirection": self._edge_direction_label(target_edge, node_by_id),
+                        "postTapArrowDirection": self._edge_direction_label(
+                            target_edge,
+                            direction_by_edge_id,
+                            node_by_id,
+                        ),
                     }
                 )
 
             switch_previews.append(switch_preview)
         return switch_previews
 
-    def _edge_direction_label(self, edge, node_by_id) -> str:
+    def _edge_direction_label(self, edge, direction_by_edge_id, node_by_id) -> str:
+        direction = direction_by_edge_id.get(edge.id)
+        if direction is not None and direction.bucket is not None:
+            return direction.bucket
         from_node = node_by_id.get(edge.fromNodeID)
         to_node = node_by_id.get(edge.toNodeID)
         if from_node is None or to_node is None:

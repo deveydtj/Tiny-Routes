@@ -71,6 +71,20 @@ def build_generate_parser() -> argparse.ArgumentParser:
     parser.add_argument("--count", type=int, required=True, help="Number of accepted levels to generate.")
     parser.add_argument("--difficulty", required=True, choices=difficulty_names, help="Difficulty preset to use.")
     parser.add_argument("--template", default="mixed", choices=template_names, help="Template to use. Default: mixed.")
+    parser.add_argument(
+        "--generation-mode",
+        default="legacy-template",
+        choices=("legacy-template", "legacy_template", "recipe-first", "recipe_first", "hybrid"),
+        help="Generation architecture mode. Default: legacy-template.",
+    )
+    parser.add_argument("--recipe-pool-size", type=int, default=1, help="Abstract recipes to solve before layout.")
+    parser.add_argument("--layouts-per-recipe", type=int, default=1, help="Layout variants to try for each solved recipe.")
+    parser.add_argument(
+        "--road-shapes-per-layout",
+        type=int,
+        default=1,
+        help="Road-shape strategies to try for each layout.",
+    )
     parser.add_argument("--seed", type=int, default=None, help="Deterministic base seed.")
     parser.add_argument("--dry-run", action="store_true", help="Generate and validate without writing level files.")
     parser.add_argument("--overwrite", action="store_true", help="Allow replacing existing output files.")
@@ -144,6 +158,10 @@ def _config_from_args(args: argparse.Namespace, argv: list[str] | None) -> Gener
         count=args.count,
         difficulty=args.difficulty,
         template_name=args.template,
+        generation_mode=args.generation_mode,
+        recipe_pool_size=args.recipe_pool_size,
+        layouts_per_recipe=args.layouts_per_recipe,
+        road_shapes_per_layout=args.road_shapes_per_layout,
         seed=args.seed,
         dry_run=args.dry_run,
         overwrite=args.overwrite,
@@ -167,7 +185,8 @@ def _print_generation_summary(config: GenerationConfig) -> None:
     mode = "dry run" if config.dry_run else "write"
     print(
         f"Generating {config.count} {config.difficulty} level(s) starting at "
-        f"{config.start_level_number:03d} with template={config.template_name} seed={config.seed} mode={mode}."
+        f"{config.start_level_number:03d} with template={config.template_name} "
+        f"generation_mode={config.generation_mode} seed={config.seed} mode={mode}."
     )
 
 

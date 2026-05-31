@@ -15,6 +15,7 @@ from ..services.solution_builder_service import SolutionBuilderService
 class LevelTemplate(ABC):
     name: str
     requires_swift_validation: bool = False
+    legacy_compatible: bool = True
 
     def __init__(self) -> None:
         self.solution_builder = SolutionBuilderService()

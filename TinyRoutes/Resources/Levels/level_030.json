@@ -103,7 +103,7 @@
         "id": "e_multi_switch_chain_four_switch_switch_a_package",
         "fromNodeID": "multi_switch_chain_four_switch_switch_a",
         "toNodeID": "package",
-        "roadShape": "verticalFirst"
+        "roadShape": "horizontalFirst"
       },
       {
         "id": "e_package_multi_switch_chain_four_switch_switch_b",
@@ -121,7 +121,7 @@
         "id": "e_multi_switch_chain_four_switch_switch_b_multi_switch_chain_four_switch_switch_c",
         "fromNodeID": "multi_switch_chain_four_switch_switch_b",
         "toNodeID": "multi_switch_chain_four_switch_switch_c",
-        "roadShape": "verticalFirst"
+        "roadShape": "horizontalFirst"
       },
       {
         "id": "e_multi_switch_chain_four_switch_switch_c_multi_switch_chain_four_switch_dead_end_c",
@@ -145,7 +145,7 @@
         "id": "e_multi_switch_chain_four_switch_switch_d_destination",
         "fromNodeID": "multi_switch_chain_four_switch_switch_d",
         "toNodeID": "destination",
-        "roadShape": "verticalFirst"
+        "roadShape": "horizontalFirst"
       }
     ]
   },

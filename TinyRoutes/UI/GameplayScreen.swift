@@ -637,9 +637,8 @@ struct SwitchArrowDirectionResolver {
     static func directionAngle(for edge: RuntimeRouteEdge, from node: RuntimeRouteNode, in runtimeGraph: RuntimeRouteGraph) -> Double {
         // Switch arrows describe the rendered road exit direction. The target-node vector is only
         // a fallback for malformed or legacy edge data that cannot provide path geometry.
-        let tangent = edge.roadPath.tangent(atProgress: 0)
-        if hasUsableMagnitude(tangent) {
-            return snappedAxisAngle(for: tangent)
+        if let roadPathAngle = directionAngleForRoadPathStart(edge.roadPath) {
+            return roadPathAngle
         }
 
         if let targetNode = runtimeGraph.nodesByID[edge.toNodeID] {
@@ -654,6 +653,14 @@ struct SwitchArrowDirectionResolver {
         }
 
         return 0
+    }
+
+    static func directionAngleForRoadPathStart(_ roadPath: RoadPath) -> Double? {
+        let tangent = roadPath.tangent(atProgress: 0)
+        guard hasUsableMagnitude(tangent) else {
+            return nil
+        }
+        return snappedAxisAngle(for: tangent)
     }
 
     static func incomingDirectionAngle(

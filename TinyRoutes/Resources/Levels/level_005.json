@@ -72,7 +72,7 @@
         "id": "e_lower_choice_package",
         "fromNodeID": "lower_choice",
         "toNodeID": "package",
-        "roadShape": "horizontalFirst"
+        "roadShape": "verticalFirst"
       },
       {
         "id": "e_package_destination",

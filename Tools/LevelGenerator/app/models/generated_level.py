@@ -24,6 +24,11 @@ class GeneratedLevel:
     quality_score: GenerationQualityScore | None = None
     preview_path: Path | None = None
     warning_messages: list[str] = field(default_factory=list)
+    recipe_family: str | None = None
+    recipe_variant: str | None = None
+    abstract_graph_signature: str | None = None
+    selected_layout_variant: str | None = None
+    selected_road_shape_strategy: str | None = None
 
     @property
     def level_id(self) -> str:

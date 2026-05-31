@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import hashlib
+import json
 from dataclasses import dataclass, field
 
 
@@ -26,6 +28,8 @@ class GraphRecipe:
     package_node_id: str = "package"
     destination_node_id: str = "destination"
     notes: tuple[str, ...] = field(default_factory=tuple)
+    family_name: str = "graph_recipe"
+    variant_name: str = "default"
 
     def validate(self) -> list[str]:
         messages: list[str] = []
@@ -49,4 +53,22 @@ class GraphRecipe:
                 messages.append(f"edge_unknown_from_node:{edge.from_node_id}")
             if edge.to_node_id not in node_ids:
                 messages.append(f"edge_unknown_to_node:{edge.to_node_id}")
+        edge_pairs = {(edge.from_node_id, edge.to_node_id) for edge in self.edges}
+        for from_node_id, to_node_id in zip(self.required_path, self.required_path[1:]):
+            if (from_node_id, to_node_id) not in edge_pairs:
+                messages.append(f"required_path_missing_edge:{from_node_id}:{to_node_id}")
         return messages
+
+    @property
+    def abstract_signature(self) -> str:
+        payload = {
+            "difficulty": self.difficulty,
+            "family": self.family_name,
+            "variant": self.variant_name,
+            "nodes": [(node.id, node.role) for node in self.nodes],
+            "edges": [(edge.from_node_id, edge.to_node_id) for edge in self.edges],
+            "requiredPath": list(self.required_path),
+            "tapNodeIDs": list(self.tap_node_ids),
+        }
+        encoded = json.dumps(payload, sort_keys=True, separators=(",", ":")).encode("utf-8")
+        return hashlib.sha256(encoded).hexdigest()

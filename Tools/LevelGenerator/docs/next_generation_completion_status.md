@@ -54,4 +54,120 @@ Result: `TEST SUCCEEDED`; 88 `RouteEngineTests` passed, including `testLevel028S
 
 ## Phase 1 - Runtime-Parity Switch Direction and Arrow Correctness
 
-Not started as part of this phase. Some runtime arrow direction fixes and Swift tests were already present when Phase 0 began; Python-side switch visual clarity validation and generator rejection remain future work.
+- [x] Updated `SwitchArrowDirectionResolver` to expose `directionAngleForRoadPathStart(_:)` and use the road-path start tangent before falling back to target-node vectors.
+- [x] Added focused Swift tests for straight horizontal roads, straight vertical roads, horizontal-first L-roads, vertical-first L-roads, the level-028-style fixture, and active outgoing edge arrow changes.
+- [x] Added `SwitchVisualClarityService` for Python-side generator validation.
+- [x] Added generator validation errors for ambiguous switch visual directions, duplicate switch direction buckets, and solution taps that cycle to visually confusing edges.
+- [x] Updated `GraphBuilderService` to choose distinct switch outgoing road-shape buckets where a clear assignment exists, while preserving explicit road-shape overrides for validation to judge.
+- [x] Added generator tests for duplicate right-exit rejection, distinct up/right/down/left exits, and L-shaped first-segment direction bucketing.
+- [x] Added switch visual direction bucket details to JSON generation reports under each switch preview.
+- [x] Confirmed rejection reason counts include visual switch failures through the existing validation/rejection path.
+- [x] Updated affected checked-in production level `roadShape` fields so existing levels pass the stricter visual-clarity gate without changing topology or solution timings.
+
+Verification:
+
+```bash
+/Library/Frameworks/Python.framework/Versions/3.13/bin/python3 -m pytest Tools/LevelGenerator/tests
+```
+
+Result: `147 passed`.
+
+```bash
+/Library/Frameworks/Python.framework/Versions/3.13/bin/python3 Tools/LevelGenerator/run_all_generator_checks.py --python /Library/Frameworks/Python.framework/Versions/3.13/bin/python3
+```
+
+Result: passed. The check suite ran Python tests, smoke dry-run generation, and validation for production levels `level_001` through `level_030` with Swift tests disabled by the script.
+
+```bash
+xcodebuild test -scheme TinyRoutes -destination 'platform=iOS Simulator,id=CE7E87CB-2EDB-4E6B-AC65-AA1BDCA416AD' -only-testing:TinyRoutesTests/RouteEngineTests
+```
+
+Result: `TEST SUCCEEDED`; 91 `RouteEngineTests` passed.
+
+```bash
+xcodebuild test -scheme TinyRoutes -destination 'platform=iOS Simulator,id=CE7E87CB-2EDB-4E6B-AC65-AA1BDCA416AD' -only-testing:TinyRoutesTests/LevelRepositoryTests
+```
+
+Result: `TEST SUCCEEDED`; 30 `LevelRepositoryTests` passed.
+
+## Phase 2 - Move From Template-First to Recipe-First Generation
+
+Completed:
+
+- [x] Added the recipe-generation contract surface:
+  - [x] `MechanicRecipeGenerator`
+  - [x] `RecipeFamily`
+  - [x] `RecipeVariantSpec`
+- [x] Added `RecipeFamilyRegistry` as the recipe-family selection boundary.
+- [x] Added legacy-compatible recipe-family placeholders for the current template families:
+  - [x] `straight_delivery`
+  - [x] `single_switch`
+  - [x] `package_gate`
+  - [x] `return_loop`
+  - [x] `multi_switch_chain`
+  - [x] `ring_route`
+  - [x] `four_way_intersection`
+- [x] Marked existing `LevelTemplate` classes as legacy-compatible through the shared base class.
+- [x] Added generation architecture config fields:
+  - [x] `generation_mode`: `legacy_template`, `recipe_first`, `hybrid`
+  - [x] `recipe_pool_size`
+  - [x] `layouts_per_recipe`
+  - [x] `road_shapes_per_layout`
+- [x] Added CLI options:
+  - [x] `--generation-mode`
+  - [x] `--recipe-pool-size`
+  - [x] `--layouts-per-recipe`
+  - [x] `--road-shapes-per-layout`
+- [x] Added report payload fields for the new architecture config values.
+- [x] Implemented recipe-family graph production for each current template family:
+  - [x] `straight_delivery`
+  - [x] `single_switch`
+  - [x] `package_gate`
+  - [x] `return_loop`
+  - [x] `multi_switch_chain`
+  - [x] `ring_route`
+  - [x] `four_way_intersection`
+- [x] Updated `LevelGenerationService` to choose recipe families in `recipe_first` and `hybrid` mode.
+- [x] Added abstract recipe validation before layout generation.
+- [x] Added recipe candidate pool, layout-per-recipe, and road-shape-per-layout expansion.
+- [x] Added recipe-first metadata to generated candidates:
+  - [x] recipe family
+  - [x] recipe variant
+  - [x] abstract graph signature
+  - [x] selected layout variant
+  - [x] selected road-shape strategy
+- [x] Added GUI state and controls for the new options.
+- [x] Updated reports to show recipe source metadata.
+- [x] Fixed the initial recipe-first return-loop layout failure by moving handcrafted family layout seeds into the layout builder rather than storing coordinates in recipe objects.
+
+Verification:
+
+```bash
+/Library/Frameworks/Python.framework/Versions/3.13/bin/python3 -m pytest Tools/LevelGenerator/tests/test_recipe_family_registry.py Tools/LevelGenerator/tests/test_generation_service.py Tools/LevelGenerator/tests/test_cli.py
+```
+
+Result: `25 passed`.
+
+```bash
+/Library/Frameworks/Python.framework/Versions/3.13/bin/python3 -m pytest Tools/LevelGenerator/tests
+```
+
+Result: `153 passed`.
+
+```bash
+/Library/Frameworks/Python.framework/Versions/3.13/bin/python3 -m pytest Tools/LevelGenerator/tests
+```
+
+Result: `156 passed`.
+
+```bash
+/Library/Frameworks/Python.framework/Versions/3.13/bin/python3 Tools/LevelGenerator/run_all_generator_checks.py --python /Library/Frameworks/Python.framework/Versions/3.13/bin/python3
+```
+
+Result: passed. The check suite ran Python tests, smoke dry-run generation, and validation for production levels `level_001` through `level_030` with Swift tests disabled by the script.
+
+```bash
+xcodebuild test -scheme TinyRoutes -destination 'platform=iOS Simulator,id=CE7E87CB-2EDB-4E6B-AC65-AA1BDCA416AD' -only-testing:TinyRoutesTests/RouteEngineTests -only-testing:TinyRoutesTests/LevelRepositoryTests
+```
+
+Result: `TEST SUCCEEDED`; 121 selected Swift tests passed.

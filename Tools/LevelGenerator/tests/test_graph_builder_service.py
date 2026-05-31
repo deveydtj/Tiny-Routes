@@ -15,3 +15,18 @@ def test_outgoing_edge_ids_match_edges_and_preserve_order() -> None:
 
     assert level.graph.nodes[0].outgoingEdgeIDs == [wrong.id, package.id]
     assert [edge.id for edge in level.graph.edges] == [wrong.id, package.id]
+
+
+def test_switch_outgoing_road_shapes_are_adjusted_for_distinct_visual_starts() -> None:
+    builder = GraphBuilderService()
+    builder.add_node("switch", 0, 0)
+    builder.add_node("wrong", 1, -1)
+    builder.add_node("package", 1, 1)
+
+    wrong = builder.add_edge("switch", "wrong")
+    package = builder.add_edge("switch", "package")
+    level = builder.build_level_document("level_012", "Level 012", "switch", "package", "package", 30, 1)
+    edges = {edge.id: edge for edge in level.graph.edges}
+
+    assert edges[wrong.id].roadShape == "horizontalFirst"
+    assert edges[package.id].roadShape == "verticalFirst"

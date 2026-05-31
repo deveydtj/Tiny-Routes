@@ -87,7 +87,7 @@
         "id": "e_upper_beta_switch_upper_dead_end",
         "fromNodeID": "upper_beta_switch",
         "toNodeID": "upper_dead_end",
-        "roadShape": "verticalFirst"
+        "roadShape": "horizontalFirst"
       },
       {
         "id": "e_upper_beta_switch_upper_return",

@@ -13,6 +13,10 @@ class GuiGenerationState:
     count: str = "1"
     difficulty: str = "tutorial"
     template_name: str = "mixed"
+    generation_mode: str = "legacy_template"
+    recipe_pool_size: str = "1"
+    layouts_per_recipe: str = "1"
+    road_shapes_per_layout: str = "1"
     seed: str = ""
     dry_run: bool = True
     overwrite: bool = False
@@ -47,6 +51,9 @@ def to_generation_config(state: GuiGenerationState) -> GenerationConfig:
     count = parse_positive_int(state.count, "Count")
     max_attempts_per_level = parse_positive_int(state.max_attempts_per_level, "Max attempts per level")
     candidate_pool_size = parse_positive_int(state.candidate_pool_size, "Candidate pool size")
+    recipe_pool_size = parse_positive_int(state.recipe_pool_size, "Recipe pool size")
+    layouts_per_recipe = parse_positive_int(state.layouts_per_recipe, "Layouts per recipe")
+    road_shapes_per_layout = parse_positive_int(state.road_shapes_per_layout, "Road shapes per layout")
     swift_timeout_seconds = parse_positive_int(state.swift_timeout_seconds, "Swift timeout seconds")
     seed = _parse_optional_int(state.seed, "Seed")
 
@@ -71,6 +78,9 @@ def to_generation_config(state: GuiGenerationState) -> GenerationConfig:
         seed=seed,
         max_attempts_per_level=max_attempts_per_level,
         candidate_pool_size=candidate_pool_size,
+        recipe_pool_size=recipe_pool_size,
+        layouts_per_recipe=layouts_per_recipe,
+        road_shapes_per_layout=road_shapes_per_layout,
         swift_timeout_seconds=swift_timeout_seconds,
         levels_output_dir=levels_output_dir,
         solutions_output_dir=solutions_output_dir,
@@ -83,6 +93,10 @@ def to_generation_config(state: GuiGenerationState) -> GenerationConfig:
         count=count,
         difficulty=state.difficulty,
         template_name=state.template_name,
+        generation_mode=state.generation_mode,
+        recipe_pool_size=recipe_pool_size,
+        layouts_per_recipe=layouts_per_recipe,
+        road_shapes_per_layout=road_shapes_per_layout,
         seed=seed,
         dry_run=state.dry_run,
         overwrite=state.overwrite,
@@ -107,6 +121,10 @@ def build_command_preview(state: GuiGenerationState) -> str:
     _append_pair(args, "--count", state.count)
     _append_pair(args, "--difficulty", state.difficulty)
     _append_pair(args, "--template", state.template_name)
+    _append_pair(args, "--generation-mode", state.generation_mode)
+    _append_pair(args, "--recipe-pool-size", state.recipe_pool_size)
+    _append_pair(args, "--layouts-per-recipe", state.layouts_per_recipe)
+    _append_pair(args, "--road-shapes-per-layout", state.road_shapes_per_layout)
     _append_pair(args, "--seed", state.seed)
     if state.dry_run:
         args.append("--dry-run")
@@ -156,6 +174,9 @@ def _build_command_arguments(
     seed: int | None,
     max_attempts_per_level: int,
     candidate_pool_size: int,
+    recipe_pool_size: int,
+    layouts_per_recipe: int,
+    road_shapes_per_layout: int,
     swift_timeout_seconds: int,
     levels_output_dir: Path,
     solutions_output_dir: Path,
@@ -171,6 +192,14 @@ def _build_command_arguments(
         state.difficulty,
         "--template",
         state.template_name,
+        "--generation-mode",
+        state.generation_mode,
+        "--recipe-pool-size",
+        str(recipe_pool_size),
+        "--layouts-per-recipe",
+        str(layouts_per_recipe),
+        "--road-shapes-per-layout",
+        str(road_shapes_per_layout),
     ]
     if seed is not None:
         args.extend(["--seed", str(seed)])

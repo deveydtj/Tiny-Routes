@@ -790,6 +790,28 @@ final class RouteEngineTests: XCTestCase {
         XCTAssertEqual(downTransform.rotationAngle, .pi / 2, accuracy: 0.0001)
     }
 
+    func testSwitchArrowDirectionUsesStraightHorizontalRoadStart() throws {
+        let rightPath = RoadPath.make(from: RoadPoint(x: 0, y: 0), to: RoadPoint(x: 1, y: 0))
+        let leftPath = RoadPath.make(from: RoadPoint(x: 0, y: 0), to: RoadPoint(x: -1, y: 0))
+
+        let rightAngle = try XCTUnwrap(SwitchArrowDirectionResolver.directionAngleForRoadPathStart(rightPath))
+        let leftAngle = try XCTUnwrap(SwitchArrowDirectionResolver.directionAngleForRoadPathStart(leftPath))
+
+        XCTAssertEqual(rightAngle, 0, accuracy: 0.0001)
+        XCTAssertEqual(leftAngle, .pi, accuracy: 0.0001)
+    }
+
+    func testSwitchArrowDirectionUsesStraightVerticalRoadStart() throws {
+        let upPath = RoadPath.make(from: RoadPoint(x: 0, y: 0), to: RoadPoint(x: 0, y: 1))
+        let downPath = RoadPath.make(from: RoadPoint(x: 0, y: 0), to: RoadPoint(x: 0, y: -1))
+
+        let upAngle = try XCTUnwrap(SwitchArrowDirectionResolver.directionAngleForRoadPathStart(upPath))
+        let downAngle = try XCTUnwrap(SwitchArrowDirectionResolver.directionAngleForRoadPathStart(downPath))
+
+        XCTAssertEqual(upAngle, -.pi / 2, accuracy: 0.0001)
+        XCTAssertEqual(downAngle, .pi / 2, accuracy: 0.0001)
+    }
+
     func testSwitchArrowDirectionUsesRoadExitDirectionForHorizontalFirstElbow() throws {
         let (graph, switchNode) = makeSwitchRuntimeGraphForTarget(
             RoadPoint(x: 1, y: 1),
@@ -832,6 +854,63 @@ final class RouteEngineTests: XCTestCase {
         let angle = try XCTUnwrap(SwitchArrowDirectionResolver.activeDirectionAngle(for: switchNode, in: graph))
 
         XCTAssertEqual(angle, .pi / 2, accuracy: 0.0001)
+    }
+
+    func testActiveOutgoingEdgeChangesArrowDirectionAfterRotation() throws {
+        let switchNode = RuntimeRouteNode(
+            id: "switch",
+            x: 0,
+            y: 0,
+            outgoingEdgeIDs: ["e_switch_east", "e_switch_north"],
+            activeOutgoingEdgeID: "e_switch_east"
+        )
+        let rotatedSwitchNode = RuntimeRouteNode(
+            id: "switch",
+            x: 0,
+            y: 0,
+            outgoingEdgeIDs: ["e_switch_east", "e_switch_north"],
+            activeOutgoingEdgeID: "e_switch_north"
+        )
+        let eastNode = RuntimeRouteNode(id: "east", x: 1, y: 0, outgoingEdgeIDs: [], activeOutgoingEdgeID: nil)
+        let northNode = RuntimeRouteNode(id: "north", x: 0, y: 1, outgoingEdgeIDs: [], activeOutgoingEdgeID: nil)
+        let edges = [
+            "e_switch_east": RuntimeRouteEdge(
+                id: "e_switch_east",
+                fromNodeID: switchNode.id,
+                toNodeID: eastNode.id,
+                roadPath: RoadPath.make(from: RoadPoint(x: 0, y: 0), to: RoadPoint(x: 1, y: 0))
+            ),
+            "e_switch_north": RuntimeRouteEdge(
+                id: "e_switch_north",
+                fromNodeID: switchNode.id,
+                toNodeID: northNode.id,
+                roadPath: RoadPath.make(from: RoadPoint(x: 0, y: 0), to: RoadPoint(x: 0, y: 1))
+            )
+        ]
+        let graph = RuntimeRouteGraph(
+            nodesByID: [
+                switchNode.id: switchNode,
+                eastNode.id: eastNode,
+                northNode.id: northNode
+            ],
+            edgesByID: edges
+        )
+        let rotatedGraph = RuntimeRouteGraph(
+            nodesByID: [
+                rotatedSwitchNode.id: rotatedSwitchNode,
+                eastNode.id: eastNode,
+                northNode.id: northNode
+            ],
+            edgesByID: edges
+        )
+
+        let initialAngle = try XCTUnwrap(SwitchArrowDirectionResolver.activeDirectionAngle(for: switchNode, in: graph))
+        let rotatedAngle = try XCTUnwrap(
+            SwitchArrowDirectionResolver.activeDirectionAngle(for: rotatedSwitchNode, in: rotatedGraph)
+        )
+
+        XCTAssertEqual(initialAngle, 0, accuracy: 0.0001)
+        XCTAssertEqual(rotatedAngle, -.pi / 2, accuracy: 0.0001)
     }
 
     func testSwitchArrowDirectionFallbackSnapsTargetVectorToCardinalAxis() throws {
