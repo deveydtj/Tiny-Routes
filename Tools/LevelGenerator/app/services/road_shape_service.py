@@ -35,6 +35,7 @@ class RoadShapeService:
     _point_tolerance = 1e-9
     _merge_distance = 0.16
     _important_node_clearance = 0.18
+    _return_loop_false_shortcut_clearance = 0.14
 
     def pick_for_positions(
         self,
@@ -262,6 +263,11 @@ class RoadShapeService:
             segment_sets,
         )
         smooth_break_count = self._main_route_smooth_break_count(required_path, edge_plan_by_edge)
+        return_loop_false_shortcut_count = self._return_loop_false_shortcut_count(
+            positions,
+            required_path,
+            segment_sets,
+        )
 
         if confusing_crossing_count:
             issues.append(f"road_crossing_near_important_node:{confusing_crossing_count}")
@@ -274,6 +280,8 @@ class RoadShapeService:
                 issues.append(f"{code}:{count}")
         if important_node_proximity_count:
             issues.append(f"road_segment_too_close_to_important_node:{important_node_proximity_count}")
+        if return_loop_false_shortcut_count:
+            issues.append(f"return_loop_false_shortcut:{return_loop_false_shortcut_count}")
 
         duplicate_switch_penalty = sum(
             1
@@ -289,6 +297,7 @@ class RoadShapeService:
         score -= required_crossing_count * 0.12
         score -= long_parallel_count * 0.10
         score -= sum(visual_topology_counts.values()) * 0.40
+        score -= return_loop_false_shortcut_count * 0.35
         score -= important_node_proximity_count * 0.08
         if strategy == "crossing_minimized":
             score -= crossing_count * 0.05
@@ -314,6 +323,7 @@ class RoadShapeService:
                 "requiredPathCrossingCount": required_crossing_count,
                 "longParallelSegmentCount": long_parallel_count,
                 "visualTopologyIssueCounts": visual_topology_counts,
+                "returnLoopFalseShortcutCount": return_loop_false_shortcut_count,
                 "importantNodeProximityCount": important_node_proximity_count,
                 "mainRouteSmoothBreakCount": smooth_break_count,
                 "endpointVectorMismatchCount": endpoint_mismatch_count,
@@ -534,6 +544,82 @@ class RoadShapeService:
                 count += 1
         return count
 
+    def _return_loop_false_shortcut_count(
+        self,
+        positions: dict[str, tuple[float, float]],
+        required_path: tuple[str, ...],
+        segment_sets: dict[tuple[str, str], list[tuple[tuple[float, float], tuple[float, float]]]],
+    ) -> int:
+        if len(required_path) < 4 or len(set(required_path)) == len(required_path):
+            return 0
+
+        count = 0
+        emitted_pairs: set[tuple[tuple[str, str], tuple[str, str]]] = set()
+        repeated_nodes = {
+            node_id
+            for node_id, node_count in Counter(required_path).items()
+            if node_count > 1 and node_id in positions
+        }
+        for repeated_node_id in repeated_nodes:
+            repeated_position = positions[repeated_node_id]
+            repeated_indexes = [
+                index
+                for index, node_id in enumerate(required_path)
+                if node_id == repeated_node_id
+            ]
+            for repeated_index in repeated_indexes[1:]:
+                if repeated_index == 0 or repeated_index + 1 >= len(required_path):
+                    continue
+                return_edge = (required_path[repeated_index - 1], repeated_node_id)
+                destination_edge = (repeated_node_id, required_path[repeated_index + 1])
+                if return_edge not in segment_sets or destination_edge not in segment_sets:
+                    continue
+                pair_key = (return_edge, destination_edge)
+                if pair_key in emitted_pairs:
+                    continue
+                if self._return_loop_edge_pair_creates_false_shortcut(
+                    segment_sets[return_edge],
+                    segment_sets[destination_edge],
+                    repeated_position,
+                ):
+                    emitted_pairs.add(pair_key)
+                    count += 1
+        return count
+
+    def _return_loop_edge_pair_creates_false_shortcut(
+        self,
+        return_segments: list[tuple[tuple[float, float], tuple[float, float]]],
+        destination_segments: list[tuple[tuple[float, float], tuple[float, float]]],
+        repeated_position: tuple[float, float],
+    ) -> bool:
+        for return_segment in return_segments:
+            for destination_segment in destination_segments:
+                if self._return_loop_segments_create_false_shortcut(
+                    return_segment,
+                    destination_segment,
+                    repeated_position,
+                ):
+                    return True
+        return False
+
+    def _return_loop_segments_create_false_shortcut(
+        self,
+        return_segment: tuple[tuple[float, float], tuple[float, float]],
+        destination_segment: tuple[tuple[float, float], tuple[float, float]],
+        repeated_position: tuple[float, float],
+    ) -> bool:
+        if self._segments_are_collinear(return_segment, destination_segment):
+            return self._projection_overlap_length(return_segment, destination_segment) > self._point_tolerance
+
+        intersection = self._segment_intersection_point(return_segment, destination_segment)
+        if intersection is not None:
+            return self._point_distance(intersection, repeated_position) > self._point_tolerance
+
+        return (
+            self._segment_clearance_away_from_node(return_segment, destination_segment, repeated_position)
+            < self._return_loop_false_shortcut_clearance
+        )
+
     def _segment_length(self, segment: tuple[tuple[float, float], tuple[float, float]]) -> float:
         return math.hypot(segment[1][0] - segment[0][0], segment[1][1] - segment[0][1])
 
@@ -657,15 +743,51 @@ class RoadShapeService:
         point: tuple[float, float],
         segment: tuple[tuple[float, float], tuple[float, float]],
     ) -> float:
+        nearest = self._nearest_point_on_segment(point, segment)
+        return math.hypot(point[0] - nearest[0], point[1] - nearest[1])
+
+    def _segment_clearance_away_from_node(
+        self,
+        first: tuple[tuple[float, float], tuple[float, float]],
+        second: tuple[tuple[float, float], tuple[float, float]],
+        ignored_node_position: tuple[float, float],
+    ) -> float:
+        distances: list[float] = []
+        for fraction in (0.0, 0.25, 0.5, 0.75, 1.0):
+            for point, segment in (
+                (self._point_at_fraction(first, fraction), second),
+                (self._point_at_fraction(second, fraction), first),
+            ):
+                nearest = self._nearest_point_on_segment(point, segment)
+                if (
+                    self._point_distance(point, ignored_node_position) <= self._return_loop_false_shortcut_clearance
+                    and self._point_distance(nearest, ignored_node_position) <= self._return_loop_false_shortcut_clearance
+                ):
+                    continue
+                distances.append(self._point_distance(point, nearest))
+        return min(distances) if distances else math.inf
+
+    def _nearest_point_on_segment(
+        self,
+        point: tuple[float, float],
+        segment: tuple[tuple[float, float], tuple[float, float]],
+    ) -> tuple[float, float]:
         (px, py) = point
         (x1, y1), (x2, y2) = segment
         dx = x2 - x1
         dy = y2 - y1
         if abs(dx) <= self._point_tolerance and abs(dy) <= self._point_tolerance:
-            return math.hypot(px - x1, py - y1)
+            return (x1, y1)
         t = max(0.0, min(1.0, ((px - x1) * dx + (py - y1) * dy) / ((dx * dx) + (dy * dy))))
-        nearest = (x1 + (t * dx), y1 + (t * dy))
-        return math.hypot(px - nearest[0], py - nearest[1])
+        return (x1 + (t * dx), y1 + (t * dy))
 
     def _point_distance(self, first: tuple[float, float], second: tuple[float, float]) -> float:
         return math.hypot(first[0] - second[0], first[1] - second[1])
+
+    def _point_at_fraction(
+        self,
+        segment: tuple[tuple[float, float], tuple[float, float]],
+        fraction: float,
+    ) -> tuple[float, float]:
+        start, end = segment
+        return (start[0] + ((end[0] - start[0]) * fraction), start[1] + ((end[1] - start[1]) * fraction))

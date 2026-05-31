@@ -67,6 +67,7 @@ class VisualClarityValidationService:
     long_parallel_overlap = 0.35
     main_route_dead_end_ratio = 0.80
     small_device_spacing_distance = 0.32
+    return_loop_false_shortcut_clearance = 0.14
     point_tolerance = 1e-9
 
     def __init__(self) -> None:
@@ -111,6 +112,7 @@ class VisualClarityValidationService:
         issues.extend(self._important_node_readability_issues(positions, important_node_ids, segments))
         issues.extend(self._mobile_ui_issues(level, positions, switch_node_ids, important_node_ids, segments))
         issues.extend(self._route_flow_issues(level, positions, edge_by_id, resolved_required_path, required_edge_ids, switch_node_ids))
+        issues.extend(self._return_loop_false_shortcut_issues(segments, positions, edge_by_id, resolved_required_path, switch_node_ids))
 
         deduped_issues = tuple(dict.fromkeys(issues))
         score = self._score(deduped_issues)
@@ -623,6 +625,72 @@ class VisualClarityValidationService:
                         )
         return issues
 
+    def _return_loop_false_shortcut_issues(
+        self,
+        segments: tuple[_SegmentRef, ...],
+        positions: dict[str, tuple[float, float]],
+        edge_by_id: dict[str, object],
+        required_path: tuple[str, ...],
+        switch_node_ids: tuple[str, ...],
+    ) -> list[VisualClarityIssue]:
+        if len(required_path) < 4 or len(set(required_path)) == len(required_path):
+            return []
+
+        edge_by_pair = {
+            (edge.fromNodeID, edge.toNodeID): edge
+            for edge in edge_by_id.values()
+        }
+        segments_by_edge_id: dict[str, list[_SegmentRef]] = {}
+        for segment in segments:
+            segments_by_edge_id.setdefault(segment.edge_id, []).append(segment)
+
+        issues: list[VisualClarityIssue] = []
+        emitted_pairs: set[tuple[str, str, str]] = set()
+        repeated_switch_ids = {
+            node_id
+            for node_id, count in Counter(required_path).items()
+            if count > 1 and node_id in switch_node_ids
+        }
+        for repeated_node_id in repeated_switch_ids:
+            repeated_position = positions.get(repeated_node_id)
+            if repeated_position is None:
+                continue
+            repeated_indexes = [
+                index
+                for index, node_id in enumerate(required_path)
+                if node_id == repeated_node_id
+            ]
+            for repeated_index in repeated_indexes[1:]:
+                if repeated_index == 0 or repeated_index + 1 >= len(required_path):
+                    continue
+                return_edge = edge_by_pair.get((required_path[repeated_index - 1], repeated_node_id))
+                destination_edge = edge_by_pair.get((repeated_node_id, required_path[repeated_index + 1]))
+                if return_edge is None or destination_edge is None:
+                    continue
+                pair_key = (repeated_node_id, return_edge.id, destination_edge.id)
+                if pair_key in emitted_pairs:
+                    continue
+                if self._edges_create_return_loop_false_shortcut(
+                    tuple(segments_by_edge_id.get(return_edge.id, ())),
+                    tuple(segments_by_edge_id.get(destination_edge.id, ())),
+                    repeated_position,
+                ):
+                    emitted_pairs.add(pair_key)
+                    issues.append(
+                        VisualClarityIssue(
+                            severity="error",
+                            code="return_loop_false_shortcut",
+                            message=(
+                                f"Return-loop edge '{return_edge.id}' visually creates a shortcut "
+                                f"into destination edge '{destination_edge.id}'."
+                            ),
+                            related_node_id=repeated_node_id,
+                            related_edge_id=return_edge.id,
+                            related_edge_ids=(return_edge.id, destination_edge.id),
+                        )
+                    )
+        return issues
+
     def _segments_for_level(
         self,
         level,
@@ -792,6 +860,62 @@ class VisualClarityValidationService:
             return True
         return self._segments_are_collinear(first, second) and self._projection_overlap_length(first, second) > self.point_tolerance
 
+    def _edges_create_return_loop_false_shortcut(
+        self,
+        return_segments: tuple[_SegmentRef, ...],
+        destination_segments: tuple[_SegmentRef, ...],
+        repeated_position: tuple[float, float],
+    ) -> bool:
+        for return_segment in return_segments:
+            for destination_segment in destination_segments:
+                if self._return_loop_segments_create_false_shortcut(
+                    (return_segment.start, return_segment.end),
+                    (destination_segment.start, destination_segment.end),
+                    repeated_position,
+                ):
+                    return True
+        return False
+
+    def _return_loop_segments_create_false_shortcut(
+        self,
+        return_segment: tuple[tuple[float, float], tuple[float, float]],
+        destination_segment: tuple[tuple[float, float], tuple[float, float]],
+        repeated_position: tuple[float, float],
+    ) -> bool:
+        if self._segments_are_collinear(return_segment, destination_segment):
+            return self._projection_overlap_length(return_segment, destination_segment) > self.point_tolerance
+
+        intersection = self._segment_intersection_point(return_segment, destination_segment)
+        if intersection is not None:
+            return not self._point_matches(intersection, repeated_position)
+
+        return (
+            self._segment_clearance_away_from_node(return_segment, destination_segment, repeated_position)
+            < self.return_loop_false_shortcut_clearance
+        )
+
+    def _segment_clearance_away_from_node(
+        self,
+        first: tuple[tuple[float, float], tuple[float, float]],
+        second: tuple[tuple[float, float], tuple[float, float]],
+        ignored_node_position: tuple[float, float],
+    ) -> float:
+        candidates: list[tuple[tuple[float, float], tuple[tuple[float, float], tuple[float, float]]]] = []
+        for fraction in (0.0, 0.25, 0.5, 0.75, 1.0):
+            candidates.append((self._point_at_fraction(first, fraction), second))
+            candidates.append((self._point_at_fraction(second, fraction), first))
+
+        distances: list[float] = []
+        for point, segment in candidates:
+            nearest = self._nearest_point_on_segment(point, segment)
+            if (
+                self._point_distance(point, ignored_node_position) <= self.return_loop_false_shortcut_clearance
+                and self._point_distance(nearest, ignored_node_position) <= self.return_loop_false_shortcut_clearance
+            ):
+                continue
+            distances.append(self._point_distance(point, nearest))
+        return min(distances) if distances else math.inf
+
     def _segments_are_collinear(
         self,
         first: tuple[tuple[float, float], tuple[float, float]],
@@ -840,15 +964,22 @@ class VisualClarityValidationService:
         point: tuple[float, float],
         segment: tuple[tuple[float, float], tuple[float, float]],
     ) -> float:
+        nearest = self._nearest_point_on_segment(point, segment)
+        return math.hypot(point[0] - nearest[0], point[1] - nearest[1])
+
+    def _nearest_point_on_segment(
+        self,
+        point: tuple[float, float],
+        segment: tuple[tuple[float, float], tuple[float, float]],
+    ) -> tuple[float, float]:
         (px, py) = point
         (x1, y1), (x2, y2) = segment
         dx = x2 - x1
         dy = y2 - y1
         if abs(dx) <= self.point_tolerance and abs(dy) <= self.point_tolerance:
-            return math.hypot(px - x1, py - y1)
+            return (x1, y1)
         t = max(0.0, min(1.0, ((px - x1) * dx + (py - y1) * dy) / ((dx * dx) + (dy * dy))))
-        nearest = (x1 + (t * dx), y1 + (t * dy))
-        return math.hypot(px - nearest[0], py - nearest[1])
+        return (x1 + (t * dx), y1 + (t * dy))
 
     def _point_distance(self, first: tuple[float, float], second: tuple[float, float]) -> float:
         return math.hypot(first[0] - second[0], first[1] - second[1])
@@ -864,3 +995,11 @@ class VisualClarityValidationService:
             return start
         scale = min(1.0, distance / length)
         return (start[0] + ((end[0] - start[0]) * scale), start[1] + ((end[1] - start[1]) * scale))
+
+    def _point_at_fraction(
+        self,
+        segment: tuple[tuple[float, float], tuple[float, float]],
+        fraction: float,
+    ) -> tuple[float, float]:
+        start, end = segment
+        return (start[0] + ((end[0] - start[0]) * fraction), start[1] + ((end[1] - start[1]) * fraction))

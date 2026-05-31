@@ -24,6 +24,7 @@ class GeneratorValidationMessage:
     message: str
     related_node_id: str | None = None
     related_edge_id: str | None = None
+    related_edge_ids: tuple[str, ...] = field(default_factory=tuple)
 
 
 @dataclass
@@ -79,6 +80,7 @@ class GeneratedLevelValidationService:
                     message=converted.message,
                     related_node_id=converted.related_node_id,
                     related_edge_id=converted.related_edge_id,
+                    related_edge_ids=converted.related_edge_ids,
                 )
             messages.append(converted)
 
@@ -271,6 +273,7 @@ class GeneratedLevelValidationService:
                 "road_crosses_through_unconnected_node",
                 "unconnected_road_endpoint_touches_segment",
                 "unconnected_parallel_road_overlap",
+                "return_loop_false_shortcut",
             } else "warning"
             messages.append(
                 GeneratorValidationMessage(
@@ -465,6 +468,7 @@ class GeneratedLevelValidationService:
                 message=issue.message,
                 related_node_id=issue.related_node_id,
                 related_edge_id=issue.related_edge_id,
+                related_edge_ids=issue.related_edge_ids,
             )
             for issue in report.issues
         ]
