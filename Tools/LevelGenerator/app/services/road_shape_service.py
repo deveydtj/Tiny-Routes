@@ -254,6 +254,7 @@ class RoadShapeService:
             segment_sets,
         )
         long_parallel_count = self._long_parallel_segment_count(edges, segment_sets)
+        visual_topology_counts = self._visual_topology_counts(positions, edges, segment_sets)
         important_node_proximity_count = self._important_node_proximity_count(
             positions,
             important_nodes,
@@ -268,6 +269,9 @@ class RoadShapeService:
             issues.append(f"required_path_crossing:{required_crossing_count}")
         if long_parallel_count:
             issues.append(f"long_parallel_road_segments:{long_parallel_count}")
+        for code, count in visual_topology_counts.items():
+            if count:
+                issues.append(f"{code}:{count}")
         if important_node_proximity_count:
             issues.append(f"road_segment_too_close_to_important_node:{important_node_proximity_count}")
 
@@ -284,6 +288,7 @@ class RoadShapeService:
         score -= confusing_crossing_count * 0.18
         score -= required_crossing_count * 0.12
         score -= long_parallel_count * 0.10
+        score -= sum(visual_topology_counts.values()) * 0.40
         score -= important_node_proximity_count * 0.08
         if strategy == "crossing_minimized":
             score -= crossing_count * 0.05
@@ -308,6 +313,7 @@ class RoadShapeService:
                 "confusingCrossingCount": confusing_crossing_count,
                 "requiredPathCrossingCount": required_crossing_count,
                 "longParallelSegmentCount": long_parallel_count,
+                "visualTopologyIssueCounts": visual_topology_counts,
                 "importantNodeProximityCount": important_node_proximity_count,
                 "mainRouteSmoothBreakCount": smooth_break_count,
                 "endpointVectorMismatchCount": endpoint_mismatch_count,
@@ -445,6 +451,51 @@ class RoadShapeService:
                             count += 1
         return count
 
+    def _visual_topology_counts(
+        self,
+        positions: dict[str, tuple[float, float]],
+        edges: list[tuple[str, str]],
+        segment_sets: dict[tuple[str, str], list[tuple[tuple[float, float], tuple[float, float]]]],
+    ) -> dict[str, int]:
+        counts = {
+            "implicit_intersection_without_graph_node": 0,
+            "road_crosses_through_unconnected_node": 0,
+            "unconnected_road_endpoint_touches_segment": 0,
+            "unconnected_parallel_road_overlap": 0,
+        }
+
+        for edge in edges:
+            for segment in segment_sets[edge]:
+                for node_id, position in positions.items():
+                    if node_id in edge:
+                        continue
+                    if self._point_lies_on_segment(position, segment):
+                        counts["road_crosses_through_unconnected_node"] += 1
+
+        for first_index, first_edge in enumerate(edges):
+            for second_edge in edges[first_index + 1:]:
+                if set(first_edge) & set(second_edge):
+                    continue
+                for first_segment in segment_sets[first_edge]:
+                    for second_segment in segment_sets[second_edge]:
+                        if self._segments_are_collinear(first_segment, second_segment):
+                            if self._projection_overlap_length(first_segment, second_segment) > self._point_tolerance:
+                                counts["unconnected_parallel_road_overlap"] += 1
+                            continue
+
+                        intersection = self._segment_intersection_point(first_segment, second_segment)
+                        if intersection is None:
+                            continue
+                        if self._edge_endpoint_at_intersection(positions, first_edge, intersection) or self._edge_endpoint_at_intersection(
+                            positions,
+                            second_edge,
+                            intersection,
+                        ):
+                            counts["unconnected_road_endpoint_touches_segment"] += 1
+                        elif self._node_at_point(intersection, positions) is None:
+                            counts["implicit_intersection_without_graph_node"] += 1
+        return counts
+
     def _important_node_proximity_count(
         self,
         positions: dict[str, tuple[float, float]],
@@ -512,6 +563,41 @@ class RoadShapeService:
         return (
             min(x1, x2) - self._point_tolerance <= x <= max(x1, x2) + self._point_tolerance
             and min(y1, y2) - self._point_tolerance <= y <= max(y1, y2) + self._point_tolerance
+        )
+
+    def _point_lies_on_segment(
+        self,
+        point: tuple[float, float],
+        segment: tuple[tuple[float, float], tuple[float, float]],
+    ) -> bool:
+        return (
+            self._point_on_segment(point, segment)
+            and self._point_to_segment_distance(point, segment) <= self._point_tolerance
+        )
+
+    def _node_at_point(
+        self,
+        point: tuple[float, float],
+        positions: dict[str, tuple[float, float]],
+    ) -> str | None:
+        return next(
+            (
+                node_id
+                for node_id, position in positions.items()
+                if self._point_distance(point, position) <= self._point_tolerance
+            ),
+            None,
+        )
+
+    def _edge_endpoint_at_intersection(
+        self,
+        positions: dict[str, tuple[float, float]],
+        edge: tuple[str, str],
+        intersection: tuple[float, float],
+    ) -> bool:
+        return (
+            self._point_distance(positions[edge[0]], intersection) <= self._point_tolerance
+            or self._point_distance(positions[edge[1]], intersection) <= self._point_tolerance
         )
 
     def _segments_overlap(

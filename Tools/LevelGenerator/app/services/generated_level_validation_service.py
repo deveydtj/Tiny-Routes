@@ -267,6 +267,10 @@ class GeneratedLevelValidationService:
                 "same_switch_first_segments_overlap",
                 "required_and_wrong_route_first_segments_overlap",
                 "road_crossing_near_important_node",
+                "implicit_intersection_without_graph_node",
+                "road_crosses_through_unconnected_node",
+                "unconnected_road_endpoint_touches_segment",
+                "unconnected_parallel_road_overlap",
             } else "warning"
             messages.append(
                 GeneratorValidationMessage(

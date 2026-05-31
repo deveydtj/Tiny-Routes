@@ -4,6 +4,7 @@ from ..models.difficulty_preset import DifficultyPreset
 from ..models.generated_level import GeneratedLevel
 from ..models.template_variant_spec import TemplateVariantSpec
 from ..random_source import RandomSource
+from ..services.road_shape_service import RoadShapeService
 from .base_template import LevelTemplate
 
 
@@ -37,8 +38,15 @@ class FourWayIntersectionTemplate(LevelTemplate):
 
         for node_id in positions:
             builder.add_node(node_id, *positions[node_id])
+        road_shapes = RoadShapeService().plan_for_graph(
+            positions,
+            edges,
+            required_path=tuple(route),
+            strategy="auto",
+            important_node_ids=("start", "package", "destination"),
+        ).edge_shapes
         for from_node_id, to_node_id in edges:
-            builder.add_edge(from_node_id, to_node_id)
+            builder.add_edge(from_node_id, to_node_id, road_shape=road_shapes[(from_node_id, to_node_id)])
 
         time_limit = self.calculate_time_limit([positions[node_id] for node_id in route], preset)
         level = builder.build_level_document(
@@ -83,7 +91,7 @@ def _variant_spec(
             "central_switch": (0.0, 0.0),
             "dead_end": (0.0, -0.78),
             "package": (0.0, 0.78),
-            "return_node": (-0.5, 0.78),
+            "return_node": (-0.45, 0.35),
             "destination": (0.95, 0.0),
             "side_branch": (-0.45, -0.62),
         }
@@ -96,7 +104,7 @@ def _variant_spec(
             "central_switch": (0.0, 0.0),
             "dead_end": (0.78, 0.0),
             "package": (-0.78, 0.0),
-            "return_node": (-0.78, -0.5),
+            "return_node": (-0.35, -0.45),
             "destination": (0.0, 0.95),
             "side_branch": (0.62, -0.45),
         }
@@ -109,7 +117,7 @@ def _variant_spec(
             "central_switch": (0.0, 0.0),
             "dead_end": (-0.78, 0.0),
             "package": (0.78, 0.0),
-            "return_node": (0.78, 0.5),
+            "return_node": (0.35, 0.35),
             "destination": (0.0, -0.95),
             "side_branch": (-0.62, 0.45),
         }
@@ -121,7 +129,7 @@ def _variant_spec(
         "central_switch": (0.0, 0.0),
         "dead_end": (0.0, 0.78),
         "package": (0.0, -0.78),
-        "return_node": (-0.5, -0.78),
+        "return_node": (-0.45, -0.35),
         "destination": (0.95, 0.0),
         "side_branch": (-0.45, 0.62),
     }

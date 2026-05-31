@@ -528,6 +528,10 @@ class GraphLayoutPlannerService:
         positions["start"] = layout.snap_point(-1.0, -0.55)
         positions[recipe.destination_node_id] = layout.snap_point(1.0, -0.5)
         self._place_off_route_nodes(recipe, layout, positions, vertical=False)
+        if "ring_a" in positions:
+            positions["ring_a"] = layout.snap_point(-0.35, -0.05)
+        if "dead_end_a" in positions:
+            positions["dead_end_a"] = layout.snap_point(0.35, 0.85)
         return positions
 
     def _loop_positions(self, recipe: GraphRecipe, layout: GraphLayoutService) -> dict[str, tuple[float, float]]:
@@ -559,6 +563,8 @@ class GraphLayoutPlannerService:
         if len(recipe.required_path) > 1 and recipe.required_path[1] != switch_id:
             positions[recipe.required_path[1]] = layout.snap_point(-0.78, -0.42)
         positions[recipe.destination_node_id] = layout.snap_point(1.05, -0.48)
+        if "return_node" in positions:
+            positions["return_node"] = layout.snap_point(0.45, 0.32)
         return positions
 
     def _place_off_route_nodes(

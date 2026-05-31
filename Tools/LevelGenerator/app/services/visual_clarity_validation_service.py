@@ -47,6 +47,8 @@ class _SegmentRef:
     edge_id: str
     from_node_id: str
     to_node_id: str
+    start_node_id: str | None
+    end_node_id: str | None
     start: tuple[float, float]
     end: tuple[float, float]
     index: int
@@ -101,6 +103,7 @@ class VisualClarityValidationService:
 
         issues: list[VisualClarityIssue] = []
         issues.extend(self._switch_issues(level, switch_node_ids, positions, segments))
+        issues.extend(self._visual_topology_issues(segments, positions))
         issues.extend(self._route_crossing_issues(segments, positions, important_node_ids, switch_node_ids, required_edge_ids))
         issues.extend(self._route_overlap_issues(segments, switch_node_ids, edge_by_id))
         issues.extend(self._node_spacing_issues(positions, important_node_ids))
@@ -205,6 +208,83 @@ class VisualClarityValidationService:
                             code="switch_too_close_to_another_switch",
                             message=f"Switches '{first_id}' and '{second_id}' are too close to read independently.",
                             related_node_id=first_id,
+                        )
+                    )
+        return issues
+
+    def _visual_topology_issues(
+        self,
+        segments: tuple[_SegmentRef, ...],
+        positions: dict[str, tuple[float, float]],
+    ) -> list[VisualClarityIssue]:
+        issues: list[VisualClarityIssue] = []
+
+        for segment in segments:
+            for node_id, position in positions.items():
+                if node_id in {segment.from_node_id, segment.to_node_id}:
+                    continue
+                if self._point_lies_on_segment(position, (segment.start, segment.end)):
+                    issues.append(
+                        VisualClarityIssue(
+                            severity="error",
+                            code="road_crosses_through_unconnected_node",
+                            message=f"Edge '{segment.edge_id}' visually crosses node '{node_id}' without a graph connection.",
+                            related_node_id=node_id,
+                            related_edge_id=segment.edge_id,
+                        )
+                    )
+
+        for first_index, first in enumerate(segments):
+            for second in segments[first_index + 1:]:
+                if first.edge_id == second.edge_id or {first.from_node_id, first.to_node_id} & {second.from_node_id, second.to_node_id}:
+                    continue
+
+                first_segment = (first.start, first.end)
+                second_segment = (second.start, second.end)
+                if self._segments_are_collinear(first_segment, second_segment):
+                    if self._projection_overlap_length(first_segment, second_segment) > self.point_tolerance:
+                        issues.append(
+                            VisualClarityIssue(
+                                severity="error",
+                                code="unconnected_parallel_road_overlap",
+                                message=f"Edges '{first.edge_id}' and '{second.edge_id}' overlap without a graph connection.",
+                                related_edge_id=first.edge_id,
+                                related_edge_ids=(first.edge_id, second.edge_id),
+                            )
+                        )
+                    continue
+
+                intersection = self._segment_intersection_point(first_segment, second_segment)
+                if intersection is None:
+                    continue
+
+                endpoint_touch = self._unconnected_endpoint_touch(first, second, intersection)
+                if endpoint_touch is not None:
+                    touched_node_id, touched_edge_id = endpoint_touch
+                    issues.append(
+                        VisualClarityIssue(
+                            severity="error",
+                            code="unconnected_road_endpoint_touches_segment",
+                            message=f"Endpoint node '{touched_node_id}' touches edge '{touched_edge_id}' without a graph connection.",
+                            related_node_id=touched_node_id,
+                            related_edge_id=touched_edge_id,
+                            related_edge_ids=(first.edge_id, second.edge_id),
+                        )
+                    )
+                    continue
+
+                graph_node_id = self._node_at_point(intersection, positions)
+                if graph_node_id is None:
+                    issues.append(
+                        VisualClarityIssue(
+                            severity="error",
+                            code="implicit_intersection_without_graph_node",
+                            message=(
+                                f"Edges '{first.edge_id}' and '{second.edge_id}' visually intersect "
+                                "without an intersection node."
+                            ),
+                            related_edge_id=first.edge_id,
+                            related_edge_ids=(first.edge_id, second.edge_id),
                         )
                     )
         return issues
@@ -567,6 +647,8 @@ class VisualClarityValidationService:
                         edge_id=edge.id,
                         from_node_id=edge.fromNodeID,
                         to_node_id=edge.toNodeID,
+                        start_node_id=edge.fromNodeID if index == 0 else None,
+                        end_node_id=edge.toNodeID if index == len(edge_segments) - 1 else None,
                         start=start,
                         end=end,
                         index=index,
@@ -659,6 +741,47 @@ class VisualClarityValidationService:
             min(x1, x2) - self.point_tolerance <= x <= max(x1, x2) + self.point_tolerance
             and min(y1, y2) - self.point_tolerance <= y <= max(y1, y2) + self.point_tolerance
         )
+
+    def _point_lies_on_segment(
+        self,
+        point: tuple[float, float],
+        segment: tuple[tuple[float, float], tuple[float, float]],
+    ) -> bool:
+        return (
+            self._point_on_segment(point, segment)
+            and self._point_to_segment_distance(point, segment) <= self.point_tolerance
+        )
+
+    def _point_matches(self, first: tuple[float, float], second: tuple[float, float]) -> bool:
+        return self._point_distance(first, second) <= self.point_tolerance
+
+    def _node_at_point(
+        self,
+        point: tuple[float, float],
+        positions: dict[str, tuple[float, float]],
+    ) -> str | None:
+        return next(
+            (
+                node_id
+                for node_id, position in positions.items()
+                if self._point_matches(point, position)
+            ),
+            None,
+        )
+
+    def _unconnected_endpoint_touch(
+        self,
+        first: _SegmentRef,
+        second: _SegmentRef,
+        intersection: tuple[float, float],
+    ) -> tuple[str, str] | None:
+        for node_id, endpoint in ((first.start_node_id, first.start), (first.end_node_id, first.end)):
+            if node_id is not None and self._point_matches(endpoint, intersection):
+                return (node_id, second.edge_id)
+        for node_id, endpoint in ((second.start_node_id, second.start), (second.end_node_id, second.end)):
+            if node_id is not None and self._point_matches(endpoint, intersection):
+                return (node_id, first.edge_id)
+        return None
 
     def _segments_overlap(
         self,

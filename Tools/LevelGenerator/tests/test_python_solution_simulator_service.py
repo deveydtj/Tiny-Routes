@@ -62,7 +62,7 @@ def test_python_solution_simulator_arrival_time_for_repeated_switch_tap_uses_nex
     simulator = PythonSolutionSimulatorService()
 
     assert simulator.arrival_time_for_action(generated, 0) == pytest.approx(1.05, abs=0.001)
-    assert simulator.arrival_time_for_action(generated, 1) == pytest.approx(3.378, abs=0.001)
+    assert simulator.arrival_time_for_action(generated, 1) == pytest.approx(3.280, abs=0.001)
 
 
 def test_python_solution_simulator_rejects_late_switch_tap_after_runtime_commitment() -> None:

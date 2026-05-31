@@ -168,6 +168,8 @@ def _single_switch_spec(
 ) -> tuple[tuple[str, ...], tuple[GraphRecipeEdge, ...], tuple[str, ...], tuple[str, ...]]:
     include_approach = preset.name != "tutorial"
     positions, switch_id, dead_end_id, route = single_switch_variant_spec(variant_name, include_approach)
+    if not include_approach:
+        positions = {node_id: position for node_id, position in positions.items() if node_id != "approach"}
     pairs = []
     if include_approach:
         pairs.extend([("start", "approach"), ("approach", switch_id)])
