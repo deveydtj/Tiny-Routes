@@ -516,38 +516,40 @@ Reject levels that are technically valid but visually bad.
 
 ## Tasks
 
-- [ ] Create `VisualClarityValidationService` or expand current validation:
-  - [ ] route crossing analysis
-  - [ ] route overlap analysis
-  - [ ] node spacing analysis
-  - [ ] switch exit direction analysis
-  - [ ] tap target spacing analysis
-  - [ ] important-node readability analysis
-- [ ] Add switch-specific checks:
-  - [ ] duplicate outgoing start direction
-  - [ ] ambiguous active edge arrow
-  - [ ] active edge visually hidden under another road
-  - [ ] switch too close to another switch
-  - [ ] four-way switch missing clear cardinal options
-- [ ] Add route-specific checks:
-  - [ ] required path crosses itself too much
-  - [ ] wrong route crosses required route near a switch
-  - [ ] dead end looks like the main route
-  - [ ] return loop visually unclear
-  - [ ] package is off the visual flow without being intentional
-- [ ] Add mobile UI checks:
-  - [ ] switch tap target has enough screen separation
-  - [ ] arrow icon will not collide with node label or package icon
-  - [ ] important nodes remain readable at current board zoom
-  - [ ] level still reads well on small devices
-- [ ] Add severity levels:
-  - [ ] `error`: reject candidate
-  - [ ] `warning`: allow but lower score
-  - [ ] `info`: include in report
-- [ ] Add tests:
-  - [ ] visual clarity errors reject generation
-  - [ ] warnings lower quality score
-  - [ ] report includes exact node/edge IDs
+- [x] Create `VisualClarityValidationService` or expand current validation:
+  - [x] route crossing analysis
+  - [x] route overlap analysis
+  - [x] node spacing analysis
+  - [x] switch exit direction analysis
+  - [x] tap target spacing analysis
+  - [x] important-node readability analysis
+- [x] Add switch-specific checks:
+  - [x] duplicate outgoing start direction
+  - [x] ambiguous active edge arrow
+  - [x] active edge visually hidden under another road
+  - [x] switch too close to another switch
+  - [x] four-way switch missing clear cardinal options
+- [x] Add route-specific checks:
+  - [x] required path crosses itself too much
+  - [x] wrong route crosses required route near a switch
+  - [x] dead end looks like the main route
+  - [x] return loop visually unclear
+  - [x] package is off the visual flow without being intentional
+- [x] Add mobile UI checks:
+  - [x] switch tap target has enough screen separation
+  - [x] arrow icon will not collide with node label or package icon
+  - [x] important nodes remain readable at current board zoom
+  - [x] level still reads well on small devices
+- [x] Add severity levels:
+  - [x] `error`: structured hard-failure issue severity
+  - [x] `warning`: structured soft issue severity
+  - [x] `info`: structured report-only issue severity
+- [x] Add tests:
+  - [x] visual clarity errors reject generation
+  - [x] warnings lower quality score
+  - [x] report includes exact node/edge IDs
+
+Implementation note: `VisualClarityValidationService` defines the Phase 6 rule set and emits structured `error`, `warning`, and `info` issues with related node/edge IDs. Visual errors are wired into generator rejection, warnings lower readability quality, and JSON reports include exact node/edge IDs.
 
 ## Do
 
@@ -565,9 +567,9 @@ Reject levels that are technically valid but visually bad.
 
 ## Acceptance Criteria
 
-- [ ] Visual clarity validation catches ambiguous switches and messy roads.
-- [ ] Reports clearly identify failed nodes/edges.
-- [ ] The generator rejects ugly/confusing levels before human review.
+- [x] Visual clarity validation catches ambiguous switches and messy roads.
+- [x] Reports clearly identify failed nodes/edges.
+- [x] The generator rejects ugly/confusing levels before human review.
 
 ---
 

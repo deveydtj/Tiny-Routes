@@ -9,6 +9,7 @@ from ..paths import find_repo_root
 from ..services.preview_image_service import PreviewImageService
 from ..services.route_timing_service import RouteTimingService
 from ..services.switch_visual_clarity_service import SwitchVisualClarityService
+from ..services.visual_clarity_validation_service import VisualClarityValidationService
 
 
 class GenerationReportRepository:
@@ -16,6 +17,7 @@ class GenerationReportRepository:
         self.preview_image_service = PreviewImageService()
         self.route_timing = RouteTimingService()
         self.switch_visual_clarity = SwitchVisualClarityService()
+        self.visual_clarity_validation = VisualClarityValidationService()
 
     def write_markdown(self, path: Path, config, result) -> Path:
         path = Path(path)
@@ -79,6 +81,7 @@ class GenerationReportRepository:
                     "quality": self._quality_payload(level),
                     "simulation": self._simulation_payload(level),
                     "switchPreview": self._switch_preview_payload(level),
+                    "visualClarity": self._visual_clarity_payload(level),
                     "previewPath": str(level.preview_path) if level.preview_path else None,
                     "status": "passed",
                     "notes": level.generation_notes,
@@ -179,6 +182,11 @@ class GenerationReportRepository:
                             f"{road_shape.get('requiredPathCrossingCount', 0)} required-path crossings, "
                             f"{road_shape.get('longParallelSegmentCount', 0)} long parallel segments."
                         )
+                    visual_clarity = level["visualClarity"]
+                    lines.append(
+                        f"- Visual clarity: score `{visual_clarity['score']}`, "
+                        f"{len(visual_clarity['issues'])} issue(s)."
+                    )
                     if level["abstractSolution"]:
                         abstract = level["abstractSolution"]
                         lines.append(
@@ -200,6 +208,11 @@ class GenerationReportRepository:
                     )
                 for warning in level["warnings"]:
                     lines.append(f"- Warning: {warning}")
+                for issue in level["visualClarity"]["issues"]:
+                    lines.append(
+                        f"- Visual clarity {issue['severity']}: `{issue['code']}` "
+                        f"node `{issue['relatedNodeID']}` edge `{issue['relatedEdgeID']}`."
+                    )
                 if not level["switchPreview"] and not level["warnings"]:
                     lines.append("- No switch-specific review notes.")
 
@@ -301,6 +314,24 @@ class GenerationReportRepository:
             "tapCount": simulation.tap_count,
             "reachedPackage": simulation.reached_package,
             "reachedDestination": simulation.reached_destination,
+        }
+
+    def _visual_clarity_payload(self, level) -> dict[str, Any]:
+        report = self.visual_clarity_validation.report_for_generated_level(level)
+        return {
+            "score": report.score,
+            "metadata": report.metadata,
+            "issues": [
+                {
+                    "severity": issue.severity,
+                    "code": issue.code,
+                    "message": issue.message,
+                    "relatedNodeID": issue.related_node_id,
+                    "relatedEdgeID": issue.related_edge_id,
+                    "relatedEdgeIDs": list(issue.related_edge_ids),
+                }
+                for issue in report.issues
+            ],
         }
 
     def _switch_preview_payload(self, level) -> list[dict[str, Any]]:

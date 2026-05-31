@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 from app.random_source import RandomSource
+from app.level_editor_imports import LevelDocument, RouteEdgeModel, RouteGraphModel, RouteNodeModel, SolutionModel
+from app.models.generated_level import GeneratedLevel
 from app.services.candidate_signature_service import CandidateSignatureService
 from app.services.difficulty_service import DifficultyService
 from app.services.generation_quality_service import GenerationQualityService
@@ -32,3 +34,57 @@ def test_generation_quality_penalizes_similar_candidates() -> None:
 
     assert score.uniqueness < 0.2
     assert "similar_to_existing_candidate" in score.penalties
+
+
+def test_generation_quality_visual_clarity_warnings_lower_readability_score() -> None:
+    preset = DifficultyService().get_preset("easy")
+    generated = _parallel_warning_generated_level()
+
+    score = GenerationQualityService().score(generated, preset)
+
+    assert score.details["visualClarityScore"] < 1
+    assert score.readability < 1
+    assert "long_parallel_road_segments_visually_merge" in score.penalties
+
+
+def _parallel_warning_generated_level() -> GeneratedLevel:
+    level = LevelDocument(
+        id="level_visual_warning",
+        name="Visual Warning",
+        graph=RouteGraphModel(
+            nodes=[
+                RouteNodeModel(id="start", x=0.0, y=0.0, outgoingEdgeIDs=["e_start_package"]),
+                RouteNodeModel(id="package", x=1.0, y=0.0, outgoingEdgeIDs=["e_package_destination"]),
+                RouteNodeModel(id="destination", x=2.0, y=0.0, outgoingEdgeIDs=[]),
+                RouteNodeModel(id="side_a", x=0.0, y=1.0, outgoingEdgeIDs=["e_side_ab"]),
+                RouteNodeModel(id="side_b", x=1.0, y=1.0, outgoingEdgeIDs=[]),
+                RouteNodeModel(id="side_c", x=0.0, y=1.1, outgoingEdgeIDs=["e_side_cd"]),
+                RouteNodeModel(id="side_d", x=1.0, y=1.1, outgoingEdgeIDs=[]),
+            ],
+            edges=[
+                RouteEdgeModel(id="e_start_package", fromNodeID="start", toNodeID="package"),
+                RouteEdgeModel(id="e_package_destination", fromNodeID="package", toNodeID="destination"),
+                RouteEdgeModel(id="e_side_ab", fromNodeID="side_a", toNodeID="side_b"),
+                RouteEdgeModel(id="e_side_cd", fromNodeID="side_c", toNodeID="side_d"),
+            ],
+        ),
+        startNodeID="start",
+        packageNodeID="package",
+        destinationNodeID="destination",
+        timeLimitSeconds=30,
+        parTaps=0,
+    )
+    return GeneratedLevel(
+        level_document=level,
+        solution=SolutionModel(
+            levelID=level.id,
+            description="No taps.",
+            expectedOutcome="completed",
+            maxTaps=0,
+            requiresWithinTimeLimit=True,
+            actions=[],
+        ),
+        template_name="visual_warning",
+        difficulty="easy",
+        seed=1,
+    )

@@ -8,6 +8,7 @@ from ..models.generation_quality import GenerationQualityScore
 from .candidate_uniqueness_service import CandidateUniquenessService
 from .difficulty_service import DifficultyService
 from .graph_layout_service import GraphLayoutService
+from .visual_clarity_validation_service import VisualClarityValidationService
 
 
 class GenerationQualityService:
@@ -15,6 +16,7 @@ class GenerationQualityService:
         self.layout = GraphLayoutService()
         self.uniqueness = CandidateUniquenessService()
         self.difficulty = DifficultyService()
+        self.visual_clarity = VisualClarityValidationService()
 
     def score(
         self,
@@ -50,6 +52,14 @@ class GenerationQualityService:
                 penalties.append("required_path_crossing")
             elif issue.startswith("long_parallel_road_segments"):
                 penalties.append("long_parallel_road_segments")
+        visual_clarity_report = self.visual_clarity.report_for_generated_level(generated_level)
+        if visual_clarity_report.score < readability:
+            readability = (readability * 0.65) + (visual_clarity_report.score * 0.35)
+        for issue in visual_clarity_report.issues:
+            if issue.severity == "warning":
+                penalties.append(issue.code)
+            elif issue.severity == "info":
+                penalties.append(issue.code)
         readability = self._clamp(readability)
 
         signature = generated_level.candidate_signature
@@ -90,6 +100,18 @@ class GenerationQualityService:
                 "requiredTapCount": generated_level.required_tap_count,
                 "roadShapeScore": round(road_shape_score, 4),
                 "roadShapeIssues": list(road_shape_metadata.get("issues", [])),
+                "visualClarityScore": visual_clarity_report.score,
+                "visualClarityIssues": [
+                    {
+                        "severity": issue.severity,
+                        "code": issue.code,
+                        "message": issue.message,
+                        "relatedNodeID": issue.related_node_id,
+                        "relatedEdgeID": issue.related_edge_id,
+                        "relatedEdgeIDs": list(issue.related_edge_ids),
+                    }
+                    for issue in visual_clarity_report.issues
+                ],
             },
         )
 

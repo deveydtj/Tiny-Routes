@@ -56,6 +56,26 @@ def test_generated_level_validation_rejects_five_way_switch_for_all_presets() ->
         assert "switch_has_too_many_outgoing_edges" in result.error_codes
 
 
+def test_generated_level_validation_rejects_visual_clarity_errors() -> None:
+    generated = _generated_switch_with_outgoing_count(2)
+
+    result = GeneratedLevelValidationService().validate(
+        generated,
+        preset=DifficultyService().get_preset("easy"),
+        overwrite=True,
+        enforce_difficulty=False,
+    )
+
+    assert "switch_choices_same_visual_direction" in result.error_codes
+    visual_message = next(
+        message
+        for message in result.messages
+        if message.code == "switch_choices_same_visual_direction"
+    )
+    assert visual_message.related_node_id == "switch"
+    assert visual_message.related_edge_id == "e0"
+
+
 def test_generated_level_validation_rejects_tap_that_is_not_before_switch_arrival_buffer() -> None:
     preset = DifficultyService().get_preset("hard")
 

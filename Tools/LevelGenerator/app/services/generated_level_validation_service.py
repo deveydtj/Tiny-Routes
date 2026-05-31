@@ -14,7 +14,7 @@ from .switch_classification_service import (
     SwitchClassificationService,
     SwitchNodeKind,
 )
-from .switch_visual_clarity_service import SwitchVisualClarityService
+from .visual_clarity_validation_service import VisualClarityValidationService
 
 
 @dataclass(frozen=True)
@@ -49,7 +49,7 @@ class GeneratedLevelValidationService:
         self.road_shape_service = RoadShapeService()
         self.solution_simulator = PythonSolutionSimulatorService()
         self.switch_classification_service = SwitchClassificationService()
-        self.switch_visual_clarity_service = SwitchVisualClarityService()
+        self.visual_clarity_validation_service = VisualClarityValidationService()
 
     def validate(
         self,
@@ -157,7 +157,7 @@ class GeneratedLevelValidationService:
                         related_node_id=node.id,
                     )
                 )
-        messages.extend(self._switch_visual_clarity_messages(level, solution))
+        messages.extend(self._visual_clarity_messages(generated_level))
 
         if preset is not None:
             bounds = BoundingBox(*preset.coordinate_bounds)
@@ -452,16 +452,17 @@ class GeneratedLevelValidationService:
             )
         return messages
 
-    def _switch_visual_clarity_messages(self, level, solution) -> list[GeneratorValidationMessage]:
+    def _visual_clarity_messages(self, generated_level) -> list[GeneratorValidationMessage]:
+        report = self.visual_clarity_validation_service.report_for_generated_level(generated_level)
         return [
             GeneratorValidationMessage(
-                severity="error",
+                severity=issue.severity,
                 code=issue.code,
                 message=issue.message,
-                related_node_id=issue.node_id,
-                related_edge_id=issue.edge_id,
+                related_node_id=issue.related_node_id,
+                related_edge_id=issue.related_edge_id,
             )
-            for issue in self.switch_visual_clarity_service.issues_for_level(level, solution)
+            for issue in report.issues
         ]
 
     def _simulation_failure_detail(self, simulation) -> str:

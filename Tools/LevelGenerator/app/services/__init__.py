@@ -14,6 +14,11 @@ from .switch_classification_service import (
 )
 from .switch_visual_clarity_service import SwitchVisualClarityService
 from .swift_test_service import SwiftTestService
+from .visual_clarity_validation_service import (
+    VisualClarityIssue,
+    VisualClarityReport,
+    VisualClarityValidationService,
+)
 
 __all__ = [
     "BoundingBox",
@@ -33,4 +38,7 @@ __all__ = [
     "SwitchNodeKind",
     "SwitchVisualClarityService",
     "SwiftTestService",
+    "VisualClarityIssue",
+    "VisualClarityReport",
+    "VisualClarityValidationService",
 ]

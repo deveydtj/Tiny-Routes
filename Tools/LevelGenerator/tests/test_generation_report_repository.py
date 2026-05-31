@@ -3,6 +3,8 @@ from __future__ import annotations
 import json
 
 from app.generation_config import GenerationConfig
+from app.level_editor_imports import LevelDocument, RouteEdgeModel, RouteGraphModel, RouteNodeModel, SolutionModel
+from app.models.generated_level import GeneratedLevel
 from app.repositories.generation_report_repository import GenerationReportRepository
 from app.services.candidate_signature_service import CandidateSignatureService
 from app.services.difficulty_service import DifficultyService
@@ -142,3 +144,85 @@ def test_generation_report_repository_writes_recipe_metadata(tmp_path) -> None:
     assert accepted["abstractGraphSignature"]
     assert accepted["selectedLayoutVariant"] == "normal"
     assert accepted["selectedRoadShapeStrategy"] == "auto"
+
+
+def test_generation_report_repository_includes_visual_clarity_node_and_edge_ids(tmp_path) -> None:
+    generated = _visual_clarity_report_level()
+    config = GenerationConfig(
+        start_level_number=12,
+        count=1,
+        difficulty="easy",
+        levels_output_dir=tmp_path / "levels",
+        solutions_output_dir=tmp_path / "solutions",
+        report_path=tmp_path / "report.md",
+        json_report_path=tmp_path / "report.json",
+    )
+    result = type(
+        "Result",
+        (),
+        {
+            "accepted": [generated],
+            "rejected_candidate_count": 0,
+            "rejection_reason_counts": {},
+            "written_level_paths": [],
+            "written_solution_paths": [],
+            "swift_test_summary": type("Swift", (), {"passed": None, "command": [], "exit_code": None, "summary": "not run"})(),
+            "messages": [],
+        },
+    )()
+
+    GenerationReportRepository().write_json(config.json_report_path, config, result)
+
+    payload = json.loads(config.json_report_path.read_text(encoding="utf-8"))
+    issues = payload["acceptedLevels"][0]["visualClarity"]["issues"]
+    parallel_issue = next(
+        issue
+        for issue in issues
+        if issue["code"] == "long_parallel_road_segments_visually_merge"
+    )
+    assert parallel_issue["relatedEdgeID"] == "e_side_ab"
+    assert parallel_issue["relatedEdgeIDs"] == ["e_side_ab", "e_side_cd"]
+    assert "relatedNodeID" in parallel_issue
+
+
+def _visual_clarity_report_level() -> GeneratedLevel:
+    level = LevelDocument(
+        id="level_visual_report",
+        name="Visual Report",
+        graph=RouteGraphModel(
+            nodes=[
+                RouteNodeModel(id="start", x=0.0, y=0.0, outgoingEdgeIDs=["e_start_package"]),
+                RouteNodeModel(id="package", x=1.0, y=0.0, outgoingEdgeIDs=["e_package_destination"]),
+                RouteNodeModel(id="destination", x=2.0, y=0.0, outgoingEdgeIDs=[]),
+                RouteNodeModel(id="side_a", x=0.0, y=1.0, outgoingEdgeIDs=["e_side_ab"]),
+                RouteNodeModel(id="side_b", x=1.0, y=1.0, outgoingEdgeIDs=[]),
+                RouteNodeModel(id="side_c", x=0.0, y=1.1, outgoingEdgeIDs=["e_side_cd"]),
+                RouteNodeModel(id="side_d", x=1.0, y=1.1, outgoingEdgeIDs=[]),
+            ],
+            edges=[
+                RouteEdgeModel(id="e_start_package", fromNodeID="start", toNodeID="package"),
+                RouteEdgeModel(id="e_package_destination", fromNodeID="package", toNodeID="destination"),
+                RouteEdgeModel(id="e_side_ab", fromNodeID="side_a", toNodeID="side_b"),
+                RouteEdgeModel(id="e_side_cd", fromNodeID="side_c", toNodeID="side_d"),
+            ],
+        ),
+        startNodeID="start",
+        packageNodeID="package",
+        destinationNodeID="destination",
+        timeLimitSeconds=30,
+        parTaps=0,
+    )
+    return GeneratedLevel(
+        level_document=level,
+        solution=SolutionModel(
+            levelID=level.id,
+            description="No taps.",
+            expectedOutcome="completed",
+            maxTaps=0,
+            requiresWithinTimeLimit=True,
+            actions=[],
+        ),
+        template_name="visual_report",
+        difficulty="easy",
+        seed=1,
+    )

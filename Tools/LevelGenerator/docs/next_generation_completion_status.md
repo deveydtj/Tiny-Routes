@@ -320,3 +320,32 @@ Result: `172 passed`.
 ```
 
 Result: passed. The check suite ran Python tests, smoke dry-run generation, and validation for production levels `level_001` through `level_021` with Swift tests disabled by the script.
+
+## Phase 6 - Visual Clarity Validator
+
+Completed:
+
+- [x] Added standalone `VisualClarityValidationService`.
+- [x] Added structured `VisualClarityIssue` and `VisualClarityReport` outputs with `error`, `warning`, and `info` severities.
+- [x] Added route crossing, overlap, node spacing, switch exit direction, tap target spacing, and important-node readability rules.
+- [x] Added switch-specific rule codes for duplicate start directions, ambiguous active arrows, hidden active edges, switch spacing, and missing four-way cardinal options.
+- [x] Added route-specific rule codes for required-path self-crossings, wrong/required route crossings near switches, main-route-like dead ends, unclear return loops, and packages off the visual flow.
+- [x] Added mobile-readability rule codes for switch tap target spacing, arrow/icon collision risk, important-node readability, and small-device spacing.
+- [x] Wired visual clarity errors into generated-level validation and candidate rejection.
+- [x] Wired visual clarity warnings into generation quality readability penalties.
+- [x] Added visual clarity metadata and exact node/edge IDs to JSON generation reports.
+- [x] Added tests for visual clarity rejection, warning quality penalties, and report node/edge ID output.
+
+Verification:
+
+```bash
+/Library/Frameworks/Python.framework/Versions/3.13/bin/python3 -m pytest Tools/LevelGenerator/tests/test_generated_level_validation_service.py Tools/LevelGenerator/tests/test_generation_quality_service.py Tools/LevelGenerator/tests/test_generation_report_repository.py Tools/LevelGenerator/tests/test_switch_visual_clarity_service.py
+```
+
+Result: `18 passed`.
+
+```bash
+/Library/Frameworks/Python.framework/Versions/3.13/bin/python3 -m pytest Tools/LevelGenerator/tests
+```
+
+Result: `175 passed`.
