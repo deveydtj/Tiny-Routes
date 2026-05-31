@@ -141,6 +141,7 @@ class GeneratedLevelValidationService:
                         related_edge_id=edge.id,
                     )
                 )
+        messages.extend(self._road_shape_plan_messages(generated_level))
 
         for node in level.graph.nodes:
             classification = classifications_by_node_id[node.id]
@@ -255,6 +256,26 @@ class GeneratedLevelValidationService:
             elif preset is not None and enforce_difficulty:
                 messages.extend(self._simulation_difficulty_messages(simulation, preset))
 
+        return messages
+
+    def _road_shape_plan_messages(self, generated_level) -> list[GeneratorValidationMessage]:
+        metadata = getattr(generated_level, "road_shape_metadata", None) or {}
+        messages: list[GeneratorValidationMessage] = []
+        for issue in metadata.get("issues", []):
+            code, *detail = str(issue).split(":")
+            severity = "error" if code in {
+                "same_switch_first_segments_overlap",
+                "required_and_wrong_route_first_segments_overlap",
+                "road_crossing_near_important_node",
+            } else "warning"
+            messages.append(
+                GeneratorValidationMessage(
+                    severity=severity,
+                    code=code,
+                    message=f"Road-shape issue: {issue}",
+                    related_node_id=detail[0] if detail else None,
+                )
+            )
         return messages
 
     def _four_way_solution_complexity_messages(

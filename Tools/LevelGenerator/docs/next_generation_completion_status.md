@@ -276,3 +276,47 @@ Result: `168 passed`.
 ```
 
 Result: passed. The check suite ran Python tests, smoke dry-run generation, and validation for production levels `level_001` through `level_030` with Swift tests disabled by the script.
+
+## Phase 5 - Road Shape Planner
+
+Completed:
+
+- [x] Expanded `RoadShapeService` from single-edge shape selection into whole-graph road-shape planning.
+- [x] Planner input now includes node positions, recipe edges, required path, important nodes, and outgoing switch choices inferred from graph topology.
+- [x] Planner output includes per-edge road shapes, start/end direction buckets, route-edge flags, quality score, issue codes, and report-ready metadata.
+- [x] Added road-shape alternatives:
+  - [x] `auto`
+  - [x] `all_straight`
+  - [x] `horizontal_first`
+  - [x] `vertical_first`
+  - [x] `alternating`
+  - [x] `switch_clarity_optimized`
+  - [x] `crossing_minimized`
+  - [x] `main_route_smoothed`
+- [x] Wired recipe-first level building through the road-shape planner before constructing `RouteEdgeModel` values.
+- [x] Added switch-exit scoring and validation metadata for duplicate starting tangents, overlapping same-switch first segments, required/wrong-route first-segment overlap, and four-way cardinal exit coverage.
+- [x] Added crossing and overlap analysis for total crossings, crossings near important nodes, required-path crossings, long parallel segments, important-node proximity, endpoint-vector mismatch, and main-route smoothness breaks.
+- [x] Added road-shape metadata to generated candidates, JSON reports, Markdown reports, and generation quality details.
+- [x] Added validation messages for hard road-shape failures while leaving softer road-shape findings as quality/report warnings.
+- [x] Updated recipe-first road-shape strategy expansion to include the new planner strategies.
+- [x] Added tests for switch-exit separation, L-road tangent differences, crossing score penalties, overlapping first-segment failures, recipe-first metadata, and report quality details.
+
+Verification:
+
+```bash
+/Library/Frameworks/Python.framework/Versions/3.13/bin/python3 -m pytest Tools/LevelGenerator/tests/test_road_shape_service.py Tools/LevelGenerator/tests/test_generation_service.py::test_generation_service_recipe_first_mode_generates_recipe_metadata Tools/LevelGenerator/tests/test_generation_service.py::test_generation_service_recipe_first_supports_current_recipe_families -q
+```
+
+Result: `9 passed`.
+
+```bash
+/Library/Frameworks/Python.framework/Versions/3.13/bin/python3 -m pytest Tools/LevelGenerator/tests
+```
+
+Result: `172 passed`.
+
+```bash
+/Library/Frameworks/Python.framework/Versions/3.13/bin/python3 Tools/LevelGenerator/run_all_generator_checks.py --python /Library/Frameworks/Python.framework/Versions/3.13/bin/python3
+```
+
+Result: passed. The check suite ran Python tests, smoke dry-run generation, and validation for production levels `level_001` through `level_021` with Swift tests disabled by the script.

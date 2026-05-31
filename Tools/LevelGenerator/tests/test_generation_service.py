@@ -300,6 +300,11 @@ def test_generation_service_recipe_first_mode_generates_recipe_metadata(tmp_path
     assert result.accepted[0].abstract_graph_signature is not None
     assert result.accepted[0].selected_layout_variant is not None
     assert result.accepted[0].selected_road_shape_strategy == "auto"
+    assert result.accepted[0].road_shape_metadata is not None
+    assert "score" in result.accepted[0].road_shape_metadata
+    report = json.loads((tmp_path / "report.json").read_text(encoding="utf-8"))
+    assert "roadShapeMetadata" in report["acceptedLevels"][0]
+    assert "roadShapeScore" in report["acceptedLevels"][0]["quality"]["details"]
 
 
 def test_generation_service_recipe_first_supports_current_recipe_families(tmp_path) -> None:

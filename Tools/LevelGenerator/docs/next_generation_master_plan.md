@@ -456,35 +456,35 @@ Choose `horizontalFirst` or `verticalFirst` deliberately so roads are readable a
 
 ## Tasks
 
-- [ ] Expand `RoadShapeService` into a planner:
-  - [ ] input: node positions, abstract solved path, outgoing switch choices
-  - [ ] output: road shape for each edge plus scoring metadata
-- [ ] Generate road-shape alternatives:
-  - [ ] all-straight where possible
-  - [ ] horizontal-first preference
-  - [ ] vertical-first preference
-  - [ ] switch-clarity optimized
-  - [ ] crossing-minimized
-  - [ ] main-route-smoothed
-- [ ] Add switch-exit clarity rules:
-  - [ ] outgoing choices from a switch should have different starting tangents
-  - [ ] required route and wrong route should not initially overlap
-  - [ ] four-way switches should ideally use four cardinal directions
-  - [ ] avoid diagonal-feeling arrows caused by endpoint vector mismatch
-- [ ] Add road crossing rules:
-  - [ ] count crossings
-  - [ ] distinguish harmless decorative crossings from confusing crossings
-  - [ ] reject crossings near switches, package, or destination
-  - [ ] penalize crossings on the required path
-- [ ] Add road overlap rules:
-  - [ ] reject overlapping first segments from the same switch
-  - [ ] reject long parallel road segments that visually merge
-  - [ ] reject path segments too close to important nodes
-- [ ] Add tests:
-  - [ ] road shape can be chosen to separate two switch exits
-  - [ ] horizontal-first and vertical-first create different tangents for L-roads
-  - [ ] crossing-heavy candidate scores lower
-  - [ ] overlapping first segments fail validation
+- [x] Expand `RoadShapeService` into a planner:
+  - [x] input: node positions, abstract solved path, outgoing switch choices
+  - [x] output: road shape for each edge plus scoring metadata
+- [x] Generate road-shape alternatives:
+  - [x] all-straight where possible
+  - [x] horizontal-first preference
+  - [x] vertical-first preference
+  - [x] switch-clarity optimized
+  - [x] crossing-minimized
+  - [x] main-route-smoothed
+- [x] Add switch-exit clarity rules:
+  - [x] outgoing choices from a switch should have different starting tangents
+  - [x] required route and wrong route should not initially overlap
+  - [x] four-way switches should ideally use four cardinal directions
+  - [x] avoid diagonal-feeling arrows caused by endpoint vector mismatch
+- [x] Add road crossing rules:
+  - [x] count crossings
+  - [x] distinguish harmless decorative crossings from confusing crossings
+  - [x] reject crossings near switches, package, or destination
+  - [x] penalize crossings on the required path
+- [x] Add road overlap rules:
+  - [x] reject overlapping first segments from the same switch
+  - [x] reject long parallel road segments that visually merge
+  - [x] reject path segments too close to important nodes
+- [x] Add tests:
+  - [x] road shape can be chosen to separate two switch exits
+  - [x] horizontal-first and vertical-first create different tangents for L-roads
+  - [x] crossing-heavy candidate scores lower
+  - [x] overlapping first segments fail validation
 
 ## Do
 
@@ -502,9 +502,9 @@ Choose `horizontalFirst` or `verticalFirst` deliberately so roads are readable a
 
 ## Acceptance Criteria
 
-- [ ] Road-shape selection reduces visual ambiguity.
-- [ ] Switch arrows and road exits match.
-- [ ] Road-shape scores are included in quality reports.
+- [x] Road-shape selection reduces visual ambiguity.
+- [x] Switch arrows and road exits match.
+- [x] Road-shape scores are included in quality reports.
 
 ---
 

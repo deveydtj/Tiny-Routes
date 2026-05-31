@@ -7,6 +7,7 @@ from .difficulty_service import DifficultyService
 from .graph_builder_service import GraphBuilderService
 from .graph_layout_service import GraphLayoutPlannerService
 from .level_naming_service import LevelNamingService
+from .road_shape_service import RoadShapeService
 from .solution_builder_service import SolutionBuilderService
 
 
@@ -16,6 +17,7 @@ class RecipeToLevelBuilderService:
         self.naming = LevelNamingService()
         self.solution_builder = SolutionBuilderService()
         self.layout_planner = GraphLayoutPlannerService()
+        self.road_shape_service = RoadShapeService()
 
     def build_level(
         self,
@@ -33,14 +35,25 @@ class RecipeToLevelBuilderService:
         rng = RandomSource(seed)
         layout_plan = self.layout_planner.plan_layout(recipe, preset, rng, layout_variant_name)
         positions = layout_plan.positions
+        recipe_edges = [
+            (edge.from_node_id, edge.to_node_id)
+            for edge in recipe.edges
+        ]
+        road_shape_plan = self.road_shape_service.plan_for_graph(
+            positions,
+            recipe_edges,
+            required_path=recipe.required_path,
+            strategy=road_shape_strategy,
+            important_node_ids=("start", recipe.package_node_id, recipe.destination_node_id),
+        )
         builder = GraphBuilderService()
         for node in recipe.nodes:
             builder.add_node(node.id, *positions[node.id])
-        for edge_index, edge in enumerate(recipe.edges):
+        for edge in recipe.edges:
             builder.add_edge(
                 edge.from_node_id,
                 edge.to_node_id,
-                road_shape=self._road_shape_for_strategy(road_shape_strategy, edge_index),
+                road_shape=road_shape_plan.edge_shapes[(edge.from_node_id, edge.to_node_id)],
             )
 
         time_limit = self._time_limit(recipe.required_path, positions, preset.time_limit_padding_seconds)
@@ -85,15 +98,17 @@ class RecipeToLevelBuilderService:
                 f"Abstract graph signature: {recipe.abstract_signature[:12]}",
                 f"Selected layout strategy: {layout_plan.strategy}",
                 f"Selected layout variant: {layout_plan.variant}",
-                f"Selected road-shape strategy: {road_shape_strategy}",
+                f"Selected road-shape strategy: {road_shape_plan.strategy}",
+                f"Road-shape score: {road_shape_plan.score}",
             ],
             recipe_family=recipe.family_name,
             recipe_variant=recipe.variant_name,
             abstract_graph_signature=recipe.abstract_signature,
             selected_layout_variant=layout_plan.variant,
-            selected_road_shape_strategy=road_shape_strategy,
+            selected_road_shape_strategy=road_shape_plan.strategy,
             abstract_solution_metadata=recipe.solved_metadata,
             layout_metadata=layout_plan.metadata,
+            road_shape_metadata=road_shape_plan.metadata,
         )
 
     def _time_limit(
@@ -108,15 +123,3 @@ class RecipeToLevelBuilderService:
             to_position = positions[to_node_id]
             distance += abs(from_position[0] - to_position[0]) + abs(from_position[1] - to_position[1])
         return max(30, int(round(distance + padding_seconds + 6)))
-
-    def _road_shape_for_strategy(self, strategy: str, edge_index: int) -> str | None:
-        normalized = strategy.strip().lower().replace("-", "_")
-        if normalized in {"", "auto"}:
-            return None
-        if normalized == "horizontal_first":
-            return "horizontalFirst"
-        if normalized == "vertical_first":
-            return "verticalFirst"
-        if normalized == "alternating":
-            return "horizontalFirst" if edge_index % 2 == 0 else "verticalFirst"
-        raise ValueError(f"Unknown road-shape strategy: {strategy}")

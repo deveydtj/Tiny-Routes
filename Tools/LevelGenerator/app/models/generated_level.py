@@ -32,6 +32,7 @@ class GeneratedLevel:
     selected_road_shape_strategy: str | None = None
     abstract_solution_metadata: AbstractPuzzleSolutionMetadata | None = None
     layout_metadata: dict[str, Any] | None = None
+    road_shape_metadata: dict[str, Any] | None = None
 
     @property
     def level_id(self) -> str:

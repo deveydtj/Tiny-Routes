@@ -39,6 +39,17 @@ class GenerationQualityService:
         if readability_details["edgeSpacingIssues"]:
             readability -= 0.08 * readability_details["edgeSpacingIssues"]
             penalties.append("tight_edge_spacing")
+        road_shape_metadata = getattr(generated_level, "road_shape_metadata", None) or {}
+        road_shape_score = float(road_shape_metadata.get("score", 1.0))
+        if road_shape_score < readability:
+            readability = (readability * 0.75) + (road_shape_score * 0.25)
+        for issue in road_shape_metadata.get("issues", []):
+            if issue.startswith("switch_choices_same_visual_direction"):
+                penalties.append("ambiguous_switch_exit")
+            elif issue.startswith("required_path_crossing"):
+                penalties.append("required_path_crossing")
+            elif issue.startswith("long_parallel_road_segments"):
+                penalties.append("long_parallel_road_segments")
         readability = self._clamp(readability)
 
         signature = generated_level.candidate_signature
@@ -77,6 +88,8 @@ class GenerationQualityService:
                 "edgeCount": generated_level.edge_count,
                 "switchCount": generated_level.switch_count,
                 "requiredTapCount": generated_level.required_tap_count,
+                "roadShapeScore": round(road_shape_score, 4),
+                "roadShapeIssues": list(road_shape_metadata.get("issues", [])),
             },
         )
 

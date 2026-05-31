@@ -65,6 +65,7 @@ class GenerationReportRepository:
                     "selectedLayoutVariant": level.selected_layout_variant,
                     "layoutMetadata": level.layout_metadata,
                     "selectedRoadShapeStrategy": level.selected_road_shape_strategy,
+                    "roadShapeMetadata": level.road_shape_metadata,
                     "abstractSolution": self._abstract_solution_payload(level),
                     "seed": level.seed,
                     "difficulty": level.difficulty,
@@ -168,8 +169,16 @@ class GenerationReportRepository:
                     lines.append(
                         f"- Layout: `{level['selectedLayoutVariant']}`; "
                         f"strategy: `{(level['layoutMetadata'] or {}).get('strategy', 'unknown')}`; "
-                        f"road shapes: `{level['selectedRoadShapeStrategy']}`."
+                        f"road shapes: `{level['selectedRoadShapeStrategy']}` "
+                        f"(score `{(level['roadShapeMetadata'] or {}).get('score', 'unknown')}`)."
                     )
+                    if level["roadShapeMetadata"]:
+                        road_shape = level["roadShapeMetadata"]
+                        lines.append(
+                            f"- Road-shape checks: {road_shape.get('crossingCount', 0)} crossings, "
+                            f"{road_shape.get('requiredPathCrossingCount', 0)} required-path crossings, "
+                            f"{road_shape.get('longParallelSegmentCount', 0)} long parallel segments."
+                        )
                     if level["abstractSolution"]:
                         abstract = level["abstractSolution"]
                         lines.append(

@@ -377,7 +377,16 @@ class LevelGenerationService:
         return [names[index % len(names)] for index in range(count)]
 
     def _road_shape_strategies(self, count: int) -> list[str]:
-        names = ["auto", "horizontal_first", "vertical_first", "alternating"]
+        names = [
+            "auto",
+            "switch_clarity_optimized",
+            "crossing_minimized",
+            "main_route_smoothed",
+            "horizontal_first",
+            "vertical_first",
+            "all_straight",
+            "alternating",
+        ]
         return [names[index % len(names)] for index in range(count)]
 
     def _preflight_output_collisions(self, config: GenerationConfig) -> None:
