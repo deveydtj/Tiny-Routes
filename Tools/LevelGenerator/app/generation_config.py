@@ -10,6 +10,11 @@ from .paths import (
 )
 
 GENERATION_MODES = ("legacy_template", "recipe_first", "hybrid")
+DEFAULT_GENERATION_MODE = "recipe_first"
+DEFAULT_RECIPE_POOL_SIZE = 4
+DEFAULT_LAYOUTS_PER_RECIPE = 3
+DEFAULT_ROAD_SHAPES_PER_LAYOUT = 3
+DEFAULT_CANDIDATE_POOL_SIZE = 8
 
 
 @dataclass(frozen=True)
@@ -18,10 +23,10 @@ class GenerationConfig:
     count: int
     difficulty: str
     template_name: str = "mixed"
-    generation_mode: str = "legacy_template"
-    recipe_pool_size: int = 1
-    layouts_per_recipe: int = 1
-    road_shapes_per_layout: int = 1
+    generation_mode: str = DEFAULT_GENERATION_MODE
+    recipe_pool_size: int = DEFAULT_RECIPE_POOL_SIZE
+    layouts_per_recipe: int = DEFAULT_LAYOUTS_PER_RECIPE
+    road_shapes_per_layout: int = DEFAULT_ROAD_SHAPES_PER_LAYOUT
     seed: int | None = None
     dry_run: bool = False
     overwrite: bool = False
@@ -37,7 +42,7 @@ class GenerationConfig:
     map_seed_path: Path | None = None
     debug_failures_dir: Path | None = None
     max_attempts_per_level: int = 100
-    candidate_pool_size: int = 1
+    candidate_pool_size: int = DEFAULT_CANDIDATE_POOL_SIZE
     swift_timeout_seconds: int = 180
     sync_xcode_project: bool = True
     compare_against_existing: bool = True

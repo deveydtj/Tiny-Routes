@@ -4,7 +4,14 @@ import argparse
 import sys
 from pathlib import Path
 
-from .generation_config import GenerationConfig
+from .generation_config import (
+    DEFAULT_CANDIDATE_POOL_SIZE,
+    DEFAULT_GENERATION_MODE,
+    DEFAULT_LAYOUTS_PER_RECIPE,
+    DEFAULT_RECIPE_POOL_SIZE,
+    DEFAULT_ROAD_SHAPES_PER_LAYOUT,
+    GenerationConfig,
+)
 from .paths import (
     get_default_levels_directory,
     get_default_reports_directory,
@@ -73,16 +80,26 @@ def build_generate_parser() -> argparse.ArgumentParser:
     parser.add_argument("--template", default="mixed", choices=template_names, help="Template to use. Default: mixed.")
     parser.add_argument(
         "--generation-mode",
-        default="legacy-template",
+        default=DEFAULT_GENERATION_MODE,
         choices=("legacy-template", "legacy_template", "recipe-first", "recipe_first", "hybrid"),
-        help="Generation architecture mode. Default: legacy-template.",
+        help="Generation architecture mode. Default: recipe-first. legacy-template and hybrid remain available.",
     )
-    parser.add_argument("--recipe-pool-size", type=int, default=1, help="Abstract recipes to solve before layout.")
-    parser.add_argument("--layouts-per-recipe", type=int, default=1, help="Layout variants to try for each solved recipe.")
+    parser.add_argument(
+        "--recipe-pool-size",
+        type=int,
+        default=DEFAULT_RECIPE_POOL_SIZE,
+        help="Abstract recipes to solve before layout.",
+    )
+    parser.add_argument(
+        "--layouts-per-recipe",
+        type=int,
+        default=DEFAULT_LAYOUTS_PER_RECIPE,
+        help="Layout variants to try for each solved recipe.",
+    )
     parser.add_argument(
         "--road-shapes-per-layout",
         type=int,
-        default=1,
+        default=DEFAULT_ROAD_SHAPES_PER_LAYOUT,
         help="Road-shape strategies to try for each layout.",
     )
     parser.add_argument("--seed", type=int, default=None, help="Deterministic base seed.")
@@ -108,7 +125,12 @@ def build_generate_parser() -> argparse.ArgumentParser:
     parser.add_argument("--map-seed-path", type=Path, default=None, help="Optional simplified map seed JSON path.")
     parser.add_argument("--debug-failures", type=Path, default=None, help="Directory for rejected candidate debug files.")
     parser.add_argument("--max-attempts-per-level", type=int, default=100, help="Candidate attempts before failing a level.")
-    parser.add_argument("--candidate-pool-size", type=int, default=1, help="Valid candidates to score before choosing the best one.")
+    parser.add_argument(
+        "--candidate-pool-size",
+        type=int,
+        default=DEFAULT_CANDIDATE_POOL_SIZE,
+        help="Valid candidates to score before choosing the best one.",
+    )
     parser.add_argument("--swift-timeout-seconds", type=int, default=180, help="Timeout for optional Swift tests.")
     parser.add_argument(
         "--compare-existing",

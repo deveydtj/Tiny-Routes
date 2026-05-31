@@ -210,7 +210,8 @@ Notes: The second implementation pass completed `TemplateVariantSpec`, the full 
   - [x] Levels 1-3 tutorial.
   - [x] Levels 4-10 easy.
   - [x] Levels 11-25 medium.
-  - [x] Levels 26+ hard.
+  - [x] Levels 26-40 hard.
+  - [x] Levels 41+ expert.
 - [x] Add template weights per level number.
 - [x] Add CLI difficulty choice `auto`.
 - [x] Add GUI difficulty option `auto`.

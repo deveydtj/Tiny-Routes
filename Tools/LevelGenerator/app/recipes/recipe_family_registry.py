@@ -69,6 +69,6 @@ class RecipeFamilyRegistry(MechanicRecipeGenerator):
             "easy": {"single_switch": 5, "package_gate": 3},
             "medium": {"package_gate": 3, "return_loop": 3, "multi_switch_chain": 4},
             "hard": {"multi_switch_chain": 5, "ring_route": 2},
-            "expert": {"four_way_intersection": 5, "multi_switch_chain": 2, "ring_route": 1},
+            "expert": {"four_way_intersection": 5, "multi_switch_chain": 2, "ring_route": 2},
         }
         return weights.get(difficulty_name, {}).get(family_name, 1)

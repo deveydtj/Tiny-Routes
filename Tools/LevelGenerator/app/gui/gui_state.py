@@ -3,7 +3,14 @@ from __future__ import annotations
 from dataclasses import dataclass
 from pathlib import Path
 
-from ..generation_config import GenerationConfig
+from ..generation_config import (
+    DEFAULT_CANDIDATE_POOL_SIZE,
+    DEFAULT_GENERATION_MODE,
+    DEFAULT_LAYOUTS_PER_RECIPE,
+    DEFAULT_RECIPE_POOL_SIZE,
+    DEFAULT_ROAD_SHAPES_PER_LAYOUT,
+    GenerationConfig,
+)
 from ..paths import get_default_levels_directory, get_default_reports_directory, get_default_solutions_directory
 
 
@@ -13,10 +20,10 @@ class GuiGenerationState:
     count: str = "1"
     difficulty: str = "tutorial"
     template_name: str = "mixed"
-    generation_mode: str = "legacy_template"
-    recipe_pool_size: str = "1"
-    layouts_per_recipe: str = "1"
-    road_shapes_per_layout: str = "1"
+    generation_mode: str = DEFAULT_GENERATION_MODE
+    recipe_pool_size: str = str(DEFAULT_RECIPE_POOL_SIZE)
+    layouts_per_recipe: str = str(DEFAULT_LAYOUTS_PER_RECIPE)
+    road_shapes_per_layout: str = str(DEFAULT_ROAD_SHAPES_PER_LAYOUT)
     seed: str = ""
     dry_run: bool = True
     overwrite: bool = False
@@ -29,7 +36,7 @@ class GuiGenerationState:
     map_seed_path: str = ""
     debug_failures_dir: str = ""
     max_attempts_per_level: str = "100"
-    candidate_pool_size: str = "1"
+    candidate_pool_size: str = str(DEFAULT_CANDIDATE_POOL_SIZE)
     swift_timeout_seconds: str = "180"
 
 

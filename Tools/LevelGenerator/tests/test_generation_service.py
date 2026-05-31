@@ -18,6 +18,10 @@ def _config(tmp_path, **kwargs) -> GenerationConfig:
         count=kwargs.pop("count", 1),
         difficulty=kwargs.pop("difficulty", "tutorial"),
         template_name=kwargs.pop("template_name", "straight_delivery"),
+        recipe_pool_size=kwargs.pop("recipe_pool_size", 1),
+        layouts_per_recipe=kwargs.pop("layouts_per_recipe", 1),
+        road_shapes_per_layout=kwargs.pop("road_shapes_per_layout", 1),
+        candidate_pool_size=kwargs.pop("candidate_pool_size", 1),
         seed=kwargs.pop("seed", 1),
         dry_run=kwargs.pop("dry_run", False),
         overwrite=kwargs.pop("overwrite", False),
@@ -94,7 +98,7 @@ def test_generation_service_retries_after_rejected_candidate(tmp_path) -> None:
         return GeneratorValidationResult([])
 
     service.validation_service.validate = fake_validate
-    result = service.generate(_config(tmp_path, dry_run=True))
+    result = service.generate(_config(tmp_path, dry_run=True, candidate_pool_size=1))
 
     assert result.passed is True
     assert result.rejection_reason_counts["forced_failure"] == 1
@@ -120,6 +124,8 @@ def test_generation_service_rejects_duplicate_batch_candidates(tmp_path) -> None
             count=2,
             max_attempts_per_level=2,
             dry_run=True,
+            generation_mode="legacy_template",
+            candidate_pool_size=1,
         )
     )
 
@@ -207,6 +213,8 @@ def test_generation_service_rejects_candidates_similar_to_existing_levels(tmp_pa
             template_name="single_switch",
             max_attempts_per_level=1,
             dry_run=True,
+            generation_mode="legacy_template",
+            candidate_pool_size=1,
         )
     )
 
@@ -234,6 +242,8 @@ def test_generation_service_can_skip_existing_similarity_check(tmp_path) -> None
             seed=2,
             dry_run=True,
             compare_against_existing=False,
+            generation_mode="legacy_template",
+            candidate_pool_size=1,
         )
     )
 
@@ -272,6 +282,7 @@ def test_generation_service_selects_highest_quality_candidate_from_pool(tmp_path
             template_name="single_switch",
             dry_run=True,
             compare_against_existing=False,
+            generation_mode="legacy_template",
             candidate_pool_size=2,
         )
     )
@@ -409,6 +420,7 @@ def test_generation_service_applies_map_seed_path(tmp_path) -> None:
             template_name="single_switch",
             dry_run=True,
             compare_against_existing=False,
+            generation_mode="legacy_template",
             map_seed_path=map_seed_path,
         )
     )

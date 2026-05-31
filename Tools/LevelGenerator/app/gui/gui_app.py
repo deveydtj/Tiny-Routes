@@ -7,6 +7,13 @@ import subprocess
 from pathlib import Path
 from tkinter import messagebox, scrolledtext, ttk
 
+from ..generation_config import (
+    DEFAULT_CANDIDATE_POOL_SIZE,
+    DEFAULT_GENERATION_MODE,
+    DEFAULT_LAYOUTS_PER_RECIPE,
+    DEFAULT_RECIPE_POOL_SIZE,
+    DEFAULT_ROAD_SHAPES_PER_LAYOUT,
+)
 from ..services.difficulty_service import DifficultyService
 from ..templates.template_registry import TemplateRegistry
 from .gui_controller import GuiController, format_generation_result, format_validation_result
@@ -65,13 +72,13 @@ class LevelGeneratorGui:
         self.count_var = tk.StringVar(value="1")
         self.difficulty_var = tk.StringVar(value="tutorial")
         self.template_var = tk.StringVar(value="mixed")
-        self.generation_mode_var = tk.StringVar(value="legacy_template")
-        self.recipe_pool_var = tk.StringVar(value="1")
-        self.layouts_per_recipe_var = tk.StringVar(value="1")
-        self.road_shapes_per_layout_var = tk.StringVar(value="1")
+        self.generation_mode_var = tk.StringVar(value=DEFAULT_GENERATION_MODE)
+        self.recipe_pool_var = tk.StringVar(value=str(DEFAULT_RECIPE_POOL_SIZE))
+        self.layouts_per_recipe_var = tk.StringVar(value=str(DEFAULT_LAYOUTS_PER_RECIPE))
+        self.road_shapes_per_layout_var = tk.StringVar(value=str(DEFAULT_ROAD_SHAPES_PER_LAYOUT))
         self.seed_var = tk.StringVar(value="")
         self.max_attempts_var = tk.StringVar(value="100")
-        self.candidate_pool_var = tk.StringVar(value="1")
+        self.candidate_pool_var = tk.StringVar(value=str(DEFAULT_CANDIDATE_POOL_SIZE))
 
         self.dry_run_var = tk.BooleanVar(value=True)
         self.overwrite_var = tk.BooleanVar(value=False)

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import json
 
-from app.cli import main_generate, main_validate
+from app.cli import _config_from_args, build_generate_parser, main_generate, main_validate
 
 
 def test_cli_valid_dry_run(tmp_path, capsys) -> None:
@@ -27,6 +27,14 @@ def test_cli_valid_dry_run(tmp_path, capsys) -> None:
             str(tmp_path / "report.md"),
             "--json-report",
             str(tmp_path / "report.json"),
+            "--recipe-pool-size",
+            "1",
+            "--layouts-per-recipe",
+            "1",
+            "--road-shapes-per-layout",
+            "1",
+            "--candidate-pool-size",
+            "1",
         ]
     )
 
@@ -80,10 +88,31 @@ def test_cli_auto_difficulty_dry_run(tmp_path) -> None:
             str(tmp_path / "report.md"),
             "--json-report",
             str(tmp_path / "report.json"),
+            "--recipe-pool-size",
+            "1",
+            "--layouts-per-recipe",
+            "1",
+            "--road-shapes-per-layout",
+            "1",
+            "--candidate-pool-size",
+            "1",
         ]
     )
 
     assert code == 0
+
+
+def test_cli_defaults_create_recipe_first_config() -> None:
+    argv = ["--start", "12", "--count", "1", "--difficulty", "easy"]
+    args = build_generate_parser().parse_args(argv)
+
+    config = _config_from_args(args, argv)
+
+    assert config.generation_mode == "recipe_first"
+    assert config.recipe_pool_size == 4
+    assert config.layouts_per_recipe == 3
+    assert config.road_shapes_per_layout == 3
+    assert config.candidate_pool_size == 8
 
 
 def test_cli_accepts_recipe_architecture_options_for_recipe_generation(tmp_path) -> None:
@@ -105,6 +134,8 @@ def test_cli_accepts_recipe_architecture_options_for_recipe_generation(tmp_path)
             "2",
             "--road-shapes-per-layout",
             "2",
+            "--candidate-pool-size",
+            "1",
             "--dry-run",
             "--output-levels",
             str(tmp_path / "levels"),
@@ -125,6 +156,39 @@ def test_cli_accepts_recipe_architecture_options_for_recipe_generation(tmp_path)
     assert report["roadShapesPerLayout"] == 2
     assert report["acceptedLevels"][0]["recipeFamily"] == "single_switch"
     assert report["acceptedLevels"][0]["recipeVariant"] is not None
+
+
+def test_cli_explicit_legacy_template_mode_still_generates(tmp_path) -> None:
+    code = main_generate(
+        [
+            "--start",
+            "12",
+            "--count",
+            "1",
+            "--difficulty",
+            "tutorial",
+            "--template",
+            "straight_delivery",
+            "--generation-mode",
+            "legacy-template",
+            "--candidate-pool-size",
+            "1",
+            "--dry-run",
+            "--output-levels",
+            str(tmp_path / "levels"),
+            "--output-solutions",
+            str(tmp_path / "solutions"),
+            "--report",
+            str(tmp_path / "report.md"),
+            "--json-report",
+            str(tmp_path / "report.json"),
+        ]
+    )
+
+    assert code == 0
+    report = json.loads((tmp_path / "report.json").read_text(encoding="utf-8"))
+    assert report["generationMode"] == "legacy_template"
+    assert report["acceptedLevels"][0]["recipeFamily"] is None
 
 
 def test_validate_cli_validates_written_files(tmp_path) -> None:
@@ -148,6 +212,14 @@ def test_validate_cli_validates_written_files(tmp_path) -> None:
             str(tmp_path / "report.md"),
             "--json-report",
             str(tmp_path / "report.json"),
+            "--recipe-pool-size",
+            "1",
+            "--layouts-per-recipe",
+            "1",
+            "--road-shapes-per-layout",
+            "1",
+            "--candidate-pool-size",
+            "1",
         ]
     )
     assert generate_code == 0

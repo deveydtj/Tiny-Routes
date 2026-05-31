@@ -109,9 +109,13 @@ Use a Python 3.10+ interpreter with Tkinter enabled.
 
 `--compare-existing` rejects candidates that are too similar to existing level files in the configured output folders. This is enabled by default; use `--no-compare-existing` for scratch experiments.
 
+`--generation-mode` controls the generation architecture. `recipe-first` is the default and preferred path; `legacy-template` and `hybrid` remain available for comparison and fallback runs.
+
+Recipe-first generation solves multiple abstract recipes before layout, then tries layout and road-shape variants. The default breadth is 4 recipes, 3 layouts per recipe, 3 road-shape strategies per layout, and 8 valid candidates scored before accepting the best one.
+
 `--candidate-pool-size` scores multiple valid candidates for each level and accepts the highest-scoring one. Reports include quality and simulation details.
 
-`--difficulty auto` uses the default campaign curve: levels 1-3 tutorial, 4-10 easy, 11-25 medium, and 26+ hard.
+`--difficulty auto` uses the default campaign curve: levels 1-3 tutorial, 4-10 easy, 11-25 medium, 26-40 hard, and 41+ expert.
 
 `--map-seed-path` applies a saved map seed JSON to generated node positions. Map import is separate from production generation:
 
