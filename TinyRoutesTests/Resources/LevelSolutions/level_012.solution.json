@@ -6,16 +6,16 @@
   "requiresWithinTimeLimit": true,
   "actions": [
     {
-      "timeSeconds": 0.32,
-      "tapNodeID": "upper_alpha_switch"
+      "timeSeconds": 0.29,
+      "tapNodeID": "alpha_switch"
     },
     {
-      "timeSeconds": 2.37,
-      "tapNodeID": "upper_beta_switch"
+      "timeSeconds": 2.3,
+      "tapNodeID": "beta_switch"
     },
     {
-      "timeSeconds": 5.41,
-      "tapNodeID": "upper_alpha_switch"
+      "timeSeconds": 5.22,
+      "tapNodeID": "alpha_switch"
     }
   ]
 }

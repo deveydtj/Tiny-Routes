@@ -91,7 +91,7 @@
         "id": "e_multi_switch_chain_split_dead_ends_switch_b_destination",
         "fromNodeID": "multi_switch_chain_split_dead_ends_switch_b",
         "toNodeID": "destination",
-        "roadShape": "verticalFirst"
+        "roadShape": "horizontalFirst"
       }
     ]
   },

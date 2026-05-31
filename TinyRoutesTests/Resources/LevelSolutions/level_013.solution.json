@@ -1,21 +1,17 @@
 {
   "levelID": "level_013",
-  "description": "Rotate alpha to collect the package, rotate beta onto the return path, then rotate alpha again for destination.",
+  "description": "Rotate the approach switch to collect the package, then rotate the finish switch to reach destination.",
   "expectedOutcome": "completed",
-  "maxTaps": 3,
+  "maxTaps": 2,
   "requiresWithinTimeLimit": true,
   "actions": [
     {
-      "timeSeconds": 0.3,
-      "tapNodeID": "alpha_switch"
+      "timeSeconds": 0.28,
+      "tapNodeID": "left_entry_switch"
     },
     {
-      "timeSeconds": 2.22,
-      "tapNodeID": "beta_switch"
-    },
-    {
-      "timeSeconds": 5.55,
-      "tapNodeID": "alpha_switch"
+      "timeSeconds": 2.57,
+      "tapNodeID": "left_finish_switch"
     }
   ]
 }

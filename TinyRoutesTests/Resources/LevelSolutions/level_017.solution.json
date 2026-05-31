@@ -1,21 +1,21 @@
 {
   "levelID": "level_017",
-  "description": "Rotate each chain switch once so the route avoids dead ends and completes delivery.",
+  "description": "Rotate alpha to collect the package, rotate beta onto the return path, then rotate alpha again for destination.",
   "expectedOutcome": "completed",
   "maxTaps": 3,
   "requiresWithinTimeLimit": true,
   "actions": [
     {
-      "timeSeconds": 0.37,
-      "tapNodeID": "multi_switch_chain_zigzag_switch_a"
+      "timeSeconds": 0.33,
+      "tapNodeID": "upper_alpha_switch"
     },
     {
-      "timeSeconds": 2.67,
-      "tapNodeID": "multi_switch_chain_zigzag_switch_b"
+      "timeSeconds": 2.43,
+      "tapNodeID": "upper_beta_switch"
     },
     {
-      "timeSeconds": 3.44,
-      "tapNodeID": "multi_switch_chain_zigzag_switch_c"
+      "timeSeconds": 5.42,
+      "tapNodeID": "upper_alpha_switch"
     }
   ]
 }

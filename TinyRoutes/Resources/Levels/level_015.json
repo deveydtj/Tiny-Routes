@@ -6,119 +6,119 @@
       {
         "id": "start",
         "x": -1.1,
-        "y": -0.12,
+        "y": -0.25,
         "outgoingEdgeIDs": [
-          "e_start_multi_switch_chain_split_dead_ends_switch_a"
+          "e_start_double_entry_switch"
         ]
       },
       {
-        "id": "multi_switch_chain_split_dead_ends_switch_a",
-        "x": -0.66,
-        "y": 0.28,
+        "id": "double_entry_switch",
+        "x": -0.6,
+        "y": -0.1,
         "outgoingEdgeIDs": [
-          "e_multi_switch_chain_split_dead_ends_switch_a_multi_switch_chain_split_dead_ends_dead_end_a",
-          "e_multi_switch_chain_split_dead_ends_switch_a_package"
+          "e_double_entry_switch_double_bypass",
+          "e_double_entry_switch_package"
         ]
+      },
+      {
+        "id": "double_bypass",
+        "x": -0.1,
+        "y": -0.8,
+        "outgoingEdgeIDs": []
       },
       {
         "id": "package",
-        "x": -0.22,
-        "y": 0.58,
+        "x": 0.0,
+        "y": 0.65,
         "outgoingEdgeIDs": [
-          "e_package_multi_switch_chain_split_dead_ends_switch_b"
+          "e_package_double_mid_switch"
         ]
       },
       {
-        "id": "multi_switch_chain_split_dead_ends_switch_b",
-        "x": 0.22,
-        "y": 0.28,
+        "id": "double_mid_switch",
+        "x": 0.4,
+        "y": 0.4,
         "outgoingEdgeIDs": [
-          "e_multi_switch_chain_split_dead_ends_switch_b_multi_switch_chain_split_dead_ends_dead_end_b",
-          "e_multi_switch_chain_split_dead_ends_switch_b_multi_switch_chain_split_dead_ends_switch_c"
+          "e_double_mid_switch_double_dead_end_a",
+          "e_double_mid_switch_double_finish_switch"
         ]
       },
       {
-        "id": "multi_switch_chain_split_dead_ends_switch_c",
-        "x": 0.66,
-        "y": -0.12,
+        "id": "double_dead_end_a",
+        "x": 0.75,
+        "y": -0.45,
+        "outgoingEdgeIDs": []
+      },
+      {
+        "id": "double_finish_switch",
+        "x": 0.85,
+        "y": 0.2,
         "outgoingEdgeIDs": [
-          "e_multi_switch_chain_split_dead_ends_switch_c_multi_switch_chain_split_dead_ends_dead_end_c",
-          "e_multi_switch_chain_split_dead_ends_switch_c_destination"
+          "e_double_finish_switch_double_dead_end_b",
+          "e_double_finish_switch_destination"
         ]
+      },
+      {
+        "id": "double_dead_end_b",
+        "x": 1.15,
+        "y": -0.7,
+        "outgoingEdgeIDs": []
       },
       {
         "id": "destination",
-        "x": 1.1,
-        "y": -0.32,
-        "outgoingEdgeIDs": []
-      },
-      {
-        "id": "multi_switch_chain_split_dead_ends_dead_end_a",
-        "x": -0.66,
-        "y": 0.92,
-        "outgoingEdgeIDs": []
-      },
-      {
-        "id": "multi_switch_chain_split_dead_ends_dead_end_b",
-        "x": 0.22,
-        "y": -0.92,
-        "outgoingEdgeIDs": []
-      },
-      {
-        "id": "multi_switch_chain_split_dead_ends_dead_end_c",
-        "x": 0.66,
-        "y": 0.92,
+        "x": 1.15,
+        "y": 0.8,
         "outgoingEdgeIDs": []
       }
     ],
     "edges": [
       {
-        "id": "e_start_multi_switch_chain_split_dead_ends_switch_a",
+        "id": "e_start_double_entry_switch",
         "fromNodeID": "start",
-        "toNodeID": "multi_switch_chain_split_dead_ends_switch_a",
+        "toNodeID": "double_entry_switch",
         "roadShape": "horizontalFirst"
       },
       {
-        "id": "e_multi_switch_chain_split_dead_ends_switch_a_multi_switch_chain_split_dead_ends_dead_end_a",
-        "fromNodeID": "multi_switch_chain_split_dead_ends_switch_a",
-        "toNodeID": "multi_switch_chain_split_dead_ends_dead_end_a",
+        "id": "e_double_entry_switch_double_bypass",
+        "fromNodeID": "double_entry_switch",
+        "toNodeID": "double_bypass",
         "roadShape": "verticalFirst"
       },
       {
-        "id": "e_multi_switch_chain_split_dead_ends_switch_a_package",
-        "fromNodeID": "multi_switch_chain_split_dead_ends_switch_a",
+        "id": "e_double_entry_switch_package",
+        "fromNodeID": "double_entry_switch",
         "toNodeID": "package",
-        "roadShape": "horizontalFirst"
+        "roadShape": "verticalFirst"
       },
       {
-        "id": "e_package_multi_switch_chain_split_dead_ends_switch_b",
+        "id": "e_package_double_mid_switch",
         "fromNodeID": "package",
-        "toNodeID": "multi_switch_chain_split_dead_ends_switch_b",
+        "toNodeID": "double_mid_switch",
         "roadShape": "horizontalFirst"
       },
       {
-        "id": "e_multi_switch_chain_split_dead_ends_switch_b_multi_switch_chain_split_dead_ends_dead_end_b",
-        "fromNodeID": "multi_switch_chain_split_dead_ends_switch_b",
-        "toNodeID": "multi_switch_chain_split_dead_ends_dead_end_b",
+        "id": "e_double_mid_switch_double_dead_end_a",
+        "fromNodeID": "double_mid_switch",
+        "toNodeID": "double_dead_end_a",
         "roadShape": "verticalFirst"
       },
       {
-        "id": "e_multi_switch_chain_split_dead_ends_switch_b_multi_switch_chain_split_dead_ends_switch_c",
-        "fromNodeID": "multi_switch_chain_split_dead_ends_switch_b",
-        "toNodeID": "multi_switch_chain_split_dead_ends_switch_c",
+        "id": "e_double_mid_switch_double_finish_switch",
+        "fromNodeID": "double_mid_switch",
+        "toNodeID": "double_finish_switch",
         "roadShape": "horizontalFirst"
       },
       {
-        "id": "e_multi_switch_chain_split_dead_ends_switch_c_multi_switch_chain_split_dead_ends_dead_end_c",
-        "fromNodeID": "multi_switch_chain_split_dead_ends_switch_c",
-        "toNodeID": "multi_switch_chain_split_dead_ends_dead_end_c",
+        "id": "e_double_finish_switch_double_dead_end_b",
+        "fromNodeID": "double_finish_switch",
+        "toNodeID": "double_dead_end_b",
         "roadShape": "verticalFirst"
       },
       {
-        "id": "e_multi_switch_chain_split_dead_ends_switch_c_destination",
-        "fromNodeID": "multi_switch_chain_split_dead_ends_switch_c",
+        "id": "e_double_finish_switch_destination",
+        "fromNodeID": "double_finish_switch",
         "toNodeID": "destination",
-        "roadShape": "horizontalFirst"
+        "roadShape": "verticalFirst"
       }
     ]
   },

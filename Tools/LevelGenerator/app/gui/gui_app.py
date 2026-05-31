@@ -33,8 +33,10 @@ STATUS_COLORS = {
 def run_gui() -> None:
     root = tk.Tk()
     root.title("Tiny Routes Level Generator")
-    root.geometry("950x700")
-    root.minsize(850, 640)
+    width = min(950, max(760, root.winfo_screenwidth() - 80))
+    height = min(700, max(500, root.winfo_screenheight() - 140))
+    root.geometry(f"{width}x{height}")
+    root.minsize(760, 500)
     LevelGeneratorGui(root)
     root.mainloop()
 
@@ -95,11 +97,29 @@ class LevelGeneratorGui:
         self.command_preview_var = tk.StringVar(value="")
 
     def _build_window(self) -> None:
-        root_frame = ttk.Frame(self.root, padding=12)
-        root_frame.grid(row=0, column=0, sticky="nsew")
         self.root.grid_rowconfigure(0, weight=1)
         self.root.grid_columnconfigure(0, weight=1)
+
+        viewport = ttk.Frame(self.root)
+        viewport.grid(row=0, column=0, sticky="nsew")
+        viewport.grid_rowconfigure(0, weight=1)
+        viewport.grid_columnconfigure(0, weight=1)
+
+        canvas = tk.Canvas(viewport, borderwidth=0, highlightthickness=0)
+        scrollbar = ttk.Scrollbar(viewport, orient=tk.VERTICAL, command=canvas.yview)
+        canvas.configure(yscrollcommand=scrollbar.set)
+        canvas.grid(row=0, column=0, sticky="nsew")
+        scrollbar.grid(row=0, column=1, sticky="ns")
+
+        root_frame = ttk.Frame(canvas, padding=12)
+        self._scroll_window_id = canvas.create_window((0, 0), window=root_frame, anchor="nw")
+        self._scroll_canvas = canvas
+        root_frame.bind("<Configure>", self._on_scroll_frame_configure)
+        canvas.bind("<Configure>", self._on_scroll_canvas_configure)
+        canvas.bind_all("<MouseWheel>", self._on_mousewheel)
+
         root_frame.grid_columnconfigure(0, weight=1)
+        root_frame.grid_rowconfigure(5, weight=1)
 
         header = ttk.Label(root_frame, text="Tiny Routes Level Generator", font=("TkDefaultFont", 16, "bold"))
         header.grid(row=0, column=0, sticky="w", pady=(0, 8))
@@ -126,6 +146,17 @@ class LevelGeneratorGui:
         self._build_summary_section(root_frame)
         self._build_preview_section(root_frame)
         self._build_log_panel(root_frame)
+
+    def _on_scroll_frame_configure(self, _event) -> None:
+        self._scroll_canvas.configure(scrollregion=self._scroll_canvas.bbox("all"))
+
+    def _on_scroll_canvas_configure(self, event) -> None:
+        self._scroll_canvas.itemconfigure(self._scroll_window_id, width=event.width)
+
+    def _on_mousewheel(self, event) -> None:
+        if self.root.focus_get() is self.log_text:
+            return
+        self._scroll_canvas.yview_scroll(int(-1 * (event.delta / 120)), "units")
 
     def _build_generation_section(self, parent: ttk.Frame) -> None:
         frame = ttk.LabelFrame(parent, text="Generation Settings", padding=8)
@@ -266,6 +297,7 @@ class LevelGeneratorGui:
 
         self.preview_canvas = tk.Canvas(frame, width=320, height=190, background="#f8fafc")
         self.preview_canvas.grid(row=0, column=1, sticky="nsew")
+        self.preview_canvas.bind("<Configure>", lambda _event: self._draw_selected_preview())
 
         button_frame = ttk.Frame(frame)
         button_frame.grid(row=1, column=0, columnspan=2, sticky="ew", pady=(8, 0))
@@ -277,7 +309,7 @@ class LevelGeneratorGui:
         ttk.Button(button_frame, text="Write Approved", command=self._on_write_approved).grid(row=0, column=3, sticky="ew", padx=(4, 0))
 
     def _build_log_panel(self, parent: ttk.Frame) -> None:
-        self.log_text = scrolledtext.ScrolledText(parent, wrap=tk.WORD, height=14)
+        self.log_text = scrolledtext.ScrolledText(parent, wrap=tk.WORD, height=10)
         self.log_text.grid(row=5, column=0, sticky="nsew")
         parent.grid_rowconfigure(5, weight=1)
 
@@ -518,8 +550,8 @@ class LevelGeneratorGui:
         nodes = level.graph.nodes
         if not nodes:
             return
-        width = int(self.preview_canvas["width"])
-        height = int(self.preview_canvas["height"])
+        width = max(self.preview_canvas.winfo_width(), int(self.preview_canvas["width"]))
+        height = max(self.preview_canvas.winfo_height(), int(self.preview_canvas["height"]))
         margin = 18
         xs = [node.x for node in nodes]
         ys = [node.y for node in nodes]
