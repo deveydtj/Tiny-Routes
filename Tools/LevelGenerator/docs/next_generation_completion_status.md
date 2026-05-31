@@ -223,3 +223,56 @@ Result: `164 passed`.
 ```
 
 Result: passed. The check suite ran Python tests, smoke dry-run generation, and validation for production levels `level_001` through `level_030` with Swift tests disabled by the script.
+
+## Phase 4 - Layout Planner
+
+Completed:
+
+- [x] Added `GraphLayoutPlannerService` as the recipe-first layout planning boundary.
+- [x] Planner input is a solved abstract `GraphRecipe`; output includes node coordinates, strategy/variant metadata, layout hash, and validation issue codes.
+- [x] Added layout strategies:
+  - [x] horizontal route progression
+  - [x] vertical route progression
+  - [x] hub-and-spoke
+  - [x] ring/loop
+  - [x] package-inside-loop
+  - [x] split-lane
+  - [x] four-way intersection
+- [x] Added layout spacing and composition checks:
+  - [x] minimum node distance
+  - [x] larger important-node distance
+  - [x] board-edge margins
+  - [x] switch-to-switch spacing
+  - [x] package/destination separation
+  - [x] dead-end readability
+  - [x] switch edge/tap-target clearance
+- [x] Added deterministic layout variation support for mirror, rotation, widen/narrow, route center shifting, and controlled jitter.
+- [x] Wired recipe-first builds through the layout planner instead of direct recipe-position assignment.
+- [x] Added layout metadata to generated candidates and JSON/Markdown reports.
+- [x] Added validation rejection codes:
+  - [x] `layout_node_cluster`
+  - [x] `layout_important_nodes_too_close`
+  - [x] `layout_switch_too_close_to_edge`
+  - [x] `layout_package_destination_confusing`
+  - [x] `layout_dead_end_not_readable`
+- [x] Added tests for strategy bounds, important-node spacing, layout hash variation, clustered layout rejection, and recipe-family generation support.
+
+Verification:
+
+```bash
+/Library/Frameworks/Python.framework/Versions/3.13/bin/python3 -m pytest Tools/LevelGenerator/tests/test_graph_layout_service.py Tools/LevelGenerator/tests/test_generated_level_validation_service.py Tools/LevelGenerator/tests/test_generation_service.py::test_generation_service_recipe_first_supports_current_recipe_families Tools/LevelGenerator/tests/test_generation_service.py::test_generation_service_recipe_first_mode_generates_recipe_metadata
+```
+
+Result: `17 passed`.
+
+```bash
+/Library/Frameworks/Python.framework/Versions/3.13/bin/python3 -m pytest Tools/LevelGenerator/tests
+```
+
+Result: `168 passed`.
+
+```bash
+/Library/Frameworks/Python.framework/Versions/3.13/bin/python3 Tools/LevelGenerator/run_all_generator_checks.py --python /Library/Frameworks/Python.framework/Versions/3.13/bin/python3
+```
+
+Result: passed. The check suite ran Python tests, smoke dry-run generation, and validation for production levels `level_001` through `level_030` with Swift tests disabled by the script.

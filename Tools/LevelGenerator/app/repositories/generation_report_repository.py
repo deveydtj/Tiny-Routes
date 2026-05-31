@@ -63,6 +63,7 @@ class GenerationReportRepository:
                         level.abstract_graph_signature[:12] if level.abstract_graph_signature else None
                     ),
                     "selectedLayoutVariant": level.selected_layout_variant,
+                    "layoutMetadata": level.layout_metadata,
                     "selectedRoadShapeStrategy": level.selected_road_shape_strategy,
                     "abstractSolution": self._abstract_solution_payload(level),
                     "seed": level.seed,
@@ -166,6 +167,7 @@ class GenerationReportRepository:
                     )
                     lines.append(
                         f"- Layout: `{level['selectedLayoutVariant']}`; "
+                        f"strategy: `{(level['layoutMetadata'] or {}).get('strategy', 'unknown')}`; "
                         f"road shapes: `{level['selectedRoadShapeStrategy']}`."
                     )
                     if level["abstractSolution"]:

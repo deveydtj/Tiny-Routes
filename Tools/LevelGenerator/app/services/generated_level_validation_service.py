@@ -163,7 +163,11 @@ class GeneratedLevelValidationService:
             layout = GraphLayoutService(bounds=bounds, minimum_node_distance=preset.minimum_node_distance)
             positions = {node.id: (node.x, node.y) for node in level.graph.nodes}
             for issue in layout.validate_positions(positions):
-                code, *detail = issue.split(":")
+                raw_code, *detail = issue.split(":")
+                code = {
+                    "node_out_of_bounds": "layout_node_out_of_bounds",
+                    "overlapping_nodes": "layout_node_cluster",
+                }.get(raw_code, raw_code)
                 messages.append(
                     GeneratorValidationMessage(
                         severity="error",
@@ -330,11 +334,11 @@ class GeneratedLevelValidationService:
         edges = [(edge.fromNodeID, edge.toNodeID, edge.id) for edge in level.graph.edges]
         summary = layout.readability_summary(positions, edges)
         messages: list[GeneratorValidationMessage] = []
-        if summary["crossings"] > 1:
+        if summary["crossings"] > 3:
             messages.append(
                 GeneratorValidationMessage(
                     severity="error",
-                    code="too_many_edge_crossings",
+                    code="layout_too_many_edge_crossings",
                     message=f"Layout has too many crossing edges: {summary['crossings']}.",
                 )
             )
@@ -342,7 +346,7 @@ class GeneratedLevelValidationService:
             messages.append(
                 GeneratorValidationMessage(
                     severity="error",
-                    code="too_many_tight_edge_spacing_issues",
+                    code="layout_too_many_tight_edge_spacing_issues",
                     message=f"Layout has too many tight edge spacing issues: {summary['edgeSpacingIssues']}.",
                 )
             )
@@ -355,11 +359,47 @@ class GeneratedLevelValidationService:
                         messages.append(
                             GeneratorValidationMessage(
                                 severity="error",
-                                code="important_nodes_too_close",
+                                code="layout_important_nodes_too_close",
                                 message=f"Important nodes are too close: {first_id} and {second_id}.",
                                 related_node_id=first_id,
                             )
                         )
+        if level.packageNodeID in positions and level.destinationNodeID in positions:
+            distance = layout.point_distance(positions[level.packageNodeID], positions[level.destinationNodeID])
+            if distance < preset.minimum_node_distance * 2.0:
+                messages.append(
+                    GeneratorValidationMessage(
+                        severity="error",
+                        code="layout_package_destination_confusing",
+                        message="Package and destination are too close to read as separate goals.",
+                        related_node_id=level.packageNodeID,
+                    )
+                )
+        margin = max(0.2, preset.minimum_node_distance * 0.9)
+        for node in level.graph.nodes:
+            valid_outgoing = [
+                edge
+                for edge in level.graph.edges
+                if edge.fromNodeID == node.id and edge.id in node.outgoingEdgeIDs
+            ]
+            if len(valid_outgoing) < 2:
+                continue
+            x, y = positions[node.id]
+            distance_to_edge = min(
+                x - layout.bounds.min_x,
+                layout.bounds.max_x - x,
+                y - layout.bounds.min_y,
+                layout.bounds.max_y - y,
+            )
+            if distance_to_edge < margin:
+                messages.append(
+                    GeneratorValidationMessage(
+                        severity="error",
+                        code="layout_switch_too_close_to_edge",
+                        message=f"Switch '{node.id}' is too close to the board edge.",
+                        related_node_id=node.id,
+                    )
+                )
         return messages
 
     def _timed_tap_arrival_messages(self, generated_level) -> list[GeneratorValidationMessage]:

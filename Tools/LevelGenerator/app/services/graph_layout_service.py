@@ -1,9 +1,13 @@
 from __future__ import annotations
 
 import math
+import hashlib
+import json
 from dataclasses import dataclass
 from typing import Iterable
 
+from ..models.difficulty_preset import DifficultyPreset
+from ..models.graph_recipe import GraphRecipe
 from ..random_source import RandomSource
 
 
@@ -13,6 +17,26 @@ class BoundingBox:
     max_x: float = 1.2
     min_y: float = -1.3
     max_y: float = 1.0
+
+
+@dataclass(frozen=True)
+class LayoutValidationIssue:
+    code: str
+    message: str
+    node_id: str | None = None
+
+
+@dataclass(frozen=True)
+class LayoutPlanResult:
+    strategy: str
+    variant: str
+    positions: dict[str, tuple[float, float]]
+    validation_issues: tuple[LayoutValidationIssue, ...]
+    metadata: dict[str, object]
+
+    @property
+    def is_valid(self) -> bool:
+        return not self.validation_issues
 
 
 class GraphLayoutService:
@@ -273,3 +297,380 @@ class GraphLayoutService:
         projection = max(0.0, min(1.0, projection))
         closest = (start[0] + (projection * segment_x), start[1] + (projection * segment_y))
         return self.point_distance(point, closest)
+
+
+class GraphLayoutPlannerService:
+    """Plans readable recipe-first node coordinates before road-shape selection."""
+
+    strategy_names = (
+        "horizontal_route_progression",
+        "vertical_route_progression",
+        "hub_and_spoke",
+        "ring_loop",
+        "package_inside_loop",
+        "split_lane",
+        "four_way_intersection",
+    )
+
+    def plan_layout(
+        self,
+        recipe: GraphRecipe,
+        preset: DifficultyPreset,
+        rng: RandomSource,
+        layout_variant_name: str = "normal",
+    ) -> LayoutPlanResult:
+        layout = GraphLayoutService(
+            bounds=BoundingBox(*preset.coordinate_bounds),
+            minimum_node_distance=preset.minimum_node_distance,
+        )
+        strategy = self._strategy_for_recipe(recipe)
+        base_positions = self._base_positions_for_strategy(recipe, strategy, layout)
+        positions, variant = self._apply_variation(base_positions, layout, rng, layout_variant_name)
+        issues = self.validate_layout(recipe, preset, positions)
+        if issues:
+            normalized = layout.normalize_positions(positions, padding=0.12)
+            normalized_issues = self.validate_layout(recipe, preset, normalized)
+            if len(normalized_issues) < len(issues):
+                positions = normalized
+                issues = normalized_issues
+        metadata = self._metadata(recipe, strategy, variant, positions, issues)
+        return LayoutPlanResult(
+            strategy=strategy,
+            variant=variant,
+            positions=positions,
+            validation_issues=tuple(issues),
+            metadata=metadata,
+        )
+
+    def validate_layout(
+        self,
+        recipe: GraphRecipe,
+        preset: DifficultyPreset,
+        positions: dict[str, tuple[float, float]],
+    ) -> list[LayoutValidationIssue]:
+        layout = GraphLayoutService(
+            bounds=BoundingBox(*preset.coordinate_bounds),
+            minimum_node_distance=preset.minimum_node_distance,
+        )
+        issues: list[LayoutValidationIssue] = []
+        margin = max(0.12, preset.minimum_node_distance * 0.55)
+        switch_margin = max(0.2, preset.minimum_node_distance * 0.9)
+        important_minimum = preset.minimum_node_distance * 1.6
+        package_destination_minimum = preset.minimum_node_distance * 2.0
+
+        for node_id, (x, y) in positions.items():
+            if not layout.is_inside_bounds(x, y):
+                issues.append(LayoutValidationIssue("layout_node_out_of_bounds", f"Node '{node_id}' is outside coordinate bounds.", node_id))
+                continue
+            if (
+                x < layout.bounds.min_x + margin
+                or x > layout.bounds.max_x - margin
+                or y < layout.bounds.min_y + margin
+                or y > layout.bounds.max_y - margin
+            ):
+                code = "layout_switch_too_close_to_edge" if self._node_role(recipe, node_id) == "switch" else "layout_node_too_close_to_edge"
+                issues.append(LayoutValidationIssue(code, f"Node '{node_id}' is too close to the board edge.", node_id))
+
+        for first_id, second_id in layout.overlapping_pairs(positions):
+            issues.append(
+                LayoutValidationIssue(
+                    "layout_node_cluster",
+                    f"Nodes '{first_id}' and '{second_id}' are too close together.",
+                    first_id,
+                )
+            )
+
+        important_node_ids = ["start", recipe.package_node_id, recipe.destination_node_id]
+        for index, first_id in enumerate(important_node_ids):
+            for second_id in important_node_ids[index + 1:]:
+                if first_id not in positions or second_id not in positions:
+                    continue
+                distance = layout.point_distance(positions[first_id], positions[second_id])
+                if distance < important_minimum:
+                    issues.append(
+                        LayoutValidationIssue(
+                            "layout_important_nodes_too_close",
+                            f"Important nodes '{first_id}' and '{second_id}' are too close.",
+                            first_id,
+                        )
+                    )
+
+        if recipe.package_node_id in positions and recipe.destination_node_id in positions:
+            distance = layout.point_distance(positions[recipe.package_node_id], positions[recipe.destination_node_id])
+            if distance < package_destination_minimum:
+                issues.append(
+                    LayoutValidationIssue(
+                        "layout_package_destination_confusing",
+                        "Package and destination are too close to read as separate goals.",
+                        recipe.package_node_id,
+                    )
+                )
+
+        switch_ids = [node.id for node in recipe.nodes if node.role == "switch"]
+        for index, first_id in enumerate(switch_ids):
+            if first_id in positions and self._distance_to_bounds(layout, positions[first_id]) < switch_margin:
+                issues.append(
+                    LayoutValidationIssue(
+                        "layout_switch_too_close_to_edge",
+                        f"Switch '{first_id}' is too close to the board edge.",
+                        first_id,
+                    )
+                )
+            for second_id in switch_ids[index + 1:]:
+                if first_id not in positions or second_id not in positions:
+                    continue
+                if layout.point_distance(positions[first_id], positions[second_id]) < preset.minimum_node_distance * 1.5:
+                    issues.append(
+                        LayoutValidationIssue(
+                            "layout_node_cluster",
+                            f"Switches '{first_id}' and '{second_id}' do not have enough separation.",
+                            first_id,
+                        )
+                    )
+
+        parents_by_node_id: dict[str, list[str]] = {}
+        for edge in recipe.edges:
+            parents_by_node_id.setdefault(edge.to_node_id, []).append(edge.from_node_id)
+        for node in recipe.nodes:
+            if node.role != "dead_end" or node.id not in positions:
+                continue
+            parent_id = parents_by_node_id.get(node.id, [None])[0]
+            if parent_id is None or parent_id not in positions:
+                issues.append(LayoutValidationIssue("layout_dead_end_not_readable", f"Dead end '{node.id}' has no readable parent.", node.id))
+                continue
+            if layout.point_distance(positions[node.id], positions[parent_id]) < preset.minimum_node_distance * 1.35:
+                issues.append(LayoutValidationIssue("layout_dead_end_not_readable", f"Dead end '{node.id}' is too close to its branch.", node.id))
+
+        return issues
+
+    def _strategy_for_recipe(self, recipe: GraphRecipe) -> str:
+        if recipe.family_name == "four_way_intersection":
+            return "four_way_intersection"
+        if recipe.family_name == "ring_route":
+            return "ring_loop"
+        if recipe.family_name == "return_loop":
+            return "package_inside_loop"
+        if recipe.family_name == "package_gate":
+            return "split_lane"
+        if any(self._outgoing_count(recipe, node.id) >= 3 for node in recipe.nodes if node.role == "switch"):
+            return "hub_and_spoke"
+        return "horizontal_route_progression"
+
+    def _base_positions_for_strategy(
+        self,
+        recipe: GraphRecipe,
+        strategy: str,
+        layout: GraphLayoutService,
+    ) -> dict[str, tuple[float, float]]:
+        if strategy == "vertical_route_progression":
+            return self._route_progression_positions(recipe, layout, vertical=True)
+        if strategy == "hub_and_spoke":
+            return self._hub_positions(recipe, layout)
+        if strategy == "ring_loop":
+            return self._ring_positions(recipe, layout)
+        if strategy == "package_inside_loop":
+            return self._loop_positions(recipe, layout)
+        if strategy == "split_lane":
+            return self._split_lane_positions(recipe, layout)
+        if strategy == "four_way_intersection":
+            return self._four_way_positions(recipe, layout)
+        return self._route_progression_positions(recipe, layout, vertical=False)
+
+    def _route_progression_positions(
+        self,
+        recipe: GraphRecipe,
+        layout: GraphLayoutService,
+        *,
+        vertical: bool,
+    ) -> dict[str, tuple[float, float]]:
+        route = list(recipe.required_path)
+        positions: dict[str, tuple[float, float]] = {}
+        span = 2.0
+        step = span / max(len(route) - 1, 1)
+        for index, node_id in enumerate(route):
+            primary = -1.0 + (index * step)
+            offset = 0.0
+            role = self._node_role(recipe, node_id)
+            if role == "package":
+                offset = 0.42
+            elif role == "destination":
+                offset = -0.32
+            elif role == "switch":
+                offset = 0.2 if index % 2 else -0.2
+            if vertical:
+                positions[node_id] = layout.snap_point(offset, 0.85 - (index * (1.85 / max(len(route) - 1, 1))))
+            else:
+                positions[node_id] = layout.snap_point(primary, offset)
+        self._place_off_route_nodes(recipe, layout, positions, vertical=vertical)
+        return positions
+
+    def _hub_positions(self, recipe: GraphRecipe, layout: GraphLayoutService) -> dict[str, tuple[float, float]]:
+        positions = self._route_progression_positions(recipe, layout, vertical=False)
+        hub_id = next((node.id for node in recipe.nodes if node.role == "switch" and self._outgoing_count(recipe, node.id) >= 3), None)
+        if hub_id is None:
+            return positions
+        positions[hub_id] = layout.snap_point(0.0, 0.0)
+        outgoing = [edge.to_node_id for edge in recipe.edges if edge.from_node_id == hub_id]
+        spokes = [(-0.75, 0.25), (0.75, 0.25), (0.0, -0.72), (0.0, 0.72)]
+        for node_id, point in zip(outgoing, spokes):
+            if node_id in positions and node_id not in {"start", recipe.destination_node_id}:
+                positions[node_id] = layout.snap_point(*point)
+        return positions
+
+    def _ring_positions(self, recipe: GraphRecipe, layout: GraphLayoutService) -> dict[str, tuple[float, float]]:
+        route = list(recipe.required_path)
+        positions: dict[str, tuple[float, float]] = {}
+        radius_x = 0.82
+        radius_y = 0.54
+        for index, node_id in enumerate(route):
+            angle = math.radians(210 - (300 * index / max(len(route) - 1, 1)))
+            positions[node_id] = layout.snap_point(math.cos(angle) * radius_x, math.sin(angle) * radius_y)
+        positions["start"] = layout.snap_point(-1.0, -0.55)
+        positions[recipe.destination_node_id] = layout.snap_point(1.0, -0.5)
+        self._place_off_route_nodes(recipe, layout, positions, vertical=False)
+        return positions
+
+    def _loop_positions(self, recipe: GraphRecipe, layout: GraphLayoutService) -> dict[str, tuple[float, float]]:
+        positions = self._ring_positions(recipe, layout)
+        if recipe.package_node_id in positions:
+            positions[recipe.package_node_id] = layout.snap_point(-0.05, 0.42)
+        return positions
+
+    def _split_lane_positions(self, recipe: GraphRecipe, layout: GraphLayoutService) -> dict[str, tuple[float, float]]:
+        positions = self._route_progression_positions(recipe, layout, vertical=False)
+        for node_id in recipe.required_path:
+            if node_id in positions:
+                x, _ = positions[node_id]
+                positions[node_id] = layout.snap_point(x, 0.28 if node_id == recipe.package_node_id else -0.08)
+        self._place_off_route_nodes(recipe, layout, positions, vertical=False, dead_end_y=0.72)
+        return positions
+
+    def _four_way_positions(self, recipe: GraphRecipe, layout: GraphLayoutService) -> dict[str, tuple[float, float]]:
+        positions = self._route_progression_positions(recipe, layout, vertical=False)
+        switch_id = next((node.id for node in recipe.nodes if node.role == "switch"), None)
+        if switch_id is None:
+            return positions
+        positions[switch_id] = layout.snap_point(0.0, 0.0)
+        directions = [(-0.85, 0.28), (0.0, 0.68), (0.85, 0.0), (0.0, -0.68)]
+        for node_id, point in zip([edge.to_node_id for edge in recipe.edges if edge.from_node_id == switch_id], directions):
+            if node_id in positions and node_id != recipe.destination_node_id:
+                positions[node_id] = layout.snap_point(*point)
+        positions["start"] = layout.snap_point(-1.05, -0.48)
+        if len(recipe.required_path) > 1 and recipe.required_path[1] != switch_id:
+            positions[recipe.required_path[1]] = layout.snap_point(-0.78, -0.42)
+        positions[recipe.destination_node_id] = layout.snap_point(1.05, -0.48)
+        return positions
+
+    def _place_off_route_nodes(
+        self,
+        recipe: GraphRecipe,
+        layout: GraphLayoutService,
+        positions: dict[str, tuple[float, float]],
+        *,
+        vertical: bool,
+        dead_end_y: float | None = None,
+    ) -> None:
+        route_ids = set(recipe.required_path)
+        parent_counts: dict[str, int] = {}
+        for edge in recipe.edges:
+            if edge.to_node_id in positions:
+                continue
+            parent_position = positions.get(edge.from_node_id, (0.0, 0.0))
+            count = parent_counts.get(edge.from_node_id, 0)
+            parent_counts[edge.from_node_id] = count + 1
+            direction = 1 if count % 2 == 0 else -1
+            if vertical:
+                candidates = [
+                    layout.snap_point(parent_position[0] + (0.62 * direction), parent_position[1]),
+                    layout.snap_point(parent_position[0] - (0.62 * direction), parent_position[1]),
+                    layout.snap_point(parent_position[0], parent_position[1] + 0.62),
+                    layout.snap_point(parent_position[0], parent_position[1] - 0.62),
+                ]
+            else:
+                y = dead_end_y if dead_end_y is not None and edge.to_node_id not in route_ids else parent_position[1] + (0.62 * direction)
+                candidates = [
+                    layout.snap_point(parent_position[0], y),
+                    layout.snap_point(parent_position[0], parent_position[1] - (0.62 * direction)),
+                    layout.snap_point(parent_position[0] + 0.62, parent_position[1]),
+                    layout.snap_point(parent_position[0] - 0.62, parent_position[1]),
+                ]
+            positions[edge.to_node_id] = self._first_readable_candidate(layout, candidates, positions)
+
+    def _first_readable_candidate(
+        self,
+        layout: GraphLayoutService,
+        candidates: list[tuple[float, float]],
+        positions: dict[str, tuple[float, float]],
+    ) -> tuple[float, float]:
+        margin = max(0.12, layout.minimum_node_distance * 0.55)
+        for candidate in candidates:
+            x, y = candidate
+            if not (
+                layout.bounds.min_x + margin <= x <= layout.bounds.max_x - margin
+                and layout.bounds.min_y + margin <= y <= layout.bounds.max_y - margin
+            ):
+                continue
+            if all(layout.point_distance(candidate, existing) >= layout.minimum_node_distance * 1.35 for existing in positions.values()):
+                return candidate
+        for candidate in candidates:
+            if layout.is_inside_bounds(*candidate):
+                return candidate
+        x, y = candidates[0]
+        return layout.snap_point(
+            min(max(x, layout.bounds.min_x + margin), layout.bounds.max_x - margin),
+            min(max(y, layout.bounds.min_y + margin), layout.bounds.max_y - margin),
+        )
+
+    def _apply_variation(
+        self,
+        positions: dict[str, tuple[float, float]],
+        layout: GraphLayoutService,
+        rng: RandomSource,
+        variant_name: str,
+    ) -> tuple[dict[str, tuple[float, float]], str]:
+        variant = variant_name if variant_name in {"normal", "mirrored", "wide", "tall", "offset", "jittered", "rotated"} else "normal"
+        if variant == "mirrored":
+            return (layout.mirror_horizontally(positions) if rng.bool(0.5) else layout.mirror_vertically(positions)), variant
+        if variant == "wide":
+            return layout.scale_positions(positions, scale_x=1.08, scale_y=0.94), variant
+        if variant == "tall":
+            return layout.scale_positions(positions, scale_x=0.94, scale_y=1.08), variant
+        if variant == "offset":
+            return layout.translate_positions(positions, rng.choice([-0.08, -0.04, 0.04, 0.08]), rng.choice([-0.08, -0.04, 0.04, 0.08])), variant
+        if variant == "jittered":
+            return layout.apply_safe_jitter(positions, rng, amount=0.04), variant
+        if variant == "rotated":
+            return layout.rotate_positions(positions, 180), variant
+        return dict(positions), "normal"
+
+    def _metadata(
+        self,
+        recipe: GraphRecipe,
+        strategy: str,
+        variant: str,
+        positions: dict[str, tuple[float, float]],
+        issues: list[LayoutValidationIssue],
+    ) -> dict[str, object]:
+        payload = {
+            "strategy": strategy,
+            "variant": variant,
+            "positions": {node_id: [x, y] for node_id, (x, y) in sorted(positions.items())},
+        }
+        encoded = json.dumps(payload, sort_keys=True, separators=(",", ":")).encode("utf-8")
+        return {
+            "strategy": strategy,
+            "variant": variant,
+            "layoutHash": hashlib.sha256(encoded).hexdigest(),
+            "rejectionCodes": [issue.code for issue in issues],
+            "nodeCount": len(recipe.nodes),
+        }
+
+    def _node_role(self, recipe: GraphRecipe, node_id: str) -> str:
+        return next((node.role for node in recipe.nodes if node.id == node_id), "route")
+
+    def _outgoing_count(self, recipe: GraphRecipe, node_id: str) -> int:
+        return sum(1 for edge in recipe.edges if edge.from_node_id == node_id)
+
+    def _distance_to_bounds(self, layout: GraphLayoutService, point: tuple[float, float]) -> float:
+        x, y = point
+        return min(x - layout.bounds.min_x, layout.bounds.max_x - x, y - layout.bounds.min_y, layout.bounds.max_y - y)

@@ -38,7 +38,7 @@ def test_generated_level_validation_rejects_important_nodes_too_close() -> None:
 
     result = GeneratedLevelValidationService().validate(generated, preset=preset, overwrite=True)
 
-    assert "important_nodes_too_close" in result.error_codes
+    assert "layout_important_nodes_too_close" in result.error_codes
 
 
 def test_generated_level_validation_rejects_five_way_switch_for_all_presets() -> None:

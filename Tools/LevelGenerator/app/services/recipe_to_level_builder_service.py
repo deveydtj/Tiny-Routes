@@ -3,14 +3,9 @@ from __future__ import annotations
 from ..models.generated_level import GeneratedLevel
 from ..models.graph_recipe import GraphRecipe
 from ..random_source import RandomSource
-from ..templates.four_way_intersection_template import _variant_spec as four_way_variant_spec
-from ..templates.package_gate_template import _variant_spec as package_gate_variant_spec
-from ..templates.return_loop_template import _variant_spec as return_loop_variant_spec
-from ..templates.ring_route_template import _positions_for_variant as ring_route_positions_for_variant
-from ..templates.single_switch_template import _variant_spec as single_switch_variant_spec
 from .difficulty_service import DifficultyService
 from .graph_builder_service import GraphBuilderService
-from .layout_variant_service import LayoutVariantService
+from .graph_layout_service import GraphLayoutPlannerService
 from .level_naming_service import LevelNamingService
 from .solution_builder_service import SolutionBuilderService
 
@@ -20,7 +15,7 @@ class RecipeToLevelBuilderService:
         self.difficulty = DifficultyService()
         self.naming = LevelNamingService()
         self.solution_builder = SolutionBuilderService()
-        self.layout_variants = LayoutVariantService()
+        self.layout_planner = GraphLayoutPlannerService()
 
     def build_level(
         self,
@@ -36,9 +31,8 @@ class RecipeToLevelBuilderService:
 
         preset = self.difficulty.get_preset(recipe.difficulty)
         rng = RandomSource(seed)
-        base_positions = self._assign_positions(recipe)
-        layout_variant = self.layout_variants.apply_variant(layout_variant_name, base_positions, rng, preset)
-        positions = layout_variant.positions
+        layout_plan = self.layout_planner.plan_layout(recipe, preset, rng, layout_variant_name)
+        positions = layout_plan.positions
         builder = GraphBuilderService()
         for node in recipe.nodes:
             builder.add_node(node.id, *positions[node.id])
@@ -89,69 +83,18 @@ class RecipeToLevelBuilderService:
             generation_notes=[
                 *recipe.notes,
                 f"Abstract graph signature: {recipe.abstract_signature[:12]}",
-                f"Selected layout variant: {layout_variant.name}",
+                f"Selected layout strategy: {layout_plan.strategy}",
+                f"Selected layout variant: {layout_plan.variant}",
                 f"Selected road-shape strategy: {road_shape_strategy}",
             ],
             recipe_family=recipe.family_name,
             recipe_variant=recipe.variant_name,
             abstract_graph_signature=recipe.abstract_signature,
-            selected_layout_variant=layout_variant.name,
+            selected_layout_variant=layout_plan.variant,
             selected_road_shape_strategy=road_shape_strategy,
             abstract_solution_metadata=recipe.solved_metadata,
+            layout_metadata=layout_plan.metadata,
         )
-
-    def _assign_positions(self, recipe: GraphRecipe) -> dict[str, tuple[float, float]]:
-        template_positions = self._template_positions_for_recipe(recipe)
-        if template_positions is not None:
-            return template_positions
-
-        route = list(recipe.required_path)
-        x_step = 2.2 / max(len(route) - 1, 1)
-        positions: dict[str, tuple[float, float]] = {}
-        for index, node_id in enumerate(route):
-            y = 0.0
-            if node_id == recipe.package_node_id:
-                y = 0.55
-            elif node_id.startswith("switch_"):
-                y = -0.2 if index % 2 == 0 else 0.2
-            elif node_id == recipe.destination_node_id:
-                y = -0.45
-            positions[node_id] = (round(-1.1 + (index * x_step), 4), y)
-
-        parent_counts: dict[str, int] = {}
-        for edge in recipe.edges:
-            if edge.to_node_id in positions:
-                continue
-            parent_position = positions[edge.from_node_id]
-            count = parent_counts.get(edge.from_node_id, 0)
-            parent_counts[edge.from_node_id] = count + 1
-            y_offset = 0.72 if count % 2 == 0 else -0.72
-            positions[edge.to_node_id] = (parent_position[0], round(parent_position[1] + y_offset, 4))
-        return positions
-
-    def _template_positions_for_recipe(self, recipe: GraphRecipe) -> dict[str, tuple[float, float]] | None:
-        try:
-            if recipe.family_name == "single_switch":
-                include_approach = "approach" in {node.id for node in recipe.nodes}
-                positions, _switch_id, _dead_end_id, _route = single_switch_variant_spec(
-                    recipe.variant_name,
-                    include_approach,
-                )
-                return positions
-            if recipe.family_name == "package_gate":
-                positions, _edges, _taps, _route = package_gate_variant_spec(recipe.variant_name)
-                return positions
-            if recipe.family_name == "return_loop":
-                positions, _edges, _taps, _route = return_loop_variant_spec(recipe.variant_name)
-                return positions
-            if recipe.family_name == "ring_route":
-                return ring_route_positions_for_variant(recipe.variant_name)
-            if recipe.family_name == "four_way_intersection":
-                positions, _edges, _taps, _route = four_way_variant_spec(recipe.variant_name)
-                return positions
-        except Exception:
-            return None
-        return None
 
     def _time_limit(
         self,

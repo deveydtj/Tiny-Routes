@@ -380,47 +380,47 @@ The layout planner should generate several candidate layouts per solved recipe a
 
 ## Tasks
 
-- [ ] Create or expand `GraphLayoutPlannerService`:
-  - [ ] input: solved abstract recipe
-  - [ ] output: node coordinates with layout metadata
-- [ ] Support layout strategies:
-  - [ ] horizontal route progression
-  - [ ] vertical route progression
-  - [ ] hub-and-spoke
-  - [ ] ring/loop layout
-  - [ ] package-inside-loop layout
-  - [ ] split-lane layout
-  - [ ] four-way intersection layout
-- [ ] Add spacing constraints:
-  - [ ] minimum distance between all nodes
-  - [ ] larger minimum distance between important nodes
-  - [ ] minimum distance from board edge
-  - [ ] minimum distance between switch nodes
-  - [ ] avoid placing package/destination too close together
-- [ ] Add composition rules:
-  - [ ] start should be visually obvious
-  - [ ] package should be visually reachable and not hidden in clutter
-  - [ ] destination should feel like the goal
-  - [ ] dead ends should look intentional
-  - [ ] switches should have enough empty space around them for tap targets and arrows
-- [ ] Add layout variation:
-  - [ ] mirror horizontally
-  - [ ] mirror vertically
-  - [ ] rotate when safe
-  - [ ] widen/narrow route
-  - [ ] shift route center
-  - [ ] apply controlled jitter
-- [ ] Add rejection reasons:
-  - [ ] `layout_node_cluster`
-  - [ ] `layout_important_nodes_too_close`
-  - [ ] `layout_switch_too_close_to_edge`
-  - [ ] `layout_package_destination_confusing`
-  - [ ] `layout_dead_end_not_readable`
-- [ ] Add tests:
-  - [ ] each layout strategy stays inside preset coordinate bounds
-  - [ ] important nodes meet spacing requirements
-  - [ ] layout variation changes layout hash
-  - [ ] invalid clustered layouts are rejected
+- [x] Create or expand `GraphLayoutPlannerService`:
+  - [x] input: solved abstract recipe
+  - [x] output: node coordinates with layout metadata
+- [x] Support layout strategies:
+  - [x] horizontal route progression
+  - [x] vertical route progression
+  - [x] hub-and-spoke
+  - [x] ring/loop layout
+  - [x] package-inside-loop layout
+  - [x] split-lane layout
+  - [x] four-way intersection layout
+- [x] Add spacing constraints:
+  - [x] minimum distance between all nodes
+  - [x] larger minimum distance between important nodes
+  - [x] minimum distance from board edge
+  - [x] minimum distance between switch nodes
+  - [x] avoid placing package/destination too close together
+- [x] Add composition rules:
+  - [x] start should be visually obvious
+  - [x] package should be visually reachable and not hidden in clutter
+  - [x] destination should feel like the goal
+  - [x] dead ends should look intentional
+  - [x] switches should have enough empty space around them for tap targets and arrows
+- [x] Add layout variation:
+  - [x] mirror horizontally
+  - [x] mirror vertically
+  - [x] rotate when safe
+  - [x] widen/narrow route
+  - [x] shift route center
+  - [x] apply controlled jitter
+- [x] Add rejection reasons:
+  - [x] `layout_node_cluster`
+  - [x] `layout_important_nodes_too_close`
+  - [x] `layout_switch_too_close_to_edge`
+  - [x] `layout_package_destination_confusing`
+  - [x] `layout_dead_end_not_readable`
+- [x] Add tests:
+  - [x] each layout strategy stays inside preset coordinate bounds
+  - [x] important nodes meet spacing requirements
+  - [x] layout variation changes layout hash
+  - [x] invalid clustered layouts are rejected
 
 ## Do
 
@@ -438,9 +438,9 @@ The layout planner should generate several candidate layouts per solved recipe a
 
 ## Acceptance Criteria
 
-- [ ] Layout planner generates multiple valid layouts for each recipe family.
-- [ ] Layout rejection reasons are visible in reports.
-- [ ] No generated candidate can pass with clustered important nodes.
+- [x] Layout planner generates multiple valid layouts for each recipe family.
+- [x] Layout rejection reasons are visible in reports.
+- [x] No generated candidate can pass with clustered important nodes.
 
 ---
 
