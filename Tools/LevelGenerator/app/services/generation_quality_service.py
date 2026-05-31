@@ -64,6 +64,7 @@ class GenerationQualityService:
             elif issue.severity == "info":
                 penalties.append(issue.code)
         readability = self._clamp(readability)
+        switch_clarity = self._switch_clarity_score(road_shape_metadata, visual_clarity_report)
 
         signature = generated_level.candidate_signature
         max_similarity = 0.0
@@ -87,7 +88,17 @@ class GenerationQualityService:
         if band_distance >= 2:
             penalties.append("estimated_difficulty_band_far_from_target")
 
+        abstract_mechanic_quality = self._abstract_mechanic_quality(generated_level, preset)
+        runtime_solvability = self._runtime_solvability(generated_level)
+        mobile_tap_comfort = self._mobile_tap_comfort(difficulty_metrics, preset)
+        visual_appeal = self._visual_appeal(readability, visual_clarity_report.score, difficulty_metrics)
         route_interest = self._route_interest(generated_level)
+        if mobile_tap_comfort < 1.0:
+            penalties.append("awkward_tap_timing")
+        if preset.name in {"medium", "hard", "expert"} and route_interest < 0.45:
+            penalties.append("route_too_straight_for_difficulty")
+        if preset.name in {"tutorial", "easy"} and difficulty_metrics.visual_score > 0.55:
+            penalties.append("route_too_complex_for_difficulty")
         campaign_pacing = self.campaign_pacing.score(
             signature,
             comparison_signatures,
@@ -98,11 +109,15 @@ class GenerationQualityService:
         if campaign_pacing is not None:
             penalties.extend(campaign_pacing.penalties)
         total = (
-            (readability * 0.30)
-            + (uniqueness * 0.20)
-            + (difficulty_fit * 0.25)
-            + (route_interest * 0.15)
-            + (campaign_pacing_score * 0.10)
+            (abstract_mechanic_quality * 0.13)
+            + (runtime_solvability * 0.12)
+            + (readability * 0.16)
+            + (switch_clarity * 0.12)
+            + (difficulty_fit * 0.14)
+            + (uniqueness * 0.12)
+            + (campaign_pacing_score * 0.07)
+            + (mobile_tap_comfort * 0.07)
+            + (visual_appeal * 0.07)
         )
         return GenerationQualityScore(
             total=round(self._clamp(total), 4),
@@ -110,6 +125,11 @@ class GenerationQualityService:
             uniqueness=round(uniqueness, 4),
             difficulty_fit=round(difficulty_fit, 4),
             route_interest=round(route_interest, 4),
+            abstract_mechanic_quality=round(abstract_mechanic_quality, 4),
+            runtime_solvability=round(runtime_solvability, 4),
+            switch_clarity=round(switch_clarity, 4),
+            mobile_tap_comfort=round(mobile_tap_comfort, 4),
+            visual_appeal=round(visual_appeal, 4),
             campaign_pacing=round(campaign_pacing_score, 4),
             mechanical_difficulty=difficulty_metrics.mechanical_score,
             visual_difficulty=difficulty_metrics.visual_score,
@@ -127,6 +147,11 @@ class GenerationQualityService:
                 "roadShapeScore": round(road_shape_score, 4),
                 "roadShapeIssues": list(road_shape_metadata.get("issues", [])),
                 "visualClarityScore": visual_clarity_report.score,
+                "abstractMechanicQuality": round(abstract_mechanic_quality, 4),
+                "runtimeSolvability": round(runtime_solvability, 4),
+                "switchClarity": round(switch_clarity, 4),
+                "mobileTapComfort": round(mobile_tap_comfort, 4),
+                "visualAppeal": round(visual_appeal, 4),
                 "visualClarityIssues": [
                     {
                         "severity": issue.severity,
@@ -140,6 +165,80 @@ class GenerationQualityService:
                 ],
             },
         )
+
+    def _abstract_mechanic_quality(self, generated_level, preset: DifficultyPreset) -> float:
+        metadata = getattr(generated_level, "abstract_solution_metadata", None)
+        if metadata is None:
+            return self._route_interest(generated_level)
+
+        score = 0.55
+        score += min(metadata.false_route_count, 4) * 0.07
+        score += min(metadata.dead_end_count, 3) * 0.06
+        score += min(metadata.loop_count, 2) * 0.08
+        if preset.required_tap_range[0] <= metadata.minimum_required_taps <= preset.required_tap_range[1]:
+            score += 0.14
+        if metadata.repeated_switch_usage and preset.allow_repeated_switch_taps:
+            score += 0.05
+        if not metadata.package_before_destination:
+            score -= 0.35
+        if metadata.alternate_path_count > 2:
+            score -= min(metadata.alternate_path_count - 2, 4) * 0.05
+        return self._clamp(score)
+
+    def _runtime_solvability(self, generated_level) -> float:
+        simulation = getattr(generated_level, "simulation_result", None)
+        if simulation is None:
+            return 0.85
+        if not simulation.passed:
+            return 0.0
+        if simulation.elapsed_time_seconds <= 0:
+            return 0.8
+        time_limit = max(float(generated_level.level_document.timeLimitSeconds), 1.0)
+        slack_ratio = (time_limit - simulation.elapsed_time_seconds) / time_limit
+        return self._clamp(0.82 + min(max(slack_ratio, 0.0), 0.18))
+
+    def _switch_clarity_score(self, road_shape_metadata: dict, visual_clarity_report) -> float:
+        score = float(road_shape_metadata.get("switchClarityScore", 1.0))
+        for issue in road_shape_metadata.get("issues", []):
+            if str(issue).startswith("switch_choices_same_visual_direction"):
+                score -= 0.35
+            elif str(issue).startswith("required_and_wrong_route_first_segments_overlap"):
+                score -= 0.30
+            elif str(issue).startswith("same_switch_first_segments_overlap"):
+                score -= 0.30
+        for issue in visual_clarity_report.issues:
+            if "switch" not in issue.code and "arrow" not in issue.code:
+                continue
+            if issue.severity == "error":
+                score -= 0.35
+            elif issue.severity == "warning":
+                score -= 0.16
+            else:
+                score -= 0.04
+        return self._clamp(score)
+
+    def _mobile_tap_comfort(self, difficulty_metrics, preset: DifficultyPreset) -> float:
+        if difficulty_metrics.required_tap_count == 0:
+            return 1.0
+        score = 1.0
+        minimum_spacing = difficulty_metrics.minimum_reaction_window_before_required_switch
+        average_spacing = difficulty_metrics.average_time_between_required_taps
+        if minimum_spacing is not None and minimum_spacing < preset.min_tap_spacing_seconds:
+            score -= 0.45
+        if average_spacing is not None and average_spacing < preset.min_tap_spacing_seconds * 1.35:
+            score -= 0.20
+        if difficulty_metrics.required_tap_count > preset.required_tap_range[1]:
+            score -= 0.15
+        return self._clamp(score)
+
+    def _visual_appeal(self, readability: float, visual_clarity_score: float, difficulty_metrics) -> float:
+        crossing_penalty = difficulty_metrics.route_crossing_score * 0.25
+        complexity = difficulty_metrics.visual_complexity_score
+        if difficulty_metrics.estimated_band in {"tutorial", "easy"}:
+            complexity_penalty = max(0.0, complexity - 0.35) * 0.6
+        else:
+            complexity_penalty = max(0.0, complexity - 0.75) * 0.35
+        return self._clamp((readability * 0.45) + (visual_clarity_score * 0.45) + 0.10 - crossing_penalty - complexity_penalty)
 
     def _route_interest(self, generated_level) -> float:
         score = 0.15

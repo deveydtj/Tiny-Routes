@@ -7,6 +7,7 @@ from ..generation_config import (
     DEFAULT_CANDIDATE_POOL_SIZE,
     DEFAULT_GENERATION_MODE,
     DEFAULT_LAYOUTS_PER_RECIPE,
+    DEFAULT_MAX_ATTEMPTS_PER_LEVEL,
     DEFAULT_RECIPE_POOL_SIZE,
     DEFAULT_ROAD_SHAPES_PER_LAYOUT,
     GenerationConfig,
@@ -35,7 +36,7 @@ class GuiGenerationState:
     json_report_path: str = ""
     map_seed_path: str = ""
     debug_failures_dir: str = ""
-    max_attempts_per_level: str = "100"
+    max_attempts_per_level: str = str(DEFAULT_MAX_ATTEMPTS_PER_LEVEL)
     candidate_pool_size: str = str(DEFAULT_CANDIDATE_POOL_SIZE)
     swift_timeout_seconds: str = "180"
 

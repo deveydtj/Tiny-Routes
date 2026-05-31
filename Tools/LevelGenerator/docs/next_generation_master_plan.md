@@ -827,42 +827,42 @@ max_attempts_per_level: 300 for production batches
 
 ## Tasks
 
-- [ ] Update default candidate pool behavior:
-  - [ ] keep `candidate_pool_size=1` only for fast tests
-  - [ ] use larger default for GUI production mode
-  - [ ] warn if production generation uses pool size 1
-- [ ] Expand quality score categories:
-  - [ ] abstract mechanic quality
-  - [ ] runtime solvability
-  - [ ] visual readability
-  - [ ] switch clarity
-  - [ ] difficulty fit
-  - [ ] uniqueness
-  - [ ] campaign pacing
-  - [ ] mobile tap comfort
-  - [ ] visual appeal
-- [ ] Add hard rejection thresholds:
-  - [ ] minimum total quality
-  - [ ] minimum switch clarity score
-  - [ ] minimum runtime confidence
-  - [ ] maximum similarity score
-- [ ] Add soft penalties:
-  - [ ] too many crossings
-  - [ ] too many nearby nodes
-  - [ ] repeated recipe family
-  - [ ] awkward tap timing
-  - [ ] route too straight for difficulty
-  - [ ] route too complex for difficulty
-- [ ] Update reports:
-  - [ ] show top rejected near-miss candidates
-  - [ ] show score breakdown for accepted candidate
-  - [ ] show why the accepted candidate beat other candidates
-  - [ ] show minimum/average/max candidate scores per generated level
-- [ ] Add tests:
-  - [ ] higher clarity beats lower clarity
-  - [ ] unique candidate beats near duplicate
-  - [ ] difficulty-fit candidate beats wrong-band candidate
-  - [ ] pool selection is deterministic for same seed
+- [x] Update default candidate pool behavior:
+  - [x] keep `candidate_pool_size=1` only for fast tests
+  - [x] use larger default for GUI production mode
+  - [x] warn if production generation uses pool size 1
+- [x] Expand quality score categories:
+  - [x] abstract mechanic quality
+  - [x] runtime solvability
+  - [x] visual readability
+  - [x] switch clarity
+  - [x] difficulty fit
+  - [x] uniqueness
+  - [x] campaign pacing
+  - [x] mobile tap comfort
+  - [x] visual appeal
+- [x] Add hard rejection thresholds:
+  - [x] minimum total quality
+  - [x] minimum switch clarity score
+  - [x] minimum runtime confidence
+  - [x] maximum similarity score
+- [x] Add soft penalties:
+  - [x] too many crossings
+  - [x] too many nearby nodes
+  - [x] repeated recipe family
+  - [x] awkward tap timing
+  - [x] route too straight for difficulty
+  - [x] route too complex for difficulty
+- [x] Update reports:
+  - [x] show top rejected near-miss candidates
+  - [x] show score breakdown for accepted candidate
+  - [x] show why the accepted candidate beat other candidates
+  - [x] show minimum/average/max candidate scores per generated level
+- [x] Add tests:
+  - [x] higher clarity beats lower clarity
+  - [x] unique candidate beats near duplicate
+  - [x] difficulty-fit candidate beats wrong-band candidate
+  - [x] pool selection is deterministic for same seed
 
 ## Do
 
@@ -880,9 +880,9 @@ max_attempts_per_level: 300 for production batches
 
 ## Acceptance Criteria
 
-- [ ] Production generation uses meaningful candidate pools.
-- [ ] Reports explain candidate selection.
-- [ ] Low-quality but technically valid candidates are not accepted.
+- [x] Production generation uses meaningful candidate pools.
+- [x] Reports explain candidate selection.
+- [x] Low-quality but technically valid candidates are not accepted.
 
 ---
 

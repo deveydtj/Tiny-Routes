@@ -163,6 +163,24 @@ def test_generation_service_requires_swift_tests_for_hard_production_writes(tmp_
     assert not (tmp_path / "levels").exists()
 
 
+def test_generation_service_warns_when_production_uses_pool_size_one(tmp_path) -> None:
+    result = LevelGenerationService().generate(
+        _config(
+            tmp_path,
+            difficulty="easy",
+            template_name="single_switch",
+            dry_run=False,
+            compare_against_existing=False,
+            generation_mode="legacy_template",
+            candidate_pool_size=1,
+            sync_xcode_project=False,
+        )
+    )
+
+    assert result.passed is True
+    assert any("candidate_pool_size=1" in message for message in result.messages)
+
+
 def test_generation_service_generates_unique_medium_mixed_batch(tmp_path) -> None:
     result = LevelGenerationService().generate(
         _config(
@@ -290,6 +308,95 @@ def test_generation_service_selects_highest_quality_candidate_from_pool(tmp_path
     assert result.passed is True
     assert result.accepted[0].seed == 3
     assert result.accepted[0].quality_score.total == 0.9
+    selection = result.candidate_selection_summaries[0]
+    assert selection["acceptedCandidate"]["seed"] == 3
+    assert selection["scoreStats"] == {"minimum": 0.1, "average": 0.5, "maximum": 0.9}
+    assert selection["topRejectedNearMisses"][0]["seed"] == 2
+    assert "highest deterministic quality score" in selection["selectionRationale"]
+
+
+def test_generation_service_rejects_low_switch_clarity_after_scoring(tmp_path) -> None:
+    service = LevelGenerationService()
+    seeds = iter([2, 3])
+
+    class SequenceTemplate:
+        requires_swift_validation = False
+
+        def generate(self, level_id, level_number, preset, rng):
+            return SingleSwitchTemplate().generate(level_id, level_number, preset, RandomSource(next(seeds)))
+
+    class FakeQualityService:
+        def score(self, candidate, preset, comparison_signatures):
+            if candidate.seed == 2:
+                return GenerationQualityScore(
+                    total=0.95,
+                    readability=1,
+                    uniqueness=1,
+                    difficulty_fit=1,
+                    route_interest=1,
+                    switch_clarity=0.1,
+                )
+            return GenerationQualityScore(
+                total=0.8,
+                readability=1,
+                uniqueness=1,
+                difficulty_fit=1,
+                route_interest=1,
+                switch_clarity=1,
+            )
+
+    service.template_registry.choose = lambda *args, **kwargs: SequenceTemplate()
+    service.quality_service = FakeQualityService()
+
+    result = service.generate(
+        _config(
+            tmp_path,
+            difficulty="easy",
+            template_name="single_switch",
+            dry_run=True,
+            compare_against_existing=False,
+            generation_mode="legacy_template",
+            candidate_pool_size=1,
+        )
+    )
+
+    assert result.passed is True
+    assert result.accepted[0].seed == 3
+    assert result.rejection_reason_counts["quality_switch_clarity_below_threshold"] == 1
+    near_miss = result.candidate_selection_summaries[0]["topRejectedNearMisses"][0]
+    assert near_miss["status"] == "quality_switch_clarity_below_threshold"
+
+
+def test_generation_service_pool_selection_is_deterministic_for_same_seed(tmp_path) -> None:
+    first = LevelGenerationService().generate(
+        _config(
+            tmp_path / "a",
+            difficulty="easy",
+            template_name="single_switch",
+            dry_run=True,
+            seed=44,
+            compare_against_existing=False,
+            candidate_pool_size=3,
+            max_attempts_per_level=20,
+        )
+    )
+    second = LevelGenerationService().generate(
+        _config(
+            tmp_path / "b",
+            difficulty="easy",
+            template_name="single_switch",
+            dry_run=True,
+            seed=44,
+            compare_against_existing=False,
+            candidate_pool_size=3,
+            max_attempts_per_level=20,
+        )
+    )
+
+    assert first.passed is True
+    assert second.passed is True
+    assert first.accepted[0].seed == second.accepted[0].seed
+    assert first.candidate_selection_summaries[0]["scoreStats"] == second.candidate_selection_summaries[0]["scoreStats"]
 
 
 def test_generation_service_auto_difficulty_reports_actual_difficulty(tmp_path) -> None:

@@ -455,3 +455,49 @@ Result: `194 passed`.
 ```
 
 Result: passed. The check suite ran Python tests, smoke dry-run generation, and validation for production levels `level_001` through `level_030` with Swift tests disabled by the script.
+
+## Phase 10 - Candidate Search, Scoring, and Selection
+
+Completed:
+
+- [x] Updated candidate-pool defaults for production-quality selection:
+  - [x] default `candidate_pool_size` is now `25`
+  - [x] default `max_attempts_per_level` is now `300`
+  - [x] explicit `candidate_pool_size=1` remains supported for fast tests
+  - [x] production generation emits a warning when pool size is `1`
+- [x] Expanded `GenerationQualityScore` and report payloads with:
+  - [x] abstract mechanic quality
+  - [x] runtime solvability
+  - [x] visual readability
+  - [x] switch clarity
+  - [x] difficulty fit
+  - [x] uniqueness
+  - [x] campaign pacing
+  - [x] mobile tap comfort
+  - [x] visual appeal
+- [x] Added hard quality rejection thresholds for:
+  - [x] minimum total quality
+  - [x] minimum switch clarity
+  - [x] minimum runtime confidence
+  - [x] maximum similarity
+- [x] Added soft quality penalties for awkward tap timing, route simplicity/complexity mismatch, crossings, tight spacing, and repeated recipe-family pacing.
+- [x] Added candidate selection summaries to generation results and reports:
+  - [x] accepted candidate score breakdown
+  - [x] top rejected near-miss candidates
+  - [x] selection rationale explaining why the accepted candidate won
+  - [x] minimum, average, and maximum scored candidate totals per generated level
+- [x] Added tests for expanded quality categories, clarity threshold rejection, production pool-size warnings, selection summaries, and deterministic pool selection.
+
+Verification:
+
+```bash
+/Library/Frameworks/Python.framework/Versions/3.13/bin/python3 -m pytest Tools/LevelGenerator/tests -q
+```
+
+Result: `198 passed`.
+
+```bash
+/Library/Frameworks/Python.framework/Versions/3.13/bin/python3 Tools/LevelGenerator/run_all_generator_checks.py --python /Library/Frameworks/Python.framework/Versions/3.13/bin/python3
+```
+
+Result: passed. The check suite ran Python tests, smoke dry-run generation, and validation for production levels `level_001` through `level_030` with Swift tests disabled by the script.

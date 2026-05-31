@@ -89,6 +89,7 @@ class GenerationReportRepository:
                 }
                 for level in result.accepted
             ],
+            "candidateSelection": list(getattr(result, "candidate_selection_summaries", [])),
             "rejectedCandidateCount": result.rejected_candidate_count,
             "rejectionReasonCounts": result.rejection_reason_counts,
             "writtenLevelPaths": [str(path) for path in result.written_level_paths],
@@ -203,6 +204,25 @@ class GenerationReportRepository:
                         f"mechanical `{quality['mechanicalDifficulty']}`, "
                         f"visual `{quality['visualDifficulty']}`, campaign pacing `{quality['campaignPacing']}`."
                     )
+                    lines.append(
+                        f"- Score breakdown: mechanic `{quality['abstractMechanicQuality']}`, "
+                        f"runtime `{quality['runtimeSolvability']}`, readability `{quality['readability']}`, "
+                        f"switch clarity `{quality['switchClarity']}`, mobile comfort `{quality['mobileTapComfort']}`, "
+                        f"visual appeal `{quality['visualAppeal']}`."
+                    )
+                selection = self._selection_for_level(payload["candidateSelection"], level["levelID"])
+                if selection:
+                    stats = selection["scoreStats"]
+                    lines.append(
+                        f"- Candidate selection: {selection['selectionRationale']} "
+                        f"Scores min/avg/max `{stats['minimum']}`/`{stats['average']}`/`{stats['maximum']}`."
+                    )
+                    for near_miss in selection["topRejectedNearMisses"][:3]:
+                        near_quality = near_miss.get("quality", {})
+                        lines.append(
+                            f"- Near miss `{near_miss.get('status')}` seed `{near_miss.get('seed')}` "
+                            f"score `{near_quality.get('total')}`."
+                        )
                 for switch in level["switchPreview"]:
                     transition_summary = ", ".join(
                         (
@@ -307,10 +327,15 @@ class GenerationReportRepository:
             return None
         return {
             "total": quality.total,
+            "abstractMechanicQuality": quality.abstract_mechanic_quality,
+            "runtimeSolvability": quality.runtime_solvability,
             "readability": quality.readability,
+            "switchClarity": quality.switch_clarity,
             "uniqueness": quality.uniqueness,
             "difficultyFit": quality.difficulty_fit,
             "routeInterest": quality.route_interest,
+            "mobileTapComfort": quality.mobile_tap_comfort,
+            "visualAppeal": quality.visual_appeal,
             "campaignPacing": quality.campaign_pacing,
             "mechanicalDifficulty": quality.mechanical_difficulty,
             "visualDifficulty": quality.visual_difficulty,
@@ -318,6 +343,12 @@ class GenerationReportRepository:
             "penalties": list(quality.penalties),
             "details": quality.details,
         }
+
+    def _selection_for_level(self, selection_summaries: list[dict[str, Any]], level_id: str) -> dict[str, Any] | None:
+        return next(
+            (summary for summary in selection_summaries if summary.get("levelID") == level_id),
+            None,
+        )
 
     def _abstract_solution_payload(self, level) -> dict[str, Any] | None:
         metadata = getattr(level, "abstract_solution_metadata", None)

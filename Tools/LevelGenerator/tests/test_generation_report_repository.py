@@ -144,6 +144,11 @@ def test_generation_report_repository_writes_recipe_metadata(tmp_path) -> None:
     assert accepted["abstractGraphSignature"]
     assert accepted["selectedLayoutVariant"] == "normal"
     assert accepted["selectedRoadShapeStrategy"] == "auto"
+    assert accepted["quality"]["abstractMechanicQuality"] > 0
+    assert accepted["quality"]["switchClarity"] > 0
+    assert payload["candidateSelection"][0]["levelID"] == "level_012"
+    assert payload["candidateSelection"][0]["scoreStats"]["maximum"] is not None
+    assert "Candidate selection" in (tmp_path / "report.md").read_text(encoding="utf-8")
 
 
 def test_generation_report_repository_includes_visual_clarity_node_and_edge_ids(tmp_path) -> None:

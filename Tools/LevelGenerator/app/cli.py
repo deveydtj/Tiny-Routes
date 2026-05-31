@@ -8,6 +8,7 @@ from .generation_config import (
     DEFAULT_CANDIDATE_POOL_SIZE,
     DEFAULT_GENERATION_MODE,
     DEFAULT_LAYOUTS_PER_RECIPE,
+    DEFAULT_MAX_ATTEMPTS_PER_LEVEL,
     DEFAULT_RECIPE_POOL_SIZE,
     DEFAULT_ROAD_SHAPES_PER_LAYOUT,
     GenerationConfig,
@@ -124,7 +125,12 @@ def build_generate_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument("--map-seed-path", type=Path, default=None, help="Optional simplified map seed JSON path.")
     parser.add_argument("--debug-failures", type=Path, default=None, help="Directory for rejected candidate debug files.")
-    parser.add_argument("--max-attempts-per-level", type=int, default=100, help="Candidate attempts before failing a level.")
+    parser.add_argument(
+        "--max-attempts-per-level",
+        type=int,
+        default=DEFAULT_MAX_ATTEMPTS_PER_LEVEL,
+        help="Candidate attempts before failing a level.",
+    )
     parser.add_argument(
         "--candidate-pool-size",
         type=int,

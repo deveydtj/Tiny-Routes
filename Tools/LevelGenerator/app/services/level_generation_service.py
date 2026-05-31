@@ -31,6 +31,12 @@ from .swift_test_service import SwiftTestService
 
 
 class LevelGenerationService:
+    MINIMUM_TOTAL_QUALITY = 0.45
+    MINIMUM_SWITCH_CLARITY = 0.40
+    MINIMUM_RUNTIME_CONFIDENCE = 0.75
+    MAXIMUM_SELECTION_SIMILARITY = 0.87
+    MAX_REJECTION_MESSAGES = 50
+
     def __init__(self) -> None:
         self.difficulty_service = DifficultyService()
         self.difficulty_curve_service = DifficultyCurveService()
@@ -66,6 +72,11 @@ class LevelGenerationService:
             result.messages.append(str(exc))
             self._write_reports(config, result)
             return result
+        if not config.dry_run and config.candidate_pool_size == 1:
+            result.messages.append(
+                "Warning: production generation is using `candidate_pool_size=1`; "
+                "use a larger pool for quality-based selection."
+            )
 
         rejection_service = CandidateRejectionService()
         base_rng = RandomSource(config.base_seed)
@@ -89,6 +100,7 @@ class LevelGenerationService:
             accepted_candidate = None
             candidate_pool = []
             candidate_pool_signatures = []
+            near_miss_candidates = []
 
             for attempt in range(config.max_attempts_per_level):
                 candidate_seed = base_rng.child_seed(plan_entry.difficulty, config.template_name, level_id, attempt)
@@ -140,7 +152,7 @@ class LevelGenerationService:
                                 duplicate_result.message,
                                 config.debug_failures_dir,
                             )
-                            result.messages.append(message)
+                            self._append_rejection_message(result, message)
                             continue
 
                         if config.compare_against_existing:
@@ -155,7 +167,7 @@ class LevelGenerationService:
                                     existing_duplicate_result.message,
                                     config.debug_failures_dir,
                                 )
-                                result.messages.append(message)
+                                self._append_rejection_message(result, message)
                                 continue
 
                         candidate.candidate_signature = candidate_signature
@@ -168,6 +180,18 @@ class LevelGenerationService:
                                 *(existing_signatures if config.compare_against_existing else []),
                             ],
                         )
+                        quality_rejection = self._quality_rejection(candidate)
+                        if quality_rejection is not None:
+                            reason, detail = quality_rejection
+                            near_miss_candidates.append(self._candidate_summary(candidate, reason))
+                            message = rejection_service.record_custom_rejection(
+                                candidate,
+                                reason,
+                                detail,
+                                config.debug_failures_dir,
+                            )
+                            self._append_rejection_message(result, message)
+                            continue
                         candidate_pool.append(candidate)
                         candidate_pool_signatures.append(candidate_signature)
                         if len(candidate_pool) >= config.candidate_pool_size:
@@ -180,11 +204,11 @@ class LevelGenerationService:
                     break
 
             if candidate_pool:
-                accepted_candidate = max(
-                    candidate_pool,
-                    key=lambda candidate: candidate.quality_score.total if candidate.quality_score is not None else 0,
-                )
+                accepted_candidate = max(candidate_pool, key=self._candidate_selection_key)
                 accepted_signatures.append(accepted_candidate.candidate_signature)
+                result.candidate_selection_summaries.append(
+                    self._candidate_selection_summary(level_id, accepted_candidate, candidate_pool, near_miss_candidates)
+                )
 
             if accepted_candidate is None:
                 result.passed = False
@@ -413,6 +437,136 @@ class LevelGenerationService:
             "alternating",
         ]
         return [names[index % len(names)] for index in range(count)]
+
+    def _append_rejection_message(self, result: GenerationResult, message: str) -> None:
+        rejection_message_count = sum(1 for existing in result.messages if existing.startswith("Rejected candidate "))
+        if rejection_message_count < self.MAX_REJECTION_MESSAGES:
+            result.messages.append(message)
+            return
+        suppression_message = (
+            f"Additional candidate rejection messages suppressed after {self.MAX_REJECTION_MESSAGES}; "
+            "see rejectionReasonCounts and candidateSelection in the report."
+        )
+        if suppression_message not in result.messages:
+            result.messages.append(suppression_message)
+
+    def _candidate_selection_key(self, candidate) -> tuple[float, float, float, int]:
+        quality = candidate.quality_score
+        if quality is None:
+            return (0.0, 0.0, 0.0, -candidate.seed)
+        return (quality.total, quality.switch_clarity, quality.uniqueness, -candidate.seed)
+
+    def _quality_rejection(self, candidate) -> tuple[str, str] | None:
+        quality = candidate.quality_score
+        if quality is None:
+            return None
+        max_similarity = float(quality.details.get("maxSimilarity", 0.0))
+        if quality.runtime_solvability < self.MINIMUM_RUNTIME_CONFIDENCE:
+            return (
+                "quality_runtime_confidence_below_threshold",
+                (
+                    f"runtime confidence {quality.runtime_solvability:.2f} "
+                    f"< {self.MINIMUM_RUNTIME_CONFIDENCE:.2f}"
+                ),
+            )
+        if quality.switch_clarity < self.MINIMUM_SWITCH_CLARITY:
+            return (
+                "quality_switch_clarity_below_threshold",
+                f"switch clarity {quality.switch_clarity:.2f} < {self.MINIMUM_SWITCH_CLARITY:.2f}",
+            )
+        if max_similarity > self.MAXIMUM_SELECTION_SIMILARITY:
+            return (
+                "quality_similarity_above_threshold",
+                f"similarity {max_similarity:.2f} > {self.MAXIMUM_SELECTION_SIMILARITY:.2f}",
+            )
+        if quality.total < self.MINIMUM_TOTAL_QUALITY:
+            return (
+                "quality_total_below_threshold",
+                f"quality total {quality.total:.2f} < {self.MINIMUM_TOTAL_QUALITY:.2f}",
+            )
+        return None
+
+    def _candidate_selection_summary(self, level_id: str, accepted_candidate, candidate_pool, near_miss_candidates):
+        scored_candidates = [candidate for candidate in candidate_pool if candidate.quality_score is not None]
+        sorted_candidates = sorted(scored_candidates, key=self._candidate_selection_key, reverse=True)
+        runner_ups = [
+            self._candidate_summary(candidate, "not_selected")
+            for candidate in sorted_candidates
+            if candidate is not accepted_candidate
+        ]
+        top_rejected = sorted(
+            [*runner_ups, *near_miss_candidates],
+            key=lambda item: item.get("quality", {}).get("total", 0.0),
+            reverse=True,
+        )[:5]
+        scores = [
+            *[candidate.quality_score.total for candidate in scored_candidates],
+            *[
+                near_miss.get("quality", {}).get("total")
+                for near_miss in near_miss_candidates
+                if near_miss.get("quality", {}).get("total") is not None
+            ],
+        ]
+        accepted_score = accepted_candidate.quality_score.total if accepted_candidate.quality_score is not None else 0.0
+        next_score = top_rejected[0]["quality"]["total"] if top_rejected else None
+        return {
+            "levelID": level_id,
+            "candidateCount": len(scores),
+            "acceptedCandidate": self._candidate_summary(accepted_candidate, "accepted"),
+            "scoreStats": {
+                "minimum": round(min(scores), 4) if scores else None,
+                "average": round(sum(scores) / len(scores), 4) if scores else None,
+                "maximum": round(max(scores), 4) if scores else None,
+            },
+            "topRejectedNearMisses": top_rejected,
+            "selectionRationale": self._selection_rationale(accepted_score, next_score),
+        }
+
+    def _selection_rationale(self, accepted_score: float, next_score: float | None) -> str:
+        if next_score is None:
+            return "Only one scored candidate passed validation and quality thresholds."
+        return f"Accepted candidate had the highest deterministic quality score ({accepted_score:.4f} vs {next_score:.4f})."
+
+    def _candidate_summary(self, candidate, status: str) -> dict:
+        quality = candidate.quality_score
+        return {
+            "levelID": candidate.level_id,
+            "seed": candidate.seed,
+            "template": candidate.template_name,
+            "recipeFamily": candidate.recipe_family,
+            "recipeVariant": candidate.recipe_variant,
+            "layoutVariant": candidate.selected_layout_variant,
+            "roadShapeStrategy": candidate.selected_road_shape_strategy,
+            "status": status,
+            "quality": self._quality_summary(quality),
+            "signature": (
+                {
+                    "topologyHashShort": candidate.candidate_signature.topology_hash[:8],
+                    "layoutHashShort": candidate.candidate_signature.layout_hash[:8],
+                    "solutionHashShort": candidate.candidate_signature.solution_hash[:8],
+                }
+                if candidate.candidate_signature is not None
+                else None
+            ),
+        }
+
+    def _quality_summary(self, quality) -> dict:
+        if quality is None:
+            return {}
+        return {
+            "total": quality.total,
+            "abstractMechanicQuality": quality.abstract_mechanic_quality,
+            "runtimeSolvability": quality.runtime_solvability,
+            "readability": quality.readability,
+            "switchClarity": quality.switch_clarity,
+            "difficultyFit": quality.difficulty_fit,
+            "uniqueness": quality.uniqueness,
+            "campaignPacing": quality.campaign_pacing,
+            "mobileTapComfort": quality.mobile_tap_comfort,
+            "visualAppeal": quality.visual_appeal,
+            "penalties": list(quality.penalties),
+            "maxSimilarity": quality.details.get("maxSimilarity", 0.0),
+        }
 
     def _preflight_output_collisions(self, config: GenerationConfig) -> None:
         if config.overwrite or config.dry_run:

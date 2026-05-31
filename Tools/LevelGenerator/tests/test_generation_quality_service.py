@@ -19,7 +19,17 @@ def test_generation_quality_service_scores_valid_candidate() -> None:
 
     assert 0 < score.total <= 1
     assert score.difficulty_fit == 1
+    assert 0 < score.abstract_mechanic_quality <= 1
+    assert 0 < score.runtime_solvability <= 1
+    assert 0 < score.switch_clarity <= 1
+    assert 0 < score.mobile_tap_comfort <= 1
+    assert 0 < score.visual_appeal <= 1
     assert "switchCount" in score.details
+    assert "abstractMechanicQuality" in score.details
+    assert "runtimeSolvability" in score.details
+    assert "switchClarity" in score.details
+    assert "mobileTapComfort" in score.details
+    assert "visualAppeal" in score.details
 
 
 def test_generation_quality_penalizes_similar_candidates() -> None:
@@ -49,6 +59,21 @@ def test_generation_quality_penalizes_adjacent_duplicate_mechanics() -> None:
     assert score.campaign_pacing < 1
     assert "campaign_repeated_recipe_family" in score.penalties
     assert score.details["campaignPacing"]["previousLevelID"] == "level_012"
+
+
+def test_generation_quality_rewards_target_difficulty_fit() -> None:
+    difficulty_service = DifficultyService()
+    easy_preset = difficulty_service.get_preset("easy")
+    hard_preset = difficulty_service.get_preset("hard")
+    generated = SingleSwitchTemplate().generate("level_012", 12, easy_preset, RandomSource(2))
+    generated.candidate_signature = CandidateSignatureService().signature_for(generated)
+    quality_service = GenerationQualityService()
+
+    easy_score = quality_service.score(generated, easy_preset)
+    hard_score = quality_service.score(generated, hard_preset)
+
+    assert easy_score.difficulty_fit > hard_score.difficulty_fit
+    assert easy_score.total > hard_score.total
 
 
 def test_generation_quality_visual_clarity_warnings_lower_readability_score() -> None:

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from pathlib import Path
+from typing import Any
 
 from .generated_level import GeneratedLevel
 
@@ -21,6 +22,7 @@ class SwiftTestSummary:
 @dataclass
 class GenerationResult:
     accepted: list[GeneratedLevel] = field(default_factory=list)
+    candidate_selection_summaries: list[dict[str, Any]] = field(default_factory=list)
     rejected_candidate_count: int = 0
     rejection_reason_counts: dict[str, int] = field(default_factory=dict)
     written_level_paths: list[Path] = field(default_factory=list)

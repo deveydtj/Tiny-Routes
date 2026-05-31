@@ -14,8 +14,8 @@ def test_generation_config_defaults_use_recipe_first_breadth() -> None:
     assert config.recipe_pool_size == 4
     assert config.layouts_per_recipe == 3
     assert config.road_shapes_per_layout == 3
-    assert config.candidate_pool_size == 8
-    assert config.max_attempts_per_level == 100
+    assert config.candidate_pool_size == 25
+    assert config.max_attempts_per_level == 300
 
 
 def test_generation_config_still_accepts_explicit_legacy_template_mode() -> None:

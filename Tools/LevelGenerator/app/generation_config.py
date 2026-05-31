@@ -14,7 +14,8 @@ DEFAULT_GENERATION_MODE = "recipe_first"
 DEFAULT_RECIPE_POOL_SIZE = 4
 DEFAULT_LAYOUTS_PER_RECIPE = 3
 DEFAULT_ROAD_SHAPES_PER_LAYOUT = 3
-DEFAULT_CANDIDATE_POOL_SIZE = 8
+DEFAULT_CANDIDATE_POOL_SIZE = 25
+DEFAULT_MAX_ATTEMPTS_PER_LEVEL = 300
 
 
 @dataclass(frozen=True)
@@ -41,7 +42,7 @@ class GenerationConfig:
     )
     map_seed_path: Path | None = None
     debug_failures_dir: Path | None = None
-    max_attempts_per_level: int = 100
+    max_attempts_per_level: int = DEFAULT_MAX_ATTEMPTS_PER_LEVEL
     candidate_pool_size: int = DEFAULT_CANDIDATE_POOL_SIZE
     swift_timeout_seconds: int = 180
     sync_xcode_project: bool = True

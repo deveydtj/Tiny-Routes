@@ -112,7 +112,8 @@ def test_cli_defaults_create_recipe_first_config() -> None:
     assert config.recipe_pool_size == 4
     assert config.layouts_per_recipe == 3
     assert config.road_shapes_per_layout == 3
-    assert config.candidate_pool_size == 8
+    assert config.candidate_pool_size == 25
+    assert config.max_attempts_per_level == 300
 
 
 def test_cli_accepts_recipe_architecture_options_for_recipe_generation(tmp_path) -> None:

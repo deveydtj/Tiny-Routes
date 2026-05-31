@@ -51,6 +51,11 @@ class GenerationQualityScore:
     uniqueness: float
     difficulty_fit: float
     route_interest: float
+    abstract_mechanic_quality: float = 1.0
+    runtime_solvability: float = 1.0
+    switch_clarity: float = 1.0
+    mobile_tap_comfort: float = 1.0
+    visual_appeal: float = 1.0
     campaign_pacing: float = 1.0
     mechanical_difficulty: float = 0.0
     visual_difficulty: float = 0.0

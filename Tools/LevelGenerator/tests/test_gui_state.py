@@ -38,7 +38,8 @@ def test_default_gui_state_converts_to_generation_config() -> None:
     assert config.recipe_pool_size == 4
     assert config.layouts_per_recipe == 3
     assert config.road_shapes_per_layout == 3
-    assert config.candidate_pool_size == 8
+    assert config.candidate_pool_size == 25
+    assert config.max_attempts_per_level == 300
     assert config.dry_run is True
 
 

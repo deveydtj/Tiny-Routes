@@ -11,6 +11,7 @@ from ..generation_config import (
     DEFAULT_CANDIDATE_POOL_SIZE,
     DEFAULT_GENERATION_MODE,
     DEFAULT_LAYOUTS_PER_RECIPE,
+    DEFAULT_MAX_ATTEMPTS_PER_LEVEL,
     DEFAULT_RECIPE_POOL_SIZE,
     DEFAULT_ROAD_SHAPES_PER_LAYOUT,
 )
@@ -77,7 +78,7 @@ class LevelGeneratorGui:
         self.layouts_per_recipe_var = tk.StringVar(value=str(DEFAULT_LAYOUTS_PER_RECIPE))
         self.road_shapes_per_layout_var = tk.StringVar(value=str(DEFAULT_ROAD_SHAPES_PER_LAYOUT))
         self.seed_var = tk.StringVar(value="")
-        self.max_attempts_var = tk.StringVar(value="100")
+        self.max_attempts_var = tk.StringVar(value=str(DEFAULT_MAX_ATTEMPTS_PER_LEVEL))
         self.candidate_pool_var = tk.StringVar(value=str(DEFAULT_CANDIDATE_POOL_SIZE))
 
         self.dry_run_var = tk.BooleanVar(value=True)
@@ -648,8 +649,8 @@ class LevelGeneratorGui:
         self.difficulty_var.set("tutorial")
         self.template_var.set("mixed")
         self.seed_var.set("")
-        self.max_attempts_var.set("100")
-        self.candidate_pool_var.set("1")
+        self.max_attempts_var.set(str(DEFAULT_MAX_ATTEMPTS_PER_LEVEL))
+        self.candidate_pool_var.set(str(DEFAULT_CANDIDATE_POOL_SIZE))
         self.dry_run_var.set(True)
         self.overwrite_var.set(False)
         self.swift_tests_var.set(False)
