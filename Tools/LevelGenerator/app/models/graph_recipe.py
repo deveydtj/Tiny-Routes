@@ -4,6 +4,8 @@ import hashlib
 import json
 from dataclasses import dataclass, field
 
+from .abstract_puzzle_solution import AbstractPuzzleSolutionMetadata
+
 
 @dataclass(frozen=True)
 class GraphRecipeNode:
@@ -30,6 +32,7 @@ class GraphRecipe:
     notes: tuple[str, ...] = field(default_factory=tuple)
     family_name: str = "graph_recipe"
     variant_name: str = "default"
+    solved_metadata: AbstractPuzzleSolutionMetadata | None = None
 
     def validate(self) -> list[str]:
         messages: list[str] = []

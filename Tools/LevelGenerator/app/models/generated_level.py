@@ -4,6 +4,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
+from .abstract_puzzle_solution import AbstractPuzzleSolutionMetadata
 from .candidate_signature import CandidateSignature
 from .generation_quality import GenerationQualityScore
 from .simulation import SimulationResult
@@ -29,6 +30,7 @@ class GeneratedLevel:
     abstract_graph_signature: str | None = None
     selected_layout_variant: str | None = None
     selected_road_shape_strategy: str | None = None
+    abstract_solution_metadata: AbstractPuzzleSolutionMetadata | None = None
 
     @property
     def level_id(self) -> str:

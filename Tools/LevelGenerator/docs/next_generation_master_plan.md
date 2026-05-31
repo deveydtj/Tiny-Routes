@@ -301,50 +301,50 @@ Before worrying about visual layout, prove that the generated puzzle graph has a
 
 ## Tasks
 
-- [ ] Create `AbstractPuzzleSolverService`:
-  - [ ] input: recipe graph, start, package, destination, switch behavior
-  - [ ] output: solved path, required switch taps, alternate paths, dead ends, failure paths
-- [ ] Model switch state explicitly:
-  - [ ] default active outgoing edge
-  - [ ] tap order rotation
-  - [ ] two-way, three-way, and four-way switch behavior
-  - [ ] repeated taps allowed or disallowed by difficulty
-- [ ] Search possible tap sequences:
-  - [ ] breadth-first search for lower difficulties
-  - [ ] bounded search for hard/expert levels
-  - [ ] max tap count guard
-  - [ ] max state count guard
-- [ ] Identify solution quality:
-  - [ ] minimum required taps
-  - [ ] optional taps
-  - [ ] false routes
-  - [ ] route loops
-  - [ ] repeated switch usage
-  - [ ] whether package is collected before destination
-- [ ] Reject bad abstract puzzles:
-  - [ ] no solution
-  - [ ] solution skips package
-  - [ ] destination reachable before package when that would confuse scoring
-  - [ ] every choice is obvious/no-op
-  - [ ] too many equivalent solutions
-  - [ ] requires too many taps for difficulty
-  - [ ] requires repeated taps before player has learned that mechanic
-- [ ] Store solved recipe metadata:
-  - [ ] `solutionTapNodeIDs`
-  - [ ] `solutionSwitchStates`
-  - [ ] `requiredPath`
-  - [ ] `alternatePathCount`
-  - [ ] `deadEndCount`
-  - [ ] `loopCount`
-- [ ] Add tests:
-  - [ ] no-switch tutorial route
-  - [ ] single switch with one wrong branch
-  - [ ] package gate
-  - [ ] return loop
-  - [ ] ring route
-  - [ ] four-way intersection
-  - [ ] unsolvable graph
-  - [ ] destination-before-package graph
+- [x] Create `AbstractPuzzleSolverService`:
+  - [x] input: recipe graph, start, package, destination, switch behavior
+  - [x] output: solved path, required switch taps, alternate paths, dead ends, failure paths
+- [x] Model switch state explicitly:
+  - [x] default active outgoing edge
+  - [x] tap order rotation
+  - [x] two-way, three-way, and four-way switch behavior
+  - [x] repeated taps allowed or disallowed by difficulty
+- [x] Search possible tap sequences:
+  - [x] breadth-first search for lower difficulties
+  - [x] bounded search for hard/expert levels
+  - [x] max tap count guard
+  - [x] max state count guard
+- [x] Identify solution quality:
+  - [x] minimum required taps
+  - [x] optional taps
+  - [x] false routes
+  - [x] route loops
+  - [x] repeated switch usage
+  - [x] whether package is collected before destination
+- [x] Reject bad abstract puzzles:
+  - [x] no solution
+  - [x] solution skips package
+  - [x] destination reachable before package when that would confuse scoring
+  - [x] every choice is obvious/no-op
+  - [x] too many equivalent solutions
+  - [x] requires too many taps for difficulty
+  - [x] requires repeated taps before player has learned that mechanic
+- [x] Store solved recipe metadata:
+  - [x] `solutionTapNodeIDs`
+  - [x] `solutionSwitchStates`
+  - [x] `requiredPath`
+  - [x] `alternatePathCount`
+  - [x] `deadEndCount`
+  - [x] `loopCount`
+- [x] Add tests:
+  - [x] no-switch tutorial route
+  - [x] single switch with one wrong branch
+  - [x] package gate
+  - [x] return loop
+  - [x] ring route
+  - [x] four-way intersection
+  - [x] unsolvable graph
+  - [x] destination-before-package graph
 
 ## Do
 
@@ -362,9 +362,9 @@ Before worrying about visual layout, prove that the generated puzzle graph has a
 
 ## Acceptance Criteria
 
-- [ ] Every recipe-first candidate is abstractly solved before layout.
-- [ ] Solver failures produce clear rejection codes.
-- [ ] Solver tests cover all supported mechanic families.
+- [x] Every recipe-first candidate is abstractly solved before layout.
+- [x] Solver failures produce clear rejection codes.
+- [x] Solver tests cover all supported mechanic families.
 
 ---
 

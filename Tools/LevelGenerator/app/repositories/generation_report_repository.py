@@ -64,6 +64,7 @@ class GenerationReportRepository:
                     ),
                     "selectedLayoutVariant": level.selected_layout_variant,
                     "selectedRoadShapeStrategy": level.selected_road_shape_strategy,
+                    "abstractSolution": self._abstract_solution_payload(level),
                     "seed": level.seed,
                     "difficulty": level.difficulty,
                     "nodes": level.node_count,
@@ -167,6 +168,13 @@ class GenerationReportRepository:
                         f"- Layout: `{level['selectedLayoutVariant']}`; "
                         f"road shapes: `{level['selectedRoadShapeStrategy']}`."
                     )
+                    if level["abstractSolution"]:
+                        abstract = level["abstractSolution"]
+                        lines.append(
+                            f"- Abstract solution: {abstract['minimumRequiredTaps']} required taps, "
+                            f"{abstract['alternatePathCount']} alternate paths, "
+                            f"{abstract['deadEndCount']} dead ends, {abstract['loopCount']} loops."
+                        )
                 for switch in level["switchPreview"]:
                     transition_summary = ", ".join(
                         (
@@ -263,6 +271,12 @@ class GenerationReportRepository:
             "penalties": list(quality.penalties),
             "details": quality.details,
         }
+
+    def _abstract_solution_payload(self, level) -> dict[str, Any] | None:
+        metadata = getattr(level, "abstract_solution_metadata", None)
+        if metadata is None:
+            return None
+        return metadata.to_dict()
 
     def _simulation_payload(self, level) -> dict[str, Any] | None:
         simulation = getattr(level, "simulation_result", None)

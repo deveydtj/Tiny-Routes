@@ -97,6 +97,7 @@ class RecipeToLevelBuilderService:
             abstract_graph_signature=recipe.abstract_signature,
             selected_layout_variant=layout_variant.name,
             selected_road_shape_strategy=road_shape_strategy,
+            abstract_solution_metadata=recipe.solved_metadata,
         )
 
     def _assign_positions(self, recipe: GraphRecipe) -> dict[str, tuple[float, float]]:

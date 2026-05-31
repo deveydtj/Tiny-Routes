@@ -171,3 +171,55 @@ xcodebuild test -scheme TinyRoutes -destination 'platform=iOS Simulator,id=CE7E8
 ```
 
 Result: `TEST SUCCEEDED`; 121 selected Swift tests passed.
+
+## Phase 3 - Abstract Puzzle Solver
+
+Completed:
+
+- [x] Added `AbstractPuzzleSolverService`.
+- [x] Added explicit switch-state search over recipe graphs:
+  - [x] default active outgoing edge is index `0`
+  - [x] tap order rotates through outgoing edges in recipe/build order
+  - [x] two-way, three-way, and four-way switches are supported through bounded outgoing-edge counts
+  - [x] repeated switch taps are rejected when the difficulty preset has not unlocked them
+- [x] Added bounded breadth-first exploration with max tap, state, and path-step guards.
+- [x] Added solved recipe metadata:
+  - [x] `solutionTapNodeIDs`
+  - [x] `solutionSwitchStates`
+  - [x] `requiredPath`
+  - [x] `alternatePathCount`
+  - [x] `deadEndCount`
+  - [x] `loopCount`
+  - [x] additional failure/false-route/repeated-tap metadata for reports
+- [x] Updated recipe-first generation to solve every recipe before layout.
+- [x] Added clear abstract solver rejection codes for invalid recipes, no-solution graphs, destination-before-package routes, repeated taps before unlock, excessive taps, too many equivalent solutions, too many outgoing switch edges, and no meaningful switch choices.
+- [x] Added abstract solution metadata to JSON generation reports and a short summary to Markdown reports.
+- [x] Added solver tests for:
+  - [x] no-switch tutorial route
+  - [x] single switch with wrong branch
+  - [x] package gate
+  - [x] return loop
+  - [x] ring route
+  - [x] four-way intersection
+  - [x] unsolvable graph
+  - [x] destination-before-package graph
+
+Verification:
+
+```bash
+/Library/Frameworks/Python.framework/Versions/3.13/bin/python3 -m pytest Tools/LevelGenerator/tests/test_abstract_puzzle_solver_service.py Tools/LevelGenerator/tests/test_generation_service.py::test_generation_service_recipe_first_supports_current_recipe_families Tools/LevelGenerator/tests/test_generation_service.py::test_generation_service_recipe_first_mode_generates_recipe_metadata
+```
+
+Result: `10 passed`.
+
+```bash
+/Library/Frameworks/Python.framework/Versions/3.13/bin/python3 -m pytest Tools/LevelGenerator/tests
+```
+
+Result: `164 passed`.
+
+```bash
+/Library/Frameworks/Python.framework/Versions/3.13/bin/python3 Tools/LevelGenerator/run_all_generator_checks.py --python /Library/Frameworks/Python.framework/Versions/3.13/bin/python3
+```
+
+Result: passed. The check suite ran Python tests, smoke dry-run generation, and validation for production levels `level_001` through `level_030` with Swift tests disabled by the script.

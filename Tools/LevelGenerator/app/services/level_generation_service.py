@@ -16,6 +16,7 @@ from ..repositories.generated_level_repository import GeneratedLevelRepository
 from ..repositories.generation_report_repository import GenerationReportRepository
 from ..recipes.recipe_family_registry import RecipeFamilyRegistry
 from ..templates.template_registry import TemplateRegistry
+from .abstract_puzzle_solver_service import AbstractPuzzleSolverService
 from .candidate_rejection_service import CandidateRejectionService
 from .candidate_signature_service import CandidateSignatureService
 from .candidate_uniqueness_service import CandidateUniquenessService
@@ -46,6 +47,7 @@ class LevelGenerationService:
         self.resource_sync_service = LevelResourceSyncService()
         self.recipe_to_level_builder = RecipeToLevelBuilderService()
         self.layout_variant_service = LayoutVariantService()
+        self.abstract_puzzle_solver = AbstractPuzzleSolverService()
 
     def generate(self, config: GenerationConfig) -> GenerationResult:
         result = GenerationResult()
@@ -100,7 +102,8 @@ class LevelGenerationService:
                         plan_template_weights=plan_entry.template_weights,
                     )
                 except Exception as exc:
-                    rejection_service.reason_counts["candidate_generation_error"] += 1
+                    rejection_code = getattr(exc, "code", "candidate_generation_error")
+                    rejection_service.reason_counts[rejection_code] += 1
                     result.messages.append(f"Rejected candidate {level_id} attempt={attempt}: {exc}")
                     continue
 
@@ -353,6 +356,7 @@ class LevelGenerationService:
             recipe_issues = recipe.validate()
             if recipe_issues:
                 raise ValueError(f"Invalid solved recipe candidate: {', '.join(recipe_issues)}")
+            recipe = self.abstract_puzzle_solver.solve(recipe, preset)
 
             for layout_index, layout_name in enumerate(layout_names):
                 for road_index, road_shape_strategy in enumerate(road_shape_strategies):
