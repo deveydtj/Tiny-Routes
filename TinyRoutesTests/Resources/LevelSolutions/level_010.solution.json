@@ -7,7 +7,7 @@
   "actions": [
     {
       "timeSeconds": 0.65,
-      "tapNodeID": "upper_choice"
+      "tapNodeID": "short_choice"
     }
   ]
 }

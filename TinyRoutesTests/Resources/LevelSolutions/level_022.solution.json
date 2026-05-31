@@ -7,11 +7,11 @@
   "actions": [
     {
       "timeSeconds": 0.15,
-      "tapNodeID": "multi_switch_chain_split_dead_ends_switch_a"
+      "tapNodeID": "lower_entry_switch"
     },
     {
       "timeSeconds": 1.8,
-      "tapNodeID": "multi_switch_chain_split_dead_ends_switch_b"
+      "tapNodeID": "lower_finish_switch"
     }
   ]
 }

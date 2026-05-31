@@ -2,20 +2,16 @@
   "levelID": "level_012",
   "description": "Follow the generated graph recipe route and rotate each switch before arrival.",
   "expectedOutcome": "completed",
-  "maxTaps": 3,
+  "maxTaps": 2,
   "requiresWithinTimeLimit": true,
   "actions": [
     {
-      "timeSeconds": 0.21,
+      "timeSeconds": 0.31,
       "tapNodeID": "multi_switch_chain_zigzag_switch_a"
     },
     {
-      "timeSeconds": 1.32,
+      "timeSeconds": 1.62,
       "tapNodeID": "multi_switch_chain_zigzag_switch_b"
-    },
-    {
-      "timeSeconds": 2.04,
-      "tapNodeID": "multi_switch_chain_zigzag_switch_c"
     }
   ]
 }

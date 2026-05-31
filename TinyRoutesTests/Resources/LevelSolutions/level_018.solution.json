@@ -6,16 +6,16 @@
   "requiresWithinTimeLimit": true,
   "actions": [
     {
-      "timeSeconds": 1.46,
-      "tapNodeID": "lower_alpha_switch"
+      "timeSeconds": 0.1,
+      "tapNodeID": "multi_switch_chain_split_dead_ends_switch_a"
     },
     {
-      "timeSeconds": 3.32,
-      "tapNodeID": "lower_beta_switch"
+      "timeSeconds": 1.5,
+      "tapNodeID": "multi_switch_chain_split_dead_ends_switch_b"
     },
     {
-      "timeSeconds": 4.56,
-      "tapNodeID": "lower_alpha_switch"
+      "timeSeconds": 1.9,
+      "tapNodeID": "multi_switch_chain_split_dead_ends_switch_c"
     }
   ]
 }

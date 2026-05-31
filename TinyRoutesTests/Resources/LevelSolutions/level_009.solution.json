@@ -7,11 +7,11 @@
   "actions": [
     {
       "timeSeconds": 0.15,
-      "tapNodeID": "approach_switch"
+      "tapNodeID": "lower_entry_switch"
     },
     {
       "timeSeconds": 1.8,
-      "tapNodeID": "finish_switch"
+      "tapNodeID": "lower_finish_switch"
     }
   ]
 }

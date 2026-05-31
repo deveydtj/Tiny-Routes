@@ -2,24 +2,20 @@
   "levelID": "level_026",
   "description": "Follow the generated graph recipe route and rotate each switch before arrival.",
   "expectedOutcome": "completed",
-  "maxTaps": 4,
+  "maxTaps": 3,
   "requiresWithinTimeLimit": true,
   "actions": [
     {
-      "timeSeconds": 0.16,
-      "tapNodeID": "multi_switch_chain_double_gate_switch_a"
+      "timeSeconds": 0.69,
+      "tapNodeID": "hub"
     },
     {
-      "timeSeconds": 1.12,
-      "tapNodeID": "multi_switch_chain_double_gate_switch_b"
+      "timeSeconds": 2.56,
+      "tapNodeID": "ring_b"
     },
     {
-      "timeSeconds": 1.8,
-      "tapNodeID": "multi_switch_chain_double_gate_switch_c"
-    },
-    {
-      "timeSeconds": 2.43,
-      "tapNodeID": "multi_switch_chain_double_gate_switch_d"
+      "timeSeconds": 3.06,
+      "tapNodeID": "gate"
     }
   ]
 }
