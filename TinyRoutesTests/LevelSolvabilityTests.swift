@@ -403,6 +403,61 @@ final class LevelSolvabilityTests: XCTestCase {
         }
     }
 
+    func testRequestedGeneratedLevelsCompleteFromEnvironmentDirectories() throws {
+        let environment = ProcessInfo.processInfo.environment
+        guard let rawLevelIDs = environment["TINY_ROUTES_VALIDATION_LEVEL_IDS"],
+              !rawLevelIDs.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+            throw XCTSkip("No generated level IDs requested for external Swift validation.")
+        }
+        guard let levelsPath = environment["TINY_ROUTES_LEVELS_DIR"],
+              let solutionsPath = environment["TINY_ROUTES_SOLUTIONS_DIR"] else {
+            XCTFail("TINY_ROUTES_LEVELS_DIR and TINY_ROUTES_SOLUTIONS_DIR are required when TINY_ROUTES_VALIDATION_LEVEL_IDS is set.")
+            return
+        }
+
+        let levelIDs = rawLevelIDs
+            .split(separator: ",")
+            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+            .filter { !$0.isEmpty }
+        let levelsDirectory = URL(fileURLWithPath: levelsPath, isDirectory: true)
+        let solutionsDirectory = URL(fileURLWithPath: solutionsPath, isDirectory: true)
+        var failures: [String] = []
+
+        for levelID in levelIDs {
+            let level = try catalog.loadLevel(levelID: levelID, from: levelsDirectory)
+            let script = try solutionRepository.loadScript(levelID: levelID, from: solutionsDirectory)
+            let result = Result { try harness.run(level: level, script: script) }
+
+            switch result {
+            case .failure(let error):
+                failures.append(
+                    describeFailure(
+                        level: level,
+                        script: script,
+                        error: error,
+                        context: "External generated level harness threw."
+                    )
+                )
+            case .success(let solvability) where solvability.outcome != .completed:
+                failures.append(
+                    describeFailure(
+                        level: level,
+                        script: script,
+                        result: solvability,
+                        context: "External generated level expected .completed."
+                    )
+                )
+            case .success:
+                break
+            }
+        }
+
+        XCTAssertTrue(
+            failures.isEmpty,
+            "External generated level solvability failures:\n\(failures.joined(separator: "\n"))"
+        )
+    }
+
     private func describeFailure(
         level: LevelData,
         script: LevelSolutionScript,

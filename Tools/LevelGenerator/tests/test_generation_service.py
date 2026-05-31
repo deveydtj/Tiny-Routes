@@ -142,6 +142,21 @@ def test_generation_service_requires_swift_tests_for_hard_mixed_production_write
     assert "--swift-tests" in result.messages[0]
 
 
+def test_generation_service_requires_swift_tests_for_hard_production_writes(tmp_path) -> None:
+    result = LevelGenerationService().generate(
+        _config(
+            tmp_path,
+            difficulty="hard",
+            template_name="multi_switch_chain",
+            dry_run=False,
+        )
+    )
+
+    assert result.passed is False
+    assert "--swift-tests" in result.messages[0]
+    assert not (tmp_path / "levels").exists()
+
+
 def test_generation_service_generates_unique_medium_mixed_batch(tmp_path) -> None:
     result = LevelGenerationService().generate(
         _config(

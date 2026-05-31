@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 import shutil
 import subprocess
 from dataclasses import dataclass
@@ -12,9 +13,12 @@ from ..models.generation_result import SwiftTestSummary
 class SwiftTestService:
     repo_root: Path
     timeout_seconds: int = 180
+    level_ids: tuple[str, ...] = ()
+    levels_output_dir: Path | None = None
+    solutions_output_dir: Path | None = None
 
     def build_command(self) -> list[str]:
-        return [
+        command = [
             "xcodebuild",
             "test",
             "-project",
@@ -23,6 +27,14 @@ class SwiftTestService:
             "TinyRoutes",
             "-destination",
             "platform=iOS Simulator,name=iPhone 16,OS=18.5",
+        ]
+        if self.level_ids:
+            return [
+                *command,
+                "-only-testing:TinyRoutesTests/LevelSolvabilityTests/testRequestedGeneratedLevelsCompleteFromEnvironmentDirectories",
+            ]
+        return [
+            *command,
             "-only-testing:TinyRoutesTests/LevelSolvabilityTests",
             "-only-testing:TinyRoutesTests/LevelSimulationHarnessTests",
             "-only-testing:TinyRoutesTests/LevelSolutionScriptTests",
@@ -30,14 +42,28 @@ class SwiftTestService:
             "-only-testing:TinyRoutesTests/SwitchNodeViewTests",
         ]
 
+    def build_environment(self) -> dict[str, str]:
+        if not self.level_ids:
+            return {}
+        environment = {
+            "TINY_ROUTES_VALIDATION_LEVEL_IDS": ",".join(self.level_ids),
+        }
+        if self.levels_output_dir is not None:
+            environment["TINY_ROUTES_LEVELS_DIR"] = str(self.levels_output_dir)
+        if self.solutions_output_dir is not None:
+            environment["TINY_ROUTES_SOLUTIONS_DIR"] = str(self.solutions_output_dir)
+        return environment
+
     def is_available(self) -> bool:
         return shutil.which("xcodebuild") is not None
 
     def run(self) -> SwiftTestSummary:
         command = self.build_command()
+        environment = self.build_environment()
         if not self.is_available():
             return SwiftTestSummary(
                 command=command,
+                environment=environment,
                 exit_code=127,
                 passed=False,
                 summary="Could not run Swift tests because xcodebuild was not found.",
@@ -46,6 +72,7 @@ class SwiftTestService:
             completed = subprocess.run(
                 command,
                 cwd=self.repo_root,
+                env={**os.environ, **environment},
                 capture_output=True,
                 text=True,
                 timeout=self.timeout_seconds,
@@ -54,28 +81,38 @@ class SwiftTestService:
         except subprocess.TimeoutExpired as exc:
             return SwiftTestSummary(
                 command=command,
+                environment=environment,
                 exit_code=124,
                 passed=False,
                 summary=f"Swift solvability tests timed out after {self.timeout_seconds} seconds.",
                 stdout_tail=_tail(exc.stdout),
                 stderr_tail=_tail(exc.stderr),
+                failure_details=_failure_details(exc.stdout, exc.stderr),
             )
         except OSError as exc:
             return SwiftTestSummary(
                 command=command,
+                environment=environment,
                 exit_code=1,
                 passed=False,
                 summary=f"Could not run Swift tests: {exc}",
             )
 
         passed = completed.returncode == 0
+        failure_details = [] if passed else _failure_details(completed.stdout, completed.stderr)
         return SwiftTestSummary(
             command=command,
+            environment=environment,
             exit_code=completed.returncode,
             passed=passed,
-            summary="Swift solvability tests passed." if passed else f"Swift solvability tests failed with exit code {completed.returncode}.",
+            summary=(
+                "Swift solvability tests passed."
+                if passed
+                else f"Swift solvability tests failed with exit code {completed.returncode}."
+            ),
             stdout_tail=_tail(completed.stdout),
             stderr_tail=_tail(completed.stderr),
+            failure_details=failure_details,
         )
 
 
@@ -86,3 +123,27 @@ def _tail(value: object, limit: int = 4000) -> str:
         value = value.decode(errors="replace")
     text = str(value)
     return text[-limit:]
+
+
+def _failure_details(stdout: object, stderr: object, limit: int = 20) -> list[str]:
+    text = "\n".join(part for part in [_tail(stdout, 12_000), _tail(stderr, 12_000)] if part)
+    details = []
+    interesting_prefixes = (
+        "External generated level solvability failures:",
+        "Level solvability failures:",
+        "level id:",
+        "script id:",
+        "actual outcome:",
+        "elapsed time:",
+        "tap count:",
+        "final node:",
+        "current edge:",
+        "harness error:",
+    )
+    for raw_line in text.splitlines():
+        line = raw_line.strip()
+        if any(line.startswith(prefix) for prefix in interesting_prefixes):
+            details.append(line)
+        if len(details) >= limit:
+            break
+    return details

@@ -52,6 +52,23 @@ final class LevelSolutionRepository {
         }
     }
 
+    /// Loads a single solution script from an explicit directory. Used by generator validation
+    /// runs that point Swift tests at scratch output folders instead of bundled test resources.
+    func loadScript(levelID: String, from directory: URL) throws -> LevelSolutionScript {
+        let url = directory.appendingPathComponent("\(levelID).solution.json")
+        let data: Data
+        do {
+            data = try Data(contentsOf: url)
+        } catch {
+            throw LevelSolutionRepositoryError.readFailed(levelID: levelID, underlying: error)
+        }
+        do {
+            return try decoder.decode(LevelSolutionScript.self, from: data)
+        } catch {
+            throw LevelSolutionRepositoryError.decodingFailed(levelID: levelID, underlying: error)
+        }
+    }
+
     /// Loads all solution scripts found in the `LevelSolutions` bundle directory.
     /// - Returns: An array of decoded `LevelSolutionScript` values, sorted by `levelID`.
     /// - Throws: `LevelSolutionRepositoryError.readFailed` or `.decodingFailed` for the first script that cannot be loaded.

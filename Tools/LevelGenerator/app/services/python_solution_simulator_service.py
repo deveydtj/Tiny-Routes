@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from dataclasses import dataclass
+
 from ..models.simulation import SimulationResult, SimulationStep
 from .route_timing_service import RouteTimingService
 
@@ -95,6 +97,31 @@ class PythonSolutionSimulatorService:
         while state.elapsed_time_seconds < target_time - tolerance:
             if state.step_count > max_step_count:
                 return self._failed("max_step_count_exceeded", steps, state)
+            if state.transition is not None:
+                transition = state.transition
+                remaining_transition_distance = transition.length - state.distance_along_transition
+                remaining_time = target_time - state.elapsed_time_seconds
+                if remaining_time < remaining_transition_distance - tolerance:
+                    state.distance_along_transition += remaining_time
+                    state.elapsed_time_seconds = target_time
+                    return None
+
+                state.elapsed_time_seconds += max(remaining_transition_distance, 0.0)
+                state.current_edge_id = transition.to_edge_id
+                state.distance_along_edge = transition.exit_distance_along_to_edge
+                state.transition = None
+                state.distance_along_transition = 0.0
+                state.step_count += 1
+                steps.append(
+                    SimulationStep(
+                        time_seconds=round(state.elapsed_time_seconds, 3),
+                        event="end_transition",
+                        node_id=state.current_node_id,
+                        edge_id=state.current_edge_id,
+                    )
+                )
+                continue
+
             terminal = self._begin_edge_if_needed(level, nodes, edges, active_edges, state, steps)
             if terminal is not None:
                 return terminal
@@ -104,14 +131,16 @@ class PythonSolutionSimulatorService:
                 return self._failed("active_edge_missing", steps, state)
 
             edge_length = max(self._edge_length(nodes, edge), 1e-9)
-            remaining_edge_distance = edge_length - state.distance_along_edge
+            transition = self._smooth_transition(nodes, edges, active_edges, edge)
+            edge_target_distance = transition.entry_distance_along_from_edge if transition is not None else edge_length
+            remaining_edge_distance = edge_target_distance - state.distance_along_edge
             remaining_time = target_time - state.elapsed_time_seconds
             if remaining_time < remaining_edge_distance - tolerance:
                 state.distance_along_edge += remaining_time
                 state.elapsed_time_seconds = target_time
                 return None
 
-            terminal = self._advance_across_current_edge(level, nodes, edges, state, steps)
+            terminal = self._advance_to_current_edge_target(level, nodes, edges, active_edges, state, steps, transition)
             if terminal is not None:
                 return terminal
         state.elapsed_time_seconds = target_time
@@ -132,7 +161,8 @@ class PythonSolutionSimulatorService:
             next_index = (valid_edges.index(current_edge_id) + 1) % len(valid_edges)
         previous_edge_id = active_edges.get(node_id)
         next_edge_id = valid_edges[next_index]
-        blocked = state.current_edge_id is not None and edges[state.current_edge_id].fromNodeID == node_id
+        blocked_by_current_edge = state.current_edge_id is not None and edges[state.current_edge_id].fromNodeID == node_id
+        blocked_by_transition = state.transition is not None and state.current_node_id == node_id
         target_node_id = edges[next_edge_id].toNodeID
         steps.append(
             SimulationStep(
@@ -146,12 +176,15 @@ class PythonSolutionSimulatorService:
                     target_node_id,
                     state.current_node_id,
                     state.current_edge_id,
-                    blocked,
+                    blocked_by_current_edge,
+                    blocked_by_transition,
                 ),
             )
         )
-        if blocked:
+        if blocked_by_current_edge:
             return self._failed("tap_ignored_current_edge", steps, state)
+        if blocked_by_transition:
+            return self._failed("tap_ignored_transition_node", steps, state)
 
         active_edges[node_id] = next_edge_id
         return None
@@ -243,13 +276,53 @@ class PythonSolutionSimulatorService:
         )
         return None
 
-    def _advance_across_current_edge(self, level, nodes, edges, state, steps: list[SimulationStep]) -> SimulationResult | None:
+    def _smooth_transition(self, nodes, edges, active_edges, edge) -> "_Transition | None":
+        node = nodes.get(edge.toNodeID)
+        if node is None:
+            return None
+        valid_outgoing_edge_ids = self._valid_outgoing_edge_ids(node, edges)
+        next_edge_id = active_edges.get(node.id)
+        if len(valid_outgoing_edge_ids) != 1 or next_edge_id not in valid_outgoing_edge_ids:
+            return None
+        next_edge = edges.get(next_edge_id)
+        if next_edge is None or next_edge.fromNodeID != node.id:
+            return None
+        connector = self.route_timing.perpendicular_connector(
+            nodes[edge.fromNodeID],
+            nodes[edge.toNodeID],
+            edge.roadShape,
+            nodes[next_edge.fromNodeID],
+            nodes[next_edge.toNodeID],
+            next_edge.roadShape,
+        )
+        if connector is None:
+            return None
+        return _Transition(
+            node_id=node.id,
+            to_edge_id=next_edge_id,
+            length=connector.length,
+            entry_distance_along_from_edge=connector.entry_distance_along_incoming_path,
+            exit_distance_along_to_edge=connector.exit_distance_along_outgoing_path,
+        )
+
+    def _advance_to_current_edge_target(
+        self,
+        level,
+        nodes,
+        edges,
+        active_edges,
+        state,
+        steps: list[SimulationStep],
+        transition: "_Transition | None" = None,
+    ) -> SimulationResult | None:
         edge = edges.get(state.current_edge_id)
         if edge is None:
             return self._failed("active_edge_missing", steps, state)
 
         edge_length = max(self._edge_length(nodes, edge), 1e-9)
-        remaining_edge_distance = edge_length - state.distance_along_edge
+        transition = transition if transition is not None else self._smooth_transition(nodes, edges, active_edges, edge)
+        edge_target_distance = transition.entry_distance_along_from_edge if transition is not None else edge_length
+        remaining_edge_distance = edge_target_distance - state.distance_along_edge
         state.elapsed_time_seconds += remaining_edge_distance
         state.current_node_id = edge.toNodeID
         state.current_edge_id = None
@@ -272,7 +345,51 @@ class PythonSolutionSimulatorService:
                     node_id=state.current_node_id,
                 )
             )
-        return self._evaluate_terminal(level, state, steps)
+        terminal = self._evaluate_terminal(level, state, steps)
+        if terminal is not None:
+            return terminal
+
+        if transition is not None:
+            state.transition = transition
+            state.distance_along_transition = 0.0
+            steps.append(
+                SimulationStep(
+                    time_seconds=round(state.elapsed_time_seconds, 3),
+                    event="begin_transition",
+                    node_id=state.current_node_id,
+                    edge_id=transition.to_edge_id,
+                    detail=(
+                        f"entryDistance={transition.entry_distance_along_from_edge:.3f}"
+                        f" exitDistance={transition.exit_distance_along_to_edge:.3f}"
+                        f" length={transition.length:.3f}"
+                    ),
+                )
+            )
+        return None
+
+    def _advance_across_current_edge(self, level, nodes, edges, active_edges, state, steps: list[SimulationStep]) -> SimulationResult | None:
+        terminal = self._advance_to_current_edge_target(level, nodes, edges, active_edges, state, steps)
+        if terminal is not None:
+            return terminal
+        if state.transition is None:
+            return None
+
+        transition = state.transition
+        state.elapsed_time_seconds += max(transition.length - state.distance_along_transition, 0.0)
+        state.current_edge_id = transition.to_edge_id
+        state.distance_along_edge = transition.exit_distance_along_to_edge
+        state.transition = None
+        state.distance_along_transition = 0.0
+        state.step_count += 1
+        steps.append(
+            SimulationStep(
+                time_seconds=round(state.elapsed_time_seconds, 3),
+                event="end_transition",
+                node_id=state.current_node_id,
+                edge_id=state.current_edge_id,
+            )
+        )
+        return None
 
     def _advance_until_node(
         self,
@@ -298,7 +415,7 @@ class PythonSolutionSimulatorService:
             if terminal is not None:
                 return state.elapsed_time_seconds if state.current_node_id == target_node_id else None
 
-            terminal = self._advance_across_current_edge(level, nodes, edges, state, steps)
+            terminal = self._advance_across_current_edge(level, nodes, edges, active_edges, state, steps)
             if terminal is not None and state.current_node_id != target_node_id:
                 return None
 
@@ -351,6 +468,7 @@ class PythonSolutionSimulatorService:
         current_node_id: str | None,
         current_edge_id: str | None,
         blocked_because_current_edge_starts_at_tapped_node: bool,
+        blocked_because_transition_is_at_tapped_node: bool,
     ) -> str:
         return (
             f"previousEdge={previous_edge_id or '(none)'}"
@@ -360,7 +478,18 @@ class PythonSolutionSimulatorService:
             f" currentEdge={current_edge_id or '(none)'}"
             f" blockedBecauseCurrentEdgeStartsAtTappedNode="
             f"{'true' if blocked_because_current_edge_starts_at_tapped_node else 'false'}"
+            f" blockedBecauseTransitionIsAtTappedNode="
+            f"{'true' if blocked_because_transition_is_at_tapped_node else 'false'}"
         )
+
+
+@dataclass(frozen=True)
+class _Transition:
+    node_id: str
+    to_edge_id: str
+    length: float
+    entry_distance_along_from_edge: float
+    exit_distance_along_to_edge: float
 
 
 class _SimulationState:
@@ -368,6 +497,8 @@ class _SimulationState:
         self.current_node_id = current_node_id
         self.current_edge_id: str | None = None
         self.distance_along_edge = 0.0
+        self.transition: _Transition | None = None
+        self.distance_along_transition = 0.0
         self.elapsed_time_seconds = 0.0
         self.tap_count = 0
         self.reached_package = False

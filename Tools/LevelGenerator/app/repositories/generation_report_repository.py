@@ -96,9 +96,11 @@ class GenerationReportRepository:
             "swiftTests": {
                 "run": result.swift_test_summary.passed is not None,
                 "command": result.swift_test_summary.command,
+                "environment": getattr(result.swift_test_summary, "environment", {}),
                 "exitCode": result.swift_test_summary.exit_code,
                 "passed": result.swift_test_summary.passed,
                 "summary": result.swift_test_summary.summary,
+                "failureDetails": getattr(result.swift_test_summary, "failure_details", []),
             },
             "messages": list(result.messages),
             "recommendations": self._recommendations(config, result),
@@ -238,6 +240,16 @@ class GenerationReportRepository:
                 "",
                 f"- Command: `{ ' '.join(payload['swiftTests']['command']) if payload['swiftTests']['command'] else 'not run' }`",
                 f"- Result: `{payload['swiftTests']['summary']}`",
+            ]
+        )
+        if payload["swiftTests"].get("environment"):
+            lines.append(f"- Environment: `{payload['swiftTests']['environment']}`")
+        if payload["swiftTests"].get("failureDetails"):
+            lines.append("- Failure details:")
+            for detail in payload["swiftTests"]["failureDetails"]:
+                lines.append(f"  - `{detail}`")
+        lines.extend(
+            [
                 "",
                 "## Next Steps",
                 "",

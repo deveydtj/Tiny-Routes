@@ -9,11 +9,13 @@ from .generated_level import GeneratedLevel
 @dataclass
 class SwiftTestSummary:
     command: list[str] = field(default_factory=list)
+    environment: dict[str, str] = field(default_factory=dict)
     exit_code: int | None = None
     passed: bool | None = None
     summary: str = "Swift tests were not run."
     stdout_tail: str = ""
     stderr_tail: str = ""
+    failure_details: list[str] = field(default_factory=list)
 
 
 @dataclass

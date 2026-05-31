@@ -349,3 +349,59 @@ Result: `18 passed`.
 ```
 
 Result: `175 passed`.
+
+## Phase 7 - Runtime-Parity Simulation
+
+Completed:
+
+- [x] Audited Swift runtime movement and switch behavior across:
+  - [x] `RouteEngine.swift`
+  - [x] `RuntimeRouteGraph.swift`
+  - [x] `NodeSwitchController.swift`
+  - [x] `RoadPath` in `RouteEdge.swift`
+  - [x] gameplay switch arrow rendering behavior from Phase 1
+- [x] Expanded `RouteTimingService` to build Swift-parity road paths with straight segments, rounded horizontal-first/vertical-first L-road turns, point/tangent sampling, and perpendicular connector lengths.
+- [x] Updated `PythonSolutionSimulatorService` to:
+  - [x] use road-path-aware edge length
+  - [x] model pass-through `DeliveryDotTransition` timing with `begin_transition` and `end_transition` trace events
+  - [x] keep Swift switch rotation order through valid outgoing edge order
+  - [x] reject taps ignored because the dot has already committed to the current edge
+  - [x] reject taps ignored while the dot is in a transition at that node
+- [x] Added parity fixture coverage for:
+  - [x] straight road timing
+  - [x] horizontal-first L-road timing
+  - [x] vertical-first L-road timing
+  - [x] pass-through connector timing
+  - [x] return loop completion
+  - [x] ring route completion
+  - [x] four-way switch completion
+- [x] Improved Swift validation hooks:
+  - [x] `SwiftTestService` can target specific generated level IDs
+  - [x] generated-level validation can pass scratch level and solution directories to XCTest through environment variables
+  - [x] Swift test summaries include validation environment and structured failure details
+  - [x] `LevelSolvabilityTests` can validate externally generated levels from explicit directories
+- [x] Added production policy enforcement:
+  - [x] hard/expert production generation requires `--swift-tests`
+  - [x] ring/four-way production generation requires Swift validation
+  - [x] dry runs remain Python-only friendly
+- [x] Updated `level_017.solution.json` final tap timing from `5.42s` to `5.30s` so the stricter road-path-aware Python timing leaves the required pre-arrival buffer while Swift solvability still passes.
+
+Verification:
+
+```bash
+/Library/Frameworks/Python.framework/Versions/3.13/bin/python3 -m pytest Tools/LevelGenerator/tests
+```
+
+Result: `185 passed`.
+
+```bash
+/Library/Frameworks/Python.framework/Versions/3.13/bin/python3 Tools/LevelGenerator/run_all_generator_checks.py --python /Library/Frameworks/Python.framework/Versions/3.13/bin/python3
+```
+
+Result: passed. The check suite ran Python tests, smoke dry-run generation, and validation for production levels `level_001` through `level_021` with Swift tests disabled by the script.
+
+```bash
+xcodebuild test -project TinyRoutes.xcodeproj -scheme TinyRoutes -destination 'platform=iOS Simulator,name=iPhone 16,OS=18.5' -only-testing:TinyRoutesTests/LevelSolvabilityTests -only-testing:TinyRoutesTests/LevelSimulationHarnessTests
+```
+
+Result: `TEST SUCCEEDED`; 19 selected Swift tests ran, with the external generated-level validation test skipped because no generated level IDs were requested through environment variables.

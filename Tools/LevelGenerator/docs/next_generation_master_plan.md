@@ -585,34 +585,34 @@ Python simulation currently approximates route movement using Manhattan distance
 
 ## Tasks
 
-- [ ] Audit Swift runtime behavior:
-  - [ ] `RouteEngine.swift`
-  - [ ] `RuntimeRouteGraph.swift`
-  - [ ] `NodeSwitchController.swift`
-  - [ ] `RoadPath` in `RouteEdge.swift`
-  - [ ] gameplay screen arrow rendering
-- [ ] Update Python simulator:
-  - [ ] compute road path length using the same segment rules as Swift
-  - [ ] support horizontal-first and vertical-first turn lengths
-  - [ ] account for connector/transition behavior if it affects timing
-  - [ ] model tap ignored/current-edge behavior exactly
-  - [ ] model switch rotation order exactly
-- [ ] Add parity fixtures:
-  - [ ] straight road
-  - [ ] horizontal-first L-road
-  - [ ] vertical-first L-road
-  - [ ] return loop
-  - [ ] ring route
-  - [ ] four-way switch
-- [ ] Add Swift validation harness improvements:
-  - [ ] allow testing a specific generated level ID
-  - [ ] allow testing scratch-level directories
-  - [ ] return structured failure details
-  - [ ] expose simulation trace where practical
-- [ ] Add production rule:
-  - [ ] hard and expert generated levels require Swift validation before commit
-  - [ ] ring and four-way levels require Swift validation before production
-  - [ ] Python-only validation is allowed for quick dry runs but not final production batches
+- [x] Audit Swift runtime behavior:
+  - [x] `RouteEngine.swift`
+  - [x] `RuntimeRouteGraph.swift`
+  - [x] `NodeSwitchController.swift`
+  - [x] `RoadPath` in `RouteEdge.swift`
+  - [x] gameplay screen arrow rendering
+- [x] Update Python simulator:
+  - [x] compute road path length using the same segment rules as Swift
+  - [x] support horizontal-first and vertical-first turn lengths
+  - [x] account for connector/transition behavior if it affects timing
+  - [x] model tap ignored/current-edge behavior exactly
+  - [x] model switch rotation order exactly
+- [x] Add parity fixtures:
+  - [x] straight road
+  - [x] horizontal-first L-road
+  - [x] vertical-first L-road
+  - [x] return loop
+  - [x] ring route
+  - [x] four-way switch
+- [x] Add Swift validation harness improvements:
+  - [x] allow testing a specific generated level ID
+  - [x] allow testing scratch-level directories
+  - [x] return structured failure details
+  - [x] expose simulation trace where practical
+- [x] Add production rule:
+  - [x] hard and expert generated levels require Swift validation before commit
+  - [x] ring and four-way levels require Swift validation before production
+  - [x] Python-only validation is allowed for quick dry runs but not final production batches
 
 ## Do
 
@@ -630,9 +630,9 @@ Python simulation currently approximates route movement using Manhattan distance
 
 ## Acceptance Criteria
 
-- [ ] Python simulator uses road-path-aware timing.
-- [ ] Swift-specific production checks are required for risky mechanics.
-- [ ] Simulation failures include useful traces.
+- [x] Python simulator uses road-path-aware timing.
+- [x] Swift-specific production checks are required for risky mechanics.
+- [x] Simulation failures include useful traces.
 
 ---
 

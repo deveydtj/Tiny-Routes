@@ -59,6 +59,7 @@ class LevelGenerationService:
             )
             self._validate_generation_mode(config)
             self._validate_template(config.template_name, config)
+            self._validate_swift_validation_policy(config, [entry.difficulty for entry in batch_plan.entries])
             self._preflight_output_collisions(config)
         except Exception as exc:
             result.passed = False
@@ -201,7 +202,13 @@ class LevelGenerationService:
 
         if result.passed and config.run_swift_tests and not config.dry_run:
             result.messages.extend(self._resource_reference_warnings(config, result))
-            swift_summary = SwiftTestService(find_repo_root(), timeout_seconds=config.swift_timeout_seconds).run()
+            swift_summary = SwiftTestService(
+                find_repo_root(),
+                timeout_seconds=config.swift_timeout_seconds,
+                level_ids=tuple(level.level_id for level in result.accepted),
+                levels_output_dir=config.levels_output_dir,
+                solutions_output_dir=config.solutions_output_dir,
+            ).run()
             result.swift_test_summary = swift_summary
             if swift_summary.passed is not True:
                 result.passed = False
@@ -259,6 +266,24 @@ class LevelGenerationService:
         if template_name != "mixed":
             include_swift_required = config.run_swift_tests or config.dry_run
             self.template_registry.choose(template_name, preset, RandomSource(config.base_seed), include_swift_required)
+
+    def _validate_swift_validation_policy(self, config: GenerationConfig, planned_difficulties: list[str]) -> None:
+        if config.dry_run or config.run_swift_tests:
+            return
+        risky_difficulties = {"hard", "expert"}
+        risky_templates = {"ring_route", "four_way_intersection"}
+        planned_risky_difficulties = sorted(risky_difficulties.intersection(planned_difficulties))
+        if planned_risky_difficulties:
+            joined = ", ".join(planned_risky_difficulties)
+            raise ValueError(
+                f"Production generation for {joined} levels requires `--swift-tests`. "
+                "Use `--dry-run` for Python-only iteration."
+            )
+        if config.template_name in risky_templates:
+            raise ValueError(
+                f"Production generation for `{config.template_name}` requires `--swift-tests` "
+                "because this mechanic needs Swift runtime validation."
+            )
 
     def _generate_raw_candidates(
         self,

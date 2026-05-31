@@ -84,6 +84,9 @@ class LevelValidationRunnerService:
             result.swift_summary = SwiftTestService(
                 find_repo_root(),
                 timeout_seconds=config.swift_timeout_seconds,
+                level_ids=tuple(result.validated_level_ids),
+                levels_output_dir=config.levels_output_dir,
+                solutions_output_dir=config.solutions_output_dir,
             ).run()
             if result.swift_summary.passed is not True:
                 result.failures.append(result.swift_summary.summary)
