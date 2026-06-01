@@ -538,6 +538,13 @@ class LevelGenerationService:
             "mechanicTags": list(getattr(candidate, "mechanic_tags", ()) or ()),
             "primaryMechanicTag": getattr(candidate, "primary_mechanic_tag", "") or None,
             "topologyClass": getattr(candidate, "topology_class", "") or None,
+            "requiredPathLength": self._required_path_length(candidate),
+            "layoutOrientation": self._layout_orientation(candidate),
+            "diversityAudit": self._diversity_audit(candidate),
+            "topologyDiversityScore": None,
+            "nearbyMechanicTagPenalty": None,
+            "nearbyTopologyClassPenalty": None,
+            "diversityScore": None,
             "layoutVariant": candidate.selected_layout_variant,
             "roadShapeStrategy": candidate.selected_road_shape_strategy,
             "status": status,
@@ -569,6 +576,48 @@ class LevelGenerationService:
             "visualAppeal": quality.visual_appeal,
             "penalties": list(quality.penalties),
             "maxSimilarity": quality.details.get("maxSimilarity", 0.0),
+        }
+
+    def _required_path_length(self, candidate) -> int | None:
+        signature = getattr(candidate, "candidate_signature", None)
+        if signature is not None and signature.required_path_length is not None:
+            return signature.required_path_length
+        metadata = getattr(candidate, "abstract_solution_metadata", None)
+        if metadata is not None and getattr(metadata, "required_path", None):
+            return max(len(metadata.required_path) - 1, 0)
+        solution_metadata = dict(getattr(candidate.solution, "_extra", {}).get("metadata", {}))
+        route = solution_metadata.get("solutionRoute") or []
+        if route:
+            return max(len(route) - 1, 0)
+        return None
+
+    def _layout_orientation(self, candidate) -> str:
+        signature = getattr(candidate, "candidate_signature", None)
+        if signature is not None:
+            return signature.layout_orientation
+        metadata = getattr(candidate, "layout_metadata", None) or {}
+        explicit = metadata.get("orientation")
+        if explicit:
+            return str(explicit).strip().lower() or "unknown"
+        strategy = str(metadata.get("strategy", "")).lower()
+        if "vertical" in strategy:
+            return "vertical"
+        if "horizontal" in strategy:
+            return "horizontal"
+        variant = str(getattr(candidate, "selected_layout_variant", "") or metadata.get("variant", "")).lower()
+        if variant == "tall":
+            return "vertical"
+        if variant == "wide":
+            return "horizontal"
+        return "unknown"
+
+    def _diversity_audit(self, candidate) -> dict[str, float | None]:
+        signature = getattr(candidate, "candidate_signature", None)
+        return {
+            "topologyDiversityScore": getattr(signature, "topology_diversity_score", None),
+            "nearbyMechanicTagPenalty": getattr(signature, "nearby_mechanic_tag_penalty", None),
+            "nearbyTopologyClassPenalty": getattr(signature, "nearby_topology_class_penalty", None),
+            "diversityScore": getattr(signature, "diversity_score", None),
         }
 
     def _preflight_output_collisions(self, config: GenerationConfig) -> None:

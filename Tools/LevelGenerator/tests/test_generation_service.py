@@ -433,6 +433,9 @@ def test_generation_service_recipe_first_mode_generates_recipe_metadata(tmp_path
     assert result.accepted[0].mechanic_tags
     assert result.accepted[0].primary_mechanic_tag == "single_switch"
     assert result.accepted[0].topology_class == "single_branch"
+    assert result.accepted[0].candidate_signature.topology_class == "single_branch"
+    assert "single_switch" in result.accepted[0].candidate_signature.mechanic_tags
+    assert result.accepted[0].candidate_signature.required_path_length is not None
     assert result.accepted[0].abstract_graph_signature is not None
     assert result.accepted[0].selected_layout_variant is not None
     assert result.accepted[0].selected_road_shape_strategy == "auto"
@@ -442,6 +445,9 @@ def test_generation_service_recipe_first_mode_generates_recipe_metadata(tmp_path
     assert "roadShapeMetadata" in report["acceptedLevels"][0]
     assert report["acceptedLevels"][0]["primaryMechanicTag"] == "single_switch"
     assert report["acceptedLevels"][0]["topologyClass"] == "single_branch"
+    assert report["acceptedLevels"][0]["requiredPathLength"] is not None
+    assert report["acceptedLevels"][0]["diversityAudit"]["topologyDiversityScore"] is None
+    assert report["candidateSelection"][0]["acceptedCandidate"]["diversityScore"] is None
     assert "roadShapeScore" in report["acceptedLevels"][0]["quality"]["details"]
 
 

@@ -3,8 +3,10 @@ from __future__ import annotations
 from copy import deepcopy
 
 from app.random_source import RandomSource
+from app.recipes.recipe_family_registry import RecipeFamilyRegistry
 from app.services.candidate_signature_service import CandidateSignatureService
 from app.services.difficulty_service import DifficultyService
+from app.services.recipe_to_level_builder_service import RecipeToLevelBuilderService
 from app.templates.four_way_intersection_template import FourWayIntersectionTemplate
 from app.templates.package_gate_template import PackageGateTemplate
 from app.templates.single_switch_template import SingleSwitchTemplate
@@ -58,3 +60,39 @@ def test_four_way_signature_records_outgoing_and_revisit_shape() -> None:
     assert signature.max_outgoing_edge_count == 4
     assert signature.has_four_way_switch is True
     assert signature.central_switch_revisit_count == 2
+
+
+def test_signature_reports_recipe_topology_mechanics_path_and_orientation() -> None:
+    preset = DifficultyService().get_preset("easy")
+    family = RecipeFamilyRegistry().get_family("single_switch")
+    recipe = family.generate_recipe("level_012", preset, RandomSource(10))
+    generated = RecipeToLevelBuilderService().build_level(recipe, 12, seed=10, layout_variant_name="tall")
+
+    signature = CandidateSignatureService().signature_for(generated)
+
+    assert "single_switch" in signature.mechanic_tags
+    assert signature.primary_mechanic_tag == "single_switch"
+    assert signature.topology_class == "single_branch"
+    assert signature.required_path_length == len(recipe.required_path) - 1
+    assert signature.layout_orientation == "horizontal"
+    assert signature.topology_diversity_score is None
+    assert signature.diversity_score is None
+
+
+def test_same_topology_with_different_layout_keeps_topology_class_auditable() -> None:
+    preset = DifficultyService().get_preset("easy")
+    family = RecipeFamilyRegistry().get_family("single_switch")
+    recipe = family.generate_recipe("level_012", preset, RandomSource(10))
+    builder = RecipeToLevelBuilderService()
+    normal = builder.build_level(recipe, 12, seed=10, layout_variant_name="normal")
+    tall = builder.build_level(recipe, 12, seed=10, layout_variant_name="tall")
+    service = CandidateSignatureService()
+
+    normal_signature = service.signature_for(normal)
+    tall_signature = service.signature_for(tall)
+
+    assert normal_signature.topology_class == tall_signature.topology_class == "single_branch"
+    assert normal_signature.mechanic_tags == tall_signature.mechanic_tags
+    assert "single_switch" in normal_signature.mechanic_tags
+    assert normal_signature.topology_hash == tall_signature.topology_hash
+    assert normal_signature.layout_hash != tall_signature.layout_hash

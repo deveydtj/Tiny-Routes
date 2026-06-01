@@ -63,6 +63,13 @@ class GenerationReportRepository:
                     "mechanicTags": list(getattr(level, "mechanic_tags", ()) or ()),
                     "primaryMechanicTag": getattr(level, "primary_mechanic_tag", "") or None,
                     "topologyClass": getattr(level, "topology_class", "") or None,
+                    "requiredPathLength": self._required_path_length(level),
+                    "layoutOrientation": self._layout_orientation(level),
+                    "diversityAudit": self._diversity_audit(level),
+                    "topologyDiversityScore": None,
+                    "nearbyMechanicTagPenalty": None,
+                    "nearbyTopologyClassPenalty": None,
+                    "diversityScore": None,
                     "unlockRequirement": getattr(level, "unlock_requirement", None),
                     "priorMechanicDependency": getattr(level, "prior_mechanic_dependency", None),
                     "mechanicMetadata": getattr(level, "mechanic_metadata", {}) or {},
@@ -140,8 +147,8 @@ class GenerationReportRepository:
             "",
             "## Accepted Levels",
             "",
-            "| Level | Source | Mechanics | Topology | Seed | Difficulty | Nodes | Edges | Switches | Par Taps | Time Limit | Quality | Preview | Signatures | Status |",
-            "|---|---|---|---|---:|---|---:|---:|---:|---:|---:|---:|---|---|---|",
+            "| Level | Source | Mechanics | Topology | Path | Orientation | Diversity | Seed | Difficulty | Nodes | Edges | Switches | Par Taps | Time Limit | Quality | Preview | Signatures | Status |",
+            "|---|---|---|---|---:|---|---|---:|---|---:|---:|---:|---:|---:|---:|---|---|---|",
         ]
         for level in payload["acceptedLevels"]:
             signature = level["signature"]
@@ -161,13 +168,16 @@ class GenerationReportRepository:
             if level["primaryMechanicTag"]:
                 mechanic_summary = f"{level['primaryMechanicTag']}: {mechanic_summary}"
             topology_summary = level["topologyClass"] or ""
+            diversity_summary = self._diversity_summary(level["diversityAudit"])
             lines.append(
-                "| `{levelID}` | `{source}` | `{mechanic_summary}` | `{topology_summary}` | {seed} | {difficulty} | "
+                "| `{levelID}` | `{source}` | `{mechanic_summary}` | `{topology_summary}` | {requiredPathLength} | "
+                "`{layoutOrientation}` | `{diversity_summary}` | {seed} | {difficulty} | "
                 "{nodes} | {edges} | {switches} | {parTaps} | {timeLimit} | {quality_summary} | {preview} | "
                 "`{signature_summary}` | {status} |".format(
                     source=source,
                     mechanic_summary=mechanic_summary,
                     topology_summary=topology_summary,
+                    diversity_summary=diversity_summary,
                     quality_summary=quality_summary,
                     preview=preview,
                     signature_summary=signature_summary,
@@ -175,7 +185,7 @@ class GenerationReportRepository:
                 )
             )
         if not payload["acceptedLevels"]:
-            lines.append("| _None_ |  |  |  |  |  |  |  |  |  |  |  |  |  | failed |")
+            lines.append("| _None_ |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  | failed |")
 
         if payload["acceptedLevels"]:
             lines.extend(["", "## Level Details", ""])
@@ -191,9 +201,12 @@ class GenerationReportRepository:
                             f"- Mechanics: tags `{', '.join(level['mechanicTags']) or 'none'}`; "
                             f"primary `{level['primaryMechanicTag'] or 'none'}`; "
                             f"topology `{level['topologyClass'] or 'none'}`; "
+                            f"required path length `{level['requiredPathLength']}`; "
+                            f"layout orientation `{level['layoutOrientation']}`; "
                             f"unlock `{level['unlockRequirement'] or 'none'}`; "
                             f"depends on `{level['priorMechanicDependency'] or 'none'}`."
                         )
+                    lines.append(f"- Diversity audit: {self._diversity_summary(level['diversityAudit'])}.")
                     lines.append(
                         f"- Layout: `{level['selectedLayoutVariant']}`; "
                         f"strategy: `{(level['layoutMetadata'] or {}).get('strategy', 'unknown')}`; "
@@ -255,12 +268,30 @@ class GenerationReportRepository:
                         f"- Candidate selection: {selection['selectionRationale']} "
                         f"Scores min/avg/max `{stats['minimum']}`/`{stats['average']}`/`{stats['maximum']}`."
                     )
+                    accepted_summary = selection["acceptedCandidate"]
+                    lines.append(
+                        f"- Accepted candidate audit: family `{accepted_summary.get('recipeFamily') or 'none'}`; "
+                        f"variant `{accepted_summary.get('recipeVariant') or 'none'}`; "
+                        f"tags `{', '.join(accepted_summary.get('mechanicTags') or []) or 'none'}`; "
+                        f"primary `{accepted_summary.get('primaryMechanicTag') or 'none'}`; "
+                        f"topology `{accepted_summary.get('topologyClass') or 'none'}`; "
+                        f"path `{accepted_summary.get('requiredPathLength')}`; "
+                        f"orientation `{accepted_summary.get('layoutOrientation', 'unknown')}`; "
+                        f"diversity `{self._diversity_summary(accepted_summary.get('diversityAudit') or {})}`."
+                    )
                     for near_miss in selection["topRejectedNearMisses"][:3]:
                         near_quality = near_miss.get("quality", {})
                         lines.append(
                             f"- Near miss `{near_miss.get('status')}` seed `{near_miss.get('seed')}` "
                             f"score `{near_quality.get('total')}` "
-                            f"topology `{near_miss.get('topologyClass') or 'none'}`."
+                            f"family `{near_miss.get('recipeFamily') or 'none'}` "
+                            f"variant `{near_miss.get('recipeVariant') or 'none'}` "
+                            f"tags `{', '.join(near_miss.get('mechanicTags') or []) or 'none'}` "
+                            f"primary `{near_miss.get('primaryMechanicTag') or 'none'}` "
+                            f"topology `{near_miss.get('topologyClass') or 'none'}` "
+                            f"path `{near_miss.get('requiredPathLength')}` "
+                            f"orientation `{near_miss.get('layoutOrientation', 'unknown')}` "
+                            f"diversity `{self._diversity_summary(near_miss.get('diversityAudit') or {})}`."
                         )
                 for switch in level["switchPreview"]:
                     transition_summary = ", ".join(
@@ -351,6 +382,17 @@ class GenerationReportRepository:
             "maxOutgoingEdgeCount": signature.max_outgoing_edge_count,
             "hasFourWaySwitch": signature.has_four_way_switch,
             "centralSwitchRevisitCount": signature.central_switch_revisit_count,
+            "mechanicTags": list(signature.mechanic_tags),
+            "primaryMechanicTag": signature.primary_mechanic_tag or None,
+            "topologyClass": signature.topology_class or None,
+            "requiredPathLength": signature.required_path_length,
+            "layoutOrientation": signature.layout_orientation,
+            "diversityAudit": {
+                "topologyDiversityScore": signature.topology_diversity_score,
+                "nearbyMechanicTagPenalty": signature.nearby_mechanic_tag_penalty,
+                "nearbyTopologyClassPenalty": signature.nearby_topology_class_penalty,
+                "diversityScore": signature.diversity_score,
+            },
             "topologyHash": signature.topology_hash,
             "topologyHashShort": signature.topology_hash[:8],
             "layoutHash": signature.layout_hash,
@@ -359,6 +401,56 @@ class GenerationReportRepository:
             "solutionHashShort": signature.solution_hash[:8],
             "normalizedPositions": list(signature.normalized_positions),
         }
+
+    def _required_path_length(self, level) -> int | None:
+        signature = getattr(level, "candidate_signature", None)
+        if signature is not None and signature.required_path_length is not None:
+            return signature.required_path_length
+        metadata = getattr(level, "abstract_solution_metadata", None)
+        if metadata is not None and getattr(metadata, "required_path", None):
+            return max(len(metadata.required_path) - 1, 0)
+        solution_metadata = dict(getattr(level.solution, "_extra", {}).get("metadata", {}))
+        route = solution_metadata.get("solutionRoute") or []
+        if route:
+            return max(len(route) - 1, 0)
+        return None
+
+    def _layout_orientation(self, level) -> str:
+        signature = getattr(level, "candidate_signature", None)
+        if signature is not None:
+            return signature.layout_orientation
+        metadata = getattr(level, "layout_metadata", None) or {}
+        explicit = metadata.get("orientation")
+        if explicit:
+            return str(explicit).strip().lower() or "unknown"
+        strategy = str(metadata.get("strategy", "")).lower()
+        if "vertical" in strategy:
+            return "vertical"
+        if "horizontal" in strategy:
+            return "horizontal"
+        variant = str(getattr(level, "selected_layout_variant", "") or metadata.get("variant", "")).lower()
+        if variant == "tall":
+            return "vertical"
+        if variant == "wide":
+            return "horizontal"
+        return "unknown"
+
+    def _diversity_audit(self, level) -> dict[str, float | None]:
+        signature = getattr(level, "candidate_signature", None)
+        return {
+            "topologyDiversityScore": getattr(signature, "topology_diversity_score", None),
+            "nearbyMechanicTagPenalty": getattr(signature, "nearby_mechanic_tag_penalty", None),
+            "nearbyTopologyClassPenalty": getattr(signature, "nearby_topology_class_penalty", None),
+            "diversityScore": getattr(signature, "diversity_score", None),
+        }
+
+    def _diversity_summary(self, audit: dict[str, Any]) -> str:
+        return (
+            f"topology {audit.get('topologyDiversityScore')}, "
+            f"mechanic penalty {audit.get('nearbyMechanicTagPenalty')}, "
+            f"topology penalty {audit.get('nearbyTopologyClassPenalty')}, "
+            f"score {audit.get('diversityScore')}"
+        )
 
     def _quality_payload(self, level) -> dict[str, Any] | None:
         quality = getattr(level, "quality_score", None)

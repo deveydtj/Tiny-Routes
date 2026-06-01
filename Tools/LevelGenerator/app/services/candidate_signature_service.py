@@ -64,6 +64,11 @@ class CandidateSignatureService:
             max_outgoing_edge_count=max_outgoing_edge_count,
             has_four_way_switch=max_outgoing_edge_count == 4,
             central_switch_revisit_count=central_switch_revisit_count,
+            mechanic_tags=tuple(getattr(generated_level, "mechanic_tags", ()) or ()),
+            primary_mechanic_tag=getattr(generated_level, "primary_mechanic_tag", "") or "",
+            topology_class=getattr(generated_level, "topology_class", "") or "",
+            required_path_length=self._required_path_length(generated_level),
+            layout_orientation=self._layout_orientation(generated_level),
         )
 
     def _normalized_edges(self, level_document) -> tuple[tuple[str, str], ...]:
@@ -98,3 +103,33 @@ class CandidateSignatureService:
     def _hash_payload(self, payload: Any) -> str:
         serialized = json.dumps(payload, sort_keys=True, separators=(",", ":"), ensure_ascii=True)
         return hashlib.sha256(serialized.encode("utf-8")).hexdigest()
+
+    def _required_path_length(self, generated_level) -> int | None:
+        metadata = getattr(generated_level, "abstract_solution_metadata", None)
+        if metadata is not None and getattr(metadata, "required_path", None):
+            return max(len(metadata.required_path) - 1, 0)
+
+        solution_metadata = dict(getattr(generated_level.solution, "_extra", {}).get("metadata", {}))
+        route = solution_metadata.get("solutionRoute") or []
+        if route:
+            return max(len(route) - 1, 0)
+        return None
+
+    def _layout_orientation(self, generated_level) -> str:
+        metadata = getattr(generated_level, "layout_metadata", None) or {}
+        explicit = metadata.get("orientation")
+        if explicit:
+            return str(explicit).strip().lower() or "unknown"
+
+        strategy = str(metadata.get("strategy", "")).lower()
+        if "vertical" in strategy:
+            return "vertical"
+        if "horizontal" in strategy:
+            return "horizontal"
+
+        variant = str(getattr(generated_level, "selected_layout_variant", "") or metadata.get("variant", "")).lower()
+        if variant == "tall":
+            return "vertical"
+        if variant == "wide":
+            return "horizontal"
+        return "unknown"

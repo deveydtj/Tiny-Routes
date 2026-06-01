@@ -149,6 +149,15 @@ def test_generation_report_repository_writes_recipe_metadata(tmp_path) -> None:
     assert accepted["mechanicTags"]
     assert accepted["primaryMechanicTag"] == "single_switch"
     assert accepted["topologyClass"] == "single_branch"
+    assert accepted["requiredPathLength"] is not None
+    assert accepted["layoutOrientation"] == "horizontal"
+    assert accepted["diversityAudit"] == {
+        "topologyDiversityScore": None,
+        "nearbyMechanicTagPenalty": None,
+        "nearbyTopologyClassPenalty": None,
+        "diversityScore": None,
+    }
+    assert accepted["topologyDiversityScore"] is None
     assert accepted["abstractGraphSignature"]
     assert accepted["selectedLayoutVariant"] == "normal"
     assert accepted["selectedRoadShapeStrategy"] == "auto"
@@ -158,10 +167,21 @@ def test_generation_report_repository_writes_recipe_metadata(tmp_path) -> None:
     assert payload["candidateSelection"][0]["scoreStats"]["maximum"] is not None
     assert payload["candidateSelection"][0]["acceptedCandidate"]["primaryMechanicTag"] == "single_switch"
     assert payload["candidateSelection"][0]["acceptedCandidate"]["topologyClass"] == "single_branch"
+    assert payload["candidateSelection"][0]["acceptedCandidate"]["requiredPathLength"] == accepted["requiredPathLength"]
+    assert payload["candidateSelection"][0]["acceptedCandidate"]["layoutOrientation"] == "horizontal"
+    assert payload["candidateSelection"][0]["acceptedCandidate"]["diversityAudit"]["diversityScore"] is None
     markdown = (tmp_path / "report.md").read_text(encoding="utf-8")
     assert "Candidate selection" in markdown
     assert "Topology" in markdown
     assert "primary `single_switch`" in markdown
+    assert "required path length" in markdown
+    assert "layout orientation `horizontal`" in markdown
+    assert "Diversity audit:" in markdown
+    assert "Accepted candidate audit:" in markdown
+    assert "family `single_switch`" in markdown
+    assert "variant `single_switch_" in markdown
+    assert "primary `single_switch`" in markdown
+    assert "mechanic penalty None" in markdown
 
 
 def test_generation_report_repository_writes_recipe_mechanic_metadata(tmp_path) -> None:

@@ -22,3 +22,12 @@ class CandidateSignature:
     max_outgoing_edge_count: int = 0
     has_four_way_switch: bool = False
     central_switch_revisit_count: int = 0
+    mechanic_tags: tuple[str, ...] = ()
+    primary_mechanic_tag: str = ""
+    topology_class: str = ""
+    required_path_length: int | None = None
+    layout_orientation: str = "unknown"
+    topology_diversity_score: float | None = None
+    nearby_mechanic_tag_penalty: float | None = None
+    nearby_topology_class_penalty: float | None = None
+    diversity_score: float | None = None
