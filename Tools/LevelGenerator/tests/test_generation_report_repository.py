@@ -131,6 +131,7 @@ def test_generation_report_repository_writes_recipe_metadata(tmp_path) -> None:
             difficulty="easy",
             template_name="single_switch",
             generation_mode="recipe_first",
+            layout_orientation_preference="vertical",
             dry_run=True,
             compare_against_existing=False,
             levels_output_dir=tmp_path / "levels",
@@ -150,7 +151,11 @@ def test_generation_report_repository_writes_recipe_metadata(tmp_path) -> None:
     assert accepted["primaryMechanicTag"] == "single_switch"
     assert accepted["topologyClass"] == "single_branch"
     assert accepted["requiredPathLength"] is not None
-    assert accepted["layoutOrientation"] == "horizontal"
+    assert accepted["layoutOrientation"] == "vertical"
+    assert accepted["layoutStrategy"] == "vertical_route_progression"
+    assert accepted["layoutVariant"] == "normal"
+    assert accepted["layoutOrientationSelectionReason"] == "explicit_preference"
+    assert accepted["verticalCandidateRejectedReason"] is None
     assert accepted["diversityAudit"] == {
         "topologyDiversityScore": None,
         "nearbyMechanicTagPenalty": None,
@@ -168,14 +173,21 @@ def test_generation_report_repository_writes_recipe_metadata(tmp_path) -> None:
     assert payload["candidateSelection"][0]["acceptedCandidate"]["primaryMechanicTag"] == "single_switch"
     assert payload["candidateSelection"][0]["acceptedCandidate"]["topologyClass"] == "single_branch"
     assert payload["candidateSelection"][0]["acceptedCandidate"]["requiredPathLength"] == accepted["requiredPathLength"]
-    assert payload["candidateSelection"][0]["acceptedCandidate"]["layoutOrientation"] == "horizontal"
+    assert payload["layoutOrientationPreference"] == "vertical"
+    assert payload["verticalRouteProbability"] == 0.35
+    assert payload["preferVerticalForLongRoutes"] is True
+    assert payload["candidateSelection"][0]["acceptedCandidate"]["layoutOrientation"] == "vertical"
+    assert payload["candidateSelection"][0]["acceptedCandidate"]["layoutStrategy"] == "vertical_route_progression"
+    assert payload["candidateSelection"][0]["acceptedCandidate"]["layoutVariant"] == "normal"
+    assert payload["candidateSelection"][0]["acceptedCandidate"]["layoutOrientationSelectionReason"] == "explicit_preference"
     assert payload["candidateSelection"][0]["acceptedCandidate"]["diversityAudit"]["diversityScore"] is None
     markdown = (tmp_path / "report.md").read_text(encoding="utf-8")
     assert "Candidate selection" in markdown
     assert "Topology" in markdown
     assert "primary `single_switch`" in markdown
     assert "required path length" in markdown
-    assert "layout orientation `horizontal`" in markdown
+    assert "layout orientation `vertical` via `explicit_preference`" in markdown
+    assert "strategy: `vertical_route_progression`" in markdown
     assert "Diversity audit:" in markdown
     assert "Accepted candidate audit:" in markdown
     assert "family `single_switch`" in markdown

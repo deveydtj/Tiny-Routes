@@ -10,12 +10,15 @@ from .paths import (
 )
 
 GENERATION_MODES = ("legacy_template", "recipe_first", "hybrid")
+LAYOUT_ORIENTATION_PREFERENCES = ("horizontal", "vertical", "mixed", "auto")
 DEFAULT_GENERATION_MODE = "recipe_first"
 DEFAULT_RECIPE_POOL_SIZE = 4
 DEFAULT_LAYOUTS_PER_RECIPE = 3
 DEFAULT_ROAD_SHAPES_PER_LAYOUT = 3
 DEFAULT_CANDIDATE_POOL_SIZE = 25
 DEFAULT_MAX_ATTEMPTS_PER_LEVEL = 300
+DEFAULT_LAYOUT_ORIENTATION_PREFERENCE = "auto"
+DEFAULT_VERTICAL_ROUTE_PROBABILITY = 0.35
 
 
 @dataclass(frozen=True)
@@ -28,6 +31,9 @@ class GenerationConfig:
     recipe_pool_size: int = DEFAULT_RECIPE_POOL_SIZE
     layouts_per_recipe: int = DEFAULT_LAYOUTS_PER_RECIPE
     road_shapes_per_layout: int = DEFAULT_ROAD_SHAPES_PER_LAYOUT
+    layout_orientation_preference: str = DEFAULT_LAYOUT_ORIENTATION_PREFERENCE
+    vertical_route_probability: float = DEFAULT_VERTICAL_ROUTE_PROBABILITY
+    prefer_vertical_for_long_routes: bool = True
     seed: int | None = None
     dry_run: bool = False
     overwrite: bool = False
@@ -62,6 +68,12 @@ class GenerationConfig:
         object.__setattr__(self, "difficulty", self.difficulty.strip().lower())
         object.__setattr__(self, "template_name", self.template_name.strip().lower())
         object.__setattr__(self, "generation_mode", self.generation_mode.strip().lower().replace("-", "_"))
+        object.__setattr__(
+            self,
+            "layout_orientation_preference",
+            self.layout_orientation_preference.strip().lower().replace("-", "_"),
+        )
+        object.__setattr__(self, "vertical_route_probability", float(self.vertical_route_probability))
         object.__setattr__(self, "levels_output_dir", Path(self.levels_output_dir))
         object.__setattr__(self, "solutions_output_dir", Path(self.solutions_output_dir))
         if self.report_path is not None:
@@ -75,6 +87,11 @@ class GenerationConfig:
         if self.generation_mode not in GENERATION_MODES:
             valid = ", ".join(GENERATION_MODES)
             raise ValueError(f"generation_mode must be one of: {valid}")
+        if self.layout_orientation_preference not in LAYOUT_ORIENTATION_PREFERENCES:
+            valid = ", ".join(LAYOUT_ORIENTATION_PREFERENCES)
+            raise ValueError(f"layout_orientation_preference must be one of: {valid}")
+        if not 0.0 <= self.vertical_route_probability <= 1.0:
+            raise ValueError("vertical_route_probability must be between 0.0 and 1.0")
         if self.recipe_pool_size <= 0:
             raise ValueError("recipe_pool_size must be greater than zero")
         if self.layouts_per_recipe <= 0:

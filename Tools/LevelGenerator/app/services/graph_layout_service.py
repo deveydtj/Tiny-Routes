@@ -305,6 +305,10 @@ class GraphLayoutPlannerService:
     strategy_names = (
         "horizontal_route_progression",
         "vertical_route_progression",
+        "snake_layout",
+        "s_curve_layout",
+        "vertical_split_lane",
+        "vertical_loop",
         "hub_and_spoke",
         "ring_loop",
         "package_inside_loop",
@@ -318,12 +322,16 @@ class GraphLayoutPlannerService:
         preset: DifficultyPreset,
         rng: RandomSource,
         layout_variant_name: str = "normal",
+        layout_orientation_preference: str = "horizontal",
+        orientation_selection_reason: str = "default_horizontal",
+        strategy_override: str | None = None,
     ) -> LayoutPlanResult:
         layout = GraphLayoutService(
             bounds=BoundingBox(*preset.coordinate_bounds),
             minimum_node_distance=preset.minimum_node_distance,
         )
-        strategy = self._strategy_for_recipe(recipe)
+        requested_orientation = layout_orientation_preference.strip().lower()
+        strategy = strategy_override or self._strategy_for_recipe(recipe, requested_orientation)
         base_positions = self._base_positions_for_strategy(recipe, strategy, layout)
         positions, variant = self._apply_variation(base_positions, layout, rng, layout_variant_name)
         issues = self.validate_layout(recipe, preset, positions)
@@ -333,7 +341,35 @@ class GraphLayoutPlannerService:
             if len(normalized_issues) < len(issues):
                 positions = normalized
                 issues = normalized_issues
-        metadata = self._metadata(recipe, strategy, variant, positions, issues)
+        vertical_rejection_reason = None
+        if requested_orientation == "vertical" and issues and strategy_override is None:
+            fallback_strategy = self._strategy_for_recipe(recipe, "horizontal")
+            if fallback_strategy != strategy:
+                fallback_positions, fallback_variant = self._apply_variation(
+                    self._base_positions_for_strategy(recipe, fallback_strategy, layout),
+                    layout,
+                    rng,
+                    layout_variant_name,
+                )
+                fallback_issues = self.validate_layout(recipe, preset, fallback_positions)
+                if len(fallback_issues) < len(issues):
+                    vertical_rejection_reason = ",".join(sorted({issue.code for issue in issues})) or "layout_invalid"
+                    strategy = fallback_strategy
+                    positions = fallback_positions
+                    variant = fallback_variant
+                    issues = fallback_issues
+        orientation = self._orientation_for_strategy(strategy)
+        metadata = self._metadata(
+            recipe,
+            strategy,
+            variant,
+            positions,
+            issues,
+            orientation=orientation,
+            orientation_preference=requested_orientation,
+            orientation_selection_reason=orientation_selection_reason,
+            vertical_candidate_rejected_reason=vertical_rejection_reason,
+        )
         return LayoutPlanResult(
             strategy=strategy,
             variant=variant,
@@ -443,7 +479,12 @@ class GraphLayoutPlannerService:
 
         return issues
 
-    def _strategy_for_recipe(self, recipe: GraphRecipe) -> str:
+    def _strategy_for_recipe(self, recipe: GraphRecipe, orientation_preference: str = "horizontal") -> str:
+        if orientation_preference == "vertical":
+            return self._vertical_strategy_for_recipe(recipe)
+        return self._horizontal_strategy_for_recipe(recipe)
+
+    def _horizontal_strategy_for_recipe(self, recipe: GraphRecipe) -> str:
         family_name = recipe.family_name
         tags = set(recipe.mechanic_tags)
         if family_name == "four_way_intersection" or "four_way" in tags:
@@ -460,6 +501,26 @@ class GraphLayoutPlannerService:
             return "hub_and_spoke"
         return "horizontal_route_progression"
 
+    def _vertical_strategy_for_recipe(self, recipe: GraphRecipe) -> str:
+        family_name = recipe.family_name
+        tags = set(recipe.mechanic_tags)
+        if family_name == "four_way_intersection" or "four_way" in tags:
+            return "four_way_intersection"
+        if family_name == "ring_route" or "ring_route" in tags or "ring" in family_name:
+            return "vertical_loop"
+        if family_name == "return_loop" or "return_loop" in tags or "loop" in tags:
+            return "vertical_loop"
+        if family_name == "package_gate" or "package_gate" in tags:
+            return "vertical_split_lane"
+        if "split_path" in tags or "branch" in tags or "rejoin" in tags:
+            return "vertical_split_lane"
+        path_length = max(len(recipe.required_path) - 1, 0)
+        if path_length >= 9:
+            return "s_curve_layout"
+        if path_length >= 7:
+            return "snake_layout"
+        return "vertical_route_progression"
+
     def _base_positions_for_strategy(
         self,
         recipe: GraphRecipe,
@@ -468,6 +529,14 @@ class GraphLayoutPlannerService:
     ) -> dict[str, tuple[float, float]]:
         if strategy == "vertical_route_progression":
             return self._route_progression_positions(recipe, layout, vertical=True)
+        if strategy == "snake_layout":
+            return self._snake_positions(recipe, layout)
+        if strategy == "s_curve_layout":
+            return self._s_curve_positions(recipe, layout)
+        if strategy == "vertical_split_lane":
+            return self._vertical_split_lane_positions(recipe, layout)
+        if strategy == "vertical_loop":
+            return self._vertical_loop_positions(recipe, layout)
         if strategy == "hub_and_spoke":
             return self._hub_positions(recipe, layout)
         if strategy == "ring_loop":
@@ -506,6 +575,43 @@ class GraphLayoutPlannerService:
             else:
                 positions[node_id] = layout.snap_point(primary, offset)
         self._place_off_route_nodes(recipe, layout, positions, vertical=vertical)
+        return positions
+
+    def _snake_positions(self, recipe: GraphRecipe, layout: GraphLayoutService) -> dict[str, tuple[float, float]]:
+        route = list(recipe.required_path)
+        positions: dict[str, tuple[float, float]] = {}
+        step_y = 1.9 / max(len(route) - 1, 1)
+        lanes = (-0.62, 0.62)
+        for index, node_id in enumerate(route):
+            lane_index = (index // 2) % 2
+            x = lanes[lane_index]
+            if index % 2 == 1:
+                x = lanes[1 - lane_index]
+            y = 0.85 - (index * step_y)
+            role = self._node_role(recipe, node_id)
+            if role == "package":
+                x *= 0.55
+            elif role == "destination":
+                x *= 0.75
+            positions[node_id] = layout.snap_point(x, y)
+        self._place_off_route_nodes(recipe, layout, positions, vertical=True)
+        return positions
+
+    def _s_curve_positions(self, recipe: GraphRecipe, layout: GraphLayoutService) -> dict[str, tuple[float, float]]:
+        route = list(recipe.required_path)
+        positions: dict[str, tuple[float, float]] = {}
+        denominator = max(len(route) - 1, 1)
+        for index, node_id in enumerate(route):
+            progress = index / denominator
+            x = math.sin((progress * math.pi * 2.0) - (math.pi / 4.0)) * 0.58
+            y = 0.85 - (progress * 1.9)
+            role = self._node_role(recipe, node_id)
+            if role == "package":
+                x += 0.16
+            elif role == "destination":
+                x -= 0.16
+            positions[node_id] = layout.snap_point(x, y)
+        self._place_off_route_nodes(recipe, layout, positions, vertical=True)
         return positions
 
     def _hub_positions(self, recipe: GraphRecipe, layout: GraphLayoutService) -> dict[str, tuple[float, float]]:
@@ -551,6 +657,57 @@ class GraphLayoutPlannerService:
                 x, _ = positions[node_id]
                 positions[node_id] = layout.snap_point(x, 0.28 if node_id == recipe.package_node_id else -0.08)
         self._place_off_route_nodes(recipe, layout, positions, vertical=False, dead_end_y=0.72)
+        return positions
+
+    def _vertical_split_lane_positions(self, recipe: GraphRecipe, layout: GraphLayoutService) -> dict[str, tuple[float, float]]:
+        route = list(recipe.required_path)
+        positions: dict[str, tuple[float, float]] = {}
+        step_y = 1.85 / max(len(route) - 1, 1)
+        for index, node_id in enumerate(route):
+            role = self._node_role(recipe, node_id)
+            x = 0.0
+            if role == "package":
+                x = -0.34
+            elif role == "destination":
+                x = 0.34
+            elif role == "switch":
+                x = 0.18 if index % 2 else -0.18
+            positions[node_id] = layout.snap_point(x, 0.85 - (index * step_y))
+
+        route_ids = set(route)
+        parent_counts: dict[str, int] = {}
+        for edge in recipe.edges:
+            if edge.to_node_id in positions:
+                continue
+            parent_position = positions.get(edge.from_node_id, (0.0, 0.0))
+            count = parent_counts.get(edge.from_node_id, 0)
+            parent_counts[edge.from_node_id] = count + 1
+            direction = 1 if count % 2 == 0 else -1
+            side_offset = 0.72 * direction
+            if edge.to_node_id not in route_ids:
+                side_offset = 0.72 if parent_position[0] <= 0 else -0.72
+            candidates = [
+                layout.snap_point(parent_position[0] + side_offset, parent_position[1] - 0.04),
+                layout.snap_point(parent_position[0] - side_offset, parent_position[1] + 0.04),
+                layout.snap_point(parent_position[0] + side_offset, parent_position[1] - 0.34),
+                layout.snap_point(parent_position[0] - side_offset, parent_position[1] + 0.34),
+            ]
+            positions[edge.to_node_id] = self._first_readable_candidate(layout, candidates, positions)
+        return positions
+
+    def _vertical_loop_positions(self, recipe: GraphRecipe, layout: GraphLayoutService) -> dict[str, tuple[float, float]]:
+        route = list(recipe.required_path)
+        positions: dict[str, tuple[float, float]] = {}
+        radius_x = 0.54
+        radius_y = 0.82
+        for index, node_id in enumerate(route):
+            angle = math.radians(140 + (280 * index / max(len(route) - 1, 1)))
+            positions[node_id] = layout.snap_point(math.cos(angle) * radius_x, math.sin(angle) * radius_y - 0.08)
+        positions["start"] = layout.snap_point(-0.62, 0.82)
+        positions[recipe.destination_node_id] = layout.snap_point(0.62, -0.98)
+        if recipe.package_node_id in positions:
+            positions[recipe.package_node_id] = layout.snap_point(-0.42, -0.02)
+        self._place_off_route_nodes(recipe, layout, positions, vertical=True)
         return positions
 
     def _four_way_positions(self, recipe: GraphRecipe, layout: GraphLayoutService) -> dict[str, tuple[float, float]]:
@@ -660,20 +817,43 @@ class GraphLayoutPlannerService:
         variant: str,
         positions: dict[str, tuple[float, float]],
         issues: list[LayoutValidationIssue],
+        *,
+        orientation: str,
+        orientation_preference: str,
+        orientation_selection_reason: str,
+        vertical_candidate_rejected_reason: str | None,
     ) -> dict[str, object]:
         payload = {
             "strategy": strategy,
             "variant": variant,
+            "orientation": orientation,
             "positions": {node_id: [x, y] for node_id, (x, y) in sorted(positions.items())},
         }
         encoded = json.dumps(payload, sort_keys=True, separators=(",", ":")).encode("utf-8")
         return {
             "strategy": strategy,
             "variant": variant,
+            "orientation": orientation,
+            "orientationPreference": orientation_preference,
+            "orientationSelectionReason": orientation_selection_reason,
+            "verticalCandidateRejectedReason": vertical_candidate_rejected_reason,
             "layoutHash": hashlib.sha256(encoded).hexdigest(),
             "rejectionCodes": [issue.code for issue in issues],
             "nodeCount": len(recipe.nodes),
         }
+
+    def _orientation_for_strategy(self, strategy: str) -> str:
+        if strategy in {
+            "vertical_route_progression",
+            "snake_layout",
+            "s_curve_layout",
+            "vertical_split_lane",
+            "vertical_loop",
+        }:
+            return "vertical"
+        if strategy in {"horizontal_route_progression", "split_lane"}:
+            return "horizontal"
+        return "horizontal"
 
     def _node_role(self, recipe: GraphRecipe, node_id: str) -> str:
         return next((node.role for node in recipe.nodes if node.id == node_id), "route")

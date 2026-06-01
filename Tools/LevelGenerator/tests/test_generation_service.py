@@ -399,6 +399,123 @@ def test_generation_service_pool_selection_is_deterministic_for_same_seed(tmp_pa
     assert first.candidate_selection_summaries[0]["scoreStats"] == second.candidate_selection_summaries[0]["scoreStats"]
 
 
+def test_recipe_first_mixed_orientation_includes_vertical_candidates(tmp_path) -> None:
+    service = LevelGenerationService()
+    config = _config(
+        tmp_path,
+        difficulty="easy",
+        template_name="single_switch",
+        dry_run=True,
+        compare_against_existing=False,
+        generation_mode="recipe_first",
+        layout_orientation_preference="mixed",
+        vertical_route_probability=1.0,
+    )
+    preset = service.difficulty_service.get_preset("easy")
+
+    candidates = service._generate_raw_candidates(
+        config=config,
+        level_id="level_012",
+        level_number=12,
+        preset=preset,
+        rng=RandomSource(12),
+        plan_template_weights={},
+    )
+
+    assert {candidate.layout_metadata["orientation"] for candidate in candidates} == {"horizontal", "vertical"}
+    assert {candidate.layout_metadata["strategy"] for candidate in candidates} >= {
+        "horizontal_route_progression",
+        "vertical_route_progression",
+    }
+
+
+def test_recipe_first_auto_orientation_can_include_vertical_by_probability(tmp_path) -> None:
+    service = LevelGenerationService()
+    config = _config(
+        tmp_path,
+        difficulty="medium",
+        template_name="package_gate",
+        dry_run=True,
+        compare_against_existing=False,
+        generation_mode="recipe_first",
+        layout_orientation_preference="auto",
+        vertical_route_probability=1.0,
+        prefer_vertical_for_long_routes=False,
+    )
+    preset = service.difficulty_service.get_preset("medium")
+
+    candidates = service._generate_raw_candidates(
+        config=config,
+        level_id="level_012",
+        level_number=12,
+        preset=preset,
+        rng=RandomSource(12),
+        plan_template_weights={},
+    )
+
+    assert candidates[0].layout_metadata["orientation"] == "vertical"
+    assert candidates[0].layout_metadata["orientationSelectionReason"] == "probability"
+
+
+def test_recipe_first_long_routes_can_prefer_vertical_when_configured(tmp_path) -> None:
+    service = LevelGenerationService()
+    preset = service.difficulty_service.get_preset("hard")
+    recipe = type(
+        "Recipe",
+        (),
+        {
+            "required_path": tuple(f"node_{index}" for index in range(12)),
+            "mechanic_tags": (),
+            "topology_class": "long_chain",
+        },
+    )()
+    config = _config(
+        tmp_path,
+        difficulty="hard",
+        template_name="multi_switch_chain",
+        dry_run=True,
+        compare_against_existing=False,
+        generation_mode="recipe_first",
+        layout_orientation_preference="auto",
+        vertical_route_probability=0.0,
+        prefer_vertical_for_long_routes=True,
+    )
+
+    requests = service._layout_orientation_requests(config, recipe, preset, RandomSource(1), layout_index=0)
+
+    assert requests == [{"orientation": "vertical", "reason": "long_route_preference"}]
+
+
+def test_generation_service_vertical_orientation_is_deterministic_for_same_seed(tmp_path) -> None:
+    first = LevelGenerationService().generate(
+        _config(
+            tmp_path / "a",
+            difficulty="easy",
+            template_name="single_switch",
+            dry_run=True,
+            seed=44,
+            compare_against_existing=False,
+            layout_orientation_preference="vertical",
+        )
+    )
+    second = LevelGenerationService().generate(
+        _config(
+            tmp_path / "b",
+            difficulty="easy",
+            template_name="single_switch",
+            dry_run=True,
+            seed=44,
+            compare_against_existing=False,
+            layout_orientation_preference="vertical",
+        )
+    )
+
+    assert first.passed is True
+    assert second.passed is True
+    assert first.accepted[0].level_document.to_dict() == second.accepted[0].level_document.to_dict()
+    assert first.accepted[0].layout_metadata == second.accepted[0].layout_metadata
+
+
 def test_generation_service_auto_difficulty_reports_actual_difficulty(tmp_path) -> None:
     result = LevelGenerationService().generate(
         _config(

@@ -25,6 +25,8 @@ class RecipeToLevelBuilderService:
         level_number: int,
         seed: int = 0,
         layout_variant_name: str = "normal",
+        layout_orientation_preference: str = "horizontal",
+        orientation_selection_reason: str = "default_horizontal",
         road_shape_strategy: str = "auto",
     ) -> GeneratedLevel:
         issues = recipe.validate()
@@ -33,7 +35,14 @@ class RecipeToLevelBuilderService:
 
         preset = self.difficulty.get_preset(recipe.difficulty)
         rng = RandomSource(seed)
-        layout_plan = self.layout_planner.plan_layout(recipe, preset, rng, layout_variant_name)
+        layout_plan = self.layout_planner.plan_layout(
+            recipe,
+            preset,
+            rng,
+            layout_variant_name,
+            layout_orientation_preference=layout_orientation_preference,
+            orientation_selection_reason=orientation_selection_reason,
+        )
         positions = layout_plan.positions
         recipe_edges = [
             (edge.from_node_id, edge.to_node_id)

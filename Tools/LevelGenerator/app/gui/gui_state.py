@@ -7,9 +7,11 @@ from ..generation_config import (
     DEFAULT_CANDIDATE_POOL_SIZE,
     DEFAULT_GENERATION_MODE,
     DEFAULT_LAYOUTS_PER_RECIPE,
+    DEFAULT_LAYOUT_ORIENTATION_PREFERENCE,
     DEFAULT_MAX_ATTEMPTS_PER_LEVEL,
     DEFAULT_RECIPE_POOL_SIZE,
     DEFAULT_ROAD_SHAPES_PER_LAYOUT,
+    DEFAULT_VERTICAL_ROUTE_PROBABILITY,
     GenerationConfig,
 )
 from ..paths import get_default_levels_directory, get_default_reports_directory, get_default_solutions_directory
@@ -25,6 +27,9 @@ class GuiGenerationState:
     recipe_pool_size: str = str(DEFAULT_RECIPE_POOL_SIZE)
     layouts_per_recipe: str = str(DEFAULT_LAYOUTS_PER_RECIPE)
     road_shapes_per_layout: str = str(DEFAULT_ROAD_SHAPES_PER_LAYOUT)
+    layout_orientation_preference: str = DEFAULT_LAYOUT_ORIENTATION_PREFERENCE
+    vertical_route_probability: str = str(DEFAULT_VERTICAL_ROUTE_PROBABILITY)
+    prefer_vertical_for_long_routes: bool = True
     seed: str = ""
     dry_run: bool = True
     overwrite: bool = False
@@ -54,6 +59,19 @@ def parse_positive_int(value: str, field_name: str) -> int:
     return parsed
 
 
+def parse_probability(value: str, field_name: str) -> float:
+    stripped = value.strip()
+    if not stripped:
+        raise ValueError(f"{field_name} is required.")
+    try:
+        parsed = float(stripped)
+    except ValueError as exc:
+        raise ValueError(f"{field_name} must be a number.") from exc
+    if parsed < 0.0 or parsed > 1.0:
+        raise ValueError(f"{field_name} must be between 0.0 and 1.0.")
+    return parsed
+
+
 def to_generation_config(state: GuiGenerationState) -> GenerationConfig:
     start_level_number = parse_positive_int(state.start_level_number, "Start level number")
     count = parse_positive_int(state.count, "Count")
@@ -62,6 +80,7 @@ def to_generation_config(state: GuiGenerationState) -> GenerationConfig:
     recipe_pool_size = parse_positive_int(state.recipe_pool_size, "Recipe pool size")
     layouts_per_recipe = parse_positive_int(state.layouts_per_recipe, "Layouts per recipe")
     road_shapes_per_layout = parse_positive_int(state.road_shapes_per_layout, "Road shapes per layout")
+    vertical_route_probability = parse_probability(state.vertical_route_probability, "Vertical route probability")
     swift_timeout_seconds = parse_positive_int(state.swift_timeout_seconds, "Swift timeout seconds")
     seed = _parse_optional_int(state.seed, "Seed")
 
@@ -89,6 +108,7 @@ def to_generation_config(state: GuiGenerationState) -> GenerationConfig:
         recipe_pool_size=recipe_pool_size,
         layouts_per_recipe=layouts_per_recipe,
         road_shapes_per_layout=road_shapes_per_layout,
+        vertical_route_probability=vertical_route_probability,
         swift_timeout_seconds=swift_timeout_seconds,
         levels_output_dir=levels_output_dir,
         solutions_output_dir=solutions_output_dir,
@@ -105,6 +125,9 @@ def to_generation_config(state: GuiGenerationState) -> GenerationConfig:
         recipe_pool_size=recipe_pool_size,
         layouts_per_recipe=layouts_per_recipe,
         road_shapes_per_layout=road_shapes_per_layout,
+        layout_orientation_preference=state.layout_orientation_preference,
+        vertical_route_probability=vertical_route_probability,
+        prefer_vertical_for_long_routes=state.prefer_vertical_for_long_routes,
         seed=seed,
         dry_run=state.dry_run,
         overwrite=state.overwrite,
@@ -133,6 +156,12 @@ def build_command_preview(state: GuiGenerationState) -> str:
     _append_pair(args, "--recipe-pool-size", state.recipe_pool_size)
     _append_pair(args, "--layouts-per-recipe", state.layouts_per_recipe)
     _append_pair(args, "--road-shapes-per-layout", state.road_shapes_per_layout)
+    _append_pair(args, "--layout-orientation", state.layout_orientation_preference)
+    _append_pair(args, "--vertical-route-probability", state.vertical_route_probability)
+    if state.prefer_vertical_for_long_routes:
+        args.append("--prefer-vertical-for-long-routes")
+    else:
+        args.append("--no-prefer-vertical-for-long-routes")
     _append_pair(args, "--seed", state.seed)
     if state.dry_run:
         args.append("--dry-run")
@@ -185,6 +214,7 @@ def _build_command_arguments(
     recipe_pool_size: int,
     layouts_per_recipe: int,
     road_shapes_per_layout: int,
+    vertical_route_probability: float,
     swift_timeout_seconds: int,
     levels_output_dir: Path,
     solutions_output_dir: Path,
@@ -208,7 +238,12 @@ def _build_command_arguments(
         str(layouts_per_recipe),
         "--road-shapes-per-layout",
         str(road_shapes_per_layout),
+        "--layout-orientation",
+        state.layout_orientation_preference,
+        "--vertical-route-probability",
+        str(vertical_route_probability),
     ]
+    args.append("--prefer-vertical-for-long-routes" if state.prefer_vertical_for_long_routes else "--no-prefer-vertical-for-long-routes")
     if seed is not None:
         args.extend(["--seed", str(seed)])
     if state.dry_run:

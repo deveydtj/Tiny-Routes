@@ -47,6 +47,9 @@ class GenerationReportRepository:
             "recipePoolSize": config.recipe_pool_size,
             "layoutsPerRecipe": config.layouts_per_recipe,
             "roadShapesPerLayout": config.road_shapes_per_layout,
+            "layoutOrientationPreference": getattr(config, "layout_orientation_preference", "auto"),
+            "verticalRouteProbability": getattr(config, "vertical_route_probability", 0.0),
+            "preferVerticalForLongRoutes": getattr(config, "prefer_vertical_for_long_routes", True),
             "baseSeed": config.seed,
             "dryRun": config.dry_run,
             "overwrite": config.overwrite,
@@ -65,6 +68,10 @@ class GenerationReportRepository:
                     "topologyClass": getattr(level, "topology_class", "") or None,
                     "requiredPathLength": self._required_path_length(level),
                     "layoutOrientation": self._layout_orientation(level),
+                    "layoutStrategy": (level.layout_metadata or {}).get("strategy"),
+                    "layoutVariant": level.selected_layout_variant,
+                    "layoutOrientationSelectionReason": (level.layout_metadata or {}).get("orientationSelectionReason"),
+                    "verticalCandidateRejectedReason": (level.layout_metadata or {}).get("verticalCandidateRejectedReason"),
                     "diversityAudit": self._diversity_audit(level),
                     "topologyDiversityScore": None,
                     "nearbyMechanicTagPenalty": None,
@@ -142,6 +149,9 @@ class GenerationReportRepository:
             f"- Recipe pool size: `{payload['recipePoolSize']}`",
             f"- Layouts per recipe: `{payload['layoutsPerRecipe']}`",
             f"- Road shapes per layout: `{payload['roadShapesPerLayout']}`",
+            f"- Layout orientation preference: `{payload['layoutOrientationPreference']}`",
+            f"- Vertical route probability: `{payload['verticalRouteProbability']}`",
+            f"- Prefer vertical for long routes: `{payload['preferVerticalForLongRoutes']}`",
             f"- Xcode project sync: `{payload['syncXcodeProject']}`",
             f"- Swift tests: `{payload['swiftTests']['summary']}`",
             "",
@@ -202,17 +212,23 @@ class GenerationReportRepository:
                             f"primary `{level['primaryMechanicTag'] or 'none'}`; "
                             f"topology `{level['topologyClass'] or 'none'}`; "
                             f"required path length `{level['requiredPathLength']}`; "
-                            f"layout orientation `{level['layoutOrientation']}`; "
+                            f"layout orientation `{level['layoutOrientation']}` "
+                            f"via `{level['layoutOrientationSelectionReason'] or 'unknown'}`; "
                             f"unlock `{level['unlockRequirement'] or 'none'}`; "
                             f"depends on `{level['priorMechanicDependency'] or 'none'}`."
                         )
                     lines.append(f"- Diversity audit: {self._diversity_summary(level['diversityAudit'])}.")
                     lines.append(
                         f"- Layout: `{level['selectedLayoutVariant']}`; "
-                        f"strategy: `{(level['layoutMetadata'] or {}).get('strategy', 'unknown')}`; "
+                        f"strategy: `{level['layoutStrategy'] or 'unknown'}`; "
+                        f"orientation: `{level['layoutOrientation']}`; "
                         f"road shapes: `{level['selectedRoadShapeStrategy']}` "
                         f"(score `{(level['roadShapeMetadata'] or {}).get('score', 'unknown')}`)."
                     )
+                    if level["verticalCandidateRejectedReason"]:
+                        lines.append(
+                            f"- Vertical candidate rejected: `{level['verticalCandidateRejectedReason']}`."
+                        )
                     if level["roadShapeMetadata"]:
                         road_shape = level["roadShapeMetadata"]
                         lines.append(
@@ -277,6 +293,9 @@ class GenerationReportRepository:
                         f"topology `{accepted_summary.get('topologyClass') or 'none'}`; "
                         f"path `{accepted_summary.get('requiredPathLength')}`; "
                         f"orientation `{accepted_summary.get('layoutOrientation', 'unknown')}`; "
+                        f"strategy `{accepted_summary.get('layoutStrategy', 'unknown')}`; "
+                        f"variant `{accepted_summary.get('layoutVariant', 'unknown')}`; "
+                        f"orientation reason `{accepted_summary.get('layoutOrientationSelectionReason', 'unknown')}`; "
                         f"diversity `{self._diversity_summary(accepted_summary.get('diversityAudit') or {})}`."
                     )
                     for near_miss in selection["topRejectedNearMisses"][:3]:
@@ -291,6 +310,9 @@ class GenerationReportRepository:
                             f"topology `{near_miss.get('topologyClass') or 'none'}` "
                             f"path `{near_miss.get('requiredPathLength')}` "
                             f"orientation `{near_miss.get('layoutOrientation', 'unknown')}` "
+                            f"strategy `{near_miss.get('layoutStrategy', 'unknown')}` "
+                            f"variant `{near_miss.get('layoutVariant', 'unknown')}` "
+                            f"orientation reason `{near_miss.get('layoutOrientationSelectionReason', 'unknown')}` "
                             f"diversity `{self._diversity_summary(near_miss.get('diversityAudit') or {})}`."
                         )
                 for switch in level["switchPreview"]:

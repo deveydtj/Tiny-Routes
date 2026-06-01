@@ -112,8 +112,34 @@ def test_cli_defaults_create_recipe_first_config() -> None:
     assert config.recipe_pool_size == 4
     assert config.layouts_per_recipe == 3
     assert config.road_shapes_per_layout == 3
+    assert config.layout_orientation_preference == "auto"
+    assert config.vertical_route_probability == 0.35
+    assert config.prefer_vertical_for_long_routes is True
     assert config.candidate_pool_size == 25
     assert config.max_attempts_per_level == 300
+
+
+def test_cli_parses_layout_orientation_options() -> None:
+    argv = [
+        "--start",
+        "12",
+        "--count",
+        "1",
+        "--difficulty",
+        "easy",
+        "--layout-orientation",
+        "vertical",
+        "--vertical-route-probability",
+        "0.8",
+        "--no-prefer-vertical-for-long-routes",
+    ]
+    args = build_generate_parser().parse_args(argv)
+
+    config = _config_from_args(args, argv)
+
+    assert config.layout_orientation_preference == "vertical"
+    assert config.vertical_route_probability == 0.8
+    assert config.prefer_vertical_for_long_routes is False
 
 
 def test_cli_accepts_recipe_architecture_options_for_recipe_generation(tmp_path) -> None:
@@ -135,6 +161,10 @@ def test_cli_accepts_recipe_architecture_options_for_recipe_generation(tmp_path)
             "2",
             "--road-shapes-per-layout",
             "2",
+            "--layout-orientation",
+            "vertical",
+            "--vertical-route-probability",
+            "1.0",
             "--candidate-pool-size",
             "1",
             "--dry-run",
@@ -155,8 +185,11 @@ def test_cli_accepts_recipe_architecture_options_for_recipe_generation(tmp_path)
     assert report["recipePoolSize"] == 3
     assert report["layoutsPerRecipe"] == 2
     assert report["roadShapesPerLayout"] == 2
+    assert report["layoutOrientationPreference"] == "vertical"
+    assert report["verticalRouteProbability"] == 1.0
     assert report["acceptedLevels"][0]["recipeFamily"] == "single_switch"
     assert report["acceptedLevels"][0]["recipeVariant"] is not None
+    assert report["acceptedLevels"][0]["layoutOrientation"] == "vertical"
 
 
 def test_cli_explicit_legacy_template_mode_still_generates(tmp_path) -> None:

@@ -408,18 +408,85 @@ class LevelGenerationService:
             recipe = self.abstract_puzzle_solver.solve(recipe, preset)
 
             for layout_index, layout_name in enumerate(layout_names):
-                for road_index, road_shape_strategy in enumerate(road_shape_strategies):
-                    candidate_seed = rng.child_seed("layout", recipe_index, layout_index, road_index)
-                    candidate = self.recipe_to_level_builder.build_level(
-                        recipe,
-                        level_number,
-                        seed=candidate_seed,
-                        layout_variant_name=layout_name,
-                        road_shape_strategy=road_shape_strategy,
-                    )
-                    candidate.requires_swift_validation = family.requires_swift_validation
-                    candidates.append(candidate)
+                orientation_requests = self._layout_orientation_requests(
+                    config,
+                    recipe,
+                    preset,
+                    rng,
+                    layout_index,
+                )
+                for orientation_index, orientation_request in enumerate(orientation_requests):
+                    for road_index, road_shape_strategy in enumerate(road_shape_strategies):
+                        candidate_seed = rng.child_seed(
+                            "layout",
+                            recipe_index,
+                            layout_index,
+                            orientation_index,
+                            road_index,
+                        )
+                        candidate = self.recipe_to_level_builder.build_level(
+                            recipe,
+                            level_number,
+                            seed=candidate_seed,
+                            layout_variant_name=layout_name,
+                            layout_orientation_preference=orientation_request["orientation"],
+                            orientation_selection_reason=orientation_request["reason"],
+                            road_shape_strategy=road_shape_strategy,
+                        )
+                        if candidate.layout_metadata is not None:
+                            candidate.layout_metadata["orientationPreference"] = config.layout_orientation_preference
+                            candidate.layout_metadata["verticalRouteProbability"] = config.vertical_route_probability
+                            candidate.layout_metadata["preferVerticalForLongRoutes"] = config.prefer_vertical_for_long_routes
+                            candidate.layout_metadata["orientationRequest"] = orientation_request["orientation"]
+                        candidate.requires_swift_validation = family.requires_swift_validation
+                        candidates.append(candidate)
         return candidates
+
+    def _layout_orientation_requests(
+        self,
+        config: GenerationConfig,
+        recipe,
+        preset,
+        rng: RandomSource,
+        layout_index: int,
+    ) -> list[dict[str, str]]:
+        preference = config.layout_orientation_preference
+        if preference == "horizontal":
+            return [{"orientation": "horizontal", "reason": "explicit_preference"}]
+        if preference == "vertical":
+            return [{"orientation": "vertical", "reason": "explicit_preference"}]
+
+        if preference == "mixed":
+            requests = [{"orientation": "horizontal", "reason": "mixed_horizontal"}]
+            if layout_index == 0:
+                requests.append({"orientation": "vertical", "reason": "mixed_preference"})
+            elif rng.bool(config.vertical_route_probability):
+                requests.append({"orientation": "vertical", "reason": "probability"})
+            return requests
+
+        if config.prefer_vertical_for_long_routes and self._is_long_route(recipe, preset):
+            return [{"orientation": "vertical", "reason": "long_route_preference"}]
+        if self._recipe_metadata_prefers_vertical(recipe) and rng.bool(config.vertical_route_probability):
+            return [{"orientation": "vertical", "reason": "probability"}]
+        if max(len(recipe.required_path) - 1, 0) >= 5 and rng.bool(config.vertical_route_probability):
+            return [{"orientation": "vertical", "reason": "probability"}]
+        return [{"orientation": "horizontal", "reason": "auto_horizontal"}]
+
+    def _recipe_metadata_prefers_vertical(self, recipe) -> bool:
+        tags = set(getattr(recipe, "mechanic_tags", ()) or ())
+        topology_class = str(getattr(recipe, "topology_class", "") or "")
+        return bool(tags.intersection({"loop", "ring", "rejoin", "package_gate", "long_route"}) or "loop" in topology_class)
+
+    def _is_long_route(self, recipe, preset) -> bool:
+        route_length = max(len(recipe.required_path) - 1, 0)
+        thresholds = {
+            "tutorial": 4,
+            "easy": 6,
+            "medium": 8,
+            "hard": 10,
+            "expert": 11,
+        }
+        return route_length >= thresholds.get(preset.name, 8)
 
     def _layout_variant_names(self, count: int) -> list[str]:
         names = list(self.layout_variant_service.variant_names)
@@ -540,6 +607,9 @@ class LevelGenerationService:
             "topologyClass": getattr(candidate, "topology_class", "") or None,
             "requiredPathLength": self._required_path_length(candidate),
             "layoutOrientation": self._layout_orientation(candidate),
+            "layoutStrategy": (candidate.layout_metadata or {}).get("strategy"),
+            "layoutOrientationSelectionReason": (candidate.layout_metadata or {}).get("orientationSelectionReason"),
+            "verticalCandidateRejectedReason": (candidate.layout_metadata or {}).get("verticalCandidateRejectedReason"),
             "diversityAudit": self._diversity_audit(candidate),
             "topologyDiversityScore": None,
             "nearbyMechanicTagPenalty": None,

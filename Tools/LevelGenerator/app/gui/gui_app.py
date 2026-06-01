@@ -11,9 +11,12 @@ from ..generation_config import (
     DEFAULT_CANDIDATE_POOL_SIZE,
     DEFAULT_GENERATION_MODE,
     DEFAULT_LAYOUTS_PER_RECIPE,
+    DEFAULT_LAYOUT_ORIENTATION_PREFERENCE,
     DEFAULT_MAX_ATTEMPTS_PER_LEVEL,
     DEFAULT_RECIPE_POOL_SIZE,
     DEFAULT_ROAD_SHAPES_PER_LAYOUT,
+    DEFAULT_VERTICAL_ROUTE_PROBABILITY,
+    LAYOUT_ORIENTATION_PREFERENCES,
 )
 from ..services.difficulty_service import DifficultyService
 from ..templates.template_registry import TemplateRegistry
@@ -56,6 +59,7 @@ class LevelGeneratorGui:
         self.difficulty_names = [*DifficultyService().valid_names, "auto"]
         self.template_names = TemplateRegistry().valid_names
         self.generation_modes = ["legacy_template", "recipe_first", "hybrid"]
+        self.layout_orientation_preferences = list(LAYOUT_ORIENTATION_PREFERENCES)
         self.latest_result = None
         self.approved_candidates = []
         self.cancel_requested = False
@@ -77,6 +81,8 @@ class LevelGeneratorGui:
         self.recipe_pool_var = tk.StringVar(value=str(DEFAULT_RECIPE_POOL_SIZE))
         self.layouts_per_recipe_var = tk.StringVar(value=str(DEFAULT_LAYOUTS_PER_RECIPE))
         self.road_shapes_per_layout_var = tk.StringVar(value=str(DEFAULT_ROAD_SHAPES_PER_LAYOUT))
+        self.layout_orientation_var = tk.StringVar(value=DEFAULT_LAYOUT_ORIENTATION_PREFERENCE)
+        self.vertical_route_probability_var = tk.StringVar(value=str(DEFAULT_VERTICAL_ROUTE_PROBABILITY))
         self.seed_var = tk.StringVar(value="")
         self.max_attempts_var = tk.StringVar(value=str(DEFAULT_MAX_ATTEMPTS_PER_LEVEL))
         self.candidate_pool_var = tk.StringVar(value=str(DEFAULT_CANDIDATE_POOL_SIZE))
@@ -85,6 +91,7 @@ class LevelGeneratorGui:
         self.overwrite_var = tk.BooleanVar(value=False)
         self.swift_tests_var = tk.BooleanVar(value=False)
         self.compare_existing_var = tk.BooleanVar(value=True)
+        self.prefer_vertical_for_long_routes_var = tk.BooleanVar(value=True)
         self.swift_timeout_var = tk.StringVar(value="180")
 
         self.levels_output_var = tk.StringVar(value=try_get_default_levels_directory())
@@ -179,9 +186,22 @@ class LevelGeneratorGui:
         add_labeled_entry(frame, "Recipe pool size", self.recipe_pool_var, 5)
         add_labeled_entry(frame, "Layouts per recipe", self.layouts_per_recipe_var, 6)
         add_labeled_entry(frame, "Road shapes per layout", self.road_shapes_per_layout_var, 7)
-        add_labeled_entry(frame, "Seed", self.seed_var, 8)
-        add_labeled_entry(frame, "Max attempts per level", self.max_attempts_var, 9)
-        add_labeled_entry(frame, "Candidate pool size", self.candidate_pool_var, 10)
+        add_labeled_combobox(
+            frame,
+            "Layout orientation",
+            self.layout_orientation_var,
+            self.layout_orientation_preferences,
+            8,
+        )
+        add_labeled_entry(frame, "Vertical route probability", self.vertical_route_probability_var, 9)
+        ttk.Checkbutton(
+            frame,
+            text="Prefer vertical for long routes",
+            variable=self.prefer_vertical_for_long_routes_var,
+        ).grid(row=10, column=0, columnspan=2, sticky="w", pady=3)
+        add_labeled_entry(frame, "Seed", self.seed_var, 11)
+        add_labeled_entry(frame, "Max attempts per level", self.max_attempts_var, 12)
+        add_labeled_entry(frame, "Candidate pool size", self.candidate_pool_var, 13)
 
     def _build_options_section(self, parent: ttk.Frame) -> None:
         frame = ttk.LabelFrame(parent, text="Options", padding=8)
@@ -331,6 +351,8 @@ class LevelGeneratorGui:
             self.recipe_pool_var,
             self.layouts_per_recipe_var,
             self.road_shapes_per_layout_var,
+            self.layout_orientation_var,
+            self.vertical_route_probability_var,
             self.seed_var,
             self.max_attempts_var,
             self.candidate_pool_var,
@@ -338,6 +360,7 @@ class LevelGeneratorGui:
             self.overwrite_var,
             self.swift_tests_var,
             self.compare_existing_var,
+            self.prefer_vertical_for_long_routes_var,
             self.swift_timeout_var,
             self.levels_output_var,
             self.solutions_output_var,
@@ -362,6 +385,9 @@ class LevelGeneratorGui:
             recipe_pool_size=self.recipe_pool_var.get(),
             layouts_per_recipe=self.layouts_per_recipe_var.get(),
             road_shapes_per_layout=self.road_shapes_per_layout_var.get(),
+            layout_orientation_preference=self.layout_orientation_var.get(),
+            vertical_route_probability=self.vertical_route_probability_var.get(),
+            prefer_vertical_for_long_routes=self.prefer_vertical_for_long_routes_var.get(),
             seed=self.seed_var.get(),
             dry_run=self.dry_run_var.get(),
             overwrite=self.overwrite_var.get(),
@@ -648,6 +674,13 @@ class LevelGeneratorGui:
         self.count_var.set("1")
         self.difficulty_var.set("tutorial")
         self.template_var.set("mixed")
+        self.generation_mode_var.set(DEFAULT_GENERATION_MODE)
+        self.recipe_pool_var.set(str(DEFAULT_RECIPE_POOL_SIZE))
+        self.layouts_per_recipe_var.set(str(DEFAULT_LAYOUTS_PER_RECIPE))
+        self.road_shapes_per_layout_var.set(str(DEFAULT_ROAD_SHAPES_PER_LAYOUT))
+        self.layout_orientation_var.set(DEFAULT_LAYOUT_ORIENTATION_PREFERENCE)
+        self.vertical_route_probability_var.set(str(DEFAULT_VERTICAL_ROUTE_PROBABILITY))
+        self.prefer_vertical_for_long_routes_var.set(True)
         self.seed_var.set("")
         self.max_attempts_var.set(str(DEFAULT_MAX_ATTEMPTS_PER_LEVEL))
         self.candidate_pool_var.set(str(DEFAULT_CANDIDATE_POOL_SIZE))

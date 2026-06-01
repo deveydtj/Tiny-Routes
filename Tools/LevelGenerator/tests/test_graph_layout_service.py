@@ -92,6 +92,83 @@ def test_layout_planner_variation_changes_layout_hash() -> None:
     assert normal.metadata["layoutHash"] != wide.metadata["layoutHash"]
 
 
+def test_vertical_route_progression_can_be_selected_intentionally() -> None:
+    planner = GraphLayoutPlannerService()
+    preset = DifficultyService().get_preset("easy")
+    recipe = _recipe("single_switch")
+
+    result = planner.plan_layout(
+        recipe,
+        preset,
+        RandomSource(4),
+        "normal",
+        layout_orientation_preference="vertical",
+        orientation_selection_reason="explicit_preference",
+    )
+
+    assert result.is_valid, result.validation_issues
+    assert result.strategy == "vertical_route_progression"
+    assert result.metadata["orientation"] == "vertical"
+    assert result.metadata["orientationSelectionReason"] == "explicit_preference"
+    assert result.positions["start"][1] > result.positions["destination"][1]
+
+
+def test_snake_layout_keeps_nodes_inside_bounds_and_readable() -> None:
+    planner = GraphLayoutPlannerService()
+    preset = DifficultyService().get_preset("hard")
+    recipe = _long_route_recipe(required_edge_count=7)
+
+    result = planner.plan_layout(recipe, preset, RandomSource(9), "normal", layout_orientation_preference="vertical")
+
+    layout = GraphLayoutService(BoundingBox(*preset.coordinate_bounds), preset.minimum_node_distance)
+    assert result.is_valid, result.validation_issues
+    assert result.strategy == "snake_layout"
+    assert all(layout.is_inside_bounds(*point) for point in result.positions.values())
+    assert layout.point_distance(result.positions[recipe.package_node_id], result.positions[recipe.destination_node_id]) >= preset.minimum_node_distance * 2.0
+
+
+def test_s_curve_layout_keeps_nodes_inside_bounds_and_readable() -> None:
+    planner = GraphLayoutPlannerService()
+    preset = DifficultyService().get_preset("expert")
+    recipe = _long_route_recipe(required_edge_count=9)
+
+    result = planner.plan_layout(recipe, preset, RandomSource(10), "normal", layout_orientation_preference="vertical")
+
+    layout = GraphLayoutService(BoundingBox(*preset.coordinate_bounds), preset.minimum_node_distance)
+    assert result.is_valid, result.validation_issues
+    assert result.strategy == "s_curve_layout"
+    assert all(layout.is_inside_bounds(*point) for point in result.positions.values())
+    assert layout.point_distance(result.positions["start"], result.positions[recipe.package_node_id]) >= preset.minimum_node_distance * 1.6
+
+
+def test_vertical_split_lane_keeps_branches_separated() -> None:
+    planner = GraphLayoutPlannerService()
+    preset = DifficultyService().get_preset("medium")
+    recipe = _recipe("package_gate")
+
+    result = planner.plan_layout(recipe, preset, RandomSource(11), "normal", layout_orientation_preference="vertical")
+
+    layout = GraphLayoutService(BoundingBox(*preset.coordinate_bounds), preset.minimum_node_distance)
+    assert result.is_valid, result.validation_issues
+    assert result.strategy == "vertical_split_lane"
+    assert abs(result.positions["dead_end_a"][0] - result.positions["switch_a"][0]) >= 0.5
+    assert abs(result.positions["dead_end_b"][0] - result.positions["switch_b"][0]) >= 0.5
+    assert layout.point_distance(result.positions["dead_end_a"], result.positions["dead_end_b"]) >= preset.minimum_node_distance * 1.5
+
+
+def test_vertical_loop_keeps_package_and_destination_readable() -> None:
+    planner = GraphLayoutPlannerService()
+    preset = DifficultyService().get_preset("hard")
+    recipe = _recipe("return_loop")
+
+    result = planner.plan_layout(recipe, preset, RandomSource(12), "normal", layout_orientation_preference="vertical")
+
+    layout = GraphLayoutService(BoundingBox(*preset.coordinate_bounds), preset.minimum_node_distance)
+    assert result.is_valid, result.validation_issues
+    assert result.strategy == "vertical_loop"
+    assert layout.point_distance(result.positions[recipe.package_node_id], result.positions[recipe.destination_node_id]) >= preset.minimum_node_distance * 2.0
+
+
 def test_layout_planner_rejects_clustered_layouts() -> None:
     planner = GraphLayoutPlannerService()
     preset = DifficultyService().get_preset("easy")
@@ -185,6 +262,24 @@ def _recipe(family_name: str) -> GraphRecipe:
         tap_node_ids=taps,
         family_name=family_name,
         variant_name="test",
+    )
+
+
+def _long_route_recipe(required_edge_count: int) -> GraphRecipe:
+    route = ["start", *[f"route_{index}" for index in range(1, required_edge_count)], "destination"]
+    package_index = max(2, required_edge_count // 2)
+    route[package_index] = "package"
+    nodes = tuple(route)
+    edges = tuple((from_id, to_id) for from_id, to_id in zip(route, route[1:]))
+    return GraphRecipe(
+        level_id="level_998",
+        difficulty="hard",
+        nodes=tuple(GraphRecipeNode(node_id, _role(node_id)) for node_id in nodes),
+        edges=tuple(GraphRecipeEdge(from_id, to_id) for from_id, to_id in edges),
+        required_path=tuple(route),
+        tap_node_ids=(),
+        family_name="multi_switch_chain",
+        variant_name="long_test",
     )
 
 

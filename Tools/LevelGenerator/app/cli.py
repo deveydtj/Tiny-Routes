@@ -8,10 +8,13 @@ from .generation_config import (
     DEFAULT_CANDIDATE_POOL_SIZE,
     DEFAULT_GENERATION_MODE,
     DEFAULT_LAYOUTS_PER_RECIPE,
+    DEFAULT_LAYOUT_ORIENTATION_PREFERENCE,
     DEFAULT_MAX_ATTEMPTS_PER_LEVEL,
     DEFAULT_RECIPE_POOL_SIZE,
     DEFAULT_ROAD_SHAPES_PER_LAYOUT,
+    DEFAULT_VERTICAL_ROUTE_PROBABILITY,
     GenerationConfig,
+    LAYOUT_ORIENTATION_PREFERENCES,
 )
 from .paths import (
     get_default_levels_directory,
@@ -103,6 +106,31 @@ def build_generate_parser() -> argparse.ArgumentParser:
         default=DEFAULT_ROAD_SHAPES_PER_LAYOUT,
         help="Road-shape strategies to try for each layout.",
     )
+    parser.add_argument(
+        "--layout-orientation",
+        choices=LAYOUT_ORIENTATION_PREFERENCES,
+        default=DEFAULT_LAYOUT_ORIENTATION_PREFERENCE,
+        help="Layout orientation preference. Default: auto.",
+    )
+    parser.add_argument(
+        "--vertical-route-probability",
+        type=float,
+        default=DEFAULT_VERTICAL_ROUTE_PROBABILITY,
+        help="Chance of vertical route candidates when orientation is mixed or auto. Default: 0.35.",
+    )
+    parser.add_argument(
+        "--prefer-vertical-for-long-routes",
+        action="store_true",
+        dest="prefer_vertical_for_long_routes",
+        help="Prefer vertical candidates for longer routes. Default: enabled.",
+    )
+    parser.add_argument(
+        "--no-prefer-vertical-for-long-routes",
+        action="store_false",
+        dest="prefer_vertical_for_long_routes",
+        help="Do not raise vertical preference for longer routes.",
+    )
+    parser.set_defaults(prefer_vertical_for_long_routes=True)
     parser.add_argument("--seed", type=int, default=None, help="Deterministic base seed.")
     parser.add_argument("--dry-run", action="store_true", help="Generate and validate without writing level files.")
     parser.add_argument("--overwrite", action="store_true", help="Allow replacing existing output files.")
@@ -190,6 +218,9 @@ def _config_from_args(args: argparse.Namespace, argv: list[str] | None) -> Gener
         recipe_pool_size=args.recipe_pool_size,
         layouts_per_recipe=args.layouts_per_recipe,
         road_shapes_per_layout=args.road_shapes_per_layout,
+        layout_orientation_preference=args.layout_orientation,
+        vertical_route_probability=args.vertical_route_probability,
+        prefer_vertical_for_long_routes=args.prefer_vertical_for_long_routes,
         seed=args.seed,
         dry_run=args.dry_run,
         overwrite=args.overwrite,
