@@ -19,6 +19,24 @@ class RecipeFamily(ABC):
     def variants(self) -> tuple[RecipeVariantSpec, ...]:
         raise NotImplementedError
 
+    @property
+    def mechanic_tags(self) -> tuple[str, ...]:
+        return tuple(dict.fromkeys(tag for variant in self.variants for tag in variant.mechanic_tags))
+
+    @property
+    def primary_mechanic_tag(self) -> str:
+        for variant in self.variants:
+            if variant.primary_mechanic_tag:
+                return variant.primary_mechanic_tag
+        return self.mechanic_tags[0] if self.mechanic_tags else ""
+
+    @property
+    def topology_class(self) -> str:
+        for variant in self.variants:
+            if variant.topology_class:
+                return variant.topology_class
+        return ""
+
     def supports_difficulty(self, preset: DifficultyPreset) -> bool:
         return any(variant.supports_difficulty(preset.name) for variant in self.variants)
 

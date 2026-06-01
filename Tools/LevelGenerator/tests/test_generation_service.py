@@ -430,6 +430,9 @@ def test_generation_service_recipe_first_mode_generates_recipe_metadata(tmp_path
     assert result.passed is True
     assert result.accepted[0].recipe_family == "single_switch"
     assert result.accepted[0].recipe_variant is not None
+    assert result.accepted[0].mechanic_tags
+    assert result.accepted[0].primary_mechanic_tag == "single_switch"
+    assert result.accepted[0].topology_class == "single_branch"
     assert result.accepted[0].abstract_graph_signature is not None
     assert result.accepted[0].selected_layout_variant is not None
     assert result.accepted[0].selected_road_shape_strategy == "auto"
@@ -437,6 +440,8 @@ def test_generation_service_recipe_first_mode_generates_recipe_metadata(tmp_path
     assert "score" in result.accepted[0].road_shape_metadata
     report = json.loads((tmp_path / "report.json").read_text(encoding="utf-8"))
     assert "roadShapeMetadata" in report["acceptedLevels"][0]
+    assert report["acceptedLevels"][0]["primaryMechanicTag"] == "single_switch"
+    assert report["acceptedLevels"][0]["topologyClass"] == "single_branch"
     assert "roadShapeScore" in report["acceptedLevels"][0]["quality"]["details"]
 
 

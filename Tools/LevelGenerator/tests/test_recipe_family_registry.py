@@ -16,12 +16,17 @@ def test_recipe_variant_spec_normalizes_names() -> None:
         family_name=" Single_Switch ",
         difficulty_names=(" Easy ",),
         legacy_template_name=" Single_Switch ",
+        mechanic_tags=(" Single_Switch ",),
+        topology_class=" Single_Branch ",
     )
 
     assert variant.name == "default"
     assert variant.family_name == "single_switch"
     assert variant.legacy_template_name == "single_switch"
     assert variant.supports_difficulty("easy")
+    assert variant.mechanic_tags == ("single_switch",)
+    assert variant.primary_mechanic_tag == "single_switch"
+    assert variant.topology_class == "single_branch"
 
 
 def test_recipe_family_registry_exposes_current_template_families() -> None:
@@ -84,6 +89,23 @@ def test_recipe_family_registry_filters_by_difficulty() -> None:
     } == supported
 
 
+def test_every_registered_recipe_family_exposes_mechanic_and_topology_metadata() -> None:
+    registry = RecipeFamilyRegistry()
+
+    for family_name in registry.valid_family_names():
+        if family_name == "mixed":
+            continue
+        family = registry.get_family(family_name)
+
+        assert family.mechanic_tags, family_name
+        assert family.primary_mechanic_tag, family_name
+        assert family.topology_class, family_name
+        for variant in family.variants:
+            assert variant.mechanic_tags, (family_name, variant.name)
+            assert variant.primary_mechanic_tag, (family_name, variant.name)
+            assert variant.topology_class, (family_name, variant.name)
+
+
 def test_recipe_family_generates_valid_graph_recipe() -> None:
     preset = DifficultyService().get_preset("easy")
     family = RecipeFamilyRegistry().choose_family("single_switch", preset, RandomSource(1))
@@ -93,6 +115,11 @@ def test_recipe_family_generates_valid_graph_recipe() -> None:
     assert recipe.variant_name.startswith("single_switch_")
     assert recipe.required_path[0] == "start"
     assert recipe.required_path[-1] == "destination"
+    assert recipe.mechanic_tags
+    assert recipe.primary_mechanic_tag == "single_switch"
+    assert recipe.topology_class == "single_branch"
+    assert recipe.mechanic_metadata["primaryMechanicTag"] == "single_switch"
+    assert recipe.mechanic_metadata["topologyClass"] == "single_branch"
     assert recipe.validate() == []
 
 
@@ -114,5 +141,9 @@ def test_expanded_recipe_families_solve_layout_and_validate() -> None:
         assert not result.has_errors, (definition.name, result.error_codes)
         assert generated.recipe_family == definition.name
         assert generated.mechanic_tags
+        assert generated.primary_mechanic_tag
+        assert generated.topology_class
         assert generated.mechanic_metadata["intendedMechanic"]
+        assert generated.mechanic_metadata["primaryMechanicTag"] == generated.primary_mechanic_tag
+        assert generated.mechanic_metadata["topologyClass"] == generated.topology_class
         assert generated.unlock_requirement is not None

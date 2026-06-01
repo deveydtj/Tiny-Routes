@@ -61,6 +61,8 @@ class GenerationReportRepository:
                     "recipeFamily": level.recipe_family,
                     "recipeVariant": level.recipe_variant,
                     "mechanicTags": list(getattr(level, "mechanic_tags", ()) or ()),
+                    "primaryMechanicTag": getattr(level, "primary_mechanic_tag", "") or None,
+                    "topologyClass": getattr(level, "topology_class", "") or None,
                     "unlockRequirement": getattr(level, "unlock_requirement", None),
                     "priorMechanicDependency": getattr(level, "prior_mechanic_dependency", None),
                     "mechanicMetadata": getattr(level, "mechanic_metadata", {}) or {},
@@ -138,8 +140,8 @@ class GenerationReportRepository:
             "",
             "## Accepted Levels",
             "",
-            "| Level | Source | Seed | Difficulty | Nodes | Edges | Switches | Par Taps | Time Limit | Quality | Preview | Signatures | Status |",
-            "|---|---|---:|---|---:|---:|---:|---:|---:|---:|---|---|---|",
+            "| Level | Source | Mechanics | Topology | Seed | Difficulty | Nodes | Edges | Switches | Par Taps | Time Limit | Quality | Preview | Signatures | Status |",
+            "|---|---|---|---|---:|---|---:|---:|---:|---:|---:|---:|---|---|---|",
         ]
         for level in payload["acceptedLevels"]:
             signature = level["signature"]
@@ -155,10 +157,17 @@ class GenerationReportRepository:
             source = level["template"]
             if level["recipeFamily"]:
                 source = f"{level['recipeFamily']} / {level['recipeVariant']}"
+            mechanic_summary = ", ".join(level["mechanicTags"]) or ""
+            if level["primaryMechanicTag"]:
+                mechanic_summary = f"{level['primaryMechanicTag']}: {mechanic_summary}"
+            topology_summary = level["topologyClass"] or ""
             lines.append(
-                "| `{levelID}` | `{source}` | {seed} | {difficulty} | {nodes} | {edges} | {switches} | "
-                "{parTaps} | {timeLimit} | {quality_summary} | {preview} | `{signature_summary}` | {status} |".format(
+                "| `{levelID}` | `{source}` | `{mechanic_summary}` | `{topology_summary}` | {seed} | {difficulty} | "
+                "{nodes} | {edges} | {switches} | {parTaps} | {timeLimit} | {quality_summary} | {preview} | "
+                "`{signature_summary}` | {status} |".format(
                     source=source,
+                    mechanic_summary=mechanic_summary,
+                    topology_summary=topology_summary,
                     quality_summary=quality_summary,
                     preview=preview,
                     signature_summary=signature_summary,
@@ -166,7 +175,7 @@ class GenerationReportRepository:
                 )
             )
         if not payload["acceptedLevels"]:
-            lines.append("| _None_ |  |  |  |  |  |  |  |  |  |  |  | failed |")
+            lines.append("| _None_ |  |  |  |  |  |  |  |  |  |  |  |  |  | failed |")
 
         if payload["acceptedLevels"]:
             lines.extend(["", "## Level Details", ""])
@@ -180,6 +189,8 @@ class GenerationReportRepository:
                     if level["mechanicTags"] or level["unlockRequirement"] or level["priorMechanicDependency"]:
                         lines.append(
                             f"- Mechanics: tags `{', '.join(level['mechanicTags']) or 'none'}`; "
+                            f"primary `{level['primaryMechanicTag'] or 'none'}`; "
+                            f"topology `{level['topologyClass'] or 'none'}`; "
                             f"unlock `{level['unlockRequirement'] or 'none'}`; "
                             f"depends on `{level['priorMechanicDependency'] or 'none'}`."
                         )
@@ -248,7 +259,8 @@ class GenerationReportRepository:
                         near_quality = near_miss.get("quality", {})
                         lines.append(
                             f"- Near miss `{near_miss.get('status')}` seed `{near_miss.get('seed')}` "
-                            f"score `{near_quality.get('total')}`."
+                            f"score `{near_quality.get('total')}` "
+                            f"topology `{near_miss.get('topologyClass') or 'none'}`."
                         )
                 for switch in level["switchPreview"]:
                     transition_summary = ", ".join(

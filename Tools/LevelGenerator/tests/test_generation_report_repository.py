@@ -146,6 +146,9 @@ def test_generation_report_repository_writes_recipe_metadata(tmp_path) -> None:
     assert result.passed is True
     assert accepted["recipeFamily"] == "single_switch"
     assert accepted["recipeVariant"].startswith("single_switch_")
+    assert accepted["mechanicTags"]
+    assert accepted["primaryMechanicTag"] == "single_switch"
+    assert accepted["topologyClass"] == "single_branch"
     assert accepted["abstractGraphSignature"]
     assert accepted["selectedLayoutVariant"] == "normal"
     assert accepted["selectedRoadShapeStrategy"] == "auto"
@@ -153,7 +156,12 @@ def test_generation_report_repository_writes_recipe_metadata(tmp_path) -> None:
     assert accepted["quality"]["switchClarity"] > 0
     assert payload["candidateSelection"][0]["levelID"] == "level_012"
     assert payload["candidateSelection"][0]["scoreStats"]["maximum"] is not None
-    assert "Candidate selection" in (tmp_path / "report.md").read_text(encoding="utf-8")
+    assert payload["candidateSelection"][0]["acceptedCandidate"]["primaryMechanicTag"] == "single_switch"
+    assert payload["candidateSelection"][0]["acceptedCandidate"]["topologyClass"] == "single_branch"
+    markdown = (tmp_path / "report.md").read_text(encoding="utf-8")
+    assert "Candidate selection" in markdown
+    assert "Topology" in markdown
+    assert "primary `single_switch`" in markdown
 
 
 def test_generation_report_repository_writes_recipe_mechanic_metadata(tmp_path) -> None:
@@ -184,6 +192,8 @@ def test_generation_report_repository_writes_recipe_mechanic_metadata(tmp_path) 
     assert result.passed is True
     assert accepted["recipeFamily"] == "four_way_intro"
     assert "four_way" in accepted["mechanicTags"]
+    assert accepted["primaryMechanicTag"] == "four_way"
+    assert accepted["topologyClass"] == "four_way_gate"
     assert accepted["unlockRequirement"]
     assert accepted["priorMechanicDependency"] == "hub_choice"
     assert accepted["mechanicMetadata"]["intendedMechanic"]

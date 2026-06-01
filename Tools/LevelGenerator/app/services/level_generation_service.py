@@ -536,6 +536,8 @@ class LevelGenerationService:
             "recipeFamily": candidate.recipe_family,
             "recipeVariant": candidate.recipe_variant,
             "mechanicTags": list(getattr(candidate, "mechanic_tags", ()) or ()),
+            "primaryMechanicTag": getattr(candidate, "primary_mechanic_tag", "") or None,
+            "topologyClass": getattr(candidate, "topology_class", "") or None,
             "layoutVariant": candidate.selected_layout_variant,
             "roadShapeStrategy": candidate.selected_road_shape_strategy,
             "status": status,

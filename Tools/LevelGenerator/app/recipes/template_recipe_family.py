@@ -32,6 +32,9 @@ class TemplateRecipeFamilyDefinition:
     name: str
     variants: tuple[RecipeVariantSpec, ...]
     build_spec: RecipeSpecBuilder
+    mechanic_tags: tuple[str, ...]
+    primary_mechanic_tag: str
+    topology_class: str
     requires_swift_validation: bool = False
 
 
@@ -74,6 +77,8 @@ class TemplateRecipeFamily(RecipeFamily):
             family_name=self.name,
             variant_name=selected_variant.name,
             mechanic_tags=selected_variant.mechanic_tags,
+            primary_mechanic_tag=selected_variant.primary_mechanic_tag,
+            topology_class=selected_variant.topology_class,
             unlock_requirement=selected_variant.unlock_requirement,
             prior_mechanic_dependency=selected_variant.prior_mechanic_dependency,
             mechanic_metadata=selected_variant.mechanic_metadata(),
@@ -94,46 +99,106 @@ def template_recipe_family_definitions() -> list[TemplateRecipeFamilyDefinition]
                     family_name=StraightDeliveryTemplate.name,
                     difficulty_names=("tutorial",),
                     legacy_template_name=StraightDeliveryTemplate.name,
+                    mechanic_tags=("straight_delivery",) if count < 2 else ("straight_delivery", "long_route"),
+                    primary_mechanic_tag="straight_delivery",
+                    topology_class="straight_line",
                 )
                 for count in range(3)
             ),
             build_spec=_straight_delivery_spec,
+            mechanic_tags=("straight_delivery",),
+            primary_mechanic_tag="straight_delivery",
+            topology_class="straight_line",
         ),
         TemplateRecipeFamilyDefinition(
             name=SingleSwitchTemplate.name,
-            variants=_variants_from_template(SingleSwitchTemplate),
+            variants=_variants_from_template(
+                SingleSwitchTemplate,
+                mechanic_tags=("single_switch", "dead_end"),
+                primary_mechanic_tag="single_switch",
+                topology_class="single_branch",
+            ),
             build_spec=_single_switch_spec,
+            mechanic_tags=("single_switch", "dead_end"),
+            primary_mechanic_tag="single_switch",
+            topology_class="single_branch",
         ),
         TemplateRecipeFamilyDefinition(
             name=PackageGateTemplate.name,
-            variants=_variants_from_template(PackageGateTemplate),
+            variants=_variants_from_template(
+                PackageGateTemplate,
+                mechanic_tags=("package_gate", "multi_switch"),
+                primary_mechanic_tag="package_gate",
+                topology_class="package_gate",
+            ),
             build_spec=_package_gate_spec,
+            mechanic_tags=("package_gate", "multi_switch"),
+            primary_mechanic_tag="package_gate",
+            topology_class="package_gate",
         ),
         TemplateRecipeFamilyDefinition(
             name=ReturnLoopTemplate.name,
-            variants=_variants_from_template(ReturnLoopTemplate),
+            variants=_variants_from_template(
+                ReturnLoopTemplate,
+                mechanic_tags=("loop", "repeated_tap"),
+                primary_mechanic_tag="loop",
+                topology_class="return_loop",
+            ),
             build_spec=_return_loop_spec,
+            mechanic_tags=("loop", "repeated_tap"),
+            primary_mechanic_tag="loop",
+            topology_class="return_loop",
         ),
         TemplateRecipeFamilyDefinition(
             name=MultiSwitchChainTemplate.name,
-            variants=_variants_from_template(MultiSwitchChainTemplate),
+            variants=_variants_from_template(
+                MultiSwitchChainTemplate,
+                mechanic_tags=("multi_switch",),
+                primary_mechanic_tag="multi_switch",
+                topology_class="two_switch_order",
+            ),
             build_spec=_multi_switch_chain_spec,
+            mechanic_tags=("multi_switch",),
+            primary_mechanic_tag="multi_switch",
+            topology_class="two_switch_order",
         ),
         TemplateRecipeFamilyDefinition(
             name=RingRouteTemplate.name,
-            variants=_variants_from_template(RingRouteTemplate),
+            variants=_variants_from_template(
+                RingRouteTemplate,
+                mechanic_tags=("ring", "package_gate"),
+                primary_mechanic_tag="ring",
+                topology_class="ring",
+            ),
             build_spec=_ring_route_spec,
+            mechanic_tags=("ring", "package_gate"),
+            primary_mechanic_tag="ring",
+            topology_class="ring",
             requires_swift_validation=True,
         ),
         TemplateRecipeFamilyDefinition(
             name=FourWayIntersectionTemplate.name,
-            variants=_variants_from_template(FourWayIntersectionTemplate),
+            variants=_variants_from_template(
+                FourWayIntersectionTemplate,
+                mechanic_tags=("four_way", "repeated_tap"),
+                primary_mechanic_tag="four_way",
+                topology_class="four_way_gate",
+            ),
             build_spec=_four_way_intersection_spec,
+            mechanic_tags=("four_way", "repeated_tap"),
+            primary_mechanic_tag="four_way",
+            topology_class="four_way_gate",
         ),
     ]
 
 
-def _variants_from_template(template_class) -> tuple[RecipeVariantSpec, ...]:
+def _variants_from_template(
+    template_class,
+    *,
+    mechanic_tags: tuple[str, ...],
+    primary_mechanic_tag: str,
+    topology_class: str,
+) -> tuple[RecipeVariantSpec, ...]:
     return tuple(
         RecipeVariantSpec(
             name=spec.name,
@@ -142,6 +207,9 @@ def _variants_from_template(template_class) -> tuple[RecipeVariantSpec, ...]:
             legacy_template_name=spec.template_name,
             requires_swift_validation=spec.requires_swift_validation,
             notes=spec.notes,
+            mechanic_tags=mechanic_tags,
+            primary_mechanic_tag=primary_mechanic_tag,
+            topology_class=topology_class,
         )
         for spec in template_class.variant_specs
     )

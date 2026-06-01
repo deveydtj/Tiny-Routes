@@ -106,6 +106,10 @@ class RecipeToLevelBuilderService:
         mechanic_notes = []
         if recipe.mechanic_tags:
             mechanic_notes.append(f"Mechanic tags: {', '.join(recipe.mechanic_tags)}")
+        if recipe.primary_mechanic_tag:
+            mechanic_notes.append(f"Primary mechanic tag: {recipe.primary_mechanic_tag}")
+        if recipe.topology_class:
+            mechanic_notes.append(f"Topology class: {recipe.topology_class}")
         if recipe.unlock_requirement:
             mechanic_notes.append(f"Unlock requirement: {recipe.unlock_requirement}")
         if recipe.prior_mechanic_dependency:
@@ -134,6 +138,8 @@ class RecipeToLevelBuilderService:
             layout_metadata=layout_plan.metadata,
             road_shape_metadata=road_shape_plan.metadata,
             mechanic_tags=recipe.mechanic_tags,
+            primary_mechanic_tag=recipe.primary_mechanic_tag,
+            topology_class=recipe.topology_class,
             unlock_requirement=recipe.unlock_requirement,
             prior_mechanic_dependency=recipe.prior_mechanic_dependency,
             mechanic_metadata=recipe.mechanic_metadata,

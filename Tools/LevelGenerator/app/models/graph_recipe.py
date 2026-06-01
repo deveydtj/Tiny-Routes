@@ -35,6 +35,8 @@ class GraphRecipe:
     variant_name: str = "default"
     solved_metadata: AbstractPuzzleSolutionMetadata | None = None
     mechanic_tags: tuple[str, ...] = field(default_factory=tuple)
+    primary_mechanic_tag: str = ""
+    topology_class: str = ""
     unlock_requirement: str | None = None
     prior_mechanic_dependency: str | None = None
     mechanic_metadata: dict[str, Any] = field(default_factory=dict)

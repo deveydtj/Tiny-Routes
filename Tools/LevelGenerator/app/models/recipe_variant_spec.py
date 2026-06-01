@@ -19,6 +19,8 @@ class RecipeVariantSpec:
     visual_layout_requirements: tuple[str, ...] = field(default_factory=tuple)
     design_reason: str = ""
     mechanic_tags: tuple[str, ...] = field(default_factory=tuple)
+    primary_mechanic_tag: str = ""
+    topology_class: str = ""
     unlock_requirement: str | None = None
     prior_mechanic_dependency: str | None = None
 
@@ -43,6 +45,11 @@ class RecipeVariantSpec:
             "mechanic_tags",
             tuple(tag.strip().lower() for tag in self.mechanic_tags if tag.strip()),
         )
+        primary_mechanic_tag = self.primary_mechanic_tag.strip().lower()
+        if not primary_mechanic_tag and self.mechanic_tags:
+            primary_mechanic_tag = self.mechanic_tags[0]
+        object.__setattr__(self, "primary_mechanic_tag", primary_mechanic_tag)
+        object.__setattr__(self, "topology_class", self.topology_class.strip().lower())
         object.__setattr__(
             self,
             "visual_layout_requirements",
@@ -71,6 +78,8 @@ class RecipeVariantSpec:
             "visualLayoutRequirements": list(self.visual_layout_requirements),
             "designReason": self.design_reason,
             "mechanicTags": list(self.mechanic_tags),
+            "primaryMechanicTag": self.primary_mechanic_tag,
+            "topologyClass": self.topology_class,
             "unlockRequirement": self.unlock_requirement,
             "priorMechanicDependency": self.prior_mechanic_dependency,
         }

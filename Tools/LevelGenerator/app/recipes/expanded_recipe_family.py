@@ -21,6 +21,8 @@ class ExpandedRecipeFamilyDefinition:
     name: str
     difficulty_names: tuple[str, ...]
     mechanic_tags: tuple[str, ...]
+    primary_mechanic_tag: str
+    topology_class: str
     intended_mechanic: str
     required_player_skill: str
     allowed_switch_counts: tuple[int, int]
@@ -84,6 +86,8 @@ class ExpandedRecipeFamily(RecipeFamily):
             family_name=self.name,
             variant_name=selected_variant.name,
             mechanic_tags=selected_variant.mechanic_tags,
+            primary_mechanic_tag=selected_variant.primary_mechanic_tag,
+            topology_class=selected_variant.topology_class,
             unlock_requirement=selected_variant.unlock_requirement,
             prior_mechanic_dependency=selected_variant.prior_mechanic_dependency,
             mechanic_metadata=selected_variant.mechanic_metadata(),
@@ -108,6 +112,8 @@ class ExpandedRecipeFamily(RecipeFamily):
             visual_layout_requirements=definition.visual_layout_requirements,
             design_reason=definition.design_reason,
             mechanic_tags=definition.mechanic_tags,
+            primary_mechanic_tag=definition.primary_mechanic_tag,
+            topology_class=definition.topology_class,
             unlock_requirement=definition.unlock_requirement,
             prior_mechanic_dependency=definition.prior_mechanic_dependency,
         )
@@ -118,7 +124,8 @@ def expanded_recipe_family_definitions() -> list[ExpandedRecipeFamilyDefinition]
         _definition(
             "straight_delivery_intro",
             ("tutorial",),
-            ("intro", "straight_delivery"),
+            ("straight_delivery", "intro"),
+            "straight_line",
             "Teach the package-before-destination objective without switches.",
             "Follow a single readable path.",
             (0, 0),
@@ -133,7 +140,8 @@ def expanded_recipe_family_definitions() -> list[ExpandedRecipeFamilyDefinition]
         _definition(
             "single_switch_intro",
             ("tutorial",),
-            ("switch", "intro"),
+            ("single_switch", "dead_end", "switch", "intro"),
+            "single_branch",
             "Introduce one tap that rotates away from a dead end.",
             "Tap one switch before arrival.",
             (1, 1),
@@ -148,7 +156,8 @@ def expanded_recipe_family_definitions() -> list[ExpandedRecipeFamilyDefinition]
         _definition(
             "single_switch_wrong_dead_end",
             ("tutorial",),
-            ("switch", "dead_end"),
+            ("single_switch", "dead_end", "switch"),
+            "single_branch",
             "Make the untapped switch outcome visibly wrong but harmless.",
             "Recognize and avoid a dead-end branch.",
             (1, 1),
@@ -163,7 +172,8 @@ def expanded_recipe_family_definitions() -> list[ExpandedRecipeFamilyDefinition]
         _definition(
             "package_before_destination_intro",
             ("tutorial",),
-            ("package_order", "straight_delivery"),
+            ("straight_delivery", "long_route", "package_order"),
+            "straight_line",
             "Reinforce that the package must come before the destination.",
             "Scan goal order along the main path.",
             (0, 0),
@@ -178,7 +188,8 @@ def expanded_recipe_family_definitions() -> list[ExpandedRecipeFamilyDefinition]
         _definition(
             "single_switch_package_choice",
             ("easy",),
-            ("switch", "package_choice"),
+            ("single_switch", "safe_choice", "switch", "package_choice"),
+            "single_branch",
             "Choose the package branch at a single switch.",
             "Identify the productive branch before the car reaches it.",
             (1, 1),
@@ -193,7 +204,8 @@ def expanded_recipe_family_definitions() -> list[ExpandedRecipeFamilyDefinition]
         _definition(
             "two_switch_order_intro",
             ("easy",),
-            ("switch_order", "two_switch"),
+            ("multi_switch", "switch_order", "two_switch"),
+            "two_switch_order",
             "Tap two switches in route order.",
             "Track a short ordered tap sequence.",
             (2, 2),
@@ -208,7 +220,8 @@ def expanded_recipe_family_definitions() -> list[ExpandedRecipeFamilyDefinition]
         _definition(
             "short_detour_gate",
             ("easy",),
-            ("detour", "gate"),
+            ("detour", "single_switch", "dead_end", "gate"),
+            "detour_gate",
             "Route through a short detour before reaching the package.",
             "Notice that the longer branch is correct.",
             (1, 1),
@@ -223,7 +236,8 @@ def expanded_recipe_family_definitions() -> list[ExpandedRecipeFamilyDefinition]
         _definition(
             "safe_dead_end_choice",
             ("easy",),
-            ("dead_end", "choice"),
+            ("safe_choice", "single_switch", "dead_end", "choice"),
+            "single_branch",
             "Compare a harmless wrong branch against the goal route.",
             "Read a branch before tapping.",
             (1, 1),
@@ -238,7 +252,8 @@ def expanded_recipe_family_definitions() -> list[ExpandedRecipeFamilyDefinition]
         _definition(
             "package_gate_simple",
             ("easy",),
-            ("package_gate", "switch"),
+            ("package_gate", "single_switch", "switch"),
+            "package_gate",
             "Use one gate switch to reach the package path.",
             "Connect switch state to package access.",
             (1, 1),
@@ -253,7 +268,8 @@ def expanded_recipe_family_definitions() -> list[ExpandedRecipeFamilyDefinition]
         _definition(
             "multi_switch_order",
             ("medium",),
-            ("switch_order", "multi_switch"),
+            ("multi_switch", "switch_order"),
+            "two_switch_order",
             "Resolve two ordered switches around the package.",
             "Maintain a route-level tap plan.",
             (2, 2),
@@ -268,7 +284,8 @@ def expanded_recipe_family_definitions() -> list[ExpandedRecipeFamilyDefinition]
         _definition(
             "package_gate_double_choice",
             ("medium",),
-            ("package_gate", "two_switch"),
+            ("package_gate", "multi_switch", "two_switch"),
+            "package_gate",
             "Open the package branch and then the exit branch.",
             "Remember that the route has two gated decisions.",
             (2, 2),
@@ -283,7 +300,8 @@ def expanded_recipe_family_definitions() -> list[ExpandedRecipeFamilyDefinition]
         _definition(
             "return_loop_intro",
             ("medium",),
-            ("return_loop", "repeated_tap"),
+            ("loop", "repeated_tap", "multi_switch", "return_loop"),
+            "two_switch_order",
             "Use a loop to revisit and retap the same hub.",
             "Recognize a switch state can matter on the second visit.",
             (2, 2),
@@ -299,6 +317,7 @@ def expanded_recipe_family_definitions() -> list[ExpandedRecipeFamilyDefinition]
             "split_path_rejoin",
             ("medium",),
             ("split_path", "rejoin"),
+            "split_rejoin",
             "Split away from and rejoin the main route.",
             "Follow route continuity through a branch.",
             (2, 2),
@@ -314,6 +333,7 @@ def expanded_recipe_family_definitions() -> list[ExpandedRecipeFamilyDefinition]
             "fake_shortcut",
             ("medium",),
             ("fake_shortcut", "dead_end"),
+            "two_switch_order",
             "Avoid a tempting short branch.",
             "Prefer the goal route over the shortest-looking exit.",
             (2, 2),
@@ -328,7 +348,8 @@ def expanded_recipe_family_definitions() -> list[ExpandedRecipeFamilyDefinition]
         _definition(
             "hub_choice",
             ("medium",),
-            ("hub", "three_way"),
+            ("hub", "multi_switch", "three_way"),
+            "two_switch_order",
             "Choose from a three-way hub and then exit through a gate.",
             "Count taps on a three-way switch.",
             (2, 2),
@@ -343,7 +364,8 @@ def expanded_recipe_family_definitions() -> list[ExpandedRecipeFamilyDefinition]
         _definition(
             "return_loop_with_gate",
             ("hard",),
-            ("return_loop", "gate", "repeated_tap"),
+            ("loop", "repeated_tap", "package_gate", "return_loop", "gate"),
+            "two_switch_order",
             "Revisit a hub after opening a loop gate.",
             "Plan repeated hub use plus an intermediate gate.",
             (3, 3),
@@ -358,7 +380,8 @@ def expanded_recipe_family_definitions() -> list[ExpandedRecipeFamilyDefinition]
         _definition(
             "ring_route_gate",
             ("hard",),
-            ("ring_route", "package_gate"),
+            ("ring", "package_gate", "ring_route"),
+            "two_switch_order",
             "Route around a ring-like path through a gate.",
             "Read a non-linear route around the package.",
             (3, 3),
@@ -374,6 +397,7 @@ def expanded_recipe_family_definitions() -> list[ExpandedRecipeFamilyDefinition]
             "multi_switch_revisit",
             ("hard",),
             ("multi_switch", "revisit", "repeated_tap"),
+            "two_switch_order",
             "Return to an earlier switch with a changed route goal.",
             "Remember an earlier switch state after a loop.",
             (3, 3),
@@ -388,7 +412,8 @@ def expanded_recipe_family_definitions() -> list[ExpandedRecipeFamilyDefinition]
         _definition(
             "package_inside_loop",
             ("hard",),
-            ("package", "loop", "multi_switch"),
+            ("package_inside_loop", "loop", "multi_switch", "package"),
+            "return_loop",
             "Collect the package inside a loop before exiting.",
             "Track objective progress inside a loop.",
             (3, 3),
@@ -404,6 +429,7 @@ def expanded_recipe_family_definitions() -> list[ExpandedRecipeFamilyDefinition]
             "two_phase_route",
             ("hard",),
             ("two_phase", "multi_switch"),
+            "two_phase",
             "Solve a package phase and then an exit phase.",
             "Group taps by route phase.",
             (3, 3),
@@ -418,7 +444,8 @@ def expanded_recipe_family_definitions() -> list[ExpandedRecipeFamilyDefinition]
         _definition(
             "branch_then_rejoin_with_wrong_order",
             ("hard",),
-            ("branch", "rejoin", "wrong_order"),
+            ("split_path", "rejoin", "wrong_order", "branch"),
+            "split_rejoin",
             "Handle a branch that rejoins before later gates.",
             "Avoid applying later switch logic too early.",
             (3, 3),
@@ -433,7 +460,8 @@ def expanded_recipe_family_definitions() -> list[ExpandedRecipeFamilyDefinition]
         _definition(
             "four_way_intro",
             ("expert",),
-            ("four_way", "intro"),
+            ("four_way", "repeated_tap", "intro"),
+            "four_way_gate",
             "Use a four-way switch with a clearly counted tap target.",
             "Count two taps on a four-way switch.",
             (1, 1),
@@ -450,6 +478,7 @@ def expanded_recipe_family_definitions() -> list[ExpandedRecipeFamilyDefinition]
             "four_way_package_gate",
             ("expert",),
             ("four_way", "package_gate"),
+            "four_way_gate",
             "Use a four-way switch to reach the package, then gate the exit.",
             "Combine four-way counting with a standard gate.",
             (1, 1),
@@ -465,7 +494,8 @@ def expanded_recipe_family_definitions() -> list[ExpandedRecipeFamilyDefinition]
         _definition(
             "four_way_ring",
             ("expert",),
-            ("four_way", "ring_route", "repeated_tap"),
+            ("four_way", "ring", "repeated_tap", "ring_route"),
+            "four_way_gate",
             "Leave and revisit a four-way hub through a loop.",
             "Retap a multi-exit hub after route progress.",
             (1, 1),
@@ -482,6 +512,7 @@ def expanded_recipe_family_definitions() -> list[ExpandedRecipeFamilyDefinition]
             "multi_four_way_route",
             ("expert",),
             ("four_way", "multi_switch"),
+            "four_way_gate",
             "Resolve two multi-exit switch decisions in sequence.",
             "Count taps across separate four-way-style decisions.",
             (1, 1),
@@ -497,7 +528,8 @@ def expanded_recipe_family_definitions() -> list[ExpandedRecipeFamilyDefinition]
         _definition(
             "controlled_repeated_taps",
             ("expert",),
-            ("repeated_tap", "return_loop"),
+            ("repeated_tap", "loop", "multi_switch", "return_loop"),
+            "two_switch_order",
             "Repeat a hub tap after collecting the package.",
             "Understand that route state changes the same switch's goal.",
             (2, 2),
@@ -513,6 +545,7 @@ def expanded_recipe_family_definitions() -> list[ExpandedRecipeFamilyDefinition]
             "late_route_reversal",
             ("expert",),
             ("route_reversal", "revisit", "repeated_tap"),
+            "two_switch_order",
             "Reverse back through a previous decision late in the route.",
             "Carry earlier route context into the final exit.",
             (3, 3),
@@ -531,6 +564,7 @@ def _definition(
     name: str,
     difficulty_names: tuple[str, ...],
     mechanic_tags: tuple[str, ...],
+    topology_class: str,
     intended_mechanic: str,
     required_player_skill: str,
     allowed_switch_counts: tuple[int, int],
@@ -547,6 +581,8 @@ def _definition(
         name=name,
         difficulty_names=difficulty_names,
         mechanic_tags=mechanic_tags,
+        primary_mechanic_tag=mechanic_tags[0] if mechanic_tags else "",
+        topology_class=topology_class,
         intended_mechanic=intended_mechanic,
         required_player_skill=required_player_skill,
         allowed_switch_counts=allowed_switch_counts,
