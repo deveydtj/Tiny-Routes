@@ -146,20 +146,41 @@ def test_road_shape_plan_prefers_assignment_without_false_shortcut() -> None:
     assert not any("road_crosses_through_unconnected_node" in issue for issue in plan.issues)
 
 
-def test_road_shape_plan_switch_direction_clarity_unaffected_by_topology_scoring() -> None:
-    """Switch-direction clarity scoring still works correctly after the per-type topology penalty changes."""
+def test_road_shape_plan_penalizes_unconnected_road_endpoint_touches_segment() -> None:
     service = RoadShapeService()
 
     plan = service.plan_for_graph(
         {
-            "switch": (0.0, 0.0),
-            "upper": (1.0, 1.0),
-            "lower": (1.0, -1.0),
+            "a": (0.0, 0.0),
+            "b": (2.0, 0.0),
+            "c": (1.0, 0.0),
+            "d": (1.0, 1.0),
         },
-        [("switch", "upper"), ("switch", "lower")],
-        strategy="switch_clarity_optimized",
+        [("a", "b"), ("c", "d")],
+        strategy="all_straight",
     )
 
-    buckets = plan.metadata["switchDirectionBuckets"]["switch"]
-    assert len(set(buckets.values())) == 2
-    assert not any(issue.startswith("switch_choices_same_visual_direction") for issue in plan.issues)
+    counts = plan.metadata["visualTopologyIssueCounts"]
+    assert counts["unconnected_road_endpoint_touches_segment"] == 1
+    assert counts["unconnected_parallel_road_overlap"] == 0
+    assert plan.score == pytest.approx(0.39)
+
+
+def test_road_shape_plan_penalizes_unconnected_parallel_road_overlap() -> None:
+    service = RoadShapeService()
+
+    plan = service.plan_for_graph(
+        {
+            "a": (0.0, 0.0),
+            "b": (3.0, 0.0),
+            "c": (1.0, 0.0),
+            "d": (4.0, 0.0),
+        },
+        [("a", "b"), ("c", "d")],
+        strategy="all_straight",
+    )
+
+    counts = plan.metadata["visualTopologyIssueCounts"]
+    assert counts["unconnected_parallel_road_overlap"] == 1
+    assert counts["unconnected_road_endpoint_touches_segment"] == 0
+    assert plan.score == pytest.approx(0.02)
