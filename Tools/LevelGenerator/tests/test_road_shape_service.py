@@ -101,3 +101,87 @@ def test_overlapping_first_segments_fail_road_shape_validation() -> None:
 
     assert any(issue.startswith("same_switch_first_segments_overlap:switch") for issue in plan.issues)
     assert any(issue.startswith("required_and_wrong_route_first_segments_overlap:switch") for issue in plan.issues)
+
+
+def test_road_shape_plan_penalizes_implicit_intersection() -> None:
+    """A layout where two roads cross at a point with no graph node is penalised."""
+    service = RoadShapeService()
+
+    # Edge a→b is horizontal at y=1; edge c→d is vertical at x=1.
+    # They intersect at (1, 1) which has no graph node.
+    plan = service.plan_for_graph(
+        {
+            "a": (0.0, 1.0),
+            "b": (2.0, 1.0),
+            "c": (1.0, 0.0),
+            "d": (1.0, 2.0),
+        },
+        [("a", "b"), ("c", "d")],
+        strategy="all_straight",
+    )
+
+    counts = plan.metadata["visualTopologyIssueCounts"]
+    assert counts["implicit_intersection_without_graph_node"] == 1
+    assert plan.score == pytest.approx(0.66)
+
+
+def test_road_shape_plan_prefers_assignment_without_false_shortcut() -> None:
+    """The planner prefers the road-shape assignment that avoids roads crossing through unconnected nodes.
+
+    Node 'c' sits exactly at the L-bend of edge a→b when horizontalFirst is used.
+    Switching to verticalFirst routes a→b through (0, 1) instead, avoiding c entirely.
+    """
+    service = RoadShapeService()
+
+    plan = service.plan_for_graph(
+        {
+            "a": (0.0, 0.0),
+            "b": (1.0, 1.0),
+            "c": (1.0, 0.0),
+        },
+        [("a", "b")],
+        strategy="auto",
+    )
+
+    assert plan.edge_shapes[("a", "b")] == "verticalFirst"
+    assert not any("road_crosses_through_unconnected_node" in issue for issue in plan.issues)
+
+
+def test_road_shape_plan_penalizes_unconnected_road_endpoint_touches_segment() -> None:
+    service = RoadShapeService()
+
+    plan = service.plan_for_graph(
+        {
+            "a": (0.0, 0.0),
+            "b": (2.0, 0.0),
+            "c": (1.0, 0.0),
+            "d": (1.0, 1.0),
+        },
+        [("a", "b"), ("c", "d")],
+        strategy="all_straight",
+    )
+
+    counts = plan.metadata["visualTopologyIssueCounts"]
+    assert counts["unconnected_road_endpoint_touches_segment"] == 1
+    assert counts["unconnected_parallel_road_overlap"] == 0
+    assert plan.score == pytest.approx(0.39)
+
+
+def test_road_shape_plan_penalizes_unconnected_parallel_road_overlap() -> None:
+    service = RoadShapeService()
+
+    plan = service.plan_for_graph(
+        {
+            "a": (0.0, 0.0),
+            "b": (3.0, 0.0),
+            "c": (1.0, 0.0),
+            "d": (4.0, 0.0),
+        },
+        [("a", "b"), ("c", "d")],
+        strategy="all_straight",
+    )
+
+    counts = plan.metadata["visualTopologyIssueCounts"]
+    assert counts["unconnected_parallel_road_overlap"] == 1
+    assert counts["unconnected_road_endpoint_touches_segment"] == 0
+    assert plan.score == pytest.approx(0.02)
