@@ -296,7 +296,10 @@ class RoadShapeService:
         score -= confusing_crossing_count * 0.18
         score -= required_crossing_count * 0.12
         score -= long_parallel_count * 0.10
-        score -= sum(visual_topology_counts.values()) * 0.40
+        score -= visual_topology_counts["implicit_intersection_without_graph_node"] * 0.30
+        score -= visual_topology_counts["unconnected_road_endpoint_touches_segment"] * 0.22
+        score -= visual_topology_counts["unconnected_parallel_road_overlap"] * 0.18
+        score -= visual_topology_counts["road_crosses_through_unconnected_node"] * 0.35
         score -= return_loop_false_shortcut_count * 0.35
         score -= important_node_proximity_count * 0.08
         if strategy == "crossing_minimized":
