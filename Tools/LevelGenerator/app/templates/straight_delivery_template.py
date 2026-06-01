@@ -51,7 +51,7 @@ class StraightDeliveryTemplate(LevelTemplate):
             time_limit_seconds=time_limit,
             par_taps=0,
         )
-        solution = self.solution_builder.build_no_tap_solution(level_id)
+        solution = self.solution_builder.build_no_tap_solution(level_id, solution_route=route_ids)
         return self.generated(level, solution, preset, rng.seed, notes=[f"Layout variant: {layout_variant.name}"])
 
 

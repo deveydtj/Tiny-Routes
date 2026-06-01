@@ -894,35 +894,35 @@ Ensure every generated solution is correct, readable, and fair for players.
 
 ## Tasks
 
-- [ ] Improve solution-building metadata:
-  - [ ] record why each tap is needed
-  - [ ] record expected edge after tap
-  - [ ] record player reaction window
-  - [ ] record switch state before and after tap
-- [ ] Add solution timing rules:
-  - [ ] minimum spacing by difficulty
-  - [ ] minimum reaction time before switch arrival
-  - [ ] no tap required immediately after level start unless tutorialized
-  - [ ] no rapid repeated taps except expert levels
-  - [ ] required taps should align with visible switch approach
-- [ ] Add solution sidecar comments/metadata where schema allows:
-  - [ ] recipe family
-  - [ ] solution route
-  - [ ] required tap order
-  - [ ] generated seed
-  - [ ] validation version
-- [ ] Add validation:
-  - [ ] reject placeholder solutions
-  - [ ] reject missing sidecars
-  - [ ] reject sidecars that do not match level ID
-  - [ ] reject actions targeting non-switchable nodes
-  - [ ] reject taps too close together
-  - [ ] reject solutions that fail Python or Swift simulation
-- [ ] Add tests:
-  - [ ] generated solution matches level ID
-  - [ ] solution actions are ordered
-  - [ ] solution timing is difficulty-appropriate
-  - [ ] no placeholder sidecar can pass production validation
+- [x] Improve solution-building metadata:
+  - [x] record why each tap is needed
+  - [x] record expected edge after tap
+  - [x] record player reaction window
+  - [x] record switch state before and after tap
+- [x] Add solution timing rules:
+  - [x] minimum spacing by difficulty
+  - [x] minimum reaction time before switch arrival
+  - [x] no tap required immediately after level start unless tutorialized
+  - [x] no rapid repeated taps except expert levels
+  - [x] required taps should align with visible switch approach
+- [x] Add solution sidecar comments/metadata where schema allows:
+  - [x] recipe family
+  - [x] solution route
+  - [x] required tap order
+  - [x] generated seed
+  - [x] validation version
+- [x] Add validation:
+  - [x] reject placeholder solutions
+  - [x] reject missing sidecars
+  - [x] reject sidecars that do not match level ID
+  - [x] reject actions targeting non-switchable nodes
+  - [x] reject taps too close together
+  - [x] reject solutions that fail Python or Swift simulation
+- [x] Add tests:
+  - [x] generated solution matches level ID
+  - [x] solution actions are ordered
+  - [x] solution timing is difficulty-appropriate
+  - [x] no placeholder sidecar can pass production validation
 
 ## Do
 
@@ -940,9 +940,9 @@ Ensure every generated solution is correct, readable, and fair for players.
 
 ## Acceptance Criteria
 
-- [ ] Every generated production level has a valid matching solution sidecar.
-- [ ] Solution timing is reviewed automatically for fairness.
-- [ ] Reports show the intended tap sequence and route.
+- [x] Every generated production level has a valid matching solution sidecar.
+- [x] Solution timing is reviewed automatically for fairness.
+- [x] Reports show the intended tap sequence and route.
 
 ---
 

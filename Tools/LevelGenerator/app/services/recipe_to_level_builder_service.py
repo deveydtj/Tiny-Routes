@@ -79,6 +79,14 @@ class RecipeToLevelBuilderService:
                     (edge.fromNodeID, edge.toNodeID): edge.roadShape
                     for edge in level.graph.edges
                 },
+                route_edge_ids_by_pair={
+                    (edge.fromNodeID, edge.toNodeID): edge.id
+                    for edge in level.graph.edges
+                },
+                outgoing_edge_ids_by_node={
+                    node.id: list(node.outgoingEdgeIDs)
+                    for node in level.graph.nodes
+                },
             )
         except ValueError:
             solution = self.solution_builder.build_tap_solution(
@@ -87,6 +95,14 @@ class RecipeToLevelBuilderService:
                 preset,
                 description,
             )
+        self.solution_builder.apply_generation_metadata(
+            solution,
+            template_name=recipe.family_name,
+            seed=seed,
+            recipe_family=recipe.family_name,
+            recipe_variant=recipe.variant_name,
+            solution_route=recipe.required_path,
+        )
         return GeneratedLevel(
             level_document=level,
             solution=solution,

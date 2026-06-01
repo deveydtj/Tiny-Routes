@@ -501,3 +501,47 @@ Result: `198 passed`.
 ```
 
 Result: passed. The check suite ran Python tests, smoke dry-run generation, and validation for production levels `level_001` through `level_030` with Swift tests disabled by the script.
+
+## Phase 11 - Generated Solution Sidecars and Human-Friendly Timing
+
+Completed:
+
+- [x] Added generated solution metadata:
+  - [x] per-tap reason text
+  - [x] expected edge after tap
+  - [x] reaction window before switch arrival
+  - [x] switch state before and after tap
+- [x] Added sidecar-level metadata:
+  - [x] template and recipe family/variant where available
+  - [x] intended solution route
+  - [x] required tap order
+  - [x] generated seed
+  - [x] solution metadata validation version
+- [x] Added generated-candidate timing validation:
+  - [x] difficulty-aware minimum tap spacing
+  - [x] difficulty-aware reaction window before switch arrival
+  - [x] first-tap grace after level start for non-tutorial levels
+  - [x] stricter repeated-tap spacing outside expert levels
+- [x] Hardened generated solution validation for missing sidecars, level ID mismatches, placeholder sidecars, non-switch tap targets, tap spacing, and Python simulation failure.
+- [x] Added solution route and required tap summaries to JSON and Markdown generation reports.
+- [x] Added tests covering metadata output, matching level IDs, missing sidecars, early taps, rapid repeated taps, and report solution payloads.
+
+Verification:
+
+```bash
+/Library/Frameworks/Python.framework/Versions/3.13/bin/python3 -m pytest Tools/LevelGenerator/tests/test_solution_builder_service.py Tools/LevelGenerator/tests/test_generated_level_validation_service.py Tools/LevelGenerator/tests/test_generation_report_repository.py -q
+```
+
+Result: `21 passed`.
+
+```bash
+/Library/Frameworks/Python.framework/Versions/3.13/bin/python3 -m pytest Tools/LevelGenerator/tests -q
+```
+
+Result: `217 passed`.
+
+```bash
+/Library/Frameworks/Python.framework/Versions/3.13/bin/python3 Tools/LevelGenerator/run_all_generator_checks.py --python /Library/Frameworks/Python.framework/Versions/3.13/bin/python3
+```
+
+Result: passed. The check suite ran Python tests, smoke dry-run generation, and validation for production levels `level_001` through `level_030` with Swift tests disabled by the script.

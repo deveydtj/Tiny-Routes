@@ -42,6 +42,20 @@ class GeneratorValidationResult:
 
 class GeneratedLevelValidationService:
     minimum_pre_arrival_tap_buffer_seconds = 0.15
+    reaction_window_by_difficulty = {
+        "tutorial": 0.15,
+        "easy": 0.25,
+        "medium": 0.20,
+        "hard": 0.20,
+        "expert": 0.15,
+    }
+    first_tap_grace_by_difficulty = {
+        "tutorial": 0.0,
+        "easy": 0.10,
+        "medium": 0.10,
+        "hard": 0.10,
+        "expert": 0.10,
+    }
 
     def __init__(self) -> None:
         self.level_validation_service = LevelValidationService()
@@ -83,6 +97,9 @@ class GeneratedLevelValidationService:
                     related_edge_ids=converted.related_edge_ids,
                 )
             messages.append(converted)
+
+        if solution is None:
+            return GeneratorValidationResult(messages=messages)
 
         messages.extend(self._generator_specific_messages(generated_level, preset, enforce_difficulty))
 
@@ -193,22 +210,10 @@ class GeneratedLevelValidationService:
                     )
                 messages.extend(self._readability_messages(level, layout, preset))
 
-            previous_time: float | None = None
-            tolerance = 1e-9
-            for action in sorted(solution.actions, key=lambda value: value.timeSeconds):
-                if previous_time is not None and action.timeSeconds - previous_time < preset.min_tap_spacing_seconds - tolerance:
-                    messages.append(
-                        GeneratorValidationMessage(
-                            severity="error",
-                            code="solution_action_spacing_too_small",
-                            message=(
-                                f"Solution action at {action.timeSeconds}s is less than "
-                                f"{preset.min_tap_spacing_seconds}s after the previous action."
-                            ),
-                            related_node_id=action.tapNodeID,
-                        )
-                    )
-                previous_time = action.timeSeconds
+            messages.extend(self._solution_spacing_messages(solution, preset))
+            if enforce_difficulty:
+                messages.extend(self._solution_start_timing_messages(solution, preset))
+                messages.extend(self._repeated_tap_timing_messages(solution, preset))
 
         if solution.isPlaceholder is True:
             messages.append(
@@ -231,7 +236,7 @@ class GeneratedLevelValidationService:
                     )
                 )
 
-        messages.extend(self._timed_tap_arrival_messages(generated_level))
+        messages.extend(self._timed_tap_arrival_messages(generated_level, preset if enforce_difficulty else None))
         messages.extend(self._four_way_solution_complexity_messages(level, solution, classifications_by_node_id, preset))
 
         try:
@@ -430,10 +435,83 @@ class GeneratedLevelValidationService:
                 )
         return messages
 
-    def _timed_tap_arrival_messages(self, generated_level) -> list[GeneratorValidationMessage]:
+    def _solution_spacing_messages(self, solution, preset: DifficultyPreset) -> list[GeneratorValidationMessage]:
+        messages: list[GeneratorValidationMessage] = []
+        previous_time: float | None = None
+        tolerance = 1e-9
+        for action in sorted(solution.actions, key=lambda value: value.timeSeconds):
+            if previous_time is not None and action.timeSeconds - previous_time < preset.min_tap_spacing_seconds - tolerance:
+                messages.append(
+                    GeneratorValidationMessage(
+                        severity="error",
+                        code="solution_action_spacing_too_small",
+                        message=(
+                            f"Solution action at {action.timeSeconds}s is less than "
+                            f"{preset.min_tap_spacing_seconds}s after the previous action."
+                        ),
+                        related_node_id=action.tapNodeID,
+                    )
+                )
+            previous_time = action.timeSeconds
+        return messages
+
+    def _solution_start_timing_messages(self, solution, preset: DifficultyPreset) -> list[GeneratorValidationMessage]:
+        if not solution.actions:
+            return []
+        first_action = min(solution.actions, key=lambda action: float(action.timeSeconds))
+        minimum_delay = self.first_tap_grace_by_difficulty.get(preset.name, 0.20)
+        if float(first_action.timeSeconds) + 1e-9 >= minimum_delay:
+            return []
+        return [
+            GeneratorValidationMessage(
+                severity="error",
+                code="solution_first_tap_too_early",
+                message=(
+                    f"First solution tap at {float(first_action.timeSeconds):.2f}s is too close to level start "
+                    f"for {preset.name}; minimum is {minimum_delay:.2f}s."
+                ),
+                related_node_id=first_action.tapNodeID,
+            )
+        ]
+
+    def _repeated_tap_timing_messages(self, solution, preset: DifficultyPreset) -> list[GeneratorValidationMessage]:
+        if preset.name == "expert":
+            return []
+        minimum_repeated_spacing = preset.min_tap_spacing_seconds * 1.5
+        messages: list[GeneratorValidationMessage] = []
+        actions_by_node_id: dict[str, list[float]] = {}
+        for action in solution.actions:
+            actions_by_node_id.setdefault(action.tapNodeID, []).append(float(action.timeSeconds))
+        for node_id, times in actions_by_node_id.items():
+            sorted_times = sorted(times)
+            for previous, current in zip(sorted_times, sorted_times[1:]):
+                if current - previous < minimum_repeated_spacing - 1e-9:
+                    messages.append(
+                        GeneratorValidationMessage(
+                            severity="error",
+                            code="repeated_switch_taps_too_close",
+                            message=(
+                                f"Repeated taps on '{node_id}' are only {current - previous:.2f}s apart; "
+                                f"minimum repeated-tap spacing is {minimum_repeated_spacing:.2f}s."
+                            ),
+                            related_node_id=node_id,
+                        )
+                    )
+        return messages
+
+    def _timed_tap_arrival_messages(
+        self,
+        generated_level,
+        preset: DifficultyPreset | None = None,
+    ) -> list[GeneratorValidationMessage]:
         solution = generated_level.solution
         messages: list[GeneratorValidationMessage] = []
         tolerance = 1e-9
+        minimum_buffer = (
+            self.reaction_window_by_difficulty.get(preset.name, self.minimum_pre_arrival_tap_buffer_seconds)
+            if preset is not None
+            else self.minimum_pre_arrival_tap_buffer_seconds
+        )
         sorted_actions = sorted(solution.actions, key=lambda action: float(action.timeSeconds))
         for index, action in enumerate(sorted_actions):
             try:
@@ -443,7 +521,7 @@ class GeneratedLevelValidationService:
             if arrival_time is None:
                 continue
             arrival_buffer = arrival_time - float(action.timeSeconds)
-            if arrival_buffer + tolerance >= self.minimum_pre_arrival_tap_buffer_seconds:
+            if arrival_buffer + tolerance >= minimum_buffer:
                 continue
             messages.append(
                 GeneratorValidationMessage(
@@ -452,7 +530,7 @@ class GeneratedLevelValidationService:
                     message=(
                         f"Solution action at {float(action.timeSeconds):.2f}s for '{action.tapNodeID}' leaves only "
                         f"{arrival_buffer:.2f}s before arrival at {arrival_time:.2f}s; minimum buffer is "
-                        f"{self.minimum_pre_arrival_tap_buffer_seconds:.2f}s."
+                        f"{minimum_buffer:.2f}s."
                     ),
                     related_node_id=action.tapNodeID,
                 )

@@ -1,7 +1,14 @@
 from __future__ import annotations
 
 from app.random_source import RandomSource
-from app.level_editor_imports import LevelDocument, RouteEdgeModel, RouteGraphModel, RouteNodeModel, SolutionModel
+from app.level_editor_imports import (
+    LevelDocument,
+    RouteEdgeModel,
+    RouteGraphModel,
+    RouteNodeModel,
+    SolutionActionModel,
+    SolutionModel,
+)
 from app.models.generated_level import GeneratedLevel
 from app.services.difficulty_service import DifficultyService
 from app.services.generated_level_validation_service import GeneratedLevelValidationService
@@ -27,6 +34,26 @@ def test_generated_level_validation_rejects_placeholder_solution() -> None:
     result = GeneratedLevelValidationService().validate(generated, preset=preset, overwrite=True)
 
     assert "solution_marked_placeholder" in result.error_codes
+
+
+def test_generated_level_validation_rejects_missing_solution() -> None:
+    preset = DifficultyService().get_preset("easy")
+    generated = SingleSwitchTemplate().generate("level_012", 12, preset, RandomSource(9))
+    generated.solution = None
+
+    result = GeneratedLevelValidationService().validate(generated, preset=preset, overwrite=True)
+
+    assert "missing_solution" in result.error_codes
+
+
+def test_generated_level_validation_rejects_solution_level_id_mismatch() -> None:
+    preset = DifficultyService().get_preset("easy")
+    generated = SingleSwitchTemplate().generate("level_012", 12, preset, RandomSource(9))
+    generated.solution.levelID = "level_999"
+
+    result = GeneratedLevelValidationService().validate(generated, preset=preset, overwrite=True)
+
+    assert "solution_level_id_mismatch" in result.error_codes
 
 
 def test_generated_level_validation_rejects_important_nodes_too_close() -> None:
@@ -88,6 +115,34 @@ def test_generated_level_validation_rejects_tap_that_is_not_before_switch_arriva
     assert "solution_tap_not_before_switch_arrival" in result.error_codes
 
 
+def test_generated_level_validation_rejects_first_tap_too_close_to_start() -> None:
+    preset = DifficultyService().get_preset("easy")
+    generated = SingleSwitchTemplate().generate("level_012", 12, preset, RandomSource(9))
+    generated.solution.actions[0].timeSeconds = 0.05
+
+    result = GeneratedLevelValidationService().validate(generated, preset=preset, overwrite=True)
+
+    assert "solution_first_tap_too_early" in result.error_codes
+
+
+def test_generated_level_validation_rejects_rapid_repeated_taps_except_expert() -> None:
+    generated = _generated_repeated_tap_level([0.30, 0.75])
+
+    medium_result = GeneratedLevelValidationService().validate(
+        generated,
+        preset=DifficultyService().get_preset("medium"),
+        overwrite=True,
+    )
+    expert_result = GeneratedLevelValidationService().validate(
+        _generated_repeated_tap_level([0.30, 0.75]),
+        preset=DifficultyService().get_preset("expert"),
+        overwrite=True,
+    )
+
+    assert "repeated_switch_taps_too_close" in medium_result.error_codes
+    assert "repeated_switch_taps_too_close" not in expert_result.error_codes
+
+
 def test_generated_level_validation_accepts_regenerated_earlier_tap_times() -> None:
     preset = DifficultyService().get_preset("hard")
 
@@ -137,6 +192,51 @@ def _generated_switch_with_outgoing_count(outgoing_count: int) -> GeneratedLevel
             maxTaps=0,
             requiresWithinTimeLimit=True,
             actions=[],
+        ),
+        template_name="test",
+        difficulty="test",
+        seed=1,
+    )
+
+
+def _generated_repeated_tap_level(times: list[float]) -> GeneratedLevel:
+    level = LevelDocument(
+        id="level_repeat",
+        name="Repeat",
+        graph=RouteGraphModel(
+            nodes=[
+                RouteNodeModel(id="start", x=-1.0, y=0.0, outgoingEdgeIDs=["e_start_switch"]),
+                RouteNodeModel(id="switch", x=0.0, y=0.0, outgoingEdgeIDs=["e_switch_package", "e_switch_return"]),
+                RouteNodeModel(id="package", x=0.7, y=0.0, outgoingEdgeIDs=["e_package_switch"]),
+                RouteNodeModel(id="return", x=-0.5, y=-0.5, outgoingEdgeIDs=["e_return_destination"]),
+                RouteNodeModel(id="destination", x=1.0, y=-0.5, outgoingEdgeIDs=[]),
+            ],
+            edges=[
+                RouteEdgeModel(id="e_start_switch", fromNodeID="start", toNodeID="switch"),
+                RouteEdgeModel(id="e_switch_package", fromNodeID="switch", toNodeID="package"),
+                RouteEdgeModel(id="e_switch_return", fromNodeID="switch", toNodeID="return"),
+                RouteEdgeModel(id="e_package_switch", fromNodeID="package", toNodeID="switch"),
+                RouteEdgeModel(id="e_return_destination", fromNodeID="return", toNodeID="destination"),
+            ],
+        ),
+        startNodeID="start",
+        packageNodeID="package",
+        destinationNodeID="destination",
+        timeLimitSeconds=30,
+        parTaps=2,
+    )
+    return GeneratedLevel(
+        level_document=level,
+        solution=SolutionModel(
+            levelID=level.id,
+            description="Repeat switch.",
+            expectedOutcome="completed",
+            maxTaps=len(times),
+            requiresWithinTimeLimit=True,
+            actions=[
+                SolutionActionModel(timeSeconds=time, tapNodeID="switch")
+                for time in times
+            ],
         ),
         template_name="test",
         difficulty="test",

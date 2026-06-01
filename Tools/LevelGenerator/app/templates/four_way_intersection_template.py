@@ -66,6 +66,8 @@ class FourWayIntersectionTemplate(LevelTemplate):
             preset,
             "Rotate the central 4-way switch to collect the package, then rotate it again after the return path reaches the intersection.",
             route_edge_shapes=self.route_edge_shapes_for(level, route),
+            route_edge_ids_by_pair=self.route_edge_ids_for(level, route),
+            outgoing_edge_ids_by_node=self.outgoing_edge_ids_by_node_for(level),
         )
         return self.generated(
             level,

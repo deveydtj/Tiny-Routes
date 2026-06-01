@@ -67,6 +67,28 @@ class LevelTemplate(ABC):
             if (from_node_id, to_node_id) in edge_shapes_by_pair
         }
 
+    def route_edge_ids_for(self, level_document, route_node_ids: list[str]) -> dict[tuple[str, str], str]:
+        edge_ids_by_pair = {
+            (edge.fromNodeID, edge.toNodeID): edge.id
+            for edge in level_document.graph.edges
+        }
+        return {
+            (from_node_id, to_node_id): edge_ids_by_pair[(from_node_id, to_node_id)]
+            for from_node_id, to_node_id in zip(route_node_ids, route_node_ids[1:])
+            if (from_node_id, to_node_id) in edge_ids_by_pair
+        }
+
+    def outgoing_edge_ids_by_node_for(self, level_document) -> dict[str, list[str]]:
+        edge_ids = {edge.id for edge in level_document.graph.edges}
+        return {
+            node.id: [
+                edge_id
+                for edge_id in node.outgoingEdgeIDs
+                if edge_id in edge_ids
+            ]
+            for node in level_document.graph.nodes
+        }
+
     def generated(
         self,
         level_document,
@@ -75,6 +97,11 @@ class LevelTemplate(ABC):
         seed: int,
         notes: list[str] | None = None,
     ) -> GeneratedLevel:
+        self.solution_builder.apply_generation_metadata(
+            solution,
+            template_name=self.name,
+            seed=seed,
+        )
         return GeneratedLevel(
             level_document=level_document,
             solution=solution,

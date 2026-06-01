@@ -81,6 +81,11 @@ def test_generation_report_repository_writes_candidate_signatures(tmp_path) -> N
     assert "Signatures" in config.report_path.read_text(encoding="utf-8")
     assert payload["acceptedLevels"][0]["switchPreview"]
     assert payload["acceptedLevels"][0]["switchPreview"][0]["visualDirectionBuckets"]
+    solution = payload["acceptedLevels"][0]["solution"]
+    assert solution["metadata"]["validationVersion"] == "solution_sidecar_v1"
+    assert solution["requiredTapOrder"] == [action.tapNodeID for action in generated.solution.actions]
+    assert solution["actions"][0]["reason"]
+    assert "Required taps" in config.report_path.read_text(encoding="utf-8")
 
 
 def test_generation_report_repository_adds_duplicate_exhaustion_recommendations(tmp_path) -> None:

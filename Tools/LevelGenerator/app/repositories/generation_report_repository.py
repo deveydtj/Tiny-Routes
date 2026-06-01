@@ -80,6 +80,7 @@ class GenerationReportRepository:
                     "signature": self._signature_payload(level),
                     "quality": self._quality_payload(level),
                     "simulation": self._simulation_payload(level),
+                    "solution": self._solution_payload(level),
                     "switchPreview": self._switch_preview_payload(level),
                     "visualClarity": self._visual_clarity_payload(level),
                     "previewPath": str(level.preview_path) if level.preview_path else None,
@@ -210,6 +211,22 @@ class GenerationReportRepository:
                         f"switch clarity `{quality['switchClarity']}`, mobile comfort `{quality['mobileTapComfort']}`, "
                         f"visual appeal `{quality['visualAppeal']}`."
                     )
+                solution = level["solution"]
+                route_summary = " -> ".join(f"`{node_id}`" for node_id in solution["route"])
+                if route_summary:
+                    lines.append(f"- Solution route: {route_summary}.")
+                if solution["actions"]:
+                    tap_summary = ", ".join(
+                        (
+                            f"tap `{action['tapNodeID']}` at `{action['timeSeconds']:.2f}s`"
+                            f" -> `{action.get('expectedEdgeAfterTap') or 'unknown'}`"
+                            f" ({action.get('reactionWindowSeconds', 'unknown')}s window)"
+                        )
+                        for action in solution["actions"]
+                    )
+                    lines.append(f"- Required taps: {tap_summary}.")
+                else:
+                    lines.append("- Required taps: none.")
                 selection = self._selection_for_level(payload["candidateSelection"], level["levelID"])
                 if selection:
                     stats = selection["scoreStats"]
@@ -385,6 +402,29 @@ class GenerationReportRepository:
                     "relatedEdgeIDs": list(issue.related_edge_ids),
                 }
                 for issue in report.issues
+            ],
+        }
+
+    def _solution_payload(self, level) -> dict[str, Any]:
+        solution = level.solution
+        metadata = dict(getattr(solution, "_extra", {}).get("metadata", {}))
+        abstract = getattr(level, "abstract_solution_metadata", None)
+        route = list(metadata.get("solutionRoute") or (abstract.required_path if abstract else []))
+        return {
+            "description": solution.description,
+            "metadata": metadata,
+            "route": route,
+            "requiredTapOrder": list(
+                metadata.get("requiredTapOrder")
+                or [action.tapNodeID for action in solution.actions]
+            ),
+            "actions": [
+                {
+                    "timeSeconds": float(action.timeSeconds),
+                    "tapNodeID": action.tapNodeID,
+                    **dict(getattr(action, "_extra", {})),
+                }
+                for action in sorted(solution.actions, key=lambda action: float(action.timeSeconds))
             ],
         }
 
