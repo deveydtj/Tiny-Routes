@@ -120,8 +120,9 @@ def test_road_shape_plan_penalizes_implicit_intersection() -> None:
         strategy="all_straight",
     )
 
-    assert any("implicit_intersection_without_graph_node" in issue for issue in plan.issues)
-    assert plan.score < 1.0
+    counts = plan.metadata["visualTopologyIssueCounts"]
+    assert counts["implicit_intersection_without_graph_node"] == 1
+    assert plan.score == pytest.approx(0.66)
 
 
 def test_road_shape_plan_prefers_assignment_without_false_shortcut() -> None:
