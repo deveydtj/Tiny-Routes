@@ -55,6 +55,7 @@ class ReturnLoopTemplate(LevelTemplate):
             positions,
             preset,
             "Rotate alpha to collect the package, rotate beta onto the return path, then rotate alpha again for destination.",
+            lead_time_seconds=0.5,
             route_edge_shapes=self.route_edge_shapes_for(level, route),
         )
         generated = self.generated(
@@ -90,14 +91,16 @@ def _variant_spec(
     list[str],
 ]:
     if variant == "return_loop_upper":
+        # Keep the return leg on the switch corridor and the destination leg on a
+        # separate left corridor so the loop never reads as a shortcut.
         positions = {
-            "start": (-1.1, -0.18),
-            "upper_alpha_switch": (-0.5, -0.05),
-            "package": (0.05, 0.82),
-            "upper_beta_switch": (0.68, 0.72),
-            "upper_return": (0.82, -0.48),
-            "destination": (-0.8, -1.08),
-            "upper_dead_end": (1.12, 0.2),
+            "start": (-1.15, -0.18),
+            "upper_alpha_switch": (-0.25, -0.06),
+            "package": (0.02, 0.68),
+            "upper_beta_switch": (0.58, 0.52),
+            "upper_return": (0.9, -0.58),
+            "destination": (-0.75, -1.08),
+            "upper_dead_end": (1.05, 0.18),
         }
         edges = [
             ("start", "upper_alpha_switch"),
@@ -119,14 +122,16 @@ def _variant_spec(
         ]
 
     if variant == "return_loop_lower":
+        # Mirror the upper variant's spacing: destination routes outside the
+        # loop while the return path rejoins alpha from the interior corridor.
         positions = {
-            "start": (-1.05, 0.2),
-            "lower_alpha_switch": (-0.48, 0.02),
-            "package": (0.1, -0.78),
-            "lower_beta_switch": (0.72, -0.7),
-            "lower_return": (0.78, 0.5),
-            "destination": (-0.8, 0.95),
-            "lower_dead_end": (1.12, -0.12),
+            "start": (-1.15, 0.22),
+            "lower_alpha_switch": (-0.25, 0.02),
+            "package": (0.04, -0.68),
+            "lower_beta_switch": (0.58, -0.52),
+            "lower_return": (0.9, 0.58),
+            "destination": (-0.75, 0.94),
+            "lower_dead_end": (1.05, -0.14),
         }
         edges = [
             ("start", "lower_alpha_switch"),
@@ -147,14 +152,16 @@ def _variant_spec(
             "destination",
         ]
 
+    # Classic uses the same spacing rule as the offset variants: the return
+    # path approaches alpha on the inner corridor, away from the destination leg.
     positions = {
-        "start": (-1.1, 0.0),
-        "alpha_switch": (-0.45, 0.0),
-        "package": (0.1, 0.75),
-        "beta_switch": (0.75, 0.75),
-        "return_a": (0.75, -0.55),
-        "destination": (-0.8, -1.05),
-        "dead_end_a": (1.15, 0.15),
+        "start": (-1.15, 0.0),
+        "alpha_switch": (-0.25, 0.0),
+        "package": (0.08, 0.64),
+        "beta_switch": (0.62, 0.52),
+        "return_a": (0.9, -0.62),
+        "destination": (-0.75, -1.05),
+        "dead_end_a": (1.08, 0.12),
     }
     edges = [
         ("start", "alpha_switch"),
