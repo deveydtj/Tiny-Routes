@@ -535,6 +535,7 @@ class LevelGenerationService:
             "template": candidate.template_name,
             "recipeFamily": candidate.recipe_family,
             "recipeVariant": candidate.recipe_variant,
+            "mechanicTags": list(getattr(candidate, "mechanic_tags", ()) or ()),
             "layoutVariant": candidate.selected_layout_variant,
             "roadShapeStrategy": candidate.selected_road_shape_strategy,
             "status": status,

@@ -73,6 +73,10 @@ class TemplateRecipeFamily(RecipeFamily):
             notes=(f"Recipe family: {self.name}", f"Recipe variant: {selected_variant.name}"),
             family_name=self.name,
             variant_name=selected_variant.name,
+            mechanic_tags=selected_variant.mechanic_tags,
+            unlock_requirement=selected_variant.unlock_requirement,
+            prior_mechanic_dependency=selected_variant.prior_mechanic_dependency,
+            mechanic_metadata=selected_variant.mechanic_metadata(),
         )
         issues = recipe.validate()
         if issues:

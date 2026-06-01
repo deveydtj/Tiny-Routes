@@ -38,22 +38,80 @@ class DifficultyCurveService:
     def template_weights_for_level(self, level_number: int, difficulty: str) -> dict[str, int]:
         if difficulty == "tutorial":
             if level_number <= 1:
-                return {"straight_delivery": 7}
-            return {"straight_delivery": 5, "single_switch": 2}
+                return {"straight_delivery_intro": 7, "straight_delivery": 2}
+            return {
+                "straight_delivery_intro": 4,
+                "package_before_destination_intro": 4,
+                "single_switch_intro": 3,
+                "single_switch_wrong_dead_end": 2,
+                "straight_delivery": 2,
+                "single_switch": 1,
+            }
         if difficulty == "easy":
             if level_number <= 5:
-                return {"single_switch": 5, "package_gate": 1}
-            return {"single_switch": 4, "package_gate": 3}
+                return {
+                    "single_switch_package_choice": 5,
+                    "safe_dead_end_choice": 3,
+                    "short_detour_gate": 2,
+                    "single_switch": 1,
+                }
+            return {
+                "single_switch_package_choice": 3,
+                "two_switch_order_intro": 4,
+                "short_detour_gate": 3,
+                "safe_dead_end_choice": 2,
+                "package_gate_simple": 4,
+                "package_gate": 1,
+            }
         if difficulty == "medium":
             if level_number <= 15:
-                return {"package_gate": 5, "multi_switch_chain": 2}
-            return {"package_gate": 2, "multi_switch_chain": 4, "return_loop": 3}
+                return {
+                    "multi_switch_order": 4,
+                    "package_gate_double_choice": 4,
+                    "split_path_rejoin": 3,
+                    "fake_shortcut": 2,
+                    "package_gate": 1,
+                }
+            return {
+                "multi_switch_order": 3,
+                "package_gate_double_choice": 3,
+                "return_loop_intro": 4,
+                "split_path_rejoin": 2,
+                "fake_shortcut": 2,
+                "hub_choice": 3,
+                "return_loop": 1,
+            }
         if difficulty == "hard":
             if level_number <= 30:
-                return {"multi_switch_chain": 5, "return_loop": 2, "ring_route": 1}
-            return {"multi_switch_chain": 4, "return_loop": 1, "ring_route": 3}
+                return {
+                    "two_phase_route": 5,
+                    "return_loop_with_gate": 3,
+                    "branch_then_rejoin_with_wrong_order": 3,
+                    "multi_switch_revisit": 2,
+                    "multi_switch_chain": 1,
+                }
+            return {
+                "ring_route_gate": 4,
+                "package_inside_loop": 3,
+                "multi_switch_revisit": 3,
+                "return_loop_with_gate": 2,
+                "two_phase_route": 2,
+                "ring_route": 1,
+            }
         if difficulty == "expert":
             if level_number <= 45:
-                return {"four_way_intersection": 3, "multi_switch_chain": 3, "ring_route": 2}
-            return {"four_way_intersection": 5, "multi_switch_chain": 2, "ring_route": 2}
+                return {
+                    "four_way_intro": 5,
+                    "four_way_package_gate": 4,
+                    "controlled_repeated_taps": 3,
+                    "four_way_intersection": 1,
+                }
+            return {
+                "four_way_package_gate": 4,
+                "four_way_ring": 4,
+                "multi_four_way_route": 3,
+                "controlled_repeated_taps": 3,
+                "late_route_reversal": 3,
+                "four_way_intersection": 1,
+            }
         return {}

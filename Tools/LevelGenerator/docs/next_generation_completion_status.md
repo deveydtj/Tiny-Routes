@@ -456,6 +456,51 @@ Result: `194 passed`.
 
 Result: passed. The check suite ran Python tests, smoke dry-run generation, and validation for production levels `level_001` through `level_030` with Swift tests disabled by the script.
 
+## Phase 9 - Recipe Library Expansion
+
+Completed:
+
+- [x] Added 27 recipe-first families across the campaign bands:
+  - [x] Tutorial: `straight_delivery_intro`, `single_switch_intro`, `single_switch_wrong_dead_end`, `package_before_destination_intro`
+  - [x] Easy: `single_switch_package_choice`, `two_switch_order_intro`, `short_detour_gate`, `safe_dead_end_choice`, `package_gate_simple`
+  - [x] Medium: `multi_switch_order`, `package_gate_double_choice`, `return_loop_intro`, `split_path_rejoin`, `fake_shortcut`, `hub_choice`
+  - [x] Hard: `return_loop_with_gate`, `ring_route_gate`, `multi_switch_revisit`, `package_inside_loop`, `two_phase_route`, `branch_then_rejoin_with_wrong_order`
+  - [x] Expert: `four_way_intro`, `four_way_package_gate`, `four_way_ring`, `multi_four_way_route`, `controlled_repeated_taps`, `late_route_reversal`
+- [x] Added structured recipe mechanic metadata:
+  - [x] intended mechanic
+  - [x] supported difficulties
+  - [x] required player skill
+  - [x] allowed switch and tap counts
+  - [x] repeated-tap allowance
+  - [x] visual layout requirements
+  - [x] design/usefulness reason
+  - [x] mechanic tags, unlock requirement, and prior dependency
+- [x] Added expanded recipe families to `RecipeFamilyRegistry` and mixed recipe selection.
+- [x] Updated campaign recipe weights by difficulty and level-number unlock progression.
+- [x] Added mechanic metadata to generated candidates, candidate selection summaries, solution review notes, JSON reports, and Markdown reports.
+- [x] Added tests proving every expanded family produces a valid recipe, solves through the abstract solver, builds a layout, and passes final Python validation for a deterministic seed.
+- [x] Scoped the batch smoke test to a small deterministic candidate pool so it still covers all difficulty bands without running production-sized search inside the unit suite.
+
+Verification:
+
+```bash
+/Library/Frameworks/Python.framework/Versions/3.13/bin/python3 -m pytest Tools/LevelGenerator/tests/test_recipe_family_registry.py Tools/LevelGenerator/tests/test_difficulty_curve_service.py Tools/LevelGenerator/tests/test_generation_report_repository.py::test_generation_report_repository_writes_recipe_mechanic_metadata Tools/LevelGenerator/tests/test_generation_service.py::test_generation_service_recipe_first_supports_current_recipe_families
+```
+
+Result: `11 passed`.
+
+```bash
+/Library/Frameworks/Python.framework/Versions/3.13/bin/python3 -m pytest Tools/LevelGenerator/tests
+```
+
+Result: `219 passed`.
+
+```bash
+/Library/Frameworks/Python.framework/Versions/3.13/bin/python3 Tools/LevelGenerator/run_all_generator_checks.py --python /Library/Frameworks/Python.framework/Versions/3.13/bin/python3
+```
+
+Result: passed. The check suite ran Python tests, deterministic smoke dry-run generation with scoped candidate search, and validation for production levels `level_001` through `level_030` with Swift tests disabled by the script.
+
 ## Phase 10 - Candidate Search, Scoring, and Selection
 
 Completed:

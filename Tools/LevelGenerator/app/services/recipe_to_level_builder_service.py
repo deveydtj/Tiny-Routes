@@ -103,6 +103,13 @@ class RecipeToLevelBuilderService:
             recipe_variant=recipe.variant_name,
             solution_route=recipe.required_path,
         )
+        mechanic_notes = []
+        if recipe.mechanic_tags:
+            mechanic_notes.append(f"Mechanic tags: {', '.join(recipe.mechanic_tags)}")
+        if recipe.unlock_requirement:
+            mechanic_notes.append(f"Unlock requirement: {recipe.unlock_requirement}")
+        if recipe.prior_mechanic_dependency:
+            mechanic_notes.append(f"Prior mechanic dependency: {recipe.prior_mechanic_dependency}")
         return GeneratedLevel(
             level_document=level,
             solution=solution,
@@ -111,6 +118,7 @@ class RecipeToLevelBuilderService:
             seed=seed,
             generation_notes=[
                 *recipe.notes,
+                *mechanic_notes,
                 f"Abstract graph signature: {recipe.abstract_signature[:12]}",
                 f"Selected layout strategy: {layout_plan.strategy}",
                 f"Selected layout variant: {layout_plan.variant}",
@@ -125,6 +133,10 @@ class RecipeToLevelBuilderService:
             abstract_solution_metadata=recipe.solved_metadata,
             layout_metadata=layout_plan.metadata,
             road_shape_metadata=road_shape_plan.metadata,
+            mechanic_tags=recipe.mechanic_tags,
+            unlock_requirement=recipe.unlock_requirement,
+            prior_mechanic_dependency=recipe.prior_mechanic_dependency,
+            mechanic_metadata=recipe.mechanic_metadata,
         )
 
     def _time_limit(

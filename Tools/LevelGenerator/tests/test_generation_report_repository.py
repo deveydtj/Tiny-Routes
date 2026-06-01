@@ -156,6 +156,40 @@ def test_generation_report_repository_writes_recipe_metadata(tmp_path) -> None:
     assert "Candidate selection" in (tmp_path / "report.md").read_text(encoding="utf-8")
 
 
+def test_generation_report_repository_writes_recipe_mechanic_metadata(tmp_path) -> None:
+    result = LevelGenerationService().generate(
+        GenerationConfig(
+            start_level_number=44,
+            count=1,
+            difficulty="expert",
+            template_name="four_way_intro",
+            generation_mode="recipe_first",
+            recipe_pool_size=1,
+            layouts_per_recipe=1,
+            road_shapes_per_layout=1,
+            candidate_pool_size=1,
+            max_attempts_per_level=5,
+            dry_run=True,
+            compare_against_existing=False,
+            levels_output_dir=tmp_path / "levels",
+            solutions_output_dir=tmp_path / "solutions",
+            report_path=tmp_path / "report.md",
+            json_report_path=tmp_path / "report.json",
+        )
+    )
+
+    payload = json.loads((tmp_path / "report.json").read_text(encoding="utf-8"))
+    accepted = payload["acceptedLevels"][0]
+
+    assert result.passed is True
+    assert accepted["recipeFamily"] == "four_way_intro"
+    assert "four_way" in accepted["mechanicTags"]
+    assert accepted["unlockRequirement"]
+    assert accepted["priorMechanicDependency"] == "hub_choice"
+    assert accepted["mechanicMetadata"]["intendedMechanic"]
+    assert "Mechanics:" in (tmp_path / "report.md").read_text(encoding="utf-8")
+
+
 def test_generation_report_repository_includes_visual_clarity_node_and_edge_ids(tmp_path) -> None:
     generated = _visual_clarity_report_level()
     config = GenerationConfig(

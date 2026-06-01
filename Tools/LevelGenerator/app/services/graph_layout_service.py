@@ -444,13 +444,17 @@ class GraphLayoutPlannerService:
         return issues
 
     def _strategy_for_recipe(self, recipe: GraphRecipe) -> str:
-        if recipe.family_name == "four_way_intersection":
+        family_name = recipe.family_name
+        tags = set(recipe.mechanic_tags)
+        if family_name == "four_way_intersection" or "four_way" in tags:
             return "four_way_intersection"
-        if recipe.family_name == "ring_route":
+        if family_name == "ring_route" or "ring_route" in tags or "ring" in family_name:
             return "ring_loop"
-        if recipe.family_name == "return_loop":
+        if family_name == "return_loop" or "return_loop" in tags:
             return "package_inside_loop"
-        if recipe.family_name == "package_gate":
+        if family_name == "package_gate" or "package_gate" in tags:
+            return "split_lane"
+        if "split_path" in tags or "branch" in tags:
             return "split_lane"
         if any(self._outgoing_count(recipe, node.id) >= 3 for node in recipe.nodes if node.role == "switch"):
             return "hub_and_spoke"

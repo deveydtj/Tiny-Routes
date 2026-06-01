@@ -3,6 +3,7 @@ from __future__ import annotations
 import hashlib
 import json
 from dataclasses import dataclass, field
+from typing import Any
 
 from .abstract_puzzle_solution import AbstractPuzzleSolutionMetadata
 
@@ -33,6 +34,10 @@ class GraphRecipe:
     family_name: str = "graph_recipe"
     variant_name: str = "default"
     solved_metadata: AbstractPuzzleSolutionMetadata | None = None
+    mechanic_tags: tuple[str, ...] = field(default_factory=tuple)
+    unlock_requirement: str | None = None
+    prior_mechanic_dependency: str | None = None
+    mechanic_metadata: dict[str, Any] = field(default_factory=dict)
 
     def validate(self) -> list[str]:
         messages: list[str] = []
@@ -72,6 +77,7 @@ class GraphRecipe:
             "edges": [(edge.from_node_id, edge.to_node_id) for edge in self.edges],
             "requiredPath": list(self.required_path),
             "tapNodeIDs": list(self.tap_node_ids),
+            "mechanicTags": list(self.mechanic_tags),
         }
         encoded = json.dumps(payload, sort_keys=True, separators=(",", ":")).encode("utf-8")
         return hashlib.sha256(encoded).hexdigest()

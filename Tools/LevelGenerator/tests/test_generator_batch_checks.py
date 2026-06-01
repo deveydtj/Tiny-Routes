@@ -20,6 +20,10 @@ def test_dry_run_batches_for_each_difficulty_pass_validation(tmp_path) -> None:
                 report_path=tmp_path / difficulty / "report.md",
                 json_report_path=tmp_path / difficulty / "report.json",
                 max_attempts_per_level=25,
+                candidate_pool_size=2,
+                recipe_pool_size=2,
+                layouts_per_recipe=1,
+                road_shapes_per_layout=1,
             )
         )
 

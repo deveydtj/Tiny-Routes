@@ -33,6 +33,10 @@ class GeneratedLevel:
     abstract_solution_metadata: AbstractPuzzleSolutionMetadata | None = None
     layout_metadata: dict[str, Any] | None = None
     road_shape_metadata: dict[str, Any] | None = None
+    mechanic_tags: tuple[str, ...] = field(default_factory=tuple)
+    unlock_requirement: str | None = None
+    prior_mechanic_dependency: str | None = None
+    mechanic_metadata: dict[str, Any] = field(default_factory=dict)
 
     @property
     def level_id(self) -> str:

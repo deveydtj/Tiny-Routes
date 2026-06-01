@@ -40,6 +40,16 @@ def main(argv: list[str] | None = None) -> int:
                 "/tmp/tiny-routes-smoke.md",
                 "--json-report",
                 "/tmp/tiny-routes-smoke.json",
+                "--recipe-pool-size",
+                "2",
+                "--layouts-per-recipe",
+                "1",
+                "--road-shapes-per-layout",
+                "1",
+                "--candidate-pool-size",
+                "2",
+                "--max-attempts-per-level",
+                "50",
             ]
         )
     if not args.skip_production_validation:

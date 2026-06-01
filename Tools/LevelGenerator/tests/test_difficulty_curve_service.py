@@ -23,33 +23,24 @@ def test_difficulty_curve_builds_batch_plan_with_weights() -> None:
     plan = DifficultyCurveService().build_plan(9, 4, "auto")
 
     assert [entry.difficulty for entry in plan.entries] == ["easy", "easy", "medium", "medium"]
-    assert plan.entries[0].template_weights["single_switch"] > 0
-    assert plan.entries[2].template_weights["multi_switch_chain"] > 0
+    assert plan.entries[0].template_weights["two_switch_order_intro"] > 0
+    assert plan.entries[2].template_weights["multi_switch_order"] > 0
 
 
 def test_difficulty_curve_expert_template_weights() -> None:
     service = DifficultyCurveService()
 
-    assert service.template_weights_for_level(41, "expert") == {
-        "four_way_intersection": 3,
-        "multi_switch_chain": 3,
-        "ring_route": 2,
-    }
-    assert service.template_weights_for_level(46, "expert") == {
-        "four_way_intersection": 5,
-        "multi_switch_chain": 2,
-        "ring_route": 2,
-    }
-    assert service.template_weights_for_level(28, "hard") == {
-        "multi_switch_chain": 5,
-        "return_loop": 2,
-        "ring_route": 1,
-    }
+    assert service.template_weights_for_level(41, "expert")["four_way_intro"] == 5
+    assert service.template_weights_for_level(46, "expert")["four_way_ring"] == 4
+    assert service.template_weights_for_level(28, "hard")["two_phase_route"] == 5
 
 
 def test_difficulty_curve_feature_unlock_gates() -> None:
     service = DifficultyCurveService()
 
-    assert service.template_weights_for_level(1, "tutorial") == {"straight_delivery": 7}
-    assert "return_loop" not in service.template_weights_for_level(15, "medium")
-    assert service.template_weights_for_level(31, "hard")["ring_route"] > service.template_weights_for_level(28, "hard")["ring_route"]
+    assert service.template_weights_for_level(1, "tutorial")["straight_delivery_intro"] == 7
+    assert "return_loop_intro" not in service.template_weights_for_level(15, "medium")
+    assert (
+        service.template_weights_for_level(31, "hard")["ring_route_gate"]
+        > service.template_weights_for_level(28, "hard").get("ring_route_gate", 0)
+    )

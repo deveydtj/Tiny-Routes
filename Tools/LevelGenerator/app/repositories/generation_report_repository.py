@@ -60,6 +60,10 @@ class GenerationReportRepository:
                     "template": level.template_name,
                     "recipeFamily": level.recipe_family,
                     "recipeVariant": level.recipe_variant,
+                    "mechanicTags": list(getattr(level, "mechanic_tags", ()) or ()),
+                    "unlockRequirement": getattr(level, "unlock_requirement", None),
+                    "priorMechanicDependency": getattr(level, "prior_mechanic_dependency", None),
+                    "mechanicMetadata": getattr(level, "mechanic_metadata", {}) or {},
                     "abstractGraphSignature": level.abstract_graph_signature,
                     "abstractGraphSignatureShort": (
                         level.abstract_graph_signature[:12] if level.abstract_graph_signature else None
@@ -173,6 +177,12 @@ class GenerationReportRepository:
                         f"- Recipe: `{level['recipeFamily']}` variant `{level['recipeVariant']}`; "
                         f"abstract signature `{level['abstractGraphSignatureShort']}`."
                     )
+                    if level["mechanicTags"] or level["unlockRequirement"] or level["priorMechanicDependency"]:
+                        lines.append(
+                            f"- Mechanics: tags `{', '.join(level['mechanicTags']) or 'none'}`; "
+                            f"unlock `{level['unlockRequirement'] or 'none'}`; "
+                            f"depends on `{level['priorMechanicDependency'] or 'none'}`."
+                        )
                     lines.append(
                         f"- Layout: `{level['selectedLayoutVariant']}`; "
                         f"strategy: `{(level['layoutMetadata'] or {}).get('strategy', 'unknown')}`; "

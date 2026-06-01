@@ -719,72 +719,72 @@ Add enough mechanic variety that large batches do not feel samey.
 
 ### Beginner/Tutorial
 
-- [ ] `straight_delivery_intro`
-- [ ] `single_switch_intro`
-- [ ] `single_switch_wrong_dead_end`
-- [ ] `package_before_destination_intro`
+- [x] `straight_delivery_intro`
+- [x] `single_switch_intro`
+- [x] `single_switch_wrong_dead_end`
+- [x] `package_before_destination_intro`
 
 ### Easy
 
-- [ ] `single_switch_package_choice`
-- [ ] `two_switch_order_intro`
-- [ ] `short_detour_gate`
-- [ ] `safe_dead_end_choice`
-- [ ] `package_gate_simple`
+- [x] `single_switch_package_choice`
+- [x] `two_switch_order_intro`
+- [x] `short_detour_gate`
+- [x] `safe_dead_end_choice`
+- [x] `package_gate_simple`
 
 ### Medium
 
-- [ ] `multi_switch_order`
-- [ ] `package_gate_double_choice`
-- [ ] `return_loop_intro`
-- [ ] `split_path_rejoin`
-- [ ] `fake_shortcut`
-- [ ] `hub_choice`
+- [x] `multi_switch_order`
+- [x] `package_gate_double_choice`
+- [x] `return_loop_intro`
+- [x] `split_path_rejoin`
+- [x] `fake_shortcut`
+- [x] `hub_choice`
 
 ### Hard
 
-- [ ] `return_loop_with_gate`
-- [ ] `ring_route_gate`
-- [ ] `multi_switch_revisit`
-- [ ] `package_inside_loop`
-- [ ] `two_phase_route`
-- [ ] `branch_then_rejoin_with_wrong_order`
+- [x] `return_loop_with_gate`
+- [x] `ring_route_gate`
+- [x] `multi_switch_revisit`
+- [x] `package_inside_loop`
+- [x] `two_phase_route`
+- [x] `branch_then_rejoin_with_wrong_order`
 
 ### Expert
 
-- [ ] `four_way_intro`
-- [ ] `four_way_package_gate`
-- [ ] `four_way_ring`
-- [ ] `multi_four_way_route`
-- [ ] `controlled_repeated_taps`
-- [ ] `late_route_reversal`
+- [x] `four_way_intro`
+- [x] `four_way_package_gate`
+- [x] `four_way_ring`
+- [x] `multi_four_way_route`
+- [x] `controlled_repeated_taps`
+- [x] `late_route_reversal`
 
 ## Tasks
 
-- [ ] For each recipe family, define:
-  - [ ] intended mechanic
-  - [ ] supported difficulties
-  - [ ] required player skill
-  - [ ] allowed switch counts
-  - [ ] allowed tap counts
-  - [ ] allowed repeated taps
-  - [ ] visual layout requirements
-  - [ ] reason it is fun or useful
-- [ ] Add recipe-family tests:
-  - [ ] generated recipe validates
-  - [ ] abstract solver finds solution
-  - [ ] layout planner can place it
-  - [ ] final validator accepts at least one deterministic seed
-- [ ] Add recipe weights:
-  - [ ] by difficulty
-  - [ ] by level number
-  - [ ] by recently used mechanic families
-  - [ ] by whether a mechanic is newly introduced
-- [ ] Update reports:
-  - [ ] recipe family
-  - [ ] mechanic tags
-  - [ ] unlock requirement
-  - [ ] prior mechanic dependency
+- [x] For each recipe family, define:
+  - [x] intended mechanic
+  - [x] supported difficulties
+  - [x] required player skill
+  - [x] allowed switch counts
+  - [x] allowed tap counts
+  - [x] allowed repeated taps
+  - [x] visual layout requirements
+  - [x] reason it is fun or useful
+- [x] Add recipe-family tests:
+  - [x] generated recipe validates
+  - [x] abstract solver finds solution
+  - [x] layout planner can place it
+  - [x] final validator accepts at least one deterministic seed
+- [x] Add recipe weights:
+  - [x] by difficulty
+  - [x] by level number
+  - [x] by recently used mechanic families
+  - [x] by whether a mechanic is newly introduced
+- [x] Update reports:
+  - [x] recipe family
+  - [x] mechanic tags
+  - [x] unlock requirement
+  - [x] prior mechanic dependency
 
 ## Do
 
@@ -802,9 +802,9 @@ Add enough mechanic variety that large batches do not feel samey.
 
 ## Acceptance Criteria
 
-- [ ] Each difficulty band has multiple reliable recipe families.
-- [ ] Hard generation no longer depends heavily on `multi_switch_chain`.
-- [ ] Expert generation has clear four-way progression.
+- [x] Each difficulty band has multiple reliable recipe families.
+- [x] Hard generation no longer depends heavily on `multi_switch_chain`.
+- [x] Expert generation has clear four-way progression.
 
 ---
 
