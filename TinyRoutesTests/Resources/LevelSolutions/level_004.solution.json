@@ -6,12 +6,42 @@
   "requiresWithinTimeLimit": true,
   "actions": [
     {
-      "timeSeconds": 0.15,
-      "tapNodeID": "short_entry_switch"
+      "timeSeconds": 0.16,
+      "tapNodeID": "upper_entry_switch",
+      "reason": "Rotate switch 'upper_entry_switch' toward 'package' before arrival.",
+      "expectedEdgeAfterTap": "e_upper_entry_switch_package",
+      "expectedRouteNodeAfterTap": "package",
+      "reactionWindowSeconds": 0.45,
+      "switchStateBeforeTap": "e_upper_entry_switch_upper_bypass",
+      "switchStateAfterTap": "e_upper_entry_switch_package"
     },
     {
-      "timeSeconds": 1.8,
-      "tapNodeID": "short_finish_switch"
+      "timeSeconds": 2.05,
+      "tapNodeID": "upper_finish_switch",
+      "reason": "Rotate switch 'upper_finish_switch' toward 'destination' before arrival.",
+      "expectedEdgeAfterTap": "e_upper_finish_switch_destination",
+      "expectedRouteNodeAfterTap": "destination",
+      "reactionWindowSeconds": 0.45,
+      "switchStateBeforeTap": "e_upper_finish_switch_upper_dead_end",
+      "switchStateAfterTap": "e_upper_finish_switch_destination"
     }
-  ]
+  ],
+  "metadata": {
+    "validationVersion": "solution_sidecar_v1",
+    "solutionRoute": [
+      "start",
+      "upper_entry_switch",
+      "package",
+      "upper_finish_switch",
+      "destination"
+    ],
+    "requiredTapOrder": [
+      "upper_entry_switch",
+      "upper_finish_switch"
+    ],
+    "template": "package_gate",
+    "generatedSeed": 1935842674,
+    "recipeFamily": "package_gate",
+    "recipeVariant": "package_gate_upper_package"
+  }
 }

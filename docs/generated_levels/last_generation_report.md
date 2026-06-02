@@ -1,163 +1,1198 @@
 # Tiny Routes Generation Report
 
-- Generated: `2026-06-01T03:23:05.977575+00:00`
+- Generated: `2026-06-02T02:01:08.359262+00:00`
 - Repo root: `/Users/jake/Developer/Tiny-Routes`
-- Difficulty: `medium`
-- Template mode: `return_loop`
+- Difficulty: `auto`
+- Template mode: `mixed`
 - Generation mode: `recipe_first`
-- Base seed: `123`
-- Dry run: `True`
+- Base seed: `None`
+- Dry run: `False`
 - Compare existing levels: `True`
 - Candidate pool size: `25`
 - Recipe pool size: `4`
 - Layouts per recipe: `3`
 - Road shapes per layout: `3`
+- Layout orientation preference: `auto`
+- Vertical route probability: `0.35`
+- Prefer vertical for long routes: `True`
 - Xcode project sync: `True`
 - Swift tests: `Swift tests were not run.`
 
 ## Accepted Levels
 
-| Level | Source | Seed | Difficulty | Nodes | Edges | Switches | Par Taps | Time Limit | Quality | Preview | Signatures | Status |
-|---|---|---:|---|---:|---:|---:|---:|---:|---:|---|---|---|
-| `level_016` | `return_loop / return_loop_upper` | 3209180135 | medium | 7 | 7 | 2 | 3 | 30 | 0.8824 | [SVG](/Users/jake/Developer/Tiny-Routes/docs/generated_levels/previews/level_016.svg) | `T:b0ddc5b0 L:bfac11b3 S:c09ff266` | passed |
-| `level_017` | `return_loop / return_loop_classic` | 639403786 | medium | 7 | 7 | 2 | 3 | 30 | 0.8805 | [SVG](/Users/jake/Developer/Tiny-Routes/docs/generated_levels/previews/level_017.svg) | `T:18a00047 L:be5d90ce S:c6e81a71` | passed |
-| `level_018` | `return_loop / return_loop_classic` | 1623720224 | medium | 7 | 7 | 2 | 3 | 30 | 0.8725 | [SVG](/Users/jake/Developer/Tiny-Routes/docs/generated_levels/previews/level_018.svg) | `T:18a00047 L:f9902909 S:c6e81a71` | passed |
-| `level_019` | `return_loop / return_loop_lower` | 4089836770 | medium | 7 | 7 | 2 | 3 | 30 | 0.8705 | [SVG](/Users/jake/Developer/Tiny-Routes/docs/generated_levels/previews/level_019.svg) | `T:f152647c L:998cd5e3 S:50bb2282` | passed |
+| Level | Source | Mechanics | Topology | Path | Orientation | Diversity | Seed | Difficulty | Nodes | Edges | Switches | Par Taps | Time Limit | Quality | Preview | Signatures | Status |
+|---|---|---|---|---:|---|---|---:|---|---:|---:|---:|---:|---:|---:|---|---|---|
+| `level_001` | `straight_delivery_intro / straight_delivery_intro_primary` | `straight_delivery: straight_delivery, intro` | `straight_line` | 2 | `horizontal` | `topology None, mechanic penalty None, topology penalty None, score None` | 735630041 | tutorial | 3 | 2 | 0 | 0 | 30 | 0.9592 | [SVG](/Users/jake/Developer/Tiny-Routes/docs/generated_levels/previews/level_001.svg) | `T:2a12d2df L:2311b857 S:4ea3c0eb` | passed |
+| `level_002` | `single_switch_intro / single_switch_intro_alternate` | `single_switch: single_switch, dead_end, switch, intro` | `single_branch` | 3 | `horizontal` | `topology None, mechanic penalty None, topology penalty None, score None` | 3401823727 | tutorial | 5 | 4 | 1 | 1 | 30 | 0.9428 | [SVG](/Users/jake/Developer/Tiny-Routes/docs/generated_levels/previews/level_002.svg) | `T:9e8f40a4 L:9445f9f1 S:fc75f4b5` | passed |
+| `level_003` | `package_before_destination_intro / package_before_destination_intro_primary` | `straight_delivery: straight_delivery, long_route, package_order` | `straight_line` | 4 | `vertical` | `topology None, mechanic penalty None, topology penalty None, score None` | 1768553935 | tutorial | 5 | 4 | 0 | 0 | 30 | 0.918 | [SVG](/Users/jake/Developer/Tiny-Routes/docs/generated_levels/previews/level_003.svg) | `T:1a988a48 L:752cf628 S:4ea3c0eb` | passed |
+| `level_004` | `package_gate / package_gate_upper_package` | `package_gate: package_gate, multi_switch` | `package_gate` | 4 | `vertical` | `topology None, mechanic penalty None, topology penalty None, score None` | 1935842674 | easy | 7 | 6 | 2 | 2 | 30 | 0.9626 | [SVG](/Users/jake/Developer/Tiny-Routes/docs/generated_levels/previews/level_004.svg) | `T:21d12e30 L:8271e892 S:cc89457d` | passed |
+| `level_005` | `long_detour_gate / long_detour_gate_primary` | `long_route: long_route, detour, package_gate` | `detour_gate` | 5 | `vertical` | `topology None, mechanic penalty None, topology penalty None, score None` | 1185477608 | easy | 7 | 6 | 1 | 1 | 30 | 0.9391 | [SVG](/Users/jake/Developer/Tiny-Routes/docs/generated_levels/previews/level_005.svg) | `T:776cd618 L:74593c5c S:55079312` | passed |
+| `level_006` | `two_switch_order_intro / two_switch_order_intro_primary` | `multi_switch: multi_switch, switch_order, two_switch` | `two_switch_order` | 4 | `horizontal` | `topology None, mechanic penalty None, topology penalty None, score None` | 2973262750 | easy | 7 | 6 | 2 | 2 | 30 | 0.9375 | [SVG](/Users/jake/Developer/Tiny-Routes/docs/generated_levels/previews/level_006.svg) | `T:501007b5 L:ea43dbd5 S:22e42c17` | passed |
+| `level_007` | `single_switch / single_switch_short_dead_end` | `single_switch: single_switch, dead_end` | `single_branch` | 4 | `horizontal` | `topology None, mechanic penalty None, topology penalty None, score None` | 2254506795 | easy | 6 | 5 | 1 | 1 | 30 | 0.9279 | [SVG](/Users/jake/Developer/Tiny-Routes/docs/generated_levels/previews/level_007.svg) | `T:0396dc69 L:197dd687 S:5f40244e` | passed |
+| `level_008` | `short_detour_gate / short_detour_gate_alternate` | `detour: detour, single_switch, dead_end, gate` | `detour_gate` | 4 | `horizontal` | `topology None, mechanic penalty None, topology penalty None, score None` | 4001690462 | easy | 6 | 5 | 1 | 1 | 30 | 0.9269 | [SVG](/Users/jake/Developer/Tiny-Routes/docs/generated_levels/previews/level_008.svg) | `T:d2ffab49 L:4c680ffa S:16d6ec44` | passed |
+| `level_009` | `package_gate / package_gate_lower_package` | `package_gate: package_gate, multi_switch` | `package_gate` | 4 | `horizontal` | `topology None, mechanic penalty None, topology penalty None, score None` | 2409022145 | easy | 7 | 6 | 2 | 2 | 30 | 0.9248 | [SVG](/Users/jake/Developer/Tiny-Routes/docs/generated_levels/previews/level_009.svg) | `T:40609fcc L:ffb5f2ed S:8bfd535e` | passed |
+| `level_010` | `package_gate_simple / package_gate_simple_alternate` | `package_gate: package_gate, single_switch, switch` | `package_gate` | 3 | `vertical` | `topology None, mechanic penalty None, topology penalty None, score None` | 2679724832 | easy | 5 | 4 | 1 | 1 | 30 | 0.9236 | [SVG](/Users/jake/Developer/Tiny-Routes/docs/generated_levels/previews/level_010.svg) | `T:e3cd100d L:dd8b9665 S:16d6ec44` | passed |
+| `level_011` | `multi_switch_chain / multi_switch_chain_zigzag` | `multi_switch: multi_switch` | `two_switch_order` | 4 | `horizontal` | `topology None, mechanic penalty None, topology penalty None, score None` | 3429423932 | medium | 7 | 6 | 2 | 2 | 30 | 0.9445 | [SVG](/Users/jake/Developer/Tiny-Routes/docs/generated_levels/previews/level_011.svg) | `T:1020c7ef L:9b001fdb S:781a4be2` | passed |
+| `level_012` | `package_gate / package_gate_double_choice` | `package_gate: package_gate, multi_switch` | `package_gate` | 5 | `vertical` | `topology None, mechanic penalty None, topology penalty None, score None` | 2640705482 | medium | 9 | 8 | 3 | 3 | 30 | 0.9439 | [SVG](/Users/jake/Developer/Tiny-Routes/docs/generated_levels/previews/level_012.svg) | `T:ee49bc2d L:ac1bf9dc S:1312b44f` | passed |
+| `level_013` | `multi_switch_chain / multi_switch_chain_split_dead_ends` | `multi_switch: multi_switch` | `two_switch_order` | 5 | `vertical` | `topology None, mechanic penalty None, topology penalty None, score None` | 3581691191 | medium | 9 | 8 | 3 | 3 | 30 | 0.9431 | [SVG](/Users/jake/Developer/Tiny-Routes/docs/generated_levels/previews/level_013.svg) | `T:c5ec3fec L:d849d4a1 S:855efe3c` | passed |
+| `level_014` | `return_loop / return_loop_classic` | `loop: loop, repeated_tap` | `return_loop` | 6 | `horizontal` | `topology None, mechanic penalty None, topology penalty None, score None` | 1982278601 | medium | 7 | 7 | 2 | 3 | 30 | 0.9451 | [SVG](/Users/jake/Developer/Tiny-Routes/docs/generated_levels/previews/level_014.svg) | `T:18a00047 L:77660417 S:c6e81a71` | passed |
+| `level_015` | `fake_shortcut / fake_shortcut_alternate` | `fake_shortcut: fake_shortcut, detour, package_gate, dead_end` | `detour_gate` | 6 | `vertical` | `topology None, mechanic penalty None, topology penalty None, score None` | 2044855766 | medium | 9 | 8 | 2 | 2 | 30 | 0.9399 | [SVG](/Users/jake/Developer/Tiny-Routes/docs/generated_levels/previews/level_015.svg) | `T:c115d191 L:1c23971f S:547b0f2b` | passed |
+| `level_016` | `long_detour_gate / long_detour_gate_primary` | `long_route: long_route, detour, package_gate` | `detour_gate` | 6 | `horizontal` | `topology None, mechanic penalty None, topology penalty None, score None` | 3017450586 | medium | 9 | 8 | 2 | 2 | 30 | 0.9368 | [SVG](/Users/jake/Developer/Tiny-Routes/docs/generated_levels/previews/level_016.svg) | `T:ac3570b9 L:c8aceb3c S:e45124c2` | passed |
+| `level_017` | `hub_choice / hub_choice_primary` | `hub: hub, multi_switch, rejoin, dead_end` | `hub_spoke` | 6 | `horizontal` | `topology None, mechanic penalty None, topology penalty None, score None` | 3075548730 | medium | 9 | 9 | 2 | 2 | 30 | 0.9321 | [SVG](/Users/jake/Developer/Tiny-Routes/docs/generated_levels/previews/level_017.svg) | `T:02fd7ebc L:4164daf0 S:84ab4378` | passed |
+| `level_018` | `package_gate / package_gate_classic` | `package_gate: package_gate, multi_switch` | `package_gate` | 4 | `horizontal` | `topology None, mechanic penalty None, topology penalty None, score None` | 3167469754 | medium | 7 | 6 | 2 | 2 | 30 | 0.9306 | [SVG](/Users/jake/Developer/Tiny-Routes/docs/generated_levels/previews/level_018.svg) | `T:fa3d3c7b L:7bd44963 S:02457ebc` | passed |
+| `level_019` | `package_gate / package_gate_crossing_avoidance` | `package_gate: package_gate, multi_switch` | `package_gate` | 4 | `horizontal` | `topology None, mechanic penalty None, topology penalty None, score None` | 2385495577 | medium | 7 | 6 | 2 | 2 | 30 | 0.9306 | [SVG](/Users/jake/Developer/Tiny-Routes/docs/generated_levels/previews/level_019.svg) | `T:b6fc1fcd L:d16e5a6d S:02f4e4f5` | passed |
+| `level_020` | `package_gate / package_gate_right_entry` | `package_gate: package_gate, multi_switch` | `package_gate` | 4 | `vertical` | `topology None, mechanic penalty None, topology penalty None, score None` | 1007697055 | medium | 7 | 6 | 2 | 2 | 30 | 0.9301 | [SVG](/Users/jake/Developer/Tiny-Routes/docs/generated_levels/previews/level_020.svg) | `T:ca4f39e2 L:b75f3ebc S:a4a445db` | passed |
+| `level_021` | `split_path_rejoin / split_path_rejoin_alternate` | `split_path: split_path, rejoin, multi_switch, package_gate` | `split_rejoin` | 6 | `horizontal` | `topology None, mechanic penalty None, topology penalty None, score None` | 3631058336 | medium | 9 | 9 | 2 | 2 | 30 | 0.9297 | [SVG](/Users/jake/Developer/Tiny-Routes/docs/generated_levels/previews/level_021.svg) | `T:404d3c3f L:e41c32fa S:22e42c17` | passed |
+| `level_022` | `multi_switch_chain / multi_switch_chain_split_dead_ends` | `multi_switch: multi_switch` | `two_switch_order` | 4 | `horizontal` | `topology None, mechanic penalty None, topology penalty None, score None` | 1153220041 | medium | 7 | 6 | 2 | 2 | 30 | 0.9319 | [SVG](/Users/jake/Developer/Tiny-Routes/docs/generated_levels/previews/level_022.svg) | `T:5ef03ec1 L:fee47f33 S:1d523248` | passed |
+| `level_023` | `multi_switch_chain / multi_switch_chain_stair_step` | `multi_switch: multi_switch` | `two_switch_order` | 5 | `horizontal` | `topology None, mechanic penalty None, topology penalty None, score None` | 3008736748 | medium | 9 | 8 | 3 | 3 | 30 | 0.9271 | [SVG](/Users/jake/Developer/Tiny-Routes/docs/generated_levels/previews/level_023.svg) | `T:23b7782f L:0b531428 S:d83bfb4a` | passed |
+| `level_024` | `multi_switch_chain / multi_switch_chain_zigzag` | `multi_switch: multi_switch` | `two_switch_order` | 5 | `horizontal` | `topology None, mechanic penalty None, topology penalty None, score None` | 499289342 | medium | 9 | 8 | 3 | 3 | 30 | 0.9021 | [SVG](/Users/jake/Developer/Tiny-Routes/docs/generated_levels/previews/level_024.svg) | `T:5f89aaaa L:b25ace11 S:3ffd97b1` | passed |
+| `level_025` | `multi_switch_chain / multi_switch_chain_stair_step` | `multi_switch: multi_switch` | `two_switch_order` | 4 | `horizontal` | `topology None, mechanic penalty None, topology penalty None, score None` | 4012282461 | medium | 7 | 6 | 2 | 2 | 30 | 0.9301 | [SVG](/Users/jake/Developer/Tiny-Routes/docs/generated_levels/previews/level_025.svg) | `T:7708ad8f L:c0cc79f2 S:d19167c8` | passed |
+| `level_026` | `ring_route / ring_route_clockwise` | `ring: ring, package_gate` | `ring` | 5 | `horizontal` | `topology None, mechanic penalty None, topology penalty None, score None` | 33170278 | hard | 9 | 11 | 3 | 3 | 30 | 0.9617 | [SVG](/Users/jake/Developer/Tiny-Routes/docs/generated_levels/previews/level_026.svg) | `T:a9d95cd3 L:ff5f2b31 S:6047f946` | passed |
+| `level_027` | `two_phase_route / two_phase_route_primary` | `two_phase: two_phase, multi_switch` | `two_phase` | 6 | `horizontal` | `topology None, mechanic penalty None, topology penalty None, score None` | 1782602036 | hard | 10 | 9 | 3 | 3 | 30 | 0.9648 | [SVG](/Users/jake/Developer/Tiny-Routes/docs/generated_levels/previews/level_027.svg) | `T:7b1d5f8d L:22bf797c S:56d7db03` | passed |
+| `level_028` | `multi_switch_chain / multi_switch_chain_four_switch` | `multi_switch: multi_switch` | `two_switch_order` | 6 | `horizontal` | `topology None, mechanic penalty None, topology penalty None, score None` | 1874523060 | hard | 11 | 10 | 4 | 4 | 30 | 0.9569 | [SVG](/Users/jake/Developer/Tiny-Routes/docs/generated_levels/previews/level_028.svg) | `T:9b842c8a L:b7046577 S:70e84a99` | passed |
+| `level_029` | `long_detour_gate / long_detour_gate_alternate` | `long_route: long_route, detour, package_gate` | `detour_gate` | 8 | `horizontal` | `topology None, mechanic penalty None, topology penalty None, score None` | 2007079881 | hard | 12 | 12 | 3 | 3 | 30 | 0.9499 | [SVG](/Users/jake/Developer/Tiny-Routes/docs/generated_levels/previews/level_029.svg) | `T:363dcbeb L:6885beee S:8962f818` | passed |
+| `level_030` | `split_path_rejoin / split_path_rejoin_primary` | `split_path: split_path, rejoin, multi_switch, package_gate` | `split_rejoin` | 7 | `horizontal` | `topology None, mechanic penalty None, topology penalty None, score None` | 3158422042 | hard | 11 | 11 | 3 | 3 | 30 | 0.9347 | [SVG](/Users/jake/Developer/Tiny-Routes/docs/generated_levels/previews/level_030.svg) | `T:7162a7ad L:c5c5aede S:56d7db03` | passed |
+| `level_031` | `multi_switch_chain / multi_switch_chain_stair_step` | `multi_switch: multi_switch` | `two_switch_order` | 6 | `horizontal` | `topology None, mechanic penalty None, topology penalty None, score None` | 4101655842 | hard | 11 | 10 | 4 | 4 | 30 | 0.9324 | [SVG](/Users/jake/Developer/Tiny-Routes/docs/generated_levels/previews/level_031.svg) | `T:57716ef1 L:37ff9b78 S:202383ae` | passed |
+| `level_032` | `multi_switch_chain / multi_switch_chain_zigzag` | `multi_switch: multi_switch` | `two_switch_order` | 6 | `vertical` | `topology None, mechanic penalty None, topology penalty None, score None` | 3346794594 | hard | 11 | 10 | 4 | 4 | 30 | 0.9385 | [SVG](/Users/jake/Developer/Tiny-Routes/docs/generated_levels/previews/level_032.svg) | `T:160eb254 L:4f594f79 S:7dca06ec` | passed |
+| `level_033` | `multi_switch_chain / multi_switch_chain_double_gate` | `multi_switch: multi_switch` | `two_switch_order` | 6 | `horizontal` | `topology None, mechanic penalty None, topology penalty None, score None` | 4292276485 | hard | 11 | 10 | 4 | 4 | 30 | 0.9324 | [SVG](/Users/jake/Developer/Tiny-Routes/docs/generated_levels/previews/level_033.svg) | `T:fe11be36 L:26a2411b S:977ae29e` | passed |
+| `level_034` | `fake_shortcut / fake_shortcut_primary` | `fake_shortcut: fake_shortcut, detour, package_gate, dead_end` | `detour_gate` | 8 | `horizontal` | `topology None, mechanic penalty None, topology penalty None, score None` | 89247374 | hard | 12 | 11 | 3 | 3 | 30 | 0.9414 | [SVG](/Users/jake/Developer/Tiny-Routes/docs/generated_levels/previews/level_034.svg) | `T:7c294735 L:1853a935 S:a6ef2f9f` | passed |
+| `level_035` | `package_inside_loop / package_inside_loop_primary` | `package_inside_loop: package_inside_loop, loop, multi_switch, package` | `return_loop` | 7 | `horizontal` | `topology None, mechanic penalty None, topology penalty None, score None` | 1831934859 | hard | 11 | 10 | 3 | 3 | 30 | 0.9298 | [SVG](/Users/jake/Developer/Tiny-Routes/docs/generated_levels/previews/level_035.svg) | `T:3a81ab33 L:3592dfcb S:56d7db03` | passed |
+| `level_036` | `hub_choice / hub_choice_primary` | `hub: hub, multi_switch, rejoin, dead_end` | `hub_spoke` | 8 | `horizontal` | `topology None, mechanic penalty None, topology penalty None, score None` | 3687434405 | hard | 12 | 12 | 3 | 3 | 32 | 0.9283 | [SVG](/Users/jake/Developer/Tiny-Routes/docs/generated_levels/previews/level_036.svg) | `T:f4e1bc6c L:938a1ad8 S:b7150b30` | passed |
+| `level_037` | `multi_switch_revisit / multi_switch_revisit_primary` | `multi_switch: multi_switch, revisit, repeated_tap` | `two_switch_order` | 6 | `horizontal` | `topology None, mechanic penalty None, topology penalty None, score None` | 2871603026 | hard | 10 | 9 | 3 | 3 | 30 | 0.8951 | [SVG](/Users/jake/Developer/Tiny-Routes/docs/generated_levels/previews/level_037.svg) | `T:7b1d5f8d L:903aa8c3 S:56d7db03` | passed |
+| `level_038` | `branch_then_rejoin_with_wrong_order / branch_then_rejoin_with_wrong_order_primary` | `split_path: split_path, rejoin, wrong_order, branch` | `split_rejoin` | 7 | `vertical` | `topology None, mechanic penalty None, topology penalty None, score None` | 1238333234 | hard | 11 | 10 | 3 | 3 | 30 | 0.9155 | [SVG](/Users/jake/Developer/Tiny-Routes/docs/generated_levels/previews/level_038.svg) | `T:e240dafe L:6008d97e S:56d7db03` | passed |
+| `level_039` | `return_loop_with_gate / return_loop_with_gate_alternate` | `loop: loop, repeated_tap, package_gate, return_loop, gate` | `two_switch_order` | 6 | `horizontal` | `topology None, mechanic penalty None, topology penalty None, score None` | 3904544081 | hard | 10 | 9 | 3 | 3 | 30 | 0.897 | [SVG](/Users/jake/Developer/Tiny-Routes/docs/generated_levels/previews/level_039.svg) | `T:7b1d5f8d L:a6f73d9e S:56d7db03` | passed |
+| `level_040` | `multi_switch_chain / multi_switch_chain_stair_step` | `multi_switch: multi_switch` | `two_switch_order` | 5 | `horizontal` | `topology None, mechanic penalty None, topology penalty None, score None` | 799289492 | hard | 9 | 8 | 3 | 3 | 30 | 0.8897 | [SVG](/Users/jake/Developer/Tiny-Routes/docs/generated_levels/previews/level_040.svg) | `T:23b7782f L:a0664761 S:d83bfb4a` | passed |
+| `level_041` | `four_way_package_gate / four_way_package_gate_primary` | `four_way: four_way, package_gate, two_phase` | `four_way_gate` | 8 | `horizontal` | `topology None, mechanic penalty None, topology penalty None, score None` | 3845644057 | expert | 12 | 12 | 2 | 2 | 31 | 0.9703 | [SVG](/Users/jake/Developer/Tiny-Routes/docs/generated_levels/previews/level_041.svg) | `T:e0873dd8 L:7e67647d S:866172b1` | passed |
+| `level_042` | `four_way_intro / four_way_intro_primary` | `four_way: four_way, repeated_tap, intro` | `four_way_gate` | 6 | `horizontal` | `topology None, mechanic penalty None, topology penalty None, score None` | 2214622356 | expert | 8 | 8 | 1 | 2 | 31 | 0.9672 | [SVG](/Users/jake/Developer/Tiny-Routes/docs/generated_levels/previews/level_042.svg) | `T:d874db7b L:65878705 S:8d23fbb4` | passed |
+| `level_043` | `four_way_ring / four_way_ring_alternate` | `four_way: four_way, ring, loop, package_inside_loop` | `four_way_ring` | 7 | `horizontal` | `topology None, mechanic penalty None, topology penalty None, score None` | 588096837 | expert | 12 | 13 | 3 | 3 | 31 | 0.9571 | [SVG](/Users/jake/Developer/Tiny-Routes/docs/generated_levels/previews/level_043.svg) | `T:691e5412 L:9ddb7cd2 S:42996274` | passed |
+| `level_044` | `controlled_repeated_taps / controlled_repeated_taps_alternate` | `repeated_tap: repeated_tap, revisit, two_phase, loop, long_route` | `revisit` | 9 | `horizontal` | `topology None, mechanic penalty None, topology penalty None, score None` | 680035022 | expert | 12 | 12 | 3 | 4 | 35 | 0.9222 | [SVG](/Users/jake/Developer/Tiny-Routes/docs/generated_levels/previews/level_044.svg) | `T:986caf2c L:718010f4 S:61378125` | passed |
+| `level_045` | `late_route_reversal / late_route_reversal_alternate` | `route_reversal: route_reversal, revisit, repeated_tap` | `two_switch_order` | 6 | `horizontal` | `topology None, mechanic penalty None, topology penalty None, score None` | 3348493962 | expert | 10 | 9 | 3 | 3 | 30 | 0.8925 | [SVG](/Users/jake/Developer/Tiny-Routes/docs/generated_levels/previews/level_045.svg) | `T:7b1d5f8d L:b06375d7 S:56d7db03` | passed |
+| `level_046` | `multi_four_way_route / multi_four_way_route_alternate` | `four_way: four_way, multi_switch` | `four_way_gate` | 6 | `horizontal` | `topology None, mechanic penalty None, topology penalty None, score None` | 4287231578 | expert | 8 | 8 | 1 | 2 | 31 | 0.8916 | [SVG](/Users/jake/Developer/Tiny-Routes/docs/generated_levels/previews/level_046.svg) | `T:d874db7b L:c39135d1 S:8d23fbb4` | passed |
+| `level_047` | `multi_four_way_route / multi_four_way_route_alternate` | `four_way: four_way, multi_switch` | `four_way_gate` | 6 | `horizontal` | `topology None, mechanic penalty None, topology penalty None, score None` | 1804914262 | expert | 8 | 8 | 1 | 2 | 31 | 0.8556 | [SVG](/Users/jake/Developer/Tiny-Routes/docs/generated_levels/previews/level_047.svg) | `T:d874db7b L:ecf0714d S:8d23fbb4` | passed |
 
 ## Level Details
 
+### `level_001`
+- Recipe: `straight_delivery_intro` variant `straight_delivery_intro_primary`; abstract signature `19aba4205409`.
+- Mechanics: tags `straight_delivery, intro`; primary `straight_delivery`; topology `straight_line`; required path length `2`; layout orientation `horizontal` via `auto_horizontal`; Swift-required `False`; unlock `level 1`; depends on `none`.
+- Diversity audit: topology None, mechanic penalty None, topology penalty None, score None.
+- Layout: `normal`; strategy: `horizontal_route_progression`; orientation: `horizontal`; road shapes: `auto` (score `0.99`).
+- Road-shape checks: 0 crossings, 0 required-path crossings, 0 long parallel segments.
+- Visual clarity: score `1.0`, 0 issue(s).
+- Abstract solution: 0 required taps, 0 alternate paths, 0 dead ends, 0 loops.
+- Difficulty model: estimated `tutorial`, mechanical `0.1027`, visual `0.205`, campaign pacing `1.0`.
+- Score breakdown: mechanic `0.69`, runtime `1.0`, readability `0.9975`, switch clarity `1.0`, mobile comfort `1.0`, visual appeal `0.9989`.
+- Solution route: `start` -> `package` -> `destination`.
+- Required taps: none.
+- Candidate selection: Accepted candidate had the highest deterministic quality score (0.9592 vs 0.9428). Scores min/avg/max `0.8298`/`0.8879`/`0.9592`.
+- Accepted candidate audit: family `straight_delivery_intro`; variant `straight_delivery_intro_primary`; tags `straight_delivery, intro`; primary `straight_delivery`; topology `straight_line`; path `2`; orientation `horizontal`; Swift-required `False`; strategy `horizontal_route_progression`; variant `normal`; orientation reason `auto_horizontal`; diversity `topology None, mechanic penalty None, topology penalty None, score None`.
+- Near miss `not_selected` seed `740126223` score `0.9428` family `single_switch_wrong_dead_end` variant `single_switch_wrong_dead_end_primary` tags `single_switch, dead_end, switch` primary `single_switch` topology `single_branch` path `3` orientation `horizontal` Swift-required `False` strategy `horizontal_route_progression` variant `normal` orientation reason `auto_horizontal` diversity `topology None, mechanic penalty None, topology penalty None, score None`.
+- Near miss `not_selected` seed `742374314` score `0.899` family `straight_delivery` variant `straight_delivery_2_intermediate` tags `straight_delivery, long_route` primary `straight_delivery` topology `straight_line` path `4` orientation `vertical` Swift-required `False` strategy `vertical_route_progression` variant `normal` orientation reason `long_route_preference` diversity `topology None, mechanic penalty None, topology penalty None, score None`.
+- Near miss `not_selected` seed `1656888151` score `0.8974` family `straight_delivery` variant `straight_delivery_1_intermediate` tags `straight_delivery` primary `straight_delivery` topology `straight_line` path `3` orientation `horizontal` Swift-required `False` strategy `horizontal_route_progression` variant `normal` orientation reason `auto_horizontal` diversity `topology None, mechanic penalty None, topology penalty None, score None`.
+- No switch-specific review notes.
+### `level_002`
+- Recipe: `single_switch_intro` variant `single_switch_intro_alternate`; abstract signature `5b01380dc1d3`.
+- Mechanics: tags `single_switch, dead_end, switch, intro`; primary `single_switch`; topology `single_branch`; required path length `3`; layout orientation `horizontal` via `auto_horizontal`; Swift-required `False`; unlock `straight delivery understood`; depends on `straight_delivery_intro`.
+- Diversity audit: topology None, mechanic penalty None, topology penalty None, score None.
+- Layout: `normal`; strategy: `horizontal_route_progression`; orientation: `horizontal`; road shapes: `auto` (score `0.96`).
+- Road-shape checks: 0 crossings, 0 required-path crossings, 0 long parallel segments.
+- Visual clarity: score `1.0`, 0 issue(s).
+- Abstract solution: 1 required taps, 0 alternate paths, 1 dead ends, 0 loops.
+- Difficulty model: estimated `medium`, mechanical `0.4107`, visual `0.445`, campaign pacing `0.78`.
+- Score breakdown: mechanic `0.82`, runtime `1.0`, readability `0.99`, switch clarity `1.0`, mobile comfort `1.0`, visual appeal `0.9955`.
+- Solution route: `start` -> `choice` -> `package` -> `destination`.
+- Required taps: tap `choice` at `0.36s` -> `e_choice_package` (0.45s window).
+- Candidate selection: Accepted candidate had the highest deterministic quality score (0.9428 vs 0.9180). Scores min/avg/max `0.8298`/`0.8872`/`0.9428`.
+- Accepted candidate audit: family `single_switch_intro`; variant `single_switch_intro_alternate`; tags `single_switch, dead_end, switch, intro`; primary `single_switch`; topology `single_branch`; path `3`; orientation `horizontal`; Swift-required `False`; strategy `horizontal_route_progression`; variant `normal`; orientation reason `auto_horizontal`; diversity `topology None, mechanic penalty None, topology penalty None, score None`.
+- Near miss `not_selected` seed `832064408` score `0.918` family `package_before_destination_intro` variant `package_before_destination_intro_primary` tags `straight_delivery, long_route, package_order` primary `straight_delivery` topology `straight_line` path `4` orientation `vertical` Swift-required `False` strategy `vertical_route_progression` variant `normal` orientation reason `long_route_preference` diversity `topology None, mechanic penalty None, topology penalty None, score None`.
+- Near miss `not_selected` seed `4284728453` score `0.8942` family `straight_delivery` variant `straight_delivery_2_intermediate` tags `straight_delivery, long_route` primary `straight_delivery` topology `straight_line` path `4` orientation `vertical` Swift-required `False` strategy `vertical_route_progression` variant `normal` orientation reason `long_route_preference` diversity `topology None, mechanic penalty None, topology penalty None, score None`.
+- Near miss `not_selected` seed `834312499` score `0.8892` family `single_switch_wrong_dead_end` variant `single_switch_wrong_dead_end_primary` tags `single_switch, dead_end, switch` primary `single_switch` topology `single_branch` path `3` orientation `horizontal` Swift-required `False` strategy `horizontal_route_progression` variant `normal` orientation reason `auto_horizontal` diversity `topology None, mechanic penalty None, topology penalty None, score None`.
+- Switch `choice` starts on `e_choice_dead_end_a` (north); tap 1 @ 0.36s -> `e_choice_package` (east).
+- Warning: tap_node_switch_context: Solution action 1 taps 2-way switch 'choice' with 2 option(s).
+### `level_003`
+- Recipe: `package_before_destination_intro` variant `package_before_destination_intro_primary`; abstract signature `ca11821affcd`.
+- Mechanics: tags `straight_delivery, long_route, package_order`; primary `straight_delivery`; topology `straight_line`; required path length `4`; layout orientation `vertical` via `long_route_preference`; Swift-required `False`; unlock `package objective introduced`; depends on `straight_delivery_intro`.
+- Diversity audit: topology None, mechanic penalty None, topology penalty None, score None.
+- Layout: `normal`; strategy: `vertical_route_progression`; orientation: `vertical`; road shapes: `auto` (score `0.96`).
+- Road-shape checks: 0 crossings, 0 required-path crossings, 0 long parallel segments.
+- Visual clarity: score `1.0`, 0 issue(s).
+- Abstract solution: 0 required taps, 0 alternate paths, 0 dead ends, 0 loops.
+- Difficulty model: estimated `easy`, mechanical `0.1948`, visual `0.365`, campaign pacing `1.0`.
+- Score breakdown: mechanic `0.69`, runtime `1.0`, readability `0.99`, switch clarity `1.0`, mobile comfort `1.0`, visual appeal `0.9865`.
+- Solution route: `start` -> `pickup_lane` -> `package` -> `exit_lane` -> `destination`.
+- Required taps: none.
+- Candidate selection: Accepted candidate had the highest deterministic quality score (0.9180 vs 0.8942). Scores min/avg/max `0.8251`/`0.8661`/`0.918`.
+- Accepted candidate audit: family `package_before_destination_intro`; variant `package_before_destination_intro_primary`; tags `straight_delivery, long_route, package_order`; primary `straight_delivery`; topology `straight_line`; path `4`; orientation `vertical`; Swift-required `False`; strategy `vertical_route_progression`; variant `normal`; orientation reason `long_route_preference`; diversity `topology None, mechanic penalty None, topology penalty None, score None`.
+- Near miss `not_selected` seed `1804659228` score `0.8942` family `straight_delivery` variant `straight_delivery_2_intermediate` tags `straight_delivery, long_route` primary `straight_delivery` topology `straight_line` path `4` orientation `vertical` Swift-required `False` strategy `vertical_route_progression` variant `normal` orientation reason `long_route_preference` diversity `topology None, mechanic penalty None, topology penalty None, score None`.
+- Near miss `not_selected` seed `3500506185` score `0.8892` family `single_switch_wrong_dead_end` variant `single_switch_wrong_dead_end_alternate` tags `single_switch, dead_end, switch` primary `single_switch` topology `single_branch` path `3` orientation `horizontal` Swift-required `False` strategy `horizontal_route_progression` variant `normal` orientation reason `auto_horizontal` diversity `topology None, mechanic penalty None, topology penalty None, score None`.
+- Near miss `not_selected` seed `928515936` score `0.8656` family `single_switch` variant `single_switch_classic` tags `single_switch, dead_end` primary `single_switch` topology `single_branch` path `3` orientation `horizontal` Swift-required `False` strategy `horizontal_route_progression` variant `mirrored` orientation reason `auto_horizontal` diversity `topology None, mechanic penalty None, topology penalty None, score None`.
+- No switch-specific review notes.
+### `level_004`
+- Recipe: `package_gate` variant `package_gate_upper_package`; abstract signature `576027802071`.
+- Mechanics: tags `package_gate, multi_switch`; primary `package_gate`; topology `package_gate`; required path length `4`; layout orientation `vertical` via `probability`; Swift-required `False`; unlock `none`; depends on `none`.
+- Diversity audit: topology None, mechanic penalty None, topology penalty None, score None.
+- Layout: `normal`; strategy: `vertical_split_lane`; orientation: `vertical`; road shapes: `auto` (score `0.95`).
+- Road-shape checks: 0 crossings, 0 required-path crossings, 0 long parallel segments.
+- Visual clarity: score `1.0`, 0 issue(s).
+- Abstract solution: 2 required taps, 0 alternate paths, 2 dead ends, 0 loops.
+- Difficulty model: estimated `hard`, mechanical `0.7134`, visual `0.685`, campaign pacing `0.78`.
+- Score breakdown: mechanic `0.95`, runtime `1.0`, readability `0.9875`, switch clarity `1.0`, mobile comfort `1.0`, visual appeal `0.9944`.
+- Solution route: `start` -> `upper_entry_switch` -> `package` -> `upper_finish_switch` -> `destination`.
+- Required taps: tap `upper_entry_switch` at `0.16s` -> `e_upper_entry_switch_package` (0.45s window), tap `upper_finish_switch` at `2.05s` -> `e_upper_finish_switch_destination` (0.45s window).
+- Candidate selection: Accepted candidate had the highest deterministic quality score (0.9626 vs 0.9408). Scores min/avg/max `0.8426`/`0.8922`/`0.9626`.
+- Accepted candidate audit: family `package_gate`; variant `package_gate_upper_package`; tags `package_gate, multi_switch`; primary `package_gate`; topology `package_gate`; path `4`; orientation `vertical`; Swift-required `False`; strategy `vertical_split_lane`; variant `normal`; orientation reason `probability`; diversity `topology None, mechanic penalty None, topology penalty None, score None`.
+- Near miss `not_selected` seed `1938090765` score `0.9408` family `long_detour_gate` variant `long_detour_gate_alternate` tags `long_route, detour, package_gate` primary `long_route` topology `detour_gate` path `5` orientation `horizontal` Swift-required `False` strategy `split_lane` variant `normal` orientation reason `auto_horizontal` diversity `topology None, mechanic penalty None, topology penalty None, score None`.
+- Near miss `not_selected` seed `3699404035` score `0.9298` family `two_switch_order_intro` variant `two_switch_order_intro_alternate` tags `multi_switch, switch_order, two_switch` primary `multi_switch` topology `two_switch_order` path `4` orientation `horizontal` Swift-required `False` strategy `horizontal_route_progression` variant `normal` orientation reason `auto_horizontal` diversity `topology None, mechanic penalty None, topology penalty None, score None`.
+- Near miss `not_selected` seed `1091291332` score `0.9279` family `single_switch` variant `single_switch_lower_package` tags `single_switch, dead_end` primary `single_switch` topology `single_branch` path `4` orientation `horizontal` Swift-required `False` strategy `horizontal_route_progression` variant `normal` orientation reason `auto_horizontal` diversity `topology None, mechanic penalty None, topology penalty None, score None`.
+- Switch `upper_entry_switch` starts on `e_upper_entry_switch_upper_bypass` (west); tap 1 @ 0.16s -> `e_upper_entry_switch_package` (south).
+- Switch `upper_finish_switch` starts on `e_upper_finish_switch_upper_dead_end` (west); tap 1 @ 2.05s -> `e_upper_finish_switch_destination` (south).
+- Warning: tap_node_switch_context: Solution action 1 taps 2-way switch 'upper_entry_switch' with 2 option(s).
+- Warning: tap_node_switch_context: Solution action 2 taps 2-way switch 'upper_finish_switch' with 2 option(s).
+### `level_005`
+- Recipe: `long_detour_gate` variant `long_detour_gate_primary`; abstract signature `13189512b61e`.
+- Mechanics: tags `long_route, detour, package_gate`; primary `long_route`; topology `detour_gate`; required path length `5`; layout orientation `vertical` via `probability`; Swift-required `False`; unlock `detours unlocked`; depends on `short_detour_gate`.
+- Diversity audit: topology None, mechanic penalty None, topology penalty None, score None.
+- Layout: `normal`; strategy: `vertical_split_lane`; orientation: `vertical`; road shapes: `auto` (score `0.98`).
+- Road-shape checks: 0 crossings, 0 required-path crossings, 0 long parallel segments.
+- Visual clarity: score `1.0`, 0 issue(s).
+- Abstract solution: 1 required taps, 0 alternate paths, 1 dead ends, 0 loops.
+- Difficulty model: estimated `medium`, mechanical `0.4997`, visual `0.605`, campaign pacing `1.0`.
+- Score breakdown: mechanic `0.82`, runtime `1.0`, readability `0.995`, switch clarity `1.0`, mobile comfort `1.0`, visual appeal `0.9978`.
+- Solution route: `start` -> `switch_gate` -> `detour` -> `package` -> `rejoin` -> `destination`.
+- Required taps: tap `switch_gate` at `0.10s` -> `e_switch_gate_detour` (0.41s window).
+- Candidate selection: Accepted candidate had the highest deterministic quality score (0.9391 vs 0.9375). Scores min/avg/max `0.8431`/`0.8846`/`0.9391`.
+- Accepted candidate audit: family `long_detour_gate`; variant `long_detour_gate_primary`; tags `long_route, detour, package_gate`; primary `long_route`; topology `detour_gate`; path `5`; orientation `vertical`; Swift-required `False`; strategy `vertical_split_lane`; variant `normal`; orientation reason `probability`; diversity `topology None, mechanic penalty None, topology penalty None, score None`.
+- Near miss `not_selected` seed `304820973` score `0.9375` family `two_switch_order_intro` variant `two_switch_order_intro_alternate` tags `multi_switch, switch_order, two_switch` primary `multi_switch` topology `two_switch_order` path `4` orientation `horizontal` Swift-required `False` strategy `horizontal_route_progression` variant `normal` orientation reason `auto_horizontal` diversity `topology None, mechanic penalty None, topology penalty None, score None`.
+- Near miss `not_selected` seed `2949038969` score `0.9279` family `single_switch` variant `single_switch_lower_package` tags `single_switch, dead_end` primary `single_switch` topology `single_branch` path `4` orientation `horizontal` Swift-required `False` strategy `horizontal_route_progression` variant `normal` orientation reason `auto_horizontal` diversity `topology None, mechanic penalty None, topology penalty None, score None`.
+- Near miss `not_selected` seed `3755236927` score `0.9248` family `package_gate` variant `package_gate_classic` tags `package_gate, multi_switch` primary `package_gate` topology `package_gate` path `4` orientation `horizontal` Swift-required `False` strategy `split_lane` variant `normal` orientation reason `auto_horizontal` diversity `topology None, mechanic penalty None, topology penalty None, score None`.
+- Switch `switch_gate` starts on `e_switch_gate_direct_dead_end` (west); tap 1 @ 0.10s -> `e_switch_gate_detour` (south).
+- Warning: tap_node_switch_context: Solution action 1 taps 2-way switch 'switch_gate' with 2 option(s).
+### `level_006`
+- Recipe: `two_switch_order_intro` variant `two_switch_order_intro_primary`; abstract signature `50d6879e4067`.
+- Mechanics: tags `multi_switch, switch_order, two_switch`; primary `multi_switch`; topology `two_switch_order`; required path length `4`; layout orientation `horizontal` via `auto_horizontal`; Swift-required `False`; unlock `two taps introduced`; depends on `single_switch_intro`.
+- Diversity audit: topology None, mechanic penalty None, topology penalty None, score None.
+- Layout: `normal`; strategy: `horizontal_route_progression`; orientation: `horizontal`; road shapes: `auto` (score `0.95`).
+- Road-shape checks: 0 crossings, 0 required-path crossings, 0 long parallel segments.
+- Visual clarity: score `1.0`, 0 issue(s).
+- Abstract solution: 2 required taps, 0 alternate paths, 2 dead ends, 0 loops.
+- Difficulty model: estimated `hard`, mechanical `0.7127`, visual `0.685`, campaign pacing `0.78`.
+- Score breakdown: mechanic `0.95`, runtime `1.0`, readability `0.9875`, switch clarity `1.0`, mobile comfort `1.0`, visual appeal `0.9944`.
+- Solution route: `start` -> `switch_a` -> `package` -> `switch_b` -> `destination`.
+- Required taps: tap `switch_a` at `0.21s` -> `e_switch_a_package` (0.45s window), tap `switch_b` at `1.52s` -> `e_switch_b_destination` (0.45s window).
+- Candidate selection: Accepted candidate had the highest deterministic quality score (0.9375 vs 0.9313). Scores min/avg/max `0.8446`/`0.8961`/`0.9375`.
+- Accepted candidate audit: family `two_switch_order_intro`; variant `two_switch_order_intro_primary`; tags `multi_switch, switch_order, two_switch`; primary `multi_switch`; topology `two_switch_order`; path `4`; orientation `horizontal`; Swift-required `False`; strategy `horizontal_route_progression`; variant `normal`; orientation reason `auto_horizontal`; diversity `topology None, mechanic penalty None, topology penalty None, score None`.
+- Near miss `not_selected` seed `2968766568` score `0.9313` family `short_detour_gate` variant `short_detour_gate_primary` tags `detour, single_switch, dead_end, gate` primary `detour` topology `detour_gate` path `4` orientation `horizontal` Swift-required `False` strategy `horizontal_route_progression` variant `normal` orientation reason `auto_horizontal` diversity `topology None, mechanic penalty None, topology penalty None, score None`.
+- Near miss `not_selected` seed `2971014659` score `0.9279` family `single_switch` variant `single_switch_short_dead_end` tags `single_switch, dead_end` primary `single_switch` topology `single_branch` path `4` orientation `horizontal` Swift-required `False` strategy `horizontal_route_progression` variant `normal` orientation reason `auto_horizontal` diversity `topology None, mechanic penalty None, topology penalty None, score None`.
+- Near miss `not_selected` seed `2128711408` score `0.9248` family `package_gate` variant `package_gate_lower_package` tags `package_gate, multi_switch` primary `package_gate` topology `package_gate` path `4` orientation `horizontal` Swift-required `False` strategy `split_lane` variant `normal` orientation reason `auto_horizontal` diversity `topology None, mechanic penalty None, topology penalty None, score None`.
+- Switch `switch_a` starts on `e_switch_a_dead_end_a` (north); tap 1 @ 0.21s -> `e_switch_a_package` (east).
+- Switch `switch_b` starts on `e_switch_b_dead_end_b` (north); tap 1 @ 1.52s -> `e_switch_b_destination` (south).
+- Warning: tap_node_switch_context: Solution action 1 taps 2-way switch 'switch_a' with 2 option(s).
+- Warning: tap_node_switch_context: Solution action 2 taps 2-way switch 'switch_b' with 2 option(s).
+### `level_007`
+- Recipe: `single_switch` variant `single_switch_short_dead_end`; abstract signature `19cef48f4660`.
+- Mechanics: tags `single_switch, dead_end`; primary `single_switch`; topology `single_branch`; required path length `4`; layout orientation `horizontal` via `auto_horizontal`; Swift-required `False`; unlock `none`; depends on `none`.
+- Diversity audit: topology None, mechanic penalty None, topology penalty None, score None.
+- Layout: `normal`; strategy: `horizontal_route_progression`; orientation: `horizontal`; road shapes: `auto` (score `0.97`).
+- Road-shape checks: 0 crossings, 0 required-path crossings, 0 long parallel segments.
+- Visual clarity: score `1.0`, 0 issue(s).
+- Abstract solution: 1 required taps, 0 alternate paths, 1 dead ends, 0 loops.
+- Difficulty model: estimated `medium`, mechanical `0.458`, visual `0.525`, campaign pacing `1.0`.
+- Score breakdown: mechanic `0.82`, runtime `1.0`, readability `0.9925`, switch clarity `1.0`, mobile comfort `1.0`, visual appeal `0.9966`.
+- Solution route: `start` -> `approach` -> `short_choice` -> `package` -> `destination`.
+- Required taps: tap `short_choice` at `0.55s` -> `e_short_choice_package` (0.45s window).
+- Candidate selection: Accepted candidate had the highest deterministic quality score (0.9279 vs 0.9248). Scores min/avg/max `0.8344`/`0.8769`/`0.9279`.
+- Accepted candidate audit: family `single_switch`; variant `single_switch_short_dead_end`; tags `single_switch, dead_end`; primary `single_switch`; topology `single_branch`; path `4`; orientation `horizontal`; Swift-required `False`; strategy `horizontal_route_progression`; variant `normal`; orientation reason `auto_horizontal`; diversity `topology None, mechanic penalty None, topology penalty None, score None`.
+- Near miss `not_selected` seed `1344489140` score `0.9248` family `package_gate` variant `package_gate_right_entry` tags `package_gate, multi_switch` primary `package_gate` topology `package_gate` path `4` orientation `horizontal` Swift-required `False` strategy `split_lane` variant `normal` orientation reason `auto_horizontal` diversity `topology None, mechanic penalty None, topology penalty None, score None`.
+- Near miss `not_selected` seed `1342241049` score `0.9206` family `package_gate_simple` variant `package_gate_simple_primary` tags `package_gate, single_switch, switch` primary `package_gate` topology `package_gate` path `3` orientation `horizontal` Swift-required `False` strategy `split_lane` variant `normal` orientation reason `auto_horizontal` diversity `topology None, mechanic penalty None, topology penalty None, score None`.
+- Near miss `not_selected` seed `2225145775` score `0.9168` family `short_detour_gate` variant `short_detour_gate_alternate` tags `detour, single_switch, dead_end, gate` primary `detour` topology `detour_gate` path `4` orientation `horizontal` Swift-required `False` strategy `horizontal_route_progression` variant `normal` orientation reason `auto_horizontal` diversity `topology None, mechanic penalty None, topology penalty None, score None`.
+- Switch `short_choice` starts on `e_short_choice_short_dead_end` (north); tap 1 @ 0.55s -> `e_short_choice_package` (east).
+- Warning: tap_node_switch_context: Solution action 1 taps 2-way switch 'short_choice' with 2 option(s).
+### `level_008`
+- Recipe: `short_detour_gate` variant `short_detour_gate_alternate`; abstract signature `401c64075eec`.
+- Mechanics: tags `detour, single_switch, dead_end, gate`; primary `detour`; topology `detour_gate`; required path length `4`; layout orientation `horizontal` via `auto_horizontal`; Swift-required `False`; unlock `single switch introduced`; depends on `single_switch_intro`.
+- Diversity audit: topology None, mechanic penalty None, topology penalty None, score None.
+- Layout: `normal`; strategy: `horizontal_route_progression`; orientation: `horizontal`; road shapes: `auto` (score `0.95`).
+- Road-shape checks: 0 crossings, 0 required-path crossings, 0 long parallel segments.
+- Visual clarity: score `1.0`, 0 issue(s).
+- Abstract solution: 1 required taps, 0 alternate paths, 1 dead ends, 0 loops.
+- Difficulty model: estimated `medium`, mechanical `0.458`, visual `0.525`, campaign pacing `1.0`.
+- Score breakdown: mechanic `0.82`, runtime `1.0`, readability `0.9875`, switch clarity `1.0`, mobile comfort `1.0`, visual appeal `0.9944`.
+- Solution route: `start` -> `gate` -> `detour` -> `package` -> `destination`.
+- Required taps: tap `gate` at `0.21s` -> `e_gate_detour` (0.45s window).
+- Candidate selection: Accepted candidate had the highest deterministic quality score (0.9269 vs 0.9248). Scores min/avg/max `0.8446`/`0.8928`/`0.9269`.
+- Accepted candidate audit: family `short_detour_gate`; variant `short_detour_gate_alternate`; tags `detour, single_switch, dead_end, gate`; primary `detour`; topology `detour_gate`; path `4`; orientation `horizontal`; Swift-required `False`; strategy `horizontal_route_progression`; variant `normal`; orientation reason `auto_horizontal`; diversity `topology None, mechanic penalty None, topology penalty None, score None`.
+- Near miss `not_selected` seed `630229367` score `0.9248` family `package_gate` variant `package_gate_crossing_avoidance` tags `package_gate, multi_switch` primary `package_gate` topology `package_gate` path `4` orientation `horizontal` Swift-required `False` strategy `split_lane` variant `normal` orientation reason `auto_horizontal` diversity `topology None, mechanic penalty None, topology penalty None, score None`.
+- Near miss `not_selected` seed `3193244413` score `0.9204` family `fake_shortcut` variant `fake_shortcut_alternate` tags `fake_shortcut, detour, package_gate, dead_end` primary `fake_shortcut` topology `detour_gate` path `4` orientation `vertical` Swift-required `False` strategy `vertical_split_lane` variant `normal` orientation reason `probability` diversity `topology None, mechanic penalty None, topology penalty None, score None`.
+- Near miss `not_selected` seed `4003938553` score `0.9177` family `package_gate_simple` variant `package_gate_simple_alternate` tags `package_gate, single_switch, switch` primary `package_gate` topology `package_gate` path `3` orientation `horizontal` Swift-required `False` strategy `split_lane` variant `normal` orientation reason `auto_horizontal` diversity `topology None, mechanic penalty None, topology penalty None, score None`.
+- Switch `gate` starts on `e_gate_dead_end_a` (north); tap 1 @ 0.21s -> `e_gate_detour` (east).
+- Warning: tap_node_switch_context: Solution action 1 taps 2-way switch 'gate' with 2 option(s).
+### `level_009`
+- Recipe: `package_gate` variant `package_gate_lower_package`; abstract signature `ced582e6908e`.
+- Mechanics: tags `package_gate, multi_switch`; primary `package_gate`; topology `package_gate`; required path length `4`; layout orientation `horizontal` via `auto_horizontal`; Swift-required `False`; unlock `none`; depends on `none`.
+- Diversity audit: topology None, mechanic penalty None, topology penalty None, score None.
+- Layout: `normal`; strategy: `split_lane`; orientation: `horizontal`; road shapes: `auto` (score `0.96`).
+- Road-shape checks: 0 crossings, 0 required-path crossings, 0 long parallel segments.
+- Visual clarity: score `1.0`, 0 issue(s).
+- Abstract solution: 2 required taps, 0 alternate paths, 2 dead ends, 0 loops.
+- Difficulty model: estimated `hard`, mechanical `0.7072`, visual `0.685`, campaign pacing `0.78`.
+- Score breakdown: mechanic `0.95`, runtime `1.0`, readability `0.99`, switch clarity `1.0`, mobile comfort `1.0`, visual appeal `0.9955`.
+- Solution route: `start` -> `lower_entry_switch` -> `package` -> `lower_finish_switch` -> `destination`.
+- Required taps: tap `lower_entry_switch` at `0.10s` -> `e_lower_entry_switch_package` (0.4s window), tap `lower_finish_switch` at `1.70s` -> `e_lower_finish_switch_destination` (0.45s window).
+- Candidate selection: Accepted candidate had the highest deterministic quality score (0.9248 vs 0.9236). Scores min/avg/max `0.8353`/`0.8754`/`0.9248`.
+- Accepted candidate audit: family `package_gate`; variant `package_gate_lower_package`; tags `package_gate, multi_switch`; primary `package_gate`; topology `package_gate`; path `4`; orientation `horizontal`; Swift-required `False`; strategy `split_lane`; variant `normal`; orientation reason `auto_horizontal`; diversity `topology None, mechanic penalty None, topology penalty None, score None`.
+- Near miss `not_selected` seed `4098124829` score `0.9236` family `package_gate_simple` variant `package_gate_simple_primary` tags `package_gate, single_switch, switch` primary `package_gate` topology `package_gate` path `3` orientation `vertical` Swift-required `False` strategy `vertical_split_lane` variant `normal` orientation reason `probability` diversity `topology None, mechanic penalty None, topology penalty None, score None`.
+- Near miss `not_selected` seed `4095876738` score `0.923` family `fake_shortcut` variant `fake_shortcut_primary` tags `fake_shortcut, detour, package_gate, dead_end` primary `fake_shortcut` topology `detour_gate` path `4` orientation `horizontal` Swift-required `False` strategy `split_lane` variant `normal` orientation reason `auto_horizontal` diversity `topology None, mechanic penalty None, topology penalty None, score None`.
+- Near miss `not_selected` seed `4100372920` score `0.9123` family `safe_dead_end_choice` variant `safe_dead_end_choice_alternate` tags `safe_choice, single_switch, dead_end, choice` primary `safe_choice` topology `single_branch` path `4` orientation `horizontal` Swift-required `False` strategy `horizontal_route_progression` variant `normal` orientation reason `auto_horizontal` diversity `topology None, mechanic penalty None, topology penalty None, score None`.
+- Switch `lower_entry_switch` starts on `e_lower_entry_switch_lower_bypass` (north); tap 1 @ 0.10s -> `e_lower_entry_switch_package` (east).
+- Switch `lower_finish_switch` starts on `e_lower_finish_switch_lower_dead_end` (north); tap 1 @ 1.70s -> `e_lower_finish_switch_destination` (east).
+- Warning: tap_node_switch_context: Solution action 1 taps 2-way switch 'lower_entry_switch' with 2 option(s).
+- Warning: tap_node_switch_context: Solution action 2 taps 2-way switch 'lower_finish_switch' with 2 option(s).
+### `level_010`
+- Recipe: `package_gate_simple` variant `package_gate_simple_alternate`; abstract signature `fa12d725d9fa`.
+- Mechanics: tags `package_gate, single_switch, switch`; primary `package_gate`; topology `package_gate`; required path length `3`; layout orientation `vertical` via `probability`; Swift-required `False`; unlock `package gates introduced`; depends on `single_switch_package_choice`.
+- Diversity audit: topology None, mechanic penalty None, topology penalty None, score None.
+- Layout: `normal`; strategy: `vertical_split_lane`; orientation: `vertical`; road shapes: `auto` (score `0.96`).
+- Road-shape checks: 0 crossings, 0 required-path crossings, 0 long parallel segments.
+- Visual clarity: score `1.0`, 0 issue(s).
+- Abstract solution: 1 required taps, 0 alternate paths, 1 dead ends, 0 loops.
+- Difficulty model: estimated `medium`, mechanical `0.4117`, visual `0.445`, campaign pacing `1.0`.
+- Score breakdown: mechanic `0.82`, runtime `1.0`, readability `0.99`, switch clarity `1.0`, mobile comfort `1.0`, visual appeal `0.9955`.
+- Solution route: `start` -> `gate` -> `package` -> `destination`.
+- Required taps: tap `gate` at `0.31s` -> `e_gate_package` (0.45s window).
+- Candidate selection: Accepted candidate had the highest deterministic quality score (0.9236 vs 0.9204). Scores min/avg/max `0.8368`/`0.8761`/`0.9236`.
+- Accepted candidate audit: family `package_gate_simple`; variant `package_gate_simple_alternate`; tags `package_gate, single_switch, switch`; primary `package_gate`; topology `package_gate`; path `3`; orientation `vertical`; Swift-required `False`; strategy `vertical_split_lane`; variant `normal`; orientation reason `probability`; diversity `topology None, mechanic penalty None, topology penalty None, score None`.
+- Near miss `not_selected` seed `1875774965` score `0.9204` family `fake_shortcut` variant `fake_shortcut_primary` tags `fake_shortcut, detour, package_gate, dead_end` primary `fake_shortcut` topology `detour_gate` path `4` orientation `vertical` Swift-required `False` strategy `vertical_split_lane` variant `normal` orientation reason `probability` diversity `topology None, mechanic penalty None, topology penalty None, score None`.
+- Near miss `not_selected` seed `2681972923` score `0.9137` family `safe_dead_end_choice` variant `safe_dead_end_choice_alternate` tags `safe_choice, single_switch, dead_end, choice` primary `safe_choice` topology `single_branch` path `4` orientation `horizontal` Swift-required `False` strategy `horizontal_route_progression` variant `normal` orientation reason `auto_horizontal` diversity `topology None, mechanic penalty None, topology penalty None, score None`.
+- Near miss `not_selected` seed `3562629558` score `0.9076` family `single_switch` variant `single_switch_upper_package` tags `single_switch, dead_end` primary `single_switch` topology `single_branch` path `4` orientation `horizontal` Swift-required `False` strategy `horizontal_route_progression` variant `normal` orientation reason `auto_horizontal` diversity `topology None, mechanic penalty None, topology penalty None, score None`.
+- Switch `gate` starts on `e_gate_dead_end_a` (west); tap 1 @ 0.31s -> `e_gate_package` (south).
+- Warning: tap_node_switch_context: Solution action 1 taps 2-way switch 'gate' with 2 option(s).
+### `level_011`
+- Recipe: `multi_switch_chain` variant `multi_switch_chain_zigzag`; abstract signature `3b44d8227ceb`.
+- Mechanics: tags `multi_switch`; primary `multi_switch`; topology `two_switch_order`; required path length `4`; layout orientation `horizontal` via `auto_horizontal`; Swift-required `False`; unlock `none`; depends on `none`.
+- Diversity audit: topology None, mechanic penalty None, topology penalty None, score None.
+- Layout: `normal`; strategy: `horizontal_route_progression`; orientation: `horizontal`; road shapes: `auto` (score `0.95`).
+- Road-shape checks: 0 crossings, 0 required-path crossings, 0 long parallel segments.
+- Visual clarity: score `1.0`, 0 issue(s).
+- Abstract solution: 2 required taps, 0 alternate paths, 2 dead ends, 0 loops.
+- Difficulty model: estimated `hard`, mechanical `0.7127`, visual `0.685`, campaign pacing `1.0`.
+- Score breakdown: mechanic `0.95`, runtime `1.0`, readability `0.9875`, switch clarity `1.0`, mobile comfort `1.0`, visual appeal `0.9944`.
+- Solution route: `start` -> `multi_switch_chain_zigzag_switch_a` -> `package` -> `multi_switch_chain_zigzag_switch_b` -> `destination`.
+- Required taps: tap `multi_switch_chain_zigzag_switch_a` at `0.21s` -> `e_multi_switch_chain_zigzag_switch_a_package` (0.45s window), tap `multi_switch_chain_zigzag_switch_b` at `1.52s` -> `e_multi_switch_chain_zigzag_switch_b_destination` (0.45s window).
+- Candidate selection: Accepted candidate had the highest deterministic quality score (0.9445 vs 0.9339). Scores min/avg/max `0.8424`/`0.8842`/`0.9445`.
+- Accepted candidate audit: family `multi_switch_chain`; variant `multi_switch_chain_zigzag`; tags `multi_switch`; primary `multi_switch`; topology `two_switch_order`; path `4`; orientation `horizontal`; Swift-required `False`; strategy `horizontal_route_progression`; variant `normal`; orientation reason `auto_horizontal`; diversity `topology None, mechanic penalty None, topology penalty None, score None`.
+- Near miss `not_selected` seed `4276223365` score `0.9339` family `fake_shortcut` variant `fake_shortcut_primary` tags `fake_shortcut, detour, package_gate, dead_end` primary `fake_shortcut` topology `detour_gate` path `6` orientation `horizontal` Swift-required `False` strategy `split_lane` variant `normal` orientation reason `auto_horizontal` diversity `topology None, mechanic penalty None, topology penalty None, score None`.
+- Near miss `not_selected` seed `2544271115` score `0.9306` family `package_gate` variant `package_gate_classic` tags `package_gate, multi_switch` primary `package_gate` topology `package_gate` path `4` orientation `horizontal` Swift-required `False` strategy `split_lane` variant `normal` orientation reason `auto_horizontal` diversity `topology None, mechanic penalty None, topology penalty None, score None`.
+- Near miss `not_selected` seed `2546519206` score `0.9291` family `split_path_rejoin` variant `split_path_rejoin_primary` tags `split_path, rejoin, multi_switch, package_gate` primary `split_path` topology `split_rejoin` path `6` orientation `horizontal` Swift-required `False` strategy `split_lane` variant `normal` orientation reason `auto_horizontal` diversity `topology None, mechanic penalty None, topology penalty None, score None`.
+- Switch `multi_switch_chain_zigzag_switch_a` starts on `e_multi_switch_chain_zigzag_switch_a_multi_switch_chain_zigzag_dead_end_a` (north); tap 1 @ 0.21s -> `e_multi_switch_chain_zigzag_switch_a_package` (east).
+- Switch `multi_switch_chain_zigzag_switch_b` starts on `e_multi_switch_chain_zigzag_switch_b_multi_switch_chain_zigzag_dead_end_b` (north); tap 1 @ 1.52s -> `e_multi_switch_chain_zigzag_switch_b_destination` (south).
+- Warning: tap_node_switch_context: Solution action 1 taps 2-way switch 'multi_switch_chain_zigzag_switch_a' with 2 option(s).
+- Warning: tap_node_switch_context: Solution action 2 taps 2-way switch 'multi_switch_chain_zigzag_switch_b' with 2 option(s).
+### `level_012`
+- Recipe: `package_gate` variant `package_gate_double_choice`; abstract signature `eafe5470a8e4`.
+- Mechanics: tags `package_gate, multi_switch`; primary `package_gate`; topology `package_gate`; required path length `5`; layout orientation `vertical` via `probability`; Swift-required `False`; unlock `none`; depends on `none`.
+- Diversity audit: topology None, mechanic penalty None, topology penalty None, score None.
+- Layout: `normal`; strategy: `vertical_split_lane`; orientation: `vertical`; road shapes: `auto` (score `0.91`).
+- Road-shape checks: 0 crossings, 0 required-path crossings, 0 long parallel segments.
+- Visual clarity: score `1.0`, 0 issue(s).
+- Abstract solution: 3 required taps, 0 alternate paths, 3 dead ends, 0 loops.
+- Difficulty model: estimated `expert`, mechanical `1.0`, visual `0.925`, campaign pacing `0.78`.
+- Score breakdown: mechanic `1.0`, runtime `1.0`, readability `0.9775`, switch clarity `1.0`, mobile comfort `1.0`, visual appeal `0.9286`.
+- Solution route: `start` -> `double_entry_switch` -> `package` -> `double_mid_switch` -> `double_finish_switch` -> `destination`.
+- Required taps: tap `double_entry_switch` at `0.10s` -> `e_double_entry_switch_package` (0.41s window), tap `double_mid_switch` at `1.75s` -> `e_double_mid_switch_double_finish_switch` (0.45s window), tap `double_finish_switch` at `2.48s` -> `e_double_finish_switch_destination` (0.45s window).
+- Candidate selection: Accepted candidate had the highest deterministic quality score (0.9439 vs 0.9428). Scores min/avg/max `0.8601`/`0.8931`/`0.9439`.
+- Accepted candidate audit: family `package_gate`; variant `package_gate_double_choice`; tags `package_gate, multi_switch`; primary `package_gate`; topology `package_gate`; path `5`; orientation `vertical`; Swift-required `False`; strategy `vertical_split_lane`; variant `normal`; orientation reason `probability`; diversity `topology None, mechanic penalty None, topology penalty None, score None`.
+- Near miss `not_selected` seed `68698072` score `0.9428` family `multi_switch_chain` variant `multi_switch_chain_split_dead_ends` tags `multi_switch` primary `multi_switch` topology `two_switch_order` path `5` orientation `horizontal` Swift-required `False` strategy `horizontal_route_progression` variant `normal` orientation reason `auto_horizontal` diversity `topology None, mechanic penalty None, topology penalty None, score None`.
+- Near miss `not_selected` seed `913266576` score `0.94` family `hub_choice` variant `hub_choice_primary` tags `hub, multi_switch, rejoin, dead_end` primary `hub` topology `hub_spoke` path `6` orientation `horizontal` Swift-required `False` strategy `hub_and_spoke` variant `mirrored` orientation reason `auto_horizontal` diversity `topology None, mechanic penalty None, topology penalty None, score None`.
+- Near miss `not_selected` seed `107085778` score `0.9267` family `split_path_rejoin` variant `split_path_rejoin_alternate` tags `split_path, rejoin, multi_switch, package_gate` primary `split_path` topology `split_rejoin` path `6` orientation `horizontal` Swift-required `False` strategy `split_lane` variant `wide` orientation reason `auto_horizontal` diversity `topology None, mechanic penalty None, topology penalty None, score None`.
+- Switch `double_entry_switch` starts on `e_double_entry_switch_double_bypass` (west); tap 1 @ 0.10s -> `e_double_entry_switch_package` (south).
+- Switch `double_mid_switch` starts on `e_double_mid_switch_double_dead_end_a` (west); tap 1 @ 1.75s -> `e_double_mid_switch_double_finish_switch` (south).
+- Switch `double_finish_switch` starts on `e_double_finish_switch_double_dead_end_b` (east); tap 1 @ 2.48s -> `e_double_finish_switch_destination` (south).
+- Warning: tap_node_switch_context: Solution action 1 taps 2-way switch 'double_entry_switch' with 2 option(s).
+- Warning: tap_node_switch_context: Solution action 2 taps 2-way switch 'double_mid_switch' with 2 option(s).
+- Warning: tap_node_switch_context: Solution action 3 taps 2-way switch 'double_finish_switch' with 2 option(s).
+### `level_013`
+- Recipe: `multi_switch_chain` variant `multi_switch_chain_split_dead_ends`; abstract signature `ca138ac6b54e`.
+- Mechanics: tags `multi_switch`; primary `multi_switch`; topology `two_switch_order`; required path length `5`; layout orientation `vertical` via `probability`; Swift-required `False`; unlock `none`; depends on `none`.
+- Diversity audit: topology None, mechanic penalty None, topology penalty None, score None.
+- Layout: `normal`; strategy: `vertical_route_progression`; orientation: `vertical`; road shapes: `auto` (score `0.95`).
+- Road-shape checks: 0 crossings, 0 required-path crossings, 0 long parallel segments.
+- Visual clarity: score `1.0`, 0 issue(s).
+- Abstract solution: 3 required taps, 0 alternate paths, 3 dead ends, 0 loops.
+- Difficulty model: estimated `expert`, mechanical `1.0`, visual `0.925`, campaign pacing `0.78`.
+- Score breakdown: mechanic `1.0`, runtime `1.0`, readability `0.9875`, switch clarity `1.0`, mobile comfort `1.0`, visual appeal `0.9331`.
+- Solution route: `start` -> `multi_switch_chain_split_dead_ends_switch_a` -> `package` -> `multi_switch_chain_split_dead_ends_switch_b` -> `multi_switch_chain_split_dead_ends_switch_c` -> `destination`.
+- Required taps: tap `multi_switch_chain_split_dead_ends_switch_a` at `0.10s` -> `e_multi_switch_chain_split_dead_ends_switch_a_package` (0.25s window), tap `multi_switch_chain_split_dead_ends_switch_b` at `1.30s` -> `e_multi_switch_chain_split_dead_ends_switch_b_multi_switch_chain_split_dead_ends_switch_c` (0.45s window), tap `multi_switch_chain_split_dead_ends_switch_c` at `1.70s` -> `e_multi_switch_chain_split_dead_ends_switch_c_destination` (0.45s window).
+- Candidate selection: Accepted candidate had the highest deterministic quality score (0.9431 vs 0.9370). Scores min/avg/max `0.8419`/`0.8874`/`0.9431`.
+- Accepted candidate audit: family `multi_switch_chain`; variant `multi_switch_chain_split_dead_ends`; tags `multi_switch`; primary `multi_switch`; topology `two_switch_order`; path `5`; orientation `vertical`; Swift-required `False`; strategy `vertical_route_progression`; variant `normal`; orientation reason `probability`; diversity `topology None, mechanic penalty None, topology penalty None, score None`.
+- Near miss `not_selected` seed `2773245142` score `0.937` family `fake_shortcut` variant `fake_shortcut_alternate` tags `fake_shortcut, detour, package_gate, dead_end` primary `fake_shortcut` topology `detour_gate` path `6` orientation `horizontal` Swift-required `False` strategy `split_lane` variant `normal` orientation reason `auto_horizontal` diversity `topology None, mechanic penalty None, topology penalty None, score None`.
+- Near miss `not_selected` seed `1011966194` score `0.9329` family `hub_choice` variant `hub_choice_primary` tags `hub, multi_switch, rejoin, dead_end` primary `hub` topology `hub_spoke` path `6` orientation `horizontal` Swift-required `False` strategy `hub_and_spoke` variant `wide` orientation reason `auto_horizontal` diversity `topology None, mechanic penalty None, topology penalty None, score None`.
+- Near miss `not_selected` seed `1890340416` score `0.9319` family `multi_switch_chain` variant `multi_switch_chain_split_dead_ends` tags `multi_switch` primary `multi_switch` topology `two_switch_order` path `4` orientation `horizontal` Swift-required `False` strategy `horizontal_route_progression` variant `normal` orientation reason `auto_horizontal` diversity `topology None, mechanic penalty None, topology penalty None, score None`.
+- Switch `multi_switch_chain_split_dead_ends_switch_a` starts on `e_multi_switch_chain_split_dead_ends_switch_a_multi_switch_chain_split_dead_ends_dead_end_a` (east); tap 1 @ 0.10s -> `e_multi_switch_chain_split_dead_ends_switch_a_package` (south).
+- Switch `multi_switch_chain_split_dead_ends_switch_b` starts on `e_multi_switch_chain_split_dead_ends_switch_b_multi_switch_chain_split_dead_ends_dead_end_b` (east); tap 1 @ 1.30s -> `e_multi_switch_chain_split_dead_ends_switch_b_multi_switch_chain_split_dead_ends_switch_c` (south).
+- Switch `multi_switch_chain_split_dead_ends_switch_c` starts on `e_multi_switch_chain_split_dead_ends_switch_c_multi_switch_chain_split_dead_ends_dead_end_c` (east); tap 1 @ 1.70s -> `e_multi_switch_chain_split_dead_ends_switch_c_destination` (south).
+- Warning: tap_node_switch_context: Solution action 1 taps 2-way switch 'multi_switch_chain_split_dead_ends_switch_a' with 2 option(s).
+- Warning: tap_node_switch_context: Solution action 2 taps 2-way switch 'multi_switch_chain_split_dead_ends_switch_b' with 2 option(s).
+- Warning: tap_node_switch_context: Solution action 3 taps 2-way switch 'multi_switch_chain_split_dead_ends_switch_c' with 2 option(s).
+### `level_014`
+- Recipe: `return_loop` variant `return_loop_classic`; abstract signature `dbdd8c292882`.
+- Mechanics: tags `loop, repeated_tap`; primary `loop`; topology `return_loop`; required path length `6`; layout orientation `horizontal` via `auto_horizontal`; Swift-required `False`; unlock `none`; depends on `none`.
+- Diversity audit: topology None, mechanic penalty None, topology penalty None, score None.
+- Layout: `normal`; strategy: `package_inside_loop`; orientation: `horizontal`; road shapes: `auto` (score `0.92`).
+- Road-shape checks: 0 crossings, 0 required-path crossings, 0 long parallel segments.
+- Visual clarity: score `0.92`, 1 issue(s).
+- Abstract solution: 3 required taps, 1 alternate paths, 1 dead ends, 9 loops.
+- Difficulty model: estimated `expert`, mechanical `1.0`, visual `0.72`, campaign pacing `0.78`.
+- Score breakdown: mechanic `1.0`, runtime `1.0`, readability `0.959`, switch clarity `1.0`, mobile comfort `1.0`, visual appeal `0.9456`.
+- Solution route: `start` -> `alpha_switch` -> `package` -> `beta_switch` -> `return_a` -> `alpha_switch` -> `destination`.
+- Required taps: tap `alpha_switch` at `1.36s` -> `e_alpha_switch_package` (0.45s window), tap `beta_switch` at `3.22s` -> `e_beta_switch_return_a` (0.45s window), tap `alpha_switch` at `4.46s` -> `e_alpha_switch_destination` (0.45s window).
+- Candidate selection: Accepted candidate had the highest deterministic quality score (0.9451 vs 0.9358). Scores min/avg/max `0.8043`/`0.8907`/`0.9451`.
+- Accepted candidate audit: family `return_loop`; variant `return_loop_classic`; tags `loop, repeated_tap`; primary `loop`; topology `return_loop`; path `6`; orientation `horizontal`; Swift-required `False`; strategy `package_inside_loop`; variant `normal`; orientation reason `auto_horizontal`; diversity `topology None, mechanic penalty None, topology penalty None, score None`.
+- Near miss `not_selected` seed `1950686652` score `0.9358` family `split_path_rejoin` variant `split_path_rejoin_primary` tags `split_path, rejoin, multi_switch, package_gate` primary `split_path` topology `split_rejoin` path `6` orientation `horizontal` Swift-required `False` strategy `split_lane` variant `mirrored` orientation reason `auto_horizontal` diversity `topology None, mechanic penalty None, topology penalty None, score None`.
+- Near miss `not_selected` seed `2867431418` score `0.9321` family `hub_choice` variant `hub_choice_alternate` tags `hub, multi_switch, rejoin, dead_end` primary `hub` topology `hub_spoke` path `6` orientation `horizontal` Swift-required `False` strategy `hub_and_spoke` variant `normal` orientation reason `auto_horizontal` diversity `topology None, mechanic penalty None, topology penalty None, score None`.
+- Near miss `not_selected` seed `1984526692` score `0.9316` family `long_detour_gate` variant `long_detour_gate_primary` tags `long_route, detour, package_gate` primary `long_route` topology `detour_gate` path `6` orientation `vertical` Swift-required `False` strategy `vertical_split_lane` variant `normal` orientation reason `probability` diversity `topology None, mechanic penalty None, topology penalty None, score None`.
+- Switch `alpha_switch` starts on `e_alpha_switch_destination` (south); tap 1 @ 1.36s -> `e_alpha_switch_package` (west), tap 2 @ 4.46s -> `e_alpha_switch_destination` (south).
+- Switch `beta_switch` starts on `e_beta_switch_dead_end_a` (west); tap 1 @ 3.22s -> `e_beta_switch_return_a` (east).
+- Warning: tap_node_switch_context: Solution action 1 taps 2-way switch 'alpha_switch' with 2 option(s).
+- Warning: tap_node_switch_context: Solution action 2 taps 2-way switch 'beta_switch' with 2 option(s).
+- Warning: tap_node_switch_context: Solution action 3 taps 2-way switch 'alpha_switch' with 2 option(s).
+- Warning: return_loop_visually_unclear: Return loop revisits switch 'alpha_switch', which can obscure the intended route flow.
+- Visual clarity warning: `return_loop_visually_unclear` node `alpha_switch` edge `None`.
+### `level_015`
+- Recipe: `fake_shortcut` variant `fake_shortcut_alternate`; abstract signature `272ee33d626c`.
+- Mechanics: tags `fake_shortcut, detour, package_gate, dead_end`; primary `fake_shortcut`; topology `detour_gate`; required path length `6`; layout orientation `vertical` via `probability`; Swift-required `False`; unlock `medium levels unlocked`; depends on `short_detour_gate`.
+- Diversity audit: topology None, mechanic penalty None, topology penalty None, score None.
+- Layout: `normal`; strategy: `vertical_split_lane`; orientation: `vertical`; road shapes: `auto` (score `0.97`).
+- Road-shape checks: 0 crossings, 0 required-path crossings, 0 long parallel segments.
+- Visual clarity: score `1.0`, 0 issue(s).
+- Abstract solution: 2 required taps, 0 alternate paths, 2 dead ends, 0 loops.
+- Difficulty model: estimated `expert`, mechanical `0.8034`, visual `0.845`, campaign pacing `0.78`.
+- Score breakdown: mechanic `0.95`, runtime `1.0`, readability `0.9925`, switch clarity `1.0`, mobile comfort `1.0`, visual appeal `0.9634`.
+- Solution route: `start` -> `choice` -> `detour_a` -> `package` -> `detour_b` -> `switch_b` -> `destination`.
+- Required taps: tap `choice` at `0.10s` -> `e_choice_detour_a` (0.36s window), tap `switch_b` at `2.13s` -> `e_switch_b_destination` (0.45s window).
+- Candidate selection: Accepted candidate had the highest deterministic quality score (0.9399 vs 0.9368). Scores min/avg/max `0.8043`/`0.8785`/`0.9399`.
+- Accepted candidate audit: family `fake_shortcut`; variant `fake_shortcut_alternate`; tags `fake_shortcut, detour, package_gate, dead_end`; primary `fake_shortcut`; topology `detour_gate`; path `6`; orientation `vertical`; Swift-required `False`; strategy `vertical_split_lane`; variant `normal`; orientation reason `probability`; diversity `topology None, mechanic penalty None, topology penalty None, score None`.
+- Near miss `not_selected` seed `2078712968` score `0.9368` family `long_detour_gate` variant `long_detour_gate_alternate` tags `long_route, detour, package_gate` primary `long_route` topology `detour_gate` path `6` orientation `horizontal` Swift-required `False` strategy `split_lane` variant `normal` orientation reason `auto_horizontal` diversity `topology None, mechanic penalty None, topology penalty None, score None`.
+- Near miss `not_selected` seed `2042624838` score `0.9326` family `hub_choice` variant `hub_choice_alternate` tags `hub, multi_switch, rejoin, dead_end` primary `hub` topology `hub_spoke` path `6` orientation `horizontal` Swift-required `False` strategy `hub_and_spoke` variant `mirrored` orientation reason `probability` diversity `topology None, mechanic penalty None, topology penalty None, score None`.
+- Near miss `not_selected` seed `315151607` score `0.9301` family `package_gate` variant `package_gate_crossing_avoidance` tags `package_gate, multi_switch` primary `package_gate` topology `package_gate` path `4` orientation `vertical` Swift-required `False` strategy `vertical_split_lane` variant `normal` orientation reason `probability` diversity `topology None, mechanic penalty None, topology penalty None, score None`.
+- Switch `choice` starts on `e_choice_shortcut_dead_end` (west); tap 1 @ 0.10s -> `e_choice_detour_a` (south).
+- Switch `switch_b` starts on `e_switch_b_dead_end_b` (west); tap 1 @ 2.13s -> `e_switch_b_destination` (south).
+- Warning: tap_node_switch_context: Solution action 1 taps 2-way switch 'choice' with 2 option(s).
+- Warning: tap_node_switch_context: Solution action 2 taps 2-way switch 'switch_b' with 2 option(s).
 ### `level_016`
-- Recipe: `return_loop` variant `return_loop_upper`; abstract signature `2bb3eb201ab5`.
-- Layout: `normal`; strategy: `package_inside_loop`; road shapes: `auto` (score `0.92`).
+- Recipe: `long_detour_gate` variant `long_detour_gate_primary`; abstract signature `a7e972e2527b`.
+- Mechanics: tags `long_route, detour, package_gate`; primary `long_route`; topology `detour_gate`; required path length `6`; layout orientation `horizontal` via `auto_horizontal`; Swift-required `False`; unlock `detours unlocked`; depends on `short_detour_gate`.
+- Diversity audit: topology None, mechanic penalty None, topology penalty None, score None.
+- Layout: `normal`; strategy: `split_lane`; orientation: `horizontal`; road shapes: `auto` (score `0.96`).
 - Road-shape checks: 0 crossings, 0 required-path crossings, 0 long parallel segments.
-- Visual clarity: score `0.92`, 1 issue(s).
-- Abstract solution: 3 required taps, 1 alternate paths, 1 dead ends, 9 loops.
-- Difficulty model: estimated `expert`, mechanical `1.0`, visual `0.78`, campaign pacing `0.78`.
-- Score breakdown: mechanic `1.0`, runtime `1.0`, readability `0.74`, switch clarity `1.0`, mobile comfort `1.0`, visual appeal `0.8365`.
-- Candidate selection: Accepted candidate had the highest deterministic quality score (0.8824 vs 0.8805). Scores min/avg/max `0.8705`/`0.8765`/`0.8824`.
-- Near miss `not_selected` seed `3209145944` score `0.8805`.
-- Near miss `not_selected` seed `3209163105` score `0.8725`.
-- Near miss `not_selected` seed `2468271434` score `0.8705`.
-- Switch `upper_alpha_switch` starts on `e_upper_alpha_switch_destination` (south); tap 1 @ 1.46s -> `e_upper_alpha_switch_package` (west), tap 2 @ 4.56s -> `e_upper_alpha_switch_destination` (south).
-- Switch `upper_beta_switch` starts on `e_upper_beta_switch_upper_dead_end` (south); tap 1 @ 3.32s -> `e_upper_beta_switch_upper_return` (east).
-- Warning: tap_node_switch_context: Solution action 1 taps 2-way switch 'upper_alpha_switch' with 2 option(s).
-- Warning: tap_node_switch_context: Solution action 2 taps 2-way switch 'upper_beta_switch' with 2 option(s).
-- Warning: tap_node_switch_context: Solution action 3 taps 2-way switch 'upper_alpha_switch' with 2 option(s).
-- Warning: return_loop_visually_unclear: Return loop revisits switch 'upper_alpha_switch', which can obscure the intended route flow.
-- Visual clarity warning: `return_loop_visually_unclear` node `upper_alpha_switch` edge `None`.
+- Visual clarity: score `1.0`, 0 issue(s).
+- Abstract solution: 2 required taps, 0 alternate paths, 2 dead ends, 0 loops.
+- Difficulty model: estimated `expert`, mechanical `0.7972`, visual `0.845`, campaign pacing `0.78`.
+- Score breakdown: mechanic `0.95`, runtime `1.0`, readability `0.99`, switch clarity `1.0`, mobile comfort `1.0`, visual appeal `0.9622`.
+- Solution route: `start` -> `switch_gate` -> `detour_a` -> `package` -> `rejoin` -> `switch_exit` -> `destination`.
+- Required taps: tap `switch_gate` at `0.10s` -> `e_switch_gate_detour_a` (0.25s window), tap `switch_exit` at `1.85s` -> `e_switch_exit_destination` (0.45s window).
+- Candidate selection: Accepted candidate had the highest deterministic quality score (0.9368 vs 0.9330). Scores min/avg/max `0.8448`/`0.8875`/`0.9368`.
+- Accepted candidate audit: family `long_detour_gate`; variant `long_detour_gate_primary`; tags `long_route, detour, package_gate`; primary `long_route`; topology `detour_gate`; path `6`; orientation `horizontal`; Swift-required `False`; strategy `split_lane`; variant `normal`; orientation reason `auto_horizontal`; diversity `topology None, mechanic penalty None, topology penalty None, score None`.
+- Near miss `not_selected` seed `413851226` score `0.933` family `hub_choice` variant `hub_choice_alternate` tags `hub, multi_switch, rejoin, dead_end` primary `hub` topology `hub_spoke` path `6` orientation `horizontal` Swift-required `False` strategy `hub_and_spoke` variant `mirrored` orientation reason `probability` diversity `topology None, mechanic penalty None, topology penalty None, score None`.
+- Near miss `not_selected` seed `452187449` score `0.9319` family `multi_switch_chain` variant `multi_switch_chain_split_dead_ends` tags `multi_switch` primary `multi_switch` topology `two_switch_order` path `4` orientation `horizontal` Swift-required `False` strategy `horizontal_route_progression` variant `normal` orientation reason `auto_horizontal` diversity `topology None, mechanic penalty None, topology penalty None, score None`.
+- Near miss `not_selected` seed `2139042042` score `0.9287` family `multi_switch_chain` variant `multi_switch_chain_stair_step` tags `multi_switch` primary `multi_switch` topology `two_switch_order` path `5` orientation `horizontal` Swift-required `False` strategy `horizontal_route_progression` variant `normal` orientation reason `auto_horizontal` diversity `topology None, mechanic penalty None, topology penalty None, score None`.
+- Switch `switch_gate` starts on `e_switch_gate_direct_dead_end` (north); tap 1 @ 0.10s -> `e_switch_gate_detour_a` (east).
+- Switch `switch_exit` starts on `e_switch_exit_dead_end_b` (north); tap 1 @ 1.85s -> `e_switch_exit_destination` (east).
+- Warning: tap_node_switch_context: Solution action 1 taps 2-way switch 'switch_gate' with 2 option(s).
+- Warning: tap_node_switch_context: Solution action 2 taps 2-way switch 'switch_exit' with 2 option(s).
 ### `level_017`
-- Recipe: `return_loop` variant `return_loop_classic`; abstract signature `b0a174910854`.
-- Layout: `mirrored`; strategy: `package_inside_loop`; road shapes: `auto` (score `0.92`).
+- Recipe: `hub_choice` variant `hub_choice_primary`; abstract signature `dfb1c2c162ce`.
+- Mechanics: tags `hub, multi_switch, rejoin, dead_end`; primary `hub`; topology `hub_spoke`; required path length `6`; layout orientation `horizontal` via `auto_horizontal`; Swift-required `False`; unlock `three-way switches unlocked`; depends on `multi_switch_order`.
+- Diversity audit: topology None, mechanic penalty None, topology penalty None, score None.
+- Layout: `mirrored`; strategy: `hub_and_spoke`; orientation: `horizontal`; road shapes: `auto` (score `0.91`).
 - Road-shape checks: 0 crossings, 0 required-path crossings, 0 long parallel segments.
-- Visual clarity: score `0.92`, 1 issue(s).
-- Abstract solution: 3 required taps, 1 alternate paths, 1 dead ends, 9 loops.
-- Difficulty model: estimated `expert`, mechanical `1.0`, visual `0.72`, campaign pacing `0.78`.
-- Score breakdown: mechanic `1.0`, runtime `1.0`, readability `0.959`, switch clarity `1.0`, mobile comfort `1.0`, visual appeal `0.9456`.
-- Candidate selection: Accepted candidate had the highest deterministic quality score (0.8805 vs 0.8731). Scores min/avg/max `0.8705`/`0.8747`/`0.8805`.
-- Near miss `not_selected` seed `639403788` score `0.8731`.
-- Near miss `not_selected` seed `639386494` score `0.8705`.
-- Switch `alpha_switch` starts on `e_alpha_switch_destination` (south); tap 1 @ 1.46s -> `e_alpha_switch_package` (east), tap 2 @ 4.56s -> `e_alpha_switch_destination` (south).
-- Switch `beta_switch` starts on `e_beta_switch_dead_end_a` (east); tap 1 @ 3.32s -> `e_beta_switch_return_a` (west).
-- Warning: tap_node_switch_context: Solution action 1 taps 2-way switch 'alpha_switch' with 2 option(s).
-- Warning: tap_node_switch_context: Solution action 2 taps 2-way switch 'beta_switch' with 2 option(s).
-- Warning: tap_node_switch_context: Solution action 3 taps 2-way switch 'alpha_switch' with 2 option(s).
-- Warning: return_loop_visually_unclear: Return loop revisits switch 'alpha_switch', which can obscure the intended route flow.
-- Visual clarity warning: `return_loop_visually_unclear` node `alpha_switch` edge `None`.
+- Visual clarity: score `1.0`, 0 issue(s).
+- Abstract solution: 2 required taps, 0 alternate paths, 2 dead ends, 0 loops.
+- Difficulty model: estimated `expert`, mechanical `0.9337`, visual `0.94`, campaign pacing `0.78`.
+- Score breakdown: mechanic `1.0`, runtime `1.0`, readability `0.9175`, switch clarity `1.0`, mobile comfort `1.0`, visual appeal `0.8964`.
+- Solution route: `start` -> `hub` -> `package_branch` -> `package` -> `rejoin` -> `switch_b` -> `destination`.
+- Required taps: tap `hub` at `0.10s` -> `e_hub_package_branch` (0.4s window), tap `switch_b` at `5.63s` -> `e_switch_b_destination` (0.45s window).
+- Candidate selection: Accepted candidate had the highest deterministic quality score (0.9321 vs 0.9306). Scores min/avg/max `0.8596`/`0.888`/`0.9321`.
+- Accepted candidate audit: family `hub_choice`; variant `hub_choice_primary`; tags `hub, multi_switch, rejoin, dead_end`; primary `hub`; topology `hub_spoke`; path `6`; orientation `horizontal`; Swift-required `False`; strategy `hub_and_spoke`; variant `mirrored`; orientation reason `auto_horizontal`; diversity `topology None, mechanic penalty None, topology penalty None, score None`.
+- Near miss `not_selected` seed `1348075501` score `0.9306` family `package_gate` variant `package_gate_left_entry` tags `package_gate, multi_switch` primary `package_gate` topology `package_gate` path `4` orientation `horizontal` Swift-required `False` strategy `split_lane` variant `normal` orientation reason `auto_horizontal` diversity `topology None, mechanic penalty None, topology penalty None, score None`.
+- Near miss `not_selected` seed `1388676976` score `0.9306` family `package_gate` variant `package_gate_crossing_avoidance` tags `package_gate, multi_switch` primary `package_gate` topology `package_gate` path `4` orientation `horizontal` Swift-required `False` strategy `split_lane` variant `normal` orientation reason `auto_horizontal` diversity `topology None, mechanic penalty None, topology penalty None, score None`.
+- Near miss `not_selected` seed `1352571683` score `0.9291` family `split_path_rejoin` variant `split_path_rejoin_alternate` tags `split_path, rejoin, multi_switch, package_gate` primary `split_path` topology `split_rejoin` path `6` orientation `horizontal` Swift-required `False` strategy `split_lane` variant `normal` orientation reason `auto_horizontal` diversity `topology None, mechanic penalty None, topology penalty None, score None`.
+- Switch `hub` starts on `e_hub_dead_end_a` (north); tap 1 @ 0.10s -> `e_hub_package_branch` (west).
+- Switch `switch_b` starts on `e_switch_b_dead_end_b` (south); tap 1 @ 5.63s -> `e_switch_b_destination` (west).
+- Warning: tap_node_switch_context: Solution action 1 taps 3-way switch 'hub' with 3 option(s).
+- Warning: tap_node_switch_context: Solution action 2 taps 2-way switch 'switch_b' with 2 option(s).
 ### `level_018`
-- Recipe: `return_loop` variant `return_loop_classic`; abstract signature `b0a174910854`.
-- Layout: `mirrored`; strategy: `package_inside_loop`; road shapes: `switch_clarity_optimized` (score `0.92`).
+- Recipe: `package_gate` variant `package_gate_classic`; abstract signature `3b27b36141d8`.
+- Mechanics: tags `package_gate, multi_switch`; primary `package_gate`; topology `package_gate`; required path length `4`; layout orientation `horizontal` via `auto_horizontal`; Swift-required `False`; unlock `none`; depends on `none`.
+- Diversity audit: topology None, mechanic penalty None, topology penalty None, score None.
+- Layout: `normal`; strategy: `split_lane`; orientation: `horizontal`; road shapes: `auto` (score `0.96`).
 - Road-shape checks: 0 crossings, 0 required-path crossings, 0 long parallel segments.
-- Visual clarity: score `0.92`, 1 issue(s).
-- Abstract solution: 3 required taps, 1 alternate paths, 1 dead ends, 9 loops.
-- Difficulty model: estimated `expert`, mechanical `1.0`, visual `0.72`, campaign pacing `0.78`.
-- Score breakdown: mechanic `1.0`, runtime `1.0`, readability `0.959`, switch clarity `1.0`, mobile comfort `1.0`, visual appeal `0.9456`.
-- Candidate selection: Accepted candidate had the highest deterministic quality score (0.8725 vs 0.8705). Scores min/avg/max `0.8705`/`0.8715`/`0.8725`.
-- Near miss `not_selected` seed `2364611632` score `0.8705`.
-- Switch `alpha_switch` starts on `e_alpha_switch_destination` (north); tap 1 @ 1.46s -> `e_alpha_switch_package` (west), tap 2 @ 4.56s -> `e_alpha_switch_destination` (north).
-- Switch `beta_switch` starts on `e_beta_switch_dead_end_a` (west); tap 1 @ 3.32s -> `e_beta_switch_return_a` (east).
-- Warning: tap_node_switch_context: Solution action 1 taps 2-way switch 'alpha_switch' with 2 option(s).
-- Warning: tap_node_switch_context: Solution action 2 taps 2-way switch 'beta_switch' with 2 option(s).
-- Warning: tap_node_switch_context: Solution action 3 taps 2-way switch 'alpha_switch' with 2 option(s).
-- Warning: return_loop_visually_unclear: Return loop revisits switch 'alpha_switch', which can obscure the intended route flow.
-- Visual clarity warning: `return_loop_visually_unclear` node `alpha_switch` edge `None`.
+- Visual clarity: score `1.0`, 0 issue(s).
+- Abstract solution: 2 required taps, 0 alternate paths, 2 dead ends, 0 loops.
+- Difficulty model: estimated `hard`, mechanical `0.7072`, visual `0.685`, campaign pacing `1.0`.
+- Score breakdown: mechanic `0.95`, runtime `1.0`, readability `0.99`, switch clarity `1.0`, mobile comfort `1.0`, visual appeal `0.9955`.
+- Solution route: `start` -> `approach_switch` -> `package` -> `finish_switch` -> `destination`.
+- Required taps: tap `approach_switch` at `0.10s` -> `e_approach_switch_package` (0.4s window), tap `finish_switch` at `1.70s` -> `e_finish_switch_destination` (0.45s window).
+- Candidate selection: Accepted candidate had the highest deterministic quality score (0.9306 vs 0.9301). Scores min/avg/max `0.8613`/`0.8864`/`0.9306`.
+- Accepted candidate audit: family `package_gate`; variant `package_gate_classic`; tags `package_gate, multi_switch`; primary `package_gate`; topology `package_gate`; path `4`; orientation `horizontal`; Swift-required `False`; strategy `split_lane`; variant `normal`; orientation reason `auto_horizontal`; diversity `topology None, mechanic penalty None, topology penalty None, score None`.
+- Near miss `not_selected` seed `3171965936` score `0.9301` family `multi_switch_chain` variant `multi_switch_chain_stair_step` tags `multi_switch` primary `multi_switch` topology `two_switch_order` path `4` orientation `horizontal` Swift-required `False` strategy `horizontal_route_progression` variant `normal` orientation reason `auto_horizontal` diversity `topology None, mechanic penalty None, topology penalty None, score None`.
+- Near miss `not_selected` seed `4014269187` score `0.9287` family `multi_switch_chain` variant `multi_switch_chain_stair_step` tags `multi_switch` primary `multi_switch` topology `two_switch_order` path `5` orientation `horizontal` Swift-required `False` strategy `horizontal_route_progression` variant `normal` orientation reason `auto_horizontal` diversity `topology None, mechanic penalty None, topology penalty None, score None`.
+- Near miss `not_selected` seed `4052622571` score `0.9268` family `split_path_rejoin` variant `split_path_rejoin_alternate` tags `split_path, rejoin, multi_switch, package_gate` primary `split_path` topology `split_rejoin` path `6` orientation `horizontal` Swift-required `False` strategy `split_lane` variant `normal` orientation reason `auto_horizontal` diversity `topology None, mechanic penalty None, topology penalty None, score None`.
+- Switch `approach_switch` starts on `e_approach_switch_bypass` (north); tap 1 @ 0.10s -> `e_approach_switch_package` (east).
+- Switch `finish_switch` starts on `e_finish_switch_dead_end_a` (north); tap 1 @ 1.70s -> `e_finish_switch_destination` (east).
+- Warning: tap_node_switch_context: Solution action 1 taps 2-way switch 'approach_switch' with 2 option(s).
+- Warning: tap_node_switch_context: Solution action 2 taps 2-way switch 'finish_switch' with 2 option(s).
 ### `level_019`
-- Recipe: `return_loop` variant `return_loop_lower`; abstract signature `c849c4630a7f`.
-- Layout: `normal`; strategy: `package_inside_loop`; road shapes: `auto` (score `0.92`).
+- Recipe: `package_gate` variant `package_gate_crossing_avoidance`; abstract signature `57a53734d024`.
+- Mechanics: tags `package_gate, multi_switch`; primary `package_gate`; topology `package_gate`; required path length `4`; layout orientation `horizontal` via `auto_horizontal`; Swift-required `False`; unlock `none`; depends on `none`.
+- Diversity audit: topology None, mechanic penalty None, topology penalty None, score None.
+- Layout: `normal`; strategy: `split_lane`; orientation: `horizontal`; road shapes: `auto` (score `0.96`).
+- Road-shape checks: 0 crossings, 0 required-path crossings, 0 long parallel segments.
+- Visual clarity: score `1.0`, 0 issue(s).
+- Abstract solution: 2 required taps, 0 alternate paths, 2 dead ends, 0 loops.
+- Difficulty model: estimated `hard`, mechanical `0.7072`, visual `0.685`, campaign pacing `1.0`.
+- Score breakdown: mechanic `0.95`, runtime `1.0`, readability `0.99`, switch clarity `1.0`, mobile comfort `1.0`, visual appeal `0.9955`.
+- Solution route: `start` -> `short_entry_switch` -> `package` -> `short_finish_switch` -> `destination`.
+- Required taps: tap `short_entry_switch` at `0.10s` -> `e_short_entry_switch_package` (0.4s window), tap `short_finish_switch` at `1.70s` -> `e_short_finish_switch_destination` (0.45s window).
+- Candidate selection: Accepted candidate had the highest deterministic quality score (0.9306 vs 0.9301). Scores min/avg/max `0.8613`/`0.8872`/`0.9306`.
+- Accepted candidate audit: family `package_gate`; variant `package_gate_crossing_avoidance`; tags `package_gate, multi_switch`; primary `package_gate`; topology `package_gate`; path `4`; orientation `horizontal`; Swift-required `False`; strategy `split_lane`; variant `normal`; orientation reason `auto_horizontal`; diversity `topology None, mechanic penalty None, topology penalty None, score None`.
+- Near miss `not_selected` seed `4142312665` score `0.9301` family `multi_switch_chain` variant `multi_switch_chain_stair_step` tags `multi_switch` primary `multi_switch` topology `two_switch_order` path `4` orientation `horizontal` Swift-required `False` strategy `horizontal_route_progression` variant `normal` orientation reason `auto_horizontal` diversity `topology None, mechanic penalty None, topology penalty None, score None`.
+- Near miss `not_selected` seed `2383264648` score `0.9297` family `split_path_rejoin` variant `split_path_rejoin_alternate` tags `split_path, rejoin, multi_switch, package_gate` primary `split_path` topology `split_rejoin` path `6` orientation `horizontal` Swift-required `False` strategy `split_lane` variant `mirrored` orientation reason `probability` diversity `topology None, mechanic penalty None, topology penalty None, score None`.
+- Near miss `not_selected` seed `3268400303` score `0.9287` family `multi_switch_chain` variant `multi_switch_chain_stair_step` tags `multi_switch` primary `multi_switch` topology `two_switch_order` path `5` orientation `horizontal` Swift-required `False` strategy `horizontal_route_progression` variant `normal` orientation reason `auto_horizontal` diversity `topology None, mechanic penalty None, topology penalty None, score None`.
+- Switch `short_entry_switch` starts on `e_short_entry_switch_short_bypass` (north); tap 1 @ 0.10s -> `e_short_entry_switch_package` (east).
+- Switch `short_finish_switch` starts on `e_short_finish_switch_short_dead_end` (north); tap 1 @ 1.70s -> `e_short_finish_switch_destination` (east).
+- Warning: tap_node_switch_context: Solution action 1 taps 2-way switch 'short_entry_switch' with 2 option(s).
+- Warning: tap_node_switch_context: Solution action 2 taps 2-way switch 'short_finish_switch' with 2 option(s).
+### `level_020`
+- Recipe: `package_gate` variant `package_gate_right_entry`; abstract signature `3c810f526715`.
+- Mechanics: tags `package_gate, multi_switch`; primary `package_gate`; topology `package_gate`; required path length `4`; layout orientation `vertical` via `probability`; Swift-required `False`; unlock `none`; depends on `none`.
+- Diversity audit: topology None, mechanic penalty None, topology penalty None, score None.
+- Layout: `normal`; strategy: `vertical_split_lane`; orientation: `vertical`; road shapes: `auto` (score `0.95`).
+- Road-shape checks: 0 crossings, 0 required-path crossings, 0 long parallel segments.
+- Visual clarity: score `1.0`, 0 issue(s).
+- Abstract solution: 2 required taps, 0 alternate paths, 2 dead ends, 0 loops.
+- Difficulty model: estimated `hard`, mechanical `0.7134`, visual `0.685`, campaign pacing `1.0`.
+- Score breakdown: mechanic `0.95`, runtime `1.0`, readability `0.9875`, switch clarity `1.0`, mobile comfort `1.0`, visual appeal `0.9944`.
+- Solution route: `start` -> `right_entry_switch` -> `package` -> `right_finish_switch` -> `destination`.
+- Required taps: tap `right_entry_switch` at `0.16s` -> `e_right_entry_switch_package` (0.45s window), tap `right_finish_switch` at `2.05s` -> `e_right_finish_switch_destination` (0.45s window).
+- Candidate selection: Accepted candidate had the highest deterministic quality score (0.9301 vs 0.9267). Scores min/avg/max `0.8601`/`0.8846`/`0.9301`.
+- Accepted candidate audit: family `package_gate`; variant `package_gate_right_entry`; tags `package_gate, multi_switch`; primary `package_gate`; topology `package_gate`; path `4`; orientation `vertical`; Swift-required `False`; strategy `vertical_split_lane`; variant `normal`; orientation reason `probability`; diversity `topology None, mechanic penalty None, topology penalty None, score None`.
+- Near miss `not_selected` seed `2690089788` score `0.9267` family `split_path_rejoin` variant `split_path_rejoin_primary` tags `split_path, rejoin, multi_switch, package_gate` primary `split_path` topology `split_rejoin` path `6` orientation `horizontal` Swift-required `False` strategy `split_lane` variant `wide` orientation reason `auto_horizontal` diversity `topology None, mechanic penalty None, topology penalty None, score None`.
+- Near miss `not_selected` seed `967112741` score `0.8964` family `multi_switch_order` variant `multi_switch_order_alternate` tags `multi_switch, switch_order` primary `multi_switch` topology `two_switch_order` path `4` orientation `horizontal` Swift-required `False` strategy `horizontal_route_progression` variant `mirrored` orientation reason `auto_horizontal` diversity `topology None, mechanic penalty None, topology penalty None, score None`.
+- Near miss `not_selected` seed `2726160759` score `0.8956` family `package_gate_double_choice` variant `package_gate_double_choice_primary` tags `package_gate, multi_switch, two_switch` primary `package_gate` topology `package_gate` path `4` orientation `vertical` Swift-required `False` strategy `vertical_split_lane` variant `normal` orientation reason `probability` diversity `topology None, mechanic penalty None, topology penalty None, score None`.
+- Switch `right_entry_switch` starts on `e_right_entry_switch_right_bypass` (west); tap 1 @ 0.16s -> `e_right_entry_switch_package` (south).
+- Switch `right_finish_switch` starts on `e_right_finish_switch_right_dead_end` (west); tap 1 @ 2.05s -> `e_right_finish_switch_destination` (south).
+- Warning: tap_node_switch_context: Solution action 1 taps 2-way switch 'right_entry_switch' with 2 option(s).
+- Warning: tap_node_switch_context: Solution action 2 taps 2-way switch 'right_finish_switch' with 2 option(s).
+### `level_021`
+- Recipe: `split_path_rejoin` variant `split_path_rejoin_alternate`; abstract signature `69ecb09ffb94`.
+- Mechanics: tags `split_path, rejoin, multi_switch, package_gate`; primary `split_path`; topology `split_rejoin`; required path length `6`; layout orientation `horizontal` via `probability`; Swift-required `False`; unlock `medium levels unlocked`; depends on `two_switch_order_intro`.
+- Diversity audit: topology None, mechanic penalty None, topology penalty None, score None.
+- Layout: `mirrored`; strategy: `split_lane`; orientation: `horizontal`; road shapes: `auto` (score `0.91`).
+- Vertical candidate rejected: `layout_node_too_close_to_edge`.
+- Road-shape checks: 0 crossings, 0 required-path crossings, 0 long parallel segments.
+- Visual clarity: score `1.0`, 0 issue(s).
+- Abstract solution: 2 required taps, 0 alternate paths, 1 dead ends, 0 loops.
+- Difficulty model: estimated `expert`, mechanical `0.8766`, visual `0.88`, campaign pacing `0.78`.
+- Score breakdown: mechanic `0.96`, runtime `1.0`, readability `0.9775`, switch clarity `1.0`, mobile comfort `1.0`, visual appeal `0.9444`.
+- Solution route: `start` -> `switch_a` -> `upper_branch` -> `package` -> `rejoin` -> `switch_b` -> `destination`.
+- Required taps: tap `switch_a` at `0.10s` -> `e_switch_a_upper_branch` (0.4s window), tap `switch_b` at `4.55s` -> `e_switch_b_destination` (0.45s window).
+- Candidate selection: Accepted candidate had the highest deterministic quality score (0.9297 vs 0.9287). Scores min/avg/max `0.8613`/`0.889`/`0.9297`.
+- Accepted candidate audit: family `split_path_rejoin`; variant `split_path_rejoin_alternate`; tags `split_path, rejoin, multi_switch, package_gate`; primary `split_path`; topology `split_rejoin`; path `6`; orientation `horizontal`; Swift-required `False`; strategy `split_lane`; variant `mirrored`; orientation reason `probability`; diversity `topology None, mechanic penalty None, topology penalty None, score None`.
+- Near miss `not_selected` seed `221226696` score `0.9287` family `multi_switch_chain` variant `multi_switch_chain_stair_step` tags `multi_switch` primary `multi_switch` topology `two_switch_order` path `5` orientation `horizontal` Swift-required `False` strategy `horizontal_route_progression` variant `normal` orientation reason `auto_horizontal` diversity `topology None, mechanic penalty None, topology penalty None, score None`.
+- Near miss `not_selected` seed `2820347035` score `0.9193` family `multi_switch_chain` variant `multi_switch_chain_split_dead_ends` tags `multi_switch` primary `multi_switch` topology `two_switch_order` path `4` orientation `horizontal` Swift-required `False` strategy `horizontal_route_progression` variant `normal` orientation reason `auto_horizontal` diversity `topology None, mechanic penalty None, topology penalty None, score None`.
+- Near miss `not_selected` seed `3633306427` score `0.8984` family `return_loop_intro` variant `return_loop_intro_primary` tags `loop, repeated_tap, multi_switch, return_loop` primary `loop` topology `two_switch_order` path `4` orientation `horizontal` Swift-required `False` strategy `package_inside_loop` variant `mirrored` orientation reason `auto_horizontal` diversity `topology None, mechanic penalty None, topology penalty None, score None`.
+- Switch `switch_a` starts on `e_switch_a_lower_shortcut` (south); tap 1 @ 0.10s -> `e_switch_a_upper_branch` (west).
+- Switch `switch_b` starts on `e_switch_b_dead_end_b` (east); tap 1 @ 4.55s -> `e_switch_b_destination` (west).
+- Warning: tap_node_switch_context: Solution action 1 taps 2-way switch 'switch_a' with 2 option(s).
+- Warning: tap_node_switch_context: Solution action 2 taps 2-way switch 'switch_b' with 2 option(s).
+### `level_022`
+- Recipe: `multi_switch_chain` variant `multi_switch_chain_split_dead_ends`; abstract signature `fdb260710cad`.
+- Mechanics: tags `multi_switch`; primary `multi_switch`; topology `two_switch_order`; required path length `4`; layout orientation `horizontal` via `auto_horizontal`; Swift-required `False`; unlock `none`; depends on `none`.
+- Diversity audit: topology None, mechanic penalty None, topology penalty None, score None.
+- Layout: `normal`; strategy: `horizontal_route_progression`; orientation: `horizontal`; road shapes: `auto` (score `0.96`).
+- Road-shape checks: 0 crossings, 0 required-path crossings, 0 long parallel segments.
+- Visual clarity: score `1.0`, 0 issue(s).
+- Abstract solution: 2 required taps, 0 alternate paths, 2 dead ends, 0 loops.
+- Difficulty model: estimated `hard`, mechanical `0.7127`, visual `0.685`, campaign pacing `1.0`.
+- Score breakdown: mechanic `0.95`, runtime `1.0`, readability `0.99`, switch clarity `1.0`, mobile comfort `1.0`, visual appeal `0.9955`.
+- Solution route: `start` -> `multi_switch_chain_split_dead_ends_switch_a` -> `package` -> `multi_switch_chain_split_dead_ends_switch_b` -> `destination`.
+- Required taps: tap `multi_switch_chain_split_dead_ends_switch_a` at `0.10s` -> `e_multi_switch_chain_split_dead_ends_switch_a_package` (0.4s window), tap `multi_switch_chain_split_dead_ends_switch_b` at `1.70s` -> `e_multi_switch_chain_split_dead_ends_switch_b_destination` (0.45s window).
+- Candidate selection: Accepted candidate had the highest deterministic quality score (0.9319 vs 0.8967). Scores min/avg/max `0.8605`/`0.8841`/`0.9319`.
+- Accepted candidate audit: family `multi_switch_chain`; variant `multi_switch_chain_split_dead_ends`; tags `multi_switch`; primary `multi_switch`; topology `two_switch_order`; path `4`; orientation `horizontal`; Swift-required `False`; strategy `horizontal_route_progression`; variant `normal`; orientation reason `auto_horizontal`; diversity `topology None, mechanic penalty None, topology penalty None, score None`.
+- Near miss `not_selected` seed `3722996521` score `0.8967` family `multi_switch_order` variant `multi_switch_order_primary` tags `multi_switch, switch_order` primary `multi_switch` topology `two_switch_order` path `4` orientation `horizontal` Swift-required `False` strategy `horizontal_route_progression` variant `mirrored` orientation reason `auto_horizontal` diversity `topology None, mechanic penalty None, topology penalty None, score None`.
+- Near miss `not_selected` seed `3725227451` score `0.8956` family `package_gate_double_choice` variant `package_gate_double_choice_primary` tags `package_gate, multi_switch, two_switch` primary `package_gate` topology `package_gate` path `4` orientation `vertical` Swift-required `False` strategy `vertical_split_lane` variant `normal` orientation reason `probability` diversity `topology None, mechanic penalty None, topology penalty None, score None`.
+- Near miss `not_selected` seed `2002267565` score `0.8908` family `return_loop_intro` variant `return_loop_intro_primary` tags `loop, repeated_tap, multi_switch, return_loop` primary `loop` topology `two_switch_order` path `4` orientation `horizontal` Swift-required `False` strategy `package_inside_loop` variant `normal` orientation reason `auto_horizontal` diversity `topology None, mechanic penalty None, topology penalty None, score None`.
+- Switch `multi_switch_chain_split_dead_ends_switch_a` starts on `e_multi_switch_chain_split_dead_ends_switch_a_multi_switch_chain_split_dead_ends_dead_end_a` (north); tap 1 @ 0.10s -> `e_multi_switch_chain_split_dead_ends_switch_a_package` (east).
+- Switch `multi_switch_chain_split_dead_ends_switch_b` starts on `e_multi_switch_chain_split_dead_ends_switch_b_multi_switch_chain_split_dead_ends_dead_end_b` (north); tap 1 @ 1.70s -> `e_multi_switch_chain_split_dead_ends_switch_b_destination` (south).
+- Warning: tap_node_switch_context: Solution action 1 taps 2-way switch 'multi_switch_chain_split_dead_ends_switch_a' with 2 option(s).
+- Warning: tap_node_switch_context: Solution action 2 taps 2-way switch 'multi_switch_chain_split_dead_ends_switch_b' with 2 option(s).
+### `level_023`
+- Recipe: `multi_switch_chain` variant `multi_switch_chain_stair_step`; abstract signature `3e33cae20cca`.
+- Mechanics: tags `multi_switch`; primary `multi_switch`; topology `two_switch_order`; required path length `5`; layout orientation `horizontal` via `auto_horizontal`; Swift-required `False`; unlock `none`; depends on `none`.
+- Diversity audit: topology None, mechanic penalty None, topology penalty None, score None.
+- Layout: `mirrored`; strategy: `horizontal_route_progression`; orientation: `horizontal`; road shapes: `auto` (score `0.95`).
+- Road-shape checks: 0 crossings, 0 required-path crossings, 0 long parallel segments.
+- Visual clarity: score `1.0`, 0 issue(s).
+- Abstract solution: 3 required taps, 0 alternate paths, 3 dead ends, 0 loops.
+- Difficulty model: estimated `expert`, mechanical `1.0`, visual `0.925`, campaign pacing `0.78`.
+- Score breakdown: mechanic `1.0`, runtime `1.0`, readability `0.9875`, switch clarity `1.0`, mobile comfort `1.0`, visual appeal `0.9331`.
+- Solution route: `start` -> `multi_switch_chain_stair_step_switch_a` -> `package` -> `multi_switch_chain_stair_step_switch_b` -> `multi_switch_chain_stair_step_switch_c` -> `destination`.
+- Required taps: tap `multi_switch_chain_stair_step_switch_a` at `0.11s` -> `e_multi_switch_chain_stair_step_switch_a_package` (0.45s window), tap `multi_switch_chain_stair_step_switch_b` at `1.22s` -> `e_multi_switch_chain_stair_step_switch_b_multi_switch_chain_stair_step_switch_c` (0.45s window), tap `multi_switch_chain_stair_step_switch_c` at `1.94s` -> `e_multi_switch_chain_stair_step_switch_c_destination` (0.45s window).
+- Candidate selection: Accepted candidate had the highest deterministic quality score (0.9271 vs 0.9262). Scores min/avg/max `0.8596`/`0.8807`/`0.9271`.
+- Accepted candidate audit: family `multi_switch_chain`; variant `multi_switch_chain_stair_step`; tags `multi_switch`; primary `multi_switch`; topology `two_switch_order`; path `5`; orientation `horizontal`; Swift-required `False`; strategy `horizontal_route_progression`; variant `mirrored`; orientation reason `auto_horizontal`; diversity `topology None, mechanic penalty None, topology penalty None, score None`.
+- Near miss `not_selected` seed `2974862385` score `0.9262` family `package_gate` variant `package_gate_long_gate` tags `package_gate, multi_switch` primary `package_gate` topology `package_gate` path `5` orientation `vertical` Swift-required `False` strategy `vertical_split_lane` variant `normal` orientation reason `probability` diversity `topology None, mechanic penalty None, topology penalty None, score None`.
+- Near miss `not_selected` seed `371263025` score `0.898` family `return_loop_intro` variant `return_loop_intro_primary` tags `loop, repeated_tap, multi_switch, return_loop` primary `loop` topology `two_switch_order` path `4` orientation `horizontal` Swift-required `False` strategy `package_inside_loop` variant `mirrored` orientation reason `auto_horizontal` diversity `topology None, mechanic penalty None, topology penalty None, score None`.
+- Near miss `not_selected` seed `2096471002` score `0.8899` family `multi_switch_order` variant `multi_switch_order_alternate` tags `multi_switch, switch_order` primary `multi_switch` topology `two_switch_order` path `4` orientation `horizontal` Swift-required `False` strategy `horizontal_route_progression` variant `mirrored` orientation reason `auto_horizontal` diversity `topology None, mechanic penalty None, topology penalty None, score None`.
+- Switch `multi_switch_chain_stair_step_switch_a` starts on `e_multi_switch_chain_stair_step_switch_a_multi_switch_chain_stair_step_dead_end_a` (north); tap 1 @ 0.11s -> `e_multi_switch_chain_stair_step_switch_a_package` (west).
+- Switch `multi_switch_chain_stair_step_switch_b` starts on `e_multi_switch_chain_stair_step_switch_b_multi_switch_chain_stair_step_dead_end_b` (north); tap 1 @ 1.22s -> `e_multi_switch_chain_stair_step_switch_b_multi_switch_chain_stair_step_switch_c` (south).
+- Switch `multi_switch_chain_stair_step_switch_c` starts on `e_multi_switch_chain_stair_step_switch_c_multi_switch_chain_stair_step_dead_end_c` (north); tap 1 @ 1.94s -> `e_multi_switch_chain_stair_step_switch_c_destination` (west).
+- Warning: tap_node_switch_context: Solution action 1 taps 2-way switch 'multi_switch_chain_stair_step_switch_a' with 2 option(s).
+- Warning: tap_node_switch_context: Solution action 2 taps 2-way switch 'multi_switch_chain_stair_step_switch_b' with 2 option(s).
+- Warning: tap_node_switch_context: Solution action 3 taps 2-way switch 'multi_switch_chain_stair_step_switch_c' with 2 option(s).
+### `level_024`
+- Recipe: `multi_switch_chain` variant `multi_switch_chain_zigzag`; abstract signature `f837dc33eb83`.
+- Mechanics: tags `multi_switch`; primary `multi_switch`; topology `two_switch_order`; required path length `5`; layout orientation `horizontal` via `auto_horizontal`; Swift-required `False`; unlock `none`; depends on `none`.
+- Diversity audit: topology None, mechanic penalty None, topology penalty None, score None.
+- Layout: `normal`; strategy: `horizontal_route_progression`; orientation: `horizontal`; road shapes: `auto` (score `0.95`).
+- Road-shape checks: 0 crossings, 0 required-path crossings, 0 long parallel segments.
+- Visual clarity: score `1.0`, 0 issue(s).
+- Abstract solution: 3 required taps, 0 alternate paths, 3 dead ends, 0 loops.
+- Difficulty model: estimated `expert`, mechanical `1.0`, visual `0.925`, campaign pacing `0.4`.
+- Score breakdown: mechanic `1.0`, runtime `1.0`, readability `0.9875`, switch clarity `1.0`, mobile comfort `1.0`, visual appeal `0.9331`.
+- Solution route: `start` -> `multi_switch_chain_zigzag_switch_a` -> `package` -> `multi_switch_chain_zigzag_switch_b` -> `multi_switch_chain_zigzag_switch_c` -> `destination`.
+- Required taps: tap `multi_switch_chain_zigzag_switch_a` at `0.11s` -> `e_multi_switch_chain_zigzag_switch_a_package` (0.45s window), tap `multi_switch_chain_zigzag_switch_b` at `1.22s` -> `e_multi_switch_chain_zigzag_switch_b_multi_switch_chain_zigzag_switch_c` (0.45s window), tap `multi_switch_chain_zigzag_switch_c` at `1.94s` -> `e_multi_switch_chain_zigzag_switch_c_destination` (0.45s window).
+- Candidate selection: Accepted candidate had the highest deterministic quality score (0.9021 vs 0.8908). Scores min/avg/max `0.8613`/`0.878`/`0.9021`.
+- Accepted candidate audit: family `multi_switch_chain`; variant `multi_switch_chain_zigzag`; tags `multi_switch`; primary `multi_switch`; topology `two_switch_order`; path `5`; orientation `horizontal`; Swift-required `False`; strategy `horizontal_route_progression`; variant `normal`; orientation reason `auto_horizontal`; diversity `topology None, mechanic penalty None, topology penalty None, score None`.
+- Near miss `not_selected` seed `465432140` score `0.8908` family `return_loop_intro` variant `return_loop_intro_primary` tags `loop, repeated_tap, multi_switch, return_loop` primary `loop` topology `two_switch_order` path `4` orientation `horizontal` Swift-required `False` strategy `package_inside_loop` variant `normal` orientation reason `auto_horizontal` diversity `topology None, mechanic penalty None, topology penalty None, score None`.
+- Near miss `not_selected` seed `3032943368` score `0.8898` family `package_gate_double_choice` variant `package_gate_double_choice_alternate` tags `package_gate, multi_switch, two_switch` primary `package_gate` topology `package_gate` path `4` orientation `horizontal` Swift-required `False` strategy `split_lane` variant `normal` orientation reason `auto_horizontal` diversity `topology None, mechanic penalty None, topology penalty None, score None`.
+- Near miss `not_selected` seed `460953119` score `0.8893` family `multi_switch_order` variant `multi_switch_order_alternate` tags `multi_switch, switch_order` primary `multi_switch` topology `two_switch_order` path `4` orientation `horizontal` Swift-required `False` strategy `horizontal_route_progression` variant `mirrored` orientation reason `auto_horizontal` diversity `topology None, mechanic penalty None, topology penalty None, score None`.
+- Switch `multi_switch_chain_zigzag_switch_a` starts on `e_multi_switch_chain_zigzag_switch_a_multi_switch_chain_zigzag_dead_end_a` (north); tap 1 @ 0.11s -> `e_multi_switch_chain_zigzag_switch_a_package` (east).
+- Switch `multi_switch_chain_zigzag_switch_b` starts on `e_multi_switch_chain_zigzag_switch_b_multi_switch_chain_zigzag_dead_end_b` (north); tap 1 @ 1.22s -> `e_multi_switch_chain_zigzag_switch_b_multi_switch_chain_zigzag_switch_c` (south).
+- Switch `multi_switch_chain_zigzag_switch_c` starts on `e_multi_switch_chain_zigzag_switch_c_multi_switch_chain_zigzag_dead_end_c` (north); tap 1 @ 1.94s -> `e_multi_switch_chain_zigzag_switch_c_destination` (east).
+- Warning: tap_node_switch_context: Solution action 1 taps 2-way switch 'multi_switch_chain_zigzag_switch_a' with 2 option(s).
+- Warning: tap_node_switch_context: Solution action 2 taps 2-way switch 'multi_switch_chain_zigzag_switch_b' with 2 option(s).
+- Warning: tap_node_switch_context: Solution action 3 taps 2-way switch 'multi_switch_chain_zigzag_switch_c' with 2 option(s).
+### `level_025`
+- Recipe: `multi_switch_chain` variant `multi_switch_chain_stair_step`; abstract signature `ad87feb62b70`.
+- Mechanics: tags `multi_switch`; primary `multi_switch`; topology `two_switch_order`; required path length `4`; layout orientation `horizontal` via `auto_horizontal`; Swift-required `False`; unlock `none`; depends on `none`.
+- Diversity audit: topology None, mechanic penalty None, topology penalty None, score None.
+- Layout: `normal`; strategy: `horizontal_route_progression`; orientation: `horizontal`; road shapes: `auto` (score `0.95`).
+- Road-shape checks: 0 crossings, 0 required-path crossings, 0 long parallel segments.
+- Visual clarity: score `1.0`, 0 issue(s).
+- Abstract solution: 2 required taps, 0 alternate paths, 2 dead ends, 0 loops.
+- Difficulty model: estimated `hard`, mechanical `0.7127`, visual `0.685`, campaign pacing `1.0`.
+- Score breakdown: mechanic `0.95`, runtime `1.0`, readability `0.9875`, switch clarity `1.0`, mobile comfort `1.0`, visual appeal `0.9944`.
+- Solution route: `start` -> `multi_switch_chain_stair_step_switch_a` -> `package` -> `multi_switch_chain_stair_step_switch_b` -> `destination`.
+- Required taps: tap `multi_switch_chain_stair_step_switch_a` at `0.21s` -> `e_multi_switch_chain_stair_step_switch_a_package` (0.45s window), tap `multi_switch_chain_stair_step_switch_b` at `1.52s` -> `e_multi_switch_chain_stair_step_switch_b_destination` (0.45s window).
+- Candidate selection: Accepted candidate had the highest deterministic quality score (0.9301 vs 0.8964). Scores min/avg/max `0.8613`/`0.8831`/`0.9301`.
+- Accepted candidate audit: family `multi_switch_chain`; variant `multi_switch_chain_stair_step`; tags `multi_switch`; primary `multi_switch`; topology `two_switch_order`; path `4`; orientation `horizontal`; Swift-required `False`; strategy `horizontal_route_progression`; variant `normal`; orientation reason `auto_horizontal`; diversity `topology None, mechanic penalty None, topology penalty None, score None`.
+- Near miss `not_selected` seed `1399690737` score `0.8964` family `multi_switch_order` variant `multi_switch_order_primary` tags `multi_switch, switch_order` primary `multi_switch` topology `two_switch_order` path `4` orientation `horizontal` Swift-required `False` strategy `horizontal_route_progression` variant `mirrored` orientation reason `auto_horizontal` diversity `topology None, mechanic penalty None, topology penalty None, score None`.
+- Near miss `not_selected` seed `3129377735` score `0.8908` family `return_loop_intro` variant `return_loop_intro_primary` tags `loop, repeated_tap, multi_switch, return_loop` primary `loop` topology `two_switch_order` path `4` orientation `horizontal` Swift-required `False` strategy `package_inside_loop` variant `normal` orientation reason `auto_horizontal` diversity `topology None, mechanic penalty None, topology penalty None, score None`.
+- Near miss `not_selected` seed `555122234` score `0.8898` family `package_gate_double_choice` variant `package_gate_double_choice_primary` tags `package_gate, multi_switch, two_switch` primary `package_gate` topology `package_gate` path `4` orientation `horizontal` Swift-required `False` strategy `split_lane` variant `normal` orientation reason `auto_horizontal` diversity `topology None, mechanic penalty None, topology penalty None, score None`.
+- Switch `multi_switch_chain_stair_step_switch_a` starts on `e_multi_switch_chain_stair_step_switch_a_multi_switch_chain_stair_step_dead_end_a` (north); tap 1 @ 0.21s -> `e_multi_switch_chain_stair_step_switch_a_package` (east).
+- Switch `multi_switch_chain_stair_step_switch_b` starts on `e_multi_switch_chain_stair_step_switch_b_multi_switch_chain_stair_step_dead_end_b` (north); tap 1 @ 1.52s -> `e_multi_switch_chain_stair_step_switch_b_destination` (south).
+- Warning: tap_node_switch_context: Solution action 1 taps 2-way switch 'multi_switch_chain_stair_step_switch_a' with 2 option(s).
+- Warning: tap_node_switch_context: Solution action 2 taps 2-way switch 'multi_switch_chain_stair_step_switch_b' with 2 option(s).
+### `level_026`
+- Recipe: `ring_route` variant `ring_route_clockwise`; abstract signature `37b8bd1030d1`.
+- Mechanics: tags `ring, package_gate`; primary `ring`; topology `ring`; required path length `5`; layout orientation `horizontal` via `auto_horizontal`; Swift-required `True`; unlock `none`; depends on `none`.
+- Diversity audit: topology None, mechanic penalty None, topology penalty None, score None.
+- Layout: `mirrored`; strategy: `ring_loop`; orientation: `horizontal`; road shapes: `auto` (score `0.91`).
+- Road-shape checks: 0 crossings, 0 required-path crossings, 0 long parallel segments.
+- Visual clarity: score `1.0`, 0 issue(s).
+- Abstract solution: 3 required taps, 7 alternate paths, 2 dead ends, 602 loops.
+- Difficulty model: estimated `expert`, mechanical `1.0`, visual `1.0`, campaign pacing `1.0`.
+- Score breakdown: mechanic `1.0`, runtime `1.0`, readability `0.9775`, switch clarity `1.0`, mobile comfort `1.0`, visual appeal `0.9024`.
+- Solution route: `start` -> `hub` -> `package` -> `ring_b` -> `gate` -> `destination`.
+- Required taps: tap `hub` at `0.59s` -> `e_hub_package` (0.45s window), tap `ring_b` at `2.46s` -> `e_ring_b_gate` (0.45s window), tap `gate` at `2.96s` -> `e_gate_destination` (0.45s window).
+- Candidate selection: Accepted candidate had the highest deterministic quality score (0.9617 vs 0.9474). Scores min/avg/max `0.841`/`0.9043`/`0.9617`.
+- Accepted candidate audit: family `ring_route`; variant `ring_route_clockwise`; tags `ring, package_gate`; primary `ring`; topology `ring`; path `5`; orientation `horizontal`; Swift-required `True`; strategy `ring_loop`; variant `mirrored`; orientation reason `auto_horizontal`; diversity `topology None, mechanic penalty None, topology penalty None, score None`.
+- Near miss `not_selected` seed `3447463778` score `0.9474` family `long_detour_gate` variant `long_detour_gate_alternate` tags `long_route, detour, package_gate` primary `long_route` topology `detour_gate` path `8` orientation `horizontal` Swift-required `False` strategy `split_lane` variant `normal` orientation reason `auto_horizontal` diversity `topology None, mechanic penalty None, topology penalty None, score None`.
+- Near miss `not_selected` seed `4294263211` score `0.932` family `hub_choice` variant `hub_choice_alternate` tags `hub, multi_switch, rejoin, dead_end` primary `hub` topology `hub_spoke` path `8` orientation `horizontal` Swift-required `False` strategy `hub_and_spoke` variant `normal` orientation reason `auto_horizontal` diversity `topology None, mechanic penalty None, topology penalty None, score None`.
+- Near miss `not_selected` seed `3418102758` score `0.9247` family `branch_then_rejoin_with_wrong_order` variant `branch_then_rejoin_with_wrong_order_alternate` tags `split_path, rejoin, wrong_order, branch` primary `split_path` topology `split_rejoin` path `7` orientation `vertical` Swift-required `False` strategy `vertical_split_lane` variant `normal` orientation reason `probability` diversity `topology None, mechanic penalty None, topology penalty None, score None`.
+- Switch `hub` starts on `e_hub_ring_a` (east); tap 1 @ 0.59s -> `e_hub_package` (south).
+- Switch `ring_b` starts on `e_ring_b_ring_a` (west); tap 1 @ 2.46s -> `e_ring_b_gate` (north).
+- Switch `gate` starts on `e_gate_dead_end_b` (north); tap 1 @ 2.96s -> `e_gate_destination` (east).
+- Warning: tap_node_switch_context: Solution action 1 taps 2-way switch 'hub' with 2 option(s).
+- Warning: tap_node_switch_context: Solution action 2 taps 3-way switch 'ring_b' with 3 option(s).
+- Warning: tap_node_switch_context: Solution action 3 taps 3-way switch 'gate' with 3 option(s).
+### `level_027`
+- Recipe: `two_phase_route` variant `two_phase_route_primary`; abstract signature `2fe111186907`.
+- Mechanics: tags `two_phase, multi_switch`; primary `two_phase`; topology `two_phase`; required path length `6`; layout orientation `horizontal` via `auto_horizontal`; Swift-required `False`; unlock `hard levels unlocked`; depends on `package_gate_double_choice`.
+- Diversity audit: topology None, mechanic penalty None, topology penalty None, score None.
+- Layout: `mirrored`; strategy: `horizontal_route_progression`; orientation: `horizontal`; road shapes: `auto` (score `0.92`).
+- Road-shape checks: 0 crossings, 0 required-path crossings, 0 long parallel segments.
+- Visual clarity: score `1.0`, 0 issue(s).
+- Abstract solution: 3 required taps, 0 alternate paths, 3 dead ends, 0 loops.
+- Difficulty model: estimated `expert`, mechanical `1.0`, visual `1.0`, campaign pacing `1.0`.
+- Score breakdown: mechanic `1.0`, runtime `1.0`, readability `0.98`, switch clarity `1.0`, mobile comfort `1.0`, visual appeal `0.9035`.
+- Solution route: `start` -> `switch_a` -> `package` -> `switch_b` -> `route_mid` -> `switch_c` -> `destination`.
+- Required taps: tap `switch_a` at `0.10s` -> `e_switch_a_package` (0.41s window), tap `switch_b` at `1.02s` -> `e_switch_b_route_mid` (0.45s window), tap `switch_c` at `1.99s` -> `e_switch_c_destination` (0.45s window).
+- Candidate selection: Accepted candidate had the highest deterministic quality score (0.9648 vs 0.9531). Scores min/avg/max `0.8387`/`0.88`/`0.9648`.
+- Accepted candidate audit: family `two_phase_route`; variant `two_phase_route_primary`; tags `two_phase, multi_switch`; primary `two_phase`; topology `two_phase`; path `6`; orientation `horizontal`; Swift-required `False`; strategy `horizontal_route_progression`; variant `mirrored`; orientation reason `auto_horizontal`; diversity `topology None, mechanic penalty None, topology penalty None, score None`.
+- Near miss `not_selected` seed `942546876` score `0.9531` family `long_detour_gate` variant `long_detour_gate_alternate` tags `long_route, detour, package_gate` primary `long_route` topology `detour_gate` path `8` orientation `horizontal` Swift-required `False` strategy `split_lane` variant `mirrored` orientation reason `auto_horizontal` diversity `topology None, mechanic penalty None, topology penalty None, score None`.
+- Near miss `not_selected` seed `3541650054` score `0.9475` family `multi_switch_chain` variant `multi_switch_chain_stair_step` tags `multi_switch` primary `multi_switch` topology `two_switch_order` path `6` orientation `vertical` Swift-required `False` strategy `vertical_route_progression` variant `normal` orientation reason `probability` diversity `topology None, mechanic penalty None, topology penalty None, score None`.
+- Near miss `not_selected` seed `93482191` score `0.9347` family `split_path_rejoin` variant `split_path_rejoin_primary` tags `split_path, rejoin, multi_switch, package_gate` primary `split_path` topology `split_rejoin` path `7` orientation `horizontal` Swift-required `False` strategy `split_lane` variant `normal` orientation reason `auto_horizontal` diversity `topology None, mechanic penalty None, topology penalty None, score None`.
+- Switch `switch_a` starts on `e_switch_a_dead_end_a` (south); tap 1 @ 0.10s -> `e_switch_a_package` (east).
+- Switch `switch_b` starts on `e_switch_b_dead_end_b` (south); tap 1 @ 1.02s -> `e_switch_b_route_mid` (north).
+- Switch `switch_c` starts on `e_switch_c_dead_end_c` (south); tap 1 @ 1.99s -> `e_switch_c_destination` (east).
+- Warning: tap_node_switch_context: Solution action 1 taps 2-way switch 'switch_a' with 2 option(s).
+- Warning: tap_node_switch_context: Solution action 2 taps 2-way switch 'switch_b' with 2 option(s).
+- Warning: tap_node_switch_context: Solution action 3 taps 2-way switch 'switch_c' with 2 option(s).
+### `level_028`
+- Recipe: `multi_switch_chain` variant `multi_switch_chain_four_switch`; abstract signature `fa0cef9d0585`.
+- Mechanics: tags `multi_switch`; primary `multi_switch`; topology `two_switch_order`; required path length `6`; layout orientation `horizontal` via `auto_horizontal`; Swift-required `False`; unlock `none`; depends on `none`.
+- Diversity audit: topology None, mechanic penalty None, topology penalty None, score None.
+- Layout: `normal`; strategy: `horizontal_route_progression`; orientation: `horizontal`; road shapes: `auto` (score `0.9`).
+- Road-shape checks: 0 crossings, 0 required-path crossings, 0 long parallel segments.
+- Visual clarity: score `1.0`, 0 issue(s).
+- Abstract solution: 4 required taps, 0 alternate paths, 4 dead ends, 0 loops.
+- Difficulty model: estimated `expert`, mechanical `1.0`, visual `1.0`, campaign pacing `1.0`.
+- Score breakdown: mechanic `1.0`, runtime `1.0`, readability `0.975`, switch clarity `1.0`, mobile comfort `1.0`, visual appeal `0.9012`.
+- Solution route: `start` -> `multi_switch_chain_four_switch_switch_a` -> `package` -> `multi_switch_chain_four_switch_switch_b` -> `multi_switch_chain_four_switch_switch_c` -> `multi_switch_chain_four_switch_switch_d` -> `destination`.
+- Required taps: tap `multi_switch_chain_four_switch_switch_a` at `0.10s` -> `e_multi_switch_chain_four_switch_switch_a_package` (0.41s window), tap `multi_switch_chain_four_switch_switch_b` at `1.02s` -> `e_multi_switch_chain_four_switch_switch_b_multi_switch_chain_four_switch_switch_c` (0.45s window), tap `multi_switch_chain_four_switch_switch_c` at `1.70s` -> `e_multi_switch_chain_four_switch_switch_c_multi_switch_chain_four_switch_switch_d` (0.45s window), tap `multi_switch_chain_four_switch_switch_d` at `2.33s` -> `e_multi_switch_chain_four_switch_switch_d_destination` (0.45s window).
+- Candidate selection: Accepted candidate had the highest deterministic quality score (0.9569 vs 0.9474). Scores min/avg/max `0.8456`/`0.9002`/`0.9569`.
+- Accepted candidate audit: family `multi_switch_chain`; variant `multi_switch_chain_four_switch`; tags `multi_switch`; primary `multi_switch`; topology `two_switch_order`; path `6`; orientation `horizontal`; Swift-required `False`; strategy `horizontal_route_progression`; variant `normal`; orientation reason `auto_horizontal`; diversity `topology None, mechanic penalty None, topology penalty None, score None`.
+- Near miss `not_selected` seed `3601979128` score `0.9474` family `long_detour_gate` variant `long_detour_gate_alternate` tags `long_route, detour, package_gate` primary `long_route` topology `detour_gate` path `8` orientation `horizontal` Swift-required `False` strategy `split_lane` variant `normal` orientation reason `auto_horizontal` diversity `topology None, mechanic penalty None, topology penalty None, score None`.
+- Near miss `not_selected` seed `3635836330` score `0.9414` family `fake_shortcut` variant `fake_shortcut_alternate` tags `fake_shortcut, detour, package_gate, dead_end` primary `fake_shortcut` topology `detour_gate` path `8` orientation `horizontal` Swift-required `False` strategy `split_lane` variant `normal` orientation reason `auto_horizontal` diversity `topology None, mechanic penalty None, topology penalty None, score None`.
+- Near miss `not_selected` seed `2761923968` score `0.9303` family `split_path_rejoin` variant `split_path_rejoin_alternate` tags `split_path, rejoin, multi_switch, package_gate` primary `split_path` topology `split_rejoin` path `7` orientation `horizontal` Swift-required `False` strategy `split_lane` variant `normal` orientation reason `auto_horizontal` diversity `topology None, mechanic penalty None, topology penalty None, score None`.
+- Switch `multi_switch_chain_four_switch_switch_a` starts on `e_multi_switch_chain_four_switch_switch_a_multi_switch_chain_four_switch_dead_end_a` (north); tap 1 @ 0.10s -> `e_multi_switch_chain_four_switch_switch_a_package` (east).
+- Switch `multi_switch_chain_four_switch_switch_b` starts on `e_multi_switch_chain_four_switch_switch_b_multi_switch_chain_four_switch_dead_end_b` (north); tap 1 @ 1.02s -> `e_multi_switch_chain_four_switch_switch_b_multi_switch_chain_four_switch_switch_c` (south).
+- Switch `multi_switch_chain_four_switch_switch_c` starts on `e_multi_switch_chain_four_switch_switch_c_multi_switch_chain_four_switch_dead_end_c` (north); tap 1 @ 1.70s -> `e_multi_switch_chain_four_switch_switch_c_multi_switch_chain_four_switch_switch_d` (east).
+- Switch `multi_switch_chain_four_switch_switch_d` starts on `e_multi_switch_chain_four_switch_switch_d_multi_switch_chain_four_switch_dead_end_d` (north); tap 1 @ 2.33s -> `e_multi_switch_chain_four_switch_switch_d_destination` (east).
+- Warning: tap_node_switch_context: Solution action 1 taps 2-way switch 'multi_switch_chain_four_switch_switch_a' with 2 option(s).
+- Warning: tap_node_switch_context: Solution action 2 taps 2-way switch 'multi_switch_chain_four_switch_switch_b' with 2 option(s).
+- Warning: tap_node_switch_context: Solution action 3 taps 2-way switch 'multi_switch_chain_four_switch_switch_c' with 2 option(s).
+- Warning: tap_node_switch_context: Solution action 4 taps 2-way switch 'multi_switch_chain_four_switch_switch_d' with 2 option(s).
+### `level_029`
+- Recipe: `long_detour_gate` variant `long_detour_gate_alternate`; abstract signature `581c4071dee5`.
+- Mechanics: tags `long_route, detour, package_gate`; primary `long_route`; topology `detour_gate`; required path length `8`; layout orientation `horizontal` via `probability`; Swift-required `False`; unlock `detours unlocked`; depends on `short_detour_gate`.
+- Diversity audit: topology None, mechanic penalty None, topology penalty None, score None.
+- Layout: `mirrored`; strategy: `split_lane`; orientation: `horizontal`; road shapes: `auto` (score `0.87`).
+- Vertical candidate rejected: `layout_node_too_close_to_edge`.
+- Road-shape checks: 0 crossings, 0 required-path crossings, 0 long parallel segments.
+- Visual clarity: score `1.0`, 0 issue(s).
+- Abstract solution: 3 required taps, 0 alternate paths, 2 dead ends, 0 loops.
+- Difficulty model: estimated `expert`, mechanical `1.0`, visual `1.0`, campaign pacing `1.0`.
+- Score breakdown: mechanic `1.0`, runtime `1.0`, readability `0.9675`, switch clarity `1.0`, mobile comfort `1.0`, visual appeal `0.8979`.
+- Solution route: `start` -> `switch_gate` -> `detour_a` -> `switch_package` -> `package` -> `rejoin` -> `switch_exit` -> `exit_gate_lane` -> `destination`.
+- Required taps: tap `switch_gate` at `0.10s` -> `e_switch_gate_detour_a` (0.4s window), tap `switch_package` at `1.14s` -> `e_switch_package_package` (0.45s window), tap `switch_exit` at `4.54s` -> `e_switch_exit_exit_gate_lane` (0.45s window).
+- Candidate selection: Accepted candidate had the highest deterministic quality score (0.9499 vs 0.9396). Scores min/avg/max `0.8387`/`0.8817`/`0.9499`.
+- Accepted candidate audit: family `long_detour_gate`; variant `long_detour_gate_alternate`; tags `long_route, detour, package_gate`; primary `long_route`; topology `detour_gate`; path `8`; orientation `horizontal`; Swift-required `False`; strategy `split_lane`; variant `mirrored`; orientation reason `probability`; diversity `topology None, mechanic penalty None, topology penalty None, score None`.
+- Near miss `not_selected` seed `2815525932` score `0.9396` family `split_path_rejoin` variant `split_path_rejoin_alternate` tags `split_path, rejoin, multi_switch, package_gate` primary `split_path` topology `split_rejoin` path `7` orientation `horizontal` Swift-required `False` strategy `split_lane` variant `mirrored` orientation reason `probability` diversity `topology None, mechanic penalty None, topology penalty None, score None`.
+- Near miss `not_selected` seed `250245632` score `0.9298` family `hub_choice` variant `hub_choice_primary` tags `hub, multi_switch, rejoin, dead_end` primary `hub` topology `hub_spoke` path `8` orientation `horizontal` Swift-required `False` strategy `hub_and_spoke` variant `normal` orientation reason `auto_horizontal` diversity `topology None, mechanic penalty None, topology penalty None, score None`.
+- Near miss `not_selected` seed `1124157994` score `0.9165` family `package_inside_loop` variant `package_inside_loop_alternate` tags `package_inside_loop, loop, multi_switch, package` primary `package_inside_loop` topology `return_loop` path `7` orientation `horizontal` Swift-required `False` strategy `horizontal_route_progression` variant `normal` orientation reason `probability` diversity `topology None, mechanic penalty None, topology penalty None, score None`.
+- Switch `switch_gate` starts on `e_switch_gate_direct_bypass` (south); tap 1 @ 0.10s -> `e_switch_gate_detour_a` (west).
+- Switch `switch_package` starts on `e_switch_package_dead_end_b` (north); tap 1 @ 1.14s -> `e_switch_package_package` (west).
+- Switch `switch_exit` starts on `e_switch_exit_dead_end_c` (east); tap 1 @ 4.54s -> `e_switch_exit_exit_gate_lane` (west).
+- Warning: tap_node_switch_context: Solution action 1 taps 2-way switch 'switch_gate' with 2 option(s).
+- Warning: tap_node_switch_context: Solution action 2 taps 2-way switch 'switch_package' with 2 option(s).
+- Warning: tap_node_switch_context: Solution action 3 taps 2-way switch 'switch_exit' with 2 option(s).
+### `level_030`
+- Recipe: `split_path_rejoin` variant `split_path_rejoin_primary`; abstract signature `55487039791b`.
+- Mechanics: tags `split_path, rejoin, multi_switch, package_gate`; primary `split_path`; topology `split_rejoin`; required path length `7`; layout orientation `horizontal` via `auto_horizontal`; Swift-required `False`; unlock `medium levels unlocked`; depends on `two_switch_order_intro`.
+- Diversity audit: topology None, mechanic penalty None, topology penalty None, score None.
+- Layout: `normal`; strategy: `split_lane`; orientation: `horizontal`; road shapes: `auto` (score `0.86`).
+- Road-shape checks: 0 crossings, 0 required-path crossings, 0 long parallel segments.
+- Visual clarity: score `1.0`, 0 issue(s).
+- Abstract solution: 3 required taps, 0 alternate paths, 2 dead ends, 0 loops.
+- Difficulty model: estimated `expert`, mechanical `1.0`, visual `1.0`, campaign pacing `1.0`.
+- Score breakdown: mechanic `1.0`, runtime `1.0`, readability `0.965`, switch clarity `1.0`, mobile comfort `1.0`, visual appeal `0.8967`.
+- Solution route: `start` -> `switch_a` -> `upper_branch` -> `switch_b` -> `package` -> `rejoin` -> `switch_c` -> `destination`.
+- Required taps: tap `switch_a` at `0.10s` -> `e_switch_a_upper_branch` (0.4s window), tap `switch_b` at `1.19s` -> `e_switch_b_package` (0.45s window), tap `switch_c` at `4.79s` -> `e_switch_c_destination` (0.45s window).
+- Candidate selection: Accepted candidate had the highest deterministic quality score (0.9347 vs 0.9320). Scores min/avg/max `0.8467`/`0.8999`/`0.9347`.
+- Accepted candidate audit: family `split_path_rejoin`; variant `split_path_rejoin_primary`; tags `split_path, rejoin, multi_switch, package_gate`; primary `split_path`; topology `split_rejoin`; path `7`; orientation `horizontal`; Swift-required `False`; strategy `split_lane`; variant `normal`; orientation reason `auto_horizontal`; diversity `topology None, mechanic penalty None, topology penalty None, score None`.
+- Near miss `not_selected` seed `2318366882` score `0.932` family `hub_choice` variant `hub_choice_alternate` tags `hub, multi_switch, rejoin, dead_end` primary `hub` topology `hub_spoke` path `8` orientation `horizontal` Swift-required `False` strategy `hub_and_spoke` variant `normal` orientation reason `auto_horizontal` diversity `topology None, mechanic penalty None, topology penalty None, score None`.
+- Near miss `not_selected` seed `1399356863` score `0.9263` family `branch_then_rejoin_with_wrong_order` variant `branch_then_rejoin_with_wrong_order_alternate` tags `split_path, rejoin, wrong_order, branch` primary `split_path` topology `split_rejoin` path `7` orientation `vertical` Swift-required `False` strategy `vertical_split_lane` variant `normal` orientation reason `probability` diversity `topology None, mechanic penalty None, topology penalty None, score None`.
+- Near miss `not_selected` seed `3124564840` score `0.9218` family `package_inside_loop` variant `package_inside_loop_primary` tags `package_inside_loop, loop, multi_switch, package` primary `package_inside_loop` topology `return_loop` path `7` orientation `horizontal` Swift-required `False` strategy `horizontal_route_progression` variant `normal` orientation reason `probability` diversity `topology None, mechanic penalty None, topology penalty None, score None`.
+- Switch `switch_a` starts on `e_switch_a_lower_shortcut` (south); tap 1 @ 0.10s -> `e_switch_a_upper_branch` (east).
+- Switch `switch_b` starts on `e_switch_b_dead_end_b` (north); tap 1 @ 1.19s -> `e_switch_b_package` (east).
+- Switch `switch_c` starts on `e_switch_c_dead_end_c` (south); tap 1 @ 4.79s -> `e_switch_c_destination` (east).
+- Warning: tap_node_switch_context: Solution action 1 taps 2-way switch 'switch_a' with 2 option(s).
+- Warning: tap_node_switch_context: Solution action 2 taps 2-way switch 'switch_b' with 2 option(s).
+- Warning: tap_node_switch_context: Solution action 3 taps 2-way switch 'switch_c' with 2 option(s).
+### `level_031`
+- Recipe: `multi_switch_chain` variant `multi_switch_chain_stair_step`; abstract signature `3b9c09f31ac7`.
+- Mechanics: tags `multi_switch`; primary `multi_switch`; topology `two_switch_order`; required path length `6`; layout orientation `horizontal` via `auto_horizontal`; Swift-required `False`; unlock `none`; depends on `none`.
+- Diversity audit: topology None, mechanic penalty None, topology penalty None, score None.
+- Layout: `normal`; strategy: `horizontal_route_progression`; orientation: `horizontal`; road shapes: `auto` (score `0.9`).
+- Road-shape checks: 0 crossings, 0 required-path crossings, 0 long parallel segments.
+- Visual clarity: score `1.0`, 0 issue(s).
+- Abstract solution: 4 required taps, 0 alternate paths, 4 dead ends, 0 loops.
+- Difficulty model: estimated `expert`, mechanical `1.0`, visual `1.0`, campaign pacing `1.0`.
+- Score breakdown: mechanic `1.0`, runtime `1.0`, readability `0.975`, switch clarity `1.0`, mobile comfort `1.0`, visual appeal `0.9012`.
+- Solution route: `start` -> `multi_switch_chain_stair_step_switch_a` -> `package` -> `multi_switch_chain_stair_step_switch_b` -> `multi_switch_chain_stair_step_switch_c` -> `multi_switch_chain_stair_step_switch_d` -> `destination`.
+- Required taps: tap `multi_switch_chain_stair_step_switch_a` at `0.10s` -> `e_multi_switch_chain_stair_step_switch_a_package` (0.41s window), tap `multi_switch_chain_stair_step_switch_b` at `1.02s` -> `e_multi_switch_chain_stair_step_switch_b_multi_switch_chain_stair_step_switch_c` (0.45s window), tap `multi_switch_chain_stair_step_switch_c` at `1.70s` -> `e_multi_switch_chain_stair_step_switch_c_multi_switch_chain_stair_step_switch_d` (0.45s window), tap `multi_switch_chain_stair_step_switch_d` at `2.33s` -> `e_multi_switch_chain_stair_step_switch_d_destination` (0.45s window).
+- Candidate selection: Accepted candidate had the highest deterministic quality score (0.9324 vs 0.9229). Scores min/avg/max `0.8144`/`0.8904`/`0.9324`.
+- Accepted candidate audit: family `multi_switch_chain`; variant `multi_switch_chain_stair_step`; tags `multi_switch`; primary `multi_switch`; topology `two_switch_order`; path `6`; orientation `horizontal`; Swift-required `False`; strategy `horizontal_route_progression`; variant `normal`; orientation reason `auto_horizontal`; diversity `topology None, mechanic penalty None, topology penalty None, score None`.
+- Near miss `not_selected` seed `2378713119` score `0.9229` family `hub_choice` variant `hub_choice_alternate` tags `hub, multi_switch, rejoin, dead_end` primary `hub` topology `hub_spoke` path `8` orientation `horizontal` Swift-required `False` strategy `hub_and_spoke` variant `mirrored` orientation reason `auto_horizontal` diversity `topology None, mechanic penalty None, topology penalty None, score None`.
+- Near miss `not_selected` seed `3218751116` score `0.9165` family `package_inside_loop` variant `package_inside_loop_alternate` tags `package_inside_loop, loop, multi_switch, package` primary `package_inside_loop` topology `return_loop` path `7` orientation `horizontal` Swift-required `False` strategy `horizontal_route_progression` variant `normal` orientation reason `probability` diversity `topology None, mechanic penalty None, topology penalty None, score None`.
+- Near miss `not_selected` seed `3257104500` score `0.9071` family `fake_shortcut` variant `fake_shortcut_primary` tags `fake_shortcut, detour, package_gate, dead_end` primary `fake_shortcut` topology `detour_gate` path `8` orientation `vertical` Swift-required `False` strategy `vertical_split_lane` variant `normal` orientation reason `probability` diversity `topology None, mechanic penalty None, topology penalty None, score None`.
+- Switch `multi_switch_chain_stair_step_switch_a` starts on `e_multi_switch_chain_stair_step_switch_a_multi_switch_chain_stair_step_dead_end_a` (north); tap 1 @ 0.10s -> `e_multi_switch_chain_stair_step_switch_a_package` (east).
+- Switch `multi_switch_chain_stair_step_switch_b` starts on `e_multi_switch_chain_stair_step_switch_b_multi_switch_chain_stair_step_dead_end_b` (north); tap 1 @ 1.02s -> `e_multi_switch_chain_stair_step_switch_b_multi_switch_chain_stair_step_switch_c` (south).
+- Switch `multi_switch_chain_stair_step_switch_c` starts on `e_multi_switch_chain_stair_step_switch_c_multi_switch_chain_stair_step_dead_end_c` (north); tap 1 @ 1.70s -> `e_multi_switch_chain_stair_step_switch_c_multi_switch_chain_stair_step_switch_d` (east).
+- Switch `multi_switch_chain_stair_step_switch_d` starts on `e_multi_switch_chain_stair_step_switch_d_multi_switch_chain_stair_step_dead_end_d` (north); tap 1 @ 2.33s -> `e_multi_switch_chain_stair_step_switch_d_destination` (east).
+- Warning: tap_node_switch_context: Solution action 1 taps 2-way switch 'multi_switch_chain_stair_step_switch_a' with 2 option(s).
+- Warning: tap_node_switch_context: Solution action 2 taps 2-way switch 'multi_switch_chain_stair_step_switch_b' with 2 option(s).
+- Warning: tap_node_switch_context: Solution action 3 taps 2-way switch 'multi_switch_chain_stair_step_switch_c' with 2 option(s).
+- Warning: tap_node_switch_context: Solution action 4 taps 2-way switch 'multi_switch_chain_stair_step_switch_d' with 2 option(s).
+### `level_032`
+- Recipe: `multi_switch_chain` variant `multi_switch_chain_zigzag`; abstract signature `c450236db7c7`.
+- Mechanics: tags `multi_switch`; primary `multi_switch`; topology `two_switch_order`; required path length `6`; layout orientation `vertical` via `probability`; Swift-required `False`; unlock `none`; depends on `none`.
+- Diversity audit: topology None, mechanic penalty None, topology penalty None, score None.
+- Layout: `normal`; strategy: `vertical_route_progression`; orientation: `vertical`; road shapes: `auto` (score `0.87`).
+- Road-shape checks: 0 crossings, 0 required-path crossings, 0 long parallel segments.
+- Visual clarity: score `1.0`, 0 issue(s).
+- Abstract solution: 4 required taps, 0 alternate paths, 4 dead ends, 0 loops.
+- Difficulty model: estimated `expert`, mechanical `1.0`, visual `1.0`, campaign pacing `1.0`.
+- Score breakdown: mechanic `1.0`, runtime `1.0`, readability `0.9675`, switch clarity `1.0`, mobile comfort `1.0`, visual appeal `0.8979`.
+- Solution route: `start` -> `multi_switch_chain_zigzag_switch_a` -> `package` -> `multi_switch_chain_zigzag_switch_b` -> `multi_switch_chain_zigzag_switch_c` -> `multi_switch_chain_zigzag_switch_d` -> `destination`.
+- Required taps: tap `multi_switch_chain_zigzag_switch_a` at `0.10s` -> `e_multi_switch_chain_zigzag_switch_a_package` (0.36s window), tap `multi_switch_chain_zigzag_switch_b` at `0.97s` -> `e_multi_switch_chain_zigzag_switch_b_multi_switch_chain_zigzag_switch_c` (0.45s window), tap `multi_switch_chain_zigzag_switch_c` at `1.61s` -> `e_multi_switch_chain_zigzag_switch_c_multi_switch_chain_zigzag_switch_d` (0.45s window), tap `multi_switch_chain_zigzag_switch_d` at `2.24s` -> `e_multi_switch_chain_zigzag_switch_d_destination` (0.45s window).
+- Candidate selection: Accepted candidate had the highest deterministic quality score (0.9385 vs 0.9238). Scores min/avg/max `0.841`/`0.8934`/`0.9385`.
+- Accepted candidate audit: family `multi_switch_chain`; variant `multi_switch_chain_zigzag`; tags `multi_switch`; primary `multi_switch`; topology `two_switch_order`; path `6`; orientation `vertical`; Swift-required `False`; strategy `vertical_route_progression`; variant `normal`; orientation reason `probability`; diversity `topology None, mechanic penalty None, topology penalty None, score None`.
+- Near miss `not_selected` seed `4155240643` score `0.9238` family `package_inside_loop` variant `package_inside_loop_alternate` tags `package_inside_loop, loop, multi_switch, package` primary `package_inside_loop` topology `return_loop` path `7` orientation `horizontal` Swift-required `False` strategy `horizontal_route_progression` variant `normal` orientation reason `auto_horizontal` diversity `topology None, mechanic penalty None, topology penalty None, score None`.
+- Near miss `not_selected` seed `1587729415` score `0.9155` family `branch_then_rejoin_with_wrong_order` variant `branch_then_rejoin_with_wrong_order_alternate` tags `split_path, rejoin, wrong_order, branch` primary `split_path` topology `split_rejoin` path `7` orientation `vertical` Swift-required `False` strategy `vertical_split_lane` variant `normal` orientation reason `probability` diversity `topology None, mechanic penalty None, topology penalty None, score None`.
+- Near miss `not_selected` seed `2430032666` score `0.9071` family `fake_shortcut` variant `fake_shortcut_primary` tags `fake_shortcut, detour, package_gate, dead_end` primary `fake_shortcut` topology `detour_gate` path `8` orientation `vertical` Swift-required `False` strategy `vertical_split_lane` variant `normal` orientation reason `probability` diversity `topology None, mechanic penalty None, topology penalty None, score None`.
+- Switch `multi_switch_chain_zigzag_switch_a` starts on `e_multi_switch_chain_zigzag_switch_a_multi_switch_chain_zigzag_dead_end_a` (east); tap 1 @ 0.10s -> `e_multi_switch_chain_zigzag_switch_a_package` (south).
+- Switch `multi_switch_chain_zigzag_switch_b` starts on `e_multi_switch_chain_zigzag_switch_b_multi_switch_chain_zigzag_dead_end_b` (east); tap 1 @ 0.97s -> `e_multi_switch_chain_zigzag_switch_b_multi_switch_chain_zigzag_switch_c` (west).
+- Switch `multi_switch_chain_zigzag_switch_c` starts on `e_multi_switch_chain_zigzag_switch_c_multi_switch_chain_zigzag_dead_end_c` (east); tap 1 @ 1.61s -> `e_multi_switch_chain_zigzag_switch_c_multi_switch_chain_zigzag_switch_d` (south).
+- Switch `multi_switch_chain_zigzag_switch_d` starts on `e_multi_switch_chain_zigzag_switch_d_multi_switch_chain_zigzag_dead_end_d` (east); tap 1 @ 2.24s -> `e_multi_switch_chain_zigzag_switch_d_destination` (west).
+- Warning: tap_node_switch_context: Solution action 1 taps 2-way switch 'multi_switch_chain_zigzag_switch_a' with 2 option(s).
+- Warning: tap_node_switch_context: Solution action 2 taps 2-way switch 'multi_switch_chain_zigzag_switch_b' with 2 option(s).
+- Warning: tap_node_switch_context: Solution action 3 taps 2-way switch 'multi_switch_chain_zigzag_switch_c' with 2 option(s).
+- Warning: tap_node_switch_context: Solution action 4 taps 2-way switch 'multi_switch_chain_zigzag_switch_d' with 2 option(s).
+### `level_033`
+- Recipe: `multi_switch_chain` variant `multi_switch_chain_double_gate`; abstract signature `1cd013cf4e45`.
+- Mechanics: tags `multi_switch`; primary `multi_switch`; topology `two_switch_order`; required path length `6`; layout orientation `horizontal` via `auto_horizontal`; Swift-required `False`; unlock `none`; depends on `none`.
+- Diversity audit: topology None, mechanic penalty None, topology penalty None, score None.
+- Layout: `normal`; strategy: `horizontal_route_progression`; orientation: `horizontal`; road shapes: `auto` (score `0.9`).
+- Road-shape checks: 0 crossings, 0 required-path crossings, 0 long parallel segments.
+- Visual clarity: score `1.0`, 0 issue(s).
+- Abstract solution: 4 required taps, 0 alternate paths, 4 dead ends, 0 loops.
+- Difficulty model: estimated `expert`, mechanical `1.0`, visual `1.0`, campaign pacing `1.0`.
+- Score breakdown: mechanic `1.0`, runtime `1.0`, readability `0.975`, switch clarity `1.0`, mobile comfort `1.0`, visual appeal `0.9012`.
+- Solution route: `start` -> `multi_switch_chain_double_gate_switch_a` -> `package` -> `multi_switch_chain_double_gate_switch_b` -> `multi_switch_chain_double_gate_switch_c` -> `multi_switch_chain_double_gate_switch_d` -> `destination`.
+- Required taps: tap `multi_switch_chain_double_gate_switch_a` at `0.10s` -> `e_multi_switch_chain_double_gate_switch_a_package` (0.41s window), tap `multi_switch_chain_double_gate_switch_b` at `1.02s` -> `e_multi_switch_chain_double_gate_switch_b_multi_switch_chain_double_gate_switch_c` (0.45s window), tap `multi_switch_chain_double_gate_switch_c` at `1.70s` -> `e_multi_switch_chain_double_gate_switch_c_multi_switch_chain_double_gate_switch_d` (0.45s window), tap `multi_switch_chain_double_gate_switch_d` at `2.33s` -> `e_multi_switch_chain_double_gate_switch_d_destination` (0.45s window).
+- Candidate selection: Accepted candidate had the highest deterministic quality score (0.9324 vs 0.9320). Scores min/avg/max `0.8144`/`0.8914`/`0.9324`.
+- Accepted candidate audit: family `multi_switch_chain`; variant `multi_switch_chain_double_gate`; tags `multi_switch`; primary `multi_switch`; topology `two_switch_order`; path `6`; orientation `horizontal`; Swift-required `False`; strategy `horizontal_route_progression`; variant `normal`; orientation reason `auto_horizontal`; diversity `topology None, mechanic penalty None, topology penalty None, score None`.
+- Near miss `not_selected` seed `799010965` score `0.932` family `hub_choice` variant `hub_choice_alternate` tags `hub, multi_switch, rejoin, dead_end` primary `hub` topology `hub_spoke` path `8` orientation `horizontal` Swift-required `False` strategy `hub_and_spoke` variant `normal` orientation reason `auto_horizontal` diversity `topology None, mechanic penalty None, topology penalty None, score None`.
+- Near miss `not_selected` seed `4256171192` score `0.9298` family `package_inside_loop` variant `package_inside_loop_alternate` tags `package_inside_loop, loop, multi_switch, package` primary `package_inside_loop` topology `return_loop` path `7` orientation `horizontal` Swift-required `False` strategy `horizontal_route_progression` variant `normal` orientation reason `auto_horizontal` diversity `topology None, mechanic penalty None, topology penalty None, score None`.
+- Near miss `not_selected` seed `2567068508` score `0.9155` family `branch_then_rejoin_with_wrong_order` variant `branch_then_rejoin_with_wrong_order_primary` tags `split_path, rejoin, wrong_order, branch` primary `split_path` topology `split_rejoin` path `7` orientation `vertical` Swift-required `False` strategy `vertical_split_lane` variant `normal` orientation reason `probability` diversity `topology None, mechanic penalty None, topology penalty None, score None`.
+- Switch `multi_switch_chain_double_gate_switch_a` starts on `e_multi_switch_chain_double_gate_switch_a_multi_switch_chain_double_gate_dead_end_a` (north); tap 1 @ 0.10s -> `e_multi_switch_chain_double_gate_switch_a_package` (east).
+- Switch `multi_switch_chain_double_gate_switch_b` starts on `e_multi_switch_chain_double_gate_switch_b_multi_switch_chain_double_gate_dead_end_b` (north); tap 1 @ 1.02s -> `e_multi_switch_chain_double_gate_switch_b_multi_switch_chain_double_gate_switch_c` (south).
+- Switch `multi_switch_chain_double_gate_switch_c` starts on `e_multi_switch_chain_double_gate_switch_c_multi_switch_chain_double_gate_dead_end_c` (north); tap 1 @ 1.70s -> `e_multi_switch_chain_double_gate_switch_c_multi_switch_chain_double_gate_switch_d` (east).
+- Switch `multi_switch_chain_double_gate_switch_d` starts on `e_multi_switch_chain_double_gate_switch_d_multi_switch_chain_double_gate_dead_end_d` (north); tap 1 @ 2.33s -> `e_multi_switch_chain_double_gate_switch_d_destination` (east).
+- Warning: tap_node_switch_context: Solution action 1 taps 2-way switch 'multi_switch_chain_double_gate_switch_a' with 2 option(s).
+- Warning: tap_node_switch_context: Solution action 2 taps 2-way switch 'multi_switch_chain_double_gate_switch_b' with 2 option(s).
+- Warning: tap_node_switch_context: Solution action 3 taps 2-way switch 'multi_switch_chain_double_gate_switch_c' with 2 option(s).
+- Warning: tap_node_switch_context: Solution action 4 taps 2-way switch 'multi_switch_chain_double_gate_switch_d' with 2 option(s).
+### `level_034`
+- Recipe: `fake_shortcut` variant `fake_shortcut_primary`; abstract signature `bca6d111ed34`.
+- Mechanics: tags `fake_shortcut, detour, package_gate, dead_end`; primary `fake_shortcut`; topology `detour_gate`; required path length `8`; layout orientation `horizontal` via `auto_horizontal`; Swift-required `False`; unlock `medium levels unlocked`; depends on `short_detour_gate`.
+- Diversity audit: topology None, mechanic penalty None, topology penalty None, score None.
+- Layout: `normal`; strategy: `split_lane`; orientation: `horizontal`; road shapes: `auto` (score `0.89`).
 - Road-shape checks: 0 crossings, 0 required-path crossings, 0 long parallel segments.
 - Visual clarity: score `0.92`, 1 issue(s).
-- Abstract solution: 3 required taps, 1 alternate paths, 1 dead ends, 9 loops.
-- Difficulty model: estimated `expert`, mechanical `1.0`, visual `0.78`, campaign pacing `0.78`.
-- Score breakdown: mechanic `1.0`, runtime `1.0`, readability `0.74`, switch clarity `1.0`, mobile comfort `1.0`, visual appeal `0.8365`.
-- Candidate selection: Only one scored candidate passed validation and quality thresholds. Scores min/avg/max `0.8705`/`0.8705`/`0.8705`.
-- Switch `lower_alpha_switch` starts on `e_lower_alpha_switch_destination` (south); tap 1 @ 1.46s -> `e_lower_alpha_switch_package` (west), tap 2 @ 4.56s -> `e_lower_alpha_switch_destination` (south).
-- Switch `lower_beta_switch` starts on `e_lower_beta_switch_lower_dead_end` (south); tap 1 @ 3.32s -> `e_lower_beta_switch_lower_return` (east).
-- Warning: tap_node_switch_context: Solution action 1 taps 2-way switch 'lower_alpha_switch' with 2 option(s).
-- Warning: tap_node_switch_context: Solution action 2 taps 2-way switch 'lower_beta_switch' with 2 option(s).
-- Warning: tap_node_switch_context: Solution action 3 taps 2-way switch 'lower_alpha_switch' with 2 option(s).
-- Warning: return_loop_visually_unclear: Return loop revisits switch 'lower_alpha_switch', which can obscure the intended route flow.
-- Visual clarity warning: `return_loop_visually_unclear` node `lower_alpha_switch` edge `None`.
+- Abstract solution: 3 required taps, 0 alternate paths, 3 dead ends, 0 loops.
+- Difficulty model: estimated `expert`, mechanical `1.0`, visual `1.0`, campaign pacing `1.0`.
+- Score breakdown: mechanic `1.0`, runtime `1.0`, readability `0.9541`, switch clarity `1.0`, mobile comfort `1.0`, visual appeal `0.8559`.
+- Solution route: `start` -> `choice` -> `detour_a` -> `switch_b` -> `package` -> `detour_b` -> `rejoin` -> `switch_c` -> `destination`.
+- Required taps: tap `choice` at `0.10s` -> `e_choice_detour_a` (0.4s window), tap `switch_b` at `0.90s` -> `e_switch_b_package` (0.45s window), tap `switch_c` at `4.08s` -> `e_switch_c_destination` (0.45s window).
+- Candidate selection: Accepted candidate had the highest deterministic quality score (0.9414 vs 0.9254). Scores min/avg/max `0.8467`/`0.895`/`0.9414`.
+- Accepted candidate audit: family `fake_shortcut`; variant `fake_shortcut_primary`; tags `fake_shortcut, detour, package_gate, dead_end`; primary `fake_shortcut`; topology `detour_gate`; path `8`; orientation `horizontal`; Swift-required `False`; strategy `split_lane`; variant `normal`; orientation reason `auto_horizontal`; diversity `topology None, mechanic penalty None, topology penalty None, score None`.
+- Near miss `not_selected` seed `893197241` score `0.9254` family `branch_then_rejoin_with_wrong_order` variant `branch_then_rejoin_with_wrong_order_primary` tags `split_path, rejoin, wrong_order, branch` primary `split_path` topology `split_rejoin` path `7` orientation `vertical` Swift-required `False` strategy `vertical_split_lane` variant `normal` orientation reason `probability` diversity `topology None, mechanic penalty None, topology penalty None, score None`.
+- Near miss `not_selected` seed `1778350058` score `0.9218` family `package_inside_loop` variant `package_inside_loop_primary` tags `package_inside_loop, loop, multi_switch, package` primary `package_inside_loop` topology `return_loop` path `7` orientation `horizontal` Swift-required `False` strategy `horizontal_route_progression` variant `normal` orientation reason `probability` diversity `topology None, mechanic penalty None, topology penalty None, score None`.
+- Near miss `not_selected` seed `1809976330` score `0.8921` family `return_loop_with_gate` variant `return_loop_with_gate_alternate` tags `loop, repeated_tap, package_gate, return_loop, gate` primary `loop` topology `two_switch_order` path `6` orientation `horizontal` Swift-required `False` strategy `package_inside_loop` variant `mirrored` orientation reason `probability` diversity `topology None, mechanic penalty None, topology penalty None, score None`.
+- Switch `choice` starts on `e_choice_shortcut_dead_end` (north); tap 1 @ 0.10s -> `e_choice_detour_a` (east).
+- Switch `switch_b` starts on `e_switch_b_dead_end_b` (north); tap 1 @ 0.90s -> `e_switch_b_package` (east).
+- Switch `switch_c` starts on `e_switch_c_dead_end_c` (south); tap 1 @ 4.08s -> `e_switch_c_destination` (east).
+- Warning: tap_node_switch_context: Solution action 1 taps 2-way switch 'choice' with 2 option(s).
+- Warning: tap_node_switch_context: Solution action 2 taps 2-way switch 'switch_b' with 2 option(s).
+- Warning: tap_node_switch_context: Solution action 3 taps 2-way switch 'switch_c' with 2 option(s).
+- Warning: nodes_too_close: Nodes 'switch_c' and 'dead_end_c' are only 0.25 board units apart.
+- Visual clarity warning: `nodes_too_close` node `switch_c` edge `None`.
+### `level_035`
+- Recipe: `package_inside_loop` variant `package_inside_loop_primary`; abstract signature `d2491fccf225`.
+- Mechanics: tags `package_inside_loop, loop, multi_switch, package`; primary `package_inside_loop`; topology `return_loop`; required path length `7`; layout orientation `horizontal` via `probability`; Swift-required `False`; unlock `hard levels unlocked`; depends on `ring_route_gate`.
+- Diversity audit: topology None, mechanic penalty None, topology penalty None, score None.
+- Layout: `normal`; strategy: `horizontal_route_progression`; orientation: `horizontal`; road shapes: `auto` (score `0.88`).
+- Vertical candidate rejected: `layout_node_cluster`.
+- Road-shape checks: 0 crossings, 0 required-path crossings, 0 long parallel segments.
+- Visual clarity: score `0.92`, 1 issue(s).
+- Abstract solution: 3 required taps, 0 alternate paths, 3 dead ends, 0 loops.
+- Difficulty model: estimated `expert`, mechanical `1.0`, visual `1.0`, campaign pacing `1.0`.
+- Score breakdown: mechanic `1.0`, runtime `1.0`, readability `0.9525`, switch clarity `1.0`, mobile comfort `1.0`, visual appeal `0.8551`.
+- Solution route: `start` -> `switch_a` -> `loop_a` -> `switch_b` -> `package` -> `loop_b` -> `switch_c` -> `destination`.
+- Required taps: tap `switch_a` at `0.10s` -> `e_switch_a_loop_a` (0.36s window), tap `switch_b` at `0.87s` -> `e_switch_b_package` (0.45s window), tap `switch_c` at `2.37s` -> `e_switch_c_destination` (0.45s window).
+- Candidate selection: Accepted candidate had the highest deterministic quality score (0.9298 vs 0.9283). Scores min/avg/max `0.8456`/`0.8974`/`0.9298`.
+- Accepted candidate audit: family `package_inside_loop`; variant `package_inside_loop_primary`; tags `package_inside_loop, loop, multi_switch, package`; primary `package_inside_loop`; topology `return_loop`; path `7`; orientation `horizontal`; Swift-required `False`; strategy `horizontal_route_progression`; variant `normal`; orientation reason `probability`; diversity `topology None, mechanic penalty None, topology penalty None, score None`.
+- Near miss `not_selected` seed `178937468` score `0.9283` family `hub_choice` variant `hub_choice_primary` tags `hub, multi_switch, rejoin, dead_end` primary `hub` topology `hub_spoke` path `8` orientation `horizontal` Swift-required `False` strategy `hub_and_spoke` variant `normal` orientation reason `auto_horizontal` diversity `topology None, mechanic penalty None, topology penalty None, score None`.
+- Near miss `not_selected` seed `2717087676` score `0.9155` family `branch_then_rejoin_with_wrong_order` variant `branch_then_rejoin_with_wrong_order_primary` tags `split_path, rejoin, wrong_order, branch` primary `split_path` topology `split_rejoin` path `7` orientation `vertical` Swift-required `False` strategy `vertical_split_lane` variant `normal` orientation reason `probability` diversity `topology None, mechanic penalty None, topology penalty None, score None`.
+- Near miss `not_selected` seed `1834182950` score `0.8951` family `multi_switch_revisit` variant `multi_switch_revisit_alternate` tags `multi_switch, revisit, repeated_tap` primary `multi_switch` topology `two_switch_order` path `6` orientation `horizontal` Swift-required `False` strategy `horizontal_route_progression` variant `normal` orientation reason `auto_horizontal` diversity `topology None, mechanic penalty None, topology penalty None, score None`.
+- Switch `switch_a` starts on `e_switch_a_dead_end_a` (north); tap 1 @ 0.10s -> `e_switch_a_loop_a` (south).
+- Switch `switch_b` starts on `e_switch_b_dead_end_b` (north); tap 1 @ 0.87s -> `e_switch_b_package` (east).
+- Switch `switch_c` starts on `e_switch_c_dead_end_c` (north); tap 1 @ 2.37s -> `e_switch_c_destination` (south).
+- Warning: tap_node_switch_context: Solution action 1 taps 2-way switch 'switch_a' with 2 option(s).
+- Warning: tap_node_switch_context: Solution action 2 taps 2-way switch 'switch_b' with 2 option(s).
+- Warning: tap_node_switch_context: Solution action 3 taps 2-way switch 'switch_c' with 2 option(s).
+- Warning: important_nodes_tight_on_small_device: Switch 'switch_c' is tight against important node 'destination' at small-device scale.
+- Visual clarity warning: `important_nodes_tight_on_small_device` node `switch_c` edge `None`.
+### `level_036`
+- Recipe: `hub_choice` variant `hub_choice_primary`; abstract signature `a18c9a9a1c0f`.
+- Mechanics: tags `hub, multi_switch, rejoin, dead_end`; primary `hub`; topology `hub_spoke`; required path length `8`; layout orientation `horizontal` via `auto_horizontal`; Swift-required `False`; unlock `three-way switches unlocked`; depends on `multi_switch_order`.
+- Diversity audit: topology None, mechanic penalty None, topology penalty None, score None.
+- Layout: `normal`; strategy: `hub_and_spoke`; orientation: `horizontal`; road shapes: `auto` (score `0.72`).
+- Road-shape checks: 0 crossings, 0 required-path crossings, 1 long parallel segments.
+- Visual clarity: score `0.92`, 1 issue(s).
+- Abstract solution: 3 required taps, 0 alternate paths, 3 dead ends, 0 loops.
+- Difficulty model: estimated `expert`, mechanical `1.0`, visual `1.0`, campaign pacing `1.0`.
+- Score breakdown: mechanic `1.0`, runtime `1.0`, readability `0.87`, switch clarity `1.0`, mobile comfort `1.0`, visual appeal `0.818`.
+- Solution route: `start` -> `hub` -> `package_branch` -> `package` -> `rejoin` -> `switch_b` -> `route_mid` -> `switch_c` -> `destination`.
+- Required taps: tap `hub` at `0.10s` -> `e_hub_package_branch` (0.4s window), tap `switch_b` at `5.43s` -> `e_switch_b_route_mid` (0.45s window), tap `switch_c` at `6.60s` -> `e_switch_c_destination` (0.45s window).
+- Candidate selection: Accepted candidate had the highest deterministic quality score (0.9283 vs 0.9007). Scores min/avg/max `0.8467`/`0.8884`/`0.9283`.
+- Accepted candidate audit: family `hub_choice`; variant `hub_choice_primary`; tags `hub, multi_switch, rejoin, dead_end`; primary `hub`; topology `hub_spoke`; path `8`; orientation `horizontal`; Swift-required `False`; strategy `hub_and_spoke`; variant `normal`; orientation reason `auto_horizontal`; diversity `topology None, mechanic penalty None, topology penalty None, score None`.
+- Near miss `not_selected` seed `203178410` score `0.9007` family `multi_switch_revisit` variant `multi_switch_revisit_alternate` tags `multi_switch, revisit, repeated_tap` primary `multi_switch` topology `two_switch_order` path `6` orientation `horizontal` Swift-required `False` strategy `horizontal_route_progression` variant `mirrored` orientation reason `probability` diversity `topology None, mechanic penalty None, topology penalty None, score None`.
+- Near miss `not_selected` seed `3694195840` score `0.8921` family `return_loop_with_gate` variant `return_loop_with_gate_primary` tags `loop, repeated_tap, package_gate, return_loop, gate` primary `loop` topology `two_switch_order` path `6` orientation `horizontal` Swift-required `False` strategy `package_inside_loop` variant `mirrored` orientation reason `probability` diversity `topology None, mechanic penalty None, topology penalty None, score None`.
+- Near miss `not_selected` seed `1081586954` score `0.8867` family `ring_route` variant `ring_route_package_inside` tags `ring, package_gate` primary `ring` topology `ring` path `5` orientation `horizontal` Swift-required `True` strategy `ring_loop` variant `mirrored` orientation reason `probability` diversity `topology None, mechanic penalty None, topology penalty None, score None`.
+- Switch `hub` starts on `e_hub_dead_end_a` (north); tap 1 @ 0.10s -> `e_hub_package_branch` (east).
+- Switch `switch_b` starts on `e_switch_b_dead_end_b` (south); tap 1 @ 5.43s -> `e_switch_b_route_mid` (east).
+- Switch `switch_c` starts on `e_switch_c_dead_end_c` (south); tap 1 @ 6.60s -> `e_switch_c_destination` (east).
+- Warning: tap_node_switch_context: Solution action 1 taps 3-way switch 'hub' with 3 option(s).
+- Warning: tap_node_switch_context: Solution action 2 taps 2-way switch 'switch_b' with 2 option(s).
+- Warning: tap_node_switch_context: Solution action 3 taps 2-way switch 'switch_c' with 2 option(s).
+- Warning: long_parallel_road_segments: Road-shape issue: long_parallel_road_segments:1
+- Warning: long_parallel_road_segments_visually_merge: Edges 'e_package_rejoin' and 'e_route_mid_switch_c' have parallel segments that can read as one road.
+- Visual clarity warning: `long_parallel_road_segments_visually_merge` node `None` edge `e_package_rejoin`.
+### `level_037`
+- Recipe: `multi_switch_revisit` variant `multi_switch_revisit_primary`; abstract signature `da1ab9876038`.
+- Mechanics: tags `multi_switch, revisit, repeated_tap`; primary `multi_switch`; topology `two_switch_order`; required path length `6`; layout orientation `horizontal` via `auto_horizontal`; Swift-required `False`; unlock `hard levels unlocked`; depends on `return_loop_intro`.
+- Diversity audit: topology None, mechanic penalty None, topology penalty None, score None.
+- Layout: `normal`; strategy: `horizontal_route_progression`; orientation: `horizontal`; road shapes: `auto` (score `0.92`).
+- Road-shape checks: 0 crossings, 0 required-path crossings, 0 long parallel segments.
+- Visual clarity: score `1.0`, 0 issue(s).
+- Abstract solution: 3 required taps, 0 alternate paths, 3 dead ends, 0 loops.
+- Difficulty model: estimated `expert`, mechanical `1.0`, visual `1.0`, campaign pacing `1.0`.
+- Score breakdown: mechanic `1.0`, runtime `1.0`, readability `0.98`, switch clarity `1.0`, mobile comfort `1.0`, visual appeal `0.9035`.
+- Solution route: `start` -> `switch_a` -> `package` -> `switch_b` -> `route_mid` -> `switch_c` -> `destination`.
+- Required taps: tap `switch_a` at `0.10s` -> `e_switch_a_package` (0.41s window), tap `switch_b` at `1.02s` -> `e_switch_b_route_mid` (0.45s window), tap `switch_c` at `1.99s` -> `e_switch_c_destination` (0.45s window).
+- Candidate selection: Accepted candidate had the highest deterministic quality score (0.8951 vs 0.8921). Scores min/avg/max `0.8144`/`0.8709`/`0.8951`.
+- Accepted candidate audit: family `multi_switch_revisit`; variant `multi_switch_revisit_primary`; tags `multi_switch, revisit, repeated_tap`; primary `multi_switch`; topology `two_switch_order`; path `6`; orientation `horizontal`; Swift-required `False`; strategy `horizontal_route_progression`; variant `normal`; orientation reason `auto_horizontal`; diversity `topology None, mechanic penalty None, topology penalty None, score None`.
+- Near miss `not_selected` seed `295099434` score `0.8921` family `return_loop_with_gate` variant `return_loop_with_gate_primary` tags `loop, repeated_tap, package_gate, return_loop, gate` primary `loop` topology `two_switch_order` path `6` orientation `horizontal` Swift-required `False` strategy `package_inside_loop` variant `normal` orientation reason `auto_horizontal` diversity `topology None, mechanic penalty None, topology penalty None, score None`.
+- Near miss `not_selected` seed `2867124005` score `0.8867` family `ring_route` variant `ring_route_package_inside` tags `ring, package_gate` primary `ring` topology `ring` path `5` orientation `horizontal` Swift-required `True` strategy `ring_loop` variant `mirrored` orientation reason `probability` diversity `topology None, mechanic penalty None, topology penalty None, score None`.
+- Near miss `not_selected` seed `301860868` score `0.8863` family `two_phase_route` variant `two_phase_route_primary` tags `two_phase, multi_switch` primary `two_phase` topology `two_phase` path `6` orientation `horizontal` Swift-required `False` strategy `horizontal_route_progression` variant `mirrored` orientation reason `auto_horizontal` diversity `topology None, mechanic penalty None, topology penalty None, score None`.
+- Switch `switch_a` starts on `e_switch_a_dead_end_a` (north); tap 1 @ 0.10s -> `e_switch_a_package` (east).
+- Switch `switch_b` starts on `e_switch_b_dead_end_b` (north); tap 1 @ 1.02s -> `e_switch_b_route_mid` (south).
+- Switch `switch_c` starts on `e_switch_c_dead_end_c` (north); tap 1 @ 1.99s -> `e_switch_c_destination` (east).
+- Warning: tap_node_switch_context: Solution action 1 taps 2-way switch 'switch_a' with 2 option(s).
+- Warning: tap_node_switch_context: Solution action 2 taps 2-way switch 'switch_b' with 2 option(s).
+- Warning: tap_node_switch_context: Solution action 3 taps 2-way switch 'switch_c' with 2 option(s).
+### `level_038`
+- Recipe: `branch_then_rejoin_with_wrong_order` variant `branch_then_rejoin_with_wrong_order_primary`; abstract signature `99ef366e9cb2`.
+- Mechanics: tags `split_path, rejoin, wrong_order, branch`; primary `split_path`; topology `split_rejoin`; required path length `7`; layout orientation `vertical` via `probability`; Swift-required `False`; unlock `hard levels unlocked`; depends on `split_path_rejoin`.
+- Diversity audit: topology None, mechanic penalty None, topology penalty None, score None.
+- Layout: `normal`; strategy: `vertical_split_lane`; orientation: `vertical`; road shapes: `auto` (score `0.93`).
+- Road-shape checks: 0 crossings, 0 required-path crossings, 0 long parallel segments.
+- Visual clarity: score `0.84`, 2 issue(s).
+- Abstract solution: 3 required taps, 0 alternate paths, 3 dead ends, 0 loops.
+- Difficulty model: estimated `expert`, mechanical `1.0`, visual `1.0`, campaign pacing `1.0`.
+- Score breakdown: mechanic `1.0`, runtime `1.0`, readability `0.9326`, switch clarity `1.0`, mobile comfort `1.0`, visual appeal `0.8102`.
+- Solution route: `start` -> `switch_a` -> `branch_a` -> `rejoin` -> `switch_b` -> `package` -> `switch_c` -> `destination`.
+- Required taps: tap `switch_a` at `0.10s` -> `e_switch_a_branch_a` (0.31s window), tap `switch_b` at `1.07s` -> `e_switch_b_package` (0.45s window), tap `switch_c` at `1.86s` -> `e_switch_c_destination` (0.45s window).
+- Candidate selection: Accepted candidate had the highest deterministic quality score (0.9155 vs 0.8912). Scores min/avg/max `0.8144`/`0.8744`/`0.9155`.
+- Accepted candidate audit: family `branch_then_rejoin_with_wrong_order`; variant `branch_then_rejoin_with_wrong_order_primary`; tags `split_path, rejoin, wrong_order, branch`; primary `split_path`; topology `split_rejoin`; path `7`; orientation `vertical`; Swift-required `False`; strategy `vertical_split_lane`; variant `normal`; orientation reason `probability`; diversity `topology None, mechanic penalty None, topology penalty None, score None`.
+- Near miss `not_selected` seed `2963575533` score `0.8912` family `return_loop_with_gate` variant `return_loop_with_gate_alternate` tags `loop, repeated_tap, package_gate, return_loop, gate` primary `loop` topology `two_switch_order` path `6` orientation `horizontal` Swift-required `False` strategy `package_inside_loop` variant `wide` orientation reason `auto_horizontal` diversity `topology None, mechanic penalty None, topology penalty None, score None`.
+- Near miss `quality_similarity_above_threshold` seed `2963558374` score `0.8871` family `return_loop_with_gate` variant `return_loop_with_gate_alternate` tags `loop, repeated_tap, package_gate, return_loop, gate` primary `loop` topology `two_switch_order` path `6` orientation `horizontal` Swift-required `False` strategy `package_inside_loop` variant `mirrored` orientation reason `probability` diversity `topology None, mechanic penalty None, topology penalty None, score None`.
+- Near miss `not_selected` seed `2959062190` score `0.8863` family `two_phase_route` variant `two_phase_route_alternate` tags `two_phase, multi_switch` primary `two_phase` topology `two_phase` path `6` orientation `horizontal` Swift-required `False` strategy `horizontal_route_progression` variant `mirrored` orientation reason `auto_horizontal` diversity `topology None, mechanic penalty None, topology penalty None, score None`.
+- Switch `switch_a` starts on `e_switch_a_dead_end_a` (south); tap 1 @ 0.10s -> `e_switch_a_branch_a` (west).
+- Switch `switch_b` starts on `e_switch_b_dead_end_b` (east); tap 1 @ 1.07s -> `e_switch_b_package` (west).
+- Switch `switch_c` starts on `e_switch_c_dead_end_c` (west); tap 1 @ 1.86s -> `e_switch_c_destination` (east).
+- Warning: tap_node_switch_context: Solution action 1 taps 2-way switch 'switch_a' with 2 option(s).
+- Warning: tap_node_switch_context: Solution action 2 taps 2-way switch 'switch_b' with 2 option(s).
+- Warning: tap_node_switch_context: Solution action 3 taps 2-way switch 'switch_c' with 2 option(s).
+- Warning: nodes_too_close: Nodes 'branch_a' and 'rejoin' are only 0.25 board units apart.
+- Warning: important_nodes_tight_on_small_device: Switch 'switch_b' is tight against important node 'package' at small-device scale.
+- Visual clarity warning: `nodes_too_close` node `branch_a` edge `None`.
+- Visual clarity warning: `important_nodes_tight_on_small_device` node `switch_b` edge `None`.
+### `level_039`
+- Recipe: `return_loop_with_gate` variant `return_loop_with_gate_alternate`; abstract signature `cd548c51cc60`.
+- Mechanics: tags `loop, repeated_tap, package_gate, return_loop, gate`; primary `loop`; topology `two_switch_order`; required path length `6`; layout orientation `horizontal` via `probability`; Swift-required `False`; unlock `hard levels unlocked`; depends on `return_loop_intro`.
+- Diversity audit: topology None, mechanic penalty None, topology penalty None, score None.
+- Layout: `mirrored`; strategy: `package_inside_loop`; orientation: `horizontal`; road shapes: `auto` (score `0.93`).
+- Vertical candidate rejected: `layout_node_too_close_to_edge,layout_switch_too_close_to_edge`.
+- Road-shape checks: 0 crossings, 0 required-path crossings, 0 long parallel segments.
+- Visual clarity: score `1.0`, 0 issue(s).
+- Abstract solution: 3 required taps, 0 alternate paths, 3 dead ends, 0 loops.
+- Difficulty model: estimated `expert`, mechanical `1.0`, visual `1.0`, campaign pacing `1.0`.
+- Score breakdown: mechanic `1.0`, runtime `1.0`, readability `0.9825`, switch clarity `1.0`, mobile comfort `1.0`, visual appeal `0.9046`.
+- Solution route: `start` -> `switch_a` -> `package` -> `switch_b` -> `route_mid` -> `switch_c` -> `destination`.
+- Required taps: tap `switch_a` at `0.50s` -> `e_switch_a_package` (0.45s window), tap `switch_b` at `1.84s` -> `e_switch_b_route_mid` (0.45s window), tap `switch_c` at `3.09s` -> `e_switch_c_destination` (0.45s window).
+- Candidate selection: Accepted candidate had the highest deterministic quality score (0.8970 vs 0.8871). Scores min/avg/max `0.8456`/`0.8819`/`0.897`.
+- Accepted candidate audit: family `return_loop_with_gate`; variant `return_loop_with_gate_alternate`; tags `loop, repeated_tap, package_gate, return_loop, gate`; primary `loop`; topology `two_switch_order`; path `6`; orientation `horizontal`; Swift-required `False`; strategy `package_inside_loop`; variant `mirrored`; orientation reason `probability`; diversity `topology None, mechanic penalty None, topology penalty None, score None`.
+- Near miss `quality_similarity_above_threshold` seed `3904526922` score `0.8871` family `return_loop_with_gate` variant `return_loop_with_gate_alternate` tags `loop, repeated_tap, package_gate, return_loop, gate` primary `loop` topology `two_switch_order` path `6` orientation `horizontal` Swift-required `False` strategy `package_inside_loop` variant `normal` orientation reason `auto_horizontal` diversity `topology None, mechanic penalty None, topology penalty None, score None`.
+- Near miss `not_selected` seed `1330288580` score `0.8867` family `ring_route` variant `ring_route_clockwise` tags `ring, package_gate` primary `ring` topology `ring` path `5` orientation `horizontal` Swift-required `True` strategy `ring_loop` variant `mirrored` orientation reason `auto_horizontal` diversity `topology None, mechanic penalty None, topology penalty None, score None`.
+- Near miss `not_selected` seed `1366393873` score `0.8863` family `two_phase_route` variant `two_phase_route_primary` tags `two_phase, multi_switch` primary `two_phase` topology `two_phase` path `6` orientation `horizontal` Swift-required `False` strategy `horizontal_route_progression` variant `mirrored` orientation reason `auto_horizontal` diversity `topology None, mechanic penalty None, topology penalty None, score None`.
+- Switch `switch_a` starts on `e_switch_a_dead_end_a` (north); tap 1 @ 0.50s -> `e_switch_a_package` (west).
+- Switch `switch_b` starts on `e_switch_b_dead_end_b` (south); tap 1 @ 1.84s -> `e_switch_b_route_mid` (west).
+- Switch `switch_c` starts on `e_switch_c_dead_end_c` (south); tap 1 @ 3.09s -> `e_switch_c_destination` (west).
+- Warning: tap_node_switch_context: Solution action 1 taps 2-way switch 'switch_a' with 2 option(s).
+- Warning: tap_node_switch_context: Solution action 2 taps 2-way switch 'switch_b' with 2 option(s).
+- Warning: tap_node_switch_context: Solution action 3 taps 2-way switch 'switch_c' with 2 option(s).
+### `level_040`
+- Recipe: `multi_switch_chain` variant `multi_switch_chain_stair_step`; abstract signature `36e700104dc4`.
+- Mechanics: tags `multi_switch`; primary `multi_switch`; topology `two_switch_order`; required path length `5`; layout orientation `horizontal` via `probability`; Swift-required `False`; unlock `none`; depends on `none`.
+- Diversity audit: topology None, mechanic penalty None, topology penalty None, score None.
+- Layout: `mirrored`; strategy: `horizontal_route_progression`; orientation: `horizontal`; road shapes: `switch_clarity_optimized` (score `0.95`).
+- Vertical candidate rejected: `layout_node_too_close_to_edge`.
+- Road-shape checks: 0 crossings, 0 required-path crossings, 0 long parallel segments.
+- Visual clarity: score `1.0`, 0 issue(s).
+- Abstract solution: 3 required taps, 0 alternate paths, 3 dead ends, 0 loops.
+- Difficulty model: estimated `expert`, mechanical `1.0`, visual `0.925`, campaign pacing `1.0`.
+- Score breakdown: mechanic `1.0`, runtime `1.0`, readability `0.9875`, switch clarity `1.0`, mobile comfort `1.0`, visual appeal `0.9331`.
+- Solution route: `start` -> `multi_switch_chain_stair_step_switch_a` -> `package` -> `multi_switch_chain_stair_step_switch_b` -> `multi_switch_chain_stair_step_switch_c` -> `destination`.
+- Required taps: tap `multi_switch_chain_stair_step_switch_a` at `0.11s` -> `e_multi_switch_chain_stair_step_switch_a_package` (0.45s window), tap `multi_switch_chain_stair_step_switch_b` at `1.22s` -> `e_multi_switch_chain_stair_step_switch_b_multi_switch_chain_stair_step_switch_c` (0.45s window), tap `multi_switch_chain_stair_step_switch_c` at `1.94s` -> `e_multi_switch_chain_stair_step_switch_c_destination` (0.45s window).
+- Candidate selection: Accepted candidate had the highest deterministic quality score (0.8897 vs 0.8870). Scores min/avg/max `0.8456`/`0.8791`/`0.8897`.
+- Accepted candidate audit: family `multi_switch_chain`; variant `multi_switch_chain_stair_step`; tags `multi_switch`; primary `multi_switch`; topology `two_switch_order`; path `5`; orientation `horizontal`; Swift-required `False`; strategy `horizontal_route_progression`; variant `mirrored`; orientation reason `probability`; diversity `topology None, mechanic penalty None, topology penalty None, score None`.
+- Near miss `not_selected` seed `1641592743` score `0.887` family `return_loop_with_gate` variant `return_loop_with_gate_primary` tags `loop, repeated_tap, package_gate, return_loop, gate` primary `loop` topology `two_switch_order` path `6` orientation `horizontal` Swift-required `False` strategy `package_inside_loop` variant `mirrored` orientation reason `probability` diversity `topology None, mechanic penalty None, topology penalty None, score None`.
+- Near miss `not_selected` seed `792545218` score `0.8867` family `ring_route` variant `ring_route_counterclockwise` tags `ring, package_gate` primary `ring` topology `ring` path `5` orientation `horizontal` Swift-required `True` strategy `ring_loop` variant `mirrored` orientation reason `auto_horizontal` diversity `topology None, mechanic penalty None, topology penalty None, score None`.
+- Near miss `not_selected` seed `833146693` score `0.8863` family `two_phase_route` variant `two_phase_route_alternate` tags `two_phase, multi_switch` primary `two_phase` topology `two_phase` path `6` orientation `horizontal` Swift-required `False` strategy `horizontal_route_progression` variant `mirrored` orientation reason `probability` diversity `topology None, mechanic penalty None, topology penalty None, score None`.
+- Switch `multi_switch_chain_stair_step_switch_a` starts on `e_multi_switch_chain_stair_step_switch_a_multi_switch_chain_stair_step_dead_end_a` (south); tap 1 @ 0.11s -> `e_multi_switch_chain_stair_step_switch_a_package` (east).
+- Switch `multi_switch_chain_stair_step_switch_b` starts on `e_multi_switch_chain_stair_step_switch_b_multi_switch_chain_stair_step_dead_end_b` (south); tap 1 @ 1.22s -> `e_multi_switch_chain_stair_step_switch_b_multi_switch_chain_stair_step_switch_c` (north).
+- Switch `multi_switch_chain_stair_step_switch_c` starts on `e_multi_switch_chain_stair_step_switch_c_multi_switch_chain_stair_step_dead_end_c` (south); tap 1 @ 1.94s -> `e_multi_switch_chain_stair_step_switch_c_destination` (east).
+- Warning: tap_node_switch_context: Solution action 1 taps 2-way switch 'multi_switch_chain_stair_step_switch_a' with 2 option(s).
+- Warning: tap_node_switch_context: Solution action 2 taps 2-way switch 'multi_switch_chain_stair_step_switch_b' with 2 option(s).
+- Warning: tap_node_switch_context: Solution action 3 taps 2-way switch 'multi_switch_chain_stair_step_switch_c' with 2 option(s).
+### `level_041`
+- Recipe: `four_way_package_gate` variant `four_way_package_gate_primary`; abstract signature `b884ecfd5af7`.
+- Mechanics: tags `four_way, package_gate, two_phase`; primary `four_way`; topology `four_way_gate`; required path length `8`; layout orientation `horizontal` via `auto_horizontal`; Swift-required `True`; unlock `four-way introduced`; depends on `four_way_intro`.
+- Diversity audit: topology None, mechanic penalty None, topology penalty None, score None.
+- Layout: `normal`; strategy: `four_way_intersection`; orientation: `horizontal`; road shapes: `auto` (score `0.89`).
+- Road-shape checks: 0 crossings, 0 required-path crossings, 0 long parallel segments.
+- Visual clarity: score `1.0`, 0 issue(s).
+- Abstract solution: 2 required taps, 0 alternate paths, 3 dead ends, 0 loops.
+- Difficulty model: estimated `expert`, mechanical `1.0`, visual `1.0`, campaign pacing `1.0`.
+- Score breakdown: mechanic `1.0`, runtime `1.0`, readability `0.9725`, switch clarity `1.0`, mobile comfort `1.0`, visual appeal `0.9001`.
+- Solution route: `start` -> `entry_lane` -> `four_way_switch` -> `package_lane` -> `package` -> `gate_approach` -> `switch_exit` -> `exit_lane` -> `destination`.
+- Required taps: tap `four_way_switch` at `0.49s` -> `e_four_way_switch_package_lane` (0.5s window), tap `switch_exit` at `3.33s` -> `e_switch_exit_exit_lane` (0.5s window).
+- Candidate selection: Accepted candidate had the highest deterministic quality score (0.9703 vs 0.9672). Scores min/avg/max `0.824`/`0.8904`/`0.9703`.
+- Accepted candidate audit: family `four_way_package_gate`; variant `four_way_package_gate_primary`; tags `four_way, package_gate, two_phase`; primary `four_way`; topology `four_way_gate`; path `8`; orientation `horizontal`; Swift-required `True`; strategy `four_way_intersection`; variant `normal`; orientation reason `auto_horizontal`; diversity `topology None, mechanic penalty None, topology penalty None, score None`.
+- Near miss `not_selected` seed `3847892148` score `0.9672` family `four_way_intro` variant `four_way_intro_alternate` tags `four_way, repeated_tap, intro` primary `four_way` topology `four_way_gate` path `6` orientation `horizontal` Swift-required `True` strategy `four_way_intersection` variant `normal` orientation reason `probability` diversity `topology None, mechanic penalty None, topology penalty None, score None`.
+- Near miss `not_selected` seed `1280380920` score `0.9571` family `four_way_ring` variant `four_way_ring_alternate` tags `four_way, ring, loop, package_inside_loop` primary `four_way` topology `four_way_ring` path `7` orientation `horizontal` Swift-required `True` strategy `four_way_intersection` variant `normal` orientation reason `probability` diversity `topology None, mechanic penalty None, topology penalty None, score None`.
+- Near miss `not_selected` seed `435846739` score `0.9208` family `controlled_repeated_taps` variant `controlled_repeated_taps_primary` tags `repeated_tap, revisit, two_phase, loop, long_route` primary `repeated_tap` topology `revisit` path `9` orientation `horizontal` Swift-required `False` strategy `package_inside_loop` variant `mirrored` orientation reason `auto_horizontal` diversity `topology None, mechanic penalty None, topology penalty None, score None`.
+- Switch `four_way_switch` starts on `e_four_way_switch_wrong_dead_end` (west); tap 1 @ 0.49s -> `e_four_way_switch_package_lane` (north).
+- Switch `switch_exit` starts on `e_switch_exit_gate_dead_end` (north); tap 1 @ 3.33s -> `e_switch_exit_exit_lane` (south).
+- Warning: tap_node_switch_context: Solution action 1 taps 4-way intersection switch 'four_way_switch' with 4 option(s).
+- Warning: tap_node_switch_context: Solution action 2 taps 2-way switch 'switch_exit' with 2 option(s).
+### `level_042`
+- Recipe: `four_way_intro` variant `four_way_intro_primary`; abstract signature `ef3d0eaea3cf`.
+- Mechanics: tags `four_way, repeated_tap, intro`; primary `four_way`; topology `four_way_gate`; required path length `6`; layout orientation `horizontal` via `auto_horizontal`; Swift-required `True`; unlock `expert levels unlocked`; depends on `hub_choice`.
+- Diversity audit: topology None, mechanic penalty None, topology penalty None, score None.
+- Layout: `normal`; strategy: `four_way_intersection`; orientation: `horizontal`; road shapes: `auto` (score `0.9`).
+- Road-shape checks: 0 crossings, 0 required-path crossings, 0 long parallel segments.
+- Visual clarity: score `0.92`, 1 issue(s).
+- Abstract solution: 2 required taps, 1 alternate paths, 2 dead ends, 15 loops.
+- Difficulty model: estimated `expert`, mechanical `1.0`, visual `0.9`, campaign pacing `1.0`.
+- Score breakdown: mechanic `1.0`, runtime `1.0`, readability `0.9558`, switch clarity `1.0`, mobile comfort `1.0`, visual appeal `0.8916`.
+- Solution route: `start` -> `entry` -> `central_switch` -> `package` -> `return_node` -> `central_switch` -> `destination`.
+- Required taps: tap `central_switch` at `0.95s` -> `e_central_switch_package` (0.5s window), tap `central_switch` at `3.11s` -> `e_central_switch_destination` (0.5s window).
+- Candidate selection: Accepted candidate had the highest deterministic quality score (0.9672 vs 0.9571). Scores min/avg/max `0.8506`/`0.8937`/`0.9672`.
+- Accepted candidate audit: family `four_way_intro`; variant `four_way_intro_primary`; tags `four_way, repeated_tap, intro`; primary `four_way`; topology `four_way_gate`; path `6`; orientation `horizontal`; Swift-required `True`; strategy `four_way_intersection`; variant `normal`; orientation reason `auto_horizontal`; diversity `topology None, mechanic penalty None, topology penalty None, score None`.
+- Near miss `not_selected` seed `2221366629` score `0.9571` family `four_way_ring` variant `four_way_ring_primary` tags `four_way, ring, loop, package_inside_loop` primary `four_way` topology `four_way_ring` path `7` orientation `horizontal` Swift-required `True` strategy `four_way_intersection` variant `normal` orientation reason `probability` diversity `topology None, mechanic penalty None, topology penalty None, score None`.
+- Near miss `not_selected` seed `2216887608` score `0.9254` family `controlled_repeated_taps` variant `controlled_repeated_taps_primary` tags `repeated_tap, revisit, two_phase, loop, long_route` primary `repeated_tap` topology `revisit` path `9` orientation `horizontal` Swift-required `False` strategy `package_inside_loop` variant `mirrored` orientation reason `probability` diversity `topology None, mechanic penalty None, topology penalty None, score None`.
+- Near miss `not_selected` seed `1372336268` score `0.8925` family `late_route_reversal` variant `late_route_reversal_alternate` tags `route_reversal, revisit, repeated_tap` primary `route_reversal` topology `two_switch_order` path `6` orientation `horizontal` Swift-required `False` strategy `horizontal_route_progression` variant `mirrored` orientation reason `auto_horizontal` diversity `topology None, mechanic penalty None, topology penalty None, score None`.
+- Switch `central_switch` starts on `e_central_switch_dead_end` (west); tap 1 @ 0.95s -> `e_central_switch_package` (north), tap 2 @ 3.11s -> `e_central_switch_destination` (east).
+- Warning: tap_node_switch_context: Solution action 1 taps 4-way intersection switch 'central_switch' with 4 option(s).
+- Warning: tap_node_switch_context: Solution action 2 taps 4-way intersection switch 'central_switch' with 4 option(s).
+- Warning: return_loop_visually_unclear: Return loop revisits switch 'central_switch', which can obscure the intended route flow.
+- Visual clarity warning: `return_loop_visually_unclear` node `central_switch` edge `None`.
+### `level_043`
+- Recipe: `four_way_ring` variant `four_way_ring_alternate`; abstract signature `8c58f22a39a4`.
+- Mechanics: tags `four_way, ring, loop, package_inside_loop`; primary `four_way`; topology `four_way_ring`; required path length `7`; layout orientation `horizontal` via `probability`; Swift-required `True`; unlock `four-way loops unlocked`; depends on `four_way_intro`.
+- Diversity audit: topology None, mechanic penalty None, topology penalty None, score None.
+- Layout: `normal`; strategy: `four_way_intersection`; orientation: `horizontal`; road shapes: `auto` (score `0.89`).
+- Road-shape checks: 0 crossings, 0 required-path crossings, 0 long parallel segments.
+- Visual clarity: score `1.0`, 0 issue(s).
+- Abstract solution: 3 required taps, 4 alternate paths, 3 dead ends, 54 loops.
+- Difficulty model: estimated `expert`, mechanical `1.0`, visual `1.0`, campaign pacing `1.0`.
+- Score breakdown: mechanic `1.0`, runtime `1.0`, readability `0.9725`, switch clarity `1.0`, mobile comfort `1.0`, visual appeal `0.9001`.
+- Solution route: `start` -> `ring_entry` -> `four_way_switch` -> `ring_a` -> `package` -> `ring_b` -> `switch_exit` -> `destination`.
+- Required taps: tap `four_way_switch` at `0.77s` -> `e_four_way_switch_ring_a` (0.5s window), tap `ring_b` at `2.65s` -> `e_ring_b_switch_exit` (0.5s window), tap `switch_exit` at `3.10s` -> `e_switch_exit_destination` (0.5s window).
+- Candidate selection: Accepted candidate had the highest deterministic quality score (0.9571 vs 0.9208). Scores min/avg/max `0.825`/`0.885`/`0.9571`.
+- Accepted candidate audit: family `four_way_ring`; variant `four_way_ring_alternate`; tags `four_way, ring, loop, package_inside_loop`; primary `four_way`; topology `four_way_ring`; path `7`; orientation `horizontal`; Swift-required `True`; strategy `four_way_intersection`; variant `normal`; orientation reason `probability`; diversity `topology None, mechanic penalty None, topology penalty None, score None`.
+- Near miss `not_selected` seed `2308825793` score `0.9208` family `controlled_repeated_taps` variant `controlled_repeated_taps_primary` tags `repeated_tap, revisit, two_phase, loop, long_route` primary `repeated_tap` topology `revisit` path `9` orientation `horizontal` Swift-required `False` strategy `package_inside_loop` variant `mirrored` orientation reason `auto_horizontal` diversity `topology None, mechanic penalty None, topology penalty None, score None`.
+- Near miss `not_selected` seed `2313321975` score `0.8916` family `late_route_reversal` variant `late_route_reversal_primary` tags `route_reversal, revisit, repeated_tap` primary `route_reversal` topology `two_switch_order` path `6` orientation `horizontal` Swift-required `False` strategy `horizontal_route_progression` variant `mirrored` orientation reason `auto_horizontal` diversity `topology None, mechanic penalty None, topology penalty None, score None`.
+- Near miss `not_selected` seed `585865907` score `0.8895` family `multi_four_way_route` variant `multi_four_way_route_alternate` tags `four_way, multi_switch` primary `four_way` topology `four_way_gate` path `6` orientation `horizontal` Swift-required `True` strategy `four_way_intersection` variant `mirrored` orientation reason `auto_horizontal` diversity `topology None, mechanic penalty None, topology penalty None, score None`.
+- Switch `four_way_switch` starts on `e_four_way_switch_wrong_dead_end` (west); tap 1 @ 0.77s -> `e_four_way_switch_ring_a` (north).
+- Switch `ring_b` starts on `e_ring_b_ring_c` (west); tap 1 @ 2.65s -> `e_ring_b_switch_exit` (east).
+- Switch `switch_exit` starts on `e_switch_exit_exit_dead_end` (north); tap 1 @ 3.10s -> `e_switch_exit_destination` (south).
+- Warning: tap_node_switch_context: Solution action 1 taps 4-way intersection switch 'four_way_switch' with 4 option(s).
+- Warning: tap_node_switch_context: Solution action 2 taps 2-way switch 'ring_b' with 2 option(s).
+- Warning: tap_node_switch_context: Solution action 3 taps 2-way switch 'switch_exit' with 2 option(s).
+### `level_044`
+- Recipe: `controlled_repeated_taps` variant `controlled_repeated_taps_alternate`; abstract signature `0478883033f9`.
+- Mechanics: tags `repeated_tap, revisit, two_phase, loop, long_route`; primary `repeated_tap`; topology `revisit`; required path length `9`; layout orientation `horizontal` via `auto_horizontal`; Swift-required `False`; unlock `repeated taps unlocked`; depends on `return_loop_intro`.
+- Diversity audit: topology None, mechanic penalty None, topology penalty None, score None.
+- Layout: `normal`; strategy: `package_inside_loop`; orientation: `horizontal`; road shapes: `auto` (score `0.65`).
+- Road-shape checks: 0 crossings, 0 required-path crossings, 2 long parallel segments.
+- Visual clarity: score `0.76`, 3 issue(s).
+- Abstract solution: 4 required taps, 1 alternate paths, 3 dead ends, 34 loops.
+- Difficulty model: estimated `expert`, mechanical `1.0`, visual `1.0`, campaign pacing `1.0`.
+- Score breakdown: mechanic `1.0`, runtime `1.0`, readability `0.8201`, switch clarity `1.0`, mobile comfort `1.0`, visual appeal `0.7236`.
+- Solution route: `start` -> `repeat_switch` -> `package_lane` -> `package` -> `loop_switch` -> `return_lane` -> `repeat_switch` -> `exit_lane` -> `switch_exit` -> `destination`.
+- Required taps: tap `repeat_switch` at `0.27s` -> `e_repeat_switch_package_lane` (0.5s window), tap `loop_switch` at `2.72s` -> `e_loop_switch_return_lane` (0.5s window), tap `repeat_switch` at `5.81s` -> `e_repeat_switch_exit_lane` (0.5s window), tap `switch_exit` at `7.85s` -> `e_switch_exit_destination` (0.5s window).
+- Candidate selection: Accepted candidate had the highest deterministic quality score (0.9222 vs 0.8916). Scores min/avg/max `0.8895`/`0.8987`/`0.9222`.
+- Accepted candidate audit: family `controlled_repeated_taps`; variant `controlled_repeated_taps_alternate`; tags `repeated_tap, revisit, two_phase, loop, long_route`; primary `repeated_tap`; topology `revisit`; path `9`; orientation `horizontal`; Swift-required `False`; strategy `package_inside_loop`; variant `normal`; orientation reason `auto_horizontal`; diversity `topology None, mechanic penalty None, topology penalty None, score None`.
+- Near miss `not_selected` seed `1562956909` score `0.8916` family `multi_four_way_route` variant `multi_four_way_route_primary` tags `four_way, multi_switch` primary `four_way` topology `four_way_gate` path `6` orientation `horizontal` Swift-required `True` strategy `four_way_intersection` variant `mirrored` orientation reason `probability` diversity `topology None, mechanic penalty None, topology penalty None, score None`.
+- Near miss `not_selected` seed `3247563411` score `0.8916` family `late_route_reversal` variant `late_route_reversal_alternate` tags `route_reversal, revisit, repeated_tap` primary `route_reversal` topology `two_switch_order` path `6` orientation `horizontal` Swift-required `False` strategy `horizontal_route_progression` variant `mirrored` orientation reason `auto_horizontal` diversity `topology None, mechanic penalty None, topology penalty None, score None`.
+- Near miss `not_selected` seed `3288164886` score `0.8895` family `four_way_intersection` variant `package_right_destination_down` tags `four_way, repeated_tap` primary `four_way` topology `four_way_gate` path `6` orientation `horizontal` Swift-required `False` strategy `four_way_intersection` variant `mirrored` orientation reason `auto_horizontal` diversity `topology None, mechanic penalty None, topology penalty None, score None`.
+- Switch `repeat_switch` starts on `e_repeat_switch_dead_end_a` (west); tap 1 @ 0.27s -> `e_repeat_switch_package_lane` (north), tap 2 @ 5.81s -> `e_repeat_switch_exit_lane` (south).
+- Switch `loop_switch` starts on `e_loop_switch_dead_end_b` (north); tap 1 @ 2.72s -> `e_loop_switch_return_lane` (south).
+- Switch `switch_exit` starts on `e_switch_exit_dead_end_c` (north); tap 1 @ 7.85s -> `e_switch_exit_destination` (east).
+- Warning: tap_node_switch_context: Solution action 1 taps 3-way switch 'repeat_switch' with 3 option(s).
+- Warning: tap_node_switch_context: Solution action 2 taps 2-way switch 'loop_switch' with 2 option(s).
+- Warning: tap_node_switch_context: Solution action 3 taps 3-way switch 'repeat_switch' with 3 option(s).
+- Warning: tap_node_switch_context: Solution action 4 taps 2-way switch 'switch_exit' with 2 option(s).
+- Warning: long_parallel_road_segments: Road-shape issue: long_parallel_road_segments:2
+- Warning: long_parallel_road_segments_visually_merge: Edges 'e_loop_switch_return_lane' and 'e_switch_exit_dead_end_c' have parallel segments that can read as one road.
+- Warning: long_parallel_road_segments_visually_merge: Edges 'e_loop_switch_return_lane' and 'e_exit_lane_switch_exit' have parallel segments that can read as one road.
+- Warning: return_loop_visually_unclear: Return loop revisits switch 'repeat_switch', which can obscure the intended route flow.
+- Visual clarity warning: `long_parallel_road_segments_visually_merge` node `None` edge `e_loop_switch_return_lane`.
+- Visual clarity warning: `long_parallel_road_segments_visually_merge` node `None` edge `e_loop_switch_return_lane`.
+- Visual clarity warning: `return_loop_visually_unclear` node `repeat_switch` edge `None`.
+### `level_045`
+- Recipe: `late_route_reversal` variant `late_route_reversal_alternate`; abstract signature `e7c0a95d84a0`.
+- Mechanics: tags `route_reversal, revisit, repeated_tap`; primary `route_reversal`; topology `two_switch_order`; required path length `6`; layout orientation `horizontal` via `auto_horizontal`; Swift-required `False`; unlock `late expert mechanics unlocked`; depends on `multi_switch_revisit`.
+- Diversity audit: topology None, mechanic penalty None, topology penalty None, score None.
+- Layout: `mirrored`; strategy: `horizontal_route_progression`; orientation: `horizontal`; road shapes: `crossing_minimized` (score `0.94`).
+- Road-shape checks: 0 crossings, 0 required-path crossings, 0 long parallel segments.
+- Visual clarity: score `1.0`, 0 issue(s).
+- Abstract solution: 3 required taps, 0 alternate paths, 3 dead ends, 0 loops.
+- Difficulty model: estimated `expert`, mechanical `1.0`, visual `1.0`, campaign pacing `1.0`.
+- Score breakdown: mechanic `1.0`, runtime `1.0`, readability `0.985`, switch clarity `1.0`, mobile comfort `1.0`, visual appeal `0.9057`.
+- Solution route: `start` -> `switch_a` -> `package` -> `switch_b` -> `route_mid` -> `switch_c` -> `destination`.
+- Required taps: tap `switch_a` at `0.10s` -> `e_switch_a_package` (0.41s window), tap `switch_b` at `0.97s` -> `e_switch_b_route_mid` (0.5s window), tap `switch_c` at `1.94s` -> `e_switch_c_destination` (0.5s window).
+- Candidate selection: Accepted candidate had the highest deterministic quality score (0.8925 vs 0.8895). Scores min/avg/max `0.856`/`0.8799`/`0.8925`.
+- Accepted candidate audit: family `late_route_reversal`; variant `late_route_reversal_alternate`; tags `route_reversal, revisit, repeated_tap`; primary `route_reversal`; topology `two_switch_order`; path `6`; orientation `horizontal`; Swift-required `False`; strategy `horizontal_route_progression`; variant `mirrored`; orientation reason `auto_horizontal`; diversity `topology None, mechanic penalty None, topology penalty None, score None`.
+- Near miss `not_selected` seed `1616541710` score `0.8895` family `four_way_intersection` variant `package_left_destination_up` tags `four_way, repeated_tap` primary `four_way` topology `four_way_gate` path `6` orientation `horizontal` Swift-required `False` strategy `four_way_intersection` variant `mirrored` orientation reason `auto_horizontal` diversity `topology None, mechanic penalty None, topology penalty None, score None`.
+- Near miss `quality_similarity_above_threshold` seed `3344014941` score `0.8802` family `multi_four_way_route` variant `multi_four_way_route_primary` tags `four_way, multi_switch` primary `four_way` topology `four_way_gate` path `6` orientation `horizontal` Swift-required `True` strategy `four_way_intersection` variant `wide` orientation reason `probability` diversity `topology None, mechanic penalty None, topology penalty None, score None`.
+- Near miss `quality_similarity_above_threshold` seed `2497215508` score `0.8802` family `multi_four_way_route` variant `multi_four_way_route_primary` tags `four_way, multi_switch` primary `four_way` topology `four_way_gate` path `6` orientation `horizontal` Swift-required `True` strategy `four_way_intersection` variant `wide` orientation reason `auto_horizontal` diversity `topology None, mechanic penalty None, topology penalty None, score None`.
+- Switch `switch_a` starts on `e_switch_a_dead_end_a` (north); tap 1 @ 0.10s -> `e_switch_a_package` (west).
+- Switch `switch_b` starts on `e_switch_b_dead_end_b` (north); tap 1 @ 0.97s -> `e_switch_b_route_mid` (south).
+- Switch `switch_c` starts on `e_switch_c_dead_end_c` (north); tap 1 @ 1.94s -> `e_switch_c_destination` (west).
+- Warning: tap_node_switch_context: Solution action 1 taps 2-way switch 'switch_a' with 2 option(s).
+- Warning: tap_node_switch_context: Solution action 2 taps 2-way switch 'switch_b' with 2 option(s).
+- Warning: tap_node_switch_context: Solution action 3 taps 2-way switch 'switch_c' with 2 option(s).
+### `level_046`
+- Recipe: `multi_four_way_route` variant `multi_four_way_route_alternate`; abstract signature `6509880f7e6f`.
+- Mechanics: tags `four_way, multi_switch`; primary `four_way`; topology `four_way_gate`; required path length `6`; layout orientation `horizontal` via `auto_horizontal`; Swift-required `True`; unlock `advanced four-way unlocked`; depends on `four_way_package_gate`.
+- Diversity audit: topology None, mechanic penalty None, topology penalty None, score None.
+- Layout: `mirrored`; strategy: `four_way_intersection`; orientation: `horizontal`; road shapes: `auto` (score `0.9`).
+- Road-shape checks: 0 crossings, 0 required-path crossings, 0 long parallel segments.
+- Visual clarity: score `0.92`, 1 issue(s).
+- Abstract solution: 2 required taps, 1 alternate paths, 2 dead ends, 15 loops.
+- Difficulty model: estimated `expert`, mechanical `1.0`, visual `0.9`, campaign pacing `1.0`.
+- Score breakdown: mechanic `1.0`, runtime `1.0`, readability `0.9558`, switch clarity `1.0`, mobile comfort `1.0`, visual appeal `0.8916`.
+- Solution route: `start` -> `entry` -> `central_switch` -> `package` -> `return_node` -> `central_switch` -> `destination`.
+- Required taps: tap `central_switch` at `0.95s` -> `e_central_switch_package` (0.5s window), tap `central_switch` at `3.11s` -> `e_central_switch_destination` (0.5s window).
+- Candidate selection: Accepted candidate had the highest deterministic quality score (0.8916 vs 0.8802). Scores min/avg/max `0.8556`/`0.8774`/`0.8916`.
+- Accepted candidate audit: family `multi_four_way_route`; variant `multi_four_way_route_alternate`; tags `four_way, multi_switch`; primary `four_way`; topology `four_way_gate`; path `6`; orientation `horizontal`; Swift-required `True`; strategy `four_way_intersection`; variant `mirrored`; orientation reason `auto_horizontal`; diversity `topology None, mechanic penalty None, topology penalty None, score None`.
+- Near miss `quality_similarity_above_threshold` seed `26138647` score `0.8802` family `four_way_intersection` variant `package_left_destination_up` tags `four_way, repeated_tap` primary `four_way` topology `four_way_gate` path `6` orientation `horizontal` Swift-required `False` strategy `four_way_intersection` variant `wide` orientation reason `auto_horizontal` diversity `topology None, mechanic penalty None, topology penalty None, score None`.
+- Near miss `quality_similarity_above_threshold` seed `26138645` score `0.8799` family `four_way_intersection` variant `package_left_destination_up` tags `four_way, repeated_tap` primary `four_way` topology `four_way_gate` path `6` orientation `horizontal` Swift-required `False` strategy `four_way_intersection` variant `wide` orientation reason `auto_horizontal` diversity `topology None, mechanic penalty None, topology penalty None, score None`.
+- Near miss `quality_similarity_above_threshold` seed `26138646` score `0.8799` family `four_way_intersection` variant `package_left_destination_up` tags `four_way, repeated_tap` primary `four_way` topology `four_way_gate` path `6` orientation `horizontal` Swift-required `False` strategy `four_way_intersection` variant `wide` orientation reason `auto_horizontal` diversity `topology None, mechanic penalty None, topology penalty None, score None`.
+- Switch `central_switch` starts on `e_central_switch_dead_end` (west); tap 1 @ 0.95s -> `e_central_switch_package` (south), tap 2 @ 3.11s -> `e_central_switch_destination` (east).
+- Warning: tap_node_switch_context: Solution action 1 taps 4-way intersection switch 'central_switch' with 4 option(s).
+- Warning: tap_node_switch_context: Solution action 2 taps 4-way intersection switch 'central_switch' with 4 option(s).
+- Warning: return_loop_visually_unclear: Return loop revisits switch 'central_switch', which can obscure the intended route flow.
+- Visual clarity warning: `return_loop_visually_unclear` node `central_switch` edge `None`.
+### `level_047`
+- Recipe: `multi_four_way_route` variant `multi_four_way_route_alternate`; abstract signature `6509880f7e6f`.
+- Mechanics: tags `four_way, multi_switch`; primary `four_way`; topology `four_way_gate`; required path length `6`; layout orientation `horizontal` via `auto_horizontal`; Swift-required `True`; unlock `advanced four-way unlocked`; depends on `four_way_package_gate`.
+- Diversity audit: topology None, mechanic penalty None, topology penalty None, score None.
+- Layout: `mirrored`; strategy: `four_way_intersection`; orientation: `horizontal`; road shapes: `auto` (score `0.9`).
+- Road-shape checks: 0 crossings, 0 required-path crossings, 0 long parallel segments.
+- Visual clarity: score `0.92`, 1 issue(s).
+- Abstract solution: 2 required taps, 1 alternate paths, 2 dead ends, 15 loops.
+- Difficulty model: estimated `expert`, mechanical `1.0`, visual `0.9`, campaign pacing `0.62`.
+- Score breakdown: mechanic `1.0`, runtime `1.0`, readability `0.9558`, switch clarity `1.0`, mobile comfort `1.0`, visual appeal `0.8916`.
+- Solution route: `start` -> `entry` -> `central_switch` -> `package` -> `return_node` -> `central_switch` -> `destination`.
+- Required taps: tap `central_switch` at `0.95s` -> `e_central_switch_package` (0.5s window), tap `central_switch` at `3.11s` -> `e_central_switch_destination` (0.5s window).
+- Candidate selection: Accepted candidate had the highest deterministic quality score (0.8556 vs 0.8802). Scores min/avg/max `0.8556`/`0.8739`/`0.8802`.
+- Accepted candidate audit: family `multi_four_way_route`; variant `multi_four_way_route_alternate`; tags `four_way, multi_switch`; primary `four_way`; topology `four_way_gate`; path `6`; orientation `horizontal`; Swift-required `True`; strategy `four_way_intersection`; variant `mirrored`; orientation reason `auto_horizontal`; diversity `topology None, mechanic penalty None, topology penalty None, score None`.
+- Near miss `quality_similarity_above_threshold` seed `967124356` score `0.8802` family `four_way_intersection` variant `package_left_destination_up` tags `four_way, repeated_tap` primary `four_way` topology `four_way_gate` path `6` orientation `horizontal` Swift-required `False` strategy `four_way_intersection` variant `wide` orientation reason `auto_horizontal` diversity `topology None, mechanic penalty None, topology penalty None, score None`.
+- Near miss `quality_similarity_above_threshold` seed `967124354` score `0.8799` family `four_way_intersection` variant `package_left_destination_up` tags `four_way, repeated_tap` primary `four_way` topology `four_way_gate` path `6` orientation `horizontal` Swift-required `False` strategy `four_way_intersection` variant `wide` orientation reason `auto_horizontal` diversity `topology None, mechanic penalty None, topology penalty None, score None`.
+- Near miss `quality_similarity_above_threshold` seed `967124355` score `0.8799` family `four_way_intersection` variant `package_left_destination_up` tags `four_way, repeated_tap` primary `four_way` topology `four_way_gate` path `6` orientation `horizontal` Swift-required `False` strategy `four_way_intersection` variant `wide` orientation reason `auto_horizontal` diversity `topology None, mechanic penalty None, topology penalty None, score None`.
+- Switch `central_switch` starts on `e_central_switch_dead_end` (east); tap 1 @ 0.95s -> `e_central_switch_package` (north), tap 2 @ 3.11s -> `e_central_switch_destination` (west).
+- Warning: tap_node_switch_context: Solution action 1 taps 4-way intersection switch 'central_switch' with 4 option(s).
+- Warning: tap_node_switch_context: Solution action 2 taps 4-way intersection switch 'central_switch' with 4 option(s).
+- Warning: return_loop_visually_unclear: Return loop revisits switch 'central_switch', which can obscure the intended route flow.
+- Visual clarity warning: `return_loop_visually_unclear` node `central_switch` edge `None`.
 
 ## Rejections
 
-- Rejected candidates: `53990`
-- `candidate_too_similar_to_batch`: 53984
-- `candidate_too_similar_to_existing`: 6
+- Rejected candidates: `16827`
+- `candidate_too_similar_to_batch`: 13250
+- `implicit_intersection_without_graph_node`: 414
+- `important_node_readability_blocked_by_road`: 1512
+- `layout_node_out_of_bounds`: 198
+- `layout_switch_too_close_to_edge`: 177
+- `quality_similarity_above_threshold`: 270
+- `same_switch_first_segments_overlap`: 451
+- `solution_tap_not_before_switch_arrival`: 516
+- `switch_tap_targets_too_close`: 39
 
 ## Messages
 
-- Loaded 20 existing level signatures for similarity checks.
-- Rejected candidate level_016 seed=3209145813 template=return_loop reason=candidate_too_similar_to_existing detail=matches level_014: same topology, solution, and layout (18a00047/c6e81a71)
-- Rejected candidate level_016 seed=3209145814 template=return_loop reason=candidate_too_similar_to_existing detail=matches level_014: same topology, solution, and layout (18a00047/c6e81a71)
-- Rejected candidate level_016 seed=3209145815 template=return_loop reason=candidate_too_similar_to_existing detail=matches level_014: same topology, solution, and layout (18a00047/c6e81a71)
-- Rejected candidate level_016 seed=3209145945 template=return_loop reason=candidate_too_similar_to_batch detail=matches level_016: same topology, solution, and layout (18a00047/c6e81a71)
-- Rejected candidate level_016 seed=3209145946 template=return_loop reason=candidate_too_similar_to_batch detail=matches level_016: same topology, solution, and layout (18a00047/c6e81a71)
-- Rejected candidate level_016 seed=3209146075 template=return_loop reason=candidate_too_similar_to_batch detail=matches level_016: similarity 0.90 >= 0.88
-- Rejected candidate level_016 seed=3209146076 template=return_loop reason=candidate_too_similar_to_batch detail=matches level_016: similarity 0.90 >= 0.88
-- Rejected candidate level_016 seed=3209146077 template=return_loop reason=candidate_too_similar_to_batch detail=matches level_016: similarity 0.90 >= 0.88
-- Rejected candidate level_016 seed=3209162974 template=return_loop reason=candidate_too_similar_to_batch detail=matches level_016: similarity 0.90 >= 0.88
-- Rejected candidate level_016 seed=3209162975 template=return_loop reason=candidate_too_similar_to_batch detail=matches level_016: similarity 0.90 >= 0.88
-- Rejected candidate level_016 seed=3209162976 template=return_loop reason=candidate_too_similar_to_batch detail=matches level_016: similarity 0.90 >= 0.88
-- Rejected candidate level_016 seed=3209163106 template=return_loop reason=candidate_too_similar_to_batch detail=matches level_016: same topology, solution, and layout (18a00047/c6e81a71)
-- Rejected candidate level_016 seed=3209163107 template=return_loop reason=candidate_too_similar_to_batch detail=matches level_016: same topology, solution, and layout (18a00047/c6e81a71)
-- Rejected candidate level_016 seed=3209163236 template=return_loop reason=candidate_too_similar_to_batch detail=matches level_016: similarity 0.90 >= 0.88
-- Rejected candidate level_016 seed=3209163237 template=return_loop reason=candidate_too_similar_to_batch detail=matches level_016: similarity 0.90 >= 0.88
-- Rejected candidate level_016 seed=3209163238 template=return_loop reason=candidate_too_similar_to_batch detail=matches level_016: similarity 0.90 >= 0.88
-- Rejected candidate level_016 seed=3209180136 template=return_loop reason=candidate_too_similar_to_batch detail=matches level_016: same topology, solution, and layout (b0ddc5b0/c09ff266)
-- Rejected candidate level_016 seed=3209180137 template=return_loop reason=candidate_too_similar_to_batch detail=matches level_016: same topology, solution, and layout (b0ddc5b0/c09ff266)
-- Rejected candidate level_016 seed=3209180266 template=return_loop reason=candidate_too_similar_to_batch detail=matches level_016: similarity 0.89 >= 0.88
-- Rejected candidate level_016 seed=3209180267 template=return_loop reason=candidate_too_similar_to_batch detail=matches level_016: similarity 0.89 >= 0.88
-- Rejected candidate level_016 seed=3209180268 template=return_loop reason=candidate_too_similar_to_batch detail=matches level_016: similarity 0.90 >= 0.88
-- Rejected candidate level_016 seed=3209180397 template=return_loop reason=candidate_too_similar_to_batch detail=matches level_016: same template/topology and layout similarity 0.99
-- Rejected candidate level_016 seed=3209180398 template=return_loop reason=candidate_too_similar_to_batch detail=matches level_016: same template/topology and layout similarity 0.99
-- Rejected candidate level_016 seed=3209180399 template=return_loop reason=candidate_too_similar_to_batch detail=matches level_016: same template/topology and layout similarity 0.99
-- Rejected candidate level_016 seed=3209197296 template=return_loop reason=candidate_too_similar_to_batch detail=matches level_016: similarity 0.90 >= 0.88
-- Rejected candidate level_016 seed=3209197297 template=return_loop reason=candidate_too_similar_to_batch detail=matches level_016: similarity 0.90 >= 0.88
-- Rejected candidate level_016 seed=3209197298 template=return_loop reason=candidate_too_similar_to_batch detail=matches level_016: similarity 0.90 >= 0.88
-- Rejected candidate level_016 seed=3209197427 template=return_loop reason=candidate_too_similar_to_batch detail=matches level_016: same topology, solution, and layout (18a00047/c6e81a71)
-- Rejected candidate level_016 seed=3209197428 template=return_loop reason=candidate_too_similar_to_batch detail=matches level_016: same topology, solution, and layout (18a00047/c6e81a71)
-- Rejected candidate level_016 seed=3209197429 template=return_loop reason=candidate_too_similar_to_batch detail=matches level_016: same topology, solution, and layout (18a00047/c6e81a71)
-- Rejected candidate level_016 seed=3209197558 template=return_loop reason=candidate_too_similar_to_batch detail=matches level_016: similarity 0.90 >= 0.88
-- Rejected candidate level_016 seed=3209197559 template=return_loop reason=candidate_too_similar_to_batch detail=matches level_016: similarity 0.90 >= 0.88
-- Rejected candidate level_016 seed=3209197560 template=return_loop reason=candidate_too_similar_to_batch detail=matches level_016: similarity 0.90 >= 0.88
-- Rejected candidate level_016 seed=2468237112 template=return_loop reason=candidate_too_similar_to_batch detail=matches level_016: same topology, solution, and layout (b0ddc5b0/c09ff266)
-- Rejected candidate level_016 seed=2468237113 template=return_loop reason=candidate_too_similar_to_batch detail=matches level_016: same topology, solution, and layout (b0ddc5b0/c09ff266)
-- Rejected candidate level_016 seed=2468237114 template=return_loop reason=candidate_too_similar_to_batch detail=matches level_016: same topology, solution, and layout (b0ddc5b0/c09ff266)
-- Rejected candidate level_016 seed=2468237243 template=return_loop reason=candidate_too_similar_to_batch detail=matches level_016: similarity 0.89 >= 0.88
-- Rejected candidate level_016 seed=2468237244 template=return_loop reason=candidate_too_similar_to_batch detail=matches level_016: similarity 0.89 >= 0.88
-- Rejected candidate level_016 seed=2468237245 template=return_loop reason=candidate_too_similar_to_batch detail=matches level_016: similarity 0.89 >= 0.88
-- Rejected candidate level_016 seed=2468237374 template=return_loop reason=candidate_too_similar_to_batch detail=matches level_016: same template/topology and layout similarity 0.99
-- Rejected candidate level_016 seed=2468237375 template=return_loop reason=candidate_too_similar_to_batch detail=matches level_016: same template/topology and layout similarity 0.99
-- Rejected candidate level_016 seed=2468237376 template=return_loop reason=candidate_too_similar_to_batch detail=matches level_016: same template/topology and layout similarity 0.99
-- Rejected candidate level_016 seed=2468254273 template=return_loop reason=candidate_too_similar_to_batch detail=matches level_016: similarity 0.90 >= 0.88
-- Rejected candidate level_016 seed=2468254274 template=return_loop reason=candidate_too_similar_to_batch detail=matches level_016: similarity 0.90 >= 0.88
-- Rejected candidate level_016 seed=2468254275 template=return_loop reason=candidate_too_similar_to_batch detail=matches level_016: similarity 0.90 >= 0.88
-- Rejected candidate level_016 seed=2468254404 template=return_loop reason=candidate_too_similar_to_batch detail=matches level_016: same topology, solution, and layout (18a00047/c6e81a71)
-- Rejected candidate level_016 seed=2468254405 template=return_loop reason=candidate_too_similar_to_batch detail=matches level_016: same topology, solution, and layout (18a00047/c6e81a71)
-- Rejected candidate level_016 seed=2468254406 template=return_loop reason=candidate_too_similar_to_batch detail=matches level_016: same topology, solution, and layout (18a00047/c6e81a71)
-- Rejected candidate level_016 seed=2468254535 template=return_loop reason=candidate_too_similar_to_batch detail=matches level_016: similarity 0.90 >= 0.88
-- Rejected candidate level_016 seed=2468254536 template=return_loop reason=candidate_too_similar_to_batch detail=matches level_016: similarity 0.90 >= 0.88
+- Rejected candidate level_001 seed=735630042 template=straight_delivery_intro reason=candidate_too_similar_to_batch detail=matches level_001: same topology, solution, and layout (2a12d2df/4ea3c0eb)
+- Rejected candidate level_001 seed=735630043 template=straight_delivery_intro reason=candidate_too_similar_to_batch detail=matches level_001: same topology, solution, and layout (2a12d2df/4ea3c0eb)
+- Rejected candidate level_001 seed=735647202 template=straight_delivery_intro reason=candidate_too_similar_to_batch detail=matches level_001: similarity 0.88 >= 0.88
+- Rejected candidate level_001 seed=735647203 template=straight_delivery_intro reason=candidate_too_similar_to_batch detail=matches level_001: similarity 0.89 >= 0.88
+- Rejected candidate level_001 seed=735647204 template=straight_delivery_intro reason=candidate_too_similar_to_batch detail=matches level_001: similarity 0.88 >= 0.88
+- Rejected candidate level_001 seed=735664363 template=straight_delivery_intro reason=candidate_too_similar_to_batch detail=matches level_001: same topology, solution, and layout (2a12d2df/4ea3c0eb)
+- Rejected candidate level_001 seed=735664364 template=straight_delivery_intro reason=candidate_too_similar_to_batch detail=matches level_001: same topology, solution, and layout (2a12d2df/4ea3c0eb)
+- Rejected candidate level_001 seed=735664365 template=straight_delivery_intro reason=candidate_too_similar_to_batch detail=matches level_001: same topology, solution, and layout (2a12d2df/4ea3c0eb)
+- Rejected candidate level_001 seed=737878132 template=straight_delivery reason=candidate_too_similar_to_batch detail=matches level_001: same topology, solution, and layout (2a12d2df/4ea3c0eb)
+- Rejected candidate level_001 seed=737878133 template=straight_delivery reason=candidate_too_similar_to_batch detail=matches level_001: same topology, solution, and layout (2a12d2df/4ea3c0eb)
+- Rejected candidate level_001 seed=737878134 template=straight_delivery reason=candidate_too_similar_to_batch detail=matches level_001: same topology, solution, and layout (2a12d2df/4ea3c0eb)
+- Rejected candidate level_001 seed=737895294 template=straight_delivery reason=candidate_too_similar_to_batch detail=matches level_001: same topology, solution, and layout (2a12d2df/4ea3c0eb)
+- Rejected candidate level_001 seed=737912454 template=straight_delivery reason=candidate_too_similar_to_batch detail=matches level_001: same topology, solution, and layout (2a12d2df/4ea3c0eb)
+- Rejected candidate level_001 seed=737912455 template=straight_delivery reason=candidate_too_similar_to_batch detail=matches level_001: same topology, solution, and layout (2a12d2df/4ea3c0eb)
+- Rejected candidate level_001 seed=737912456 template=straight_delivery reason=candidate_too_similar_to_batch detail=matches level_001: same topology, solution, and layout (2a12d2df/4ea3c0eb)
+- Rejected candidate level_001 seed=740126224 template=single_switch_wrong_dead_end reason=candidate_too_similar_to_batch detail=matches level_001: same topology, solution, and layout (43bcc0ec/fc75f4b5)
+- Rejected candidate level_001 seed=740126225 template=single_switch_wrong_dead_end reason=candidate_too_similar_to_batch detail=matches level_001: same topology, solution, and layout (43bcc0ec/fc75f4b5)
+- Rejected candidate level_001 seed=740143384 template=single_switch_wrong_dead_end reason=candidate_too_similar_to_batch detail=matches level_001: similarity 0.90 >= 0.88
+- Rejected candidate level_001 seed=740143385 template=single_switch_wrong_dead_end reason=candidate_too_similar_to_batch detail=matches level_001: similarity 0.91 >= 0.88
+- Rejected candidate level_001 seed=740143386 template=single_switch_wrong_dead_end reason=candidate_too_similar_to_batch detail=matches level_001: similarity 0.91 >= 0.88
+- Rejected candidate level_001 seed=740160545 template=single_switch_wrong_dead_end reason=candidate_too_similar_to_batch detail=matches level_001: same template/topology and layout similarity 0.99
+- Rejected candidate level_001 seed=740160546 template=single_switch_wrong_dead_end reason=candidate_too_similar_to_batch detail=matches level_001: same template/topology and layout similarity 0.99
+- Rejected candidate level_001 seed=740160547 template=single_switch_wrong_dead_end reason=candidate_too_similar_to_batch detail=matches level_001: same template/topology and layout similarity 0.99
+- Rejected candidate level_001 seed=742374315 template=straight_delivery reason=candidate_too_similar_to_batch detail=matches level_001: same topology, solution, and layout (1c29ff3e/4ea3c0eb)
+- Rejected candidate level_001 seed=742374316 template=straight_delivery reason=candidate_too_similar_to_batch detail=matches level_001: same topology, solution, and layout (1c29ff3e/4ea3c0eb)
+- Rejected candidate level_001 seed=742391475 template=straight_delivery reason=candidate_too_similar_to_batch detail=matches level_001: similarity 0.92 >= 0.88
+- Rejected candidate level_001 seed=742391476 template=straight_delivery reason=candidate_too_similar_to_batch detail=matches level_001: similarity 0.92 >= 0.88
+- Rejected candidate level_001 seed=742391477 template=straight_delivery reason=candidate_too_similar_to_batch detail=matches level_001: similarity 0.91 >= 0.88
+- Rejected candidate level_001 seed=742408636 template=straight_delivery reason=candidate_too_similar_to_batch detail=matches level_001: same template/topology and layout similarity 0.99
+- Rejected candidate level_001 seed=742408637 template=straight_delivery reason=candidate_too_similar_to_batch detail=matches level_001: same template/topology and layout similarity 0.99
+- Rejected candidate level_001 seed=742408638 template=straight_delivery reason=candidate_too_similar_to_batch detail=matches level_001: same template/topology and layout similarity 0.99
+- Rejected candidate level_001 seed=2460838018 template=straight_delivery_intro reason=candidate_too_similar_to_batch detail=matches level_001: same topology, solution, and layout (2a12d2df/4ea3c0eb)
+- Rejected candidate level_001 seed=2460838019 template=straight_delivery_intro reason=candidate_too_similar_to_batch detail=matches level_001: same topology, solution, and layout (2a12d2df/4ea3c0eb)
+- Rejected candidate level_001 seed=2460838020 template=straight_delivery_intro reason=candidate_too_similar_to_batch detail=matches level_001: same topology, solution, and layout (2a12d2df/4ea3c0eb)
+- Rejected candidate level_001 seed=2460855179 template=straight_delivery_intro reason=candidate_too_similar_to_batch detail=matches level_001: similarity 0.88 >= 0.88
+- Rejected candidate level_001 seed=2460855180 template=straight_delivery_intro reason=candidate_too_similar_to_batch detail=matches level_001: similarity 0.88 >= 0.88
+- Rejected candidate level_001 seed=2460855181 template=straight_delivery_intro reason=candidate_too_similar_to_batch detail=matches level_001: similarity 0.89 >= 0.88
+- Rejected candidate level_001 seed=2460872340 template=straight_delivery_intro reason=candidate_too_similar_to_batch detail=matches level_001: same topology, solution, and layout (2a12d2df/4ea3c0eb)
+- Rejected candidate level_001 seed=2460872341 template=straight_delivery_intro reason=candidate_too_similar_to_batch detail=matches level_001: same topology, solution, and layout (2a12d2df/4ea3c0eb)
+- Rejected candidate level_001 seed=2460872342 template=straight_delivery_intro reason=candidate_too_similar_to_batch detail=matches level_001: same topology, solution, and layout (2a12d2df/4ea3c0eb)
+- Rejected candidate level_001 seed=2463086109 template=single_switch_wrong_dead_end reason=candidate_too_similar_to_batch detail=matches level_001: same topology, solution, and layout (43bcc0ec/fc75f4b5)
+- Rejected candidate level_001 seed=2463086110 template=single_switch_wrong_dead_end reason=candidate_too_similar_to_batch detail=matches level_001: same topology, solution, and layout (43bcc0ec/fc75f4b5)
+- Rejected candidate level_001 seed=2463086111 template=single_switch_wrong_dead_end reason=candidate_too_similar_to_batch detail=matches level_001: same topology, solution, and layout (43bcc0ec/fc75f4b5)
+- Rejected candidate level_001 seed=2463103270 template=single_switch_wrong_dead_end reason=candidate_too_similar_to_batch detail=matches level_001: similarity 0.90 >= 0.88
+- Rejected candidate level_001 seed=2463103271 template=single_switch_wrong_dead_end reason=candidate_too_similar_to_batch detail=matches level_001: similarity 0.91 >= 0.88
+- Rejected candidate level_001 seed=2463103272 template=single_switch_wrong_dead_end reason=candidate_too_similar_to_batch detail=matches level_001: similarity 0.90 >= 0.88
+- Rejected candidate level_001 seed=2463120431 template=single_switch_wrong_dead_end reason=candidate_too_similar_to_batch detail=matches level_001: same template/topology and layout similarity 0.99
+- Rejected candidate level_001 seed=2463120432 template=single_switch_wrong_dead_end reason=candidate_too_similar_to_batch detail=matches level_001: same template/topology and layout similarity 0.99
+- Rejected candidate level_001 seed=2463120433 template=single_switch_wrong_dead_end reason=candidate_too_similar_to_batch detail=matches level_001: same template/topology and layout similarity 0.99
+- Rejected candidate level_001 seed=2465334201 template=package_before_destination_intro reason=candidate_too_similar_to_batch detail=matches level_001: same topology, solution, and layout (1a988a48/4ea3c0eb)
 - Additional candidate rejection messages suppressed after 50; see rejectionReasonCounts and candidateSelection in the report.
-- Could not generate valid level_020 after 300 attempts.
+- Could not generate valid level_048 after 10 attempts.
 
 ## Recommendations
 

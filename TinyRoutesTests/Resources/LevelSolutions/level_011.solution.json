@@ -2,20 +2,46 @@
   "levelID": "level_011",
   "description": "Follow the generated graph recipe route and rotate each switch before arrival.",
   "expectedOutcome": "completed",
-  "maxTaps": 3,
+  "maxTaps": 2,
   "requiresWithinTimeLimit": true,
   "actions": [
     {
       "timeSeconds": 0.21,
-      "tapNodeID": "multi_switch_chain_zigzag_switch_a"
+      "tapNodeID": "multi_switch_chain_zigzag_switch_a",
+      "reason": "Rotate switch 'multi_switch_chain_zigzag_switch_a' toward 'package' before arrival.",
+      "expectedEdgeAfterTap": "e_multi_switch_chain_zigzag_switch_a_package",
+      "expectedRouteNodeAfterTap": "package",
+      "reactionWindowSeconds": 0.45,
+      "switchStateBeforeTap": "e_multi_switch_chain_zigzag_switch_a_multi_switch_chain_zigzag_dead_end_a",
+      "switchStateAfterTap": "e_multi_switch_chain_zigzag_switch_a_package"
     },
     {
-      "timeSeconds": 1.32,
-      "tapNodeID": "multi_switch_chain_zigzag_switch_b"
-    },
-    {
-      "timeSeconds": 2.04,
-      "tapNodeID": "multi_switch_chain_zigzag_switch_c"
+      "timeSeconds": 1.52,
+      "tapNodeID": "multi_switch_chain_zigzag_switch_b",
+      "reason": "Rotate switch 'multi_switch_chain_zigzag_switch_b' toward 'destination' before arrival.",
+      "expectedEdgeAfterTap": "e_multi_switch_chain_zigzag_switch_b_destination",
+      "expectedRouteNodeAfterTap": "destination",
+      "reactionWindowSeconds": 0.45,
+      "switchStateBeforeTap": "e_multi_switch_chain_zigzag_switch_b_multi_switch_chain_zigzag_dead_end_b",
+      "switchStateAfterTap": "e_multi_switch_chain_zigzag_switch_b_destination"
     }
-  ]
+  ],
+  "metadata": {
+    "validationVersion": "solution_sidecar_v1",
+    "solutionRoute": [
+      "start",
+      "multi_switch_chain_zigzag_switch_a",
+      "package",
+      "multi_switch_chain_zigzag_switch_b",
+      "destination"
+    ],
+    "requiredTapOrder": [
+      "multi_switch_chain_zigzag_switch_a",
+      "multi_switch_chain_zigzag_switch_b"
+    ],
+    "template": "multi_switch_chain",
+    "generatedSeed": 3429423932,
+    "recipeFamily": "multi_switch_chain",
+    "recipeVariant": "multi_switch_chain_zigzag"
+  }
 }

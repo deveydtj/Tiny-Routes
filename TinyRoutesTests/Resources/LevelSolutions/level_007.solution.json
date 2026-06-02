@@ -2,16 +2,35 @@
   "levelID": "level_007",
   "description": "Follow the generated graph recipe route and rotate each switch before arrival.",
   "expectedOutcome": "completed",
-  "maxTaps": 2,
+  "maxTaps": 1,
   "requiresWithinTimeLimit": true,
   "actions": [
     {
-      "timeSeconds": 0.15,
-      "tapNodeID": "approach_switch"
-    },
-    {
-      "timeSeconds": 1.8,
-      "tapNodeID": "finish_switch"
+      "timeSeconds": 0.55,
+      "tapNodeID": "short_choice",
+      "reason": "Rotate switch 'short_choice' toward 'package' before arrival.",
+      "expectedEdgeAfterTap": "e_short_choice_package",
+      "expectedRouteNodeAfterTap": "package",
+      "reactionWindowSeconds": 0.45,
+      "switchStateBeforeTap": "e_short_choice_short_dead_end",
+      "switchStateAfterTap": "e_short_choice_package"
     }
-  ]
+  ],
+  "metadata": {
+    "validationVersion": "solution_sidecar_v1",
+    "solutionRoute": [
+      "start",
+      "approach",
+      "short_choice",
+      "package",
+      "destination"
+    ],
+    "requiredTapOrder": [
+      "short_choice"
+    ],
+    "template": "single_switch",
+    "generatedSeed": 2254506795,
+    "recipeFamily": "single_switch",
+    "recipeVariant": "single_switch_short_dead_end"
+  }
 }

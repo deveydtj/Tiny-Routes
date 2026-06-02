@@ -1,0 +1,124 @@
+{
+  "id": "level_047",
+  "name": "Level 047",
+  "graph": {
+    "nodes": [
+      {
+        "id": "start",
+        "x": 1.05,
+        "y": -0.5,
+        "outgoingEdgeIDs": [
+          "e_start_entry"
+        ]
+      },
+      {
+        "id": "entry",
+        "x": 0.8,
+        "y": -0.4,
+        "outgoingEdgeIDs": [
+          "e_entry_central_switch"
+        ]
+      },
+      {
+        "id": "central_switch",
+        "x": 0.0,
+        "y": 0.0,
+        "outgoingEdgeIDs": [
+          "e_central_switch_dead_end",
+          "e_central_switch_package",
+          "e_central_switch_destination",
+          "e_central_switch_side_branch"
+        ]
+      },
+      {
+        "id": "package",
+        "x": 0.0,
+        "y": 0.7,
+        "outgoingEdgeIDs": [
+          "e_package_return_node"
+        ]
+      },
+      {
+        "id": "return_node",
+        "x": -0.45,
+        "y": 0.3,
+        "outgoingEdgeIDs": [
+          "e_return_node_central_switch"
+        ]
+      },
+      {
+        "id": "destination",
+        "x": -1.05,
+        "y": -0.5,
+        "outgoingEdgeIDs": []
+      },
+      {
+        "id": "dead_end",
+        "x": 0.85,
+        "y": 0.3,
+        "outgoingEdgeIDs": []
+      },
+      {
+        "id": "side_branch",
+        "x": 0.0,
+        "y": -0.7,
+        "outgoingEdgeIDs": []
+      }
+    ],
+    "edges": [
+      {
+        "id": "e_start_entry",
+        "fromNodeID": "start",
+        "toNodeID": "entry",
+        "roadShape": "verticalFirst"
+      },
+      {
+        "id": "e_entry_central_switch",
+        "fromNodeID": "entry",
+        "toNodeID": "central_switch",
+        "roadShape": "horizontalFirst"
+      },
+      {
+        "id": "e_central_switch_dead_end",
+        "fromNodeID": "central_switch",
+        "toNodeID": "dead_end",
+        "roadShape": "horizontalFirst"
+      },
+      {
+        "id": "e_central_switch_package",
+        "fromNodeID": "central_switch",
+        "toNodeID": "package",
+        "roadShape": "horizontalFirst"
+      },
+      {
+        "id": "e_central_switch_destination",
+        "fromNodeID": "central_switch",
+        "toNodeID": "destination",
+        "roadShape": "horizontalFirst"
+      },
+      {
+        "id": "e_central_switch_side_branch",
+        "fromNodeID": "central_switch",
+        "toNodeID": "side_branch",
+        "roadShape": "horizontalFirst"
+      },
+      {
+        "id": "e_package_return_node",
+        "fromNodeID": "package",
+        "toNodeID": "return_node",
+        "roadShape": "horizontalFirst"
+      },
+      {
+        "id": "e_return_node_central_switch",
+        "fromNodeID": "return_node",
+        "toNodeID": "central_switch",
+        "roadShape": "horizontalFirst"
+      }
+    ]
+  },
+  "startNodeID": "start",
+  "packageNodeID": "package",
+  "destinationNodeID": "destination",
+  "timeLimitSeconds": 31,
+  "parTaps": 2
+}

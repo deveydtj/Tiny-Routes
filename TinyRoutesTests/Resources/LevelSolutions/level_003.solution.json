@@ -4,5 +4,20 @@
   "expectedOutcome": "completed",
   "maxTaps": 0,
   "requiresWithinTimeLimit": true,
-  "actions": []
+  "actions": [],
+  "metadata": {
+    "validationVersion": "solution_sidecar_v1",
+    "solutionRoute": [
+      "start",
+      "pickup_lane",
+      "package",
+      "exit_lane",
+      "destination"
+    ],
+    "requiredTapOrder": [],
+    "template": "package_before_destination_intro",
+    "generatedSeed": 1768553935,
+    "recipeFamily": "package_before_destination_intro",
+    "recipeVariant": "package_before_destination_intro_primary"
+  }
 }

@@ -6,12 +6,42 @@
   "requiresWithinTimeLimit": true,
   "actions": [
     {
-      "timeSeconds": 0.15,
-      "tapNodeID": "lower_entry_switch"
+      "timeSeconds": 0.1,
+      "tapNodeID": "multi_switch_chain_split_dead_ends_switch_a",
+      "reason": "Rotate switch 'multi_switch_chain_split_dead_ends_switch_a' toward 'package' before arrival.",
+      "expectedEdgeAfterTap": "e_multi_switch_chain_split_dead_ends_switch_a_package",
+      "expectedRouteNodeAfterTap": "package",
+      "reactionWindowSeconds": 0.4,
+      "switchStateBeforeTap": "e_multi_switch_chain_split_dead_ends_switch_a_multi_switch_chain_split_dead_ends_dead_end_a",
+      "switchStateAfterTap": "e_multi_switch_chain_split_dead_ends_switch_a_package"
     },
     {
-      "timeSeconds": 1.8,
-      "tapNodeID": "lower_finish_switch"
+      "timeSeconds": 1.7,
+      "tapNodeID": "multi_switch_chain_split_dead_ends_switch_b",
+      "reason": "Rotate switch 'multi_switch_chain_split_dead_ends_switch_b' toward 'destination' before arrival.",
+      "expectedEdgeAfterTap": "e_multi_switch_chain_split_dead_ends_switch_b_destination",
+      "expectedRouteNodeAfterTap": "destination",
+      "reactionWindowSeconds": 0.45,
+      "switchStateBeforeTap": "e_multi_switch_chain_split_dead_ends_switch_b_multi_switch_chain_split_dead_ends_dead_end_b",
+      "switchStateAfterTap": "e_multi_switch_chain_split_dead_ends_switch_b_destination"
     }
-  ]
+  ],
+  "metadata": {
+    "validationVersion": "solution_sidecar_v1",
+    "solutionRoute": [
+      "start",
+      "multi_switch_chain_split_dead_ends_switch_a",
+      "package",
+      "multi_switch_chain_split_dead_ends_switch_b",
+      "destination"
+    ],
+    "requiredTapOrder": [
+      "multi_switch_chain_split_dead_ends_switch_a",
+      "multi_switch_chain_split_dead_ends_switch_b"
+    ],
+    "template": "multi_switch_chain",
+    "generatedSeed": 1153220041,
+    "recipeFamily": "multi_switch_chain",
+    "recipeVariant": "multi_switch_chain_split_dead_ends"
+  }
 }

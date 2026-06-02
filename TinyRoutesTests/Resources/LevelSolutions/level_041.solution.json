@@ -1,0 +1,51 @@
+{
+  "levelID": "level_041",
+  "description": "Follow the generated graph recipe route and rotate each switch before arrival.",
+  "expectedOutcome": "completed",
+  "maxTaps": 2,
+  "requiresWithinTimeLimit": true,
+  "actions": [
+    {
+      "timeSeconds": 0.49,
+      "tapNodeID": "four_way_switch",
+      "reason": "Rotate switch 'four_way_switch' toward 'package_lane' before arrival.",
+      "expectedEdgeAfterTap": "e_four_way_switch_package_lane",
+      "expectedRouteNodeAfterTap": "package_lane",
+      "reactionWindowSeconds": 0.5,
+      "switchStateBeforeTap": "e_four_way_switch_wrong_dead_end",
+      "switchStateAfterTap": "e_four_way_switch_package_lane"
+    },
+    {
+      "timeSeconds": 3.33,
+      "tapNodeID": "switch_exit",
+      "reason": "Rotate switch 'switch_exit' toward 'exit_lane' before arrival.",
+      "expectedEdgeAfterTap": "e_switch_exit_exit_lane",
+      "expectedRouteNodeAfterTap": "exit_lane",
+      "reactionWindowSeconds": 0.5,
+      "switchStateBeforeTap": "e_switch_exit_gate_dead_end",
+      "switchStateAfterTap": "e_switch_exit_exit_lane"
+    }
+  ],
+  "metadata": {
+    "validationVersion": "solution_sidecar_v1",
+    "solutionRoute": [
+      "start",
+      "entry_lane",
+      "four_way_switch",
+      "package_lane",
+      "package",
+      "gate_approach",
+      "switch_exit",
+      "exit_lane",
+      "destination"
+    ],
+    "requiredTapOrder": [
+      "four_way_switch",
+      "switch_exit"
+    ],
+    "template": "four_way_package_gate",
+    "generatedSeed": 3845644057,
+    "recipeFamily": "four_way_package_gate",
+    "recipeVariant": "four_way_package_gate_primary"
+  }
+}

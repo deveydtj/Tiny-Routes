@@ -1,0 +1,74 @@
+{
+  "levelID": "level_044",
+  "description": "Follow the generated graph recipe route and rotate each switch before arrival.",
+  "expectedOutcome": "completed",
+  "maxTaps": 4,
+  "requiresWithinTimeLimit": true,
+  "actions": [
+    {
+      "timeSeconds": 0.27,
+      "tapNodeID": "repeat_switch",
+      "reason": "Rotate switch 'repeat_switch' toward 'package_lane' before arrival.",
+      "expectedEdgeAfterTap": "e_repeat_switch_package_lane",
+      "expectedRouteNodeAfterTap": "package_lane",
+      "reactionWindowSeconds": 0.5,
+      "switchStateBeforeTap": "e_repeat_switch_dead_end_a",
+      "switchStateAfterTap": "e_repeat_switch_package_lane"
+    },
+    {
+      "timeSeconds": 2.72,
+      "tapNodeID": "loop_switch",
+      "reason": "Rotate switch 'loop_switch' toward 'return_lane' before arrival.",
+      "expectedEdgeAfterTap": "e_loop_switch_return_lane",
+      "expectedRouteNodeAfterTap": "return_lane",
+      "reactionWindowSeconds": 0.5,
+      "switchStateBeforeTap": "e_loop_switch_dead_end_b",
+      "switchStateAfterTap": "e_loop_switch_return_lane"
+    },
+    {
+      "timeSeconds": 5.81,
+      "tapNodeID": "repeat_switch",
+      "reason": "Rotate switch 'repeat_switch' toward 'exit_lane' before arrival.",
+      "expectedEdgeAfterTap": "e_repeat_switch_exit_lane",
+      "expectedRouteNodeAfterTap": "exit_lane",
+      "reactionWindowSeconds": 0.5,
+      "switchStateBeforeTap": "e_repeat_switch_package_lane",
+      "switchStateAfterTap": "e_repeat_switch_exit_lane"
+    },
+    {
+      "timeSeconds": 7.85,
+      "tapNodeID": "switch_exit",
+      "reason": "Rotate switch 'switch_exit' toward 'destination' before arrival.",
+      "expectedEdgeAfterTap": "e_switch_exit_destination",
+      "expectedRouteNodeAfterTap": "destination",
+      "reactionWindowSeconds": 0.5,
+      "switchStateBeforeTap": "e_switch_exit_dead_end_c",
+      "switchStateAfterTap": "e_switch_exit_destination"
+    }
+  ],
+  "metadata": {
+    "validationVersion": "solution_sidecar_v1",
+    "solutionRoute": [
+      "start",
+      "repeat_switch",
+      "package_lane",
+      "package",
+      "loop_switch",
+      "return_lane",
+      "repeat_switch",
+      "exit_lane",
+      "switch_exit",
+      "destination"
+    ],
+    "requiredTapOrder": [
+      "repeat_switch",
+      "loop_switch",
+      "repeat_switch",
+      "switch_exit"
+    ],
+    "template": "controlled_repeated_taps",
+    "generatedSeed": 680035022,
+    "recipeFamily": "controlled_repeated_taps",
+    "recipeVariant": "controlled_repeated_taps_alternate"
+  }
+}

@@ -6,16 +6,54 @@
   "requiresWithinTimeLimit": true,
   "actions": [
     {
-      "timeSeconds": 0.69,
-      "tapNodeID": "hub"
+      "timeSeconds": 0.59,
+      "tapNodeID": "hub",
+      "reason": "Rotate switch 'hub' toward 'package' before arrival.",
+      "expectedEdgeAfterTap": "e_hub_package",
+      "expectedRouteNodeAfterTap": "package",
+      "reactionWindowSeconds": 0.45,
+      "switchStateBeforeTap": "e_hub_ring_a",
+      "switchStateAfterTap": "e_hub_package"
     },
     {
-      "timeSeconds": 2.56,
-      "tapNodeID": "ring_b"
+      "timeSeconds": 2.46,
+      "tapNodeID": "ring_b",
+      "reason": "Rotate switch 'ring_b' toward 'gate' before arrival.",
+      "expectedEdgeAfterTap": "e_ring_b_gate",
+      "expectedRouteNodeAfterTap": "gate",
+      "reactionWindowSeconds": 0.45,
+      "switchStateBeforeTap": "e_ring_b_ring_a",
+      "switchStateAfterTap": "e_ring_b_gate"
     },
     {
-      "timeSeconds": 3.06,
-      "tapNodeID": "gate"
+      "timeSeconds": 2.96,
+      "tapNodeID": "gate",
+      "reason": "Rotate switch 'gate' toward 'destination' before arrival.",
+      "expectedEdgeAfterTap": "e_gate_destination",
+      "expectedRouteNodeAfterTap": "destination",
+      "reactionWindowSeconds": 0.45,
+      "switchStateBeforeTap": "e_gate_dead_end_b",
+      "switchStateAfterTap": "e_gate_destination"
     }
-  ]
+  ],
+  "metadata": {
+    "validationVersion": "solution_sidecar_v1",
+    "solutionRoute": [
+      "start",
+      "hub",
+      "package",
+      "ring_b",
+      "gate",
+      "destination"
+    ],
+    "requiredTapOrder": [
+      "hub",
+      "ring_b",
+      "gate"
+    ],
+    "template": "ring_route",
+    "generatedSeed": 33170278,
+    "recipeFamily": "ring_route",
+    "recipeVariant": "ring_route_clockwise"
+  }
 }

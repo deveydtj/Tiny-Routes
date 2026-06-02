@@ -2,16 +2,58 @@
   "levelID": "level_013",
   "description": "Follow the generated graph recipe route and rotate each switch before arrival.",
   "expectedOutcome": "completed",
-  "maxTaps": 2,
+  "maxTaps": 3,
   "requiresWithinTimeLimit": true,
   "actions": [
     {
-      "timeSeconds": 0.15,
-      "tapNodeID": "upper_entry_switch"
+      "timeSeconds": 0.1,
+      "tapNodeID": "multi_switch_chain_split_dead_ends_switch_a",
+      "reason": "Rotate switch 'multi_switch_chain_split_dead_ends_switch_a' toward 'package' before arrival.",
+      "expectedEdgeAfterTap": "e_multi_switch_chain_split_dead_ends_switch_a_package",
+      "expectedRouteNodeAfterTap": "package",
+      "reactionWindowSeconds": 0.25,
+      "switchStateBeforeTap": "e_multi_switch_chain_split_dead_ends_switch_a_multi_switch_chain_split_dead_ends_dead_end_a",
+      "switchStateAfterTap": "e_multi_switch_chain_split_dead_ends_switch_a_package"
     },
     {
-      "timeSeconds": 1.8,
-      "tapNodeID": "upper_finish_switch"
+      "timeSeconds": 1.3,
+      "tapNodeID": "multi_switch_chain_split_dead_ends_switch_b",
+      "reason": "Rotate switch 'multi_switch_chain_split_dead_ends_switch_b' toward 'multi_switch_chain_split_dead_ends_switch_c' before arrival.",
+      "expectedEdgeAfterTap": "e_multi_switch_chain_split_dead_ends_switch_b_multi_switch_chain_split_dead_ends_switch_c",
+      "expectedRouteNodeAfterTap": "multi_switch_chain_split_dead_ends_switch_c",
+      "reactionWindowSeconds": 0.45,
+      "switchStateBeforeTap": "e_multi_switch_chain_split_dead_ends_switch_b_multi_switch_chain_split_dead_ends_dead_end_b",
+      "switchStateAfterTap": "e_multi_switch_chain_split_dead_ends_switch_b_multi_switch_chain_split_dead_ends_switch_c"
+    },
+    {
+      "timeSeconds": 1.7,
+      "tapNodeID": "multi_switch_chain_split_dead_ends_switch_c",
+      "reason": "Rotate switch 'multi_switch_chain_split_dead_ends_switch_c' toward 'destination' before arrival.",
+      "expectedEdgeAfterTap": "e_multi_switch_chain_split_dead_ends_switch_c_destination",
+      "expectedRouteNodeAfterTap": "destination",
+      "reactionWindowSeconds": 0.45,
+      "switchStateBeforeTap": "e_multi_switch_chain_split_dead_ends_switch_c_multi_switch_chain_split_dead_ends_dead_end_c",
+      "switchStateAfterTap": "e_multi_switch_chain_split_dead_ends_switch_c_destination"
     }
-  ]
+  ],
+  "metadata": {
+    "validationVersion": "solution_sidecar_v1",
+    "solutionRoute": [
+      "start",
+      "multi_switch_chain_split_dead_ends_switch_a",
+      "package",
+      "multi_switch_chain_split_dead_ends_switch_b",
+      "multi_switch_chain_split_dead_ends_switch_c",
+      "destination"
+    ],
+    "requiredTapOrder": [
+      "multi_switch_chain_split_dead_ends_switch_a",
+      "multi_switch_chain_split_dead_ends_switch_b",
+      "multi_switch_chain_split_dead_ends_switch_c"
+    ],
+    "template": "multi_switch_chain",
+    "generatedSeed": 3581691191,
+    "recipeFamily": "multi_switch_chain",
+    "recipeVariant": "multi_switch_chain_split_dead_ends"
+  }
 }

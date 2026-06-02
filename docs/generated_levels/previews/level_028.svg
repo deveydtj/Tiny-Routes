@@ -26,11 +26,11 @@
 <circle cx="390.0" cy="290.0" r="8" fill="#ef4444" stroke="#0f172a" stroke-width="1"/>
 <text x="400.0" y="280.0" font-family="Arial" font-size="11" fill="#0f172a">destination</text>
 <circle cx="93.0" cy="30.0" r="8" fill="#94a3b8" stroke="#0f172a" stroke-width="1"/>
-<text x="103.0" y="20.0" font-family="Arial" font-size="11" fill="#0f172a">multi_switch_chain_zigzag_dead_end_a</text>
+<text x="103.0" y="20.0" font-family="Arial" font-size="11" fill="#0f172a">multi_switch_chain_four_switch_dead_end_a</text>
 <circle cx="210.0" cy="30.0" r="8" fill="#94a3b8" stroke="#0f172a" stroke-width="1"/>
-<text x="220.0" y="20.0" font-family="Arial" font-size="11" fill="#0f172a">multi_switch_chain_zigzag_dead_end_b</text>
+<text x="220.0" y="20.0" font-family="Arial" font-size="11" fill="#0f172a">multi_switch_chain_four_switch_dead_end_b</text>
 <circle cx="273.0" cy="124.5" r="8" fill="#94a3b8" stroke="#0f172a" stroke-width="1"/>
-<text x="283.0" y="114.5" font-family="Arial" font-size="11" fill="#0f172a">multi_switch_chain_zigzag_dead_end_c</text>
+<text x="283.0" y="114.5" font-family="Arial" font-size="11" fill="#0f172a">multi_switch_chain_four_switch_dead_end_c</text>
 <circle cx="327.0" cy="30.0" r="8" fill="#94a3b8" stroke="#0f172a" stroke-width="1"/>
-<text x="337.0" y="20.0" font-family="Arial" font-size="11" fill="#0f172a">multi_switch_chain_zigzag_dead_end_d</text>
+<text x="337.0" y="20.0" font-family="Arial" font-size="11" fill="#0f172a">multi_switch_chain_four_switch_dead_end_d</text>
 </svg>

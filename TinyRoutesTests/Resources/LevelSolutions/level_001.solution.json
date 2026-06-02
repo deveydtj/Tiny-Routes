@@ -4,5 +4,18 @@
   "expectedOutcome": "completed",
   "maxTaps": 0,
   "requiresWithinTimeLimit": true,
-  "actions": []
+  "actions": [],
+  "metadata": {
+    "validationVersion": "solution_sidecar_v1",
+    "solutionRoute": [
+      "start",
+      "package",
+      "destination"
+    ],
+    "requiredTapOrder": [],
+    "template": "straight_delivery_intro",
+    "generatedSeed": 735630041,
+    "recipeFamily": "straight_delivery_intro",
+    "recipeVariant": "straight_delivery_intro_primary"
+  }
 }

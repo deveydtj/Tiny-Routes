@@ -6,7 +6,7 @@
       {
         "id": "start",
         "x": -1.0,
-        "y": -0.55,
+        "y": 0.55,
         "outgoingEdgeIDs": [
           "e_start_hub"
         ]
@@ -14,7 +14,7 @@
       {
         "id": "hub",
         "x": -0.7,
-        "y": 0.25,
+        "y": -0.25,
         "outgoingEdgeIDs": [
           "e_hub_ring_a",
           "e_hub_package"
@@ -23,7 +23,7 @@
       {
         "id": "ring_a",
         "x": -0.35,
-        "y": -0.05,
+        "y": 0.05,
         "outgoingEdgeIDs": [
           "e_ring_a_ring_b"
         ]
@@ -31,7 +31,7 @@
       {
         "id": "ring_b",
         "x": 0.7,
-        "y": 0.25,
+        "y": -0.25,
         "outgoingEdgeIDs": [
           "e_ring_b_ring_a",
           "e_ring_b_gate",
@@ -41,7 +41,7 @@
       {
         "id": "package",
         "x": 0.0,
-        "y": 0.55,
+        "y": -0.55,
         "outgoingEdgeIDs": [
           "e_package_ring_b"
         ]
@@ -49,7 +49,7 @@
       {
         "id": "gate",
         "x": 0.7,
-        "y": -0.25,
+        "y": 0.25,
         "outgoingEdgeIDs": [
           "e_gate_dead_end_b",
           "e_gate_destination",
@@ -59,19 +59,19 @@
       {
         "id": "destination",
         "x": 1.0,
-        "y": -0.5,
+        "y": 0.5,
         "outgoingEdgeIDs": []
       },
       {
         "id": "dead_end_a",
         "x": 0.35,
-        "y": 0.85,
+        "y": -0.85,
         "outgoingEdgeIDs": []
       },
       {
         "id": "dead_end_b",
         "x": 0.7,
-        "y": -0.85,
+        "y": 0.85,
         "outgoingEdgeIDs": []
       }
     ],

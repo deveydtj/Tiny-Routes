@@ -6,12 +6,44 @@
   "requiresWithinTimeLimit": true,
   "actions": [
     {
-      "timeSeconds": 0.31,
-      "tapNodeID": "multi_switch_chain_stair_step_switch_a"
+      "timeSeconds": 0.1,
+      "tapNodeID": "hub",
+      "reason": "Rotate switch 'hub' toward 'package_branch' before arrival.",
+      "expectedEdgeAfterTap": "e_hub_package_branch",
+      "expectedRouteNodeAfterTap": "package_branch",
+      "reactionWindowSeconds": 0.4,
+      "switchStateBeforeTap": "e_hub_dead_end_a",
+      "switchStateAfterTap": "e_hub_package_branch"
     },
     {
-      "timeSeconds": 1.62,
-      "tapNodeID": "multi_switch_chain_stair_step_switch_b"
+      "timeSeconds": 5.63,
+      "tapNodeID": "switch_b",
+      "reason": "Rotate switch 'switch_b' toward 'destination' before arrival.",
+      "expectedEdgeAfterTap": "e_switch_b_destination",
+      "expectedRouteNodeAfterTap": "destination",
+      "reactionWindowSeconds": 0.45,
+      "switchStateBeforeTap": "e_switch_b_dead_end_b",
+      "switchStateAfterTap": "e_switch_b_destination"
     }
-  ]
+  ],
+  "metadata": {
+    "validationVersion": "solution_sidecar_v1",
+    "solutionRoute": [
+      "start",
+      "hub",
+      "package_branch",
+      "package",
+      "rejoin",
+      "switch_b",
+      "destination"
+    ],
+    "requiredTapOrder": [
+      "hub",
+      "switch_b"
+    ],
+    "template": "hub_choice",
+    "generatedSeed": 3075548730,
+    "recipeFamily": "hub_choice",
+    "recipeVariant": "hub_choice_primary"
+  }
 }

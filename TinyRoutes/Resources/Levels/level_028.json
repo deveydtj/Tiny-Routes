@@ -8,16 +8,16 @@
         "x": -1.0,
         "y": 0.0,
         "outgoingEdgeIDs": [
-          "e_start_multi_switch_chain_zigzag_switch_a"
+          "e_start_multi_switch_chain_four_switch_switch_a"
         ]
       },
       {
-        "id": "multi_switch_chain_zigzag_switch_a",
+        "id": "multi_switch_chain_four_switch_switch_a",
         "x": -0.65,
         "y": 0.2,
         "outgoingEdgeIDs": [
-          "e_multi_switch_chain_zigzag_switch_a_multi_switch_chain_zigzag_dead_end_a",
-          "e_multi_switch_chain_zigzag_switch_a_package"
+          "e_multi_switch_chain_four_switch_switch_a_multi_switch_chain_four_switch_dead_end_a",
+          "e_multi_switch_chain_four_switch_switch_a_package"
         ]
       },
       {
@@ -25,34 +25,34 @@
         "x": -0.35,
         "y": 0.4,
         "outgoingEdgeIDs": [
-          "e_package_multi_switch_chain_zigzag_switch_b"
+          "e_package_multi_switch_chain_four_switch_switch_b"
         ]
       },
       {
-        "id": "multi_switch_chain_zigzag_switch_b",
+        "id": "multi_switch_chain_four_switch_switch_b",
         "x": 0.0,
         "y": 0.2,
         "outgoingEdgeIDs": [
-          "e_multi_switch_chain_zigzag_switch_b_multi_switch_chain_zigzag_dead_end_b",
-          "e_multi_switch_chain_zigzag_switch_b_multi_switch_chain_zigzag_switch_c"
+          "e_multi_switch_chain_four_switch_switch_b_multi_switch_chain_four_switch_dead_end_b",
+          "e_multi_switch_chain_four_switch_switch_b_multi_switch_chain_four_switch_switch_c"
         ]
       },
       {
-        "id": "multi_switch_chain_zigzag_switch_c",
+        "id": "multi_switch_chain_four_switch_switch_c",
         "x": 0.35,
         "y": -0.2,
         "outgoingEdgeIDs": [
-          "e_multi_switch_chain_zigzag_switch_c_multi_switch_chain_zigzag_dead_end_c",
-          "e_multi_switch_chain_zigzag_switch_c_multi_switch_chain_zigzag_switch_d"
+          "e_multi_switch_chain_four_switch_switch_c_multi_switch_chain_four_switch_dead_end_c",
+          "e_multi_switch_chain_four_switch_switch_c_multi_switch_chain_four_switch_switch_d"
         ]
       },
       {
-        "id": "multi_switch_chain_zigzag_switch_d",
+        "id": "multi_switch_chain_four_switch_switch_d",
         "x": 0.65,
         "y": 0.2,
         "outgoingEdgeIDs": [
-          "e_multi_switch_chain_zigzag_switch_d_multi_switch_chain_zigzag_dead_end_d",
-          "e_multi_switch_chain_zigzag_switch_d_destination"
+          "e_multi_switch_chain_four_switch_switch_d_multi_switch_chain_four_switch_dead_end_d",
+          "e_multi_switch_chain_four_switch_switch_d_destination"
         ]
       },
       {
@@ -62,25 +62,25 @@
         "outgoingEdgeIDs": []
       },
       {
-        "id": "multi_switch_chain_zigzag_dead_end_a",
+        "id": "multi_switch_chain_four_switch_dead_end_a",
         "x": -0.65,
         "y": 0.8,
         "outgoingEdgeIDs": []
       },
       {
-        "id": "multi_switch_chain_zigzag_dead_end_b",
+        "id": "multi_switch_chain_four_switch_dead_end_b",
         "x": 0.0,
         "y": 0.8,
         "outgoingEdgeIDs": []
       },
       {
-        "id": "multi_switch_chain_zigzag_dead_end_c",
+        "id": "multi_switch_chain_four_switch_dead_end_c",
         "x": 0.35,
         "y": 0.4,
         "outgoingEdgeIDs": []
       },
       {
-        "id": "multi_switch_chain_zigzag_dead_end_d",
+        "id": "multi_switch_chain_four_switch_dead_end_d",
         "x": 0.65,
         "y": 0.8,
         "outgoingEdgeIDs": []
@@ -88,62 +88,62 @@
     ],
     "edges": [
       {
-        "id": "e_start_multi_switch_chain_zigzag_switch_a",
+        "id": "e_start_multi_switch_chain_four_switch_switch_a",
         "fromNodeID": "start",
-        "toNodeID": "multi_switch_chain_zigzag_switch_a",
+        "toNodeID": "multi_switch_chain_four_switch_switch_a",
         "roadShape": "horizontalFirst"
       },
       {
-        "id": "e_multi_switch_chain_zigzag_switch_a_multi_switch_chain_zigzag_dead_end_a",
-        "fromNodeID": "multi_switch_chain_zigzag_switch_a",
-        "toNodeID": "multi_switch_chain_zigzag_dead_end_a",
+        "id": "e_multi_switch_chain_four_switch_switch_a_multi_switch_chain_four_switch_dead_end_a",
+        "fromNodeID": "multi_switch_chain_four_switch_switch_a",
+        "toNodeID": "multi_switch_chain_four_switch_dead_end_a",
         "roadShape": "horizontalFirst"
       },
       {
-        "id": "e_multi_switch_chain_zigzag_switch_a_package",
-        "fromNodeID": "multi_switch_chain_zigzag_switch_a",
+        "id": "e_multi_switch_chain_four_switch_switch_a_package",
+        "fromNodeID": "multi_switch_chain_four_switch_switch_a",
         "toNodeID": "package",
         "roadShape": "horizontalFirst"
       },
       {
-        "id": "e_package_multi_switch_chain_zigzag_switch_b",
+        "id": "e_package_multi_switch_chain_four_switch_switch_b",
         "fromNodeID": "package",
-        "toNodeID": "multi_switch_chain_zigzag_switch_b",
+        "toNodeID": "multi_switch_chain_four_switch_switch_b",
         "roadShape": "horizontalFirst"
       },
       {
-        "id": "e_multi_switch_chain_zigzag_switch_b_multi_switch_chain_zigzag_dead_end_b",
-        "fromNodeID": "multi_switch_chain_zigzag_switch_b",
-        "toNodeID": "multi_switch_chain_zigzag_dead_end_b",
+        "id": "e_multi_switch_chain_four_switch_switch_b_multi_switch_chain_four_switch_dead_end_b",
+        "fromNodeID": "multi_switch_chain_four_switch_switch_b",
+        "toNodeID": "multi_switch_chain_four_switch_dead_end_b",
         "roadShape": "horizontalFirst"
       },
       {
-        "id": "e_multi_switch_chain_zigzag_switch_b_multi_switch_chain_zigzag_switch_c",
-        "fromNodeID": "multi_switch_chain_zigzag_switch_b",
-        "toNodeID": "multi_switch_chain_zigzag_switch_c",
+        "id": "e_multi_switch_chain_four_switch_switch_b_multi_switch_chain_four_switch_switch_c",
+        "fromNodeID": "multi_switch_chain_four_switch_switch_b",
+        "toNodeID": "multi_switch_chain_four_switch_switch_c",
         "roadShape": "verticalFirst"
       },
       {
-        "id": "e_multi_switch_chain_zigzag_switch_c_multi_switch_chain_zigzag_dead_end_c",
-        "fromNodeID": "multi_switch_chain_zigzag_switch_c",
-        "toNodeID": "multi_switch_chain_zigzag_dead_end_c",
+        "id": "e_multi_switch_chain_four_switch_switch_c_multi_switch_chain_four_switch_dead_end_c",
+        "fromNodeID": "multi_switch_chain_four_switch_switch_c",
+        "toNodeID": "multi_switch_chain_four_switch_dead_end_c",
         "roadShape": "horizontalFirst"
       },
       {
-        "id": "e_multi_switch_chain_zigzag_switch_c_multi_switch_chain_zigzag_switch_d",
-        "fromNodeID": "multi_switch_chain_zigzag_switch_c",
-        "toNodeID": "multi_switch_chain_zigzag_switch_d",
+        "id": "e_multi_switch_chain_four_switch_switch_c_multi_switch_chain_four_switch_switch_d",
+        "fromNodeID": "multi_switch_chain_four_switch_switch_c",
+        "toNodeID": "multi_switch_chain_four_switch_switch_d",
         "roadShape": "horizontalFirst"
       },
       {
-        "id": "e_multi_switch_chain_zigzag_switch_d_multi_switch_chain_zigzag_dead_end_d",
-        "fromNodeID": "multi_switch_chain_zigzag_switch_d",
-        "toNodeID": "multi_switch_chain_zigzag_dead_end_d",
+        "id": "e_multi_switch_chain_four_switch_switch_d_multi_switch_chain_four_switch_dead_end_d",
+        "fromNodeID": "multi_switch_chain_four_switch_switch_d",
+        "toNodeID": "multi_switch_chain_four_switch_dead_end_d",
         "roadShape": "horizontalFirst"
       },
       {
-        "id": "e_multi_switch_chain_zigzag_switch_d_destination",
-        "fromNodeID": "multi_switch_chain_zigzag_switch_d",
+        "id": "e_multi_switch_chain_four_switch_switch_d_destination",
+        "fromNodeID": "multi_switch_chain_four_switch_switch_d",
         "toNodeID": "destination",
         "roadShape": "horizontalFirst"
       }

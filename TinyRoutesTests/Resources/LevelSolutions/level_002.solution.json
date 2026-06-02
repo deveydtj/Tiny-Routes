@@ -6,8 +6,30 @@
   "requiresWithinTimeLimit": true,
   "actions": [
     {
-      "timeSeconds": 0.46,
-      "tapNodeID": "choice"
+      "timeSeconds": 0.36,
+      "tapNodeID": "choice",
+      "reason": "Rotate switch 'choice' toward 'package' before arrival.",
+      "expectedEdgeAfterTap": "e_choice_package",
+      "expectedRouteNodeAfterTap": "package",
+      "reactionWindowSeconds": 0.45,
+      "switchStateBeforeTap": "e_choice_dead_end_a",
+      "switchStateAfterTap": "e_choice_package"
     }
-  ]
+  ],
+  "metadata": {
+    "validationVersion": "solution_sidecar_v1",
+    "solutionRoute": [
+      "start",
+      "choice",
+      "package",
+      "destination"
+    ],
+    "requiredTapOrder": [
+      "choice"
+    ],
+    "template": "single_switch_intro",
+    "generatedSeed": 3401823727,
+    "recipeFamily": "single_switch_intro",
+    "recipeVariant": "single_switch_intro_alternate"
+  }
 }

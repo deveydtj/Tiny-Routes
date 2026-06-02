@@ -1,0 +1,179 @@
+{
+  "id": "level_036",
+  "name": "Level 036",
+  "graph": {
+    "nodes": [
+      {
+        "id": "start",
+        "x": -1.05,
+        "y": 0.0,
+        "outgoingEdgeIDs": [
+          "e_start_hub"
+        ]
+      },
+      {
+        "id": "hub",
+        "x": -0.55,
+        "y": 0.0,
+        "outgoingEdgeIDs": [
+          "e_hub_dead_end_a",
+          "e_hub_package_branch",
+          "e_hub_rejoin"
+        ]
+      },
+      {
+        "id": "package_branch",
+        "x": 0.05,
+        "y": 0.0,
+        "outgoingEdgeIDs": [
+          "e_package_branch_package"
+        ]
+      },
+      {
+        "id": "package",
+        "x": 0.8,
+        "y": 0.65,
+        "outgoingEdgeIDs": [
+          "e_package_rejoin"
+        ]
+      },
+      {
+        "id": "rejoin",
+        "x": -0.55,
+        "y": -0.75,
+        "outgoingEdgeIDs": [
+          "e_rejoin_switch_b"
+        ]
+      },
+      {
+        "id": "switch_b",
+        "x": 0.0,
+        "y": -1.05,
+        "outgoingEdgeIDs": [
+          "e_switch_b_dead_end_b",
+          "e_switch_b_route_mid"
+        ]
+      },
+      {
+        "id": "route_mid",
+        "x": 0.45,
+        "y": -0.9,
+        "outgoingEdgeIDs": [
+          "e_route_mid_switch_c"
+        ]
+      },
+      {
+        "id": "switch_c",
+        "x": 0.85,
+        "y": -0.65,
+        "outgoingEdgeIDs": [
+          "e_switch_c_dead_end_c",
+          "e_switch_c_destination"
+        ]
+      },
+      {
+        "id": "destination",
+        "x": 1.05,
+        "y": -0.05,
+        "outgoingEdgeIDs": []
+      },
+      {
+        "id": "dead_end_a",
+        "x": -0.55,
+        "y": 0.65,
+        "outgoingEdgeIDs": []
+      },
+      {
+        "id": "dead_end_b",
+        "x": 0.75,
+        "y": -1.15,
+        "outgoingEdgeIDs": []
+      },
+      {
+        "id": "dead_end_c",
+        "x": 1.05,
+        "y": -1.15,
+        "outgoingEdgeIDs": []
+      }
+    ],
+    "edges": [
+      {
+        "id": "e_start_hub",
+        "fromNodeID": "start",
+        "toNodeID": "hub",
+        "roadShape": "horizontalFirst"
+      },
+      {
+        "id": "e_hub_dead_end_a",
+        "fromNodeID": "hub",
+        "toNodeID": "dead_end_a",
+        "roadShape": "horizontalFirst"
+      },
+      {
+        "id": "e_hub_package_branch",
+        "fromNodeID": "hub",
+        "toNodeID": "package_branch",
+        "roadShape": "horizontalFirst"
+      },
+      {
+        "id": "e_hub_rejoin",
+        "fromNodeID": "hub",
+        "toNodeID": "rejoin",
+        "roadShape": "horizontalFirst"
+      },
+      {
+        "id": "e_package_branch_package",
+        "fromNodeID": "package_branch",
+        "toNodeID": "package",
+        "roadShape": "horizontalFirst"
+      },
+      {
+        "id": "e_package_rejoin",
+        "fromNodeID": "package",
+        "toNodeID": "rejoin",
+        "roadShape": "verticalFirst"
+      },
+      {
+        "id": "e_rejoin_switch_b",
+        "fromNodeID": "rejoin",
+        "toNodeID": "switch_b",
+        "roadShape": "horizontalFirst"
+      },
+      {
+        "id": "e_switch_b_dead_end_b",
+        "fromNodeID": "switch_b",
+        "toNodeID": "dead_end_b",
+        "roadShape": "verticalFirst"
+      },
+      {
+        "id": "e_switch_b_route_mid",
+        "fromNodeID": "switch_b",
+        "toNodeID": "route_mid",
+        "roadShape": "horizontalFirst"
+      },
+      {
+        "id": "e_route_mid_switch_c",
+        "fromNodeID": "route_mid",
+        "toNodeID": "switch_c",
+        "roadShape": "horizontalFirst"
+      },
+      {
+        "id": "e_switch_c_dead_end_c",
+        "fromNodeID": "switch_c",
+        "toNodeID": "dead_end_c",
+        "roadShape": "verticalFirst"
+      },
+      {
+        "id": "e_switch_c_destination",
+        "fromNodeID": "switch_c",
+        "toNodeID": "destination",
+        "roadShape": "horizontalFirst"
+      }
+    ]
+  },
+  "startNodeID": "start",
+  "packageNodeID": "package",
+  "destinationNodeID": "destination",
+  "timeLimitSeconds": 32,
+  "parTaps": 3
+}

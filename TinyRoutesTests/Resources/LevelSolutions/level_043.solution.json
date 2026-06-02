@@ -1,0 +1,61 @@
+{
+  "levelID": "level_043",
+  "description": "Follow the generated graph recipe route and rotate each switch before arrival.",
+  "expectedOutcome": "completed",
+  "maxTaps": 3,
+  "requiresWithinTimeLimit": true,
+  "actions": [
+    {
+      "timeSeconds": 0.77,
+      "tapNodeID": "four_way_switch",
+      "reason": "Rotate switch 'four_way_switch' toward 'ring_a' before arrival.",
+      "expectedEdgeAfterTap": "e_four_way_switch_ring_a",
+      "expectedRouteNodeAfterTap": "ring_a",
+      "reactionWindowSeconds": 0.5,
+      "switchStateBeforeTap": "e_four_way_switch_wrong_dead_end",
+      "switchStateAfterTap": "e_four_way_switch_ring_a"
+    },
+    {
+      "timeSeconds": 2.65,
+      "tapNodeID": "ring_b",
+      "reason": "Rotate switch 'ring_b' toward 'switch_exit' before arrival.",
+      "expectedEdgeAfterTap": "e_ring_b_switch_exit",
+      "expectedRouteNodeAfterTap": "switch_exit",
+      "reactionWindowSeconds": 0.5,
+      "switchStateBeforeTap": "e_ring_b_ring_c",
+      "switchStateAfterTap": "e_ring_b_switch_exit"
+    },
+    {
+      "timeSeconds": 3.1,
+      "tapNodeID": "switch_exit",
+      "reason": "Rotate switch 'switch_exit' toward 'destination' before arrival.",
+      "expectedEdgeAfterTap": "e_switch_exit_destination",
+      "expectedRouteNodeAfterTap": "destination",
+      "reactionWindowSeconds": 0.5,
+      "switchStateBeforeTap": "e_switch_exit_exit_dead_end",
+      "switchStateAfterTap": "e_switch_exit_destination"
+    }
+  ],
+  "metadata": {
+    "validationVersion": "solution_sidecar_v1",
+    "solutionRoute": [
+      "start",
+      "ring_entry",
+      "four_way_switch",
+      "ring_a",
+      "package",
+      "ring_b",
+      "switch_exit",
+      "destination"
+    ],
+    "requiredTapOrder": [
+      "four_way_switch",
+      "ring_b",
+      "switch_exit"
+    ],
+    "template": "four_way_ring",
+    "generatedSeed": 588096837,
+    "recipeFamily": "four_way_ring",
+    "recipeVariant": "four_way_ring_alternate"
+  }
+}

@@ -6,8 +6,30 @@
   "requiresWithinTimeLimit": true,
   "actions": [
     {
-      "timeSeconds": 0.65,
-      "tapNodeID": "short_choice"
+      "timeSeconds": 0.31,
+      "tapNodeID": "gate",
+      "reason": "Rotate switch 'gate' toward 'package' before arrival.",
+      "expectedEdgeAfterTap": "e_gate_package",
+      "expectedRouteNodeAfterTap": "package",
+      "reactionWindowSeconds": 0.45,
+      "switchStateBeforeTap": "e_gate_dead_end_a",
+      "switchStateAfterTap": "e_gate_package"
     }
-  ]
+  ],
+  "metadata": {
+    "validationVersion": "solution_sidecar_v1",
+    "solutionRoute": [
+      "start",
+      "gate",
+      "package",
+      "destination"
+    ],
+    "requiredTapOrder": [
+      "gate"
+    ],
+    "template": "package_gate_simple",
+    "generatedSeed": 2679724832,
+    "recipeFamily": "package_gate_simple",
+    "recipeVariant": "package_gate_simple_alternate"
+  }
 }

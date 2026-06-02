@@ -6,8 +6,32 @@
   "requiresWithinTimeLimit": true,
   "actions": [
     {
-      "timeSeconds": 0.65,
-      "tapNodeID": "lower_choice"
+      "timeSeconds": 0.1,
+      "tapNodeID": "switch_gate",
+      "reason": "Rotate switch 'switch_gate' toward 'detour' before arrival.",
+      "expectedEdgeAfterTap": "e_switch_gate_detour",
+      "expectedRouteNodeAfterTap": "detour",
+      "reactionWindowSeconds": 0.41,
+      "switchStateBeforeTap": "e_switch_gate_direct_dead_end",
+      "switchStateAfterTap": "e_switch_gate_detour"
     }
-  ]
+  ],
+  "metadata": {
+    "validationVersion": "solution_sidecar_v1",
+    "solutionRoute": [
+      "start",
+      "switch_gate",
+      "detour",
+      "package",
+      "rejoin",
+      "destination"
+    ],
+    "requiredTapOrder": [
+      "switch_gate"
+    ],
+    "template": "long_detour_gate",
+    "generatedSeed": 1185477608,
+    "recipeFamily": "long_detour_gate",
+    "recipeVariant": "long_detour_gate_primary"
+  }
 }
