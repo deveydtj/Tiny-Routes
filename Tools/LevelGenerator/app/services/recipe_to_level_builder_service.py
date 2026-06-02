@@ -84,6 +84,7 @@ class RecipeToLevelBuilderService:
                 positions,
                 preset,
                 description,
+                lead_time_seconds=max(0.35, preset.min_tap_spacing_seconds + 0.05),
                 route_edge_shapes={
                     (edge.fromNodeID, edge.toNodeID): edge.roadShape
                     for edge in level.graph.edges

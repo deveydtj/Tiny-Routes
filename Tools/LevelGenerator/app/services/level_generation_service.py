@@ -607,6 +607,7 @@ class LevelGenerationService:
             "topologyClass": getattr(candidate, "topology_class", "") or None,
             "requiredPathLength": self._required_path_length(candidate),
             "layoutOrientation": self._layout_orientation(candidate),
+            "requiresSwiftValidation": bool(getattr(candidate, "requires_swift_validation", False)),
             "layoutStrategy": (candidate.layout_metadata or {}).get("strategy"),
             "layoutOrientationSelectionReason": (candidate.layout_metadata or {}).get("orientationSelectionReason"),
             "verticalCandidateRejectedReason": (candidate.layout_metadata or {}).get("verticalCandidateRejectedReason"),

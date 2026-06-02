@@ -493,13 +493,13 @@ def expanded_recipe_family_definitions() -> list[ExpandedRecipeFamilyDefinition]
         _definition(
             "four_way_package_gate",
             ("expert",),
-            ("four_way", "package_gate"),
+            ("four_way", "package_gate", "two_phase"),
             "four_way_gate",
             "Use a four-way switch to reach the package, then gate the exit.",
             "Combine four-way counting with a standard gate.",
-            (1, 1),
             (2, 2),
-            True,
+            (2, 2),
+            False,
             ("four-way hub and exit gate have separate centers",),
             "Creates a clear progression from four-way intro to gated play.",
             "four-way introduced",
@@ -510,15 +510,15 @@ def expanded_recipe_family_definitions() -> list[ExpandedRecipeFamilyDefinition]
         _definition(
             "four_way_ring",
             ("expert",),
-            ("four_way", "ring", "repeated_tap", "ring_route"),
-            "four_way_gate",
-            "Leave and revisit a four-way hub through a loop.",
-            "Retap a multi-exit hub after route progress.",
-            (1, 1),
-            (2, 2),
-            True,
-            ("loop returns visibly to the four-way hub",),
-            "Uses four-way complexity for route memory, not just branching.",
+            ("four_way", "ring", "loop", "package_inside_loop"),
+            "four_way_ring",
+            "Use a four-way entry into a ring, then exit the ring after collecting the package.",
+            "Combine four-way direction counting with ring-exit spatial reasoning.",
+            (3, 3),
+            (3, 3),
+            False,
+            ("package sits on the ring and the exit is a separate decision",),
+            "Uses four-way complexity for spatial ring routing, not just branching.",
             "four-way loops unlocked",
             "four_way_intro",
             _four_way_ring,
@@ -544,12 +544,12 @@ def expanded_recipe_family_definitions() -> list[ExpandedRecipeFamilyDefinition]
         _definition(
             "controlled_repeated_taps",
             ("expert",),
-            ("repeated_tap", "loop", "multi_switch", "return_loop"),
-            "two_switch_order",
+            ("repeated_tap", "revisit", "two_phase", "loop", "long_route"),
+            "revisit",
             "Repeat a hub tap after collecting the package.",
             "Understand that route state changes the same switch's goal.",
-            (2, 2),
-            (2, 2),
+            (3, 3),
+            (4, 4),
             True,
             ("repeat hub is central and clearly revisited",),
             "Makes repeated taps intentional and controlled.",
@@ -913,11 +913,61 @@ def _four_way_intro(variant_name: str, preset: DifficultyPreset, rng: RandomSour
 
 
 def _four_way_package_gate(variant_name: str, preset: DifficultyPreset, rng: RandomSource):
-    return _four_way_intro(variant_name, preset, rng)
+    route = (
+        "start",
+        "entry_lane",
+        "four_way_switch",
+        "package_lane",
+        "package",
+        "gate_approach",
+        "switch_exit",
+        "exit_lane",
+        "destination",
+    )
+    pairs = (
+        ("start", "entry_lane"),
+        ("entry_lane", "four_way_switch"),
+        ("four_way_switch", "wrong_dead_end"),
+        ("four_way_switch", "package_lane"),
+        ("four_way_switch", "gate_approach"),
+        ("four_way_switch", "side_loop"),
+        ("package_lane", "package"),
+        ("package", "gate_approach"),
+        ("gate_approach", "switch_exit"),
+        ("switch_exit", "gate_dead_end"),
+        ("switch_exit", "exit_lane"),
+        ("exit_lane", "destination"),
+    )
+    return route, pairs, ("four_way_switch", "switch_exit")
 
 
 def _four_way_ring(variant_name: str, preset: DifficultyPreset, rng: RandomSource):
-    return _four_way_intro(variant_name, preset, rng)
+    route = (
+        "start",
+        "ring_entry",
+        "four_way_switch",
+        "ring_a",
+        "package",
+        "ring_b",
+        "switch_exit",
+        "destination",
+    )
+    pairs = (
+        ("start", "ring_entry"),
+        ("ring_entry", "four_way_switch"),
+        ("four_way_switch", "wrong_dead_end"),
+        ("four_way_switch", "ring_a"),
+        ("four_way_switch", "switch_exit"),
+        ("four_way_switch", "ring_inner"),
+        ("ring_a", "package"),
+        ("package", "ring_b"),
+        ("ring_b", "ring_c"),
+        ("ring_b", "switch_exit"),
+        ("ring_c", "four_way_switch"),
+        ("switch_exit", "exit_dead_end"),
+        ("switch_exit", "destination"),
+    )
+    return route, pairs, ("four_way_switch", "ring_b", "switch_exit")
 
 
 def _multi_four_way_route(variant_name: str, preset: DifficultyPreset, rng: RandomSource):
@@ -925,7 +975,33 @@ def _multi_four_way_route(variant_name: str, preset: DifficultyPreset, rng: Rand
 
 
 def _controlled_repeated_taps(variant_name: str, preset: DifficultyPreset, rng: RandomSource):
-    return _medium_two_switch(variant_name, preset, rng)
+    route = (
+        "start",
+        "repeat_switch",
+        "package_lane",
+        "package",
+        "loop_switch",
+        "return_lane",
+        "repeat_switch",
+        "exit_lane",
+        "switch_exit",
+        "destination",
+    )
+    pairs = (
+        ("start", "repeat_switch"),
+        ("repeat_switch", "dead_end_a"),
+        ("repeat_switch", "package_lane"),
+        ("repeat_switch", "exit_lane"),
+        ("package_lane", "package"),
+        ("package", "loop_switch"),
+        ("loop_switch", "dead_end_b"),
+        ("loop_switch", "return_lane"),
+        ("return_lane", "repeat_switch"),
+        ("exit_lane", "switch_exit"),
+        ("switch_exit", "dead_end_c"),
+        ("switch_exit", "destination"),
+    )
+    return route, pairs, ("repeat_switch", "loop_switch", "repeat_switch", "switch_exit")
 
 
 def _late_route_reversal(variant_name: str, preset: DifficultyPreset, rng: RandomSource):

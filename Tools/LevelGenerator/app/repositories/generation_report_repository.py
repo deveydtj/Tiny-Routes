@@ -68,6 +68,7 @@ class GenerationReportRepository:
                     "topologyClass": getattr(level, "topology_class", "") or None,
                     "requiredPathLength": self._required_path_length(level),
                     "layoutOrientation": self._layout_orientation(level),
+                    "requiresSwiftValidation": bool(getattr(level, "requires_swift_validation", False)),
                     "layoutStrategy": (level.layout_metadata or {}).get("strategy"),
                     "layoutVariant": level.selected_layout_variant,
                     "layoutOrientationSelectionReason": (level.layout_metadata or {}).get("orientationSelectionReason"),
@@ -214,6 +215,7 @@ class GenerationReportRepository:
                             f"required path length `{level['requiredPathLength']}`; "
                             f"layout orientation `{level['layoutOrientation']}` "
                             f"via `{level['layoutOrientationSelectionReason'] or 'unknown'}`; "
+                            f"Swift-required `{level['requiresSwiftValidation']}`; "
                             f"unlock `{level['unlockRequirement'] or 'none'}`; "
                             f"depends on `{level['priorMechanicDependency'] or 'none'}`."
                         )
@@ -293,6 +295,7 @@ class GenerationReportRepository:
                         f"topology `{accepted_summary.get('topologyClass') or 'none'}`; "
                         f"path `{accepted_summary.get('requiredPathLength')}`; "
                         f"orientation `{accepted_summary.get('layoutOrientation', 'unknown')}`; "
+                        f"Swift-required `{accepted_summary.get('requiresSwiftValidation', False)}`; "
                         f"strategy `{accepted_summary.get('layoutStrategy', 'unknown')}`; "
                         f"variant `{accepted_summary.get('layoutVariant', 'unknown')}`; "
                         f"orientation reason `{accepted_summary.get('layoutOrientationSelectionReason', 'unknown')}`; "
@@ -310,6 +313,7 @@ class GenerationReportRepository:
                             f"topology `{near_miss.get('topologyClass') or 'none'}` "
                             f"path `{near_miss.get('requiredPathLength')}` "
                             f"orientation `{near_miss.get('layoutOrientation', 'unknown')}` "
+                            f"Swift-required `{near_miss.get('requiresSwiftValidation', False)}` "
                             f"strategy `{near_miss.get('layoutStrategy', 'unknown')}` "
                             f"variant `{near_miss.get('layoutVariant', 'unknown')}` "
                             f"orientation reason `{near_miss.get('layoutOrientationSelectionReason', 'unknown')}` "

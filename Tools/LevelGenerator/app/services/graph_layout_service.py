@@ -487,6 +487,8 @@ class GraphLayoutPlannerService:
     def _horizontal_strategy_for_recipe(self, recipe: GraphRecipe) -> str:
         family_name = recipe.family_name
         tags = set(recipe.mechanic_tags)
+        if family_name == "controlled_repeated_taps":
+            return "package_inside_loop"
         if family_name == "four_way_intersection" or "four_way" in tags:
             return "four_way_intersection"
         if family_name == "ring_route" or "ring_route" in tags or "ring" in family_name:
@@ -504,6 +506,8 @@ class GraphLayoutPlannerService:
     def _vertical_strategy_for_recipe(self, recipe: GraphRecipe) -> str:
         family_name = recipe.family_name
         tags = set(recipe.mechanic_tags)
+        if family_name == "controlled_repeated_taps":
+            return "vertical_loop"
         if family_name == "four_way_intersection" or "four_way" in tags:
             return "four_way_intersection"
         if family_name == "ring_route" or "ring_route" in tags or "ring" in family_name:
@@ -673,6 +677,8 @@ class GraphLayoutPlannerService:
         return positions
 
     def _loop_positions(self, recipe: GraphRecipe, layout: GraphLayoutService) -> dict[str, tuple[float, float]]:
+        if recipe.family_name == "controlled_repeated_taps":
+            return self._controlled_repeated_taps_positions(recipe, layout)
         positions = self._ring_positions(recipe, layout)
         if recipe.package_node_id in positions:
             positions[recipe.package_node_id] = layout.snap_point(-0.05, 0.42)
@@ -808,6 +814,10 @@ class GraphLayoutPlannerService:
         return positions
 
     def _four_way_positions(self, recipe: GraphRecipe, layout: GraphLayoutService) -> dict[str, tuple[float, float]]:
+        if recipe.family_name == "four_way_package_gate":
+            return self._four_way_package_gate_positions(recipe, layout)
+        if recipe.family_name == "four_way_ring":
+            return self._four_way_ring_positions(recipe, layout)
         positions = self._route_progression_positions(recipe, layout, vertical=False)
         switch_id = next((node.id for node in recipe.nodes if node.role == "switch"), None)
         if switch_id is None:
@@ -823,6 +833,72 @@ class GraphLayoutPlannerService:
         positions[recipe.destination_node_id] = layout.snap_point(1.05, -0.48)
         if "return_node" in positions:
             positions["return_node"] = layout.snap_point(0.45, 0.32)
+        return positions
+
+    def _controlled_repeated_taps_positions(
+        self,
+        recipe: GraphRecipe,
+        layout: GraphLayoutService,
+    ) -> dict[str, tuple[float, float]]:
+        positions = {
+            "start": layout.snap_point(-1.05, -0.72),
+            "repeat_switch": layout.snap_point(-0.55, -0.35),
+            "dead_end_a": layout.snap_point(-1.05, -0.12),
+            "package_lane": layout.snap_point(-0.55, 0.45),
+            "package": layout.snap_point(0.08, 0.68),
+            "loop_switch": layout.snap_point(0.72, 0.45),
+            "dead_end_b": layout.snap_point(0.72, 0.82),
+            "return_lane": layout.snap_point(0.0, -0.95),
+            "exit_lane": layout.snap_point(-0.55, -1.05),
+            "switch_exit": layout.snap_point(0.75, -1.0),
+            "dead_end_c": layout.snap_point(0.75, -0.5),
+            "destination": layout.snap_point(1.05, -1.15),
+        }
+        self._place_off_route_nodes(recipe, layout, positions, vertical=False)
+        return positions
+
+    def _four_way_package_gate_positions(
+        self,
+        recipe: GraphRecipe,
+        layout: GraphLayoutService,
+    ) -> dict[str, tuple[float, float]]:
+        positions = {
+            "start": layout.snap_point(-1.05, -0.52),
+            "entry_lane": layout.snap_point(-0.72, -0.52),
+            "four_way_switch": layout.snap_point(-0.32, -0.2),
+            "wrong_dead_end": layout.snap_point(-1.02, -0.2),
+            "package_lane": layout.snap_point(-0.32, 0.55),
+            "side_loop": layout.snap_point(-0.32, -0.95),
+            "package": layout.snap_point(0.28, 0.7),
+            "gate_approach": layout.snap_point(0.42, -0.2),
+            "switch_exit": layout.snap_point(0.82, -0.2),
+            "gate_dead_end": layout.snap_point(0.82, 0.42),
+            "exit_lane": layout.snap_point(0.82, -0.85),
+            "destination": layout.snap_point(1.05, -1.05),
+        }
+        self._place_off_route_nodes(recipe, layout, positions, vertical=False)
+        return positions
+
+    def _four_way_ring_positions(
+        self,
+        recipe: GraphRecipe,
+        layout: GraphLayoutService,
+    ) -> dict[str, tuple[float, float]]:
+        positions = {
+            "start": layout.snap_point(-1.05, -0.75),
+            "ring_entry": layout.snap_point(-0.62, -0.75),
+            "four_way_switch": layout.snap_point(-0.2, -0.25),
+            "wrong_dead_end": layout.snap_point(-1.0, -0.25),
+            "ring_a": layout.snap_point(-0.2, 0.58),
+            "ring_inner": layout.snap_point(-0.2, -1.0),
+            "package": layout.snap_point(0.42, 0.62),
+            "ring_b": layout.snap_point(0.5, 0.25),
+            "ring_c": layout.snap_point(0.0, 0.0),
+            "switch_exit": layout.snap_point(0.95, 0.25),
+            "exit_dead_end": layout.snap_point(0.95, 0.75),
+            "destination": layout.snap_point(0.95, -0.75),
+        }
+        self._place_off_route_nodes(recipe, layout, positions, vertical=False)
         return positions
 
     def _place_off_route_nodes(
