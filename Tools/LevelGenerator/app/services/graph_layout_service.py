@@ -615,6 +615,8 @@ class GraphLayoutPlannerService:
         return positions
 
     def _hub_positions(self, recipe: GraphRecipe, layout: GraphLayoutService) -> dict[str, tuple[float, float]]:
+        if recipe.family_name == "hub_choice":
+            return self._hub_choice_positions(recipe, layout)
         positions = self._route_progression_positions(recipe, layout, vertical=False)
         hub_id = next((node.id for node in recipe.nodes if node.role == "switch" and self._outgoing_count(recipe, node.id) >= 3), None)
         if hub_id is None:
@@ -625,6 +627,32 @@ class GraphLayoutPlannerService:
         for node_id, point in zip(outgoing, spokes):
             if node_id in positions and node_id not in {"start", recipe.destination_node_id}:
                 positions[node_id] = layout.snap_point(*point)
+        return positions
+
+    def _hub_choice_positions(self, recipe: GraphRecipe, layout: GraphLayoutService) -> dict[str, tuple[float, float]]:
+        positions = {
+            "start": layout.snap_point(-1.05, 0.0),
+            "hub": layout.snap_point(-0.55, 0.0),
+            "dead_end_a": layout.snap_point(-0.55, 0.65),
+            "package_branch": layout.snap_point(0.05, 0.0),
+            "package": layout.snap_point(0.82, 0.65),
+            "rejoin": layout.snap_point(-0.55, -0.75),
+            "switch_b": layout.snap_point(0.2, -1.05),
+            "destination": layout.snap_point(1.05, -0.55),
+            "dead_end_b": layout.snap_point(0.85, -1.15),
+        }
+        if any(node.id == "switch_c" for node in recipe.nodes):
+            positions.update(
+                {
+                    "switch_b": layout.snap_point(0.0, -1.05),
+                    "route_mid": layout.snap_point(0.45, -0.9),
+                    "switch_c": layout.snap_point(0.85, -0.65),
+                    "destination": layout.snap_point(1.05, -0.05),
+                    "dead_end_b": layout.snap_point(0.75, -1.15),
+                    "dead_end_c": layout.snap_point(1.05, -1.15),
+                }
+            )
+        self._place_off_route_nodes(recipe, layout, positions, vertical=False)
         return positions
 
     def _ring_positions(self, recipe: GraphRecipe, layout: GraphLayoutService) -> dict[str, tuple[float, float]]:
@@ -651,12 +679,81 @@ class GraphLayoutPlannerService:
         return positions
 
     def _split_lane_positions(self, recipe: GraphRecipe, layout: GraphLayoutService) -> dict[str, tuple[float, float]]:
+        if recipe.family_name == "split_path_rejoin":
+            return self._split_path_rejoin_positions(recipe, layout)
+        if recipe.family_name == "fake_shortcut" and recipe.difficulty == "hard":
+            return self._fake_shortcut_hard_positions(recipe, layout)
+        if recipe.family_name == "long_detour_gate" and recipe.difficulty == "hard":
+            return self._long_detour_gate_hard_positions(recipe, layout)
         positions = self._route_progression_positions(recipe, layout, vertical=False)
         for node_id in recipe.required_path:
             if node_id in positions:
                 x, _ = positions[node_id]
                 positions[node_id] = layout.snap_point(x, 0.28 if node_id == recipe.package_node_id else -0.08)
         self._place_off_route_nodes(recipe, layout, positions, vertical=False, dead_end_y=0.72)
+        return positions
+
+    def _split_path_rejoin_positions(self, recipe: GraphRecipe, layout: GraphLayoutService) -> dict[str, tuple[float, float]]:
+        positions = {
+            "start": layout.snap_point(-1.05, 0.0),
+            "switch_a": layout.snap_point(-0.55, 0.0),
+            "upper_branch": layout.snap_point(-0.05, 0.28),
+            "package": layout.snap_point(0.75, 0.55),
+            "rejoin": layout.snap_point(-0.05, -0.7),
+            "switch_b": layout.snap_point(0.55, -0.95),
+            "destination": layout.snap_point(1.05, -0.55),
+            "lower_shortcut": layout.snap_point(-0.55, -0.7),
+            "dead_end_b": layout.snap_point(0.25, -1.15),
+        }
+        if any(node.id == "switch_c" for node in recipe.nodes):
+            positions.update(
+                {
+                    "switch_b": layout.snap_point(0.35, 0.28),
+                    "package": layout.snap_point(0.78, 0.58),
+                    "rejoin": layout.snap_point(-0.05, -0.72),
+                    "switch_c": layout.snap_point(0.62, -0.95),
+                    "destination": layout.snap_point(1.05, -0.55),
+                    "dead_end_b": layout.snap_point(0.35, 0.85),
+                    "dead_end_c": layout.snap_point(0.92, -1.15),
+                }
+            )
+        self._place_off_route_nodes(recipe, layout, positions, vertical=False)
+        return positions
+
+    def _fake_shortcut_hard_positions(self, recipe: GraphRecipe, layout: GraphLayoutService) -> dict[str, tuple[float, float]]:
+        positions = {
+            "start": layout.snap_point(-1.05, -0.15),
+            "choice": layout.snap_point(-0.55, -0.15),
+            "detour_a": layout.snap_point(-0.1, -0.15),
+            "switch_b": layout.snap_point(0.3, -0.15),
+            "package": layout.snap_point(0.68, 0.35),
+            "detour_b": layout.snap_point(0.2, -0.68),
+            "rejoin": layout.snap_point(0.55, -1.0),
+            "switch_c": layout.snap_point(0.85, -1.0),
+            "destination": layout.snap_point(1.05, -0.28),
+            "shortcut_dead_end": layout.snap_point(-0.55, 0.72),
+            "dead_end_b": layout.snap_point(0.3, 0.72),
+            "dead_end_c": layout.snap_point(1.05, -1.15),
+        }
+        self._place_off_route_nodes(recipe, layout, positions, vertical=False)
+        return positions
+
+    def _long_detour_gate_hard_positions(self, recipe: GraphRecipe, layout: GraphLayoutService) -> dict[str, tuple[float, float]]:
+        positions = {
+            "start": layout.snap_point(-1.05, 0.0),
+            "switch_gate": layout.snap_point(-0.55, 0.0),
+            "detour_a": layout.snap_point(-0.1, 0.28),
+            "switch_package": layout.snap_point(0.32, 0.28),
+            "package": layout.snap_point(0.72, 0.58),
+            "rejoin": layout.snap_point(-0.05, -0.72),
+            "switch_exit": layout.snap_point(0.55, -0.95),
+            "exit_gate_lane": layout.snap_point(0.85, -0.95),
+            "destination": layout.snap_point(1.05, -0.55),
+            "direct_bypass": layout.snap_point(-0.55, -0.72),
+            "dead_end_b": layout.snap_point(0.32, 0.85),
+            "dead_end_c": layout.snap_point(0.25, -1.15),
+        }
+        self._place_off_route_nodes(recipe, layout, positions, vertical=False)
         return positions
 
     def _vertical_split_lane_positions(self, recipe: GraphRecipe, layout: GraphLayoutService) -> dict[str, tuple[float, float]]:

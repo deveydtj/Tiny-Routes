@@ -315,13 +315,13 @@ def expanded_recipe_family_definitions() -> list[ExpandedRecipeFamilyDefinition]
         ),
         _definition(
             "split_path_rejoin",
-            ("medium",),
-            ("split_path", "rejoin"),
+            ("medium", "hard"),
+            ("split_path", "rejoin", "multi_switch", "package_gate"),
             "split_rejoin",
             "Split away from and rejoin the main route.",
             "Follow route continuity through a branch.",
-            (2, 2),
-            (2, 2),
+            (2, 3),
+            (2, 3),
             False,
             ("split and rejoin are both visible",),
             "Adds route shape variety without extra rules.",
@@ -331,13 +331,13 @@ def expanded_recipe_family_definitions() -> list[ExpandedRecipeFamilyDefinition]
         ),
         _definition(
             "fake_shortcut",
-            ("medium",),
-            ("fake_shortcut", "dead_end"),
-            "two_switch_order",
+            ("easy", "medium", "hard"),
+            ("fake_shortcut", "detour", "package_gate", "dead_end"),
+            "detour_gate",
             "Avoid a tempting short branch.",
             "Prefer the goal route over the shortest-looking exit.",
-            (2, 2),
-            (2, 2),
+            (1, 3),
+            (1, 3),
             False,
             ("fake shortcut terminates clearly",),
             "Creates a readable trick that rewards inspection.",
@@ -347,19 +347,35 @@ def expanded_recipe_family_definitions() -> list[ExpandedRecipeFamilyDefinition]
         ),
         _definition(
             "hub_choice",
-            ("medium",),
-            ("hub", "multi_switch", "three_way"),
-            "two_switch_order",
+            ("medium", "hard"),
+            ("hub", "multi_switch", "rejoin", "dead_end"),
+            "hub_spoke",
             "Choose from a three-way hub and then exit through a gate.",
             "Count taps on a three-way switch.",
-            (2, 2),
-            (2, 2),
+            (2, 3),
+            (2, 3),
             False,
             ("hub exits use three distinct directions",),
             "Introduces a central choice without four-way complexity.",
             "three-way switches unlocked",
             "multi_switch_order",
             _hub_choice,
+        ),
+        _definition(
+            "long_detour_gate",
+            ("easy", "medium", "hard"),
+            ("long_route", "detour", "package_gate"),
+            "detour_gate",
+            "Take the longer gated route because the direct branch cannot complete delivery.",
+            "Recognize a correct detour and carry that route plan through later gates.",
+            (1, 3),
+            (1, 3),
+            False,
+            ("required path length comes from route structure", "direct branch is visibly wrong"),
+            "Adds length through decisions, package collection, and rejoin structure instead of coordinate stretching.",
+            "detours unlocked",
+            "short_detour_gate",
+            _long_detour_gate,
         ),
         _definition(
             "return_loop_with_gate",
@@ -659,26 +675,168 @@ def _return_loop_intro(variant_name: str, preset: DifficultyPreset, rng: RandomS
 
 
 def _split_path_rejoin(variant_name: str, preset: DifficultyPreset, rng: RandomSource):
-    route = ("start", "switch_a", "upper_branch", "rejoin", "switch_b", "package", "destination")
+    if preset.name == "hard":
+        route = ("start", "switch_a", "upper_branch", "switch_b", "package", "rejoin", "switch_c", "destination")
+        pairs = (
+            ("start", "switch_a"),
+            ("switch_a", "lower_shortcut"),
+            ("switch_a", "upper_branch"),
+            ("lower_shortcut", "rejoin"),
+            ("upper_branch", "switch_b"),
+            ("switch_b", "dead_end_b"),
+            ("switch_b", "package"),
+            ("package", "rejoin"),
+            ("rejoin", "switch_c"),
+            ("switch_c", "dead_end_c"),
+            ("switch_c", "destination"),
+        )
+        return route, pairs, ("switch_a", "switch_b", "switch_c")
+
+    route = ("start", "switch_a", "upper_branch", "package", "rejoin", "switch_b", "destination")
     pairs = (
         ("start", "switch_a"),
-        ("switch_a", "dead_end_a"),
+        ("switch_a", "lower_shortcut"),
         ("switch_a", "upper_branch"),
-        ("upper_branch", "rejoin"),
+        ("lower_shortcut", "rejoin"),
+        ("upper_branch", "package"),
+        ("package", "rejoin"),
         ("rejoin", "switch_b"),
         ("switch_b", "dead_end_b"),
-        ("switch_b", "package"),
-        ("package", "destination"),
+        ("switch_b", "destination"),
     )
     return route, pairs, ("switch_a", "switch_b")
 
 
 def _fake_shortcut(variant_name: str, preset: DifficultyPreset, rng: RandomSource):
-    return _medium_two_switch(variant_name, preset, rng)
+    if preset.name == "easy":
+        route = ("start", "choice", "detour", "package", "destination")
+        pairs = (
+            ("start", "choice"),
+            ("choice", "shortcut_dead_end"),
+            ("choice", "detour"),
+            ("detour", "package"),
+            ("package", "destination"),
+        )
+        return route, pairs, ("choice",)
+
+    if preset.name == "hard":
+        route = ("start", "choice", "detour_a", "switch_b", "package", "detour_b", "rejoin", "switch_c", "destination")
+        pairs = (
+            ("start", "choice"),
+            ("choice", "shortcut_dead_end"),
+            ("choice", "detour_a"),
+            ("detour_a", "switch_b"),
+            ("switch_b", "dead_end_b"),
+            ("switch_b", "package"),
+            ("package", "detour_b"),
+            ("detour_b", "rejoin"),
+            ("rejoin", "switch_c"),
+            ("switch_c", "dead_end_c"),
+            ("switch_c", "destination"),
+        )
+        return route, pairs, ("choice", "switch_b", "switch_c")
+
+    route = ("start", "choice", "detour_a", "package", "detour_b", "switch_b", "destination")
+    pairs = (
+        ("start", "choice"),
+        ("choice", "shortcut_dead_end"),
+        ("choice", "detour_a"),
+        ("detour_a", "package"),
+        ("package", "detour_b"),
+        ("detour_b", "switch_b"),
+        ("switch_b", "dead_end_b"),
+        ("switch_b", "destination"),
+    )
+    return route, pairs, ("choice", "switch_b")
 
 
 def _hub_choice(variant_name: str, preset: DifficultyPreset, rng: RandomSource):
-    return _medium_two_switch(variant_name, preset, rng)
+    if preset.name == "hard":
+        route = ("start", "hub", "package_branch", "package", "rejoin", "switch_b", "route_mid", "switch_c", "destination")
+        pairs = (
+            ("start", "hub"),
+            ("hub", "dead_end_a"),
+            ("hub", "package_branch"),
+            ("hub", "rejoin"),
+            ("package_branch", "package"),
+            ("package", "rejoin"),
+            ("rejoin", "switch_b"),
+            ("switch_b", "dead_end_b"),
+            ("switch_b", "route_mid"),
+            ("route_mid", "switch_c"),
+            ("switch_c", "dead_end_c"),
+            ("switch_c", "destination"),
+        )
+        return route, pairs, ("hub", "switch_b", "switch_c")
+
+    route = ("start", "hub", "package_branch", "package", "rejoin", "switch_b", "destination")
+    pairs = (
+        ("start", "hub"),
+        ("hub", "dead_end_a"),
+        ("hub", "package_branch"),
+        ("hub", "rejoin"),
+        ("package_branch", "package"),
+        ("package", "rejoin"),
+        ("rejoin", "switch_b"),
+        ("switch_b", "dead_end_b"),
+        ("switch_b", "destination"),
+    )
+    return route, pairs, ("hub", "switch_b")
+
+
+def _long_detour_gate(variant_name: str, preset: DifficultyPreset, rng: RandomSource):
+    if preset.name == "easy":
+        route = ("start", "switch_gate", "detour", "package", "rejoin", "destination")
+        pairs = (
+            ("start", "switch_gate"),
+            ("switch_gate", "direct_dead_end"),
+            ("switch_gate", "detour"),
+            ("detour", "package"),
+            ("package", "rejoin"),
+            ("rejoin", "destination"),
+        )
+        return route, pairs, ("switch_gate",)
+
+    if preset.name == "hard":
+        route = (
+            "start",
+            "switch_gate",
+            "detour_a",
+            "switch_package",
+            "package",
+            "rejoin",
+            "switch_exit",
+            "exit_gate_lane",
+            "destination",
+        )
+        pairs = (
+            ("start", "switch_gate"),
+            ("switch_gate", "direct_bypass"),
+            ("switch_gate", "detour_a"),
+            ("direct_bypass", "rejoin"),
+            ("detour_a", "switch_package"),
+            ("switch_package", "dead_end_b"),
+            ("switch_package", "package"),
+            ("package", "rejoin"),
+            ("rejoin", "switch_exit"),
+            ("switch_exit", "dead_end_c"),
+            ("switch_exit", "exit_gate_lane"),
+            ("exit_gate_lane", "destination"),
+        )
+        return route, pairs, ("switch_gate", "switch_package", "switch_exit")
+
+    route = ("start", "switch_gate", "detour_a", "package", "rejoin", "switch_exit", "destination")
+    pairs = (
+        ("start", "switch_gate"),
+        ("switch_gate", "direct_dead_end"),
+        ("switch_gate", "detour_a"),
+        ("detour_a", "package"),
+        ("package", "rejoin"),
+        ("rejoin", "switch_exit"),
+        ("switch_exit", "dead_end_b"),
+        ("switch_exit", "destination"),
+    )
+    return route, pairs, ("switch_gate", "switch_exit")
 
 
 def _return_loop_with_gate(variant_name: str, preset: DifficultyPreset, rng: RandomSource):

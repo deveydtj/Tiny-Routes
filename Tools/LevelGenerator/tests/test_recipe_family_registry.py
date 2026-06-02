@@ -59,6 +59,7 @@ def test_recipe_family_registry_exposes_current_template_families() -> None:
         "split_path_rejoin",
         "fake_shortcut",
         "hub_choice",
+        "long_detour_gate",
         "return_loop_with_gate",
         "ring_route_gate",
         "multi_switch_revisit",
