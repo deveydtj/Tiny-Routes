@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from collections.abc import Iterable
+from dataclasses import replace
 
 from ..models.candidate_signature import CandidateSignature
 from ..models.difficulty_preset import DifficultyPreset
@@ -25,8 +26,15 @@ class GenerationQualityService:
         generated_level,
         preset: DifficultyPreset,
         comparison_signatures: Iterable[CandidateSignature] = (),
+        *,
+        accepted_signatures: Iterable[CandidateSignature] | None = None,
     ) -> GenerationQualityScore:
         comparison_signatures = list(comparison_signatures)
+        diversity_signatures = (
+            list(accepted_signatures)
+            if accepted_signatures is not None
+            else list(comparison_signatures)
+        )
         level = generated_level.level_document
         solution = generated_level.solution
         positions = {node.id: (node.x, node.y) for node in level.graph.nodes}
@@ -101,23 +109,51 @@ class GenerationQualityService:
             penalties.append("route_too_complex_for_difficulty")
         campaign_pacing = self.campaign_pacing.score(
             signature,
-            comparison_signatures,
+            diversity_signatures,
             estimated_band=difficulty_metrics.estimated_band,
             target_band=preset.name,
         ) if signature is not None else None
         campaign_pacing_score = campaign_pacing.score if campaign_pacing is not None else 1.0
         if campaign_pacing is not None:
             penalties.extend(campaign_pacing.penalties)
-        total = (
-            (abstract_mechanic_quality * 0.13)
+        diversity = self._topology_diversity(signature, diversity_signatures)
+        if signature is not None:
+            generated_level.candidate_signature = replace(
+                signature,
+                topology_diversity_score=diversity["topologyDiversityScore"],
+                nearby_mechanic_tag_penalty=diversity["nearbyMechanicTagPenalty"],
+                nearby_topology_class_penalty=diversity["nearbyTopologyClassPenalty"],
+                diversity_score=diversity["diversityScore"],
+            )
+            signature = generated_level.candidate_signature
+        if diversity["nearbyTopologyClassPenalty"] >= 0.20:
+            penalties.append("nearby_topology_class_repetition")
+        if diversity["nearbyMechanicTagPenalty"] >= 0.18:
+            penalties.append("nearby_mechanic_tag_repetition")
+        if diversity["nearbyFamilyStreakPenalty"] > 0:
+            penalties.append("nearby_recipe_family_streak")
+        base_total = (
+            (abstract_mechanic_quality * 0.12)
             + (runtime_solvability * 0.12)
-            + (readability * 0.16)
+            + (readability * 0.15)
             + (switch_clarity * 0.12)
             + (difficulty_fit * 0.14)
-            + (uniqueness * 0.12)
-            + (campaign_pacing_score * 0.07)
+            + (uniqueness * 0.10)
+            + (campaign_pacing_score * 0.06)
             + (mobile_tap_comfort * 0.07)
-            + (visual_appeal * 0.07)
+            + (visual_appeal * 0.06)
+        )
+        total = (
+            (abstract_mechanic_quality * 0.12)
+            + (runtime_solvability * 0.12)
+            + (readability * 0.15)
+            + (switch_clarity * 0.12)
+            + (difficulty_fit * 0.14)
+            + (uniqueness * 0.10)
+            + (campaign_pacing_score * 0.06)
+            + (mobile_tap_comfort * 0.07)
+            + (visual_appeal * 0.06)
+            + (diversity["diversityScore"] * 0.06)
         )
         return GenerationQualityScore(
             total=round(self._clamp(total), 4),
@@ -131,6 +167,10 @@ class GenerationQualityService:
             mobile_tap_comfort=round(mobile_tap_comfort, 4),
             visual_appeal=round(visual_appeal, 4),
             campaign_pacing=round(campaign_pacing_score, 4),
+            topology_diversity_score=diversity["topologyDiversityScore"],
+            nearby_mechanic_tag_penalty=diversity["nearbyMechanicTagPenalty"],
+            nearby_topology_class_penalty=diversity["nearbyTopologyClassPenalty"],
+            diversity_score=diversity["diversityScore"],
             mechanical_difficulty=difficulty_metrics.mechanical_score,
             visual_difficulty=difficulty_metrics.visual_score,
             estimated_difficulty_band=difficulty_metrics.estimated_band,
@@ -152,6 +192,12 @@ class GenerationQualityService:
                 "switchClarity": round(switch_clarity, 4),
                 "mobileTapComfort": round(mobile_tap_comfort, 4),
                 "visualAppeal": round(visual_appeal, 4),
+                "baseQualityScore": round(self._clamp(base_total), 4),
+                "topologyDiversityScore": diversity["topologyDiversityScore"],
+                "nearbyMechanicTagPenalty": diversity["nearbyMechanicTagPenalty"],
+                "nearbyTopologyClassPenalty": diversity["nearbyTopologyClassPenalty"],
+                "nearbyFamilyStreakPenalty": diversity["nearbyFamilyStreakPenalty"],
+                "diversityScore": diversity["diversityScore"],
                 "visualClarityIssues": [
                     {
                         "severity": issue.severity,
@@ -247,6 +293,90 @@ class GenerationQualityService:
         score += min(generated_level.edge_count, 12) * 0.035
         score += min(max(generated_level.edge_count - generated_level.node_count, 0), 4) * 0.08
         return self._clamp(score)
+
+    def _topology_diversity(
+        self,
+        candidate: CandidateSignature | None,
+        previous_signatures: list[CandidateSignature],
+    ) -> dict[str, float]:
+        if candidate is None or not previous_signatures:
+            return {
+                "topologyDiversityScore": 1.0,
+                "nearbyMechanicTagPenalty": 0.0,
+                "nearbyTopologyClassPenalty": 0.0,
+                "nearbyFamilyStreakPenalty": 0.0,
+                "diversityScore": 1.0,
+            }
+
+        topology_penalty = self._nearby_topology_penalty(candidate, previous_signatures)
+        mechanic_penalty = self._nearby_mechanic_tag_penalty(candidate, previous_signatures)
+        family_streak_penalty = self._nearby_family_streak_penalty(candidate, previous_signatures)
+        topology_score = self._clamp(1.0 - topology_penalty)
+        mechanic_score = self._clamp(1.0 - mechanic_penalty)
+        diversity_score = self._clamp((topology_score * 0.55) + (mechanic_score * 0.45) - family_streak_penalty)
+        return {
+            "topologyDiversityScore": round(topology_score, 4),
+            "nearbyMechanicTagPenalty": round(mechanic_penalty, 4),
+            "nearbyTopologyClassPenalty": round(topology_penalty, 4),
+            "nearbyFamilyStreakPenalty": round(family_streak_penalty, 4),
+            "diversityScore": round(diversity_score, 4),
+        }
+
+    def _nearby_topology_penalty(
+        self,
+        candidate: CandidateSignature,
+        previous_signatures: list[CandidateSignature],
+    ) -> float:
+        topology_class = candidate.topology_class
+        if not topology_class:
+            return 0.0
+        recent = previous_signatures[-3:]
+        repeat_count = sum(1 for signature in recent if signature.topology_class == topology_class)
+        penalty = repeat_count * 0.08
+        if recent and recent[-1].topology_class == topology_class:
+            penalty += 0.22
+        return self._clamp(min(penalty, 0.45))
+
+    def _nearby_mechanic_tag_penalty(
+        self,
+        candidate: CandidateSignature,
+        previous_signatures: list[CandidateSignature],
+    ) -> float:
+        candidate_tags = set(candidate.mechanic_tags)
+        if not candidate_tags and not candidate.primary_mechanic_tag:
+            return 0.0
+
+        penalty = 0.0
+        weighted_recent = [
+            (signature, weight)
+            for signature, weight in zip(reversed(previous_signatures[-5:]), (0.12, 0.09, 0.07, 0.05, 0.04))
+        ]
+        for signature, weight in weighted_recent:
+            previous_tags = set(signature.mechanic_tags)
+            if not candidate_tags or not previous_tags:
+                continue
+            overlap_ratio = len(candidate_tags & previous_tags) / max(len(candidate_tags), 1)
+            penalty += overlap_ratio * weight
+        previous = previous_signatures[-1]
+        if candidate.primary_mechanic_tag and candidate.primary_mechanic_tag == previous.primary_mechanic_tag:
+            penalty += 0.14
+        return self._clamp(min(penalty, 0.45))
+
+    def _nearby_family_streak_penalty(
+        self,
+        candidate: CandidateSignature,
+        previous_signatures: list[CandidateSignature],
+    ) -> float:
+        if not candidate.template_name:
+            return 0.0
+        streak = 0
+        for signature in reversed(previous_signatures):
+            if signature.template_name != candidate.template_name:
+                break
+            streak += 1
+        if streak == 0:
+            return 0.0
+        return round(min(0.12, 0.04 * streak), 4)
 
     def _clamp(self, value: float) -> float:
         return max(0.0, min(1.0, value))

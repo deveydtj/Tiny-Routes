@@ -57,6 +57,10 @@ class GenerationQualityScore:
     mobile_tap_comfort: float = 1.0
     visual_appeal: float = 1.0
     campaign_pacing: float = 1.0
+    topology_diversity_score: float = 1.0
+    nearby_mechanic_tag_penalty: float = 0.0
+    nearby_topology_class_penalty: float = 0.0
+    diversity_score: float = 1.0
     mechanical_difficulty: float = 0.0
     visual_difficulty: float = 0.0
     estimated_difficulty_band: str | None = None

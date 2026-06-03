@@ -3,9 +3,12 @@ from __future__ import annotations
 from app.random_source import RandomSource
 from app.level_editor_imports import LevelDocument, RouteEdgeModel, RouteGraphModel, RouteNodeModel, SolutionModel
 from app.models.generated_level import GeneratedLevel
+from app.recipes.recipe_family_registry import RecipeFamilyRegistry
+from app.services.abstract_puzzle_solver_service import AbstractPuzzleSolverService
 from app.services.candidate_signature_service import CandidateSignatureService
 from app.services.difficulty_service import DifficultyService
 from app.services.generation_quality_service import GenerationQualityService
+from app.services.recipe_to_level_builder_service import RecipeToLevelBuilderService
 from app.templates.package_gate_template import PackageGateTemplate
 from app.templates.single_switch_template import SingleSwitchTemplate
 
@@ -30,6 +33,8 @@ def test_generation_quality_service_scores_valid_candidate() -> None:
     assert "switchClarity" in score.details
     assert "mobileTapComfort" in score.details
     assert "visualAppeal" in score.details
+    assert "diversityScore" in score.details
+    assert score.diversity_score == 1.0
 
 
 def test_generation_quality_penalizes_similar_candidates() -> None:
@@ -59,6 +64,37 @@ def test_generation_quality_penalizes_adjacent_duplicate_mechanics() -> None:
     assert score.campaign_pacing < 1
     assert "campaign_repeated_recipe_family" in score.penalties
     assert score.details["campaignPacing"]["previousLevelID"] == "level_012"
+
+
+def test_generation_quality_penalizes_adjacent_repeated_topology_class() -> None:
+    preset = DifficultyService().get_preset("easy")
+    previous = _recipe_candidate("single_switch", "level_012", 12, preset, seed=2)
+    candidate = _recipe_candidate("safe_dead_end_choice", "level_013", 13, preset, seed=3)
+
+    score = GenerationQualityService().score(candidate, preset, [previous.candidate_signature])
+
+    assert previous.candidate_signature.topology_class == candidate.candidate_signature.topology_class
+    assert score.nearby_topology_class_penalty > 0
+    assert score.topology_diversity_score < 1
+    assert score.diversity_score < 1
+    assert "nearby_topology_class_repetition" in score.penalties
+    assert candidate.candidate_signature.diversity_score == score.diversity_score
+
+
+def test_generation_quality_penalizes_nearby_repeated_mechanic_tags() -> None:
+    preset = DifficultyService().get_preset("medium")
+    previous = [
+        _recipe_candidate("package_gate", "level_011", 11, preset, seed=2).candidate_signature,
+        _recipe_candidate("package_gate_double_choice", "level_012", 12, preset, seed=3).candidate_signature,
+    ]
+    candidate = _recipe_candidate("package_gate_double_choice", "level_013", 13, preset, seed=4)
+
+    score = GenerationQualityService().score(candidate, preset, previous)
+
+    assert "package_gate" in candidate.candidate_signature.mechanic_tags
+    assert score.nearby_mechanic_tag_penalty > 0
+    assert score.diversity_score < 1
+    assert "nearby_mechanic_tag_repetition" in score.penalties
 
 
 def test_generation_quality_rewards_target_difficulty_fit() -> None:
@@ -130,3 +166,12 @@ def _parallel_warning_generated_level() -> GeneratedLevel:
         difficulty="easy",
         seed=1,
     )
+
+
+def _recipe_candidate(family_name: str, level_id: str, level_number: int, preset, seed: int) -> GeneratedLevel:
+    family = RecipeFamilyRegistry().get_family(family_name)
+    recipe = family.generate_recipe(level_id, preset, RandomSource(seed), family.variants[0])
+    recipe = AbstractPuzzleSolverService().solve(recipe, preset)
+    generated = RecipeToLevelBuilderService().build_level(recipe, level_number, seed=seed)
+    generated.candidate_signature = CandidateSignatureService().signature_for(generated)
+    return generated

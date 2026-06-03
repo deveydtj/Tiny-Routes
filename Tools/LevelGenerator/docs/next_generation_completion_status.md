@@ -36,6 +36,71 @@ Result: `143 passed`.
 
 Result: passed. The check suite ran Python tests, smoke dry-run generation, and validation for production levels `level_001` through `level_030` with Swift tests disabled by the script.
 
+## Recipe Diversity Rescue Phases 6-7 - Topology Diversity Scoring and Stress Checks
+
+Completed:
+
+- [x] Added topology/mechanic diversity scoring as quality selection input, not validation:
+  - [x] adjacent and nearby repeated `topologyClass` penalty
+  - [x] repeated `primaryMechanicTag` and nearby mechanic-tag overlap penalty
+  - [x] repeated family-streak penalty folded into diversity scoring without relying only on family name
+  - [x] separate `topologyDiversityScore`, `nearbyMechanicTagPenalty`, `nearbyTopologyClassPenalty`, and `diversityScore`
+- [x] Kept hard validation gates ahead of scoring and preserved quality rejection gates for runtime solvability, switch clarity, similarity, and total quality.
+- [x] Updated deterministic candidate selection and selection rationale so a close candidate can win because its diversity score offsets a slightly lower base quality.
+- [x] Updated JSON and Markdown reports so accepted-level summaries, signatures, quality payloads, and candidate-selection summaries include diversity scores and penalties.
+- [x] Added focused tests for topology repetition penalties, mechanic-tag overlap penalties, campaign pacing diversity context, deterministic selection, validation-before-scoring behavior, and report fields.
+- [x] Added bounded normal dry-run diversity coverage plus opt-in full stress tests guarded by `TINY_ROUTES_FULL_GENERATOR_STRESS=1`.
+
+Verification:
+
+```bash
+/Library/Frameworks/Python.framework/Versions/3.13/bin/python3 -m pytest Tools/LevelGenerator/tests/test_generation_quality_service.py Tools/LevelGenerator/tests/test_campaign_pacing_service.py Tools/LevelGenerator/tests/test_generation_service.py Tools/LevelGenerator/tests/test_generation_report_repository.py Tools/LevelGenerator/tests/test_generator_batch_checks.py
+```
+
+Result: `43 passed, 3 skipped`.
+
+```bash
+/Library/Frameworks/Python.framework/Versions/3.13/bin/python3 -m pytest Tools/LevelGenerator/tests/test_candidate_signature_service.py Tools/LevelGenerator/tests/test_candidate_uniqueness_service.py
+```
+
+Result: `12 passed`.
+
+```bash
+/Library/Frameworks/Python.framework/Versions/3.13/bin/python3 -m pytest Tools/LevelGenerator/tests
+```
+
+Result: `273 passed, 3 skipped`.
+
+Full stress tests are not part of normal pytest runs. Run them explicitly with:
+
+```bash
+TINY_ROUTES_FULL_GENERATOR_STRESS=1 /Library/Frameworks/Python.framework/Versions/3.13/bin/python3 -m pytest Tools/LevelGenerator/tests/test_generator_batch_checks.py
+```
+
+Requested full-default dry-run commands were attempted with `python3` and temporary `/tmp` reports only. The exact auto 50 command was stopped after roughly 15 minutes with no report emitted. The exact expert 10 command was stopped after roughly 6 minutes with no report emitted. The exact hard 20 command was stopped after roughly 5 minutes with no report emitted. This runtime makes the full-default commands unsuitable for the normal suite.
+
+Bounded dry-run commands using the same seeds and temporary report paths produced actionable Phase 8 starvation data without changing weights:
+
+```bash
+python3 Tools/LevelGenerator/generate_levels.py --start 1 --count 50 --difficulty auto --template mixed --generation-mode recipe-first --seed 9001 --dry-run --no-compare-existing --report /tmp/tiny-routes-auto50-bounded.md --json-report /tmp/tiny-routes-auto50-bounded.json --candidate-pool-size 4 --recipe-pool-size 3 --layouts-per-recipe 1 --road-shapes-per-layout 2 --max-attempts-per-level 80
+```
+
+Result: failed at `level_040`; accepted `39` levels. Distribution: `20` families, `9` topology classes, `12` primary mechanic tags, orientations `31` horizontal / `8` vertical. Rejections: `3945` total, led by `candidate_too_similar_to_batch` (`2641`) plus readability/timing/shape failures.
+
+```bash
+python3 Tools/LevelGenerator/generate_levels.py --start 26 --count 20 --difficulty hard --template mixed --generation-mode recipe-first --seed 9201 --dry-run --no-compare-existing --report /tmp/tiny-routes-hard20-bounded.md --json-report /tmp/tiny-routes-hard20-bounded.json --candidate-pool-size 4 --recipe-pool-size 3 --layouts-per-recipe 1 --road-shapes-per-layout 2 --max-attempts-per-level 80
+```
+
+Result: failed at `level_042`; accepted `16` levels. Distribution: `10` families, `6` topology classes, `8` primary mechanic tags, orientations `13` horizontal / `3` vertical. Hard is still dominated by `multi_switch_chain`/`two_switch_order` shape acceptance (`7` of `16` accepted from `multi_switch_chain`; `9` of `16` topology class `two_switch_order`). Rejections: `3546` total, led by `candidate_too_similar_to_batch` (`2056`).
+
+```bash
+python3 Tools/LevelGenerator/generate_levels.py --start 41 --count 10 --difficulty expert --template mixed --generation-mode recipe-first --seed 9101 --dry-run --no-compare-existing --report /tmp/tiny-routes-expert10-bounded.md --json-report /tmp/tiny-routes-expert10-bounded.json --candidate-pool-size 4 --recipe-pool-size 3 --layouts-per-recipe 1 --road-shapes-per-layout 2 --max-attempts-per-level 80
+```
+
+Result: failed at `level_046`; accepted `5` levels. Distribution: `5` families, `4` topology classes, `3` primary mechanic tags, all horizontal. Rejections: `1974` total, led by `candidate_too_similar_to_batch` (`1738`). Expert accepted at least three relevant topology classes before starvation, but still cannot complete `10` under current untuned family selection/weights.
+
+All bounded reports included accepted candidate metadata for family, tags, topology class, layout orientation, required path length, diversity score, and candidate-selection diversity fields. Production level JSON and production solution sidecars were not modified.
+
 Xcode is available:
 
 ```bash

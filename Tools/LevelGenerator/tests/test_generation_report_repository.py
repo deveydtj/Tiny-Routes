@@ -157,12 +157,15 @@ def test_generation_report_repository_writes_recipe_metadata(tmp_path) -> None:
     assert accepted["layoutOrientationSelectionReason"] == "explicit_preference"
     assert accepted["verticalCandidateRejectedReason"] is None
     assert accepted["diversityAudit"] == {
-        "topologyDiversityScore": None,
-        "nearbyMechanicTagPenalty": None,
-        "nearbyTopologyClassPenalty": None,
-        "diversityScore": None,
+        "topologyDiversityScore": 1.0,
+        "nearbyMechanicTagPenalty": 0.0,
+        "nearbyTopologyClassPenalty": 0.0,
+        "diversityScore": 1.0,
     }
-    assert accepted["topologyDiversityScore"] is None
+    assert accepted["topologyDiversityScore"] == 1.0
+    assert accepted["nearbyMechanicTagPenalty"] == 0.0
+    assert accepted["nearbyTopologyClassPenalty"] == 0.0
+    assert accepted["diversityScore"] == 1.0
     assert accepted["abstractGraphSignature"]
     assert accepted["selectedLayoutVariant"] == "normal"
     assert accepted["selectedRoadShapeStrategy"] == "auto"
@@ -180,7 +183,11 @@ def test_generation_report_repository_writes_recipe_metadata(tmp_path) -> None:
     assert payload["candidateSelection"][0]["acceptedCandidate"]["layoutStrategy"] == "vertical_route_progression"
     assert payload["candidateSelection"][0]["acceptedCandidate"]["layoutVariant"] == "normal"
     assert payload["candidateSelection"][0]["acceptedCandidate"]["layoutOrientationSelectionReason"] == "explicit_preference"
-    assert payload["candidateSelection"][0]["acceptedCandidate"]["diversityAudit"]["diversityScore"] is None
+    assert payload["candidateSelection"][0]["acceptedCandidate"]["diversityAudit"]["diversityScore"] == 1.0
+    assert payload["candidateSelection"][0]["acceptedCandidate"]["diversityScore"] == 1.0
+    assert accepted["quality"]["diversityScore"] == 1.0
+    assert accepted["quality"]["nearbyMechanicTagPenalty"] == 0.0
+    assert "baseQualityScore" in accepted["quality"]
     markdown = (tmp_path / "report.md").read_text(encoding="utf-8")
     assert "Candidate selection" in markdown
     assert "Topology" in markdown
@@ -193,7 +200,7 @@ def test_generation_report_repository_writes_recipe_metadata(tmp_path) -> None:
     assert "family `single_switch`" in markdown
     assert "variant `single_switch_" in markdown
     assert "primary `single_switch`" in markdown
-    assert "mechanic penalty None" in markdown
+    assert "mechanic penalty 0.0" in markdown
 
 
 def test_generation_report_repository_writes_recipe_mechanic_metadata(tmp_path) -> None:

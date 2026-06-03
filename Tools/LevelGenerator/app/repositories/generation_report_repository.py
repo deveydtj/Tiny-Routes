@@ -74,10 +74,10 @@ class GenerationReportRepository:
                     "layoutOrientationSelectionReason": (level.layout_metadata or {}).get("orientationSelectionReason"),
                     "verticalCandidateRejectedReason": (level.layout_metadata or {}).get("verticalCandidateRejectedReason"),
                     "diversityAudit": self._diversity_audit(level),
-                    "topologyDiversityScore": None,
-                    "nearbyMechanicTagPenalty": None,
-                    "nearbyTopologyClassPenalty": None,
-                    "diversityScore": None,
+                    "topologyDiversityScore": self._diversity_audit(level)["topologyDiversityScore"],
+                    "nearbyMechanicTagPenalty": self._diversity_audit(level)["nearbyMechanicTagPenalty"],
+                    "nearbyTopologyClassPenalty": self._diversity_audit(level)["nearbyTopologyClassPenalty"],
+                    "diversityScore": self._diversity_audit(level)["diversityScore"],
                     "unlockRequirement": getattr(level, "unlock_requirement", None),
                     "priorMechanicDependency": getattr(level, "prior_mechanic_dependency", None),
                     "mechanicMetadata": getattr(level, "mechanic_metadata", {}) or {},
@@ -261,7 +261,10 @@ class GenerationReportRepository:
                         f"- Score breakdown: mechanic `{quality['abstractMechanicQuality']}`, "
                         f"runtime `{quality['runtimeSolvability']}`, readability `{quality['readability']}`, "
                         f"switch clarity `{quality['switchClarity']}`, mobile comfort `{quality['mobileTapComfort']}`, "
-                        f"visual appeal `{quality['visualAppeal']}`."
+                        f"visual appeal `{quality['visualAppeal']}`, diversity `{quality['diversityScore']}` "
+                        f"(topology `{quality['topologyDiversityScore']}`, "
+                        f"mechanic penalty `{quality['nearbyMechanicTagPenalty']}`, "
+                        f"topology penalty `{quality['nearbyTopologyClassPenalty']}`)."
                     )
                 solution = level["solution"]
                 route_summary = " -> ".join(f"`{node_id}`" for node_id in solution["route"])
@@ -494,10 +497,15 @@ class GenerationReportRepository:
             "mobileTapComfort": quality.mobile_tap_comfort,
             "visualAppeal": quality.visual_appeal,
             "campaignPacing": quality.campaign_pacing,
+            "topologyDiversityScore": quality.topology_diversity_score,
+            "nearbyMechanicTagPenalty": quality.nearby_mechanic_tag_penalty,
+            "nearbyTopologyClassPenalty": quality.nearby_topology_class_penalty,
+            "diversityScore": quality.diversity_score,
             "mechanicalDifficulty": quality.mechanical_difficulty,
             "visualDifficulty": quality.visual_difficulty,
             "estimatedDifficultyBand": quality.estimated_difficulty_band,
             "penalties": list(quality.penalties),
+            "baseQualityScore": quality.details.get("baseQualityScore", quality.total),
             "details": quality.details,
         }
 

@@ -6,9 +6,12 @@ from app.generation_config import GenerationConfig
 from app.models.generation_quality import GenerationQualityScore
 from app.map_import.osm_seed_importer import MapSeedEdge, MapSeedGraph, MapSeedNode
 from app.random_source import RandomSource
+from app.recipes.recipe_family_registry import RecipeFamilyRegistry
 from app.repositories.generated_level_repository import GeneratedLevelRepository
+from app.services.abstract_puzzle_solver_service import AbstractPuzzleSolverService
 from app.services.generated_level_validation_service import GeneratorValidationMessage, GeneratorValidationResult
 from app.services.level_generation_service import LevelGenerationService
+from app.services.recipe_to_level_builder_service import RecipeToLevelBuilderService
 from app.templates.single_switch_template import SingleSwitchTemplate
 
 
@@ -88,6 +91,7 @@ def test_generation_service_is_deterministic_for_seed(tmp_path) -> None:
 def test_generation_service_retries_after_rejected_candidate(tmp_path) -> None:
     service = LevelGenerationService()
     calls = {"count": 0}
+    quality_calls = {"count": 0}
 
     def fake_validate(*args, **kwargs):
         calls["count"] += 1
@@ -97,12 +101,26 @@ def test_generation_service_retries_after_rejected_candidate(tmp_path) -> None:
             )
         return GeneratorValidationResult([])
 
+    class FakeQualityService:
+        def score(self, candidate, preset, comparison_signatures):
+            quality_calls["count"] += 1
+            return GenerationQualityScore(
+                total=0.8,
+                readability=1,
+                uniqueness=1,
+                difficulty_fit=1,
+                route_interest=1,
+                switch_clarity=1,
+            )
+
     service.validation_service.validate = fake_validate
+    service.quality_service = FakeQualityService()
     result = service.generate(_config(tmp_path, dry_run=True, candidate_pool_size=1))
 
     assert result.passed is True
     assert result.rejection_reason_counts["forced_failure"] == 1
     assert calls["count"] == 2
+    assert quality_calls["count"] == 1
 
 
 def test_generation_service_rejects_duplicate_batch_candidates(tmp_path) -> None:
@@ -315,6 +333,67 @@ def test_generation_service_selects_highest_quality_candidate_from_pool(tmp_path
     assert "highest deterministic quality score" in selection["selectionRationale"]
 
 
+def test_generation_service_can_select_diverse_candidate_with_slightly_lower_base_quality(tmp_path) -> None:
+    service = LevelGenerationService()
+
+    def fake_generate_raw_candidates(**kwargs):
+        preset = kwargs["preset"]
+        level_id = kwargs["level_id"]
+        level_number = kwargs["level_number"]
+        repeated = _recipe_generated_candidate("single_switch", level_id, level_number, preset, seed=20)
+        distinct = _recipe_generated_candidate("package_gate", level_id, level_number, preset, seed=21)
+        return [repeated, distinct]
+
+    class FakeQualityService:
+        def score(self, candidate, preset, comparison_signatures, *, accepted_signatures=None):
+            if candidate.topology_class == "package_gate":
+                return GenerationQualityScore(
+                    total=0.85,
+                    readability=1,
+                    uniqueness=1,
+                    difficulty_fit=1,
+                    route_interest=1,
+                    switch_clarity=1,
+                    diversity_score=1.0,
+                    topology_diversity_score=1.0,
+                    details={"baseQualityScore": 0.82},
+                )
+            return GenerationQualityScore(
+                total=0.84,
+                readability=1,
+                uniqueness=1,
+                difficulty_fit=1,
+                route_interest=1,
+                switch_clarity=1,
+                diversity_score=0.35,
+                topology_diversity_score=0.35,
+                nearby_topology_class_penalty=0.65,
+                details={"baseQualityScore": 0.86},
+            )
+
+    service._generate_raw_candidates = fake_generate_raw_candidates
+    service.quality_service = FakeQualityService()
+
+    result = service.generate(
+        _config(
+            tmp_path,
+            difficulty="easy",
+            template_name="mixed",
+            dry_run=True,
+            compare_against_existing=False,
+            candidate_pool_size=2,
+            generation_mode="recipe_first",
+        )
+    )
+
+    assert result.passed is True
+    assert result.accepted[0].topology_class == "package_gate"
+    selection = result.candidate_selection_summaries[0]
+    assert selection["acceptedCandidate"]["quality"]["baseQualityScore"] == 0.82
+    assert selection["topRejectedNearMisses"][0]["quality"]["baseQualityScore"] == 0.86
+    assert "after diversity scoring" in selection["selectionRationale"]
+
+
 def test_generation_service_rejects_low_switch_clarity_after_scoring(tmp_path) -> None:
     service = LevelGenerationService()
     seeds = iter([2, 3])
@@ -335,6 +414,8 @@ def test_generation_service_rejects_low_switch_clarity_after_scoring(tmp_path) -
                     difficulty_fit=1,
                     route_interest=1,
                     switch_clarity=0.1,
+                    diversity_score=1,
+                    topology_diversity_score=1,
                 )
             return GenerationQualityScore(
                 total=0.8,
@@ -397,6 +478,10 @@ def test_generation_service_pool_selection_is_deterministic_for_same_seed(tmp_pa
     assert second.passed is True
     assert first.accepted[0].seed == second.accepted[0].seed
     assert first.candidate_selection_summaries[0]["scoreStats"] == second.candidate_selection_summaries[0]["scoreStats"]
+    assert (
+        first.candidate_selection_summaries[0]["acceptedCandidate"]["diversityAudit"]
+        == second.candidate_selection_summaries[0]["acceptedCandidate"]["diversityAudit"]
+    )
 
 
 def test_recipe_first_mixed_orientation_includes_vertical_candidates(tmp_path) -> None:
@@ -563,8 +648,8 @@ def test_generation_service_recipe_first_mode_generates_recipe_metadata(tmp_path
     assert report["acceptedLevels"][0]["primaryMechanicTag"] == "single_switch"
     assert report["acceptedLevels"][0]["topologyClass"] == "single_branch"
     assert report["acceptedLevels"][0]["requiredPathLength"] is not None
-    assert report["acceptedLevels"][0]["diversityAudit"]["topologyDiversityScore"] is None
-    assert report["candidateSelection"][0]["acceptedCandidate"]["diversityScore"] is None
+    assert report["acceptedLevels"][0]["diversityAudit"]["topologyDiversityScore"] == 1.0
+    assert report["candidateSelection"][0]["acceptedCandidate"]["diversityScore"] == 1.0
     assert "roadShapeScore" in report["acceptedLevels"][0]["quality"]["details"]
 
 
@@ -662,3 +747,10 @@ def test_generation_service_applies_map_seed_path(tmp_path) -> None:
 
     assert result.passed is True
     assert any("Map attribution" in note for note in result.accepted[0].generation_notes)
+
+
+def _recipe_generated_candidate(family_name: str, level_id: str, level_number: int, preset, seed: int):
+    family = RecipeFamilyRegistry().get_family(family_name)
+    recipe = family.generate_recipe(level_id, preset, RandomSource(seed), family.variants[0])
+    recipe = AbstractPuzzleSolverService().solve(recipe, preset)
+    return RecipeToLevelBuilderService().build_level(recipe, level_number, seed=seed)

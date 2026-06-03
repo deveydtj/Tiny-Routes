@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import inspect
 import shutil
 import subprocess
 from pathlib import Path
@@ -171,7 +172,7 @@ class LevelGenerationService:
                                 continue
 
                         candidate.candidate_signature = candidate_signature
-                        candidate.quality_score = self.quality_service.score(
+                        candidate.quality_score = self._score_candidate_quality(
                             candidate,
                             preset,
                             [
@@ -179,6 +180,7 @@ class LevelGenerationService:
                                 *candidate_pool_signatures,
                                 *(existing_signatures if config.compare_against_existing else []),
                             ],
+                            accepted_signatures,
                         )
                         quality_rejection = self._quality_rejection(candidate)
                         if quality_rejection is not None:
@@ -517,11 +519,22 @@ class LevelGenerationService:
         if suppression_message not in result.messages:
             result.messages.append(suppression_message)
 
-    def _candidate_selection_key(self, candidate) -> tuple[float, float, float, int]:
+    def _candidate_selection_key(self, candidate) -> tuple[float, float, float, float, int]:
         quality = candidate.quality_score
         if quality is None:
             return (0.0, 0.0, 0.0, -candidate.seed)
-        return (quality.total, quality.switch_clarity, quality.uniqueness, -candidate.seed)
+        return (quality.total, quality.diversity_score, quality.switch_clarity, quality.uniqueness, -candidate.seed)
+
+    def _score_candidate_quality(self, candidate, preset, comparison_signatures, accepted_signatures):
+        parameters = inspect.signature(self.quality_service.score).parameters
+        if "accepted_signatures" in parameters:
+            return self.quality_service.score(
+                candidate,
+                preset,
+                comparison_signatures,
+                accepted_signatures=accepted_signatures,
+            )
+        return self.quality_service.score(candidate, preset, comparison_signatures)
 
     def _quality_rejection(self, candidate) -> tuple[str, str] | None:
         quality = candidate.quality_score
@@ -574,24 +587,47 @@ class LevelGenerationService:
                 if near_miss.get("quality", {}).get("total") is not None
             ],
         ]
+        accepted_summary = self._candidate_summary(accepted_candidate, "accepted")
         accepted_score = accepted_candidate.quality_score.total if accepted_candidate.quality_score is not None else 0.0
-        next_score = top_rejected[0]["quality"]["total"] if top_rejected else None
+        next_summary = top_rejected[0] if top_rejected else None
         return {
             "levelID": level_id,
             "candidateCount": len(scores),
-            "acceptedCandidate": self._candidate_summary(accepted_candidate, "accepted"),
+            "acceptedCandidate": accepted_summary,
             "scoreStats": {
                 "minimum": round(min(scores), 4) if scores else None,
                 "average": round(sum(scores) / len(scores), 4) if scores else None,
                 "maximum": round(max(scores), 4) if scores else None,
             },
             "topRejectedNearMisses": top_rejected,
-            "selectionRationale": self._selection_rationale(accepted_score, next_score),
+            "selectionRationale": self._selection_rationale(accepted_summary, accepted_score, next_summary),
         }
 
-    def _selection_rationale(self, accepted_score: float, next_score: float | None) -> str:
-        if next_score is None:
+    def _selection_rationale(self, accepted_summary: dict, accepted_score: float, next_summary: dict | None) -> str:
+        if next_summary is None:
             return "Only one scored candidate passed validation and quality thresholds."
+        next_quality = next_summary.get("quality", {})
+        next_score = next_quality.get("total")
+        accepted_quality = accepted_summary.get("quality", {})
+        accepted_base = accepted_quality.get("baseQualityScore")
+        next_base = next_quality.get("baseQualityScore")
+        accepted_diversity = accepted_quality.get("diversityScore")
+        next_diversity = next_quality.get("diversityScore")
+        if (
+            next_score is not None
+            and accepted_base is not None
+            and next_base is not None
+            and accepted_diversity is not None
+            and next_diversity is not None
+            and accepted_base < next_base
+            and accepted_diversity > next_diversity + 0.10
+        ):
+            return (
+                "Accepted candidate had the highest deterministic quality score after diversity scoring "
+                f"({accepted_score:.4f} vs {next_score:.4f}); stronger diversity "
+                f"({accepted_diversity:.4f} vs {next_diversity:.4f}) offset close base quality "
+                f"({accepted_base:.4f} vs {next_base:.4f})."
+            )
         return f"Accepted candidate had the highest deterministic quality score ({accepted_score:.4f} vs {next_score:.4f})."
 
     def _candidate_summary(self, candidate, status: str) -> dict:
@@ -612,10 +648,10 @@ class LevelGenerationService:
             "layoutOrientationSelectionReason": (candidate.layout_metadata or {}).get("orientationSelectionReason"),
             "verticalCandidateRejectedReason": (candidate.layout_metadata or {}).get("verticalCandidateRejectedReason"),
             "diversityAudit": self._diversity_audit(candidate),
-            "topologyDiversityScore": None,
-            "nearbyMechanicTagPenalty": None,
-            "nearbyTopologyClassPenalty": None,
-            "diversityScore": None,
+            "topologyDiversityScore": self._diversity_audit(candidate)["topologyDiversityScore"],
+            "nearbyMechanicTagPenalty": self._diversity_audit(candidate)["nearbyMechanicTagPenalty"],
+            "nearbyTopologyClassPenalty": self._diversity_audit(candidate)["nearbyTopologyClassPenalty"],
+            "diversityScore": self._diversity_audit(candidate)["diversityScore"],
             "layoutVariant": candidate.selected_layout_variant,
             "roadShapeStrategy": candidate.selected_road_shape_strategy,
             "status": status,
@@ -643,6 +679,11 @@ class LevelGenerationService:
             "difficultyFit": quality.difficulty_fit,
             "uniqueness": quality.uniqueness,
             "campaignPacing": quality.campaign_pacing,
+            "topologyDiversityScore": quality.topology_diversity_score,
+            "nearbyMechanicTagPenalty": quality.nearby_mechanic_tag_penalty,
+            "nearbyTopologyClassPenalty": quality.nearby_topology_class_penalty,
+            "diversityScore": quality.diversity_score,
+            "baseQualityScore": quality.details.get("baseQualityScore", quality.total),
             "mobileTapComfort": quality.mobile_tap_comfort,
             "visualAppeal": quality.visual_appeal,
             "penalties": list(quality.penalties),
