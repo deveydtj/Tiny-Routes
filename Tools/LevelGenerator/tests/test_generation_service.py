@@ -125,6 +125,27 @@ def test_generation_service_accepts_taller_than_wide_portrait_layouts(tmp_path) 
     assert result.accepted[0].layout_metadata["portraitChecksPassed"] is True
 
 
+def test_generation_service_large_portrait_profile_generates_taller_readable_layouts(tmp_path) -> None:
+    result = LevelGenerationService().generate(
+        _config(
+            tmp_path,
+            difficulty="medium",
+            template_name="return_loop",
+            dry_run=True,
+            compare_against_existing=False,
+            layout_size_profile="large_portrait",
+        )
+    )
+
+    assert result.passed is True, result.messages
+    metadata = result.accepted[0].layout_metadata
+    metrics = metadata["portraitMetrics"]
+    assert metadata["layoutSizeProfile"] == "large_portrait"
+    assert metadata["portraitChecksPassed"] is True
+    assert metrics["height"] >= 2.75
+    assert metrics["height"] > metrics["width"]
+
+
 def test_generation_service_keeps_start_below_destination_for_portrait_default(tmp_path) -> None:
     result = LevelGenerationService().generate(
         _config(

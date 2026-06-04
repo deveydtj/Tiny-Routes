@@ -24,6 +24,10 @@ enum TRGameplayStyle {
     enum Metrics {
         static let crispWhiteRimWidth: CGFloat = 6
         static let boardPadding: CGFloat = 64
+        static let minimumReadableCoordinateScale: CGFloat = 96
+        static let cameraSafeMarginWorld: Double = 0.36
+        static let largeLevelPreviewHeightThreshold: Double = 2.75
+        static let levelPreviewDurationNanoseconds: UInt64 = 1_400_000_000
         static let switchNodeSize: CGFloat = 52
         static let switchCircleSize: CGFloat = 42
         static let playerOuterSize: CGFloat = 52

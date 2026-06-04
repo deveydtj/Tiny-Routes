@@ -23,6 +23,7 @@ struct GameplayScreen: View {
     @State private var loadErrorMessage: String?
     @State private var lastFrameDate: Date?
     @State private var hasDispatchedOutcome: Bool = false
+    @State private var isShowingLevelPreview: Bool = false
 
     init(
         levelID: String,
@@ -73,8 +74,15 @@ struct GameplayScreen: View {
                         destinationNodeID: destinationNodeID,
                         hasCollectedPackage: hasCollectedPackage,
                         cosmeticLoadout: cosmeticLoadout,
+                        isShowingPreview: isShowingLevelPreview,
                         onNodeTapped: handleNodeTapped
                     )
+                    .onAppear {
+                        finishPreviewIfNeeded(for: runtimeGraph)
+                    }
+                    .onChange(of: runtimeGraph.nodesByID.count) { _, _ in
+                        finishPreviewIfNeeded(for: runtimeGraph)
+                    }
                 } else {
                     ProgressView("Loading board…")
                         .padding(16)
@@ -105,6 +113,11 @@ struct GameplayScreen: View {
                 lastFrameDate = nil
             }
         }
+        .onChange(of: isShowingLevelPreview) { _, isPreviewing in
+            if isPreviewing {
+                lastFrameDate = nil
+            }
+        }
     }
 
     private func loadBoard() {
@@ -128,6 +141,7 @@ struct GameplayScreen: View {
             hasCollectedPackage = routeEngine.deliveryDot?.hasCollectedPackage ?? false
             timeRemaining = routeEngine.timeRemaining
             tapCount = routeEngine.tapCount
+            isShowingLevelPreview = shouldPreviewLevel(runtimeGraph: routeEngine.runtimeGraph)
 
             if !didStartMovement {
                 loadErrorMessage = "Level has no active outgoing edge from the start node."
@@ -154,6 +168,7 @@ struct GameplayScreen: View {
         hasCollectedPackage = routeEngine.deliveryDot?.hasCollectedPackage ?? false
         timeRemaining = routeEngine.timeRemaining
         tapCount = routeEngine.tapCount
+        isShowingLevelPreview = shouldPreviewLevel(runtimeGraph: routeEngine.runtimeGraph)
 
         if routeEngine.deliveryDot?.currentEdgeID == nil {
             loadErrorMessage = "Level has no active outgoing edge from the start node."
@@ -162,7 +177,7 @@ struct GameplayScreen: View {
     }
 
     private func advanceDot(at frameDate: Date) {
-        guard !isPaused, runtimeGraph != nil else {
+        guard !isPaused, !isShowingLevelPreview, runtimeGraph != nil else {
             lastFrameDate = nil
             return
         }
@@ -212,12 +227,38 @@ struct GameplayScreen: View {
         }
     }
 
+    private func shouldPreviewLevel(runtimeGraph: RuntimeRouteGraph?) -> Bool {
+        guard let runtimeGraph else {
+            return false
+        }
+
+        let extents = LevelPlayableExtents.make(for: runtimeGraph)
+        return extents.playableBounds.height >= TRGameplayStyle.Metrics.largeLevelPreviewHeightThreshold
+    }
+
+    private func finishPreviewIfNeeded(for runtimeGraph: RuntimeRouteGraph) {
+        guard shouldPreviewLevel(runtimeGraph: runtimeGraph), isShowingLevelPreview else {
+            return
+        }
+
+        Task { @MainActor in
+            try? await Task.sleep(nanoseconds: TRGameplayStyle.Metrics.levelPreviewDurationNanoseconds)
+            guard self.shouldPreviewLevel(runtimeGraph: runtimeGraph) else {
+                return
+            }
+            withAnimation(.easeInOut(duration: 0.45)) {
+                self.isShowingLevelPreview = false
+            }
+        }
+    }
+
     private func resetViewState() {
         hasCollectedPackage = false
         lastFrameDate = nil
         tapCount = 0
         timeRemaining = nil
         hasDispatchedOutcome = false
+        isShowingLevelPreview = false
     }
 }
 
@@ -228,6 +269,7 @@ struct RouteBoardView: View {
     let destinationNodeID: String
     let hasCollectedPackage: Bool
     let cosmeticLoadout: GameplayCosmeticLoadout
+    let isShowingPreview: Bool
     let onNodeTapped: (String) -> Void
 
     private let boardPadding = TRGameplayStyle.Metrics.boardPadding
@@ -250,10 +292,14 @@ struct RouteBoardView: View {
             let cosmeticStyle = TRGameplayCosmeticStyle(loadout: cosmeticLoadout)
             let nodes = runtimeGraph.nodesByID.values.sorted { $0.id < $1.id }
             let edges = runtimeGraph.edgesByID.values.sorted { $0.id < $1.id }
+            let deliveryDotWorldPosition = deliveryDot?.runtimePosition(in: runtimeGraph).map {
+                RoadPoint(x: $0.x, y: $0.y)
+            }
             let layout = BoardLayout.make(
-                for: nodes,
+                for: runtimeGraph,
                 in: geometry.size,
-                padding: boardPadding
+                padding: boardPadding,
+                cameraMode: isShowingPreview ? .preview : .follow(deliveryDotWorldPosition)
             )
             let roadPaths = renderedRoadPaths(for: edges, in: runtimeGraph, layout: layout)
             let roadHubs = renderedRoadHubs(for: runtimeGraph, layout: layout)
@@ -311,6 +357,8 @@ struct RouteBoardView: View {
             .frame(width: geometry.size.width, height: geometry.size.height)
             .background(Color.clear)
             .contentShape(Rectangle())
+            .clipped()
+            .animation(.easeOut(duration: 0.18), value: layout.cameraAnimationKey)
             .gesture(
                 DragGesture(minimumDistance: 0)
                     .onEnded { value in
@@ -617,6 +665,221 @@ struct RouteBoardView: View {
 
 }
 
+struct LevelBoundingBox: Equatable {
+    let minX: Double
+    let maxX: Double
+    let minY: Double
+    let maxY: Double
+
+    var width: Double {
+        maxX - minX
+    }
+
+    var height: Double {
+        maxY - minY
+    }
+
+    var center: RoadPoint {
+        RoadPoint(x: (minX + maxX) / 2, y: (minY + maxY) / 2)
+    }
+
+    func expanded(by margin: Double) -> LevelBoundingBox {
+        LevelBoundingBox(
+            minX: minX - margin,
+            maxX: maxX + margin,
+            minY: minY - margin,
+            maxY: maxY + margin
+        )
+    }
+}
+
+struct LevelPlayableExtents: Equatable {
+    let playableBounds: LevelBoundingBox
+    let cameraSafeBounds: LevelBoundingBox
+    let cameraSafeMargin: Double
+
+    var levelWidth: Double {
+        playableBounds.width
+    }
+
+    var levelHeight: Double {
+        playableBounds.height
+    }
+
+    static func make(
+        for runtimeGraph: RuntimeRouteGraph,
+        cameraSafeMargin: Double = TRGameplayStyle.Metrics.cameraSafeMarginWorld
+    ) -> LevelPlayableExtents {
+        var points = runtimeGraph.nodesByID.values.map { RoadPoint(x: $0.x, y: $0.y) }
+        for edge in runtimeGraph.edgesByID.values {
+            points.append(contentsOf: sampledPoints(for: edge.roadPath))
+        }
+
+        let playableBounds: LevelBoundingBox
+        if let first = points.first {
+            var minX = first.x
+            var maxX = first.x
+            var minY = first.y
+            var maxY = first.y
+            for point in points.dropFirst() {
+                minX = min(minX, point.x)
+                maxX = max(maxX, point.x)
+                minY = min(minY, point.y)
+                maxY = max(maxY, point.y)
+            }
+            playableBounds = LevelBoundingBox(minX: minX, maxX: maxX, minY: minY, maxY: maxY)
+        } else {
+            playableBounds = LevelBoundingBox(minX: 0, maxX: 0, minY: 0, maxY: 0)
+        }
+
+        return LevelPlayableExtents(
+            playableBounds: playableBounds,
+            cameraSafeBounds: playableBounds.expanded(by: cameraSafeMargin),
+            cameraSafeMargin: cameraSafeMargin
+        )
+    }
+
+    private static func sampledPoints(for roadPath: RoadPath, sampleCount: Int = 20) -> [RoadPoint] {
+        guard sampleCount > 0 else {
+            return []
+        }
+        return (0...sampleCount).map { index in
+            roadPath.point(atProgress: Double(index) / Double(sampleCount))
+        }
+    }
+}
+
+struct LevelCameraPlan: Equatable {
+    let scale: CGFloat
+    let contentSize: CGSize
+    let contentOffset: CGPoint
+    let isTrackingEnabled: Bool
+    let cameraCenter: RoadPoint
+
+    var animationKey: String {
+        [
+            String(format: "%.3f", scale),
+            String(format: "%.3f", contentOffset.x),
+            String(format: "%.3f", contentOffset.y),
+        ].joined(separator: ":")
+    }
+
+    static func make(
+        extents: LevelPlayableExtents,
+        viewportSize: CGSize,
+        padding: CGFloat,
+        mode: BoardCameraMode
+    ) -> LevelCameraPlan {
+        let bounds = extents.cameraSafeBounds
+        let widthRange = max(bounds.width, 0)
+        let heightRange = max(bounds.height, 0)
+        let usableWidth = max(viewportSize.width - (padding * 2), BoardLayout.minimumUsableDimension)
+        let usableHeight = max(viewportSize.height - (padding * 2), BoardLayout.minimumUsableDimension)
+        let fitScale = scaleToFit(
+            widthRange: widthRange,
+            heightRange: heightRange,
+            usableWidth: usableWidth,
+            usableHeight: usableHeight
+        )
+        let scale = mode.usesReadableTrackingScale
+            ? max(fitScale, TRGameplayStyle.Metrics.minimumReadableCoordinateScale)
+            : fitScale
+        let contentSize = CGSize(
+            width: max(CGFloat(widthRange) * scale, BoardLayout.minimumUsableDimension),
+            height: max(CGFloat(heightRange) * scale, BoardLayout.minimumUsableDimension)
+        )
+        let desiredCamera = mode.focusPoint ?? bounds.center
+        let desiredContentOffset = CGPoint(
+            x: (viewportSize.width / 2) - (CGFloat(desiredCamera.x - bounds.minX) * scale),
+            y: (viewportSize.height / 2) - (CGFloat(bounds.maxY - desiredCamera.y) * scale)
+        )
+        let contentOffset = clampedOffset(
+            desiredContentOffset,
+            contentSize: contentSize,
+            viewportSize: viewportSize
+        )
+        let resolvedCameraCenter = RoadPoint(
+            x: bounds.minX + Double(((viewportSize.width / 2) - contentOffset.x) / scale),
+            y: bounds.maxY - Double(((viewportSize.height / 2) - contentOffset.y) / scale)
+        )
+
+        return LevelCameraPlan(
+            scale: scale,
+            contentSize: contentSize,
+            contentOffset: contentOffset,
+            isTrackingEnabled: contentSize.width > viewportSize.width || contentSize.height > viewportSize.height,
+            cameraCenter: resolvedCameraCenter
+        )
+    }
+
+    private static func scaleToFit(
+        widthRange: Double,
+        heightRange: Double,
+        usableWidth: CGFloat,
+        usableHeight: CGFloat
+    ) -> CGFloat {
+        let hasHorizontalRange = widthRange > 0
+        let hasVerticalRange = heightRange > 0
+
+        switch (hasHorizontalRange, hasVerticalRange) {
+        case (true, true):
+            return min(usableWidth / CGFloat(widthRange), usableHeight / CGFloat(heightRange))
+        case (true, false):
+            return usableWidth / CGFloat(widthRange)
+        case (false, true):
+            return usableHeight / CGFloat(heightRange)
+        case (false, false):
+            return 1
+        }
+    }
+
+    private static func clampedOffset(
+        _ desiredOffset: CGPoint,
+        contentSize: CGSize,
+        viewportSize: CGSize
+    ) -> CGPoint {
+        CGPoint(
+            x: clampedAxisOffset(desiredOffset.x, contentLength: contentSize.width, viewportLength: viewportSize.width),
+            y: clampedAxisOffset(desiredOffset.y, contentLength: contentSize.height, viewportLength: viewportSize.height)
+        )
+    }
+
+    private static func clampedAxisOffset(
+        _ desiredOffset: CGFloat,
+        contentLength: CGFloat,
+        viewportLength: CGFloat
+    ) -> CGFloat {
+        guard contentLength > viewportLength else {
+            return (viewportLength - contentLength) / 2
+        }
+
+        return min(0, max(viewportLength - contentLength, desiredOffset))
+    }
+}
+
+enum BoardCameraMode: Equatable {
+    case preview
+    case follow(RoadPoint?)
+
+    var focusPoint: RoadPoint? {
+        switch self {
+        case .preview:
+            return nil
+        case let .follow(point):
+            return point
+        }
+    }
+
+    var usesReadableTrackingScale: Bool {
+        switch self {
+        case .preview:
+            return false
+        case .follow:
+            return true
+        }
+    }
+}
+
 struct SwitchArrowDirectionResolver {
     private static let vectorMagnitudeTolerance = 0.000_001
 
@@ -755,6 +1018,8 @@ struct RouteBoardTapTargetResolver {
 struct BoardLayout {
     let pointsByNodeID: [String: CGPoint]
     let coordinateScale: CGFloat?
+    let extents: LevelPlayableExtents?
+    let cameraPlan: LevelCameraPlan?
     private let minX: Double
     private let maxY: Double
     private let originX: CGFloat
@@ -763,6 +1028,8 @@ struct BoardLayout {
     init(
         pointsByNodeID: [String: CGPoint],
         coordinateScale: CGFloat? = nil,
+        extents: LevelPlayableExtents? = nil,
+        cameraPlan: LevelCameraPlan? = nil,
         minX: Double = 0,
         maxY: Double = 0,
         originX: CGFloat = 0,
@@ -770,6 +1037,8 @@ struct BoardLayout {
     ) {
         self.pointsByNodeID = pointsByNodeID
         self.coordinateScale = coordinateScale
+        self.extents = extents
+        self.cameraPlan = cameraPlan
         self.minX = minX
         self.maxY = maxY
         self.originX = originX
@@ -777,9 +1046,13 @@ struct BoardLayout {
     }
 
     /// Ensures non-zero usable dimensions for board layout calculations.
-    private static let minimumUsableDimension: CGFloat = 1
+    static let minimumUsableDimension: CGFloat = 1
     /// Multiplier used to compute circular spread radius for identical node coordinates.
     private static let degenerateLayoutSpreadFactor: CGFloat = 0.15
+
+    var cameraAnimationKey: String {
+        cameraPlan?.animationKey ?? "static"
+    }
 
     static func make(
         for nodes: [RuntimeRouteNode],
@@ -871,6 +1144,57 @@ struct BoardLayout {
             maxY: maxY,
             originX: originX,
             originY: originY
+        )
+    }
+
+    static func make(
+        for runtimeGraph: RuntimeRouteGraph,
+        in size: CGSize,
+        padding: CGFloat,
+        cameraMode: BoardCameraMode
+    ) -> BoardLayout {
+        let nodes = runtimeGraph.nodesByID.values.sorted { $0.id < $1.id }
+        guard !nodes.isEmpty else {
+            return BoardLayout(pointsByNodeID: [:])
+        }
+
+        let extents = LevelPlayableExtents.make(for: runtimeGraph)
+        let playableBounds = extents.playableBounds
+        guard playableBounds.width > 0 || playableBounds.height > 0 else {
+            return make(for: nodes, in: size, padding: padding)
+        }
+
+        let legacyLayout = make(for: nodes, in: size, padding: padding)
+        if case .follow = cameraMode,
+           let legacyScale = legacyLayout.coordinateScale,
+           legacyScale >= TRGameplayStyle.Metrics.minimumReadableCoordinateScale {
+            return legacyLayout
+        }
+
+        let cameraPlan = LevelCameraPlan.make(
+            extents: extents,
+            viewportSize: size,
+            padding: padding,
+            mode: cameraMode
+        )
+        let cameraBounds = extents.cameraSafeBounds
+        var pointsByNodeID: [String: CGPoint] = [:]
+        for node in nodes {
+            pointsByNodeID[node.id] = CGPoint(
+                x: cameraPlan.contentOffset.x + (CGFloat(node.x - cameraBounds.minX) * cameraPlan.scale),
+                y: cameraPlan.contentOffset.y + (CGFloat(cameraBounds.maxY - node.y) * cameraPlan.scale)
+            )
+        }
+
+        return BoardLayout(
+            pointsByNodeID: pointsByNodeID,
+            coordinateScale: cameraPlan.scale,
+            extents: extents,
+            cameraPlan: cameraPlan,
+            minX: cameraBounds.minX,
+            maxY: cameraBounds.maxY,
+            originX: cameraPlan.contentOffset.x,
+            originY: cameraPlan.contentOffset.y
         )
     }
 

@@ -9,12 +9,14 @@ from .generation_config import (
     DEFAULT_GENERATION_MODE,
     DEFAULT_LAYOUTS_PER_RECIPE,
     DEFAULT_LAYOUT_ORIENTATION_PREFERENCE,
+    DEFAULT_LAYOUT_SIZE_PROFILE,
     DEFAULT_MAX_ATTEMPTS_PER_LEVEL,
     DEFAULT_RECIPE_POOL_SIZE,
     DEFAULT_ROAD_SHAPES_PER_LAYOUT,
     DEFAULT_VERTICAL_ROUTE_PROBABILITY,
     GenerationConfig,
     LAYOUT_ORIENTATION_PREFERENCES,
+    LAYOUT_SIZE_PROFILES,
 )
 from .paths import (
     get_default_levels_directory,
@@ -111,6 +113,12 @@ def build_generate_parser() -> argparse.ArgumentParser:
         choices=LAYOUT_ORIENTATION_PREFERENCES,
         default=DEFAULT_LAYOUT_ORIENTATION_PREFERENCE,
         help="Layout orientation/profile preference. Default: portrait_vertical.",
+    )
+    parser.add_argument(
+        "--layout-size-profile",
+        choices=LAYOUT_SIZE_PROFILES,
+        default=DEFAULT_LAYOUT_SIZE_PROFILE,
+        help="Playable layout size profile. Default: standard_portrait.",
     )
     parser.add_argument(
         "--vertical-route-probability",
@@ -219,6 +227,7 @@ def _config_from_args(args: argparse.Namespace, argv: list[str] | None) -> Gener
         layouts_per_recipe=args.layouts_per_recipe,
         road_shapes_per_layout=args.road_shapes_per_layout,
         layout_orientation_preference=args.layout_orientation,
+        layout_size_profile=args.layout_size_profile,
         vertical_route_probability=args.vertical_route_probability,
         prefer_vertical_for_long_routes=args.prefer_vertical_for_long_routes,
         seed=args.seed,
@@ -245,7 +254,8 @@ def _print_generation_summary(config: GenerationConfig) -> None:
     print(
         f"Generating {config.count} {config.difficulty} level(s) starting at "
         f"{config.start_level_number:03d} with template={config.template_name} "
-        f"generation_mode={config.generation_mode} seed={config.seed} mode={mode}."
+        f"generation_mode={config.generation_mode} layout_size={config.layout_size_profile} "
+        f"seed={config.seed} mode={mode}."
     )
 
 

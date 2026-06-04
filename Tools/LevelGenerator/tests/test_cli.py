@@ -113,6 +113,7 @@ def test_cli_defaults_create_recipe_first_config() -> None:
     assert config.layouts_per_recipe == 3
     assert config.road_shapes_per_layout == 3
     assert config.layout_orientation_preference == "portrait_vertical"
+    assert config.layout_size_profile == "standard_portrait"
     assert config.vertical_route_probability == 0.35
     assert config.prefer_vertical_for_long_routes is True
     assert config.candidate_pool_size == 25
@@ -129,6 +130,8 @@ def test_cli_parses_layout_orientation_options() -> None:
         "easy",
         "--layout-orientation",
         "vertical",
+        "--layout-size-profile",
+        "large_portrait",
         "--vertical-route-probability",
         "0.8",
         "--no-prefer-vertical-for-long-routes",
@@ -138,6 +141,7 @@ def test_cli_parses_layout_orientation_options() -> None:
     config = _config_from_args(args, argv)
 
     assert config.layout_orientation_preference == "vertical"
+    assert config.layout_size_profile == "large_portrait"
     assert config.vertical_route_probability == 0.8
     assert config.prefer_vertical_for_long_routes is False
 
@@ -163,6 +167,8 @@ def test_cli_accepts_recipe_architecture_options_for_recipe_generation(tmp_path)
             "2",
             "--layout-orientation",
             "vertical",
+            "--layout-size-profile",
+            "large_portrait",
             "--vertical-route-probability",
             "1.0",
             "--candidate-pool-size",
@@ -186,10 +192,12 @@ def test_cli_accepts_recipe_architecture_options_for_recipe_generation(tmp_path)
     assert report["layoutsPerRecipe"] == 2
     assert report["roadShapesPerLayout"] == 2
     assert report["layoutOrientationPreference"] == "vertical"
+    assert report["layoutSizeProfile"] == "large_portrait"
     assert report["verticalRouteProbability"] == 1.0
     assert report["acceptedLevels"][0]["recipeFamily"] == "single_switch"
     assert report["acceptedLevels"][0]["recipeVariant"] is not None
     assert report["acceptedLevels"][0]["layoutOrientation"] == "vertical"
+    assert report["acceptedLevels"][0]["layoutSizeProfile"] == "large_portrait"
 
 
 def test_cli_explicit_legacy_template_mode_still_generates(tmp_path) -> None:

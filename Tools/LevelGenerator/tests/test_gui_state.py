@@ -49,6 +49,7 @@ def test_default_gui_state_converts_to_generation_config() -> None:
     assert config.layouts_per_recipe == 3
     assert config.road_shapes_per_layout == 3
     assert config.layout_orientation_preference == "portrait_vertical"
+    assert config.layout_size_profile == "standard_portrait"
     assert config.vertical_route_probability == 0.35
     assert config.prefer_vertical_for_long_routes is True
     assert config.candidate_pool_size == 25
@@ -93,15 +94,18 @@ def test_gui_state_converts_layout_orientation_controls(tmp_path) -> None:
         _state_with_paths(
             tmp_path,
             layout_orientation_preference="vertical",
+            layout_size_profile="large_portrait",
             vertical_route_probability="0.8",
             prefer_vertical_for_long_routes=False,
         )
     )
 
     assert config.layout_orientation_preference == "vertical"
+    assert config.layout_size_profile == "large_portrait"
     assert config.vertical_route_probability == 0.8
     assert config.prefer_vertical_for_long_routes is False
     assert "--layout-orientation" in config.command_arguments
+    assert "--layout-size-profile" in config.command_arguments
     assert "--no-prefer-vertical-for-long-routes" in config.command_arguments
 
 

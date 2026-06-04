@@ -30,6 +30,7 @@ final class GameplayCosmeticLoadoutTests: XCTestCase {
             destinationNodeID: "finish",
             hasCollectedPackage: true,
             cosmeticLoadout: try customLoadout(),
+            isShowingPreview: false,
             onNodeTapped: { _ in }
         )
 

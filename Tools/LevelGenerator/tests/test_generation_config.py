@@ -15,6 +15,7 @@ def test_generation_config_defaults_use_recipe_first_breadth() -> None:
     assert config.layouts_per_recipe == 3
     assert config.road_shapes_per_layout == 3
     assert config.layout_orientation_preference == "portrait_vertical"
+    assert config.layout_size_profile == "standard_portrait"
     assert config.vertical_route_probability == 0.35
     assert config.prefer_vertical_for_long_routes is True
     assert config.candidate_pool_size == 25
@@ -40,6 +41,26 @@ def test_generation_config_validates_layout_orientation() -> None:
         assert "layout_orientation_preference" in str(exc)
     else:
         raise AssertionError("Expected invalid orientation to raise ValueError")
+
+
+def test_generation_config_accepts_large_portrait_layout_size_profile() -> None:
+    config = GenerationConfig(
+        start_level_number=12,
+        count=1,
+        difficulty="easy",
+        layout_size_profile="large-portrait",
+    )
+
+    assert config.layout_size_profile == "large_portrait"
+
+
+def test_generation_config_validates_layout_size_profile() -> None:
+    try:
+        GenerationConfig(start_level_number=12, count=1, difficulty="easy", layout_size_profile="giant")
+    except ValueError as exc:
+        assert "layout_size_profile" in str(exc)
+    else:
+        raise AssertionError("Expected invalid layout size profile to raise ValueError")
 
 
 def test_generation_config_validates_vertical_route_probability() -> None:

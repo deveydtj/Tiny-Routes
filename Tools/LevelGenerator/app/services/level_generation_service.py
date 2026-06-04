@@ -3,6 +3,7 @@ from __future__ import annotations
 import inspect
 import shutil
 import subprocess
+from dataclasses import replace
 from pathlib import Path
 
 from ..generation_config import GenerationConfig
@@ -98,6 +99,7 @@ class LevelGenerationService:
             level_number = plan_entry.level_number
             level_id = plan_entry.level_id
             preset = self.difficulty_service.get_preset(plan_entry.difficulty)
+            preset = self._preset_for_layout_size_profile(preset, config.layout_size_profile)
             accepted_candidate = None
             candidate_pool = []
             candidate_pool_signatures = []
@@ -432,17 +434,28 @@ class LevelGenerationService:
                             seed=candidate_seed,
                             layout_variant_name=layout_name,
                             layout_orientation_preference=orientation_request["orientation"],
+                            layout_size_profile=config.layout_size_profile,
                             orientation_selection_reason=orientation_request["reason"],
                             road_shape_strategy=road_shape_strategy,
                         )
                         if candidate.layout_metadata is not None:
                             candidate.layout_metadata["orientationPreference"] = config.layout_orientation_preference
+                            candidate.layout_metadata["layoutSizeProfile"] = config.layout_size_profile
                             candidate.layout_metadata["verticalRouteProbability"] = config.vertical_route_probability
                             candidate.layout_metadata["preferVerticalForLongRoutes"] = config.prefer_vertical_for_long_routes
                             candidate.layout_metadata["orientationRequest"] = orientation_request["orientation"]
                         candidate.requires_swift_validation = family.requires_swift_validation
                         candidates.append(candidate)
         return candidates
+
+    def _preset_for_layout_size_profile(self, preset, layout_size_profile: str):
+        if layout_size_profile != "large_portrait":
+            return preset
+        return replace(
+            preset,
+            coordinate_bounds=(-1.15, 1.15, -3.4, 1.35),
+            minimum_node_distance=max(preset.minimum_node_distance, 0.24),
+        )
 
     def _layout_orientation_requests(
         self,
@@ -646,6 +659,7 @@ class LevelGenerationService:
             "requiredPathLength": self._required_path_length(candidate),
             "layoutOrientation": self._layout_orientation(candidate),
             "layoutProfile": (candidate.layout_metadata or {}).get("layoutProfile"),
+            "layoutSizeProfile": (candidate.layout_metadata or {}).get("layoutSizeProfile"),
             "portraitMetrics": (candidate.layout_metadata or {}).get("portraitMetrics"),
             "portraitChecksPassed": (candidate.layout_metadata or {}).get("portraitChecksPassed"),
             "requiresSwiftValidation": bool(getattr(candidate, "requires_swift_validation", False)),

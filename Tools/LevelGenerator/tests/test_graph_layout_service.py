@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from dataclasses import replace
+
 from app.models.graph_recipe import GraphRecipe, GraphRecipeEdge, GraphRecipeNode
 from app.random_source import RandomSource
 from app.services.difficulty_service import DifficultyService
@@ -136,6 +138,41 @@ def test_portrait_vertical_profile_adds_layout_metrics_and_checks() -> None:
     assert metrics["verticalSeparation"] >= 0.75
     assert metrics["startInLowerPortion"] is True
     assert metrics["destinationInUpperPortion"] is True
+
+
+def test_large_portrait_profile_expands_vertical_spacing_readably() -> None:
+    planner = GraphLayoutPlannerService()
+    standard_preset = DifficultyService().get_preset("medium")
+    large_preset = replace(
+        standard_preset,
+        coordinate_bounds=(-1.15, 1.15, -3.4, 1.35),
+        minimum_node_distance=0.24,
+    )
+    recipe = _recipe("return_loop")
+
+    standard = planner.plan_layout(
+        recipe,
+        standard_preset,
+        RandomSource(4),
+        "normal",
+        layout_orientation_preference="portrait_vertical",
+    )
+    large = planner.plan_layout(
+        recipe,
+        large_preset,
+        RandomSource(4),
+        "normal",
+        layout_orientation_preference="portrait_vertical",
+        layout_size_profile="large_portrait",
+    )
+
+    large_layout = GraphLayoutService(BoundingBox(*large_preset.coordinate_bounds), large_preset.minimum_node_distance)
+    assert large.is_valid, large.validation_issues
+    assert large.metadata["layoutSizeProfile"] == "large_portrait"
+    assert large.metadata["portraitMetrics"]["height"] > standard.metadata["portraitMetrics"]["height"]
+    assert large.metadata["portraitMetrics"]["height"] >= 2.75
+    assert all(large_layout.is_inside_bounds(*point) for point in large.positions.values())
+    assert not large_layout.has_overlaps(large.positions)
 
 
 def test_portrait_vertical_profile_rejects_side_by_side_start_and_destination() -> None:

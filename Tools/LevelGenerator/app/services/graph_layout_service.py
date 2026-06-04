@@ -326,6 +326,7 @@ class GraphLayoutPlannerService:
         rng: RandomSource,
         layout_variant_name: str = "normal",
         layout_orientation_preference: str = "horizontal",
+        layout_size_profile: str = "standard_portrait",
         orientation_selection_reason: str = "default_horizontal",
         strategy_override: str | None = None,
     ) -> LayoutPlanResult:
@@ -339,6 +340,8 @@ class GraphLayoutPlannerService:
         strategy = strategy_override or self._strategy_for_recipe(recipe, strategy_orientation)
         base_positions = self._base_positions_for_strategy(recipe, strategy, layout)
         positions, variant = self._apply_variation(base_positions, layout, rng, layout_variant_name)
+        if layout_size_profile == "large_portrait" and strategy_orientation == "vertical":
+            positions = self._apply_large_portrait_spacing(positions, layout)
         issues = self.validate_layout(recipe, preset, positions)
         if issues:
             normalized = layout.normalize_positions(positions, padding=0.12)
@@ -374,6 +377,7 @@ class GraphLayoutPlannerService:
             issues,
             orientation=orientation,
             layout_profile=layout_profile,
+            layout_size_profile=layout_size_profile,
             orientation_preference=requested_orientation,
             orientation_selection_reason=orientation_selection_reason,
             vertical_candidate_rejected_reason=vertical_rejection_reason,
@@ -1252,6 +1256,52 @@ class GraphLayoutPlannerService:
             return layout.rotate_positions(positions, 180), variant
         return dict(positions), "normal"
 
+    def _apply_large_portrait_spacing(
+        self,
+        positions: dict[str, tuple[float, float]],
+        layout: GraphLayoutService,
+    ) -> dict[str, tuple[float, float]]:
+        if not positions:
+            return positions
+
+        min_y = min(y for _, y in positions.values())
+        max_y = max(y for _, y in positions.values())
+        center_y = (min_y + max_y) / 2
+        for scale_x in (0.82, 0.9, 0.96):
+            expanded = layout.scale_positions(
+                positions,
+                scale_x=scale_x,
+                scale_y=1.55,
+                center=(0.0, center_y),
+            )
+            expanded = self._shift_inside_readable_bounds(expanded, layout)
+            messages = layout.validate_positions(expanded)
+            if not messages:
+                return expanded
+
+        normalized = layout.normalize_positions(positions, padding=0.18)
+        normalized_messages = layout.validate_positions(normalized)
+        return normalized if not normalized_messages else positions
+
+    def _shift_inside_readable_bounds(
+        self,
+        positions: dict[str, tuple[float, float]],
+        layout: GraphLayoutService,
+    ) -> dict[str, tuple[float, float]]:
+        margin = max(0.18, layout.minimum_node_distance * 0.9)
+        min_y = min(y for _, y in positions.values())
+        max_y = max(y for _, y in positions.values())
+        target_min_y = layout.bounds.min_y + margin
+        target_max_y = layout.bounds.max_y - margin
+        dy = 0.0
+        if max_y > target_max_y:
+            dy = target_max_y - max_y
+        if min_y + dy < target_min_y:
+            dy += target_min_y - (min_y + dy)
+        if dy == 0.0:
+            return positions
+        return layout.translate_positions(positions, 0.0, dy)
+
     def _metadata(
         self,
         recipe: GraphRecipe,
@@ -1262,6 +1312,7 @@ class GraphLayoutPlannerService:
         *,
         orientation: str,
         layout_profile: str,
+        layout_size_profile: str,
         orientation_preference: str,
         orientation_selection_reason: str,
         vertical_candidate_rejected_reason: str | None,
@@ -1277,6 +1328,7 @@ class GraphLayoutPlannerService:
             "variant": variant,
             "orientation": orientation,
             "layoutProfile": layout_profile,
+            "layoutSizeProfile": layout_size_profile,
             "positions": {node_id: [x, y] for node_id, (x, y) in sorted(positions.items())},
         }
         encoded = json.dumps(payload, sort_keys=True, separators=(",", ":")).encode("utf-8")
@@ -1285,6 +1337,7 @@ class GraphLayoutPlannerService:
             "variant": variant,
             "orientation": orientation,
             "layoutProfile": layout_profile,
+            "layoutSizeProfile": layout_size_profile,
             "orientationPreference": orientation_preference,
             "orientationSelectionReason": orientation_selection_reason,
             "verticalCandidateRejectedReason": vertical_candidate_rejected_reason,

@@ -11,6 +11,7 @@ from .paths import (
 
 GENERATION_MODES = ("legacy_template", "recipe_first", "hybrid")
 LAYOUT_ORIENTATION_PREFERENCES = ("portrait_vertical", "horizontal", "vertical", "mixed", "auto")
+LAYOUT_SIZE_PROFILES = ("standard_portrait", "large_portrait")
 DEFAULT_GENERATION_MODE = "recipe_first"
 DEFAULT_RECIPE_POOL_SIZE = 4
 DEFAULT_LAYOUTS_PER_RECIPE = 3
@@ -18,6 +19,7 @@ DEFAULT_ROAD_SHAPES_PER_LAYOUT = 3
 DEFAULT_CANDIDATE_POOL_SIZE = 25
 DEFAULT_MAX_ATTEMPTS_PER_LEVEL = 300
 DEFAULT_LAYOUT_ORIENTATION_PREFERENCE = "portrait_vertical"
+DEFAULT_LAYOUT_SIZE_PROFILE = "standard_portrait"
 DEFAULT_VERTICAL_ROUTE_PROBABILITY = 0.35
 
 
@@ -32,6 +34,7 @@ class GenerationConfig:
     layouts_per_recipe: int = DEFAULT_LAYOUTS_PER_RECIPE
     road_shapes_per_layout: int = DEFAULT_ROAD_SHAPES_PER_LAYOUT
     layout_orientation_preference: str = DEFAULT_LAYOUT_ORIENTATION_PREFERENCE
+    layout_size_profile: str = DEFAULT_LAYOUT_SIZE_PROFILE
     vertical_route_probability: float = DEFAULT_VERTICAL_ROUTE_PROBABILITY
     prefer_vertical_for_long_routes: bool = True
     seed: int | None = None
@@ -73,6 +76,11 @@ class GenerationConfig:
             "layout_orientation_preference",
             self.layout_orientation_preference.strip().lower().replace("-", "_"),
         )
+        object.__setattr__(
+            self,
+            "layout_size_profile",
+            self.layout_size_profile.strip().lower().replace("-", "_"),
+        )
         object.__setattr__(self, "vertical_route_probability", float(self.vertical_route_probability))
         object.__setattr__(self, "levels_output_dir", Path(self.levels_output_dir))
         object.__setattr__(self, "solutions_output_dir", Path(self.solutions_output_dir))
@@ -90,6 +98,9 @@ class GenerationConfig:
         if self.layout_orientation_preference not in LAYOUT_ORIENTATION_PREFERENCES:
             valid = ", ".join(LAYOUT_ORIENTATION_PREFERENCES)
             raise ValueError(f"layout_orientation_preference must be one of: {valid}")
+        if self.layout_size_profile not in LAYOUT_SIZE_PROFILES:
+            valid = ", ".join(LAYOUT_SIZE_PROFILES)
+            raise ValueError(f"layout_size_profile must be one of: {valid}")
         if not 0.0 <= self.vertical_route_probability <= 1.0:
             raise ValueError("vertical_route_probability must be between 0.0 and 1.0")
         if self.recipe_pool_size <= 0:

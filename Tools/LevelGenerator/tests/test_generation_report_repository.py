@@ -152,6 +152,7 @@ def test_generation_report_repository_writes_recipe_metadata(tmp_path) -> None:
     assert accepted["topologyClass"] == "single_branch"
     assert accepted["requiredPathLength"] is not None
     assert accepted["layoutOrientation"] == "vertical"
+    assert accepted["layoutSizeProfile"] == "standard_portrait"
     assert accepted["layoutStrategy"] == "vertical_route_progression"
     assert accepted["layoutVariant"] == "normal"
     assert accepted["layoutOrientationSelectionReason"] == "explicit_preference"
@@ -177,9 +178,11 @@ def test_generation_report_repository_writes_recipe_metadata(tmp_path) -> None:
     assert payload["candidateSelection"][0]["acceptedCandidate"]["topologyClass"] == "single_branch"
     assert payload["candidateSelection"][0]["acceptedCandidate"]["requiredPathLength"] == accepted["requiredPathLength"]
     assert payload["layoutOrientationPreference"] == "vertical"
+    assert payload["layoutSizeProfile"] == "standard_portrait"
     assert payload["verticalRouteProbability"] == 0.35
     assert payload["preferVerticalForLongRoutes"] is True
     assert payload["candidateSelection"][0]["acceptedCandidate"]["layoutOrientation"] == "vertical"
+    assert payload["candidateSelection"][0]["acceptedCandidate"]["layoutSizeProfile"] == "standard_portrait"
     assert payload["candidateSelection"][0]["acceptedCandidate"]["layoutStrategy"] == "vertical_route_progression"
     assert payload["candidateSelection"][0]["acceptedCandidate"]["layoutVariant"] == "normal"
     assert payload["candidateSelection"][0]["acceptedCandidate"]["layoutOrientationSelectionReason"] == "explicit_preference"

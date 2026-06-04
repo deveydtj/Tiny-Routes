@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from dataclasses import replace
+
 from ..models.generated_level import GeneratedLevel
 from ..models.graph_recipe import GraphRecipe
 from ..random_source import RandomSource
@@ -26,6 +28,7 @@ class RecipeToLevelBuilderService:
         seed: int = 0,
         layout_variant_name: str = "normal",
         layout_orientation_preference: str = "horizontal",
+        layout_size_profile: str = "standard_portrait",
         orientation_selection_reason: str = "default_horizontal",
         road_shape_strategy: str = "auto",
     ) -> GeneratedLevel:
@@ -33,7 +36,10 @@ class RecipeToLevelBuilderService:
         if issues:
             raise ValueError(f"Invalid graph recipe: {', '.join(issues)}")
 
-        preset = self.difficulty.get_preset(recipe.difficulty)
+        preset = self._preset_for_layout_size_profile(
+            self.difficulty.get_preset(recipe.difficulty),
+            layout_size_profile,
+        )
         rng = RandomSource(seed)
         layout_plan = self.layout_planner.plan_layout(
             recipe,
@@ -41,6 +47,7 @@ class RecipeToLevelBuilderService:
             rng,
             layout_variant_name,
             layout_orientation_preference=layout_orientation_preference,
+            layout_size_profile=layout_size_profile,
             orientation_selection_reason=orientation_selection_reason,
         )
         positions = layout_plan.positions
@@ -153,6 +160,15 @@ class RecipeToLevelBuilderService:
             unlock_requirement=recipe.unlock_requirement,
             prior_mechanic_dependency=recipe.prior_mechanic_dependency,
             mechanic_metadata=recipe.mechanic_metadata,
+        )
+
+    def _preset_for_layout_size_profile(self, preset, layout_size_profile: str):
+        if layout_size_profile != "large_portrait":
+            return preset
+        return replace(
+            preset,
+            coordinate_bounds=(-1.15, 1.15, -3.4, 1.35),
+            minimum_node_distance=max(preset.minimum_node_distance, 0.24),
         )
 
     def _time_limit(

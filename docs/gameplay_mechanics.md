@@ -38,3 +38,18 @@ A 4-way switch intersection is represented with four outgoing directed edges on 
 The package must still be collected before the destination is reached. A valid 4-way level usually routes the dot from the package branch back to the central switch before sending it to the destination branch.
 
 In the Level Editor, outgoing edge order is displayed in tap-cycle order. The default active edge is the first valid listed edge. The editor's cardinal sort helper uses clockwise order starting at Up: Up, Right, Down, Left, with diagonal directions placed between those cardinal directions.
+
+## Camera, Bounds, and Larger Maps
+
+Gameplay rendering now treats level extents as the source of truth for camera behavior. Extents are calculated from all runtime nodes plus sampled road paths, then expanded by a small camera-safe margin so markers, roads, and the delivery dot stay readable near edges.
+
+Small levels still use the original fit-to-board layout when their full extents can fit at a readable scale. Larger levels keep a stable readable scale instead of shrinking the whole puzzle to one screen. The camera follows the active delivery dot with a short eased transition and clamps the content offset so the viewport does not expose large empty areas outside the level bounds.
+
+For larger portrait maps, gameplay shows a brief full-level preview before the dot advances. The preview uses a fit-to-level camera so the player can read the overall route, then transitions into the normal follow camera. Existing small levels skip this preview and start as before.
+
+Known limitations:
+
+- Camera follow is automatic; there is no manual pan or planning mode.
+- The camera does not zoom dynamically during gameplay.
+- The preview is intentionally brief and does not add fog of war or hidden areas.
+- Bounds are derived from graph geometry and road samples, not from authored metadata in level JSON.

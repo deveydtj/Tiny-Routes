@@ -8,6 +8,7 @@ from ..generation_config import (
     DEFAULT_GENERATION_MODE,
     DEFAULT_LAYOUTS_PER_RECIPE,
     DEFAULT_LAYOUT_ORIENTATION_PREFERENCE,
+    DEFAULT_LAYOUT_SIZE_PROFILE,
     DEFAULT_MAX_ATTEMPTS_PER_LEVEL,
     DEFAULT_RECIPE_POOL_SIZE,
     DEFAULT_ROAD_SHAPES_PER_LAYOUT,
@@ -28,6 +29,7 @@ class GuiGenerationState:
     layouts_per_recipe: str = str(DEFAULT_LAYOUTS_PER_RECIPE)
     road_shapes_per_layout: str = str(DEFAULT_ROAD_SHAPES_PER_LAYOUT)
     layout_orientation_preference: str = DEFAULT_LAYOUT_ORIENTATION_PREFERENCE
+    layout_size_profile: str = DEFAULT_LAYOUT_SIZE_PROFILE
     vertical_route_probability: str = str(DEFAULT_VERTICAL_ROUTE_PROBABILITY)
     prefer_vertical_for_long_routes: bool = True
     seed: str = ""
@@ -126,6 +128,7 @@ def to_generation_config(state: GuiGenerationState) -> GenerationConfig:
         layouts_per_recipe=layouts_per_recipe,
         road_shapes_per_layout=road_shapes_per_layout,
         layout_orientation_preference=state.layout_orientation_preference,
+        layout_size_profile=state.layout_size_profile,
         vertical_route_probability=vertical_route_probability,
         prefer_vertical_for_long_routes=state.prefer_vertical_for_long_routes,
         seed=seed,
@@ -157,6 +160,7 @@ def build_command_preview(state: GuiGenerationState) -> str:
     _append_pair(args, "--layouts-per-recipe", state.layouts_per_recipe)
     _append_pair(args, "--road-shapes-per-layout", state.road_shapes_per_layout)
     _append_pair(args, "--layout-orientation", state.layout_orientation_preference)
+    _append_pair(args, "--layout-size-profile", state.layout_size_profile)
     _append_pair(args, "--vertical-route-probability", state.vertical_route_probability)
     if state.prefer_vertical_for_long_routes:
         args.append("--prefer-vertical-for-long-routes")
@@ -240,6 +244,8 @@ def _build_command_arguments(
         str(road_shapes_per_layout),
         "--layout-orientation",
         state.layout_orientation_preference,
+        "--layout-size-profile",
+        state.layout_size_profile,
         "--vertical-route-probability",
         str(vertical_route_probability),
     ]

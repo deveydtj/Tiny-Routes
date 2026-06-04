@@ -115,7 +115,9 @@ Recipe-first generation solves multiple abstract recipes before layout, then tri
 
 `--layout-orientation` defaults to `portrait_vertical`. This profile asks recipe-first layouts to compose routes for mobile portrait play: the generated map should be taller than wide, the start should sit in the lower portion of the layout, and the destination should sit in the upper portion. Horizontal branches, detours, and side movement are still allowed when the overall composition passes the portrait safety checks.
 
-Generation reports include the selected layout profile plus lightweight portrait metrics: width, height, aspect ratio, start-to-destination vertical separation, and whether portrait checks passed. Larger scrolling maps, camera follow, zoom, and gameplay rendering changes are intentionally out of scope for this generator phase.
+`--layout-size-profile` defaults to `standard_portrait`. Use `large_portrait` only when intentionally exploring taller generated layouts for the gameplay camera. Large portrait keeps the same recipe families and validation rules, but expands the vertical coordinate bounds and asks vertical/portrait layouts to preserve more space between route nodes. It does not automatically convert every generated level to a large map.
+
+Generation reports include the selected layout profile, layout size profile, and lightweight portrait metrics: width, height, aspect ratio, start-to-destination vertical separation, and whether portrait checks passed. The Swift gameplay camera uses runtime level extents to decide whether a generated large portrait level should scroll instead of being scaled down to one screen.
 
 `--candidate-pool-size` scores multiple valid candidates for each level and accepts the highest-scoring one. Reports include quality and simulation details.
 
@@ -152,7 +154,7 @@ Phase 2 upgraded these recipe families first:
 
 An interesting generated topology is one where the shortest-looking branch can be wrong, branches can rejoin, package collection changes the valid route, or a loop/revisit changes the exit decision. A boring topology is a straight line of switches with renamed dead ends or filler nodes that only increase travel time.
 
-Camera follow, zoom, scrolling maps, larger-map gameplay, production level generation, and production level JSON changes are still out of scope for this generator phase.
+Large portrait generation is intentionally limited to layout scale and coordinate bounds. It does not create new recipe families, weaken validation, add hidden map areas, or modify production level JSON by itself.
 
 `--difficulty auto` uses the default campaign curve: levels 1-3 tutorial, 4-10 easy, 11-25 medium, 26-40 hard, and 41+ expert.
 
