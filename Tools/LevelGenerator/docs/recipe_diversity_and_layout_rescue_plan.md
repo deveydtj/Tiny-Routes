@@ -102,6 +102,12 @@ A command starting at level 1 with `--count 30 --difficulty auto` only produces 
 
 ## Recipe Diversity Rescue
 
+### Phase 2 Implementation Note
+
+Phase 2 implements route-interest scoring and upgrades the first six real recipe families only: `fake_shortcut`, `split_path_rejoin`, `long_detour_gate`, `hub_choice`, `package_inside_loop`, and `two_phase_route`. The scorer rewards fake shortcuts, split/rejoin structure, correct longer detours, package-before-destination tension, loops/revisits where supported, multi-exit hubs, and meaningful turns. It penalizes straight switch chains, filler route nodes, nearby topology repetition, nearby mechanic repetition, family streaks, and candidates that become harder only by adding switches.
+
+Generation reports now include route-interest tags, bonus/penalty details, fake-shortcut/branch-rejoin/package-tension/loop flags, meaningful turn counts, and repeated-topology penalties for accepted candidates and near-miss candidates. Camera follow, zoom, scrolling maps, larger-map gameplay changes, production level JSON edits, and new production level generation remain out of scope.
+
 ### Priority Strategy
 
 1. Upgrade existing misleading expanded families so the topology matches the mechanic name.

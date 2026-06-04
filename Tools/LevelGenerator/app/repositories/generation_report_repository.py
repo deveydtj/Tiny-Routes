@@ -83,6 +83,7 @@ class GenerationReportRepository:
                     "nearbyMechanicTagPenalty": self._diversity_audit(level)["nearbyMechanicTagPenalty"],
                     "nearbyTopologyClassPenalty": self._diversity_audit(level)["nearbyTopologyClassPenalty"],
                     "diversityScore": self._diversity_audit(level)["diversityScore"],
+                    "routeInterestAudit": self._route_interest_audit(level),
                     "unlockRequirement": getattr(level, "unlock_requirement", None),
                     "priorMechanicDependency": getattr(level, "prior_mechanic_dependency", None),
                     "mechanicMetadata": getattr(level, "mechanic_metadata", {}) or {},
@@ -275,11 +276,23 @@ class GenerationReportRepository:
                     lines.append(
                         f"- Score breakdown: mechanic `{quality['abstractMechanicQuality']}`, "
                         f"runtime `{quality['runtimeSolvability']}`, readability `{quality['readability']}`, "
+                        f"route interest `{quality['routeInterest']}`, "
                         f"switch clarity `{quality['switchClarity']}`, mobile comfort `{quality['mobileTapComfort']}`, "
                         f"visual appeal `{quality['visualAppeal']}`, diversity `{quality['diversityScore']}` "
                         f"(topology `{quality['topologyDiversityScore']}`, "
                         f"mechanic penalty `{quality['nearbyMechanicTagPenalty']}`, "
                         f"topology penalty `{quality['nearbyTopologyClassPenalty']}`)."
+                    )
+                    route_interest = level["routeInterestAudit"]
+                    lines.append(
+                        f"- Route interest: score `{route_interest.get('score')}`; "
+                        f"tags `{', '.join(route_interest.get('tags') or []) or 'none'}`; "
+                        f"fake shortcut `{route_interest.get('fakeShortcutPresent')}`; "
+                        f"branch/rejoin `{route_interest.get('branchRejoinPresent')}`; "
+                        f"package tension `{route_interest.get('packageGateTensionPresent')}`; "
+                        f"loop/revisit `{route_interest.get('loopRevisitPresent')}`; "
+                        f"turns `{route_interest.get('meaningfulTurnCount')}`; "
+                        f"repeated topology penalty `{route_interest.get('repeatedTopologyPenalty')}`."
                     )
                 solution = level["solution"]
                 route_summary = " -> ".join(f"`{node_id}`" for node_id in solution["route"])
@@ -317,6 +330,7 @@ class GenerationReportRepository:
                         f"strategy `{accepted_summary.get('layoutStrategy', 'unknown')}`; "
                         f"variant `{accepted_summary.get('layoutVariant', 'unknown')}`; "
                         f"orientation reason `{accepted_summary.get('layoutOrientationSelectionReason', 'unknown')}`; "
+                        f"route interest `{(accepted_summary.get('routeInterestAudit') or {}).get('score')}`; "
                         f"diversity `{self._diversity_summary(accepted_summary.get('diversityAudit') or {})}`."
                     )
                     for near_miss in selection["topRejectedNearMisses"][:3]:
@@ -335,6 +349,7 @@ class GenerationReportRepository:
                             f"strategy `{near_miss.get('layoutStrategy', 'unknown')}` "
                             f"variant `{near_miss.get('layoutVariant', 'unknown')}` "
                             f"orientation reason `{near_miss.get('layoutOrientationSelectionReason', 'unknown')}` "
+                            f"route interest `{(near_miss.get('routeInterestAudit') or {}).get('score')}` "
                             f"diversity `{self._diversity_summary(near_miss.get('diversityAudit') or {})}`."
                         )
                 for switch in level["switchPreview"]:
@@ -522,6 +537,25 @@ class GenerationReportRepository:
             "penalties": list(quality.penalties),
             "baseQualityScore": quality.details.get("baseQualityScore", quality.total),
             "details": quality.details,
+        }
+
+    def _route_interest_audit(self, level) -> dict[str, Any]:
+        quality = getattr(level, "quality_score", None)
+        if quality is None:
+            return {}
+        audit = quality.details.get("routeInterest", {})
+        return {
+            "score": audit.get("score"),
+            "tags": audit.get("tags", []),
+            "fakeShortcutPresent": audit.get("fakeShortcutPresent", False),
+            "branchRejoinPresent": audit.get("branchRejoinPresent", False),
+            "packageGateTensionPresent": audit.get("packageGateTensionPresent", False),
+            "loopRevisitPresent": audit.get("loopRevisitPresent", False),
+            "meaningfulTurnCount": audit.get("meaningfulTurnCount", 0),
+            "repeatedTopologyPenalty": audit.get("repeatedTopologyPenalty", 0.0),
+            "bonuses": audit.get("bonuses", {}),
+            "penaltyValues": audit.get("penaltyValues", {}),
+            "penalties": list(audit.get("penalties", [])),
         }
 
     def _selection_for_level(self, selection_summaries: list[dict[str, Any]], level_id: str) -> dict[str, Any] | None:

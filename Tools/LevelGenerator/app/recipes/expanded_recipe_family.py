@@ -433,8 +433,8 @@ def expanded_recipe_family_definitions() -> list[ExpandedRecipeFamilyDefinition]
             "Collect the package inside a loop before exiting.",
             "Track objective progress inside a loop.",
             (3, 3),
-            (3, 3),
-            False,
+            (3, 5),
+            True,
             ("package sits inside the loop area",),
             "Makes the package location part of the route shape.",
             "hard levels unlocked",
@@ -444,7 +444,7 @@ def expanded_recipe_family_definitions() -> list[ExpandedRecipeFamilyDefinition]
         _definition(
             "two_phase_route",
             ("hard",),
-            ("two_phase", "multi_switch"),
+            ("two_phase", "package_gate", "split_path", "rejoin", "multi_switch"),
             "two_phase",
             "Solve a package phase and then an exit phase.",
             "Group taps by route phase.",
@@ -455,7 +455,7 @@ def expanded_recipe_family_definitions() -> list[ExpandedRecipeFamilyDefinition]
             "Gives hard levels a clear before/after package structure.",
             "hard levels unlocked",
             "package_gate_double_choice",
-            _hard_three_switch_chain,
+            _two_phase_route,
         ),
         _definition(
             "branch_then_rejoin_with_wrong_order",
@@ -828,8 +828,9 @@ def _long_detour_gate(variant_name: str, preset: DifficultyPreset, rng: RandomSo
     route = ("start", "switch_gate", "detour_a", "package", "rejoin", "switch_exit", "destination")
     pairs = (
         ("start", "switch_gate"),
-        ("switch_gate", "direct_dead_end"),
+        ("switch_gate", "direct_bypass"),
         ("switch_gate", "detour_a"),
+        ("direct_bypass", "rejoin"),
         ("detour_a", "package"),
         ("package", "rejoin"),
         ("rejoin", "switch_exit"),
@@ -864,20 +865,62 @@ def _multi_switch_revisit(variant_name: str, preset: DifficultyPreset, rng: Rand
 
 
 def _package_inside_loop(variant_name: str, preset: DifficultyPreset, rng: RandomSource):
-    route = ("start", "switch_a", "loop_a", "switch_b", "package", "loop_b", "switch_c", "destination")
-    pairs = (
-        ("start", "switch_a"),
-        ("switch_a", "dead_end_a"),
-        ("switch_a", "loop_a"),
-        ("loop_a", "switch_b"),
-        ("switch_b", "dead_end_b"),
-        ("switch_b", "package"),
-        ("package", "loop_b"),
-        ("loop_b", "switch_c"),
-        ("switch_c", "dead_end_c"),
-        ("switch_c", "destination"),
+    route = (
+        "start",
+        "loop_entry_switch",
+        "outer_loop",
+        "package_switch",
+        "package",
+        "loop_return",
+        "loop_entry_switch",
+        "exit_lane",
+        "switch_exit",
+        "destination",
     )
-    return route, pairs, ("switch_a", "switch_b", "switch_c")
+    pairs = (
+        ("start", "loop_entry_switch"),
+        ("loop_entry_switch", "dead_end_a"),
+        ("loop_entry_switch", "outer_loop"),
+        ("loop_entry_switch", "exit_lane"),
+        ("outer_loop", "package_switch"),
+        ("package_switch", "dead_end_b"),
+        ("package_switch", "package"),
+        ("package", "loop_return"),
+        ("loop_return", "loop_entry_switch"),
+        ("exit_lane", "switch_exit"),
+        ("switch_exit", "dead_end_c"),
+        ("switch_exit", "destination"),
+    )
+    return route, pairs, ("loop_entry_switch", "package_switch", "loop_entry_switch", "switch_exit")
+
+
+def _two_phase_route(variant_name: str, preset: DifficultyPreset, rng: RandomSource):
+    route = (
+        "start",
+        "phase_one_switch",
+        "package_lane",
+        "package",
+        "phase_bridge",
+        "exit_choice",
+        "exit_lane",
+        "switch_final",
+        "destination",
+    )
+    pairs = (
+        ("start", "phase_one_switch"),
+        ("phase_one_switch", "early_exit"),
+        ("phase_one_switch", "package_lane"),
+        ("early_exit", "exit_choice"),
+        ("package_lane", "package"),
+        ("package", "phase_bridge"),
+        ("phase_bridge", "exit_choice"),
+        ("exit_choice", "dead_end_b"),
+        ("exit_choice", "exit_lane"),
+        ("exit_lane", "switch_final"),
+        ("switch_final", "dead_end_c"),
+        ("switch_final", "destination"),
+    )
+    return route, pairs, ("phase_one_switch", "exit_choice", "switch_final")
 
 
 def _branch_then_rejoin(variant_name: str, preset: DifficultyPreset, rng: RandomSource):

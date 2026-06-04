@@ -657,6 +657,7 @@ class LevelGenerationService:
             "nearbyMechanicTagPenalty": self._diversity_audit(candidate)["nearbyMechanicTagPenalty"],
             "nearbyTopologyClassPenalty": self._diversity_audit(candidate)["nearbyTopologyClassPenalty"],
             "diversityScore": self._diversity_audit(candidate)["diversityScore"],
+            "routeInterestAudit": self._route_interest_audit(candidate),
             "layoutVariant": candidate.selected_layout_variant,
             "roadShapeStrategy": candidate.selected_road_shape_strategy,
             "status": status,
@@ -688,11 +689,32 @@ class LevelGenerationService:
             "nearbyMechanicTagPenalty": quality.nearby_mechanic_tag_penalty,
             "nearbyTopologyClassPenalty": quality.nearby_topology_class_penalty,
             "diversityScore": quality.diversity_score,
+            "routeInterest": quality.route_interest,
+            "routeInterestAudit": quality.details.get("routeInterest", {}),
             "baseQualityScore": quality.details.get("baseQualityScore", quality.total),
             "mobileTapComfort": quality.mobile_tap_comfort,
             "visualAppeal": quality.visual_appeal,
             "penalties": list(quality.penalties),
             "maxSimilarity": quality.details.get("maxSimilarity", 0.0),
+        }
+
+    def _route_interest_audit(self, candidate) -> dict:
+        quality = getattr(candidate, "quality_score", None)
+        if quality is None:
+            return {}
+        audit = quality.details.get("routeInterest", {})
+        return {
+            "score": audit.get("score"),
+            "tags": audit.get("tags", []),
+            "fakeShortcutPresent": audit.get("fakeShortcutPresent", False),
+            "branchRejoinPresent": audit.get("branchRejoinPresent", False),
+            "packageGateTensionPresent": audit.get("packageGateTensionPresent", False),
+            "loopRevisitPresent": audit.get("loopRevisitPresent", False),
+            "meaningfulTurnCount": audit.get("meaningfulTurnCount", 0),
+            "repeatedTopologyPenalty": audit.get("repeatedTopologyPenalty", 0.0),
+            "bonuses": audit.get("bonuses", {}),
+            "penaltyValues": audit.get("penaltyValues", {}),
+            "penalties": list(audit.get("penalties", [])),
         }
 
     def _required_path_length(self, candidate) -> int | None:

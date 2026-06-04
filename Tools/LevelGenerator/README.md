@@ -119,6 +119,41 @@ Generation reports include the selected layout profile plus lightweight portrait
 
 `--candidate-pool-size` scores multiple valid candidates for each level and accepts the highest-scoring one. Reports include quality and simulation details.
 
+### Route-Interest Scoring
+
+Recipe-first generation now includes route-interest scoring so accepted candidates are not chosen only because they validate cleanly. The score rewards small maze-like route decisions:
+
+- fake shortcuts or visually tempting invalid branches
+- split paths that rejoin later
+- correct longer detours over obvious direct-looking paths
+- package-before-destination tension
+- loops or revisit-style paths on difficulties that support them
+- multi-exit hub choices
+- meaningful route turns instead of straight switch chains
+
+It also penalizes boring topology:
+
+- mostly straight switch chains
+- route nodes that only pad length without adding a decision
+- nearby repetition of the same topology class or mechanic tags
+- candidates that become harder only by adding more switches
+- recipe families whose graph shape collapses into the same underlying chain
+
+Reports expose the selected recipe family, topology class, route-interest score, route-interest tags, bonuses, penalties, fake-shortcut/branch-rejoin/package-tension/loop flags, meaningful turn count, and repeated-topology penalty. Rejected near-misses include the same quality summary so it is clear why the accepted candidate won.
+
+Phase 2 upgraded these recipe families first:
+
+- `fake_shortcut`
+- `split_path_rejoin`
+- `long_detour_gate`
+- `hub_choice`
+- `package_inside_loop`
+- `two_phase_route`
+
+An interesting generated topology is one where the shortest-looking branch can be wrong, branches can rejoin, package collection changes the valid route, or a loop/revisit changes the exit decision. A boring topology is a straight line of switches with renamed dead ends or filler nodes that only increase travel time.
+
+Camera follow, zoom, scrolling maps, larger-map gameplay, production level generation, and production level JSON changes are still out of scope for this generator phase.
+
 `--difficulty auto` uses the default campaign curve: levels 1-3 tutorial, 4-10 easy, 11-25 medium, 26-40 hard, and 41+ expert.
 
 `--map-seed-path` applies a saved map seed JSON to generated node positions. Map import is separate from production generation:
