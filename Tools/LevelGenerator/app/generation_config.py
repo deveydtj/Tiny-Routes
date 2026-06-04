@@ -11,7 +11,7 @@ from .paths import (
 
 GENERATION_MODES = ("legacy_template", "recipe_first", "hybrid")
 LAYOUT_ORIENTATION_PREFERENCES = ("portrait_vertical", "horizontal", "vertical", "mixed", "auto")
-LAYOUT_SIZE_PROFILES = ("standard_portrait", "large_portrait")
+LAYOUT_SIZE_PROFILES = ("difficulty_curve", "standard_portrait", "large_portrait")
 DEFAULT_GENERATION_MODE = "recipe_first"
 DEFAULT_RECIPE_POOL_SIZE = 4
 DEFAULT_LAYOUTS_PER_RECIPE = 3
@@ -19,7 +19,7 @@ DEFAULT_ROAD_SHAPES_PER_LAYOUT = 3
 DEFAULT_CANDIDATE_POOL_SIZE = 25
 DEFAULT_MAX_ATTEMPTS_PER_LEVEL = 300
 DEFAULT_LAYOUT_ORIENTATION_PREFERENCE = "portrait_vertical"
-DEFAULT_LAYOUT_SIZE_PROFILE = "standard_portrait"
+DEFAULT_LAYOUT_SIZE_PROFILE = "difficulty_curve"
 DEFAULT_VERTICAL_ROUTE_PROBABILITY = 0.35
 
 

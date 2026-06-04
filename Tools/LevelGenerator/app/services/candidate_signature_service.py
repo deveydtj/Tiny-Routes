@@ -69,6 +69,7 @@ class CandidateSignatureService:
             topology_class=getattr(generated_level, "topology_class", "") or "",
             required_path_length=self._required_path_length(generated_level),
             layout_orientation=self._layout_orientation(generated_level),
+            layout_size_profile=self._layout_size_profile(generated_level),
         )
 
     def _normalized_edges(self, level_document) -> tuple[tuple[str, str], ...]:
@@ -133,3 +134,8 @@ class CandidateSignatureService:
         if variant == "wide":
             return "horizontal"
         return "unknown"
+
+    def _layout_size_profile(self, generated_level) -> str:
+        metadata = getattr(generated_level, "layout_metadata", None) or {}
+        profile = str(metadata.get("layoutSizeProfile", "")).strip().lower()
+        return profile or "standard_portrait"

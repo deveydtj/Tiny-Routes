@@ -99,7 +99,6 @@ class LevelGenerationService:
             level_number = plan_entry.level_number
             level_id = plan_entry.level_id
             preset = self.difficulty_service.get_preset(plan_entry.difficulty)
-            preset = self._preset_for_layout_size_profile(preset, config.layout_size_profile)
             accepted_candidate = None
             candidate_pool = []
             candidate_pool_signatures = []
@@ -130,9 +129,10 @@ class LevelGenerationService:
 
                     level_path = self.generated_level_repository.level_path(level_id, config.levels_output_dir)
                     solution_path = self.generated_level_repository.solution_path(level_id, config.solutions_output_dir)
+                    validation_preset = self._preset_for_candidate_layout(candidate, preset)
                     validation_result = self.validation_service.validate(
                         candidate,
-                        preset=preset,
+                        preset=validation_preset,
                         level_output_path=level_path,
                         solution_output_path=solution_path,
                         overwrite=config.overwrite or config.dry_run,
@@ -176,7 +176,7 @@ class LevelGenerationService:
                         candidate.candidate_signature = candidate_signature
                         candidate.quality_score = self._score_candidate_quality(
                             candidate,
-                            preset,
+                            validation_preset,
                             [
                                 *accepted_signatures,
                                 *candidate_pool_signatures,
@@ -411,6 +411,7 @@ class LevelGenerationService:
                 raise ValueError(f"Invalid solved recipe candidate: {', '.join(recipe_issues)}")
             recipe = self.abstract_puzzle_solver.solve(recipe, preset)
 
+            layout_size_profiles = self._layout_size_profiles_for_recipe(config, preset, recipe, recipe_rng)
             for layout_index, layout_name in enumerate(layout_names):
                 orientation_requests = self._layout_orientation_requests(
                     config,
@@ -419,34 +420,47 @@ class LevelGenerationService:
                     rng,
                     layout_index,
                 )
-                for orientation_index, orientation_request in enumerate(orientation_requests):
-                    for road_index, road_shape_strategy in enumerate(road_shape_strategies):
-                        candidate_seed = rng.child_seed(
-                            "layout",
-                            recipe_index,
-                            layout_index,
-                            orientation_index,
-                            road_index,
-                        )
-                        candidate = self.recipe_to_level_builder.build_level(
-                            recipe,
-                            level_number,
-                            seed=candidate_seed,
-                            layout_variant_name=layout_name,
-                            layout_orientation_preference=orientation_request["orientation"],
-                            layout_size_profile=config.layout_size_profile,
-                            orientation_selection_reason=orientation_request["reason"],
-                            road_shape_strategy=road_shape_strategy,
-                        )
-                        if candidate.layout_metadata is not None:
-                            candidate.layout_metadata["orientationPreference"] = config.layout_orientation_preference
-                            candidate.layout_metadata["layoutSizeProfile"] = config.layout_size_profile
-                            candidate.layout_metadata["verticalRouteProbability"] = config.vertical_route_probability
-                            candidate.layout_metadata["preferVerticalForLongRoutes"] = config.prefer_vertical_for_long_routes
-                            candidate.layout_metadata["orientationRequest"] = orientation_request["orientation"]
-                        candidate.requires_swift_validation = family.requires_swift_validation
-                        candidates.append(candidate)
+                for size_index, layout_size_profile in enumerate(layout_size_profiles):
+                    for orientation_index, orientation_request in enumerate(orientation_requests):
+                        for road_index, road_shape_strategy in enumerate(road_shape_strategies):
+                            candidate_seed = rng.child_seed(
+                                "layout",
+                                recipe_index,
+                                layout_index,
+                                size_index,
+                                orientation_index,
+                                road_index,
+                            )
+                            candidate = self.recipe_to_level_builder.build_level(
+                                recipe,
+                                level_number,
+                                seed=candidate_seed,
+                                layout_variant_name=layout_name,
+                                layout_orientation_preference=orientation_request["orientation"],
+                                layout_size_profile=layout_size_profile,
+                                orientation_selection_reason=orientation_request["reason"],
+                                road_shape_strategy=road_shape_strategy,
+                            )
+                            if candidate.layout_metadata is not None:
+                                candidate.layout_metadata["orientationPreference"] = config.layout_orientation_preference
+                                candidate.layout_metadata["requestedLayoutSizeProfile"] = config.layout_size_profile
+                                candidate.layout_metadata["layoutSizeProfile"] = layout_size_profile
+                                candidate.layout_metadata["verticalRouteProbability"] = config.vertical_route_probability
+                                candidate.layout_metadata["preferVerticalForLongRoutes"] = config.prefer_vertical_for_long_routes
+                                candidate.layout_metadata["orientationRequest"] = orientation_request["orientation"]
+                                candidate.layout_metadata["layoutSizeSelectionReason"] = self._layout_size_selection_reason(
+                                    config,
+                                    preset,
+                                    recipe,
+                                    layout_size_profile,
+                                )
+                            candidate.requires_swift_validation = family.requires_swift_validation
+                            candidates.append(candidate)
         return candidates
+
+    def _preset_for_candidate_layout(self, candidate, preset):
+        metadata = getattr(candidate, "layout_metadata", None) or {}
+        return self._preset_for_layout_size_profile(preset, metadata.get("layoutSizeProfile", "standard_portrait"))
 
     def _preset_for_layout_size_profile(self, preset, layout_size_profile: str):
         if layout_size_profile != "large_portrait":
@@ -456,6 +470,70 @@ class LevelGenerationService:
             coordinate_bounds=(-1.15, 1.15, -3.4, 1.35),
             minimum_node_distance=max(preset.minimum_node_distance, 0.24),
         )
+
+    def _layout_size_profiles_for_recipe(
+        self,
+        config: GenerationConfig,
+        preset,
+        recipe,
+        rng: RandomSource,
+    ) -> list[str]:
+        if config.layout_size_profile != "difficulty_curve":
+            return [config.layout_size_profile]
+
+        weights = dict(preset.map_size_profile_weights)
+        profiles = ["standard_portrait"]
+        large_weight = weights.get("large_portrait", 0)
+        if large_weight <= 0:
+            return profiles
+
+        total_weight = max(sum(max(weight, 0) for weight in weights.values()), 1)
+        large_probability = large_weight / total_weight
+        route_length = max(len(getattr(recipe, "required_path", ())) - 1, 0)
+        mechanic_tags = set(getattr(recipe, "mechanic_tags", ()) or ())
+        topology_class = str(getattr(recipe, "topology_class", "") or "")
+        large_friendly_tags = {
+            "long_route",
+            "detour",
+            "split_path",
+            "rejoin",
+            "loop",
+            "revisit",
+            "ring",
+            "package_inside_loop",
+            "two_phase",
+            "four_way",
+        }
+        structure_benefits_from_large = (
+            route_length >= preset.route_length_range[1]
+            or bool(mechanic_tags & large_friendly_tags)
+            or any(term in topology_class for term in ("loop", "ring", "rejoin", "phase", "four_way"))
+        )
+
+        include_large = False
+        if preset.name == "medium":
+            include_large = structure_benefits_from_large and rng.bool(min(large_probability, 0.35))
+        elif preset.name == "hard":
+            include_large = structure_benefits_from_large or rng.bool(min(large_probability, 0.60))
+        elif preset.name == "expert":
+            include_large = structure_benefits_from_large or rng.bool(min(large_probability, 0.75))
+
+        if include_large:
+            profiles.append("large_portrait")
+        return profiles
+
+    def _layout_size_selection_reason(self, config: GenerationConfig, preset, recipe, layout_size_profile: str) -> str:
+        if config.layout_size_profile != "difficulty_curve":
+            return "explicit_profile"
+        if layout_size_profile == "standard_portrait":
+            return "difficulty_curve_standard_candidate"
+        route_length = max(len(getattr(recipe, "required_path", ())) - 1, 0)
+        mechanic_tags = set(getattr(recipe, "mechanic_tags", ()) or ())
+        if route_length >= preset.route_length_range[1]:
+            return "difficulty_curve_long_route_candidate"
+        if mechanic_tags:
+            return "difficulty_curve_route_interest_candidate"
+        return "difficulty_curve_weighted_candidate"
 
     def _layout_orientation_requests(
         self,
@@ -650,6 +728,8 @@ class LevelGenerationService:
         return {
             "levelID": candidate.level_id,
             "seed": candidate.seed,
+            "difficulty": candidate.difficulty,
+            "selectedPreset": candidate.difficulty,
             "template": candidate.template_name,
             "recipeFamily": candidate.recipe_family,
             "recipeVariant": candidate.recipe_variant,
@@ -660,6 +740,8 @@ class LevelGenerationService:
             "layoutOrientation": self._layout_orientation(candidate),
             "layoutProfile": (candidate.layout_metadata or {}).get("layoutProfile"),
             "layoutSizeProfile": (candidate.layout_metadata or {}).get("layoutSizeProfile"),
+            "requestedLayoutSizeProfile": (candidate.layout_metadata or {}).get("requestedLayoutSizeProfile"),
+            "layoutSizeSelectionReason": (candidate.layout_metadata or {}).get("layoutSizeSelectionReason"),
             "portraitMetrics": (candidate.layout_metadata or {}).get("portraitMetrics"),
             "portraitChecksPassed": (candidate.layout_metadata or {}).get("portraitChecksPassed"),
             "requiresSwiftValidation": bool(getattr(candidate, "requires_swift_validation", False)),
@@ -675,6 +757,8 @@ class LevelGenerationService:
             "layoutVariant": candidate.selected_layout_variant,
             "roadShapeStrategy": candidate.selected_road_shape_strategy,
             "status": status,
+            "validationResult": "passed",
+            "acceptedOrRejectedReason": status,
             "quality": self._quality_summary(quality),
             "signature": (
                 {
@@ -710,6 +794,8 @@ class LevelGenerationService:
             "visualAppeal": quality.visual_appeal,
             "penalties": list(quality.penalties),
             "maxSimilarity": quality.details.get("maxSimilarity", 0.0),
+            "presetContentFit": quality.details.get("presetContentFit", {}),
+            "campaignPacingDetails": quality.details.get("campaignPacing", {}),
         }
 
     def _route_interest_audit(self, candidate) -> dict:

@@ -113,7 +113,7 @@ def test_cli_defaults_create_recipe_first_config() -> None:
     assert config.layouts_per_recipe == 3
     assert config.road_shapes_per_layout == 3
     assert config.layout_orientation_preference == "portrait_vertical"
-    assert config.layout_size_profile == "standard_portrait"
+    assert config.layout_size_profile == "difficulty_curve"
     assert config.vertical_route_probability == 0.35
     assert config.prefer_vertical_for_long_routes is True
     assert config.candidate_pool_size == 25

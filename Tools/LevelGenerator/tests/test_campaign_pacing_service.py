@@ -71,3 +71,36 @@ def test_campaign_pacing_allows_distinct_topology_and_mechanic() -> None:
     assert "campaign_repeated_primary_mechanic" not in result.penalties
     assert result.details["sameTopologyClassInRecentWindow"] == 0
     assert result.details["nearbyMechanicTagOverlap"] == 0.0
+
+
+def test_campaign_pacing_penalizes_repeated_special_mechanics_and_large_profile() -> None:
+    previous = _signature(
+        level_id="level_031",
+        template_name="fake_shortcut",
+        difficulty="hard",
+        mechanic_tags=("fake_shortcut", "detour"),
+        primary_mechanic_tag="fake_shortcut",
+        topology_class="detour_gate",
+        layout_size_profile="large_portrait",
+    )
+    candidate = _signature(
+        level_id="level_032",
+        template_name="long_detour_gate",
+        difficulty="hard",
+        mechanic_tags=("fake_shortcut", "detour", "package_gate"),
+        primary_mechanic_tag="fake_shortcut",
+        topology_class="detour_gate",
+        layout_size_profile="large_portrait",
+    )
+
+    result = CampaignPacingService().score(
+        candidate,
+        [previous],
+        estimated_band="hard",
+        target_band="hard",
+    )
+
+    assert "campaign_repeated_fake_shortcut_usage" in result.penalties
+    assert "campaign_repeated_large_portrait_profile" in result.penalties
+    assert "campaign_repeated_switch_count_pattern" in result.penalties
+    assert result.details["sameMapSizeProfileInRecentWindow"] == 1

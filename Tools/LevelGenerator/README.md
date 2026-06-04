@@ -115,11 +115,19 @@ Recipe-first generation solves multiple abstract recipes before layout, then tri
 
 `--layout-orientation` defaults to `portrait_vertical`. This profile asks recipe-first layouts to compose routes for mobile portrait play: the generated map should be taller than wide, the start should sit in the lower portion of the layout, and the destination should sit in the upper portion. Horizontal branches, detours, and side movement are still allowed when the overall composition passes the portrait safety checks.
 
-`--layout-size-profile` defaults to `standard_portrait`. Use `large_portrait` only when intentionally exploring taller generated layouts for the gameplay camera. Large portrait keeps the same recipe families and validation rules, but expands the vertical coordinate bounds and asks vertical/portrait layouts to preserve more space between route nodes. It does not automatically convert every generated level to a large map.
+`--layout-size-profile` defaults to `difficulty_curve`. That resolver keeps tutorial and easy levels on `standard_portrait`, introduces occasional `large_portrait` candidates for medium route-interest layouts, and offers more large portrait candidates for hard/expert routes that benefit from extra vertical room. Use explicit `standard_portrait` or `large_portrait` only for targeted experiments. Large portrait keeps the same recipe families and validation rules, but expands the vertical coordinate bounds and asks vertical/portrait layouts to preserve more space between route nodes. It does not automatically convert every generated level to a large map.
 
 Generation reports include the selected layout profile, layout size profile, and lightweight portrait metrics: width, height, aspect ratio, start-to-destination vertical separation, and whether portrait checks passed. The Swift gameplay camera uses runtime level extents to decide whether a generated large portrait level should scroll instead of being scaled down to one screen.
 
-`--candidate-pool-size` scores multiple valid candidates for each level and accepts the highest-scoring one. Reports include quality and simulation details.
+`--candidate-pool-size` scores multiple valid candidates for each level and accepts the highest-scoring one. Reports include quality, pacing, route-interest, difficulty-fit, and simulation details.
+
+Run a safe stress dry-run into a scratch folder when tuning the curve:
+
+```bash
+python Tools/LevelGenerator/stress_test_generation.py --start 1 --count 20 --difficulty auto --seed 9001 --output-dir /tmp/tiny-routes-phase4-stress
+```
+
+The stress command forces `dry_run=True`, disables existing-production similarity checks, and writes only scratch reports. It prints and writes `stress_summary.json` with pass/fail rate, accepted difficulty distribution, recipe distribution, topology distribution, map-size distribution, and rejection reasons.
 
 ### Route-Interest Scoring
 
@@ -168,12 +176,16 @@ python Tools/LevelGenerator/import_map_seed.py --place "Imperial, Missouri, USA"
 
 Supported difficulty presets:
 
-- `tutorial`
-- `easy`
-- `medium`
-- `hard`
-- `expert`
+- `tutorial`: 3-5 nodes, 0-1 switches, 0-1 taps, route length 2-4, standard portrait only, straight-line or single-branch topology, very low route-interest target, max visual complexity 0.34.
+- `easy`: 5-7 nodes, 1-2 switches, 1-2 taps, route length 3-5, standard portrait only, single-branch/two-switch/detour/package-gate topology, mild optional detour/package tension, max visual complexity 0.44.
+- `medium`: 7-9 nodes, 2-3 switches, 2-3 taps, route length 5-7, mostly standard portrait with occasional large portrait candidates, optional split/rejoin, fake shortcut, package tension, detour, or meaningful-turn tags, max visual complexity 0.62.
+- `hard`: 9-12 nodes, 3-5 switches, 3-5 taps, route length 7-10, frequent large portrait candidates for route structures that need room, stronger detour, loop/revisit, hub, two-phase, split/rejoin, and fake-shortcut tags, max visual complexity 0.76.
+- `expert`: 8-13 nodes, 1-5 switches, 2-6 taps, route length 6-11, standard and large portrait candidates allowed when four-way, ring, revisit, or route-phase structures benefit, max visual complexity 0.86.
 - `auto`
+
+Preset scoring checks node/switch/tap fit through existing strict validation, then quality scoring checks route length, route-interest threshold, topology class, optional/required route-interest tag match, visual complexity ceiling, repeated mechanics, empty map space, and whether large portrait adds puzzle value. These are selection penalties, not validation-rule weakenings.
+
+Pacing rules compare each accepted candidate to nearby accepted signatures. They penalize adjacent recipe-family repeats, topology-class repeats, repeated fake shortcuts, repeated hubs, repeated loop/revisit usage, repeated switch-count/tap-count patterns, nearby mechanic-tag overlap, difficulty cliffs, and consecutive large portrait profiles. The scorer can still accept a repeated element when the rest of the candidate is clearly better, but the report shows the pacing penalty.
 
 Supported templates:
 

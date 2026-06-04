@@ -153,6 +153,14 @@ def test_generation_report_repository_writes_recipe_metadata(tmp_path) -> None:
     assert accepted["requiredPathLength"] is not None
     assert accepted["layoutOrientation"] == "vertical"
     assert accepted["layoutSizeProfile"] == "standard_portrait"
+    assert accepted["requestedLayoutSizeProfile"] == "difficulty_curve"
+    assert accepted["layoutSizeSelectionReason"] == "difficulty_curve_standard_candidate"
+    assert accepted["selectedPreset"] == "easy"
+    assert accepted["validationResult"] == "passed"
+    assert accepted["acceptedOrRejectedReason"] == "accepted"
+    assert accepted["routeInterestScore"] is not None
+    assert accepted["difficultyScore"] is not None
+    assert accepted["pacingPenalties"] == []
     assert accepted["layoutStrategy"] == "vertical_route_progression"
     assert accepted["layoutVariant"] == "normal"
     assert accepted["layoutOrientationSelectionReason"] == "explicit_preference"
@@ -178,11 +186,15 @@ def test_generation_report_repository_writes_recipe_metadata(tmp_path) -> None:
     assert payload["candidateSelection"][0]["acceptedCandidate"]["topologyClass"] == "single_branch"
     assert payload["candidateSelection"][0]["acceptedCandidate"]["requiredPathLength"] == accepted["requiredPathLength"]
     assert payload["layoutOrientationPreference"] == "vertical"
-    assert payload["layoutSizeProfile"] == "standard_portrait"
+    assert payload["layoutSizeProfile"] == "difficulty_curve"
     assert payload["verticalRouteProbability"] == 0.35
     assert payload["preferVerticalForLongRoutes"] is True
+    assert payload["dryRunSummary"]["safeScratchRun"] is True
+    assert payload["acceptedMapSizeDistribution"] == {"standard_portrait": 1}
     assert payload["candidateSelection"][0]["acceptedCandidate"]["layoutOrientation"] == "vertical"
     assert payload["candidateSelection"][0]["acceptedCandidate"]["layoutSizeProfile"] == "standard_portrait"
+    assert payload["candidateSelection"][0]["acceptedCandidate"]["selectedPreset"] == "easy"
+    assert payload["candidateSelection"][0]["acceptedCandidate"]["validationResult"] == "passed"
     assert payload["candidateSelection"][0]["acceptedCandidate"]["layoutStrategy"] == "vertical_route_progression"
     assert payload["candidateSelection"][0]["acceptedCandidate"]["layoutVariant"] == "normal"
     assert payload["candidateSelection"][0]["acceptedCandidate"]["layoutOrientationSelectionReason"] == "explicit_preference"
@@ -191,9 +203,13 @@ def test_generation_report_repository_writes_recipe_metadata(tmp_path) -> None:
     assert accepted["quality"]["diversityScore"] == 1.0
     assert accepted["quality"]["nearbyMechanicTagPenalty"] == 0.0
     assert "baseQualityScore" in accepted["quality"]
+    assert "presetContentFit" in accepted["quality"]
+    assert "campaignPacingDetails" in accepted["quality"]
     markdown = (tmp_path / "report.md").read_text(encoding="utf-8")
     assert "Candidate selection" in markdown
     assert "Topology" in markdown
+    assert "Map size" in markdown
+    assert "preset fit" in markdown
     assert "primary `single_switch`" in markdown
     assert "required path length" in markdown
     assert "layout orientation `vertical` via `explicit_preference`" in markdown

@@ -132,6 +132,17 @@ class GenerationQualityService:
             penalties.append("nearby_recipe_family_streak")
         route_interest_audit = self._route_interest_audit(generated_level, diversity)
         route_interest = route_interest_audit["score"]
+        preset_fit = self._preset_content_fit(
+            generated_level,
+            preset,
+            difficulty_metrics,
+            route_interest_audit,
+            campaign_pacing.details if campaign_pacing is not None else {},
+        )
+        difficulty_fit = min(difficulty_fit, preset_fit["score"])
+        for penalty in preset_fit["penalties"]:
+            if penalty not in penalties:
+                penalties.append(penalty)
         if preset.name in {"medium", "hard", "expert"} and route_interest < 0.45:
             penalties.append("route_too_straight_for_difficulty")
         for penalty in route_interest_audit["penalties"]:
@@ -199,6 +210,7 @@ class GenerationQualityService:
                 "switchClarity": round(switch_clarity, 4),
                 "mobileTapComfort": round(mobile_tap_comfort, 4),
                 "visualAppeal": round(visual_appeal, 4),
+                "presetContentFit": preset_fit,
                 "baseQualityScore": round(self._clamp(base_total), 4),
                 "routeInterest": route_interest_audit,
                 "topologyDiversityScore": diversity["topologyDiversityScore"],
@@ -219,6 +231,154 @@ class GenerationQualityService:
                 ],
             },
         )
+
+    def _preset_content_fit(
+        self,
+        generated_level,
+        preset: DifficultyPreset,
+        difficulty_metrics,
+        route_interest_audit: dict,
+        campaign_pacing_details: dict,
+    ) -> dict:
+        score = 1.0
+        penalties: list[str] = []
+        route_length = int(difficulty_metrics.solution_path_length)
+        route_min, route_max = preset.route_length_range
+        if route_length < route_min:
+            score -= min(0.28, (route_min - route_length) * 0.07)
+            penalties.append("route_length_below_preset_target")
+        elif route_length > route_max:
+            score -= min(0.20, (route_length - route_max) * 0.04)
+            penalties.append("route_length_above_preset_target")
+
+        route_interest = float(route_interest_audit.get("score", 0.0) or 0.0)
+        if route_interest < preset.minimum_route_interest_score:
+            score -= min(0.30, (preset.minimum_route_interest_score - route_interest) * 0.65)
+            penalties.append("route_interest_below_preset_target")
+
+        tags = set(route_interest_audit.get("tags", []) or [])
+        required_tags = set(preset.required_route_interest_tags)
+        missing_required_tags = sorted(required_tags - tags)
+        if missing_required_tags:
+            score -= min(0.22, 0.08 * len(missing_required_tags))
+            penalties.append("missing_required_route_interest_tags")
+        optional_tags = set(preset.optional_route_interest_tags)
+        optional_matches = sorted(tags & optional_tags)
+        if optional_tags and preset.name in {"medium", "hard", "expert"} and not optional_matches:
+            score -= 0.10
+            penalties.append("no_preset_route_interest_tag_match")
+
+        topology_class = str(getattr(generated_level, "topology_class", "") or "")
+        if preset.allowed_topology_classes and topology_class not in preset.allowed_topology_classes:
+            score -= 0.12
+            penalties.append("topology_outside_preset_band")
+
+        if difficulty_metrics.visual_complexity_score > preset.max_visual_complexity:
+            score -= min(0.26, (difficulty_metrics.visual_complexity_score - preset.max_visual_complexity) * 0.70)
+            penalties.append("visual_complexity_above_preset_target")
+
+        repeated_special_mechanics = tuple(campaign_pacing_details.get("repeatedSpecialMechanics", ()) or ())
+        if len(repeated_special_mechanics) > preset.max_repeated_mechanics:
+            score -= 0.10
+            penalties.append("too_many_repeated_campaign_mechanics")
+
+        empty_space_ratio = self._empty_space_ratio(generated_level, preset)
+        if empty_space_ratio > 0.72:
+            score -= min(0.22, (empty_space_ratio - 0.72) * 0.70)
+            penalties.append("excessive_empty_map_space")
+
+        layout_size_profile = (getattr(generated_level, "layout_metadata", None) or {}).get(
+            "layoutSizeProfile",
+            "standard_portrait",
+        )
+        large_map_fit = self._large_map_fit(generated_level, preset, route_length, route_interest, layout_size_profile)
+        score += large_map_fit["bonus"]
+        score -= large_map_fit["penalty"]
+        penalties.extend(large_map_fit["penalties"])
+
+        return {
+            "score": round(self._clamp(score), 4),
+            "routeLength": route_length,
+            "targetRouteLengthRange": list(preset.route_length_range),
+            "minimumRouteInterestScore": preset.minimum_route_interest_score,
+            "requiredRouteInterestTags": list(preset.required_route_interest_tags),
+            "optionalRouteInterestTags": list(preset.optional_route_interest_tags),
+            "matchedOptionalRouteInterestTags": optional_matches,
+            "allowedTopologyClasses": list(preset.allowed_topology_classes),
+            "topologyClass": topology_class,
+            "maxVisualComplexity": preset.max_visual_complexity,
+            "emptySpaceRatio": empty_space_ratio,
+            "layoutSizeProfile": layout_size_profile,
+            "largeMapFit": large_map_fit,
+            "penalties": tuple(dict.fromkeys(penalties)),
+        }
+
+    def _large_map_fit(
+        self,
+        generated_level,
+        preset: DifficultyPreset,
+        route_length: int,
+        route_interest: float,
+        layout_size_profile: str,
+    ) -> dict:
+        if layout_size_profile != "large_portrait":
+            complex_tags = {
+                "long_route",
+                "loop",
+                "revisit",
+                "ring",
+                "split_path",
+                "rejoin",
+                "two_phase",
+                "four_way",
+            }
+            mechanic_tags = set(getattr(generated_level, "mechanic_tags", ()) or ())
+            would_benefit = (
+                preset.name in {"hard", "expert"}
+                and (
+                    route_length >= preset.route_length_range[1]
+                    or bool(mechanic_tags & complex_tags)
+                )
+            )
+            return {
+                "bonus": 0.0,
+                "penalty": 0.04 if would_benefit else 0.0,
+                "penalties": ("large_portrait_candidate_not_used_for_complex_route",) if would_benefit else (),
+            }
+
+        if preset.name in {"tutorial", "easy"}:
+            return {
+                "bonus": 0.0,
+                "penalty": 0.35,
+                "penalties": ("large_portrait_too_early",),
+            }
+
+        route_needs_room = route_length >= preset.route_length_range[0] + 1
+        interest_needs_room = route_interest >= preset.minimum_route_interest_score
+        if route_needs_room and interest_needs_room:
+            return {
+                "bonus": 0.05 if preset.name in {"hard", "expert"} else 0.02,
+                "penalty": 0.0,
+                "penalties": (),
+            }
+        return {
+            "bonus": 0.0,
+            "penalty": 0.18,
+            "penalties": ("large_portrait_without_puzzle_need",),
+        }
+
+    def _empty_space_ratio(self, generated_level, preset: DifficultyPreset) -> float:
+        nodes = generated_level.level_document.graph.nodes
+        if not nodes:
+            return 1.0
+        xs = [float(node.x) for node in nodes]
+        ys = [float(node.y) for node in nodes]
+        used_width = max(xs) - min(xs)
+        used_height = max(ys) - min(ys)
+        used_area = max(used_width * used_height, 0.01)
+        min_x, max_x, min_y, max_y = preset.coordinate_bounds
+        bounds_area = max((max_x - min_x) * (max_y - min_y), 0.01)
+        return round(self._clamp(1.0 - min(used_area / bounds_area, 1.0)), 4)
 
     def _abstract_mechanic_quality(self, generated_level, preset: DifficultyPreset) -> float:
         metadata = getattr(generated_level, "abstract_solution_metadata", None)

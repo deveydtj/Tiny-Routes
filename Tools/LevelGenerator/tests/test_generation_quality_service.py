@@ -21,7 +21,7 @@ def test_generation_quality_service_scores_valid_candidate() -> None:
     score = GenerationQualityService().score(generated, preset)
 
     assert 0 < score.total <= 1
-    assert score.difficulty_fit == 1
+    assert score.difficulty_fit > 0.7
     assert 0 < score.abstract_mechanic_quality <= 1
     assert 0 < score.runtime_solvability <= 1
     assert 0 < score.switch_clarity <= 1
@@ -33,6 +33,7 @@ def test_generation_quality_service_scores_valid_candidate() -> None:
     assert "switchClarity" in score.details
     assert "mobileTapComfort" in score.details
     assert "visualAppeal" in score.details
+    assert "presetContentFit" in score.details
     assert "diversityScore" in score.details
     assert score.diversity_score == 1.0
 

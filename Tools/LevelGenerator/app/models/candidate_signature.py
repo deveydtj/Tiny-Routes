@@ -27,6 +27,7 @@ class CandidateSignature:
     topology_class: str = ""
     required_path_length: int | None = None
     layout_orientation: str = "unknown"
+    layout_size_profile: str = "standard_portrait"
     topology_diversity_score: float | None = None
     nearby_mechanic_tag_penalty: float | None = None
     nearby_topology_class_penalty: float | None = None

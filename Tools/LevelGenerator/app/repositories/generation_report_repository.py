@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+from collections import Counter
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
@@ -54,6 +55,7 @@ class GenerationReportRepository:
             "preferVerticalForLongRoutes": getattr(config, "prefer_vertical_for_long_routes", True),
             "baseSeed": config.seed,
             "dryRun": config.dry_run,
+            "dryRunSummary": self._dry_run_summary(config, result),
             "overwrite": config.overwrite,
             "syncXcodeProject": config.sync_xcode_project,
             "compareAgainstExisting": config.compare_against_existing,
@@ -62,6 +64,7 @@ class GenerationReportRepository:
             "acceptedLevels": [
                 {
                     "levelID": level.level_id,
+                    "selectedPreset": level.difficulty,
                     "template": level.template_name,
                     "recipeFamily": level.recipe_family,
                     "recipeVariant": level.recipe_variant,
@@ -72,6 +75,8 @@ class GenerationReportRepository:
                     "layoutOrientation": self._layout_orientation(level),
                     "layoutProfile": (level.layout_metadata or {}).get("layoutProfile"),
                     "layoutSizeProfile": (level.layout_metadata or {}).get("layoutSizeProfile"),
+                    "requestedLayoutSizeProfile": (level.layout_metadata or {}).get("requestedLayoutSizeProfile"),
+                    "layoutSizeSelectionReason": (level.layout_metadata or {}).get("layoutSizeSelectionReason"),
                     "portraitMetrics": (level.layout_metadata or {}).get("portraitMetrics"),
                     "portraitChecksPassed": (level.layout_metadata or {}).get("portraitChecksPassed"),
                     "portraitCheckIssues": (level.layout_metadata or {}).get("portraitCheckIssues", []),
@@ -108,6 +113,19 @@ class GenerationReportRepository:
                     "requiredTaps": level.required_tap_count,
                     "signature": self._signature_payload(level),
                     "quality": self._quality_payload(level),
+                    "routeInterestScore": (
+                        self._route_interest_audit(level).get("score")
+                        if self._route_interest_audit(level)
+                        else None
+                    ),
+                    "difficultyScore": (
+                        self._quality_payload(level).get("difficultyFit")
+                        if self._quality_payload(level)
+                        else None
+                    ),
+                    "pacingPenalties": self._pacing_penalties(level),
+                    "validationResult": "passed",
+                    "acceptedOrRejectedReason": "accepted",
                     "simulation": self._simulation_payload(level),
                     "solution": self._solution_payload(level),
                     "switchPreview": self._switch_preview_payload(level),
@@ -120,6 +138,18 @@ class GenerationReportRepository:
                 for level in result.accepted
             ],
             "candidateSelection": list(getattr(result, "candidate_selection_summaries", [])),
+            "acceptedDifficultyDistribution": self._distribution(
+                (level.difficulty for level in result.accepted)
+            ),
+            "acceptedRecipeDistribution": self._distribution(
+                (level.recipe_family or level.template_name for level in result.accepted)
+            ),
+            "acceptedTopologyDistribution": self._distribution(
+                (getattr(level, "topology_class", "") or "unknown" for level in result.accepted)
+            ),
+            "acceptedMapSizeDistribution": self._distribution(
+                ((level.layout_metadata or {}).get("layoutSizeProfile", "unknown") for level in result.accepted)
+            ),
             "rejectedCandidateCount": result.rejected_candidate_count,
             "rejectionReasonCounts": result.rejection_reason_counts,
             "writtenLevelPaths": [str(path) for path in result.written_level_paths],
@@ -153,6 +183,7 @@ class GenerationReportRepository:
             f"- Generation mode: `{payload['generationMode']}`",
             f"- Base seed: `{payload['baseSeed']}`",
             f"- Dry run: `{payload['dryRun']}`",
+            f"- Dry-run pass rate: `{payload['dryRunSummary']['passRate']}`",
             f"- Compare existing levels: `{payload['compareAgainstExisting']}`",
             f"- Candidate pool size: `{payload['candidatePoolSize']}`",
             f"- Recipe pool size: `{payload['recipePoolSize']}`",
@@ -165,6 +196,13 @@ class GenerationReportRepository:
             f"- Prefer vertical for long routes: `{payload['preferVerticalForLongRoutes']}`",
             f"- Xcode project sync: `{payload['syncXcodeProject']}`",
             f"- Swift tests: `{payload['swiftTests']['summary']}`",
+            "",
+            "## Distributions",
+            "",
+            f"- Difficulty: `{payload['acceptedDifficultyDistribution']}`",
+            f"- Recipe: `{payload['acceptedRecipeDistribution']}`",
+            f"- Topology: `{payload['acceptedTopologyDistribution']}`",
+            f"- Map size: `{payload['acceptedMapSizeDistribution']}`",
             "",
             "## Accepted Levels",
             "",
@@ -234,6 +272,9 @@ class GenerationReportRepository:
                         f"- Layout: `{level['selectedLayoutVariant']}`; "
                         f"strategy: `{level['layoutStrategy'] or 'unknown'}`; "
                         f"profile: `{level['layoutProfile'] or 'unknown'}`; "
+                        f"map size: `{level['layoutSizeProfile'] or 'unknown'}` "
+                        f"from `{level['requestedLayoutSizeProfile'] or 'unknown'}` "
+                        f"via `{level['layoutSizeSelectionReason'] or 'unknown'}`; "
                         f"orientation: `{level['layoutOrientation']}`; "
                         f"road shapes: `{level['selectedRoadShapeStrategy']}` "
                         f"(score `{(level['roadShapeMetadata'] or {}).get('score', 'unknown')}`)."
@@ -274,7 +315,8 @@ class GenerationReportRepository:
                     lines.append(
                         f"- Difficulty model: estimated `{quality['estimatedDifficultyBand']}`, "
                         f"mechanical `{quality['mechanicalDifficulty']}`, "
-                        f"visual `{quality['visualDifficulty']}`, campaign pacing `{quality['campaignPacing']}`."
+                        f"visual `{quality['visualDifficulty']}`, campaign pacing `{quality['campaignPacing']}`, "
+                        f"preset fit `{(quality.get('presetContentFit') or {}).get('score')}`."
                     )
                     lines.append(
                         f"- Score breakdown: mechanic `{quality['abstractMechanicQuality']}`, "
@@ -449,6 +491,7 @@ class GenerationReportRepository:
             "topologyClass": signature.topology_class or None,
             "requiredPathLength": signature.required_path_length,
             "layoutOrientation": signature.layout_orientation,
+            "layoutSizeProfile": signature.layout_size_profile,
             "diversityAudit": {
                 "topologyDiversityScore": signature.topology_diversity_score,
                 "nearbyMechanicTagPenalty": signature.nearby_mechanic_tag_penalty,
@@ -539,7 +582,39 @@ class GenerationReportRepository:
             "estimatedDifficultyBand": quality.estimated_difficulty_band,
             "penalties": list(quality.penalties),
             "baseQualityScore": quality.details.get("baseQualityScore", quality.total),
+            "presetContentFit": quality.details.get("presetContentFit", {}),
+            "campaignPacingDetails": quality.details.get("campaignPacing", {}),
             "details": quality.details,
+        }
+
+    def _pacing_penalties(self, level) -> list[str]:
+        quality = getattr(level, "quality_score", None)
+        if quality is None:
+            return []
+        return [penalty for penalty in quality.penalties if penalty.startswith("campaign_")]
+
+    def _distribution(self, values) -> dict[str, int]:
+        return dict(sorted(Counter(value for value in values if value).items()))
+
+    def _dry_run_summary(self, config, result) -> dict[str, Any]:
+        accepted_count = len(getattr(result, "accepted", []))
+        rejected_count = int(getattr(result, "rejected_candidate_count", 0))
+        attempted_count = accepted_count + rejected_count
+        return {
+            "safeScratchRun": bool(config.dry_run),
+            "acceptedCount": accepted_count,
+            "rejectedCandidateCount": rejected_count,
+            "attemptedCandidateCount": attempted_count,
+            "passRate": round(accepted_count / attempted_count, 4) if attempted_count else None,
+            "difficultyDistribution": self._distribution(level.difficulty for level in result.accepted),
+            "recipeDistribution": self._distribution(level.recipe_family or level.template_name for level in result.accepted),
+            "topologyDistribution": self._distribution(
+                getattr(level, "topology_class", "") or "unknown" for level in result.accepted
+            ),
+            "mapSizeDistribution": self._distribution(
+                (level.layout_metadata or {}).get("layoutSizeProfile", "unknown") for level in result.accepted
+            ),
+            "rejectionReasons": dict(getattr(result, "rejection_reason_counts", {})),
         }
 
     def _route_interest_audit(self, level) -> dict[str, Any]:

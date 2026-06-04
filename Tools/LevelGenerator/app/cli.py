@@ -118,7 +118,7 @@ def build_generate_parser() -> argparse.ArgumentParser:
         "--layout-size-profile",
         choices=LAYOUT_SIZE_PROFILES,
         default=DEFAULT_LAYOUT_SIZE_PROFILE,
-        help="Playable layout size profile. Default: standard_portrait.",
+        help="Playable layout size profile. Default: difficulty_curve.",
     )
     parser.add_argument(
         "--vertical-route-probability",
