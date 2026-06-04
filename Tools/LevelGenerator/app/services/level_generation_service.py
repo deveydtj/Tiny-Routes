@@ -453,6 +453,8 @@ class LevelGenerationService:
         layout_index: int,
     ) -> list[dict[str, str]]:
         preference = config.layout_orientation_preference
+        if preference == "portrait_vertical":
+            return [{"orientation": "portrait_vertical", "reason": "portrait_profile_default"}]
         if preference == "horizontal":
             return [{"orientation": "horizontal", "reason": "explicit_preference"}]
         if preference == "vertical":
@@ -643,6 +645,9 @@ class LevelGenerationService:
             "topologyClass": getattr(candidate, "topology_class", "") or None,
             "requiredPathLength": self._required_path_length(candidate),
             "layoutOrientation": self._layout_orientation(candidate),
+            "layoutProfile": (candidate.layout_metadata or {}).get("layoutProfile"),
+            "portraitMetrics": (candidate.layout_metadata or {}).get("portraitMetrics"),
+            "portraitChecksPassed": (candidate.layout_metadata or {}).get("portraitChecksPassed"),
             "requiresSwiftValidation": bool(getattr(candidate, "requires_swift_validation", False)),
             "layoutStrategy": (candidate.layout_metadata or {}).get("strategy"),
             "layoutOrientationSelectionReason": (candidate.layout_metadata or {}).get("orientationSelectionReason"),

@@ -113,6 +113,10 @@ Use a Python 3.10+ interpreter with Tkinter enabled.
 
 Recipe-first generation solves multiple abstract recipes before layout, then tries layout and road-shape variants. The default breadth is 4 recipes, 3 layouts per recipe, 3 road-shape strategies per layout, and 8 valid candidates scored before accepting the best one.
 
+`--layout-orientation` defaults to `portrait_vertical`. This profile asks recipe-first layouts to compose routes for mobile portrait play: the generated map should be taller than wide, the start should sit in the lower portion of the layout, and the destination should sit in the upper portion. Horizontal branches, detours, and side movement are still allowed when the overall composition passes the portrait safety checks.
+
+Generation reports include the selected layout profile plus lightweight portrait metrics: width, height, aspect ratio, start-to-destination vertical separation, and whether portrait checks passed. Larger scrolling maps, camera follow, zoom, and gameplay rendering changes are intentionally out of scope for this generator phase.
+
 `--candidate-pool-size` scores multiple valid candidates for each level and accepts the highest-scoring one. Reports include quality and simulation details.
 
 `--difficulty auto` uses the default campaign curve: levels 1-3 tutorial, 4-10 easy, 11-25 medium, 26-40 hard, and 41+ expert.

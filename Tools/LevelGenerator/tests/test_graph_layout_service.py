@@ -113,6 +113,52 @@ def test_vertical_route_progression_can_be_selected_intentionally() -> None:
     assert result.positions["start"][1] > result.positions["destination"][1]
 
 
+def test_portrait_vertical_profile_adds_layout_metrics_and_checks() -> None:
+    planner = GraphLayoutPlannerService()
+    preset = DifficultyService().get_preset("easy")
+    recipe = _recipe("single_switch")
+
+    result = planner.plan_layout(
+        recipe,
+        preset,
+        RandomSource(4),
+        "normal",
+        layout_orientation_preference="portrait_vertical",
+        orientation_selection_reason="portrait_profile_default",
+    )
+
+    metrics = result.metadata["portraitMetrics"]
+    assert result.is_valid, result.validation_issues
+    assert result.metadata["layoutProfile"] == "portrait_vertical"
+    assert result.metadata["portraitChecksPassed"] is True
+    assert metrics["height"] > metrics["width"]
+    assert metrics["aspectRatio"] <= 0.95
+    assert metrics["verticalSeparation"] >= 0.75
+    assert metrics["startInLowerPortion"] is True
+    assert metrics["destinationInUpperPortion"] is True
+
+
+def test_portrait_vertical_profile_rejects_side_by_side_start_and_destination() -> None:
+    planner = GraphLayoutPlannerService()
+    preset = DifficultyService().get_preset("easy")
+    recipe = _recipe("single_switch")
+
+    result = planner.plan_layout(
+        recipe,
+        preset,
+        RandomSource(4),
+        "normal",
+        layout_orientation_preference="portrait_vertical",
+        strategy_override="horizontal_route_progression",
+    )
+
+    issue_codes = {issue.code for issue in result.validation_issues}
+    assert result.is_valid is False
+    assert "portrait_layout_too_wide" in issue_codes
+    assert "portrait_start_destination_not_vertically_separated" in issue_codes
+    assert result.metadata["portraitChecksPassed"] is False
+
+
 def test_snake_layout_keeps_nodes_inside_bounds_and_readable() -> None:
     planner = GraphLayoutPlannerService()
     preset = DifficultyService().get_preset("hard")

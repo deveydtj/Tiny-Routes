@@ -88,6 +88,87 @@ def test_generation_service_is_deterministic_for_seed(tmp_path) -> None:
     assert first.accepted[0].solution.to_dict() == second.accepted[0].solution.to_dict()
 
 
+def test_generation_service_defaults_to_portrait_vertical_profile(tmp_path) -> None:
+    result = LevelGenerationService().generate(
+        _config(
+            tmp_path,
+            difficulty="easy",
+            template_name="single_switch",
+            dry_run=True,
+            compare_against_existing=False,
+        )
+    )
+
+    assert result.passed is True
+    metadata = result.accepted[0].layout_metadata
+    assert metadata["layoutProfile"] == "portrait_vertical"
+    assert metadata["orientationPreference"] == "portrait_vertical"
+    assert metadata["orientationSelectionReason"] == "portrait_profile_default"
+    assert metadata["portraitChecksPassed"] is True
+
+
+def test_generation_service_accepts_taller_than_wide_portrait_layouts(tmp_path) -> None:
+    result = LevelGenerationService().generate(
+        _config(
+            tmp_path,
+            difficulty="easy",
+            template_name="single_switch",
+            dry_run=True,
+            compare_against_existing=False,
+        )
+    )
+
+    assert result.passed is True
+    metrics = result.accepted[0].layout_metadata["portraitMetrics"]
+    assert metrics["height"] > metrics["width"]
+    assert metrics["aspectRatio"] <= 0.95
+    assert result.accepted[0].layout_metadata["portraitChecksPassed"] is True
+
+
+def test_generation_service_keeps_start_below_destination_for_portrait_default(tmp_path) -> None:
+    result = LevelGenerationService().generate(
+        _config(
+            tmp_path,
+            difficulty="easy",
+            template_name="single_switch",
+            dry_run=True,
+            compare_against_existing=False,
+        )
+    )
+
+    assert result.passed is True
+    nodes = {node.id: node for node in result.accepted[0].level_document.graph.nodes}
+    assert nodes["start"].y > nodes[result.accepted[0].level_document.destinationNodeID].y
+
+
+def test_generation_service_portrait_default_is_deterministic_for_fixed_seed(tmp_path) -> None:
+    first = LevelGenerationService().generate(
+        _config(
+            tmp_path / "a",
+            difficulty="easy",
+            template_name="single_switch",
+            dry_run=True,
+            seed=20260603,
+            compare_against_existing=False,
+        )
+    )
+    second = LevelGenerationService().generate(
+        _config(
+            tmp_path / "b",
+            difficulty="easy",
+            template_name="single_switch",
+            dry_run=True,
+            seed=20260603,
+            compare_against_existing=False,
+        )
+    )
+
+    assert first.passed is True
+    assert second.passed is True
+    assert first.accepted[0].level_document.to_dict() == second.accepted[0].level_document.to_dict()
+    assert first.accepted[0].layout_metadata["portraitMetrics"] == second.accepted[0].layout_metadata["portraitMetrics"]
+
+
 def test_generation_service_retries_after_rejected_candidate(tmp_path) -> None:
     service = LevelGenerationService()
     calls = {"count": 0}

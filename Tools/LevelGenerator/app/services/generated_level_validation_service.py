@@ -161,6 +161,7 @@ class GeneratedLevelValidationService:
                     )
                 )
         messages.extend(self._road_shape_plan_messages(generated_level))
+        messages.extend(self._layout_profile_messages(generated_level))
 
         for node in level.graph.nodes:
             classification = classifications_by_node_id[node.id]
@@ -263,6 +264,22 @@ class GeneratedLevelValidationService:
             elif preset is not None and enforce_difficulty:
                 messages.extend(self._simulation_difficulty_messages(simulation, preset))
 
+        return messages
+
+    def _layout_profile_messages(self, generated_level) -> list[GeneratorValidationMessage]:
+        metadata = getattr(generated_level, "layout_metadata", None) or {}
+        if metadata.get("layoutProfile") != "portrait_vertical":
+            return []
+
+        messages: list[GeneratorValidationMessage] = []
+        for issue_code in metadata.get("portraitCheckIssues", []):
+            messages.append(
+                GeneratorValidationMessage(
+                    severity="error",
+                    code=str(issue_code),
+                    message=f"Portrait layout check failed: {issue_code}",
+                )
+            )
         return messages
 
     def _road_shape_plan_messages(self, generated_level) -> list[GeneratorValidationMessage]:

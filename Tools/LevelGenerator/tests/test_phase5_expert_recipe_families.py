@@ -144,7 +144,7 @@ def test_expert_mixed_dry_run_accepts_phase5_topology_mix_and_reports_metadata(t
             count=4,
             difficulty="expert",
             template_name="mixed",
-            seed=1,
+            seed=2,
             dry_run=True,
             compare_against_existing=False,
             levels_output_dir=tmp_path / "levels",
@@ -156,6 +156,7 @@ def test_expert_mixed_dry_run_accepts_phase5_topology_mix_and_reports_metadata(t
             recipe_pool_size=3,
             layouts_per_recipe=1,
             road_shapes_per_layout=2,
+            layout_orientation_preference="horizontal",
         )
     )
     phase5_accepted = [

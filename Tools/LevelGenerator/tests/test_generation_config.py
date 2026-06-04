@@ -14,7 +14,7 @@ def test_generation_config_defaults_use_recipe_first_breadth() -> None:
     assert config.recipe_pool_size == 4
     assert config.layouts_per_recipe == 3
     assert config.road_shapes_per_layout == 3
-    assert config.layout_orientation_preference == "auto"
+    assert config.layout_orientation_preference == "portrait_vertical"
     assert config.vertical_route_probability == 0.35
     assert config.prefer_vertical_for_long_routes is True
     assert config.candidate_pool_size == 25

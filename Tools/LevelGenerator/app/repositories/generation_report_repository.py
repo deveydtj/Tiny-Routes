@@ -48,6 +48,7 @@ class GenerationReportRepository:
             "layoutsPerRecipe": config.layouts_per_recipe,
             "roadShapesPerLayout": config.road_shapes_per_layout,
             "layoutOrientationPreference": getattr(config, "layout_orientation_preference", "auto"),
+            "layoutProfile": getattr(config, "layout_orientation_preference", "auto"),
             "verticalRouteProbability": getattr(config, "vertical_route_probability", 0.0),
             "preferVerticalForLongRoutes": getattr(config, "prefer_vertical_for_long_routes", True),
             "baseSeed": config.seed,
@@ -68,6 +69,10 @@ class GenerationReportRepository:
                     "topologyClass": getattr(level, "topology_class", "") or None,
                     "requiredPathLength": self._required_path_length(level),
                     "layoutOrientation": self._layout_orientation(level),
+                    "layoutProfile": (level.layout_metadata or {}).get("layoutProfile"),
+                    "portraitMetrics": (level.layout_metadata or {}).get("portraitMetrics"),
+                    "portraitChecksPassed": (level.layout_metadata or {}).get("portraitChecksPassed"),
+                    "portraitCheckIssues": (level.layout_metadata or {}).get("portraitCheckIssues", []),
                     "requiresSwiftValidation": bool(getattr(level, "requires_swift_validation", False)),
                     "layoutStrategy": (level.layout_metadata or {}).get("strategy"),
                     "layoutVariant": level.selected_layout_variant,
@@ -151,6 +156,7 @@ class GenerationReportRepository:
             f"- Layouts per recipe: `{payload['layoutsPerRecipe']}`",
             f"- Road shapes per layout: `{payload['roadShapesPerLayout']}`",
             f"- Layout orientation preference: `{payload['layoutOrientationPreference']}`",
+            f"- Layout profile: `{payload['layoutProfile']}`",
             f"- Vertical route probability: `{payload['verticalRouteProbability']}`",
             f"- Prefer vertical for long routes: `{payload['preferVerticalForLongRoutes']}`",
             f"- Xcode project sync: `{payload['syncXcodeProject']}`",
@@ -223,10 +229,19 @@ class GenerationReportRepository:
                     lines.append(
                         f"- Layout: `{level['selectedLayoutVariant']}`; "
                         f"strategy: `{level['layoutStrategy'] or 'unknown'}`; "
+                        f"profile: `{level['layoutProfile'] or 'unknown'}`; "
                         f"orientation: `{level['layoutOrientation']}`; "
                         f"road shapes: `{level['selectedRoadShapeStrategy']}` "
                         f"(score `{(level['roadShapeMetadata'] or {}).get('score', 'unknown')}`)."
                     )
+                    if level["portraitMetrics"]:
+                        metrics = level["portraitMetrics"]
+                        lines.append(
+                            f"- Portrait checks: passed `{level['portraitChecksPassed']}`; "
+                            f"width `{metrics['width']}`, height `{metrics['height']}`, "
+                            f"aspect `{metrics['aspectRatio']}`, "
+                            f"start-destination vertical separation `{metrics['verticalSeparation']}`."
+                        )
                     if level["verticalCandidateRejectedReason"]:
                         lines.append(
                             f"- Vertical candidate rejected: `{level['verticalCandidateRejectedReason']}`."

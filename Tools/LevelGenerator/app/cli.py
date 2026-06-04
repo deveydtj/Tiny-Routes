@@ -110,7 +110,7 @@ def build_generate_parser() -> argparse.ArgumentParser:
         "--layout-orientation",
         choices=LAYOUT_ORIENTATION_PREFERENCES,
         default=DEFAULT_LAYOUT_ORIENTATION_PREFERENCE,
-        help="Layout orientation preference. Default: auto.",
+        help="Layout orientation/profile preference. Default: portrait_vertical.",
     )
     parser.add_argument(
         "--vertical-route-probability",
