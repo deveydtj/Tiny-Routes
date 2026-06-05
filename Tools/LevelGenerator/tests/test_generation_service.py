@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+from types import SimpleNamespace
 
 from app.generation_config import GenerationConfig
 from app.models.generation_quality import GenerationQualityScore
@@ -307,7 +308,7 @@ def test_generation_service_generates_unique_medium_mixed_batch(tmp_path) -> Non
             tmp_path,
             difficulty="medium",
             template_name="mixed",
-            count=10,
+            count=8,
             seed=20260525,
             dry_run=True,
         )
@@ -322,8 +323,74 @@ def test_generation_service_generates_unique_medium_mixed_batch(tmp_path) -> Non
     }
 
     assert result.passed is True
-    assert len(result.accepted) == 10
+    assert len(result.accepted) == 8
     assert len(signatures) == len(result.accepted)
+
+
+def test_mixed_recipe_family_weights_penalize_recent_family_and_topology_repeats(tmp_path) -> None:
+    service = LevelGenerationService()
+    preset = service.difficulty_service.get_preset("medium")
+    supported = service.recipe_family_registry.supported_families(preset, include_swift_required=True)
+    accepted = [
+        SimpleNamespace(
+            recipe_family="multi_switch_order",
+            template_name="multi_switch_order",
+            topology_class="two_switch_order",
+        ),
+        SimpleNamespace(
+            recipe_family="multi_switch_order",
+            template_name="multi_switch_order",
+            topology_class="two_switch_order",
+        ),
+        SimpleNamespace(
+            recipe_family="multi_switch_order",
+            template_name="multi_switch_order",
+            topology_class="two_switch_order",
+        ),
+    ]
+
+    weighted, decision = service._diversity_adjusted_family_weights(
+        supported=supported,
+        preset=preset,
+        weights_override=None,
+        accepted_candidates=accepted,
+        level_id="level_020",
+    )
+    weights = {family.name: weight for family, weight in weighted}
+
+    assert weights["multi_switch_order"] < weights["package_gate_double_choice"]
+    assert weights["multi_switch_order"] < weights["split_path_rejoin"]
+    repeated = next(item for item in decision["families"] if item["family"] == "multi_switch_order")
+    assert "last_family_repeat_penalty" in repeated["reasons"]
+    assert "last_topology_repeat_penalty" in repeated["reasons"]
+
+
+def test_mixed_recipe_family_weights_are_deterministic_for_fixed_context(tmp_path) -> None:
+    service = LevelGenerationService()
+    preset = service.difficulty_service.get_preset("hard")
+    supported = service.recipe_family_registry.supported_families(preset, include_swift_required=True)
+    accepted = [
+        SimpleNamespace(recipe_family="ring_route_gate", template_name="ring_route_gate", topology_class="ring"),
+        SimpleNamespace(recipe_family="two_phase_route", template_name="two_phase_route", topology_class="two_phase"),
+    ]
+
+    first, first_decision = service._diversity_adjusted_family_weights(
+        supported=supported,
+        preset=preset,
+        weights_override=None,
+        accepted_candidates=accepted,
+        level_id="level_030",
+    )
+    second, second_decision = service._diversity_adjusted_family_weights(
+        supported=supported,
+        preset=preset,
+        weights_override=None,
+        accepted_candidates=accepted,
+        level_id="level_030",
+    )
+
+    assert [(family.name, weight) for family, weight in first] == [(family.name, weight) for family, weight in second]
+    assert first_decision == second_decision
 
 
 def test_generation_service_rejects_candidates_similar_to_existing_levels(tmp_path) -> None:

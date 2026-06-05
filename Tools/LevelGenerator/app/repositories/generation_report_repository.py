@@ -60,6 +60,14 @@ class GenerationReportRepository:
             "syncXcodeProject": config.sync_xcode_project,
             "compareAgainstExisting": config.compare_against_existing,
             "candidatePoolSize": config.candidate_pool_size,
+            "candidateGenerationCount": int(getattr(result, "candidate_generation_count", 0)),
+            "candidateValidationCount": int(getattr(result, "candidate_validation_count", 0)),
+            "candidateGenerationCountsByDifficulty": dict(
+                sorted(getattr(result, "candidate_generation_counts_by_difficulty", {}).items())
+            ),
+            "candidateValidationCountsByDifficulty": dict(
+                sorted(getattr(result, "candidate_validation_counts_by_difficulty", {}).items())
+            ),
             "passed": getattr(result, "passed", True),
             "acceptedLevels": [
                 {
@@ -147,6 +155,12 @@ class GenerationReportRepository:
             "acceptedTopologyDistribution": self._distribution(
                 (getattr(level, "topology_class", "") or "unknown" for level in result.accepted)
             ),
+            "acceptedFamilyStreaks": self._accepted_streaks(
+                level.recipe_family or level.template_name for level in result.accepted
+            ),
+            "acceptedTopologyStreaks": self._accepted_streaks(
+                getattr(level, "topology_class", "") or "unknown" for level in result.accepted
+            ),
             "acceptedMapSizeDistribution": self._distribution(
                 ((level.layout_metadata or {}).get("layoutSizeProfile", "unknown") for level in result.accepted)
             ),
@@ -155,10 +169,18 @@ class GenerationReportRepository:
                 for level in result.accepted
                 if self._route_interest_audit(level)
             ),
+            "routeInterestScoreByDifficulty": self._route_interest_by_difficulty(result),
             "acceptedRejectedCountsByDifficulty": self._accepted_rejected_counts_by_difficulty(result),
             "starvationCauseSummary": self._starvation_cause_summary(result),
             "rejectedCandidateCount": result.rejected_candidate_count,
             "rejectionReasonCounts": result.rejection_reason_counts,
+            "rejectionReasonCountsByDifficulty": dict(
+                sorted(getattr(result, "rejection_reason_counts_by_difficulty", {}).items())
+            ),
+            "similarityRejectionCountsByDifficulty": dict(
+                sorted(getattr(result, "similarity_rejection_counts_by_difficulty", {}).items())
+            ),
+            "diversityAdjustmentDecisions": list(getattr(result, "diversity_adjustment_decisions", [])),
             "writtenLevelPaths": [str(path) for path in result.written_level_paths],
             "writtenSolutionPaths": [str(path) for path in result.written_solution_paths],
             "swiftTests": {
@@ -193,6 +215,8 @@ class GenerationReportRepository:
             f"- Dry-run pass rate: `{payload['dryRunSummary']['passRate']}`",
             f"- Compare existing levels: `{payload['compareAgainstExisting']}`",
             f"- Candidate pool size: `{payload['candidatePoolSize']}`",
+            f"- Candidate generation count: `{payload['candidateGenerationCount']}`",
+            f"- Candidate validation count: `{payload['candidateValidationCount']}`",
             f"- Recipe pool size: `{payload['recipePoolSize']}`",
             f"- Layouts per recipe: `{payload['layoutsPerRecipe']}`",
             f"- Road shapes per layout: `{payload['roadShapesPerLayout']}`",
@@ -209,9 +233,15 @@ class GenerationReportRepository:
             f"- Difficulty: `{payload['acceptedDifficultyDistribution']}`",
             f"- Recipe: `{payload['acceptedRecipeDistribution']}`",
             f"- Topology: `{payload['acceptedTopologyDistribution']}`",
+            f"- Family streaks: `{payload['acceptedFamilyStreaks']}`",
+            f"- Topology streaks: `{payload['acceptedTopologyStreaks']}`",
             f"- Map size: `{payload['acceptedMapSizeDistribution']}`",
             f"- Route interest score: `{payload['routeInterestScoreDistribution']}`",
+            f"- Route interest by difficulty: `{payload['routeInterestScoreByDifficulty']}`",
+            f"- Candidate generation by difficulty: `{payload['candidateGenerationCountsByDifficulty']}`",
+            f"- Candidate validation by difficulty: `{payload['candidateValidationCountsByDifficulty']}`",
             f"- Accepted vs rejected by difficulty: `{payload['acceptedRejectedCountsByDifficulty']}`",
+            f"- Similarity rejections by difficulty: `{payload['similarityRejectionCountsByDifficulty']}`",
             f"- Starvation causes: `{payload['starvationCauseSummary']}`",
             "",
             "## Accepted Levels",
@@ -609,16 +639,30 @@ class GenerationReportRepository:
     def _dry_run_summary(self, config, result) -> dict[str, Any]:
         accepted_count = len(getattr(result, "accepted", []))
         rejected_count = int(getattr(result, "rejected_candidate_count", 0))
-        attempted_count = accepted_count + rejected_count
+        attempted_count = int(getattr(result, "candidate_validation_count", 0)) or accepted_count + rejected_count
         return {
             "safeScratchRun": bool(config.dry_run),
             "acceptedCount": accepted_count,
+            "candidateGenerationCount": int(getattr(result, "candidate_generation_count", 0)),
+            "candidateValidationCount": int(getattr(result, "candidate_validation_count", 0)),
             "rejectedCandidateCount": rejected_count,
             "attemptedCandidateCount": attempted_count,
             "passRate": round(accepted_count / attempted_count, 4) if attempted_count else None,
+            "candidateGenerationCountsByDifficulty": dict(
+                sorted(getattr(result, "candidate_generation_counts_by_difficulty", {}).items())
+            ),
+            "candidateValidationCountsByDifficulty": dict(
+                sorted(getattr(result, "candidate_validation_counts_by_difficulty", {}).items())
+            ),
             "difficultyDistribution": self._distribution(level.difficulty for level in result.accepted),
             "recipeDistribution": self._distribution(level.recipe_family or level.template_name for level in result.accepted),
             "topologyDistribution": self._distribution(
+                getattr(level, "topology_class", "") or "unknown" for level in result.accepted
+            ),
+            "familyStreaks": self._accepted_streaks(
+                level.recipe_family or level.template_name for level in result.accepted
+            ),
+            "topologyStreaks": self._accepted_streaks(
                 getattr(level, "topology_class", "") or "unknown" for level in result.accepted
             ),
             "mapSizeDistribution": self._distribution(
@@ -629,7 +673,55 @@ class GenerationReportRepository:
                 for level in result.accepted
                 if self._route_interest_audit(level)
             ),
+            "routeInterestScoreByDifficulty": self._route_interest_by_difficulty(result),
             "rejectionReasons": dict(getattr(result, "rejection_reason_counts", {})),
+            "rejectionReasonCountsByDifficulty": dict(
+                sorted(getattr(result, "rejection_reason_counts_by_difficulty", {}).items())
+            ),
+            "similarityRejectionCountsByDifficulty": dict(
+                sorted(getattr(result, "similarity_rejection_counts_by_difficulty", {}).items())
+            ),
+        }
+
+    def _accepted_streaks(self, values) -> dict[str, Any]:
+        streaks = []
+        current_value = None
+        current_count = 0
+        for value in values:
+            value = value or "unknown"
+            if value == current_value:
+                current_count += 1
+                continue
+            if current_value is not None:
+                streaks.append({"value": current_value, "length": current_count})
+            current_value = value
+            current_count = 1
+        if current_value is not None:
+            streaks.append({"value": current_value, "length": current_count})
+        longest = max(streaks, key=lambda item: item["length"], default=None)
+        return {
+            "longest": longest,
+            "repeatedStreaks": [streak for streak in streaks if streak["length"] > 1],
+        }
+
+    def _route_interest_by_difficulty(self, result) -> dict[str, dict[str, Any]]:
+        scores_by_difficulty: dict[str, list[float]] = {}
+        for level in result.accepted:
+            audit = self._route_interest_audit(level)
+            score = audit.get("score")
+            if score is None:
+                continue
+            scores_by_difficulty.setdefault(level.difficulty, []).append(float(score))
+        return {
+            difficulty: {
+                "minimum": round(min(scores), 4),
+                "average": round(sum(scores) / len(scores), 4),
+                "maximum": round(max(scores), 4),
+                "count": len(scores),
+                "distribution": self._score_distribution(scores),
+            }
+            for difficulty, scores in sorted(scores_by_difficulty.items())
+            if scores
         }
 
     def _score_distribution(self, scores) -> dict[str, int]:
@@ -655,26 +747,20 @@ class GenerationReportRepository:
 
     def _accepted_rejected_counts_by_difficulty(self, result) -> dict[str, dict[str, int]]:
         accepted = Counter(level.difficulty for level in result.accepted)
-        total_rejected = int(getattr(result, "rejected_candidate_count", 0))
-        if not accepted:
-            return {"unknown": {"accepted": 0, "rejected": total_rejected}}
-        counts = {
-            difficulty: {"accepted": count, "rejected": 0}
-            for difficulty, count in sorted(accepted.items())
+        rejected_by_difficulty = {
+            difficulty: sum(reasons.values())
+            for difficulty, reasons in getattr(result, "rejection_reason_counts_by_difficulty", {}).items()
         }
-        if len(counts) == 1:
-            only = next(iter(counts))
-            counts[only]["rejected"] = total_rejected
-        else:
-            accepted_total = sum(accepted.values())
-            assigned = 0
-            for index, (difficulty, accepted_count) in enumerate(accepted.items()):
-                if index == len(counts) - 1:
-                    rejected = total_rejected - assigned
-                else:
-                    rejected = round(total_rejected * (accepted_count / accepted_total))
-                    assigned += rejected
-                counts[difficulty]["rejected"] = max(rejected, 0)
+        difficulties = sorted(set(accepted) | set(rejected_by_difficulty))
+        if not difficulties:
+            total_rejected = int(getattr(result, "rejected_candidate_count", 0))
+            return {"unknown": {"accepted": 0, "rejected": total_rejected}}
+        counts = {}
+        for difficulty in difficulties:
+            counts[difficulty] = {
+                "accepted": accepted.get(difficulty, 0),
+                "rejected": rejected_by_difficulty.get(difficulty, 0),
+            }
         return counts
 
     def _starvation_cause_summary(self, result) -> dict[str, Any]:

@@ -46,14 +46,14 @@ def test_default_gui_state_converts_to_generation_config() -> None:
     assert config.template_name == "mixed"
     assert config.generation_mode == "recipe_first"
     assert config.recipe_pool_size == 4
-    assert config.layouts_per_recipe == 3
-    assert config.road_shapes_per_layout == 3
+    assert config.layouts_per_recipe == 2
+    assert config.road_shapes_per_layout == 2
     assert config.layout_orientation_preference == "portrait_vertical"
     assert config.layout_size_profile == "difficulty_curve"
     assert config.vertical_route_probability == 0.35
     assert config.prefer_vertical_for_long_routes is True
-    assert config.candidate_pool_size == 25
-    assert config.max_attempts_per_level == 300
+    assert config.candidate_pool_size == 4
+    assert config.max_attempts_per_level == 120
     assert config.dry_run is True
 
 

@@ -3,6 +3,7 @@ from __future__ import annotations
 import inspect
 import shutil
 import subprocess
+from collections import Counter
 from dataclasses import replace
 from pathlib import Path
 
@@ -38,6 +39,7 @@ class LevelGenerationService:
     MINIMUM_RUNTIME_CONFIDENCE = 0.75
     MAXIMUM_SELECTION_SIMILARITY = 0.87
     MAX_REJECTION_MESSAGES = 50
+    MAX_DIVERSITY_DECISIONS = 200
     ROUTE_INTEREST_GATED_DIFFICULTIES = {"medium", "hard", "expert"}
     SIMPLE_CHAIN_TOPOLOGIES = {"two_switch_order"}
     STRONG_ROUTE_INTEREST_TAGS = {
@@ -127,13 +129,17 @@ class LevelGenerationService:
                         preset=preset,
                         rng=rng,
                         plan_template_weights=plan_entry.template_weights,
+                        accepted_candidates=result.accepted,
+                        diversity_decisions=result.diversity_adjustment_decisions,
                     )
                 except Exception as exc:
                     rejection_code = getattr(exc, "code", "candidate_generation_error")
                     rejection_service.reason_counts[rejection_code] += 1
+                    self._record_rejection_by_difficulty(result, preset.name, rejection_code)
                     result.messages.append(f"Rejected candidate {level_id} attempt={attempt}: {exc}")
                     continue
 
+                self._record_candidate_generation(result, preset.name, len(candidates))
                 for candidate_index, candidate in enumerate(candidates):
                     candidate_rng = RandomSource(base_rng.child_seed(level_id, attempt, candidate_index, "map"))
                     if map_seed_graph is not None:
@@ -149,6 +155,7 @@ class LevelGenerationService:
                         solution_output_path=solution_path,
                         overwrite=config.overwrite or config.dry_run,
                     )
+                    self._record_candidate_validation(result, validation_preset.name)
                     candidate.warning_messages = [
                         f"{message.code}: {message.message}"
                         for message in validation_result.messages
@@ -167,6 +174,11 @@ class LevelGenerationService:
                                 duplicate_result.message,
                                 config.debug_failures_dir,
                             )
+                            self._record_rejection_by_difficulty(
+                                result,
+                                candidate.difficulty,
+                                "candidate_too_similar_to_batch",
+                            )
                             self._append_rejection_message(result, message)
                             continue
 
@@ -181,6 +193,11 @@ class LevelGenerationService:
                                     "candidate_too_similar_to_existing",
                                     existing_duplicate_result.message,
                                     config.debug_failures_dir,
+                                )
+                                self._record_rejection_by_difficulty(
+                                    result,
+                                    candidate.difficulty,
+                                    "candidate_too_similar_to_existing",
                                 )
                                 self._append_rejection_message(result, message)
                                 continue
@@ -206,17 +223,27 @@ class LevelGenerationService:
                                 detail,
                                 config.debug_failures_dir,
                             )
+                            self._record_rejection_by_difficulty(result, candidate.difficulty, reason)
                             self._append_rejection_message(result, message)
                             continue
                         candidate_pool.append(candidate)
                         candidate_pool_signatures.append(candidate_signature)
-                        if len(candidate_pool) >= config.candidate_pool_size:
+                        if self._candidate_pool_ready(candidate_pool, config, preset):
                             break
                         continue
 
+                    first_error = next(
+                        (message for message in validation_result.messages if message.severity == "error"),
+                        None,
+                    )
+                    self._record_rejection_by_difficulty(
+                        result,
+                        candidate.difficulty,
+                        first_error.code if first_error is not None else "unknown",
+                    )
                     rejection_service.record_rejection(candidate, validation_result, config.debug_failures_dir)
 
-                if len(candidate_pool) >= config.candidate_pool_size:
+                if self._candidate_pool_ready(candidate_pool, config, preset):
                     break
 
             if candidate_pool:
@@ -334,8 +361,12 @@ class LevelGenerationService:
         preset,
         rng: RandomSource,
         plan_template_weights: dict[str, int],
+        accepted_candidates=(),
+        diversity_decisions: list[dict] | None = None,
     ):
         include_swift_required = config.run_swift_tests or config.dry_run
+        if diversity_decisions is None:
+            diversity_decisions = []
         if config.generation_mode == "legacy_template":
             return [
                 self._generate_legacy_candidate(
@@ -357,6 +388,8 @@ class LevelGenerationService:
             rng=rng,
             include_swift_required=include_swift_required,
             plan_template_weights=plan_template_weights,
+            accepted_candidates=accepted_candidates,
+            diversity_decisions=diversity_decisions,
         )
         if config.generation_mode == "hybrid":
             legacy_seed = rng.child_seed("legacy", len(candidates))
@@ -403,8 +436,12 @@ class LevelGenerationService:
         rng: RandomSource,
         include_swift_required: bool,
         plan_template_weights: dict[str, int],
+        accepted_candidates=(),
+        diversity_decisions: list[dict] | None = None,
     ):
         candidates = []
+        if diversity_decisions is None:
+            diversity_decisions = []
         search_breadth = self._effective_search_breadth(config, preset)
         layout_names = self._layout_variant_names(search_breadth["layouts_per_recipe"])
         road_shape_strategies = self._road_shape_strategies(search_breadth["road_shapes_per_layout"])
@@ -415,6 +452,9 @@ class LevelGenerationService:
             include_swift_required=include_swift_required,
             plan_template_weights=plan_template_weights,
             count=search_breadth["recipe_pool_size"],
+            accepted_candidates=accepted_candidates,
+            level_id=level_id,
+            diversity_decisions=diversity_decisions,
         )
         for recipe_index, family in enumerate(families):
             recipe_seed = rng.child_seed("recipe", recipe_index)
@@ -468,17 +508,34 @@ class LevelGenerationService:
                                     recipe,
                                     layout_size_profile,
                                 )
+                                candidate.layout_metadata["candidateRecipeIndex"] = recipe_index
+                                candidate.layout_metadata["candidateLayoutIndex"] = layout_index
+                                candidate.layout_metadata["candidateLayoutSizeIndex"] = size_index
+                                candidate.layout_metadata["candidateOrientationIndex"] = orientation_index
+                                candidate.layout_metadata["candidateRoadShapeIndex"] = road_index
                             candidate.requires_swift_validation = family.requires_swift_validation
                             candidates.append(candidate)
-        return candidates
+        return sorted(candidates, key=self._raw_candidate_validation_order)
+
+    def _raw_candidate_validation_order(self, candidate) -> tuple[int, int, int, int, int, int]:
+        metadata = getattr(candidate, "layout_metadata", None) or {}
+        route_length = self._required_path_length(candidate) or 0
+        return (
+            int(metadata.get("candidateRoadShapeIndex", 0)),
+            int(metadata.get("candidateLayoutIndex", 0)),
+            int(metadata.get("candidateLayoutSizeIndex", 0)),
+            int(metadata.get("candidateOrientationIndex", 0)),
+            int(metadata.get("candidateRecipeIndex", 0)),
+            -route_length,
+        )
 
     def _effective_max_attempts(self, config: GenerationConfig, preset) -> int:
         if preset.name == "medium":
-            return max(config.max_attempts_per_level, 100)
+            return min(max(config.max_attempts_per_level, 35), 60)
         if preset.name == "hard":
-            return max(config.max_attempts_per_level, 100)
+            return min(max(config.max_attempts_per_level, 40), 70)
         if preset.name == "expert":
-            return max(config.max_attempts_per_level, 120)
+            return min(max(config.max_attempts_per_level, 20), 25)
         return config.max_attempts_per_level
 
     def _effective_search_breadth(self, config: GenerationConfig, preset) -> dict[str, int]:
@@ -486,17 +543,17 @@ class LevelGenerationService:
         layouts_per_recipe = config.layouts_per_recipe
         road_shapes_per_layout = config.road_shapes_per_layout
         if preset.name == "medium":
-            recipe_pool_size = max(recipe_pool_size, 5)
+            recipe_pool_size = max(recipe_pool_size, 4)
             layouts_per_recipe = max(layouts_per_recipe, 2)
-            road_shapes_per_layout = max(road_shapes_per_layout, 3)
+            road_shapes_per_layout = max(road_shapes_per_layout, 2)
         elif preset.name == "hard":
             recipe_pool_size = max(recipe_pool_size, 5)
             layouts_per_recipe = max(layouts_per_recipe, 2)
-            road_shapes_per_layout = max(road_shapes_per_layout, 4)
+            road_shapes_per_layout = max(road_shapes_per_layout, 2)
         elif preset.name == "expert":
-            recipe_pool_size = max(recipe_pool_size, 6)
+            recipe_pool_size = max(recipe_pool_size, 5)
             layouts_per_recipe = max(layouts_per_recipe, 2)
-            road_shapes_per_layout = max(road_shapes_per_layout, 3)
+            road_shapes_per_layout = max(road_shapes_per_layout, 2)
         return {
             "recipe_pool_size": recipe_pool_size,
             "layouts_per_recipe": layouts_per_recipe,
@@ -512,6 +569,9 @@ class LevelGenerationService:
         include_swift_required: bool,
         plan_template_weights: dict[str, int],
         count: int,
+        accepted_candidates,
+        level_id: str,
+        diversity_decisions: list[dict],
     ):
         if config.template_name != "mixed":
             family = self.recipe_family_registry.choose_family(
@@ -528,30 +588,187 @@ class LevelGenerationService:
             preset,
             include_swift_required=include_swift_required,
         )
-        weighted = [
-            (
-                family,
-                self.recipe_family_registry.weight_for(
-                    family.name,
-                    preset.name,
-                    weights_override=weights_override,
-                ),
-            )
-            for family in supported
-        ]
+        weighted, decision = self._diversity_adjusted_family_weights(
+            supported=supported,
+            preset=preset,
+            weights_override=weights_override,
+            accepted_candidates=accepted_candidates,
+            level_id=level_id,
+        )
+        self._append_diversity_decision(diversity_decisions, decision)
         weighted = [(family, max(weight, 0)) for family, weight in weighted if weight > 0]
         if not weighted:
             raise ValueError(f"No recipe families support difficulty '{preset.name}'")
 
         selected = []
         remaining = list(weighted)
+        selected_topologies: set[str] = set()
         while len(selected) < count:
             if not remaining:
                 remaining = list(weighted)
+            topology_spread_remaining = self._without_selected_topologies_when_possible(
+                remaining,
+                preset,
+                selected_topologies,
+            )
+            if topology_spread_remaining:
+                remaining = topology_spread_remaining
             family = rng.weighted_choice(remaining)
             selected.append(family)
+            selected_topologies.update(self._family_topology_classes(family, preset))
             remaining = [(candidate, weight) for candidate, weight in remaining if candidate.name != family.name]
         return selected
+
+    def _diversity_adjusted_family_weights(
+        self,
+        *,
+        supported,
+        preset,
+        weights_override: dict[str, int] | None,
+        accepted_candidates,
+        level_id: str,
+    ):
+        accepted = list(accepted_candidates)
+        family_counts = Counter(level.recipe_family or level.template_name for level in accepted)
+        topology_counts = Counter(getattr(level, "topology_class", "") or "unknown" for level in accepted)
+        recent_families = [
+            level.recipe_family or level.template_name
+            for level in accepted[-3:]
+            if level.recipe_family or level.template_name
+        ]
+        recent_topologies = [
+            getattr(level, "topology_class", "") or "unknown"
+            for level in accepted[-3:]
+        ]
+        max_family_count = max(family_counts.values(), default=0)
+        max_topology_count = max(topology_counts.values(), default=0)
+
+        adjusted = []
+        decision_families = []
+        for family in supported:
+            base_weight = self.recipe_family_registry.weight_for(
+                family.name,
+                preset.name,
+                weights_override=weights_override,
+            )
+            if base_weight <= 0:
+                adjusted.append((family, 0.0))
+                continue
+            topology_classes = self._family_topology_classes(family, preset)
+            family_count = family_counts.get(family.name, 0)
+            topology_count = max((topology_counts.get(topology, 0) for topology in topology_classes), default=0)
+            multiplier = 1.0
+            reasons: list[str] = []
+
+            if accepted:
+                if family_count == 0:
+                    multiplier *= 1.35
+                    reasons.append("unused_family_boost")
+                elif family_count < max_family_count:
+                    multiplier *= 1.15
+                    reasons.append("underused_family_boost")
+                else:
+                    multiplier *= 1.0 / (1.0 + (0.35 * family_count))
+                    reasons.append("family_count_penalty")
+
+                if topology_count == 0:
+                    multiplier *= 1.25
+                    reasons.append("unused_topology_boost")
+                elif topology_count < max_topology_count:
+                    multiplier *= 1.10
+                    reasons.append("underused_topology_boost")
+                else:
+                    multiplier *= 1.0 / (1.0 + (0.28 * topology_count))
+                    reasons.append("topology_count_penalty")
+
+            if recent_families:
+                if recent_families[-1] == family.name:
+                    multiplier *= 0.25
+                    reasons.append("last_family_repeat_penalty")
+                elif family.name in recent_families[-2:]:
+                    multiplier *= 0.55
+                    reasons.append("recent_family_repeat_penalty")
+
+            if recent_topologies and set(topology_classes):
+                if recent_topologies[-1] in topology_classes:
+                    multiplier *= 0.40
+                    reasons.append("last_topology_repeat_penalty")
+                elif set(recent_topologies[-2:]) & set(topology_classes):
+                    multiplier *= 0.70
+                    reasons.append("recent_topology_repeat_penalty")
+
+            adjusted_weight = max(base_weight * multiplier, 0.01)
+            adjusted.append((family, adjusted_weight))
+            if base_weight != adjusted_weight or reasons:
+                decision_families.append(
+                    {
+                        "family": family.name,
+                        "topologyClasses": list(topology_classes),
+                        "baseWeight": round(float(base_weight), 4),
+                        "adjustedWeight": round(float(adjusted_weight), 4),
+                        "familyCount": int(family_count),
+                        "topologyCount": int(topology_count),
+                        "reasons": reasons,
+                    }
+                )
+
+        return adjusted, {
+            "levelID": level_id,
+            "difficulty": preset.name,
+            "acceptedCount": len(accepted),
+            "recentFamilies": recent_families,
+            "recentTopologies": recent_topologies,
+            "familyCounts": dict(sorted(family_counts.items())),
+            "topologyCounts": dict(sorted(topology_counts.items())),
+            "families": sorted(decision_families, key=lambda item: item["family"]),
+        }
+
+    def _family_topology_classes(self, family, preset) -> tuple[str, ...]:
+        topologies = [
+            variant.topology_class
+            for variant in family.variants_for_difficulty(preset)
+            if variant.topology_class
+        ]
+        if not topologies and getattr(family, "topology_class", ""):
+            topologies = [family.topology_class]
+        return tuple(dict.fromkeys(topologies))
+
+    def _without_selected_topologies_when_possible(self, weighted, preset, selected_topologies: set[str]):
+        if not selected_topologies:
+            return weighted
+        alternatives = [
+            (family, weight)
+            for family, weight in weighted
+            if not (set(self._family_topology_classes(family, preset)) & selected_topologies)
+        ]
+        return alternatives or weighted
+
+    def _append_diversity_decision(self, decisions: list[dict], decision: dict) -> None:
+        if len(decisions) >= self.MAX_DIVERSITY_DECISIONS:
+            return
+        decisions.append(decision)
+
+    def _record_candidate_generation(self, result: GenerationResult, difficulty: str, count: int) -> None:
+        result.candidate_generation_count += count
+        result.candidate_generation_counts_by_difficulty[difficulty] = (
+            result.candidate_generation_counts_by_difficulty.get(difficulty, 0) + count
+        )
+
+    def _record_candidate_validation(self, result: GenerationResult, difficulty: str) -> None:
+        result.candidate_validation_count += 1
+        result.candidate_validation_counts_by_difficulty[difficulty] = (
+            result.candidate_validation_counts_by_difficulty.get(difficulty, 0) + 1
+        )
+
+    def _record_rejection_by_difficulty(self, result: GenerationResult, difficulty: str, reason: str) -> None:
+        difficulty_key = difficulty or "unknown"
+        reason_key = reason or "unknown"
+        by_reason = result.rejection_reason_counts_by_difficulty.setdefault(difficulty_key, {})
+        by_reason[reason_key] = by_reason.get(reason_key, 0) + 1
+        if reason_key == "candidate_too_similar_to_batch":
+            result.similarity_rejection_counts_by_difficulty[difficulty_key] = (
+                result.similarity_rejection_counts_by_difficulty.get(difficulty_key, 0) + 1
+            )
 
     def _preset_for_candidate_layout(self, candidate, preset):
         metadata = getattr(candidate, "layout_metadata", None) or {}
@@ -738,6 +955,31 @@ class LevelGenerationService:
         if quality is None:
             return (0.0, 0.0, 0.0, -candidate.seed)
         return (quality.total, quality.diversity_score, quality.switch_clarity, quality.uniqueness, -candidate.seed)
+
+    def _candidate_pool_ready(self, candidate_pool: list, config: GenerationConfig, preset) -> bool:
+        if len(candidate_pool) >= config.candidate_pool_size:
+            return True
+        if config.template_name != "mixed" or preset.name not in {"medium", "hard", "expert"}:
+            return False
+        if config.candidate_pool_size <= 4 or len(candidate_pool) < 4:
+            return False
+
+        families = {candidate.recipe_family or candidate.template_name for candidate in candidate_pool}
+        topologies = {getattr(candidate, "topology_class", "") or "unknown" for candidate in candidate_pool}
+        best_quality = max(
+            (candidate.quality_score.total for candidate in candidate_pool if candidate.quality_score is not None),
+            default=0.0,
+        )
+        best_diversity = max(
+            (candidate.quality_score.diversity_score for candidate in candidate_pool if candidate.quality_score is not None),
+            default=0.0,
+        )
+        return (
+            len(families) >= 3
+            and len(topologies) >= 3
+            and best_quality >= 0.72
+            and best_diversity >= 0.70
+        )
 
     def _score_candidate_quality(self, candidate, preset, comparison_signatures, accepted_signatures):
         parameters = inspect.signature(self.quality_service.score).parameters

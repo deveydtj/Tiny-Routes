@@ -23,8 +23,15 @@ class SwiftTestSummary:
 class GenerationResult:
     accepted: list[GeneratedLevel] = field(default_factory=list)
     candidate_selection_summaries: list[dict[str, Any]] = field(default_factory=list)
+    candidate_generation_count: int = 0
+    candidate_validation_count: int = 0
+    candidate_generation_counts_by_difficulty: dict[str, int] = field(default_factory=dict)
+    candidate_validation_counts_by_difficulty: dict[str, int] = field(default_factory=dict)
     rejected_candidate_count: int = 0
     rejection_reason_counts: dict[str, int] = field(default_factory=dict)
+    rejection_reason_counts_by_difficulty: dict[str, dict[str, int]] = field(default_factory=dict)
+    similarity_rejection_counts_by_difficulty: dict[str, int] = field(default_factory=dict)
+    diversity_adjustment_decisions: list[dict[str, Any]] = field(default_factory=list)
     written_level_paths: list[Path] = field(default_factory=list)
     written_solution_paths: list[Path] = field(default_factory=list)
     swift_test_summary: SwiftTestSummary = field(default_factory=SwiftTestSummary)

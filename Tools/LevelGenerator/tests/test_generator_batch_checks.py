@@ -60,9 +60,11 @@ def test_mixed_auto_dry_run_reports_diversity_distribution(tmp_path) -> None:
     assert result.passed is True
     assert len(result.accepted) == 8
     _assert_report_includes_diversity_fields(payload)
+    _assert_report_includes_generation_telemetry(payload)
     assert len(_distribution(payload, "recipeFamily")) >= 2
     assert len(_distribution(payload, "topologyClass")) >= 2
     assert len(_distribution(payload, "primaryMechanicTag")) >= 2
+    assert payload["acceptedTopologyStreaks"]["longest"]["length"] <= 4
 
 
 def test_focused_hard_generation_completes_with_strict_route_interest_gates(tmp_path) -> None:
@@ -126,6 +128,7 @@ def test_auto_dry_run_progresses_into_late_campaign_without_weak_expert_accepts(
     assert result.passed is True
     assert len(result.accepted) == 5
     assert payload["dryRunSummary"]["acceptedCount"] == 5
+    _assert_report_includes_generation_telemetry(payload)
     for accepted in payload["acceptedLevels"]:
         if accepted["selectedPreset"] in {"hard", "expert"}:
             minimum = 0.58 if accepted["selectedPreset"] == "expert" else 0.54
@@ -189,6 +192,7 @@ def test_full_mixed_auto_50_dry_run_stress_diversity(tmp_path) -> None:
     assert result.passed is True
     assert len(result.accepted) == 50
     _assert_report_includes_diversity_fields(payload)
+    _assert_report_includes_generation_telemetry(payload)
     assert len(_distribution(payload, "recipeFamily")) >= 5
     assert len(_distribution(payload, "topologyClass")) >= 5
     assert len(_distribution(payload, "primaryMechanicTag")) >= 5
@@ -285,6 +289,20 @@ def _assert_report_includes_diversity_fields(payload: dict) -> None:
         assert accepted_candidate["nearbyMechanicTagPenalty"] is not None
         assert accepted_candidate["nearbyTopologyClassPenalty"] is not None
         assert accepted_candidate["quality"]["diversityScore"] is not None
+
+
+def _assert_report_includes_generation_telemetry(payload: dict) -> None:
+    assert payload["candidateGenerationCount"] >= payload["candidateValidationCount"] >= len(payload["acceptedLevels"])
+    assert payload["candidateGenerationCountsByDifficulty"]
+    assert payload["candidateValidationCountsByDifficulty"]
+    assert "similarityRejectionCountsByDifficulty" in payload
+    assert "rejectionReasonCountsByDifficulty" in payload
+    assert "acceptedFamilyStreaks" in payload
+    assert "acceptedTopologyStreaks" in payload
+    assert "routeInterestScoreByDifficulty" in payload
+    assert payload["diversityAdjustmentDecisions"]
+    assert payload["dryRunSummary"]["candidateGenerationCount"] == payload["candidateGenerationCount"]
+    assert payload["dryRunSummary"]["candidateValidationCount"] == payload["candidateValidationCount"]
 
 
 def _distribution(payload: dict, field_name: str) -> Counter:
