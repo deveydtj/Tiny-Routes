@@ -65,6 +65,113 @@ def test_mixed_auto_dry_run_reports_diversity_distribution(tmp_path) -> None:
     assert len(_distribution(payload, "primaryMechanicTag")) >= 2
 
 
+def test_focused_hard_generation_completes_with_strict_route_interest_gates(tmp_path) -> None:
+    result = _run_dry_batch(
+        tmp_path,
+        start_level_number=26,
+        count=2,
+        difficulty="hard",
+        seed=9201,
+        max_attempts_per_level=40,
+        candidate_pool_size=1,
+        recipe_pool_size=3,
+        layouts_per_recipe=1,
+        road_shapes_per_layout=2,
+    )
+    payload = json.loads((tmp_path / "report.json").read_text(encoding="utf-8"))
+
+    assert result.passed is True
+    assert len(result.accepted) == 2
+    _assert_strict_interest_and_large_portrait_gates_hold(payload, minimum_route_interest=0.54)
+    assert "routeInterestScoreDistribution" in payload
+    assert "starvationCauseSummary" in payload
+
+
+def test_focused_expert_generation_completes_with_strict_route_interest_gates(tmp_path) -> None:
+    result = _run_dry_batch(
+        tmp_path,
+        start_level_number=41,
+        count=2,
+        difficulty="expert",
+        seed=9101,
+        max_attempts_per_level=40,
+        candidate_pool_size=1,
+        recipe_pool_size=3,
+        layouts_per_recipe=1,
+        road_shapes_per_layout=2,
+    )
+    payload = json.loads((tmp_path / "report.json").read_text(encoding="utf-8"))
+
+    assert result.passed is True
+    assert len(result.accepted) == 2
+    assert len(_distribution(payload, "topologyClass")) >= 2
+    _assert_strict_interest_and_large_portrait_gates_hold(payload, minimum_route_interest=0.58)
+
+
+def test_auto_dry_run_progresses_into_late_campaign_without_weak_expert_accepts(tmp_path) -> None:
+    result = _run_dry_batch(
+        tmp_path,
+        start_level_number=39,
+        count=5,
+        difficulty="auto",
+        seed=9001,
+        max_attempts_per_level=40,
+        candidate_pool_size=1,
+        recipe_pool_size=3,
+        layouts_per_recipe=1,
+        road_shapes_per_layout=2,
+    )
+    payload = json.loads((tmp_path / "report.json").read_text(encoding="utf-8"))
+
+    assert result.passed is True
+    assert len(result.accepted) == 5
+    assert payload["dryRunSummary"]["acceptedCount"] == 5
+    for accepted in payload["acceptedLevels"]:
+        if accepted["selectedPreset"] in {"hard", "expert"}:
+            minimum = 0.58 if accepted["selectedPreset"] == "expert" else 0.54
+            assert accepted["routeInterestAudit"]["score"] >= minimum
+    _assert_no_large_portrait_without_puzzle_need(payload)
+
+
+def test_recipe_first_generation_remains_deterministic_with_adaptive_breadth(tmp_path) -> None:
+    first = _run_dry_batch(
+        tmp_path / "first",
+        start_level_number=41,
+        count=2,
+        difficulty="expert",
+        seed=9101,
+        max_attempts_per_level=40,
+        candidate_pool_size=1,
+        recipe_pool_size=3,
+        layouts_per_recipe=1,
+        road_shapes_per_layout=2,
+    )
+    second = _run_dry_batch(
+        tmp_path / "second",
+        start_level_number=41,
+        count=2,
+        difficulty="expert",
+        seed=9101,
+        max_attempts_per_level=40,
+        candidate_pool_size=1,
+        recipe_pool_size=3,
+        layouts_per_recipe=1,
+        road_shapes_per_layout=2,
+    )
+
+    first_summary = [
+        (level.level_id, level.recipe_family, level.recipe_variant, level.topology_class, level.seed)
+        for level in first.accepted
+    ]
+    second_summary = [
+        (level.level_id, level.recipe_family, level.recipe_variant, level.topology_class, level.seed)
+        for level in second.accepted
+    ]
+    assert first.passed is True
+    assert second.passed is True
+    assert first_summary == second_summary
+
+
 @pytest.mark.skipif(
     os.environ.get(FULL_STRESS_ENV) != "1",
     reason=f"set {FULL_STRESS_ENV}=1 to run full generator stress dry-runs",
@@ -199,3 +306,26 @@ def _assert_duplicate_rejections_not_dominant(payload: dict) -> None:
         if "similar" in reason or "duplicate" in reason
     )
     assert duplicate_rejections / total_rejections < 0.85
+
+
+def _assert_strict_interest_and_large_portrait_gates_hold(payload: dict, *, minimum_route_interest: float) -> None:
+    for accepted in payload["acceptedLevels"]:
+        assert accepted["routeInterestAudit"]["score"] >= minimum_route_interest
+        if accepted["topologyClass"] == "two_switch_order":
+            tags = set(accepted["routeInterestAudit"].get("tags") or [])
+            assert tags & {
+                "fake_shortcut",
+                "split_rejoin",
+                "correct_detour",
+                "loop_or_revisit",
+                "two_phase",
+                "package_gate_tension",
+                "multi_exit_hub",
+            }
+    _assert_no_large_portrait_without_puzzle_need(payload)
+
+
+def _assert_no_large_portrait_without_puzzle_need(payload: dict) -> None:
+    for accepted in payload["acceptedLevels"]:
+        large_map_fit = accepted["quality"]["presetContentFit"]["largeMapFit"]
+        assert "large_portrait_without_puzzle_need" not in large_map_fit.get("penalties", [])

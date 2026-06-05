@@ -315,7 +315,7 @@ def expanded_recipe_family_definitions() -> list[ExpandedRecipeFamilyDefinition]
         ),
         _definition(
             "split_path_rejoin",
-            ("medium", "hard"),
+            ("medium", "hard", "expert"),
             ("split_path", "rejoin", "multi_switch", "package_gate"),
             "split_rejoin",
             "Split away from and rejoin the main route.",
@@ -331,7 +331,7 @@ def expanded_recipe_family_definitions() -> list[ExpandedRecipeFamilyDefinition]
         ),
         _definition(
             "fake_shortcut",
-            ("easy", "medium", "hard"),
+            ("easy", "medium", "hard", "expert"),
             ("fake_shortcut", "detour", "package_gate", "dead_end"),
             "detour_gate",
             "Avoid a tempting short branch.",
@@ -347,7 +347,7 @@ def expanded_recipe_family_definitions() -> list[ExpandedRecipeFamilyDefinition]
         ),
         _definition(
             "hub_choice",
-            ("medium", "hard"),
+            ("medium", "hard", "expert"),
             ("hub", "multi_switch", "rejoin", "dead_end"),
             "hub_spoke",
             "Choose from a three-way hub and then exit through a gate.",
@@ -363,7 +363,7 @@ def expanded_recipe_family_definitions() -> list[ExpandedRecipeFamilyDefinition]
         ),
         _definition(
             "long_detour_gate",
-            ("easy", "medium", "hard"),
+            ("easy", "medium", "hard", "expert"),
             ("long_route", "detour", "package_gate"),
             "detour_gate",
             "Take the longer gated route because the direct branch cannot complete delivery.",
@@ -381,11 +381,11 @@ def expanded_recipe_family_definitions() -> list[ExpandedRecipeFamilyDefinition]
             "return_loop_with_gate",
             ("hard",),
             ("loop", "repeated_tap", "package_gate", "return_loop", "gate"),
-            "two_switch_order",
+            "revisit",
             "Revisit a hub after opening a loop gate.",
             "Plan repeated hub use plus an intermediate gate.",
-            (3, 3),
-            (3, 3),
+            (3, 4),
+            (3, 4),
             True,
             ("hub revisit path stays readable",),
             "Combines loop memory with a separate gate decision.",
@@ -413,7 +413,7 @@ def expanded_recipe_family_definitions() -> list[ExpandedRecipeFamilyDefinition]
             "multi_switch_revisit",
             ("hard",),
             ("multi_switch", "revisit", "repeated_tap"),
-            "two_switch_order",
+            "revisit",
             "Return to an earlier switch with a changed route goal.",
             "Remember an earlier switch state after a loop.",
             (3, 3),
@@ -527,7 +527,7 @@ def expanded_recipe_family_definitions() -> list[ExpandedRecipeFamilyDefinition]
         _definition(
             "multi_four_way_route",
             ("expert",),
-            ("four_way", "multi_switch"),
+            ("four_way", "multi_switch", "package_gate", "two_phase", "split_path", "rejoin"),
             "four_way_gate",
             "Resolve two multi-exit switch decisions in sequence.",
             "Count taps across separate four-way-style decisions.",
@@ -560,8 +560,8 @@ def expanded_recipe_family_definitions() -> list[ExpandedRecipeFamilyDefinition]
         _definition(
             "late_route_reversal",
             ("expert",),
-            ("route_reversal", "revisit", "repeated_tap"),
-            "two_switch_order",
+            ("route_reversal", "revisit", "repeated_tap", "loop"),
+            "revisit",
             "Reverse back through a previous decision late in the route.",
             "Carry earlier route context into the final exit.",
             (3, 3),
@@ -841,7 +841,7 @@ def _long_detour_gate(variant_name: str, preset: DifficultyPreset, rng: RandomSo
 
 
 def _return_loop_with_gate(variant_name: str, preset: DifficultyPreset, rng: RandomSource):
-    return _hard_three_switch_chain(variant_name, preset, rng)
+    return _controlled_repeated_taps(variant_name, preset, rng)
 
 
 def _hard_three_switch_chain(variant_name: str, preset: DifficultyPreset, rng: RandomSource):
@@ -861,7 +861,7 @@ def _hard_three_switch_chain(variant_name: str, preset: DifficultyPreset, rng: R
 
 
 def _multi_switch_revisit(variant_name: str, preset: DifficultyPreset, rng: RandomSource):
-    return _hard_three_switch_chain(variant_name, preset, rng)
+    return _controlled_repeated_taps(variant_name, preset, rng)
 
 
 def _package_inside_loop(variant_name: str, preset: DifficultyPreset, rng: RandomSource):
@@ -1014,7 +1014,7 @@ def _four_way_ring(variant_name: str, preset: DifficultyPreset, rng: RandomSourc
 
 
 def _multi_four_way_route(variant_name: str, preset: DifficultyPreset, rng: RandomSource):
-    return _four_way_intro(variant_name, preset, rng)
+    return _four_way_package_gate(variant_name, preset, rng)
 
 
 def _controlled_repeated_taps(variant_name: str, preset: DifficultyPreset, rng: RandomSource):
@@ -1048,7 +1048,7 @@ def _controlled_repeated_taps(variant_name: str, preset: DifficultyPreset, rng: 
 
 
 def _late_route_reversal(variant_name: str, preset: DifficultyPreset, rng: RandomSource):
-    return _hard_three_switch_chain(variant_name, preset, rng)
+    return _controlled_repeated_taps(variant_name, preset, rng)
 
 
 def _single_switch_route(dead_end_id: str):

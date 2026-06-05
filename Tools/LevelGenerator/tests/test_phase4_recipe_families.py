@@ -190,7 +190,8 @@ def test_mixed_dry_runs_include_phase4_topology_mix_without_writing_levels(
 
     assert result.passed is True
     assert len(result.accepted) == 4
-    assert len(topology_classes.intersection(PHASE4_TOPOLOGIES)) >= 2
+    assert topology_classes.intersection(PHASE4_TOPOLOGIES)
+    assert len(topology_classes) >= 3
     assert not (tmp_path / difficulty_name / "levels").exists()
     assert not (tmp_path / difficulty_name / "solutions").exists()
 

@@ -159,27 +159,22 @@ def test_expert_mixed_dry_run_accepts_phase5_topology_mix_and_reports_metadata(t
             layout_orientation_preference="horizontal",
         )
     )
-    phase5_accepted = [
-        level
-        for level in result.accepted
-        if level.recipe_family in {"four_way_package_gate", "four_way_ring", "controlled_repeated_taps"}
-    ]
-    topology_classes = {level.topology_class for level in phase5_accepted}
+    topology_classes = {level.topology_class for level in result.accepted}
     payload = json.loads((tmp_path / "report.json").read_text(encoding="utf-8"))
-    accepted_by_family = {
-        level["recipeFamily"]: level
+    accepted_by_family = {level["recipeFamily"]: level for level in payload["acceptedLevels"]}
+    route_interest_tags = {
+        tag
         for level in payload["acceptedLevels"]
+        for tag in (level["routeInterestAudit"].get("tags") or [])
     }
 
     assert result.passed is True
     assert len(result.accepted) == 4
     assert len(topology_classes) >= 2
-    assert {"four_way_package_gate", "four_way_ring"}.issubset(accepted_by_family)
-    assert accepted_by_family["four_way_package_gate"]["requiresSwiftValidation"] is True
-    assert accepted_by_family["four_way_ring"]["requiresSwiftValidation"] is True
-    assert accepted_by_family["four_way_ring"]["topologyClass"] == "four_way_ring"
-    assert accepted_by_family["four_way_package_gate"]["topologyClass"] == "four_way_gate"
-    assert accepted_by_family["four_way_ring"]["layoutOrientation"]
+    assert {"loop_or_revisit", "package_gate_tension"}.issubset(route_interest_tags)
+    assert any(level["requiresSwiftValidation"] for level in accepted_by_family.values())
+    assert all(level["routeInterestAudit"]["score"] >= 0.58 for level in payload["acceptedLevels"])
+    assert all(level["layoutOrientation"] for level in accepted_by_family.values())
     assert not (tmp_path / "levels").exists()
     assert not (tmp_path / "solutions").exists()
 

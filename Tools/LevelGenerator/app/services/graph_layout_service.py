@@ -547,7 +547,12 @@ class GraphLayoutPlannerService:
     def _horizontal_strategy_for_recipe(self, recipe: GraphRecipe) -> str:
         family_name = recipe.family_name
         tags = set(recipe.mechanic_tags)
-        if family_name == "controlled_repeated_taps":
+        if family_name in {
+            "controlled_repeated_taps",
+            "late_route_reversal",
+            "multi_switch_revisit",
+            "return_loop_with_gate",
+        }:
             return "package_inside_loop"
         if family_name == "package_inside_loop":
             return "package_inside_loop"
@@ -570,7 +575,12 @@ class GraphLayoutPlannerService:
     def _vertical_strategy_for_recipe(self, recipe: GraphRecipe) -> str:
         family_name = recipe.family_name
         tags = set(recipe.mechanic_tags)
-        if family_name == "controlled_repeated_taps":
+        if family_name in {
+            "controlled_repeated_taps",
+            "late_route_reversal",
+            "multi_switch_revisit",
+            "return_loop_with_gate",
+        }:
             return "vertical_loop"
         if family_name == "package_inside_loop":
             return "vertical_loop"
@@ -778,7 +788,12 @@ class GraphLayoutPlannerService:
         return positions
 
     def _loop_positions(self, recipe: GraphRecipe, layout: GraphLayoutService) -> dict[str, tuple[float, float]]:
-        if recipe.family_name == "controlled_repeated_taps":
+        if recipe.family_name in {
+            "controlled_repeated_taps",
+            "late_route_reversal",
+            "multi_switch_revisit",
+            "return_loop_with_gate",
+        }:
             return self._controlled_repeated_taps_positions(recipe, layout)
         if recipe.family_name == "package_inside_loop":
             return self._package_inside_loop_positions(recipe, layout)
@@ -1033,7 +1048,7 @@ class GraphLayoutPlannerService:
         return layout.scale_positions(rotated, scale_x=0.92, scale_y=0.92)
 
     def _four_way_positions(self, recipe: GraphRecipe, layout: GraphLayoutService) -> dict[str, tuple[float, float]]:
-        if recipe.family_name == "four_way_package_gate":
+        if recipe.family_name in {"four_way_package_gate", "multi_four_way_route"}:
             return self._four_way_package_gate_positions(recipe, layout)
         if recipe.family_name == "four_way_ring":
             return self._four_way_ring_positions(recipe, layout)

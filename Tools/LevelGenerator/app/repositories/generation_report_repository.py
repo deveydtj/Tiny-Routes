@@ -150,6 +150,13 @@ class GenerationReportRepository:
             "acceptedMapSizeDistribution": self._distribution(
                 ((level.layout_metadata or {}).get("layoutSizeProfile", "unknown") for level in result.accepted)
             ),
+            "routeInterestScoreDistribution": self._score_distribution(
+                self._route_interest_audit(level).get("score")
+                for level in result.accepted
+                if self._route_interest_audit(level)
+            ),
+            "acceptedRejectedCountsByDifficulty": self._accepted_rejected_counts_by_difficulty(result),
+            "starvationCauseSummary": self._starvation_cause_summary(result),
             "rejectedCandidateCount": result.rejected_candidate_count,
             "rejectionReasonCounts": result.rejection_reason_counts,
             "writtenLevelPaths": [str(path) for path in result.written_level_paths],
@@ -203,6 +210,9 @@ class GenerationReportRepository:
             f"- Recipe: `{payload['acceptedRecipeDistribution']}`",
             f"- Topology: `{payload['acceptedTopologyDistribution']}`",
             f"- Map size: `{payload['acceptedMapSizeDistribution']}`",
+            f"- Route interest score: `{payload['routeInterestScoreDistribution']}`",
+            f"- Accepted vs rejected by difficulty: `{payload['acceptedRejectedCountsByDifficulty']}`",
+            f"- Starvation causes: `{payload['starvationCauseSummary']}`",
             "",
             "## Accepted Levels",
             "",
@@ -614,7 +624,92 @@ class GenerationReportRepository:
             "mapSizeDistribution": self._distribution(
                 (level.layout_metadata or {}).get("layoutSizeProfile", "unknown") for level in result.accepted
             ),
+            "routeInterestScoreDistribution": self._score_distribution(
+                self._route_interest_audit(level).get("score")
+                for level in result.accepted
+                if self._route_interest_audit(level)
+            ),
             "rejectionReasons": dict(getattr(result, "rejection_reason_counts", {})),
+        }
+
+    def _score_distribution(self, scores) -> dict[str, int]:
+        buckets = Counter()
+        for score in scores:
+            if score is None:
+                continue
+            value = float(score)
+            if value < 0.42:
+                bucket = "below_medium"
+            elif value < 0.54:
+                bucket = "medium_gate"
+            elif value < 0.58:
+                bucket = "hard_gate"
+            elif value < 0.75:
+                bucket = "expert_gate"
+            elif value < 0.90:
+                bucket = "strong"
+            else:
+                bucket = "excellent"
+            buckets[bucket] += 1
+        return dict(sorted(buckets.items()))
+
+    def _accepted_rejected_counts_by_difficulty(self, result) -> dict[str, dict[str, int]]:
+        accepted = Counter(level.difficulty for level in result.accepted)
+        total_rejected = int(getattr(result, "rejected_candidate_count", 0))
+        if not accepted:
+            return {"unknown": {"accepted": 0, "rejected": total_rejected}}
+        counts = {
+            difficulty: {"accepted": count, "rejected": 0}
+            for difficulty, count in sorted(accepted.items())
+        }
+        if len(counts) == 1:
+            only = next(iter(counts))
+            counts[only]["rejected"] = total_rejected
+        else:
+            accepted_total = sum(accepted.values())
+            assigned = 0
+            for index, (difficulty, accepted_count) in enumerate(accepted.items()):
+                if index == len(counts) - 1:
+                    rejected = total_rejected - assigned
+                else:
+                    rejected = round(total_rejected * (accepted_count / accepted_total))
+                    assigned += rejected
+                counts[difficulty]["rejected"] = max(rejected, 0)
+        return counts
+
+    def _starvation_cause_summary(self, result) -> dict[str, Any]:
+        counts = Counter(getattr(result, "rejection_reason_counts", {}) or {})
+        total = sum(counts.values())
+        categories = {
+            "batchSimilarity": sum(count for reason, count in counts.items() if "similar" in reason or "duplicate" in reason),
+            "readabilityBlockedRoads": counts.get("important_node_readability_blocked_by_road", 0),
+            "tapTiming": sum(count for reason, count in counts.items() if "tap" in reason or "arrival" in reason),
+            "layoutValidity": sum(
+                count
+                for reason, count in counts.items()
+                if reason.startswith("layout_")
+                or reason.startswith("portrait_layout")
+                or reason in {"implicit_intersection_without_graph_node", "same_switch_first_segments_overlap"}
+            ),
+            "routeInterestGate": sum(count for reason, count in counts.items() if "route_interest" in reason or "boring_topology" in reason),
+            "largePortraitNeedGate": counts.get("large_portrait_without_puzzle_need", 0),
+        }
+        sorted_categories = sorted(categories.items(), key=lambda item: item[1], reverse=True)
+        return {
+            "totalRejections": total,
+            "topCategories": [
+                {
+                    "category": category,
+                    "count": count,
+                    "share": round(count / total, 4) if total else 0.0,
+                }
+                for category, count in sorted_categories
+                if count
+            ][:5],
+            "topReasons": [
+                {"reason": reason, "count": count, "share": round(count / total, 4) if total else 0.0}
+                for reason, count in counts.most_common(5)
+            ],
         }
 
     def _route_interest_audit(self, level) -> dict[str, Any]:

@@ -53,14 +53,14 @@ class RecipeFamilyRegistry(MechanicRecipeGenerator):
             return family
 
         weighted = [
-            (family, self._weight_for(family.name, preset.name, weights_override))
+            (family, self.weight_for(family.name, preset.name, weights_override))
             for family in self.supported_families(preset, include_swift_required=include_swift_required)
         ]
         if not weighted:
             raise ValueError(f"No recipe families support difficulty '{preset.name}'")
         return rng.weighted_choice(weighted)
 
-    def _weight_for(
+    def weight_for(
         self,
         family_name: str,
         difficulty_name: str,
@@ -108,12 +108,16 @@ class RecipeFamilyRegistry(MechanicRecipeGenerator):
                 "ring_route": 1,
             },
             "expert": {
-                "four_way_intro": 4,
+                "four_way_intro": 2,
                 "four_way_package_gate": 4,
-                "four_way_ring": 3,
-                "multi_four_way_route": 3,
+                "four_way_ring": 4,
+                "multi_four_way_route": 4,
                 "controlled_repeated_taps": 3,
                 "late_route_reversal": 3,
+                "fake_shortcut": 3,
+                "split_path_rejoin": 3,
+                "hub_choice": 3,
+                "long_detour_gate": 3,
                 "four_way_intersection": 2,
                 "multi_switch_chain": 1,
                 "ring_route": 1,

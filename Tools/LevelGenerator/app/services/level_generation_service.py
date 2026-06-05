@@ -47,6 +47,7 @@ class LevelGenerationService:
         "loop_or_revisit",
         "two_phase",
         "package_gate_tension",
+        "multi_exit_hub",
     }
 
     def __init__(self) -> None:
@@ -114,7 +115,8 @@ class LevelGenerationService:
             candidate_pool_signatures = []
             near_miss_candidates = []
 
-            for attempt in range(config.max_attempts_per_level):
+            effective_max_attempts = self._effective_max_attempts(config, preset)
+            for attempt in range(effective_max_attempts):
                 candidate_seed = base_rng.child_seed(plan_entry.difficulty, config.template_name, level_id, attempt)
                 rng = RandomSource(candidate_seed)
                 try:
@@ -227,7 +229,7 @@ class LevelGenerationService:
             if accepted_candidate is None:
                 result.passed = False
                 result.messages.append(
-                    f"Could not generate valid {level_id} after {config.max_attempts_per_level} attempts."
+                    f"Could not generate valid {level_id} after {effective_max_attempts} attempts."
                 )
                 break
             result.accepted.append(accepted_candidate)
@@ -403,18 +405,20 @@ class LevelGenerationService:
         plan_template_weights: dict[str, int],
     ):
         candidates = []
-        layout_names = self._layout_variant_names(config.layouts_per_recipe)
-        road_shape_strategies = self._road_shape_strategies(config.road_shapes_per_layout)
-        for recipe_index in range(config.recipe_pool_size):
+        search_breadth = self._effective_search_breadth(config, preset)
+        layout_names = self._layout_variant_names(search_breadth["layouts_per_recipe"])
+        road_shape_strategies = self._road_shape_strategies(search_breadth["road_shapes_per_layout"])
+        families = self._recipe_family_candidates(
+            config=config,
+            preset=preset,
+            rng=rng,
+            include_swift_required=include_swift_required,
+            plan_template_weights=plan_template_weights,
+            count=search_breadth["recipe_pool_size"],
+        )
+        for recipe_index, family in enumerate(families):
             recipe_seed = rng.child_seed("recipe", recipe_index)
             recipe_rng = RandomSource(recipe_seed)
-            family = self.recipe_family_registry.choose_family(
-                config.template_name,
-                preset,
-                recipe_rng,
-                include_swift_required=include_swift_required,
-                weights_override=plan_template_weights if config.difficulty == "auto" else None,
-            )
             recipe = family.generate_recipe(level_id, preset, recipe_rng)
             recipe_issues = recipe.validate()
             if recipe_issues:
@@ -468,6 +472,87 @@ class LevelGenerationService:
                             candidates.append(candidate)
         return candidates
 
+    def _effective_max_attempts(self, config: GenerationConfig, preset) -> int:
+        if preset.name == "medium":
+            return max(config.max_attempts_per_level, 100)
+        if preset.name == "hard":
+            return max(config.max_attempts_per_level, 100)
+        if preset.name == "expert":
+            return max(config.max_attempts_per_level, 120)
+        return config.max_attempts_per_level
+
+    def _effective_search_breadth(self, config: GenerationConfig, preset) -> dict[str, int]:
+        recipe_pool_size = config.recipe_pool_size
+        layouts_per_recipe = config.layouts_per_recipe
+        road_shapes_per_layout = config.road_shapes_per_layout
+        if preset.name == "medium":
+            recipe_pool_size = max(recipe_pool_size, 5)
+            layouts_per_recipe = max(layouts_per_recipe, 2)
+            road_shapes_per_layout = max(road_shapes_per_layout, 3)
+        elif preset.name == "hard":
+            recipe_pool_size = max(recipe_pool_size, 5)
+            layouts_per_recipe = max(layouts_per_recipe, 2)
+            road_shapes_per_layout = max(road_shapes_per_layout, 4)
+        elif preset.name == "expert":
+            recipe_pool_size = max(recipe_pool_size, 6)
+            layouts_per_recipe = max(layouts_per_recipe, 2)
+            road_shapes_per_layout = max(road_shapes_per_layout, 3)
+        return {
+            "recipe_pool_size": recipe_pool_size,
+            "layouts_per_recipe": layouts_per_recipe,
+            "road_shapes_per_layout": road_shapes_per_layout,
+        }
+
+    def _recipe_family_candidates(
+        self,
+        *,
+        config: GenerationConfig,
+        preset,
+        rng: RandomSource,
+        include_swift_required: bool,
+        plan_template_weights: dict[str, int],
+        count: int,
+    ):
+        if config.template_name != "mixed":
+            family = self.recipe_family_registry.choose_family(
+                config.template_name,
+                preset,
+                rng,
+                include_swift_required=include_swift_required,
+                weights_override=plan_template_weights if config.difficulty == "auto" else None,
+            )
+            return [family] * count
+
+        weights_override = plan_template_weights if config.difficulty == "auto" else None
+        supported = self.recipe_family_registry.supported_families(
+            preset,
+            include_swift_required=include_swift_required,
+        )
+        weighted = [
+            (
+                family,
+                self.recipe_family_registry.weight_for(
+                    family.name,
+                    preset.name,
+                    weights_override=weights_override,
+                ),
+            )
+            for family in supported
+        ]
+        weighted = [(family, max(weight, 0)) for family, weight in weighted if weight > 0]
+        if not weighted:
+            raise ValueError(f"No recipe families support difficulty '{preset.name}'")
+
+        selected = []
+        remaining = list(weighted)
+        while len(selected) < count:
+            if not remaining:
+                remaining = list(weighted)
+            family = rng.weighted_choice(remaining)
+            selected.append(family)
+            remaining = [(candidate, weight) for candidate, weight in remaining if candidate.name != family.name]
+        return selected
+
     def _preset_for_candidate_layout(self, candidate, preset):
         metadata = getattr(candidate, "layout_metadata", None) or {}
         return self._preset_for_layout_size_profile(preset, metadata.get("layoutSizeProfile", "standard_portrait"))
@@ -514,6 +599,28 @@ class LevelGenerationService:
             "two_phase",
             "four_way",
         }
+        strong_interest_tags = {
+            "fake_shortcut",
+            "split_path",
+            "rejoin",
+            "detour",
+            "package_gate",
+            "loop",
+            "revisit",
+            "ring",
+            "two_phase",
+            "hub",
+        }
+        route_needs_room = route_length >= preset.route_length_range[0] + 1
+        interest_needs_room = bool(mechanic_tags & strong_interest_tags) or topology_class in {
+            "split_rejoin",
+            "hub_spoke",
+            "return_loop",
+            "ring",
+            "revisit",
+            "two_phase",
+            "four_way_ring",
+        }
         structure_benefits_from_large = (
             route_length >= preset.route_length_range[1]
             or bool(mechanic_tags & large_friendly_tags)
@@ -524,9 +631,13 @@ class LevelGenerationService:
         if preset.name == "medium":
             include_large = structure_benefits_from_large and rng.bool(min(large_probability, 0.35))
         elif preset.name == "hard":
-            include_large = structure_benefits_from_large or rng.bool(min(large_probability, 0.60))
+            include_large = route_needs_room and interest_needs_room and (
+                structure_benefits_from_large or rng.bool(min(large_probability, 0.60))
+            )
         elif preset.name == "expert":
-            include_large = structure_benefits_from_large or rng.bool(min(large_probability, 0.75))
+            include_large = route_needs_room and interest_needs_room and (
+                structure_benefits_from_large or rng.bool(min(large_probability, 0.75))
+            )
 
         if include_large:
             profiles.append("large_portrait")

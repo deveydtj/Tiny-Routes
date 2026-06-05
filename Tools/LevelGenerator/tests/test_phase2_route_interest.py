@@ -167,7 +167,7 @@ def test_hard_multi_switch_chain_two_switch_order_with_weak_interest_is_rejected
 
 def test_expert_large_portrait_without_puzzle_need_is_rejected() -> None:
     candidate = _scored_candidate(
-        "late_route_reversal",
+        "four_way_intro",
         "expert",
         "level_905",
         905,

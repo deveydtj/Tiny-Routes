@@ -136,8 +136,11 @@ class DifficultyService:
                 time_limit_padding_seconds=20,
                 map_size_profile_weights=(("standard_portrait", 2), ("large_portrait", 3)),
                 allowed_topology_classes=(
+                    "detour_gate",
                     "four_way_gate",
                     "four_way_ring",
+                    "hub_spoke",
+                    "split_rejoin",
                     "two_switch_order",
                     "return_loop",
                     "ring",
