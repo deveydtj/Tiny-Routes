@@ -761,7 +761,7 @@ def test_generation_service_recipe_first_supports_current_recipe_families(tmp_pa
         ("easy", "single_switch"),
         ("easy", "package_gate"),
         ("medium", "return_loop"),
-        ("medium", "multi_switch_chain"),
+        ("medium", "fake_shortcut"),
         ("hard", "ring_route"),
         ("expert", "four_way_intersection"),
     ]

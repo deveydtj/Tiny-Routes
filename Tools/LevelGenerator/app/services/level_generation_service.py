@@ -38,6 +38,16 @@ class LevelGenerationService:
     MINIMUM_RUNTIME_CONFIDENCE = 0.75
     MAXIMUM_SELECTION_SIMILARITY = 0.87
     MAX_REJECTION_MESSAGES = 50
+    ROUTE_INTEREST_GATED_DIFFICULTIES = {"medium", "hard", "expert"}
+    SIMPLE_CHAIN_TOPOLOGIES = {"two_switch_order"}
+    STRONG_ROUTE_INTEREST_TAGS = {
+        "fake_shortcut",
+        "split_rejoin",
+        "correct_detour",
+        "loop_or_revisit",
+        "two_phase",
+        "package_gate_tension",
+    }
 
     def __init__(self) -> None:
         self.difficulty_service = DifficultyService()
@@ -633,6 +643,9 @@ class LevelGenerationService:
         quality = candidate.quality_score
         if quality is None:
             return None
+        gate_rejection = self._quality_gate_rejection(candidate, quality)
+        if gate_rejection is not None:
+            return gate_rejection
         max_similarity = float(quality.details.get("maxSimilarity", 0.0))
         if quality.runtime_solvability < self.MINIMUM_RUNTIME_CONFIDENCE:
             return (
@@ -658,6 +671,71 @@ class LevelGenerationService:
                 f"quality total {quality.total:.2f} < {self.MINIMUM_TOTAL_QUALITY:.2f}",
             )
         return None
+
+    def _quality_gate_rejection(self, candidate, quality) -> tuple[str, str] | None:
+        difficulty = str(getattr(candidate, "difficulty", "") or "").strip().lower()
+        route_interest = float(getattr(quality, "route_interest", 0.0) or 0.0)
+        preset_content_fit = quality.details.get("presetContentFit", {})
+        minimum_route_interest = float(preset_content_fit.get("minimumRouteInterestScore", 0.0) or 0.0)
+        route_interest_audit = quality.details.get("routeInterest", {})
+        route_interest_tags = set(route_interest_audit.get("tags", ()) or ())
+        topology_class = str(getattr(candidate, "topology_class", "") or "")
+        recipe_family = str(getattr(candidate, "recipe_family", "") or "")
+
+        if self._has_large_portrait_without_puzzle_need(quality):
+            return (
+                "large_portrait_without_puzzle_need",
+                "large_portrait layout did not have enough route length, topology, and route-interest justification",
+            )
+
+        if difficulty in {"hard", "expert"} and self._is_boring_topology_for_difficulty(
+            difficulty=difficulty,
+            recipe_family=recipe_family,
+            topology_class=topology_class,
+            route_interest=route_interest,
+            minimum_route_interest=minimum_route_interest,
+            route_interest_tags=route_interest_tags,
+        ):
+            return (
+                "boring_topology_for_difficulty",
+                (
+                    f"{difficulty} candidate recipe={recipe_family or 'unknown'} "
+                    f"topology={topology_class or 'unknown'} route_interest={route_interest:.3f} "
+                    f"tags={','.join(sorted(route_interest_tags)) or 'none'}"
+                ),
+            )
+
+        if difficulty in self.ROUTE_INTEREST_GATED_DIFFICULTIES and route_interest < minimum_route_interest:
+            return (
+                f"route_interest_below_{difficulty}_gate",
+                f"route interest {route_interest:.3f} < {minimum_route_interest:.3f}",
+            )
+
+        return None
+
+    def _has_large_portrait_without_puzzle_need(self, quality) -> bool:
+        preset_content_fit = quality.details.get("presetContentFit", {})
+        large_map_fit = preset_content_fit.get("largeMapFit", {})
+        return "large_portrait_without_puzzle_need" in set(large_map_fit.get("penalties", ()) or ())
+
+    def _is_boring_topology_for_difficulty(
+        self,
+        *,
+        difficulty: str,
+        recipe_family: str,
+        topology_class: str,
+        route_interest: float,
+        minimum_route_interest: float,
+        route_interest_tags: set[str],
+    ) -> bool:
+        if topology_class not in self.SIMPLE_CHAIN_TOPOLOGIES:
+            return False
+        if difficulty == "hard" and recipe_family == "multi_switch_chain":
+            return not bool(route_interest_tags & self.STRONG_ROUTE_INTEREST_TAGS)
+        if difficulty == "expert":
+            has_strong_interest = bool(route_interest_tags & self.STRONG_ROUTE_INTEREST_TAGS)
+            return not (has_strong_interest and route_interest >= minimum_route_interest)
+        return False
 
     def _candidate_selection_summary(self, level_id: str, accepted_candidate, candidate_pool, near_miss_candidates):
         scored_candidates = [candidate for candidate in candidate_pool if candidate.quality_score is not None]

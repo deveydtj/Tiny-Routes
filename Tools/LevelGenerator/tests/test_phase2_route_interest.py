@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from collections import Counter
+from dataclasses import replace
 
 from app.generation_config import GenerationConfig
 from app.random_source import RandomSource
@@ -103,6 +104,105 @@ def test_route_interest_scoring_prefers_phase2_patterns_over_simple_chains() -> 
     assert "two_phase" in detour_score.details["routeInterest"]["tags"] or detour_score.details["routeInterest"]["branchRejoinPresent"]
 
 
+def test_hard_candidates_below_minimum_route_interest_are_rejected() -> None:
+    candidate = _scored_candidate("hub_choice", "hard", "level_903", 903)
+    quality = candidate.quality_score
+    assert quality is not None
+
+    candidate.quality_score = replace(
+        quality,
+        route_interest=0.10,
+        details={
+            **quality.details,
+            "routeInterest": {
+                **quality.details["routeInterest"],
+                "score": 0.10,
+                "tags": [],
+            },
+        },
+    )
+
+    rejection = LevelGenerationService()._quality_rejection(candidate)
+
+    assert rejection is not None
+    assert rejection[0] == "route_interest_below_hard_gate"
+
+
+def test_expert_candidates_below_minimum_route_interest_are_rejected() -> None:
+    candidate = _scored_candidate("four_way_intro", "expert", "level_907", 907)
+    quality = candidate.quality_score
+    assert quality is not None
+
+    candidate.quality_score = replace(
+        quality,
+        route_interest=0.10,
+        details={
+            **quality.details,
+            "routeInterest": {
+                **quality.details["routeInterest"],
+                "score": 0.10,
+                "tags": [],
+            },
+        },
+    )
+
+    rejection = LevelGenerationService()._quality_rejection(candidate)
+
+    assert rejection is not None
+    assert rejection[0] == "route_interest_below_expert_gate"
+
+
+def test_hard_multi_switch_chain_two_switch_order_with_weak_interest_is_rejected() -> None:
+    candidate = _scored_candidate("multi_switch_chain", "hard", "level_904", 904)
+    quality = candidate.quality_score
+    assert quality is not None
+    assert candidate.topology_class == "two_switch_order"
+    assert quality.route_interest < DifficultyService().get_preset("hard").minimum_route_interest_score
+
+    rejection = LevelGenerationService()._quality_rejection(candidate)
+
+    assert rejection is not None
+    assert rejection[0] == "boring_topology_for_difficulty"
+
+
+def test_expert_large_portrait_without_puzzle_need_is_rejected() -> None:
+    candidate = _scored_candidate(
+        "late_route_reversal",
+        "expert",
+        "level_905",
+        905,
+        layout_orientation_preference="portrait_vertical",
+        layout_size_profile="large_portrait",
+    )
+    quality = candidate.quality_score
+    assert quality is not None
+    assert quality.details["presetContentFit"]["largeMapFit"]["penalties"] == (
+        "large_portrait_without_puzzle_need",
+    )
+
+    rejection = LevelGenerationService()._quality_rejection(candidate)
+
+    assert rejection is not None
+    assert rejection[0] == "large_portrait_without_puzzle_need"
+
+
+def test_large_portrait_with_high_interest_structure_can_still_pass_quality_gate() -> None:
+    candidate = _scored_candidate(
+        "hub_choice",
+        "hard",
+        "level_906",
+        906,
+        layout_orientation_preference="portrait_vertical",
+        layout_size_profile="large_portrait",
+    )
+    quality = candidate.quality_score
+    assert quality is not None
+    assert quality.route_interest == 1.0
+    assert quality.details["presetContentFit"]["largeMapFit"]["penalties"] == ()
+
+    assert LevelGenerationService()._quality_rejection(candidate) is None
+
+
 def test_recipe_first_generation_is_deterministic_for_fixed_seed(tmp_path) -> None:
     first = _dry_run_auto(tmp_path / "first")
     second = _dry_run_auto(tmp_path / "second")
@@ -175,13 +275,51 @@ def _generated_candidate(family_name: str, difficulty_name: str, level_id: str, 
     return generated
 
 
-def _solved_recipe_and_generated(family_name: str, difficulty_name: str, level_id: str, level_number: int):
+def _scored_candidate(
+    family_name: str,
+    difficulty_name: str,
+    level_id: str,
+    level_number: int,
+    *,
+    layout_orientation_preference: str = "horizontal",
+    layout_size_profile: str = "standard_portrait",
+):
+    _, generated = _solved_recipe_and_generated(
+        family_name,
+        difficulty_name,
+        level_id,
+        level_number,
+        layout_orientation_preference=layout_orientation_preference,
+        layout_size_profile=layout_size_profile,
+    )
+    preset = DifficultyService().get_preset(difficulty_name)
+    generated.candidate_signature = CandidateSignatureService().signature_for(generated)
+    generated.quality_score = GenerationQualityService().score(generated, preset)
+    return generated
+
+
+def _solved_recipe_and_generated(
+    family_name: str,
+    difficulty_name: str,
+    level_id: str,
+    level_number: int,
+    *,
+    layout_orientation_preference: str = "horizontal",
+    layout_size_profile: str = "standard_portrait",
+):
     preset = DifficultyService().get_preset(difficulty_name)
     family = RecipeFamilyRegistry().get_family(family_name)
     recipe = family.generate_recipe(level_id, preset, RandomSource(11), family.variants[0])
     recipe = AbstractPuzzleSolverService().solve(recipe, preset)
-    generated = RecipeToLevelBuilderService().build_level(recipe, level_number, seed=22)
-    validation = GeneratedLevelValidationService().validate(generated, preset=preset, overwrite=True)
+    generated = RecipeToLevelBuilderService().build_level(
+        recipe,
+        level_number,
+        seed=22,
+        layout_orientation_preference=layout_orientation_preference,
+        layout_size_profile=layout_size_profile,
+    )
+    validation_preset = RecipeToLevelBuilderService()._preset_for_layout_size_profile(preset, layout_size_profile)
+    validation = GeneratedLevelValidationService().validate(generated, preset=validation_preset, overwrite=True)
     assert not validation.has_errors, (family_name, validation.error_codes)
     return recipe, generated
 
