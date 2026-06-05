@@ -76,10 +76,46 @@ final class GameplayCameraLayoutTests: XCTestCase {
 
         let extents = LevelPlayableExtents.make(for: graph, cameraSafeMargin: 0.25)
 
+        XCTAssertEqual(extents.nodeBounds.minX, -0.5, accuracy: 0.0001)
+        XCTAssertEqual(extents.nodeBounds.maxX, 1.0, accuracy: 0.0001)
+        XCTAssertEqual(extents.nodeBounds.minY, 0.0, accuracy: 0.0001)
+        XCTAssertEqual(extents.nodeBounds.maxY, 4.0, accuracy: 0.0001)
         XCTAssertEqual(extents.levelWidth, 1.5, accuracy: 0.0001)
         XCTAssertEqual(extents.levelHeight, 4.0, accuracy: 0.0001)
+        XCTAssertEqual(extents.cameraSafeMargin, 0.25, accuracy: 0.0001)
         XCTAssertEqual(extents.cameraSafeBounds.minX, -0.75, accuracy: 0.0001)
+        XCTAssertEqual(extents.cameraSafeBounds.maxX, 1.25, accuracy: 0.0001)
+        XCTAssertEqual(extents.cameraSafeBounds.minY, -0.25, accuracy: 0.0001)
         XCTAssertEqual(extents.cameraSafeBounds.maxY, 4.25, accuracy: 0.0001)
+    }
+
+    func testPlayableExtentsIncludeRoadGeometryOutsideNodeBounds() {
+        let graph = makeRuntimeGraph(
+            points: [
+                ("start", 0, 0),
+                ("destination", 2, 0),
+            ],
+            edgePathOverrides: [
+                "edge_0": RoadPath(segments: [
+                    RoadSegment(
+                        kind: .smoothTurn,
+                        start: RoadPoint(x: 0, y: 0),
+                        end: RoadPoint(x: 2, y: 0),
+                        center: nil,
+                        control1: RoadPoint(x: 0.5, y: 1.5),
+                        control2: RoadPoint(x: 1.5, y: 1.5),
+                        radius: 0,
+                        startAngle: 0,
+                        signedAngleDelta: 0
+                    )
+                ])
+            ]
+        )
+
+        let extents = LevelPlayableExtents.make(for: graph, cameraSafeMargin: 0)
+
+        XCTAssertEqual(extents.nodeBounds.maxY, 0, accuracy: 0.0001)
+        XCTAssertGreaterThan(extents.playableBounds.maxY, extents.nodeBounds.maxY)
     }
 
     func testCameraFollowsPlayerInsideTallLevel() {
@@ -130,6 +166,35 @@ final class GameplayCameraLayoutTests: XCTestCase {
         XCTAssertLessThan(bottomLayout.pointsByNodeID["start"]?.y ?? viewport.height, viewport.height)
     }
 
+    func testCameraClampsAtLeadingAndTrailingBounds() {
+        let graph = makeRuntimeGraph(points: [
+            ("start", -4, 0),
+            ("middle", 0, 0),
+            ("destination", 4, 0),
+        ])
+        let viewport = CGSize(width: 320, height: 480)
+        let leadingLayout = BoardLayout.make(
+            for: graph,
+            in: viewport,
+            padding: 64,
+            cameraMode: .follow(RoadPoint(x: -4, y: 0))
+        )
+        let trailingLayout = BoardLayout.make(
+            for: graph,
+            in: viewport,
+            padding: 64,
+            cameraMode: .follow(RoadPoint(x: 4, y: 0))
+        )
+
+        let leadingOffset = leadingLayout.cameraPlan?.contentOffset.x ?? .infinity
+        let trailingOffset = trailingLayout.cameraPlan?.contentOffset.x ?? -.infinity
+        let contentWidth = leadingLayout.cameraPlan?.contentSize.width ?? 0
+        XCTAssertLessThanOrEqual(leadingOffset, 0.001)
+        XCTAssertGreaterThanOrEqual(trailingOffset, viewport.width - contentWidth - 0.001)
+        XCTAssertGreaterThan(leadingLayout.pointsByNodeID["start"]?.x ?? 0, 0)
+        XCTAssertLessThan(trailingLayout.pointsByNodeID["destination"]?.x ?? viewport.width, viewport.width)
+    }
+
     func testSmallLevelsKeepFitToScreenLayout() {
         let graph = makeRuntimeGraph(points: [
             ("start", -1, -0.3),
@@ -176,7 +241,33 @@ final class GameplayCameraLayoutTests: XCTestCase {
         }
     }
 
-    private func makeRuntimeGraph(points: [(String, Double, Double)]) -> RuntimeRouteGraph {
+    func testLargePortraitFollowUsesReadableTrackingScale() {
+        let graph = makeRuntimeGraph(points: [
+            ("start", 0, 0),
+            ("one", -0.25, 1.8),
+            ("two", 0.25, 3.6),
+            ("destination", 0, 5.4),
+        ])
+        let layout = BoardLayout.make(
+            for: graph,
+            in: CGSize(width: 320, height: 480),
+            padding: 64,
+            cameraMode: .follow(RoadPoint(x: 0, y: 2.7))
+        )
+
+        XCTAssertEqual(layout.cameraPlan?.isTrackingEnabled, true)
+        XCTAssertGreaterThanOrEqual(
+            layout.coordinateScale ?? 0,
+            TRGameplayStyle.Metrics.minimumReadableCoordinateScale
+        )
+        XCTAssertEqual(layout.pointsByNodeID["one"]?.x ?? 0, 136, accuracy: 40)
+        XCTAssertEqual(layout.pointsByNodeID["two"]?.x ?? 0, 184, accuracy: 40)
+    }
+
+    private func makeRuntimeGraph(
+        points: [(String, Double, Double)],
+        edgePathOverrides: [String: RoadPath] = [:]
+    ) -> RuntimeRouteGraph {
         var nodesByID: [String: RuntimeRouteNode] = [:]
         var edgesByID: [String: RuntimeRouteEdge] = [:]
 
@@ -199,7 +290,7 @@ final class GameplayCameraLayoutTests: XCTestCase {
                 id: edgeID,
                 fromNodeID: from.0,
                 toNodeID: to.0,
-                roadPath: RoadPath.make(
+                roadPath: edgePathOverrides[edgeID] ?? RoadPath.make(
                     from: RoadPoint(x: from.1, y: from.2),
                     to: RoadPoint(x: to.1, y: to.2)
                 )

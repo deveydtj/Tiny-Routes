@@ -694,6 +694,7 @@ struct LevelBoundingBox: Equatable {
 }
 
 struct LevelPlayableExtents: Equatable {
+    let nodeBounds: LevelBoundingBox
     let playableBounds: LevelBoundingBox
     let cameraSafeBounds: LevelBoundingBox
     let cameraSafeMargin: Double
@@ -710,33 +711,40 @@ struct LevelPlayableExtents: Equatable {
         for runtimeGraph: RuntimeRouteGraph,
         cameraSafeMargin: Double = TRGameplayStyle.Metrics.cameraSafeMarginWorld
     ) -> LevelPlayableExtents {
-        var points = runtimeGraph.nodesByID.values.map { RoadPoint(x: $0.x, y: $0.y) }
+        let nodePoints = runtimeGraph.nodesByID.values.map { RoadPoint(x: $0.x, y: $0.y) }
+        var playablePoints = nodePoints
         for edge in runtimeGraph.edgesByID.values {
-            points.append(contentsOf: sampledPoints(for: edge.roadPath))
+            playablePoints.append(contentsOf: sampledPoints(for: edge.roadPath))
         }
 
-        let playableBounds: LevelBoundingBox
-        if let first = points.first {
-            var minX = first.x
-            var maxX = first.x
-            var minY = first.y
-            var maxY = first.y
-            for point in points.dropFirst() {
-                minX = min(minX, point.x)
-                maxX = max(maxX, point.x)
-                minY = min(minY, point.y)
-                maxY = max(maxY, point.y)
-            }
-            playableBounds = LevelBoundingBox(minX: minX, maxX: maxX, minY: minY, maxY: maxY)
-        } else {
-            playableBounds = LevelBoundingBox(minX: 0, maxX: 0, minY: 0, maxY: 0)
-        }
+        let nodeBounds = bounds(containing: nodePoints)
+        let playableBounds = bounds(containing: playablePoints)
 
         return LevelPlayableExtents(
+            nodeBounds: nodeBounds,
             playableBounds: playableBounds,
             cameraSafeBounds: playableBounds.expanded(by: cameraSafeMargin),
             cameraSafeMargin: cameraSafeMargin
         )
+    }
+
+    private static func bounds(containing points: [RoadPoint]) -> LevelBoundingBox {
+        guard let first = points.first else {
+            return LevelBoundingBox(minX: 0, maxX: 0, minY: 0, maxY: 0)
+        }
+
+        var minX = first.x
+        var maxX = first.x
+        var minY = first.y
+        var maxY = first.y
+        for point in points.dropFirst() {
+            minX = min(minX, point.x)
+            maxX = max(maxX, point.x)
+            minY = min(minY, point.y)
+            maxY = max(maxY, point.y)
+        }
+
+        return LevelBoundingBox(minX: minX, maxX: maxX, minY: minY, maxY: maxY)
     }
 
     private static func sampledPoints(for roadPath: RoadPath, sampleCount: Int = 20) -> [RoadPoint] {
@@ -1167,7 +1175,8 @@ struct BoardLayout {
         let legacyLayout = make(for: nodes, in: size, padding: padding)
         if case .follow = cameraMode,
            let legacyScale = legacyLayout.coordinateScale,
-           legacyScale >= TRGameplayStyle.Metrics.minimumReadableCoordinateScale {
+           legacyScale >= TRGameplayStyle.Metrics.minimumReadableCoordinateScale,
+           !requiresTrackingCamera(for: extents.cameraSafeBounds, in: size) {
             return legacyLayout
         }
 
@@ -1196,6 +1205,16 @@ struct BoardLayout {
             originX: cameraPlan.contentOffset.x,
             originY: cameraPlan.contentOffset.y
         )
+    }
+
+    private static func requiresTrackingCamera(
+        for bounds: LevelBoundingBox,
+        in size: CGSize,
+        readableScale: CGFloat = TRGameplayStyle.Metrics.minimumReadableCoordinateScale
+    ) -> Bool {
+        let readableWidth = CGFloat(max(bounds.width, 0)) * readableScale
+        let readableHeight = CGFloat(max(bounds.height, 0)) * readableScale
+        return readableWidth > size.width || readableHeight > size.height
     }
 
     func point(for roadPoint: RoadPoint) -> CGPoint? {
