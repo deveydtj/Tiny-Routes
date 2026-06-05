@@ -393,6 +393,123 @@ def test_mixed_recipe_family_weights_are_deterministic_for_fixed_context(tmp_pat
     assert first_decision == second_decision
 
 
+def test_mixed_recipe_family_weights_penalize_recent_topology_repeats_across_families(tmp_path) -> None:
+    service = LevelGenerationService()
+    preset = service.difficulty_service.get_preset("medium")
+    supported = service.recipe_family_registry.supported_families(preset, include_swift_required=True)
+    accepted = [
+        SimpleNamespace(
+            recipe_family="package_gate",
+            template_name="package_gate",
+            topology_class="package_gate",
+            mechanic_tags=("package_gate",),
+            layout_metadata={"layoutSizeProfile": "standard_portrait"},
+        ),
+        SimpleNamespace(
+            recipe_family="package_gate",
+            template_name="package_gate",
+            topology_class="package_gate",
+            mechanic_tags=("package_gate",),
+            layout_metadata={"layoutSizeProfile": "standard_portrait"},
+        ),
+        SimpleNamespace(
+            recipe_family="package_gate",
+            template_name="package_gate",
+            topology_class="package_gate",
+            mechanic_tags=("package_gate",),
+            layout_metadata={"layoutSizeProfile": "large_portrait"},
+        ),
+    ]
+
+    weighted, decision = service._diversity_adjusted_family_weights(
+        supported=supported,
+        preset=preset,
+        weights_override=None,
+        accepted_candidates=accepted,
+        level_id="level_021",
+    )
+    weights = {family.name: weight for family, weight in weighted}
+    repeated_topology = next(item for item in decision["families"] if item["family"] == "package_gate_double_choice")
+
+    assert weights["package_gate_double_choice"] < weights["split_path_rejoin"]
+    assert "last_topology_repeat_penalty" in repeated_topology["reasons"]
+    assert decision["familyCounts"] == {"package_gate": 3}
+    assert decision["topologyCounts"] == {"package_gate": 3}
+    assert decision["recentMechanicTags"] == ["package_gate", "package_gate", "package_gate"]
+    assert decision["recentLayoutSizeProfiles"] == ["standard_portrait", "standard_portrait", "large_portrait"]
+    assert decision["recentTopologyPenalties"]
+    assert decision["chosenFamilyWeightsAfterDiversityAdjustment"][0]["adjustedWeight"] >= (
+        decision["chosenFamilyWeightsAfterDiversityAdjustment"][-1]["adjustedWeight"]
+    )
+
+
+def test_mixed_recipe_family_selection_spreads_topologies_within_candidate_pool(tmp_path) -> None:
+    service = LevelGenerationService()
+    preset = service.difficulty_service.get_preset("medium")
+    config = _config(
+        tmp_path,
+        difficulty="medium",
+        template_name="mixed",
+        dry_run=True,
+        compare_against_existing=False,
+    )
+    decisions = []
+
+    families = service._recipe_family_candidates(
+        config=config,
+        preset=preset,
+        rng=RandomSource(20260605),
+        include_swift_required=True,
+        plan_template_weights={},
+        count=4,
+        accepted_candidates=[],
+        level_id="level_021",
+        diversity_decisions=decisions,
+    )
+    topologies = [service._family_topology_classes(family, preset)[0] for family in families]
+
+    assert len(topologies) == len(set(topologies))
+    assert decisions[0]["selectedFamilies"]
+
+
+def test_explicit_recipe_family_selection_ignores_batch_diversity_context(tmp_path) -> None:
+    service = LevelGenerationService()
+    preset = service.difficulty_service.get_preset("medium")
+    config = _config(
+        tmp_path,
+        difficulty="medium",
+        template_name="package_gate",
+        dry_run=True,
+        compare_against_existing=False,
+    )
+    accepted = [
+        SimpleNamespace(
+            recipe_family="package_gate",
+            template_name="package_gate",
+            topology_class="package_gate",
+            mechanic_tags=("package_gate",),
+            layout_metadata={"layoutSizeProfile": "large_portrait"},
+        )
+        for _ in range(5)
+    ]
+    decisions = []
+
+    families = service._recipe_family_candidates(
+        config=config,
+        preset=preset,
+        rng=RandomSource(20260605),
+        include_swift_required=True,
+        plan_template_weights={},
+        count=3,
+        accepted_candidates=accepted,
+        level_id="level_021",
+        diversity_decisions=decisions,
+    )
+
+    assert [family.name for family in families] == ["package_gate", "package_gate", "package_gate"]
+    assert decisions == []
+
+
 def test_generation_service_rejects_candidates_similar_to_existing_levels(tmp_path) -> None:
     preset_result = LevelGenerationService()
     preset = preset_result.difficulty_service.get_preset("easy")

@@ -617,6 +617,15 @@ class LevelGenerationService:
             selected.append(family)
             selected_topologies.update(self._family_topology_classes(family, preset))
             remaining = [(candidate, weight) for candidate, weight in remaining if candidate.name != family.name]
+        weight_by_family = {family.name: weight for family, weight in weighted}
+        decision["selectedFamilies"] = [
+            {
+                "family": family.name,
+                "topologyClasses": list(self._family_topology_classes(family, preset)),
+                "adjustedWeight": round(float(weight_by_family.get(family.name, 0.0)), 4),
+            }
+            for family in selected
+        ]
         return selected
 
     def _diversity_adjusted_family_weights(
@@ -628,20 +637,18 @@ class LevelGenerationService:
         accepted_candidates,
         level_id: str,
     ):
-        accepted = list(accepted_candidates)
-        family_counts = Counter(level.recipe_family or level.template_name for level in accepted)
-        topology_counts = Counter(getattr(level, "topology_class", "") or "unknown" for level in accepted)
-        recent_families = [
-            level.recipe_family or level.template_name
-            for level in accepted[-3:]
-            if level.recipe_family or level.template_name
-        ]
-        recent_topologies = [
-            getattr(level, "topology_class", "") or "unknown"
-            for level in accepted[-3:]
-        ]
+        context = self._batch_diversity_context(accepted_candidates)
+        accepted = context["accepted"]
+        family_counts = context["familyCounts"]
+        topology_counts = context["topologyCounts"]
+        mechanic_tag_counts = context["mechanicTagCounts"]
+        recent_families = context["recentFamilies"]
+        recent_topologies = context["recentTopologies"]
+        recent_mechanic_tags = context["recentMechanicTags"]
+        recent_layout_size_profiles = context["recentLayoutSizeProfiles"]
         max_family_count = max(family_counts.values(), default=0)
         max_topology_count = max(topology_counts.values(), default=0)
+        max_mechanic_tag_count = max(mechanic_tag_counts.values(), default=0)
 
         adjusted = []
         decision_families = []
@@ -657,8 +664,14 @@ class LevelGenerationService:
             topology_classes = self._family_topology_classes(family, preset)
             family_count = family_counts.get(family.name, 0)
             topology_count = max((topology_counts.get(topology, 0) for topology in topology_classes), default=0)
+            family_mechanic_tags = set(getattr(family, "mechanic_tags", ()) or ())
+            mechanic_tag_count = max(
+                (mechanic_tag_counts.get(tag, 0) for tag in family_mechanic_tags),
+                default=0,
+            )
             multiplier = 1.0
             reasons: list[str] = []
+            penalties: list[dict] = []
 
             if accepted:
                 if family_count == 0:
@@ -681,36 +694,67 @@ class LevelGenerationService:
                     multiplier *= 1.0 / (1.0 + (0.28 * topology_count))
                     reasons.append("topology_count_penalty")
 
+                if family_mechanic_tags:
+                    if mechanic_tag_count == 0:
+                        multiplier *= 1.08
+                        reasons.append("unused_mechanic_tag_boost")
+                    elif mechanic_tag_count < max_mechanic_tag_count:
+                        multiplier *= 1.04
+                        reasons.append("underused_mechanic_tag_boost")
+
             if recent_families:
                 if recent_families[-1] == family.name:
-                    multiplier *= 0.25
+                    factor = 0.25
+                    multiplier *= factor
                     reasons.append("last_family_repeat_penalty")
+                    penalties.append({"kind": "family", "reason": "last_family_repeat_penalty", "factor": factor})
                 elif family.name in recent_families[-2:]:
-                    multiplier *= 0.55
+                    factor = 0.55
+                    multiplier *= factor
                     reasons.append("recent_family_repeat_penalty")
+                    penalties.append({"kind": "family", "reason": "recent_family_repeat_penalty", "factor": factor})
 
             if recent_topologies and set(topology_classes):
                 if recent_topologies[-1] in topology_classes:
-                    multiplier *= 0.40
+                    factor = 0.40
+                    multiplier *= factor
                     reasons.append("last_topology_repeat_penalty")
+                    penalties.append({"kind": "topology", "reason": "last_topology_repeat_penalty", "factor": factor})
                 elif set(recent_topologies[-2:]) & set(topology_classes):
-                    multiplier *= 0.70
+                    factor = 0.70
+                    multiplier *= factor
                     reasons.append("recent_topology_repeat_penalty")
+                    penalties.append({"kind": "topology", "reason": "recent_topology_repeat_penalty", "factor": factor})
+
+            if recent_mechanic_tags and family_mechanic_tags:
+                if family_mechanic_tags & set(recent_mechanic_tags[-1:]):
+                    factor = 0.82
+                    multiplier *= factor
+                    reasons.append("last_mechanic_tag_repeat_penalty")
+                    penalties.append({"kind": "mechanic_tag", "reason": "last_mechanic_tag_repeat_penalty", "factor": factor})
+                elif family_mechanic_tags & set(recent_mechanic_tags[-3:]):
+                    factor = 0.92
+                    multiplier *= factor
+                    reasons.append("recent_mechanic_tag_repeat_penalty")
+                    penalties.append({"kind": "mechanic_tag", "reason": "recent_mechanic_tag_repeat_penalty", "factor": factor})
 
             adjusted_weight = max(base_weight * multiplier, 0.01)
             adjusted.append((family, adjusted_weight))
-            if base_weight != adjusted_weight or reasons:
-                decision_families.append(
-                    {
-                        "family": family.name,
-                        "topologyClasses": list(topology_classes),
-                        "baseWeight": round(float(base_weight), 4),
-                        "adjustedWeight": round(float(adjusted_weight), 4),
-                        "familyCount": int(family_count),
-                        "topologyCount": int(topology_count),
-                        "reasons": reasons,
-                    }
-                )
+            decision_families.append(
+                {
+                    "family": family.name,
+                    "topologyClasses": list(topology_classes),
+                    "mechanicTags": sorted(family_mechanic_tags),
+                    "baseWeight": round(float(base_weight), 4),
+                    "adjustedWeight": round(float(adjusted_weight), 4),
+                    "weightAfterDiversityAdjustment": round(float(adjusted_weight), 4),
+                    "familyCount": int(family_count),
+                    "topologyCount": int(topology_count),
+                    "mechanicTagCount": int(mechanic_tag_count),
+                    "reasons": reasons,
+                    "penalties": penalties,
+                }
+            )
 
         return adjusted, {
             "levelID": level_id,
@@ -718,9 +762,65 @@ class LevelGenerationService:
             "acceptedCount": len(accepted),
             "recentFamilies": recent_families,
             "recentTopologies": recent_topologies,
+            "recentMechanicTags": recent_mechanic_tags,
+            "recentLayoutSizeProfiles": recent_layout_size_profiles,
             "familyCounts": dict(sorted(family_counts.items())),
             "topologyCounts": dict(sorted(topology_counts.items())),
+            "mechanicTagCounts": dict(sorted(mechanic_tag_counts.items())),
+            "recentFamilyPenalties": [
+                item
+                for item in decision_families
+                if any(penalty["kind"] == "family" for penalty in item["penalties"])
+            ],
+            "recentTopologyPenalties": [
+                item
+                for item in decision_families
+                if any(penalty["kind"] == "topology" for penalty in item["penalties"])
+            ],
+            "chosenFamilyWeightsAfterDiversityAdjustment": [
+                {
+                    "family": item["family"],
+                    "topologyClasses": item["topologyClasses"],
+                    "baseWeight": item["baseWeight"],
+                    "adjustedWeight": item["adjustedWeight"],
+                    "reasons": item["reasons"],
+                }
+                for item in sorted(decision_families, key=lambda item: item["adjustedWeight"], reverse=True)
+                if item["adjustedWeight"] > 0
+            ],
             "families": sorted(decision_families, key=lambda item: item["family"]),
+        }
+
+    def _batch_diversity_context(self, accepted_candidates) -> dict:
+        accepted = list(accepted_candidates)
+        recent = accepted[-3:]
+        return {
+            "accepted": accepted,
+            "familyCounts": Counter(level.recipe_family or level.template_name for level in accepted),
+            "topologyCounts": Counter(getattr(level, "topology_class", "") or "unknown" for level in accepted),
+            "mechanicTagCounts": Counter(
+                tag
+                for level in accepted
+                for tag in (getattr(level, "mechanic_tags", ()) or ())
+            ),
+            "recentFamilies": [
+                level.recipe_family or level.template_name
+                for level in recent
+                if level.recipe_family or level.template_name
+            ],
+            "recentTopologies": [
+                getattr(level, "topology_class", "") or "unknown"
+                for level in recent
+            ],
+            "recentMechanicTags": [
+                tag
+                for level in recent
+                for tag in (getattr(level, "mechanic_tags", ()) or ())
+            ],
+            "recentLayoutSizeProfiles": [
+                (getattr(level, "layout_metadata", None) or {}).get("layoutSizeProfile", "unknown")
+                for level in recent
+            ],
         }
 
     def _family_topology_classes(self, family, preset) -> tuple[str, ...]:
@@ -744,6 +844,12 @@ class LevelGenerationService:
         return alternatives or weighted
 
     def _append_diversity_decision(self, decisions: list[dict], decision: dict) -> None:
+        level_id = decision.get("levelID")
+        if level_id:
+            for index, existing in enumerate(decisions):
+                if existing.get("levelID") == level_id:
+                    decisions[index] = decision
+                    return
         if len(decisions) >= self.MAX_DIVERSITY_DECISIONS:
             return
         decisions.append(decision)
