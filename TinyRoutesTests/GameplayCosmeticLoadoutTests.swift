@@ -31,6 +31,8 @@ final class GameplayCosmeticLoadoutTests: XCTestCase {
             hasCollectedPackage: true,
             cosmeticLoadout: try customLoadout(),
             isShowingPreview: false,
+            pressedSwitchNodeID: nil,
+            switchPressEventToken: 0,
             onNodeTapped: { _ in }
         )
 

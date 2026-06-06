@@ -19,6 +19,8 @@ struct GameplayScreen: View {
     @State private var destinationNodeID: String = ""
     @State private var hasCollectedPackage: Bool = false
     @State private var tapCount: Int = 0
+    @State private var lastRotatedSwitchNodeID: String?
+    @State private var switchPressEventToken: Int = 0
     @State private var timeRemaining: TimeInterval?
     @State private var loadErrorMessage: String?
     @State private var lastFrameDate: Date?
@@ -76,6 +78,8 @@ struct GameplayScreen: View {
                         hasCollectedPackage: hasCollectedPackage,
                         cosmeticLoadout: cosmeticLoadout,
                         isShowingPreview: isShowingLevelPreview,
+                        pressedSwitchNodeID: lastRotatedSwitchNodeID,
+                        switchPressEventToken: switchPressEventToken,
                         onNodeTapped: handleNodeTapped
                     )
                     .onAppear {
@@ -212,6 +216,8 @@ struct GameplayScreen: View {
         runtimeGraph = routeEngine.runtimeGraph
         if didRotate {
             tapCount = routeEngine.tapCount
+            lastRotatedSwitchNodeID = nodeID
+            switchPressEventToken += 1
         }
     }
 
@@ -262,6 +268,8 @@ struct GameplayScreen: View {
         hasCollectedPackage = false
         lastFrameDate = nil
         tapCount = 0
+        lastRotatedSwitchNodeID = nil
+        switchPressEventToken = 0
         timeRemaining = nil
         hasDispatchedOutcome = false
         isShowingLevelPreview = false
@@ -328,15 +336,16 @@ struct RouteBoardView: View {
     let hasCollectedPackage: Bool
     let cosmeticLoadout: GameplayCosmeticLoadout
     let isShowingPreview: Bool
+    let pressedSwitchNodeID: String?
+    let switchPressEventToken: Int
     let onNodeTapped: (String) -> Void
 
     private let boardPadding = TRGameplayStyle.Metrics.boardPadding
     private let switchSpriteSize = TRGameplayStyle.Metrics.switchNodeSize
     private let switchRingSize = TRGameplayStyle.Metrics.switchCircleSize
-    private let specialNodeSize = TRGameplayStyle.Metrics.packageMarkerSize
+    private let packageBadgeSize = TRGameplayStyle.Metrics.packageBadgeSize
     private let destinationMarkerShellSize = TRGameplayStyle.Metrics.packageMarkerSize * 0.45
     private let specialNodeIconSize = TRGameplayStyle.Metrics.markerIconSize
-    private let collectedPackageMarkerSize = TRGameplayStyle.Metrics.collectedPackageMarkerSize
 
     private let playerOuterSize = TRGameplayStyle.Metrics.playerOuterSize
     private let playerCoreSize = TRGameplayStyle.Metrics.playerCoreSize
@@ -366,8 +375,7 @@ struct RouteBoardView: View {
             let isDeliveryDotMoving = deliveryDot?.currentEdgeID != nil || deliveryDot?.transition != nil
             let tapTargetResolver = RouteBoardTapTargetResolver(
                 runtimeGraph: runtimeGraph,
-                layout: layout,
-                tapRadius: max(switchSpriteSize, specialNodeSize) * 0.65
+                layout: layout
             )
 
             ZStack {
@@ -468,12 +476,7 @@ struct RouteBoardView: View {
     @ViewBuilder
     private func nodeView(for node: RuntimeRouteNode, layout: BoardLayout) -> some View {
         if node.id == packageNodeID, !hasCollectedPackage {
-            TRCircularMarkerShell(size: specialNodeSize) {
-                SpriteImage(name: "shipping_box")
-                    .scaledToFit()
-                    .frame(width: specialNodeIconSize, height: specialNodeIconSize)
-                    .scaleEffect(1.10)
-            }
+            TRPackageMarkerView(size: packageBadgeSize)
         } else if node.id == packageNodeID {
             Image(systemName: "checkmark")
                 .font(.system(size: 14, weight: .heavy))
@@ -491,7 +494,8 @@ struct RouteBoardView: View {
                 spriteSize: switchSpriteSize,
                 ringSize: switchRingSize,
                 optionCount: validOutgoingEdgeIDs.count,
-                optionAngles: optionAngles(for: node, validOutgoingEdgeIDs: validOutgoingEdgeIDs)
+                optionAngles: optionAngles(for: node, validOutgoingEdgeIDs: validOutgoingEdgeIDs),
+                pressEventToken: pressedSwitchNodeID == node.id ? switchPressEventToken : nil
             )
         } else {
             EmptyView()
@@ -1054,6 +1058,16 @@ struct RouteBoardTapTargetResolver {
     let runtimeGraph: RuntimeRouteGraph
     let layout: BoardLayout
     let tapRadius: CGFloat
+
+    init(
+        runtimeGraph: RuntimeRouteGraph,
+        layout: BoardLayout,
+        tapRadius: CGFloat = TRGameplayStyle.Metrics.switchTapTargetSize / 2
+    ) {
+        self.runtimeGraph = runtimeGraph
+        self.layout = layout
+        self.tapRadius = tapRadius
+    }
 
     func nodeID(at point: CGPoint) -> String? {
         let tapRadiusSquared = tapRadius * tapRadius

@@ -694,6 +694,29 @@ final class RouteEngineTests: XCTestCase {
         XCTAssertEqual(resolver.nodeID(at: CGPoint(x: 52, y: 22)), "switch")
     }
 
+    func testRouteBoardTapTargetResolverDefaultRadiusSupportsPracticalSwitchTapTarget() throws {
+        let level = makeLevelData()
+        let engine = RouteEngine()
+        try engine.buildGraph(from: level)
+
+        let graph = try XCTUnwrap(engine.runtimeGraph)
+        let resolver = RouteBoardTapTargetResolver(
+            runtimeGraph: graph,
+            layout: makeBoardLayout(
+                pointsByNodeID: [
+                    "start": CGPoint(x: 10, y: 20),
+                    "switch": CGPoint(x: 50, y: 20),
+                    "package": CGPoint(x: 90, y: 10),
+                    "dead_end": CGPoint(x: 90, y: 40),
+                    "destination": CGPoint(x: 130, y: 20)
+                ]
+            )
+        )
+
+        XCTAssertEqual(resolver.tapRadius, TRGameplayStyle.Metrics.switchTapTargetSize / 2, accuracy: 0.0001)
+        XCTAssertEqual(resolver.nodeID(at: CGPoint(x: 87, y: 20)), "switch")
+    }
+
     func testRouteBoardTapTargetResolverIdentifiesFourWaySwitch() throws {
         let engine = RouteEngine()
         try engine.buildGraph(from: makeFourWayIntersectionLevelData())

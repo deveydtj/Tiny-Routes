@@ -2,46 +2,34 @@
   "levelID": "level_004",
   "description": "Follow the generated graph recipe route and rotate each switch before arrival.",
   "expectedOutcome": "completed",
-  "maxTaps": 2,
+  "maxTaps": 1,
   "requiresWithinTimeLimit": true,
   "actions": [
     {
-      "timeSeconds": 0.1,
-      "tapNodeID": "approach_switch",
-      "reason": "Rotate switch 'approach_switch' toward 'package' before arrival.",
-      "expectedEdgeAfterTap": "e_approach_switch_package",
+      "timeSeconds": 0.31,
+      "tapNodeID": "choice",
+      "reason": "Rotate switch 'choice' toward 'package' before arrival.",
+      "expectedEdgeAfterTap": "e_choice_package",
       "expectedRouteNodeAfterTap": "package",
-      "reactionWindowSeconds": 0.4,
-      "switchStateBeforeTap": "e_approach_switch_bypass",
-      "switchStateAfterTap": "e_approach_switch_package"
-    },
-    {
-      "timeSeconds": 1.7,
-      "tapNodeID": "finish_switch",
-      "reason": "Rotate switch 'finish_switch' toward 'destination' before arrival.",
-      "expectedEdgeAfterTap": "e_finish_switch_destination",
-      "expectedRouteNodeAfterTap": "destination",
       "reactionWindowSeconds": 0.45,
-      "switchStateBeforeTap": "e_finish_switch_dead_end_a",
-      "switchStateAfterTap": "e_finish_switch_destination"
+      "switchStateBeforeTap": "e_choice_wrong_dead_end",
+      "switchStateAfterTap": "e_choice_package"
     }
   ],
   "metadata": {
     "validationVersion": "solution_sidecar_v1",
     "solutionRoute": [
       "start",
-      "approach_switch",
+      "choice",
       "package",
-      "finish_switch",
       "destination"
     ],
     "requiredTapOrder": [
-      "approach_switch",
-      "finish_switch"
+      "choice"
     ],
-    "template": "package_gate",
-    "generatedSeed": 192319878,
-    "recipeFamily": "package_gate",
-    "recipeVariant": "package_gate_classic"
+    "template": "single_switch_wrong_dead_end",
+    "generatedSeed": 2014853202,
+    "recipeFamily": "single_switch_wrong_dead_end",
+    "recipeVariant": "single_switch_wrong_dead_end_primary"
   }
 }

@@ -5,24 +5,24 @@
     "nodes": [
       {
         "id": "start",
-        "x": -1.0,
-        "y": 0.0,
+        "x": 0.0,
+        "y": 0.85,
         "outgoingEdgeIDs": [
           "e_start_package"
         ]
       },
       {
         "id": "package",
-        "x": 0.0,
-        "y": 0.4,
+        "x": 0.4,
+        "y": -0.1,
         "outgoingEdgeIDs": [
           "e_package_destination"
         ]
       },
       {
         "id": "destination",
-        "x": 1.0,
-        "y": -0.3,
+        "x": -0.3,
+        "y": -1.0,
         "outgoingEdgeIDs": []
       }
     ],
@@ -31,13 +31,13 @@
         "id": "e_start_package",
         "fromNodeID": "start",
         "toNodeID": "package",
-        "roadShape": "verticalFirst"
+        "roadShape": "horizontalFirst"
       },
       {
         "id": "e_package_destination",
         "fromNodeID": "package",
         "toNodeID": "destination",
-        "roadShape": "horizontalFirst"
+        "roadShape": "verticalFirst"
       }
     ]
   },

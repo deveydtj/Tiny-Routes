@@ -2,46 +2,34 @@
   "levelID": "level_006",
   "description": "Follow the generated graph recipe route and rotate each switch before arrival.",
   "expectedOutcome": "completed",
-  "maxTaps": 2,
+  "maxTaps": 1,
   "requiresWithinTimeLimit": true,
   "actions": [
     {
-      "timeSeconds": 0.21,
-      "tapNodeID": "switch_a",
-      "reason": "Rotate switch 'switch_a' toward 'package' before arrival.",
-      "expectedEdgeAfterTap": "e_switch_a_package",
+      "timeSeconds": 0.31,
+      "tapNodeID": "choice",
+      "reason": "Rotate switch 'choice' toward 'package' before arrival.",
+      "expectedEdgeAfterTap": "e_choice_package",
       "expectedRouteNodeAfterTap": "package",
       "reactionWindowSeconds": 0.45,
-      "switchStateBeforeTap": "e_switch_a_dead_end_a",
-      "switchStateAfterTap": "e_switch_a_package"
-    },
-    {
-      "timeSeconds": 1.52,
-      "tapNodeID": "switch_b",
-      "reason": "Rotate switch 'switch_b' toward 'destination' before arrival.",
-      "expectedEdgeAfterTap": "e_switch_b_destination",
-      "expectedRouteNodeAfterTap": "destination",
-      "reactionWindowSeconds": 0.45,
-      "switchStateBeforeTap": "e_switch_b_dead_end_b",
-      "switchStateAfterTap": "e_switch_b_destination"
+      "switchStateBeforeTap": "e_choice_dead_end_a",
+      "switchStateAfterTap": "e_choice_package"
     }
   ],
   "metadata": {
     "validationVersion": "solution_sidecar_v1",
     "solutionRoute": [
       "start",
-      "switch_a",
+      "choice",
       "package",
-      "switch_b",
       "destination"
     ],
     "requiredTapOrder": [
-      "switch_a",
-      "switch_b"
+      "choice"
     ],
-    "template": "two_switch_order_intro",
-    "generatedSeed": 2655863737,
-    "recipeFamily": "two_switch_order_intro",
-    "recipeVariant": "two_switch_order_intro_primary"
+    "template": "single_switch_intro",
+    "generatedSeed": 3008145547,
+    "recipeFamily": "single_switch_intro",
+    "recipeVariant": "single_switch_intro_primary"
   }
 }

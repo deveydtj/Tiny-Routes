@@ -17,6 +17,18 @@ final class TRGameplayStyleTests: XCTestCase {
         XCTAssertEqual(TRGameplayStyle.Metrics.playerScale, expectedPlayerScale, accuracy: 0.0001)
     }
 
+    func testSwitchTapTargetIsLargerThanVisibleSwitch() {
+        XCTAssertGreaterThanOrEqual(TRGameplayStyle.Metrics.switchTapTargetSize, 72)
+        XCTAssertGreaterThan(TRGameplayStyle.Metrics.switchTapTargetSize, TRGameplayStyle.Metrics.switchNodeSize)
+        XCTAssertGreaterThan(TRGameplayStyle.Metrics.switchTapTargetSize, TRGameplayStyle.Metrics.switchCircleSize)
+    }
+
+    func testPackageBadgeReadsAsSmallerObjectiveMarker() {
+        XCTAssertLessThan(TRGameplayStyle.Metrics.packageBadgeSize, TRGameplayStyle.Metrics.switchCircleSize)
+        XCTAssertLessThan(TRGameplayStyle.Metrics.packageBadgeIconSize, TRGameplayStyle.Metrics.packageBadgeSize)
+        XCTAssertLessThan(TRGameplayStyle.Metrics.packageBadgeCornerRadius, TRGameplayStyle.Metrics.packageBadgeSize / 2)
+    }
+
     func testResultMetricsArePositiveStaticValues() {
         XCTAssertGreaterThan(TRGameplayStyle.Metrics.resultCardCornerRadius, 0)
         XCTAssertGreaterThan(TRGameplayStyle.Metrics.resultPrimaryButtonHeight, 0)

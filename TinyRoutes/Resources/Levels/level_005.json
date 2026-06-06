@@ -5,72 +5,31 @@
     "nodes": [
       {
         "id": "start",
-        "x": -1.0,
-        "y": -0.1,
-        "outgoingEdgeIDs": [
-          "e_start_choice"
-        ]
-      },
-      {
-        "id": "choice",
-        "x": -0.5,
-        "y": -0.1,
-        "outgoingEdgeIDs": [
-          "e_choice_shortcut_dead_end",
-          "e_choice_detour"
-        ]
-      },
-      {
-        "id": "detour",
         "x": 0.0,
-        "y": -0.1,
+        "y": 0.85,
         "outgoingEdgeIDs": [
-          "e_detour_package"
+          "e_start_package"
         ]
       },
       {
         "id": "package",
-        "x": 0.5,
-        "y": 0.3,
+        "x": -0.4,
+        "y": -0.1,
         "outgoingEdgeIDs": [
           "e_package_destination"
         ]
       },
       {
         "id": "destination",
-        "x": 1.0,
-        "y": -0.1,
-        "outgoingEdgeIDs": []
-      },
-      {
-        "id": "shortcut_dead_end",
-        "x": -0.5,
-        "y": 0.8,
+        "x": 0.3,
+        "y": -1.0,
         "outgoingEdgeIDs": []
       }
     ],
     "edges": [
       {
-        "id": "e_start_choice",
+        "id": "e_start_package",
         "fromNodeID": "start",
-        "toNodeID": "choice",
-        "roadShape": "horizontalFirst"
-      },
-      {
-        "id": "e_choice_shortcut_dead_end",
-        "fromNodeID": "choice",
-        "toNodeID": "shortcut_dead_end",
-        "roadShape": "verticalFirst"
-      },
-      {
-        "id": "e_choice_detour",
-        "fromNodeID": "choice",
-        "toNodeID": "detour",
-        "roadShape": "horizontalFirst"
-      },
-      {
-        "id": "e_detour_package",
-        "fromNodeID": "detour",
         "toNodeID": "package",
         "roadShape": "horizontalFirst"
       },
@@ -78,7 +37,7 @@
         "id": "e_package_destination",
         "fromNodeID": "package",
         "toNodeID": "destination",
-        "roadShape": "horizontalFirst"
+        "roadShape": "verticalFirst"
       }
     ]
   },
@@ -86,5 +45,5 @@
   "packageNodeID": "package",
   "destinationNodeID": "destination",
   "timeLimitSeconds": 30,
-  "parTaps": 1
+  "parTaps": 0
 }

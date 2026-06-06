@@ -2,34 +2,21 @@
   "levelID": "level_007",
   "description": "Follow the generated graph recipe route and rotate each switch before arrival.",
   "expectedOutcome": "completed",
-  "maxTaps": 1,
+  "maxTaps": 0,
   "requiresWithinTimeLimit": true,
-  "actions": [
-    {
-      "timeSeconds": 0.2,
-      "tapNodeID": "gate",
-      "reason": "Rotate switch 'gate' toward 'package' before arrival.",
-      "expectedEdgeAfterTap": "e_gate_package",
-      "expectedRouteNodeAfterTap": "package",
-      "reactionWindowSeconds": 0.45,
-      "switchStateBeforeTap": "e_gate_dead_end_a",
-      "switchStateAfterTap": "e_gate_package"
-    }
-  ],
+  "actions": [],
   "metadata": {
     "validationVersion": "solution_sidecar_v1",
     "solutionRoute": [
       "start",
-      "gate",
+      "node_a",
       "package",
       "destination"
     ],
-    "requiredTapOrder": [
-      "gate"
-    ],
-    "template": "package_gate_simple",
-    "generatedSeed": 3445885785,
-    "recipeFamily": "package_gate_simple",
-    "recipeVariant": "package_gate_simple_primary"
+    "requiredTapOrder": [],
+    "template": "straight_delivery",
+    "generatedSeed": 678951892,
+    "recipeFamily": "straight_delivery",
+    "recipeVariant": "straight_delivery_1_intermediate"
   }
 }

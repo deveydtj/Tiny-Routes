@@ -6,7 +6,7 @@
   "requiresWithinTimeLimit": true,
   "actions": [
     {
-      "timeSeconds": 0.36,
+      "timeSeconds": 0.31,
       "tapNodeID": "choice",
       "reason": "Rotate switch 'choice' toward 'package' before arrival.",
       "expectedEdgeAfterTap": "e_choice_package",

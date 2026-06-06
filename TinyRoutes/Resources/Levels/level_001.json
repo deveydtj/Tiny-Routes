@@ -5,40 +5,40 @@
     "nodes": [
       {
         "id": "start",
-        "x": -1.0,
-        "y": 0.0,
+        "x": 0.0,
+        "y": 0.85,
         "outgoingEdgeIDs": [
           "e_start_pickup_lane"
         ]
       },
       {
         "id": "pickup_lane",
-        "x": -0.5,
-        "y": 0.0,
+        "x": 0.0,
+        "y": 0.4,
         "outgoingEdgeIDs": [
           "e_pickup_lane_package"
         ]
       },
       {
         "id": "package",
-        "x": 0.0,
-        "y": 0.4,
+        "x": 0.4,
+        "y": -0.1,
         "outgoingEdgeIDs": [
           "e_package_exit_lane"
         ]
       },
       {
         "id": "exit_lane",
-        "x": 0.5,
-        "y": 0.0,
+        "x": 0.0,
+        "y": -0.55,
         "outgoingEdgeIDs": [
           "e_exit_lane_destination"
         ]
       },
       {
         "id": "destination",
-        "x": 1.0,
-        "y": -0.3,
+        "x": -0.3,
+        "y": -1.0,
         "outgoingEdgeIDs": []
       }
     ],
@@ -59,13 +59,13 @@
         "id": "e_package_exit_lane",
         "fromNodeID": "package",
         "toNodeID": "exit_lane",
-        "roadShape": "horizontalFirst"
+        "roadShape": "verticalFirst"
       },
       {
         "id": "e_exit_lane_destination",
         "fromNodeID": "exit_lane",
         "toNodeID": "destination",
-        "roadShape": "verticalFirst"
+        "roadShape": "horizontalFirst"
       }
     ]
   },

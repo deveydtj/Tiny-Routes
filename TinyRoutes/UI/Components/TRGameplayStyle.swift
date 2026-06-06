@@ -30,6 +30,8 @@ enum TRGameplayStyle {
         static let levelPreviewDurationNanoseconds: UInt64 = 1_400_000_000
         static let switchNodeSize: CGFloat = 52
         static let switchCircleSize: CGFloat = 42
+        static let switchTapTargetSize: CGFloat = 76
+        static let switchTouchHaloSize: CGFloat = 54
         static let playerOuterSize: CGFloat = 52
         static let playerWhiteRimWidth: CGFloat = crispWhiteRimWidth
         static let playerScale: CGFloat = 0.5625
@@ -37,6 +39,9 @@ enum TRGameplayStyle {
             max(playerOuterSize - (playerWhiteRimWidth * 2), .zero)
         }
         static let packageMarkerSize: CGFloat = 74
+        static let packageBadgeSize: CGFloat = 38
+        static let packageBadgeCornerRadius: CGFloat = 10
+        static let packageBadgeIconSize: CGFloat = 24
         static let collectedPackageMarkerSize: CGFloat = 44
         static let markerIconSize: CGFloat = 42
         static let roadOuterWidth: CGFloat = 20

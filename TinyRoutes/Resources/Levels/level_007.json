@@ -5,60 +5,47 @@
     "nodes": [
       {
         "id": "start",
-        "x": -1.0,
-        "y": -0.1,
+        "x": 0.0,
+        "y": 0.85,
         "outgoingEdgeIDs": [
-          "e_start_gate"
+          "e_start_node_a"
         ]
       },
       {
-        "id": "gate",
-        "x": -0.35,
-        "y": -0.1,
+        "id": "node_a",
+        "x": 0.0,
+        "y": 0.25,
         "outgoingEdgeIDs": [
-          "e_gate_dead_end_a",
-          "e_gate_package"
+          "e_node_a_package"
         ]
       },
       {
         "id": "package",
-        "x": 0.35,
-        "y": 0.3,
+        "x": 0.4,
+        "y": -0.4,
         "outgoingEdgeIDs": [
           "e_package_destination"
         ]
       },
       {
         "id": "destination",
-        "x": 1.0,
-        "y": -0.1,
-        "outgoingEdgeIDs": []
-      },
-      {
-        "id": "dead_end_a",
-        "x": -0.35,
-        "y": 0.8,
+        "x": -0.3,
+        "y": -1.0,
         "outgoingEdgeIDs": []
       }
     ],
     "edges": [
       {
-        "id": "e_start_gate",
+        "id": "e_start_node_a",
         "fromNodeID": "start",
-        "toNodeID": "gate",
-        "roadShape": "horizontalFirst"
-      },
-      {
-        "id": "e_gate_dead_end_a",
-        "fromNodeID": "gate",
-        "toNodeID": "dead_end_a",
+        "toNodeID": "node_a",
         "roadShape": "verticalFirst"
       },
       {
-        "id": "e_gate_package",
-        "fromNodeID": "gate",
+        "id": "e_node_a_package",
+        "fromNodeID": "node_a",
         "toNodeID": "package",
-        "roadShape": "horizontalFirst"
+        "roadShape": "verticalFirst"
       },
       {
         "id": "e_package_destination",
@@ -72,5 +59,5 @@
   "packageNodeID": "package",
   "destinationNodeID": "destination",
   "timeLimitSeconds": 30,
-  "parTaps": 1
+  "parTaps": 0
 }

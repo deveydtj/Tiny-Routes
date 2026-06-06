@@ -39,23 +39,46 @@ struct SwitchNodeView: View {
     let ringSize: CGFloat
     let optionCount: Int
     let optionAngles: [Double]
+    let pressEventToken: Int?
+
+    @State private var isPressed = false
+    @State private var isPulsing = false
 
     init(
         activeDirectionAngle: Double,
         spriteSize: CGFloat,
         ringSize: CGFloat,
         optionCount: Int = 2,
-        optionAngles: [Double] = []
+        optionAngles: [Double] = [],
+        pressEventToken: Int? = nil
     ) {
         self.activeDirectionAngle = activeDirectionAngle
         self.spriteSize = spriteSize
         self.ringSize = ringSize
         self.optionCount = optionCount
         self.optionAngles = optionAngles
+        self.pressEventToken = pressEventToken
     }
 
     var body: some View {
         ZStack {
+            Circle()
+                .fill(TRGameplayStyle.Colors.primaryBlue.opacity(0.08))
+                .frame(width: TRGameplayStyle.Metrics.switchTouchHaloSize, height: TRGameplayStyle.Metrics.switchTouchHaloSize)
+                .overlay {
+                    Circle()
+                        .stroke(TRGameplayStyle.Colors.primaryBlue.opacity(0.10), lineWidth: 1)
+                }
+                .accessibilityHidden(true)
+
+            Circle()
+                .stroke(TRGameplayStyle.Colors.primaryBlue.opacity(isPulsing ? 0.20 : 0), lineWidth: 2)
+                .frame(
+                    width: isPulsing ? TRGameplayStyle.Metrics.switchTouchHaloSize + 8 : ringSize + 4,
+                    height: isPulsing ? TRGameplayStyle.Metrics.switchTouchHaloSize + 8 : ringSize + 4
+                )
+                .accessibilityHidden(true)
+
             Circle()
                 .fill(Color.white.opacity(0.96))
                 .frame(width: ringSize, height: ringSize)
@@ -80,9 +103,19 @@ struct SwitchNodeView: View {
 
             ConceptDirectionArrowGlyph(activeDirectionAngle: activeDirectionAngle)
         }
-        .frame(width: max(spriteSize, ringSize), height: max(spriteSize, ringSize))
+        .scaleEffect(isPressed ? 0.94 : 1)
+        .frame(
+            width: max(spriteSize, ringSize, TRGameplayStyle.Metrics.switchTapTargetSize),
+            height: max(spriteSize, ringSize, TRGameplayStyle.Metrics.switchTapTargetSize)
+        )
         .contentShape(Circle())
         .accessibilityLabel(accessibilityLabel)
+        .onChange(of: pressEventToken) { _, newValue in
+            guard newValue != nil else {
+                return
+            }
+            playPressAnimation()
+        }
     }
 
     private var optionIndicatorAngles: [Double] {
@@ -96,6 +129,22 @@ struct SwitchNodeView: View {
             return "4-way switch, active \(direction)"
         }
         return "\(clampedOptionCount)-way switch, active \(direction)"
+    }
+
+    private func playPressAnimation() {
+        withAnimation(.easeOut(duration: 0.07)) {
+            isPressed = true
+            isPulsing = true
+        }
+
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.08) {
+            withAnimation(.spring(response: 0.18, dampingFraction: 0.58)) {
+                isPressed = false
+            }
+            withAnimation(.easeOut(duration: 0.18)) {
+                isPulsing = false
+            }
+        }
     }
 }
 
