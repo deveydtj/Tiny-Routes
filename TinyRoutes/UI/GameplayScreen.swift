@@ -24,6 +24,7 @@ struct GameplayScreen: View {
     @State private var lastFrameDate: Date?
     @State private var hasDispatchedOutcome: Bool = false
     @State private var isShowingLevelPreview: Bool = false
+    @State private var previewDismissScheduler = LevelPreviewDismissScheduler()
 
     init(
         levelID: String,
@@ -117,6 +118,9 @@ struct GameplayScreen: View {
             if isPreviewing {
                 lastFrameDate = nil
             }
+        }
+        .onDisappear {
+            previewDismissScheduler.cancel()
         }
     }
 
@@ -241,8 +245,9 @@ struct GameplayScreen: View {
             return
         }
 
-        Task { @MainActor in
-            try? await Task.sleep(nanoseconds: TRGameplayStyle.Metrics.levelPreviewDurationNanoseconds)
+        previewDismissScheduler.schedule(
+            afterNanoseconds: TRGameplayStyle.Metrics.levelPreviewDurationNanoseconds
+        ) {
             guard self.shouldPreviewLevel(runtimeGraph: runtimeGraph) else {
                 return
             }
@@ -253,12 +258,65 @@ struct GameplayScreen: View {
     }
 
     private func resetViewState() {
+        previewDismissScheduler.cancel()
         hasCollectedPackage = false
         lastFrameDate = nil
         tapCount = 0
         timeRemaining = nil
         hasDispatchedOutcome = false
         isShowingLevelPreview = false
+    }
+}
+
+@MainActor
+final class LevelPreviewDismissScheduler {
+    typealias Sleep = (UInt64) async throws -> Void
+
+    private let sleep: Sleep
+    private var previewDismissTask: Task<Void, Never>?
+    private var generation = 0
+
+    init(sleep: @escaping Sleep = { try await Task.sleep(nanoseconds: $0) }) {
+        self.sleep = sleep
+    }
+
+    func schedule(afterNanoseconds durationNanoseconds: UInt64, action: @MainActor @escaping () -> Void) {
+        generation += 1
+        let scheduledGeneration = generation
+        previewDismissTask?.cancel()
+        previewDismissTask = Task { @MainActor [weak self] in
+            guard let self else {
+                return
+            }
+
+            do {
+                try await sleep(durationNanoseconds)
+            } catch {
+                return
+            }
+
+            guard !Task.isCancelled, generation == scheduledGeneration else {
+                return
+            }
+
+            action()
+        }
+    }
+
+    func cancel() {
+        generation += 1
+        previewDismissTask?.cancel()
+        previewDismissTask = nil
+    }
+
+    deinit {
+        previewDismissTask?.cancel()
+    }
+}
+
+enum LevelPreviewTapPolicy {
+    static func allowsNodeTap(isShowingPreview: Bool) -> Bool {
+        !isShowingPreview
     }
 }
 
@@ -362,6 +420,9 @@ struct RouteBoardView: View {
             .gesture(
                 DragGesture(minimumDistance: 0)
                     .onEnded { value in
+                        guard LevelPreviewTapPolicy.allowsNodeTap(isShowingPreview: isShowingPreview) else {
+                            return
+                        }
                         guard let nodeID = tapTargetResolver.nodeID(at: value.location) else {
                             return
                         }

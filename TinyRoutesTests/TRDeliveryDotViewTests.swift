@@ -66,6 +66,67 @@ final class TRDeliveryDotViewTests: XCTestCase {
     }
 }
 
+@MainActor
+final class GameplayLevelPreviewTests: XCTestCase {
+    func testPreviewDismissSchedulerIgnoresCanceledTaskAfterRestart() async {
+        let sleeper = ControlledPreviewSleep()
+        let scheduler = LevelPreviewDismissScheduler { _ in
+            try await sleeper.sleep()
+        }
+        var dismissCount = 0
+
+        scheduler.schedule(afterNanoseconds: 1) {
+            dismissCount += 1
+        }
+        await Task.yield()
+
+        scheduler.schedule(afterNanoseconds: 1) {
+            dismissCount += 1
+        }
+        await Task.yield()
+
+        XCTAssertEqual(sleeper.pendingSleepCount, 2)
+
+        sleeper.resumeNextSleep()
+        await Task.yield()
+
+        XCTAssertEqual(dismissCount, 0)
+
+        sleeper.resumeNextSleep()
+        await Task.yield()
+
+        XCTAssertEqual(dismissCount, 1)
+    }
+
+    func testPreviewTapPolicyBlocksNodeTapsDuringPreview() {
+        XCTAssertFalse(LevelPreviewTapPolicy.allowsNodeTap(isShowingPreview: true))
+        XCTAssertTrue(LevelPreviewTapPolicy.allowsNodeTap(isShowingPreview: false))
+    }
+}
+
+@MainActor
+private final class ControlledPreviewSleep {
+    private var continuations: [CheckedContinuation<Void, Error>] = []
+
+    var pendingSleepCount: Int {
+        continuations.count
+    }
+
+    func sleep() async throws {
+        try await withCheckedThrowingContinuation { continuation in
+            continuations.append(continuation)
+        }
+    }
+
+    func resumeNextSleep() {
+        guard !continuations.isEmpty else {
+            return
+        }
+
+        continuations.removeFirst().resume()
+    }
+}
+
 final class GameplayCameraLayoutTests: XCTestCase {
     func testLevelPlayableExtentsIncludeNodesAndRoads() {
         let graph = makeRuntimeGraph(points: [
