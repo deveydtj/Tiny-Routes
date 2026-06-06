@@ -2,73 +2,48 @@
   "levelID": "level_044",
   "description": "Follow the generated graph recipe route and rotate each switch before arrival.",
   "expectedOutcome": "completed",
-  "maxTaps": 4,
+  "maxTaps": 2,
   "requiresWithinTimeLimit": true,
   "actions": [
     {
-      "timeSeconds": 0.27,
-      "tapNodeID": "repeat_switch",
-      "reason": "Rotate switch 'repeat_switch' toward 'package_lane' before arrival.",
-      "expectedEdgeAfterTap": "e_repeat_switch_package_lane",
-      "expectedRouteNodeAfterTap": "package_lane",
-      "reactionWindowSeconds": 0.5,
-      "switchStateBeforeTap": "e_repeat_switch_dead_end_a",
-      "switchStateAfterTap": "e_repeat_switch_package_lane"
+      "timeSeconds": 0.1,
+      "tapNodeID": "hub",
+      "reason": "Rotate switch 'hub' toward 'package_branch' before arrival.",
+      "expectedEdgeAfterTap": "e_hub_package_branch",
+      "expectedRouteNodeAfterTap": "package_branch",
+      "reactionWindowSeconds": 0.4,
+      "switchStateBeforeTap": "e_hub_dead_end_a",
+      "switchStateAfterTap": "e_hub_package_branch"
     },
     {
-      "timeSeconds": 2.72,
-      "tapNodeID": "loop_switch",
-      "reason": "Rotate switch 'loop_switch' toward 'return_lane' before arrival.",
-      "expectedEdgeAfterTap": "e_loop_switch_return_lane",
-      "expectedRouteNodeAfterTap": "return_lane",
-      "reactionWindowSeconds": 0.5,
-      "switchStateBeforeTap": "e_loop_switch_dead_end_b",
-      "switchStateAfterTap": "e_loop_switch_return_lane"
-    },
-    {
-      "timeSeconds": 5.81,
-      "tapNodeID": "repeat_switch",
-      "reason": "Rotate switch 'repeat_switch' toward 'exit_lane' before arrival.",
-      "expectedEdgeAfterTap": "e_repeat_switch_exit_lane",
-      "expectedRouteNodeAfterTap": "exit_lane",
-      "reactionWindowSeconds": 0.5,
-      "switchStateBeforeTap": "e_repeat_switch_package_lane",
-      "switchStateAfterTap": "e_repeat_switch_exit_lane"
-    },
-    {
-      "timeSeconds": 7.85,
-      "tapNodeID": "switch_exit",
-      "reason": "Rotate switch 'switch_exit' toward 'destination' before arrival.",
-      "expectedEdgeAfterTap": "e_switch_exit_destination",
+      "timeSeconds": 5.63,
+      "tapNodeID": "switch_b",
+      "reason": "Rotate switch 'switch_b' toward 'destination' before arrival.",
+      "expectedEdgeAfterTap": "e_switch_b_destination",
       "expectedRouteNodeAfterTap": "destination",
-      "reactionWindowSeconds": 0.5,
-      "switchStateBeforeTap": "e_switch_exit_dead_end_c",
-      "switchStateAfterTap": "e_switch_exit_destination"
+      "reactionWindowSeconds": 0.45,
+      "switchStateBeforeTap": "e_switch_b_dead_end_b",
+      "switchStateAfterTap": "e_switch_b_destination"
     }
   ],
   "metadata": {
     "validationVersion": "solution_sidecar_v1",
     "solutionRoute": [
       "start",
-      "repeat_switch",
-      "package_lane",
+      "hub",
+      "package_branch",
       "package",
-      "loop_switch",
-      "return_lane",
-      "repeat_switch",
-      "exit_lane",
-      "switch_exit",
+      "rejoin",
+      "switch_b",
       "destination"
     ],
     "requiredTapOrder": [
-      "repeat_switch",
-      "loop_switch",
-      "repeat_switch",
-      "switch_exit"
+      "hub",
+      "switch_b"
     ],
-    "template": "controlled_repeated_taps",
-    "generatedSeed": 680035022,
-    "recipeFamily": "controlled_repeated_taps",
-    "recipeVariant": "controlled_repeated_taps_alternate"
+    "template": "hub_choice",
+    "generatedSeed": 2855504366,
+    "recipeFamily": "hub_choice",
+    "recipeVariant": "hub_choice_alternate"
   }
 }

@@ -28,6 +28,9 @@ class GenerationResult:
     candidate_generation_counts_by_difficulty: dict[str, int] = field(default_factory=dict)
     candidate_validation_counts_by_difficulty: dict[str, int] = field(default_factory=dict)
     rejected_candidate_count: int = 0
+    validation_rejection_count: int = 0
+    filter_rejection_count: int = 0
+    generation_error_count: int = 0
     rejection_reason_counts: dict[str, int] = field(default_factory=dict)
     rejection_reason_counts_by_difficulty: dict[str, dict[str, int]] = field(default_factory=dict)
     similarity_rejection_counts_by_difficulty: dict[str, int] = field(default_factory=dict)

@@ -7,16 +7,16 @@
   "actions": [
     {
       "timeSeconds": 0.1,
-      "tapNodeID": "choice",
-      "reason": "Rotate switch 'choice' toward 'detour_a' before arrival.",
-      "expectedEdgeAfterTap": "e_choice_detour_a",
-      "expectedRouteNodeAfterTap": "detour_a",
-      "reactionWindowSeconds": 0.36,
-      "switchStateBeforeTap": "e_choice_shortcut_dead_end",
-      "switchStateAfterTap": "e_choice_detour_a"
+      "tapNodeID": "switch_a",
+      "reason": "Rotate switch 'switch_a' toward 'package' before arrival.",
+      "expectedEdgeAfterTap": "e_switch_a_package",
+      "expectedRouteNodeAfterTap": "package",
+      "reactionWindowSeconds": 0.4,
+      "switchStateBeforeTap": "e_switch_a_dead_end_a",
+      "switchStateAfterTap": "e_switch_a_package"
     },
     {
-      "timeSeconds": 2.13,
+      "timeSeconds": 1.7,
       "tapNodeID": "switch_b",
       "reason": "Rotate switch 'switch_b' toward 'destination' before arrival.",
       "expectedEdgeAfterTap": "e_switch_b_destination",
@@ -30,20 +30,18 @@
     "validationVersion": "solution_sidecar_v1",
     "solutionRoute": [
       "start",
-      "choice",
-      "detour_a",
+      "switch_a",
       "package",
-      "detour_b",
       "switch_b",
       "destination"
     ],
     "requiredTapOrder": [
-      "choice",
+      "switch_a",
       "switch_b"
     ],
-    "template": "fake_shortcut",
-    "generatedSeed": 2044855766,
-    "recipeFamily": "fake_shortcut",
-    "recipeVariant": "fake_shortcut_alternate"
+    "template": "package_gate_double_choice",
+    "generatedSeed": 2924654822,
+    "recipeFamily": "package_gate_double_choice",
+    "recipeVariant": "package_gate_double_choice_primary"
   }
 }

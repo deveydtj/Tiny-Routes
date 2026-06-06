@@ -7,41 +7,43 @@
   "actions": [
     {
       "timeSeconds": 0.1,
-      "tapNodeID": "short_entry_switch",
-      "reason": "Rotate switch 'short_entry_switch' toward 'package' before arrival.",
-      "expectedEdgeAfterTap": "e_short_entry_switch_package",
-      "expectedRouteNodeAfterTap": "package",
-      "reactionWindowSeconds": 0.4,
-      "switchStateBeforeTap": "e_short_entry_switch_short_bypass",
-      "switchStateAfterTap": "e_short_entry_switch_package"
+      "tapNodeID": "choice",
+      "reason": "Rotate switch 'choice' toward 'detour_a' before arrival.",
+      "expectedEdgeAfterTap": "e_choice_detour_a",
+      "expectedRouteNodeAfterTap": "detour_a",
+      "reactionWindowSeconds": 0.25,
+      "switchStateBeforeTap": "e_choice_shortcut_dead_end",
+      "switchStateAfterTap": "e_choice_detour_a"
     },
     {
-      "timeSeconds": 1.7,
-      "tapNodeID": "short_finish_switch",
-      "reason": "Rotate switch 'short_finish_switch' toward 'destination' before arrival.",
-      "expectedEdgeAfterTap": "e_short_finish_switch_destination",
+      "timeSeconds": 1.85,
+      "tapNodeID": "switch_b",
+      "reason": "Rotate switch 'switch_b' toward 'destination' before arrival.",
+      "expectedEdgeAfterTap": "e_switch_b_destination",
       "expectedRouteNodeAfterTap": "destination",
       "reactionWindowSeconds": 0.45,
-      "switchStateBeforeTap": "e_short_finish_switch_short_dead_end",
-      "switchStateAfterTap": "e_short_finish_switch_destination"
+      "switchStateBeforeTap": "e_switch_b_dead_end_b",
+      "switchStateAfterTap": "e_switch_b_destination"
     }
   ],
   "metadata": {
     "validationVersion": "solution_sidecar_v1",
     "solutionRoute": [
       "start",
-      "short_entry_switch",
+      "choice",
+      "detour_a",
       "package",
-      "short_finish_switch",
+      "detour_b",
+      "switch_b",
       "destination"
     ],
     "requiredTapOrder": [
-      "short_entry_switch",
-      "short_finish_switch"
+      "choice",
+      "switch_b"
     ],
-    "template": "package_gate",
-    "generatedSeed": 2385495577,
-    "recipeFamily": "package_gate",
-    "recipeVariant": "package_gate_crossing_avoidance"
+    "template": "fake_shortcut",
+    "generatedSeed": 3559023335,
+    "recipeFamily": "fake_shortcut",
+    "recipeVariant": "fake_shortcut_primary"
   }
 }

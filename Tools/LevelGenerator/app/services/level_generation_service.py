@@ -42,6 +42,15 @@ class LevelGenerationService:
     MAX_DIVERSITY_DECISIONS = 200
     ROUTE_INTEREST_GATED_DIFFICULTIES = {"medium", "hard", "expert"}
     SIMPLE_CHAIN_TOPOLOGIES = {"two_switch_order"}
+    PLAYTEST_BATCH_DUPLICATE_THRESHOLD = 0.98
+    PLAYTEST_EXISTING_DUPLICATE_THRESHOLD = 0.98
+    PLAYTEST_SELECTION_SIMILARITY_THRESHOLD = 0.98
+    PLAYTEST_ROUTE_INTEREST_RELAXATION = {
+        "medium": 0.16,
+        "hard": 0.18,
+        "expert": 0.16,
+    }
+    PLAYTEST_ROUTE_INTEREST_LATE_RELAXATION = 0.06
     STRONG_ROUTE_INTEREST_TAGS = {
         "fake_shortcut",
         "split_rejoin",
@@ -92,6 +101,11 @@ class LevelGenerationService:
                 "Warning: production generation is using `candidate_pool_size=1`; "
                 "use a larger pool for quality-based selection."
             )
+        if config.playtest_portfolio:
+            result.messages.append(
+                "Using playtest portfolio mode: strict structural validation stays enabled; "
+                "batch/existing similarity and route-interest selection filters are relaxed for large batches."
+            )
 
         rejection_service = CandidateRejectionService()
         base_rng = RandomSource(config.base_seed)
@@ -136,6 +150,7 @@ class LevelGenerationService:
                     rejection_code = getattr(exc, "code", "candidate_generation_error")
                     rejection_service.reason_counts[rejection_code] += 1
                     self._record_rejection_by_difficulty(result, preset.name, rejection_code)
+                    self._record_generation_error(result)
                     result.messages.append(f"Rejected candidate {level_id} attempt={attempt}: {exc}")
                     continue
 
@@ -163,9 +178,20 @@ class LevelGenerationService:
                     ]
                     if rejection_service.can_save(validation_result):
                         candidate_signature = self.signature_service.signature_for(candidate)
+                        batch_signatures = self._batch_similarity_signatures(
+                            config,
+                            accepted_signatures,
+                            candidate_pool_signatures,
+                        )
                         duplicate_result = self.uniqueness_service.check_duplicate(
                             candidate_signature,
-                            [*accepted_signatures, *candidate_pool_signatures],
+                            batch_signatures,
+                            threshold=self._batch_duplicate_threshold(
+                                config,
+                                accepted_count=len(result.accepted),
+                                attempt=attempt,
+                                effective_max_attempts=effective_max_attempts,
+                            ),
                         )
                         if duplicate_result.is_duplicate:
                             message = rejection_service.record_custom_rejection(
@@ -179,6 +205,7 @@ class LevelGenerationService:
                                 candidate.difficulty,
                                 "candidate_too_similar_to_batch",
                             )
+                            self._record_filter_rejection(result)
                             self._append_rejection_message(result, message)
                             continue
 
@@ -186,6 +213,7 @@ class LevelGenerationService:
                             existing_duplicate_result = self.uniqueness_service.check_duplicate(
                                 candidate_signature,
                                 existing_signatures,
+                                threshold=self._existing_duplicate_threshold(config),
                             )
                             if existing_duplicate_result.is_duplicate:
                                 message = rejection_service.record_custom_rejection(
@@ -199,6 +227,7 @@ class LevelGenerationService:
                                     candidate.difficulty,
                                     "candidate_too_similar_to_existing",
                                 )
+                                self._record_filter_rejection(result)
                                 self._append_rejection_message(result, message)
                                 continue
 
@@ -207,13 +236,19 @@ class LevelGenerationService:
                             candidate,
                             validation_preset,
                             [
-                                *accepted_signatures,
+                                *self._quality_comparison_signatures(config, accepted_signatures),
                                 *candidate_pool_signatures,
                                 *(existing_signatures if config.compare_against_existing else []),
                             ],
                             accepted_signatures,
                         )
-                        quality_rejection = self._quality_rejection(candidate)
+                        quality_rejection = self._quality_rejection(
+                            candidate,
+                            config=config,
+                            attempt=attempt,
+                            accepted_count=len(result.accepted),
+                            effective_max_attempts=effective_max_attempts,
+                        )
                         if quality_rejection is not None:
                             reason, detail = quality_rejection
                             near_miss_candidates.append(self._candidate_summary(candidate, reason))
@@ -224,6 +259,7 @@ class LevelGenerationService:
                                 config.debug_failures_dir,
                             )
                             self._record_rejection_by_difficulty(result, candidate.difficulty, reason)
+                            self._record_filter_rejection(result)
                             self._append_rejection_message(result, message)
                             continue
                         candidate_pool.append(candidate)
@@ -241,6 +277,7 @@ class LevelGenerationService:
                         candidate.difficulty,
                         first_error.code if first_error is not None else "unknown",
                     )
+                    self._record_validation_rejection(result)
                     rejection_service.record_rejection(candidate, validation_result, config.debug_failures_dir)
 
                 if self._candidate_pool_ready(candidate_pool, config, preset):
@@ -530,6 +567,14 @@ class LevelGenerationService:
         )
 
     def _effective_max_attempts(self, config: GenerationConfig, preset) -> int:
+        if config.playtest_portfolio:
+            if preset.name == "medium":
+                return min(max(config.max_attempts_per_level, 40), 70)
+            if preset.name == "hard":
+                return min(max(config.max_attempts_per_level, 40), 70)
+            if preset.name == "expert":
+                return min(max(config.max_attempts_per_level, 25), 45)
+            return min(max(config.max_attempts_per_level, 30), 60)
         if preset.name == "medium":
             return min(max(config.max_attempts_per_level, 35), 60)
         if preset.name == "hard":
@@ -542,6 +587,24 @@ class LevelGenerationService:
         recipe_pool_size = config.recipe_pool_size
         layouts_per_recipe = config.layouts_per_recipe
         road_shapes_per_layout = config.road_shapes_per_layout
+        if config.playtest_portfolio:
+            if preset.name in {"medium", "hard"}:
+                recipe_pool_size = min(max(recipe_pool_size, 1), 3)
+                layouts_per_recipe = 1
+                road_shapes_per_layout = 1
+            elif preset.name == "expert":
+                recipe_pool_size = min(max(recipe_pool_size, 1), 3)
+                layouts_per_recipe = 1
+                road_shapes_per_layout = 1
+            else:
+                recipe_pool_size = min(max(recipe_pool_size, 1), 3)
+                layouts_per_recipe = 1
+                road_shapes_per_layout = 1
+            return {
+                "recipe_pool_size": recipe_pool_size,
+                "layouts_per_recipe": layouts_per_recipe,
+                "road_shapes_per_layout": road_shapes_per_layout,
+            }
         if preset.name == "medium":
             recipe_pool_size = max(recipe_pool_size, 4)
             layouts_per_recipe = max(layouts_per_recipe, 2)
@@ -876,6 +939,67 @@ class LevelGenerationService:
                 result.similarity_rejection_counts_by_difficulty.get(difficulty_key, 0) + 1
             )
 
+    def _record_filter_rejection(self, result: GenerationResult) -> None:
+        result.filter_rejection_count += 1
+
+    def _record_validation_rejection(self, result: GenerationResult) -> None:
+        result.validation_rejection_count += 1
+
+    def _record_generation_error(self, result: GenerationResult) -> None:
+        result.generation_error_count += 1
+
+    def _batch_similarity_signatures(
+        self,
+        config: GenerationConfig,
+        accepted_signatures,
+        candidate_pool_signatures,
+    ) -> list:
+        accepted = list(accepted_signatures)
+        if config.playtest_portfolio:
+            accepted = accepted[-config.playtest_uniqueness_window :]
+        return [*accepted, *candidate_pool_signatures]
+
+    def _quality_comparison_signatures(self, config: GenerationConfig, accepted_signatures) -> list:
+        accepted = list(accepted_signatures)
+        if config.playtest_portfolio:
+            return accepted[-config.playtest_uniqueness_window :]
+        return accepted
+
+    def _batch_duplicate_threshold(
+        self,
+        config: GenerationConfig,
+        *,
+        accepted_count: int,
+        attempt: int,
+        effective_max_attempts: int,
+    ) -> float | None:
+        if not config.playtest_portfolio:
+            return None
+        pressure = self._portfolio_pressure(attempt, effective_max_attempts)
+        threshold = self.PLAYTEST_BATCH_DUPLICATE_THRESHOLD
+        if accepted_count >= config.playtest_uniqueness_window:
+            threshold += 0.01
+        if pressure >= 0.50:
+            threshold += 0.01
+        if pressure >= 0.75:
+            threshold += 0.01
+        return min(threshold, 0.99)
+
+    def _existing_duplicate_threshold(self, config: GenerationConfig) -> float | None:
+        if config.playtest_portfolio:
+            return self.PLAYTEST_EXISTING_DUPLICATE_THRESHOLD
+        return None
+
+    def _maximum_selection_similarity(self, config: GenerationConfig | None) -> float:
+        if config is not None and config.playtest_portfolio:
+            return self.PLAYTEST_SELECTION_SIMILARITY_THRESHOLD
+        return self.MAXIMUM_SELECTION_SIMILARITY
+
+    def _portfolio_pressure(self, attempt: int, effective_max_attempts: int) -> float:
+        if effective_max_attempts <= 1:
+            return 1.0
+        return max(0.0, min(1.0, attempt / float(effective_max_attempts - 1)))
+
     def _preset_for_candidate_layout(self, candidate, preset):
         metadata = getattr(candidate, "layout_metadata", None) or {}
         return self._preset_for_layout_size_profile(preset, metadata.get("layoutSizeProfile", "standard_portrait"))
@@ -1098,14 +1222,30 @@ class LevelGenerationService:
             )
         return self.quality_service.score(candidate, preset, comparison_signatures)
 
-    def _quality_rejection(self, candidate) -> tuple[str, str] | None:
+    def _quality_rejection(
+        self,
+        candidate,
+        *,
+        config: GenerationConfig | None = None,
+        attempt: int = 0,
+        accepted_count: int = 0,
+        effective_max_attempts: int = 1,
+    ) -> tuple[str, str] | None:
         quality = candidate.quality_score
         if quality is None:
             return None
-        gate_rejection = self._quality_gate_rejection(candidate, quality)
+        gate_rejection = self._quality_gate_rejection(
+            candidate,
+            quality,
+            config=config,
+            attempt=attempt,
+            accepted_count=accepted_count,
+            effective_max_attempts=effective_max_attempts,
+        )
         if gate_rejection is not None:
             return gate_rejection
         max_similarity = float(quality.details.get("maxSimilarity", 0.0))
+        maximum_selection_similarity = self._maximum_selection_similarity(config)
         if quality.runtime_solvability < self.MINIMUM_RUNTIME_CONFIDENCE:
             return (
                 "quality_runtime_confidence_below_threshold",
@@ -1119,10 +1259,10 @@ class LevelGenerationService:
                 "quality_switch_clarity_below_threshold",
                 f"switch clarity {quality.switch_clarity:.2f} < {self.MINIMUM_SWITCH_CLARITY:.2f}",
             )
-        if max_similarity > self.MAXIMUM_SELECTION_SIMILARITY:
+        if max_similarity > maximum_selection_similarity:
             return (
                 "quality_similarity_above_threshold",
-                f"similarity {max_similarity:.2f} > {self.MAXIMUM_SELECTION_SIMILARITY:.2f}",
+                f"similarity {max_similarity:.2f} > {maximum_selection_similarity:.2f}",
             )
         if quality.total < self.MINIMUM_TOTAL_QUALITY:
             return (
@@ -1131,17 +1271,38 @@ class LevelGenerationService:
             )
         return None
 
-    def _quality_gate_rejection(self, candidate, quality) -> tuple[str, str] | None:
+    def _quality_gate_rejection(
+        self,
+        candidate,
+        quality,
+        *,
+        config: GenerationConfig | None = None,
+        attempt: int = 0,
+        accepted_count: int = 0,
+        effective_max_attempts: int = 1,
+    ) -> tuple[str, str] | None:
         difficulty = str(getattr(candidate, "difficulty", "") or "").strip().lower()
         route_interest = float(getattr(quality, "route_interest", 0.0) or 0.0)
         preset_content_fit = quality.details.get("presetContentFit", {})
         minimum_route_interest = float(preset_content_fit.get("minimumRouteInterestScore", 0.0) or 0.0)
+        effective_minimum_route_interest = self._effective_minimum_route_interest(
+            difficulty,
+            minimum_route_interest,
+            config=config,
+            attempt=attempt,
+            accepted_count=accepted_count,
+            effective_max_attempts=effective_max_attempts,
+        )
         route_interest_audit = quality.details.get("routeInterest", {})
         route_interest_tags = set(route_interest_audit.get("tags", ()) or ())
         topology_class = str(getattr(candidate, "topology_class", "") or "")
         recipe_family = str(getattr(candidate, "recipe_family", "") or "")
 
-        if self._has_large_portrait_without_puzzle_need(quality):
+        if self._has_large_portrait_without_puzzle_need(quality) and not self._allow_portfolio_large_portrait(
+            config,
+            attempt=attempt,
+            effective_max_attempts=effective_max_attempts,
+        ):
             return (
                 "large_portrait_without_puzzle_need",
                 "large_portrait layout did not have enough route length, topology, and route-interest justification",
@@ -1152,8 +1313,11 @@ class LevelGenerationService:
             recipe_family=recipe_family,
             topology_class=topology_class,
             route_interest=route_interest,
-            minimum_route_interest=minimum_route_interest,
+            minimum_route_interest=effective_minimum_route_interest,
             route_interest_tags=route_interest_tags,
+            config=config,
+            attempt=attempt,
+            effective_max_attempts=effective_max_attempts,
         ):
             return (
                 "boring_topology_for_difficulty",
@@ -1165,12 +1329,51 @@ class LevelGenerationService:
             )
 
         if difficulty in self.ROUTE_INTEREST_GATED_DIFFICULTIES and route_interest < minimum_route_interest:
+            if config is not None and config.playtest_portfolio and route_interest >= effective_minimum_route_interest:
+                return None
             return (
                 f"route_interest_below_{difficulty}_gate",
-                f"route interest {route_interest:.3f} < {minimum_route_interest:.3f}",
+                f"route interest {route_interest:.3f} < {effective_minimum_route_interest:.3f}",
             )
 
         return None
+
+    def _effective_minimum_route_interest(
+        self,
+        difficulty: str,
+        minimum_route_interest: float,
+        *,
+        config: GenerationConfig | None,
+        attempt: int,
+        accepted_count: int,
+        effective_max_attempts: int,
+    ) -> float:
+        if config is None or not config.playtest_portfolio:
+            return minimum_route_interest
+        relaxation = self.PLAYTEST_ROUTE_INTEREST_RELAXATION.get(difficulty, 0.0)
+        pressure = self._portfolio_pressure(attempt, effective_max_attempts)
+        if pressure >= 0.50 or accepted_count >= config.playtest_uniqueness_window:
+            relaxation += self.PLAYTEST_ROUTE_INTEREST_LATE_RELAXATION
+        if pressure >= 0.75:
+            relaxation += 0.03
+        floor_by_difficulty = {
+            "medium": 0.24,
+            "hard": 0.34,
+            "expert": 0.38,
+        }
+        floor = floor_by_difficulty.get(difficulty, 0.0)
+        return max(floor, minimum_route_interest - relaxation)
+
+    def _allow_portfolio_large_portrait(
+        self,
+        config: GenerationConfig | None,
+        *,
+        attempt: int,
+        effective_max_attempts: int,
+    ) -> bool:
+        if config is None or not config.playtest_portfolio:
+            return False
+        return self._portfolio_pressure(attempt, effective_max_attempts) >= 0.50
 
     def _has_large_portrait_without_puzzle_need(self, quality) -> bool:
         preset_content_fit = quality.details.get("presetContentFit", {})
@@ -1186,7 +1389,17 @@ class LevelGenerationService:
         route_interest: float,
         minimum_route_interest: float,
         route_interest_tags: set[str],
+        config: GenerationConfig | None = None,
+        attempt: int = 0,
+        effective_max_attempts: int = 1,
     ) -> bool:
+        if config is not None and config.playtest_portfolio:
+            pressure = self._portfolio_pressure(attempt, effective_max_attempts)
+            has_strong_interest = bool(route_interest_tags & self.STRONG_ROUTE_INTEREST_TAGS)
+            if has_strong_interest and (route_interest >= minimum_route_interest or pressure >= 0.50):
+                return False
+            if difficulty == "hard" and pressure >= 0.75 and route_interest >= minimum_route_interest:
+                return False
         if topology_class not in self.SIMPLE_CHAIN_TOPOLOGIES:
             return False
         if difficulty == "hard" and recipe_family == "multi_switch_chain":

@@ -1,0 +1,111 @@
+{
+  "id": "level_080",
+  "name": "Level 080",
+  "graph": {
+    "nodes": [
+      {
+        "id": "start",
+        "x": 0.5,
+        "y": 1.15,
+        "outgoingEdgeIDs": [
+          "e_start_lower_alpha_switch"
+        ]
+      },
+      {
+        "id": "lower_alpha_switch",
+        "x": -0.45,
+        "y": 0.05,
+        "outgoingEdgeIDs": [
+          "e_lower_alpha_switch_destination",
+          "e_lower_alpha_switch_package"
+        ]
+      },
+      {
+        "id": "package",
+        "x": 0.35,
+        "y": -0.1,
+        "outgoingEdgeIDs": [
+          "e_package_lower_beta_switch"
+        ]
+      },
+      {
+        "id": "lower_beta_switch",
+        "x": -0.1,
+        "y": -1.5,
+        "outgoingEdgeIDs": [
+          "e_lower_beta_switch_lower_dead_end",
+          "e_lower_beta_switch_lower_return"
+        ]
+      },
+      {
+        "id": "lower_return",
+        "x": -0.35,
+        "y": -0.95,
+        "outgoingEdgeIDs": [
+          "e_lower_return_lower_alpha_switch"
+        ]
+      },
+      {
+        "id": "destination",
+        "x": -0.7,
+        "y": -1.65,
+        "outgoingEdgeIDs": []
+      },
+      {
+        "id": "lower_dead_end",
+        "x": 0.4,
+        "y": -1.5,
+        "outgoingEdgeIDs": []
+      }
+    ],
+    "edges": [
+      {
+        "id": "e_start_lower_alpha_switch",
+        "fromNodeID": "start",
+        "toNodeID": "lower_alpha_switch",
+        "roadShape": "horizontalFirst"
+      },
+      {
+        "id": "e_lower_alpha_switch_destination",
+        "fromNodeID": "lower_alpha_switch",
+        "toNodeID": "destination",
+        "roadShape": "horizontalFirst"
+      },
+      {
+        "id": "e_lower_alpha_switch_package",
+        "fromNodeID": "lower_alpha_switch",
+        "toNodeID": "package",
+        "roadShape": "horizontalFirst"
+      },
+      {
+        "id": "e_package_lower_beta_switch",
+        "fromNodeID": "package",
+        "toNodeID": "lower_beta_switch",
+        "roadShape": "verticalFirst"
+      },
+      {
+        "id": "e_lower_beta_switch_lower_dead_end",
+        "fromNodeID": "lower_beta_switch",
+        "toNodeID": "lower_dead_end",
+        "roadShape": "horizontalFirst"
+      },
+      {
+        "id": "e_lower_beta_switch_lower_return",
+        "fromNodeID": "lower_beta_switch",
+        "toNodeID": "lower_return",
+        "roadShape": "horizontalFirst"
+      },
+      {
+        "id": "e_lower_return_lower_alpha_switch",
+        "fromNodeID": "lower_return",
+        "toNodeID": "lower_alpha_switch",
+        "roadShape": "verticalFirst"
+      }
+    ]
+  },
+  "startNodeID": "start",
+  "packageNodeID": "package",
+  "destinationNodeID": "destination",
+  "timeLimitSeconds": 30,
+  "parTaps": 3
+}

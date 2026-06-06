@@ -21,6 +21,12 @@
         ]
       },
       {
+        "id": "dead_end_a",
+        "x": -0.35,
+        "y": 0.8,
+        "outgoingEdgeIDs": []
+      },
+      {
         "id": "package",
         "x": 0.35,
         "y": 0.4,
@@ -32,12 +38,6 @@
         "id": "destination",
         "x": 1.0,
         "y": -0.3,
-        "outgoingEdgeIDs": []
-      },
-      {
-        "id": "dead_end_a",
-        "x": -0.35,
-        "y": 0.8,
         "outgoingEdgeIDs": []
       }
     ],

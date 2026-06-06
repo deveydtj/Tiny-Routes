@@ -6,46 +6,42 @@
   "requiresWithinTimeLimit": true,
   "actions": [
     {
-      "timeSeconds": 0.49,
-      "tapNodeID": "four_way_switch",
-      "reason": "Rotate switch 'four_way_switch' toward 'package_lane' before arrival.",
-      "expectedEdgeAfterTap": "e_four_way_switch_package_lane",
-      "expectedRouteNodeAfterTap": "package_lane",
-      "reactionWindowSeconds": 0.5,
-      "switchStateBeforeTap": "e_four_way_switch_wrong_dead_end",
-      "switchStateAfterTap": "e_four_way_switch_package_lane"
+      "timeSeconds": 0.1,
+      "tapNodeID": "switch_a",
+      "reason": "Rotate switch 'switch_a' toward 'package' before arrival.",
+      "expectedEdgeAfterTap": "e_switch_a_package",
+      "expectedRouteNodeAfterTap": "package",
+      "reactionWindowSeconds": 0.4,
+      "switchStateBeforeTap": "e_switch_a_dead_end_a",
+      "switchStateAfterTap": "e_switch_a_package"
     },
     {
-      "timeSeconds": 3.33,
-      "tapNodeID": "switch_exit",
-      "reason": "Rotate switch 'switch_exit' toward 'exit_lane' before arrival.",
-      "expectedEdgeAfterTap": "e_switch_exit_exit_lane",
-      "expectedRouteNodeAfterTap": "exit_lane",
-      "reactionWindowSeconds": 0.5,
-      "switchStateBeforeTap": "e_switch_exit_gate_dead_end",
-      "switchStateAfterTap": "e_switch_exit_exit_lane"
+      "timeSeconds": 1.7,
+      "tapNodeID": "switch_b",
+      "reason": "Rotate switch 'switch_b' toward 'destination' before arrival.",
+      "expectedEdgeAfterTap": "e_switch_b_destination",
+      "expectedRouteNodeAfterTap": "destination",
+      "reactionWindowSeconds": 0.45,
+      "switchStateBeforeTap": "e_switch_b_dead_end_b",
+      "switchStateAfterTap": "e_switch_b_destination"
     }
   ],
   "metadata": {
     "validationVersion": "solution_sidecar_v1",
     "solutionRoute": [
       "start",
-      "entry_lane",
-      "four_way_switch",
-      "package_lane",
+      "switch_a",
       "package",
-      "gate_approach",
-      "switch_exit",
-      "exit_lane",
+      "switch_b",
       "destination"
     ],
     "requiredTapOrder": [
-      "four_way_switch",
-      "switch_exit"
+      "switch_a",
+      "switch_b"
     ],
-    "template": "four_way_package_gate",
-    "generatedSeed": 3845644057,
-    "recipeFamily": "four_way_package_gate",
-    "recipeVariant": "four_way_package_gate_primary"
+    "template": "package_gate_double_choice",
+    "generatedSeed": 3896905755,
+    "recipeFamily": "package_gate_double_choice",
+    "recipeVariant": "package_gate_double_choice_alternate"
   }
 }

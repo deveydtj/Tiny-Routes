@@ -6,44 +6,44 @@
   "requiresWithinTimeLimit": true,
   "actions": [
     {
-      "timeSeconds": 0.95,
-      "tapNodeID": "central_switch",
-      "reason": "Rotate switch 'central_switch' toward 'package' before arrival.",
-      "expectedEdgeAfterTap": "e_central_switch_package",
-      "expectedRouteNodeAfterTap": "package",
-      "reactionWindowSeconds": 0.5,
-      "switchStateBeforeTap": "e_central_switch_dead_end",
-      "switchStateAfterTap": "e_central_switch_package"
+      "timeSeconds": 0.1,
+      "tapNodeID": "choice",
+      "reason": "Rotate switch 'choice' toward 'detour_a' before arrival.",
+      "expectedEdgeAfterTap": "e_choice_detour_a",
+      "expectedRouteNodeAfterTap": "detour_a",
+      "reactionWindowSeconds": 0.25,
+      "switchStateBeforeTap": "e_choice_shortcut_dead_end",
+      "switchStateAfterTap": "e_choice_detour_a"
     },
     {
-      "timeSeconds": 3.11,
-      "tapNodeID": "central_switch",
-      "reason": "Rotate switch 'central_switch' toward 'destination' before arrival.",
-      "expectedEdgeAfterTap": "e_central_switch_destination",
+      "timeSeconds": 1.85,
+      "tapNodeID": "switch_b",
+      "reason": "Rotate switch 'switch_b' toward 'destination' before arrival.",
+      "expectedEdgeAfterTap": "e_switch_b_destination",
       "expectedRouteNodeAfterTap": "destination",
-      "reactionWindowSeconds": 0.5,
-      "switchStateBeforeTap": "e_central_switch_package",
-      "switchStateAfterTap": "e_central_switch_destination"
+      "reactionWindowSeconds": 0.45,
+      "switchStateBeforeTap": "e_switch_b_dead_end_b",
+      "switchStateAfterTap": "e_switch_b_destination"
     }
   ],
   "metadata": {
     "validationVersion": "solution_sidecar_v1",
     "solutionRoute": [
       "start",
-      "entry",
-      "central_switch",
+      "choice",
+      "detour_a",
       "package",
-      "return_node",
-      "central_switch",
+      "detour_b",
+      "switch_b",
       "destination"
     ],
     "requiredTapOrder": [
-      "central_switch",
-      "central_switch"
+      "choice",
+      "switch_b"
     ],
-    "template": "four_way_intro",
-    "generatedSeed": 2214622356,
-    "recipeFamily": "four_way_intro",
-    "recipeVariant": "four_way_intro_primary"
+    "template": "fake_shortcut",
+    "generatedSeed": 686460428,
+    "recipeFamily": "fake_shortcut",
+    "recipeVariant": "fake_shortcut_alternate"
   }
 }

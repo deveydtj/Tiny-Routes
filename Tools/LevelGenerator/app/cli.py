@@ -11,6 +11,7 @@ from .generation_config import (
     DEFAULT_LAYOUT_ORIENTATION_PREFERENCE,
     DEFAULT_LAYOUT_SIZE_PROFILE,
     DEFAULT_MAX_ATTEMPTS_PER_LEVEL,
+    DEFAULT_PLAYTEST_PORTFOLIO_UNIQUENESS_WINDOW,
     DEFAULT_RECIPE_POOL_SIZE,
     DEFAULT_ROAD_SHAPES_PER_LAYOUT,
     DEFAULT_VERTICAL_ROUTE_PROBABILITY,
@@ -140,6 +141,22 @@ def build_generate_parser() -> argparse.ArgumentParser:
     )
     parser.set_defaults(prefer_vertical_for_long_routes=True)
     parser.add_argument("--seed", type=int, default=None, help="Deterministic base seed.")
+    parser.add_argument(
+        "--playtest-mode",
+        "--portfolio-mode",
+        action="store_true",
+        dest="playtest_portfolio",
+        help=(
+            "Use the playtest portfolio preset for large batches: keep structural validation strict, "
+            "but relax batch uniqueness and quality filters that commonly starve generation."
+        ),
+    )
+    parser.add_argument(
+        "--playtest-uniqueness-window",
+        type=int,
+        default=DEFAULT_PLAYTEST_PORTFOLIO_UNIQUENESS_WINDOW,
+        help="Accepted-level lookback window for playtest batch similarity checks. Default: 6.",
+    )
     parser.add_argument("--dry-run", action="store_true", help="Generate and validate without writing level files.")
     parser.add_argument("--overwrite", action="store_true", help="Allow replacing existing output files.")
     parser.add_argument("--swift-tests", action="store_true", dest="swift_tests", help="Run Swift solvability tests after writing.")
@@ -217,6 +234,19 @@ def build_validate_parser() -> argparse.ArgumentParser:
 
 
 def _config_from_args(args: argparse.Namespace, argv: list[str] | None) -> GenerationConfig:
+    raw_args = list(argv) if argv is not None else sys.argv[1:]
+    compare_against_existing = args.compare_against_existing
+    if args.playtest_portfolio and not any(
+        option in raw_args for option in ("--compare-existing", "--no-compare-existing")
+    ):
+        compare_against_existing = False
+    candidate_pool_size = args.candidate_pool_size
+    if args.playtest_portfolio and "--candidate-pool-size" not in raw_args:
+        candidate_pool_size = 1
+    layout_orientation_preference = args.layout_orientation
+    if args.playtest_portfolio and "--layout-orientation" not in raw_args:
+        layout_orientation_preference = "auto"
+
     return GenerationConfig(
         start_level_number=args.start,
         count=args.count,
@@ -226,7 +256,7 @@ def _config_from_args(args: argparse.Namespace, argv: list[str] | None) -> Gener
         recipe_pool_size=args.recipe_pool_size,
         layouts_per_recipe=args.layouts_per_recipe,
         road_shapes_per_layout=args.road_shapes_per_layout,
-        layout_orientation_preference=args.layout_orientation,
+        layout_orientation_preference=layout_orientation_preference,
         layout_size_profile=args.layout_size_profile,
         vertical_route_probability=args.vertical_route_probability,
         prefer_vertical_for_long_routes=args.prefer_vertical_for_long_routes,
@@ -241,11 +271,13 @@ def _config_from_args(args: argparse.Namespace, argv: list[str] | None) -> Gener
         map_seed_path=args.map_seed_path,
         debug_failures_dir=args.debug_failures,
         max_attempts_per_level=args.max_attempts_per_level,
-        candidate_pool_size=args.candidate_pool_size,
+        candidate_pool_size=candidate_pool_size,
         swift_timeout_seconds=args.swift_timeout_seconds,
         sync_xcode_project=args.sync_xcode_project,
-        compare_against_existing=args.compare_against_existing,
-        command_arguments=list(argv) if argv is not None else sys.argv[1:],
+        compare_against_existing=compare_against_existing,
+        playtest_portfolio=args.playtest_portfolio,
+        playtest_uniqueness_window=args.playtest_uniqueness_window,
+        command_arguments=raw_args,
     )
 
 
@@ -255,8 +287,12 @@ def _print_generation_summary(config: GenerationConfig) -> None:
         f"Generating {config.count} {config.difficulty} level(s) starting at "
         f"{config.start_level_number:03d} with template={config.template_name} "
         f"generation_mode={config.generation_mode} layout_size={config.layout_size_profile} "
-        f"seed={config.seed} mode={mode}."
+        f"seed={config.seed} mode={mode} profile={_generation_profile_name(config)}."
     )
+
+
+def _generation_profile_name(config: GenerationConfig) -> str:
+    return "playtest_portfolio" if config.playtest_portfolio else "production"
 
 
 def _print_generation_result(config: GenerationConfig, result) -> None:

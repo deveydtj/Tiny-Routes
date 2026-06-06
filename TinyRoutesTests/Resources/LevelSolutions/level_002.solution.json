@@ -27,9 +27,9 @@
     "requiredTapOrder": [
       "choice"
     ],
-    "template": "single_switch_intro",
-    "generatedSeed": 3401823727,
-    "recipeFamily": "single_switch_intro",
-    "recipeVariant": "single_switch_intro_alternate"
+    "template": "single_switch",
+    "generatedSeed": 2962776876,
+    "recipeFamily": "single_switch",
+    "recipeVariant": "single_switch_classic"
   }
 }

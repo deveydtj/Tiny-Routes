@@ -6,14 +6,14 @@
   "requiresWithinTimeLimit": true,
   "actions": [
     {
-      "timeSeconds": 0.31,
+      "timeSeconds": 0.21,
       "tapNodeID": "gate",
-      "reason": "Rotate switch 'gate' toward 'package' before arrival.",
-      "expectedEdgeAfterTap": "e_gate_package",
-      "expectedRouteNodeAfterTap": "package",
+      "reason": "Rotate switch 'gate' toward 'detour' before arrival.",
+      "expectedEdgeAfterTap": "e_gate_detour",
+      "expectedRouteNodeAfterTap": "detour",
       "reactionWindowSeconds": 0.45,
       "switchStateBeforeTap": "e_gate_dead_end_a",
-      "switchStateAfterTap": "e_gate_package"
+      "switchStateAfterTap": "e_gate_detour"
     }
   ],
   "metadata": {
@@ -21,15 +21,16 @@
     "solutionRoute": [
       "start",
       "gate",
+      "detour",
       "package",
       "destination"
     ],
     "requiredTapOrder": [
       "gate"
     ],
-    "template": "package_gate_simple",
-    "generatedSeed": 2679724832,
-    "recipeFamily": "package_gate_simple",
-    "recipeVariant": "package_gate_simple_alternate"
+    "template": "short_detour_gate",
+    "generatedSeed": 782156390,
+    "recipeFamily": "short_detour_gate",
+    "recipeVariant": "short_detour_gate_primary"
   }
 }

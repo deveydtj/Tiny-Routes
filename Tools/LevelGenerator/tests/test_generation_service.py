@@ -472,6 +472,121 @@ def test_mixed_recipe_family_selection_spreads_topologies_within_candidate_pool(
     assert decisions[0]["selectedFamilies"]
 
 
+def test_playtest_portfolio_limits_batch_similarity_to_recent_window(tmp_path) -> None:
+    service = LevelGenerationService()
+    config = _config(
+        tmp_path,
+        difficulty="medium",
+        template_name="mixed",
+        dry_run=True,
+        playtest_portfolio=True,
+        playtest_uniqueness_window=3,
+    )
+    accepted_signatures = [f"accepted_{index}" for index in range(6)]
+    pool_signatures = ["pool_0"]
+
+    signatures = service._batch_similarity_signatures(config, accepted_signatures, pool_signatures)
+
+    assert signatures == ["accepted_3", "accepted_4", "accepted_5", "pool_0"]
+
+
+def test_playtest_portfolio_raises_similarity_threshold_under_attempt_pressure(tmp_path) -> None:
+    service = LevelGenerationService()
+    config = _config(
+        tmp_path,
+        difficulty="medium",
+        template_name="mixed",
+        dry_run=True,
+        playtest_portfolio=True,
+        playtest_uniqueness_window=3,
+    )
+
+    early = service._batch_duplicate_threshold(config, accepted_count=2, attempt=0, effective_max_attempts=10)
+    late = service._batch_duplicate_threshold(config, accepted_count=5, attempt=8, effective_max_attempts=10)
+
+    assert early == 0.98
+    assert late == 0.99
+
+
+def test_playtest_portfolio_relaxes_route_interest_gate_without_disabling_strict_default(tmp_path) -> None:
+    service = LevelGenerationService()
+    candidate = SimpleNamespace(
+        difficulty="hard",
+        recipe_family="package_gate",
+        topology_class="package_gate",
+        quality_score=GenerationQualityScore(
+            total=0.80,
+            readability=1,
+            uniqueness=1,
+            difficulty_fit=1,
+            route_interest=0.44,
+            switch_clarity=1,
+            details={
+                "presetContentFit": {"minimumRouteInterestScore": 0.54},
+                "routeInterest": {"score": 0.44, "tags": []},
+                "maxSimilarity": 0.0,
+            },
+        ),
+    )
+
+    strict_rejection = service._quality_rejection(candidate)
+    playtest_rejection = service._quality_rejection(
+        candidate,
+        config=_config(
+            tmp_path,
+            difficulty="hard",
+            template_name="mixed",
+            dry_run=True,
+            playtest_portfolio=True,
+        ),
+        attempt=0,
+        accepted_count=0,
+        effective_max_attempts=10,
+    )
+
+    assert strict_rejection is not None
+    assert strict_rejection[0] == "route_interest_below_hard_gate"
+    assert playtest_rejection is None
+
+
+def test_playtest_portfolio_relaxes_selection_similarity_gate(tmp_path) -> None:
+    service = LevelGenerationService()
+    candidate = SimpleNamespace(
+        difficulty="medium",
+        recipe_family="split_path_rejoin",
+        topology_class="split_rejoin",
+        quality_score=GenerationQualityScore(
+            total=0.80,
+            readability=1,
+            uniqueness=0.05,
+            difficulty_fit=1,
+            route_interest=0.70,
+            switch_clarity=1,
+            details={
+                "presetContentFit": {"minimumRouteInterestScore": 0.42},
+                "routeInterest": {"score": 0.70, "tags": ["split_rejoin"]},
+                "maxSimilarity": 0.95,
+            },
+        ),
+    )
+
+    strict_rejection = service._quality_rejection(candidate)
+    playtest_rejection = service._quality_rejection(
+        candidate,
+        config=_config(
+            tmp_path,
+            difficulty="medium",
+            template_name="mixed",
+            dry_run=True,
+            playtest_portfolio=True,
+        ),
+    )
+
+    assert strict_rejection is not None
+    assert strict_rejection[0] == "quality_similarity_above_threshold"
+    assert playtest_rejection is None
+
+
 def test_explicit_recipe_family_selection_ignores_batch_diversity_context(tmp_path) -> None:
     service = LevelGenerationService()
     preset = service.difficulty_service.get_preset("medium")

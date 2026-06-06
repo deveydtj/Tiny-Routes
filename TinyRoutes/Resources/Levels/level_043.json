@@ -6,181 +6,134 @@
       {
         "id": "start",
         "x": -1.05,
-        "y": -0.75,
+        "y": 0.0,
         "outgoingEdgeIDs": [
-          "e_start_ring_entry"
+          "e_start_switch_a"
         ]
       },
       {
-        "id": "ring_entry",
-        "x": -0.6,
-        "y": -0.75,
+        "id": "switch_a",
+        "x": -0.55,
+        "y": 0.0,
         "outgoingEdgeIDs": [
-          "e_ring_entry_four_way_switch"
+          "e_switch_a_lower_shortcut",
+          "e_switch_a_upper_branch"
         ]
       },
       {
-        "id": "four_way_switch",
-        "x": -0.2,
-        "y": -0.25,
+        "id": "upper_branch",
+        "x": -0.05,
+        "y": 0.3,
         "outgoingEdgeIDs": [
-          "e_four_way_switch_wrong_dead_end",
-          "e_four_way_switch_ring_a",
-          "e_four_way_switch_switch_exit",
-          "e_four_way_switch_ring_inner"
-        ]
-      },
-      {
-        "id": "ring_a",
-        "x": -0.2,
-        "y": 0.6,
-        "outgoingEdgeIDs": [
-          "e_ring_a_package"
+          "e_upper_branch_package"
         ]
       },
       {
         "id": "package",
-        "x": 0.4,
-        "y": 0.6,
+        "x": 0.75,
+        "y": 0.55,
         "outgoingEdgeIDs": [
-          "e_package_ring_b"
+          "e_package_rejoin"
         ]
       },
       {
-        "id": "ring_b",
-        "x": 0.5,
-        "y": 0.25,
+        "id": "rejoin",
+        "x": -0.05,
+        "y": -0.7,
         "outgoingEdgeIDs": [
-          "e_ring_b_ring_c",
-          "e_ring_b_switch_exit"
+          "e_rejoin_switch_b"
         ]
       },
       {
-        "id": "switch_exit",
-        "x": 0.95,
-        "y": 0.25,
+        "id": "switch_b",
+        "x": 0.55,
+        "y": -0.95,
         "outgoingEdgeIDs": [
-          "e_switch_exit_exit_dead_end",
-          "e_switch_exit_destination"
+          "e_switch_b_dead_end_b",
+          "e_switch_b_destination"
         ]
       },
       {
         "id": "destination",
-        "x": 0.95,
-        "y": -0.75,
+        "x": 1.05,
+        "y": -0.55,
         "outgoingEdgeIDs": []
       },
       {
-        "id": "wrong_dead_end",
-        "x": -1.0,
-        "y": -0.25,
-        "outgoingEdgeIDs": []
-      },
-      {
-        "id": "ring_inner",
-        "x": -0.2,
-        "y": -1.0,
-        "outgoingEdgeIDs": []
-      },
-      {
-        "id": "ring_c",
-        "x": 0.0,
-        "y": 0.0,
+        "id": "lower_shortcut",
+        "x": -0.55,
+        "y": -0.7,
         "outgoingEdgeIDs": [
-          "e_ring_c_four_way_switch"
+          "e_lower_shortcut_rejoin"
         ]
       },
       {
-        "id": "exit_dead_end",
-        "x": 0.95,
-        "y": 0.75,
+        "id": "dead_end_b",
+        "x": 0.25,
+        "y": -1.15,
         "outgoingEdgeIDs": []
       }
     ],
     "edges": [
       {
-        "id": "e_start_ring_entry",
+        "id": "e_start_switch_a",
         "fromNodeID": "start",
-        "toNodeID": "ring_entry",
+        "toNodeID": "switch_a",
         "roadShape": "horizontalFirst"
       },
       {
-        "id": "e_ring_entry_four_way_switch",
-        "fromNodeID": "ring_entry",
-        "toNodeID": "four_way_switch",
+        "id": "e_switch_a_lower_shortcut",
+        "fromNodeID": "switch_a",
+        "toNodeID": "lower_shortcut",
         "roadShape": "horizontalFirst"
       },
       {
-        "id": "e_four_way_switch_wrong_dead_end",
-        "fromNodeID": "four_way_switch",
-        "toNodeID": "wrong_dead_end",
+        "id": "e_switch_a_upper_branch",
+        "fromNodeID": "switch_a",
+        "toNodeID": "upper_branch",
         "roadShape": "horizontalFirst"
       },
       {
-        "id": "e_four_way_switch_ring_a",
-        "fromNodeID": "four_way_switch",
-        "toNodeID": "ring_a",
-        "roadShape": "verticalFirst"
-      },
-      {
-        "id": "e_four_way_switch_switch_exit",
-        "fromNodeID": "four_way_switch",
-        "toNodeID": "switch_exit",
+        "id": "e_lower_shortcut_rejoin",
+        "fromNodeID": "lower_shortcut",
+        "toNodeID": "rejoin",
         "roadShape": "horizontalFirst"
       },
       {
-        "id": "e_four_way_switch_ring_inner",
-        "fromNodeID": "four_way_switch",
-        "toNodeID": "ring_inner",
-        "roadShape": "verticalFirst"
-      },
-      {
-        "id": "e_ring_a_package",
-        "fromNodeID": "ring_a",
+        "id": "e_upper_branch_package",
+        "fromNodeID": "upper_branch",
         "toNodeID": "package",
-        "roadShape": "horizontalFirst"
+        "roadShape": "verticalFirst"
       },
       {
-        "id": "e_package_ring_b",
+        "id": "e_package_rejoin",
         "fromNodeID": "package",
-        "toNodeID": "ring_b",
+        "toNodeID": "rejoin",
         "roadShape": "verticalFirst"
       },
       {
-        "id": "e_ring_b_ring_c",
-        "fromNodeID": "ring_b",
-        "toNodeID": "ring_c",
+        "id": "e_rejoin_switch_b",
+        "fromNodeID": "rejoin",
+        "toNodeID": "switch_b",
+        "roadShape": "verticalFirst"
+      },
+      {
+        "id": "e_switch_b_dead_end_b",
+        "fromNodeID": "switch_b",
+        "toNodeID": "dead_end_b",
         "roadShape": "horizontalFirst"
       },
       {
-        "id": "e_ring_b_switch_exit",
-        "fromNodeID": "ring_b",
-        "toNodeID": "switch_exit",
-        "roadShape": "horizontalFirst"
-      },
-      {
-        "id": "e_ring_c_four_way_switch",
-        "fromNodeID": "ring_c",
-        "toNodeID": "four_way_switch",
-        "roadShape": "verticalFirst"
-      },
-      {
-        "id": "e_switch_exit_exit_dead_end",
-        "fromNodeID": "switch_exit",
-        "toNodeID": "exit_dead_end",
-        "roadShape": "verticalFirst"
-      },
-      {
-        "id": "e_switch_exit_destination",
-        "fromNodeID": "switch_exit",
+        "id": "e_switch_b_destination",
+        "fromNodeID": "switch_b",
         "toNodeID": "destination",
-        "roadShape": "verticalFirst"
+        "roadShape": "horizontalFirst"
       }
     ]
   },
   "startNodeID": "start",
   "packageNodeID": "package",
   "destinationNodeID": "destination",
-  "timeLimitSeconds": 31,
-  "parTaps": 3
+  "timeLimitSeconds": 30,
+  "parTaps": 2
 }

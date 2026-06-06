@@ -6,31 +6,32 @@
   "requiresWithinTimeLimit": true,
   "actions": [
     {
-      "timeSeconds": 0.21,
-      "tapNodeID": "gate",
-      "reason": "Rotate switch 'gate' toward 'detour' before arrival.",
-      "expectedEdgeAfterTap": "e_gate_detour",
+      "timeSeconds": 0.1,
+      "tapNodeID": "switch_gate",
+      "reason": "Rotate switch 'switch_gate' toward 'detour' before arrival.",
+      "expectedEdgeAfterTap": "e_switch_gate_detour",
       "expectedRouteNodeAfterTap": "detour",
-      "reactionWindowSeconds": 0.45,
-      "switchStateBeforeTap": "e_gate_dead_end_a",
-      "switchStateAfterTap": "e_gate_detour"
+      "reactionWindowSeconds": 0.3,
+      "switchStateBeforeTap": "e_switch_gate_direct_dead_end",
+      "switchStateAfterTap": "e_switch_gate_detour"
     }
   ],
   "metadata": {
     "validationVersion": "solution_sidecar_v1",
     "solutionRoute": [
       "start",
-      "gate",
+      "switch_gate",
       "detour",
       "package",
+      "rejoin",
       "destination"
     ],
     "requiredTapOrder": [
-      "gate"
+      "switch_gate"
     ],
-    "template": "short_detour_gate",
-    "generatedSeed": 4001690462,
-    "recipeFamily": "short_detour_gate",
-    "recipeVariant": "short_detour_gate_alternate"
+    "template": "long_detour_gate",
+    "generatedSeed": 1118940221,
+    "recipeFamily": "long_detour_gate",
+    "recipeVariant": "long_detour_gate_alternate"
   }
 }

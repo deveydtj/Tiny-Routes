@@ -8,7 +8,15 @@
         "x": -1.0,
         "y": 0.0,
         "outgoingEdgeIDs": [
-          "e_start_package"
+          "e_start_pickup_lane"
+        ]
+      },
+      {
+        "id": "pickup_lane",
+        "x": -0.5,
+        "y": 0.0,
+        "outgoingEdgeIDs": [
+          "e_pickup_lane_package"
         ]
       },
       {
@@ -16,7 +24,15 @@
         "x": 0.0,
         "y": 0.4,
         "outgoingEdgeIDs": [
-          "e_package_destination"
+          "e_package_exit_lane"
+        ]
+      },
+      {
+        "id": "exit_lane",
+        "x": 0.5,
+        "y": 0.0,
+        "outgoingEdgeIDs": [
+          "e_exit_lane_destination"
         ]
       },
       {
@@ -28,16 +44,28 @@
     ],
     "edges": [
       {
-        "id": "e_start_package",
+        "id": "e_start_pickup_lane",
         "fromNodeID": "start",
-        "toNodeID": "package",
-        "roadShape": "verticalFirst"
+        "toNodeID": "pickup_lane",
+        "roadShape": "horizontalFirst"
       },
       {
-        "id": "e_package_destination",
-        "fromNodeID": "package",
-        "toNodeID": "destination",
+        "id": "e_pickup_lane_package",
+        "fromNodeID": "pickup_lane",
+        "toNodeID": "package",
         "roadShape": "horizontalFirst"
+      },
+      {
+        "id": "e_package_exit_lane",
+        "fromNodeID": "package",
+        "toNodeID": "exit_lane",
+        "roadShape": "horizontalFirst"
+      },
+      {
+        "id": "e_exit_lane_destination",
+        "fromNodeID": "exit_lane",
+        "toNodeID": "destination",
+        "roadShape": "verticalFirst"
       }
     ]
   },

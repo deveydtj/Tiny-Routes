@@ -2,70 +2,48 @@
   "levelID": "level_031",
   "description": "Follow the generated graph recipe route and rotate each switch before arrival.",
   "expectedOutcome": "completed",
-  "maxTaps": 4,
+  "maxTaps": 2,
   "requiresWithinTimeLimit": true,
   "actions": [
     {
       "timeSeconds": 0.1,
-      "tapNodeID": "multi_switch_chain_stair_step_switch_a",
-      "reason": "Rotate switch 'multi_switch_chain_stair_step_switch_a' toward 'package' before arrival.",
-      "expectedEdgeAfterTap": "e_multi_switch_chain_stair_step_switch_a_package",
-      "expectedRouteNodeAfterTap": "package",
-      "reactionWindowSeconds": 0.41,
-      "switchStateBeforeTap": "e_multi_switch_chain_stair_step_switch_a_multi_switch_chain_stair_step_dead_end_a",
-      "switchStateAfterTap": "e_multi_switch_chain_stair_step_switch_a_package"
+      "tapNodeID": "choice",
+      "reason": "Rotate switch 'choice' toward 'detour_a' before arrival.",
+      "expectedEdgeAfterTap": "e_choice_detour_a",
+      "expectedRouteNodeAfterTap": "detour_a",
+      "reactionWindowSeconds": 0.25,
+      "switchStateBeforeTap": "e_choice_shortcut_dead_end",
+      "switchStateAfterTap": "e_choice_detour_a"
     },
     {
-      "timeSeconds": 1.02,
-      "tapNodeID": "multi_switch_chain_stair_step_switch_b",
-      "reason": "Rotate switch 'multi_switch_chain_stair_step_switch_b' toward 'multi_switch_chain_stair_step_switch_c' before arrival.",
-      "expectedEdgeAfterTap": "e_multi_switch_chain_stair_step_switch_b_multi_switch_chain_stair_step_switch_c",
-      "expectedRouteNodeAfterTap": "multi_switch_chain_stair_step_switch_c",
-      "reactionWindowSeconds": 0.45,
-      "switchStateBeforeTap": "e_multi_switch_chain_stair_step_switch_b_multi_switch_chain_stair_step_dead_end_b",
-      "switchStateAfterTap": "e_multi_switch_chain_stair_step_switch_b_multi_switch_chain_stair_step_switch_c"
-    },
-    {
-      "timeSeconds": 1.7,
-      "tapNodeID": "multi_switch_chain_stair_step_switch_c",
-      "reason": "Rotate switch 'multi_switch_chain_stair_step_switch_c' toward 'multi_switch_chain_stair_step_switch_d' before arrival.",
-      "expectedEdgeAfterTap": "e_multi_switch_chain_stair_step_switch_c_multi_switch_chain_stair_step_switch_d",
-      "expectedRouteNodeAfterTap": "multi_switch_chain_stair_step_switch_d",
-      "reactionWindowSeconds": 0.45,
-      "switchStateBeforeTap": "e_multi_switch_chain_stair_step_switch_c_multi_switch_chain_stair_step_dead_end_c",
-      "switchStateAfterTap": "e_multi_switch_chain_stair_step_switch_c_multi_switch_chain_stair_step_switch_d"
-    },
-    {
-      "timeSeconds": 2.33,
-      "tapNodeID": "multi_switch_chain_stair_step_switch_d",
-      "reason": "Rotate switch 'multi_switch_chain_stair_step_switch_d' toward 'destination' before arrival.",
-      "expectedEdgeAfterTap": "e_multi_switch_chain_stair_step_switch_d_destination",
+      "timeSeconds": 1.85,
+      "tapNodeID": "switch_b",
+      "reason": "Rotate switch 'switch_b' toward 'destination' before arrival.",
+      "expectedEdgeAfterTap": "e_switch_b_destination",
       "expectedRouteNodeAfterTap": "destination",
       "reactionWindowSeconds": 0.45,
-      "switchStateBeforeTap": "e_multi_switch_chain_stair_step_switch_d_multi_switch_chain_stair_step_dead_end_d",
-      "switchStateAfterTap": "e_multi_switch_chain_stair_step_switch_d_destination"
+      "switchStateBeforeTap": "e_switch_b_dead_end_b",
+      "switchStateAfterTap": "e_switch_b_destination"
     }
   ],
   "metadata": {
     "validationVersion": "solution_sidecar_v1",
     "solutionRoute": [
       "start",
-      "multi_switch_chain_stair_step_switch_a",
+      "choice",
+      "detour_a",
       "package",
-      "multi_switch_chain_stair_step_switch_b",
-      "multi_switch_chain_stair_step_switch_c",
-      "multi_switch_chain_stair_step_switch_d",
+      "detour_b",
+      "switch_b",
       "destination"
     ],
     "requiredTapOrder": [
-      "multi_switch_chain_stair_step_switch_a",
-      "multi_switch_chain_stair_step_switch_b",
-      "multi_switch_chain_stair_step_switch_c",
-      "multi_switch_chain_stair_step_switch_d"
+      "choice",
+      "switch_b"
     ],
-    "template": "multi_switch_chain",
-    "generatedSeed": 4101655842,
-    "recipeFamily": "multi_switch_chain",
-    "recipeVariant": "multi_switch_chain_stair_step"
+    "template": "fake_shortcut",
+    "generatedSeed": 3263948663,
+    "recipeFamily": "fake_shortcut",
+    "recipeVariant": "fake_shortcut_primary"
   }
 }

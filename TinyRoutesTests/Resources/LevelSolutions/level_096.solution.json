@@ -1,0 +1,49 @@
+{
+  "levelID": "level_096",
+  "description": "Follow the generated graph recipe route and rotate each switch before arrival.",
+  "expectedOutcome": "completed",
+  "maxTaps": 2,
+  "requiresWithinTimeLimit": true,
+  "actions": [
+    {
+      "timeSeconds": 0.1,
+      "tapNodeID": "switch_gate",
+      "reason": "Rotate switch 'switch_gate' toward 'detour_a' before arrival.",
+      "expectedEdgeAfterTap": "e_switch_gate_detour_a",
+      "expectedRouteNodeAfterTap": "detour_a",
+      "reactionWindowSeconds": 0.25,
+      "switchStateBeforeTap": "e_switch_gate_direct_bypass",
+      "switchStateAfterTap": "e_switch_gate_detour_a"
+    },
+    {
+      "timeSeconds": 1.85,
+      "tapNodeID": "switch_exit",
+      "reason": "Rotate switch 'switch_exit' toward 'destination' before arrival.",
+      "expectedEdgeAfterTap": "e_switch_exit_destination",
+      "expectedRouteNodeAfterTap": "destination",
+      "reactionWindowSeconds": 0.45,
+      "switchStateBeforeTap": "e_switch_exit_dead_end_b",
+      "switchStateAfterTap": "e_switch_exit_destination"
+    }
+  ],
+  "metadata": {
+    "validationVersion": "solution_sidecar_v1",
+    "solutionRoute": [
+      "start",
+      "switch_gate",
+      "detour_a",
+      "package",
+      "rejoin",
+      "switch_exit",
+      "destination"
+    ],
+    "requiredTapOrder": [
+      "switch_gate",
+      "switch_exit"
+    ],
+    "template": "long_detour_gate",
+    "generatedSeed": 3010866705,
+    "recipeFamily": "long_detour_gate",
+    "recipeVariant": "long_detour_gate_primary"
+  }
+}

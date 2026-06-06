@@ -9,15 +9,13 @@
     "validationVersion": "solution_sidecar_v1",
     "solutionRoute": [
       "start",
-      "pickup_lane",
       "package",
-      "exit_lane",
       "destination"
     ],
     "requiredTapOrder": [],
-    "template": "package_before_destination_intro",
-    "generatedSeed": 1768553935,
-    "recipeFamily": "package_before_destination_intro",
-    "recipeVariant": "package_before_destination_intro_primary"
+    "template": "straight_delivery_intro",
+    "generatedSeed": 4047298845,
+    "recipeFamily": "straight_delivery_intro",
+    "recipeVariant": "straight_delivery_intro_primary"
   }
 }

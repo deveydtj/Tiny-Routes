@@ -5,76 +5,68 @@
     "nodes": [
       {
         "id": "start",
-        "x": 0.0,
-        "y": 0.85,
+        "x": -1.0,
+        "y": -0.1,
         "outgoingEdgeIDs": [
-          "e_start_switch_gate"
+          "e_start_choice"
         ]
       },
       {
-        "id": "switch_gate",
-        "x": 0.2,
-        "y": 0.5,
+        "id": "choice",
+        "x": -0.5,
+        "y": -0.1,
         "outgoingEdgeIDs": [
-          "e_switch_gate_direct_dead_end",
-          "e_switch_gate_detour"
+          "e_choice_shortcut_dead_end",
+          "e_choice_detour"
         ]
       },
       {
         "id": "detour",
         "x": 0.0,
-        "y": 0.1,
+        "y": -0.1,
         "outgoingEdgeIDs": [
           "e_detour_package"
         ]
       },
       {
         "id": "package",
-        "x": -0.35,
-        "y": -0.25,
+        "x": 0.5,
+        "y": 0.3,
         "outgoingEdgeIDs": [
-          "e_package_rejoin"
-        ]
-      },
-      {
-        "id": "rejoin",
-        "x": 0.0,
-        "y": -0.65,
-        "outgoingEdgeIDs": [
-          "e_rejoin_destination"
+          "e_package_destination"
         ]
       },
       {
         "id": "destination",
-        "x": 0.35,
-        "y": -1.0,
+        "x": 1.0,
+        "y": -0.1,
         "outgoingEdgeIDs": []
       },
       {
-        "id": "direct_dead_end",
+        "id": "shortcut_dead_end",
         "x": -0.5,
-        "y": 0.45,
+        "y": 0.8,
         "outgoingEdgeIDs": []
       }
     ],
     "edges": [
       {
-        "id": "e_start_switch_gate",
+        "id": "e_start_choice",
         "fromNodeID": "start",
-        "toNodeID": "switch_gate",
+        "toNodeID": "choice",
         "roadShape": "horizontalFirst"
       },
       {
-        "id": "e_switch_gate_direct_dead_end",
-        "fromNodeID": "switch_gate",
-        "toNodeID": "direct_dead_end",
-        "roadShape": "horizontalFirst"
-      },
-      {
-        "id": "e_switch_gate_detour",
-        "fromNodeID": "switch_gate",
-        "toNodeID": "detour",
+        "id": "e_choice_shortcut_dead_end",
+        "fromNodeID": "choice",
+        "toNodeID": "shortcut_dead_end",
         "roadShape": "verticalFirst"
+      },
+      {
+        "id": "e_choice_detour",
+        "fromNodeID": "choice",
+        "toNodeID": "detour",
+        "roadShape": "horizontalFirst"
       },
       {
         "id": "e_detour_package",
@@ -83,14 +75,8 @@
         "roadShape": "horizontalFirst"
       },
       {
-        "id": "e_package_rejoin",
+        "id": "e_package_destination",
         "fromNodeID": "package",
-        "toNodeID": "rejoin",
-        "roadShape": "verticalFirst"
-      },
-      {
-        "id": "e_rejoin_destination",
-        "fromNodeID": "rejoin",
         "toNodeID": "destination",
         "roadShape": "horizontalFirst"
       }

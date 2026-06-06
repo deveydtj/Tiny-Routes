@@ -20,6 +20,8 @@ def test_generation_config_defaults_use_recipe_first_breadth() -> None:
     assert config.prefer_vertical_for_long_routes is True
     assert config.candidate_pool_size == 4
     assert config.max_attempts_per_level == 120
+    assert config.playtest_portfolio is False
+    assert config.playtest_uniqueness_window == 6
 
 
 def test_generation_config_still_accepts_explicit_legacy_template_mode() -> None:
@@ -70,3 +72,16 @@ def test_generation_config_validates_vertical_route_probability() -> None:
         assert "vertical_route_probability" in str(exc)
     else:
         raise AssertionError("Expected invalid probability to raise ValueError")
+
+
+def test_generation_config_accepts_playtest_portfolio_mode() -> None:
+    config = GenerationConfig(
+        start_level_number=12,
+        count=50,
+        difficulty="auto",
+        playtest_portfolio=True,
+        playtest_uniqueness_window=12,
+    )
+
+    assert config.playtest_portfolio is True
+    assert config.playtest_uniqueness_window == 12

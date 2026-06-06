@@ -6,17 +6,17 @@
   "requiresWithinTimeLimit": true,
   "actions": [
     {
-      "timeSeconds": 0.1,
+      "timeSeconds": 0.5,
       "tapNodeID": "switch_a",
       "reason": "Rotate switch 'switch_a' toward 'package' before arrival.",
       "expectedEdgeAfterTap": "e_switch_a_package",
       "expectedRouteNodeAfterTap": "package",
-      "reactionWindowSeconds": 0.41,
+      "reactionWindowSeconds": 0.45,
       "switchStateBeforeTap": "e_switch_a_dead_end_a",
       "switchStateAfterTap": "e_switch_a_package"
     },
     {
-      "timeSeconds": 1.02,
+      "timeSeconds": 1.92,
       "tapNodeID": "switch_b",
       "reason": "Rotate switch 'switch_b' toward 'route_mid' before arrival.",
       "expectedEdgeAfterTap": "e_switch_b_route_mid",
@@ -26,7 +26,7 @@
       "switchStateAfterTap": "e_switch_b_route_mid"
     },
     {
-      "timeSeconds": 1.99,
+      "timeSeconds": 3.16,
       "tapNodeID": "switch_c",
       "reason": "Rotate switch 'switch_c' toward 'destination' before arrival.",
       "expectedEdgeAfterTap": "e_switch_c_destination",
@@ -52,9 +52,9 @@
       "switch_b",
       "switch_c"
     ],
-    "template": "two_phase_route",
-    "generatedSeed": 1782602036,
-    "recipeFamily": "two_phase_route",
-    "recipeVariant": "two_phase_route_primary"
+    "template": "ring_route_gate",
+    "generatedSeed": 1295884768,
+    "recipeFamily": "ring_route_gate",
+    "recipeVariant": "ring_route_gate_primary"
   }
 }

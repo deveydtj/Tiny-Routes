@@ -5,148 +5,101 @@
     "nodes": [
       {
         "id": "start",
-        "x": 0.0,
-        "y": 0.85,
+        "x": 0.6,
+        "y": 0.8,
         "outgoingEdgeIDs": [
-          "e_start_switch_a"
+          "e_start_alpha_switch"
         ]
       },
       {
-        "id": "switch_a",
-        "x": 0.2,
-        "y": 0.6,
+        "id": "alpha_switch",
+        "x": -0.55,
+        "y": 0.1,
         "outgoingEdgeIDs": [
-          "e_switch_a_dead_end_a",
-          "e_switch_a_branch_a"
-        ]
-      },
-      {
-        "id": "branch_a",
-        "x": 0.0,
-        "y": 0.3,
-        "outgoingEdgeIDs": [
-          "e_branch_a_rejoin"
-        ]
-      },
-      {
-        "id": "rejoin",
-        "x": 0.0,
-        "y": 0.05,
-        "outgoingEdgeIDs": [
-          "e_rejoin_switch_b"
-        ]
-      },
-      {
-        "id": "switch_b",
-        "x": -0.2,
-        "y": -0.2,
-        "outgoingEdgeIDs": [
-          "e_switch_b_dead_end_b",
-          "e_switch_b_package"
+          "e_alpha_switch_destination",
+          "e_alpha_switch_package"
         ]
       },
       {
         "id": "package",
-        "x": -0.35,
-        "y": -0.45,
+        "x": 0.4,
+        "y": 0.0,
         "outgoingEdgeIDs": [
-          "e_package_switch_c"
+          "e_package_beta_switch"
         ]
       },
       {
-        "id": "switch_c",
-        "x": -0.2,
-        "y": -0.75,
+        "id": "beta_switch",
+        "x": -0.1,
+        "y": -0.9,
         "outgoingEdgeIDs": [
-          "e_switch_c_dead_end_c",
-          "e_switch_c_destination"
+          "e_beta_switch_dead_end_a",
+          "e_beta_switch_return_a"
+        ]
+      },
+      {
+        "id": "return_a",
+        "x": -0.45,
+        "y": -0.55,
+        "outgoingEdgeIDs": [
+          "e_return_a_alpha_switch"
         ]
       },
       {
         "id": "destination",
-        "x": 0.35,
+        "x": -0.85,
         "y": -1.0,
         "outgoingEdgeIDs": []
       },
       {
         "id": "dead_end_a",
-        "x": -0.5,
-        "y": 0.55,
-        "outgoingEdgeIDs": []
-      },
-      {
-        "id": "dead_end_b",
         "x": 0.5,
-        "y": -0.25,
-        "outgoingEdgeIDs": []
-      },
-      {
-        "id": "dead_end_c",
-        "x": -0.9,
-        "y": -0.7,
+        "y": -0.9,
         "outgoingEdgeIDs": []
       }
     ],
     "edges": [
       {
-        "id": "e_start_switch_a",
+        "id": "e_start_alpha_switch",
         "fromNodeID": "start",
-        "toNodeID": "switch_a",
-        "roadShape": "verticalFirst"
-      },
-      {
-        "id": "e_switch_a_dead_end_a",
-        "fromNodeID": "switch_a",
-        "toNodeID": "dead_end_a",
-        "roadShape": "verticalFirst"
-      },
-      {
-        "id": "e_switch_a_branch_a",
-        "fromNodeID": "switch_a",
-        "toNodeID": "branch_a",
+        "toNodeID": "alpha_switch",
         "roadShape": "horizontalFirst"
       },
       {
-        "id": "e_branch_a_rejoin",
-        "fromNodeID": "branch_a",
-        "toNodeID": "rejoin",
-        "roadShape": "verticalFirst"
-      },
-      {
-        "id": "e_rejoin_switch_b",
-        "fromNodeID": "rejoin",
-        "toNodeID": "switch_b",
-        "roadShape": "verticalFirst"
-      },
-      {
-        "id": "e_switch_b_dead_end_b",
-        "fromNodeID": "switch_b",
-        "toNodeID": "dead_end_b",
+        "id": "e_alpha_switch_destination",
+        "fromNodeID": "alpha_switch",
+        "toNodeID": "destination",
         "roadShape": "horizontalFirst"
       },
       {
-        "id": "e_switch_b_package",
-        "fromNodeID": "switch_b",
+        "id": "e_alpha_switch_package",
+        "fromNodeID": "alpha_switch",
         "toNodeID": "package",
         "roadShape": "horizontalFirst"
       },
       {
-        "id": "e_package_switch_c",
+        "id": "e_package_beta_switch",
         "fromNodeID": "package",
-        "toNodeID": "switch_c",
+        "toNodeID": "beta_switch",
         "roadShape": "verticalFirst"
       },
       {
-        "id": "e_switch_c_dead_end_c",
-        "fromNodeID": "switch_c",
-        "toNodeID": "dead_end_c",
+        "id": "e_beta_switch_dead_end_a",
+        "fromNodeID": "beta_switch",
+        "toNodeID": "dead_end_a",
         "roadShape": "horizontalFirst"
       },
       {
-        "id": "e_switch_c_destination",
-        "fromNodeID": "switch_c",
-        "toNodeID": "destination",
+        "id": "e_beta_switch_return_a",
+        "fromNodeID": "beta_switch",
+        "toNodeID": "return_a",
         "roadShape": "horizontalFirst"
+      },
+      {
+        "id": "e_return_a_alpha_switch",
+        "fromNodeID": "return_a",
+        "toNodeID": "alpha_switch",
+        "roadShape": "verticalFirst"
       }
     ]
   },

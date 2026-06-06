@@ -1,0 +1,60 @@
+{
+  "levelID": "level_085",
+  "description": "Follow the generated graph recipe route and rotate each switch before arrival.",
+  "expectedOutcome": "completed",
+  "maxTaps": 3,
+  "requiresWithinTimeLimit": true,
+  "actions": [
+    {
+      "timeSeconds": 1.36,
+      "tapNodeID": "alpha_switch",
+      "reason": "Rotate switch 'alpha_switch' toward 'package' before arrival.",
+      "expectedEdgeAfterTap": "e_alpha_switch_package",
+      "expectedRouteNodeAfterTap": "package",
+      "reactionWindowSeconds": 0.45,
+      "switchStateBeforeTap": "e_alpha_switch_destination",
+      "switchStateAfterTap": "e_alpha_switch_package"
+    },
+    {
+      "timeSeconds": 3.22,
+      "tapNodeID": "beta_switch",
+      "reason": "Rotate switch 'beta_switch' toward 'return_a' before arrival.",
+      "expectedEdgeAfterTap": "e_beta_switch_return_a",
+      "expectedRouteNodeAfterTap": "return_a",
+      "reactionWindowSeconds": 0.45,
+      "switchStateBeforeTap": "e_beta_switch_dead_end_a",
+      "switchStateAfterTap": "e_beta_switch_return_a"
+    },
+    {
+      "timeSeconds": 4.46,
+      "tapNodeID": "alpha_switch",
+      "reason": "Rotate switch 'alpha_switch' toward 'destination' before arrival.",
+      "expectedEdgeAfterTap": "e_alpha_switch_destination",
+      "expectedRouteNodeAfterTap": "destination",
+      "reactionWindowSeconds": 0.45,
+      "switchStateBeforeTap": "e_alpha_switch_package",
+      "switchStateAfterTap": "e_alpha_switch_destination"
+    }
+  ],
+  "metadata": {
+    "validationVersion": "solution_sidecar_v1",
+    "solutionRoute": [
+      "start",
+      "alpha_switch",
+      "package",
+      "beta_switch",
+      "return_a",
+      "alpha_switch",
+      "destination"
+    ],
+    "requiredTapOrder": [
+      "alpha_switch",
+      "beta_switch",
+      "alpha_switch"
+    ],
+    "template": "return_loop",
+    "generatedSeed": 1293387644,
+    "recipeFamily": "return_loop",
+    "recipeVariant": "return_loop_classic"
+  }
+}

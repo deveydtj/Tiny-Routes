@@ -297,6 +297,9 @@ def _assert_report_includes_generation_telemetry(payload: dict) -> None:
     assert payload["candidateValidationCountsByDifficulty"]
     assert "similarityRejectionCountsByDifficulty" in payload
     assert "rejectionReasonCountsByDifficulty" in payload
+    assert "rejectionPhaseCounts" in payload
+    assert "validationFailures" in payload["rejectionPhaseCounts"]
+    assert "selectionFilters" in payload["rejectionPhaseCounts"]
     assert "acceptedFamilyStreaks" in payload
     assert "acceptedTopologyStreaks" in payload
     assert "routeInterestScoreByDifficulty" in payload

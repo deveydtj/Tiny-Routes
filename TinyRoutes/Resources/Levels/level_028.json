@@ -5,145 +5,167 @@
     "nodes": [
       {
         "id": "start",
-        "x": -1.0,
-        "y": 0.0,
+        "x": -1.05,
+        "y": -0.7,
         "outgoingEdgeIDs": [
-          "e_start_multi_switch_chain_four_switch_switch_a"
+          "e_start_repeat_switch"
         ]
       },
       {
-        "id": "multi_switch_chain_four_switch_switch_a",
-        "x": -0.65,
-        "y": 0.2,
+        "id": "repeat_switch",
+        "x": -0.55,
+        "y": -0.35,
         "outgoingEdgeIDs": [
-          "e_multi_switch_chain_four_switch_switch_a_multi_switch_chain_four_switch_dead_end_a",
-          "e_multi_switch_chain_four_switch_switch_a_package"
+          "e_repeat_switch_dead_end_a",
+          "e_repeat_switch_package_lane",
+          "e_repeat_switch_exit_lane"
+        ]
+      },
+      {
+        "id": "package_lane",
+        "x": -0.55,
+        "y": 0.45,
+        "outgoingEdgeIDs": [
+          "e_package_lane_package"
         ]
       },
       {
         "id": "package",
-        "x": -0.35,
-        "y": 0.4,
+        "x": 0.1,
+        "y": 0.7,
         "outgoingEdgeIDs": [
-          "e_package_multi_switch_chain_four_switch_switch_b"
+          "e_package_loop_switch"
         ]
       },
       {
-        "id": "multi_switch_chain_four_switch_switch_b",
+        "id": "loop_switch",
+        "x": 0.7,
+        "y": 0.45,
+        "outgoingEdgeIDs": [
+          "e_loop_switch_dead_end_b",
+          "e_loop_switch_return_lane"
+        ]
+      },
+      {
+        "id": "return_lane",
         "x": 0.0,
-        "y": 0.2,
+        "y": -0.95,
         "outgoingEdgeIDs": [
-          "e_multi_switch_chain_four_switch_switch_b_multi_switch_chain_four_switch_dead_end_b",
-          "e_multi_switch_chain_four_switch_switch_b_multi_switch_chain_four_switch_switch_c"
+          "e_return_lane_repeat_switch"
         ]
       },
       {
-        "id": "multi_switch_chain_four_switch_switch_c",
-        "x": 0.35,
-        "y": -0.2,
+        "id": "exit_lane",
+        "x": -0.55,
+        "y": -1.05,
         "outgoingEdgeIDs": [
-          "e_multi_switch_chain_four_switch_switch_c_multi_switch_chain_four_switch_dead_end_c",
-          "e_multi_switch_chain_four_switch_switch_c_multi_switch_chain_four_switch_switch_d"
+          "e_exit_lane_switch_exit"
         ]
       },
       {
-        "id": "multi_switch_chain_four_switch_switch_d",
-        "x": 0.65,
-        "y": 0.2,
+        "id": "switch_exit",
+        "x": 0.75,
+        "y": -1.0,
         "outgoingEdgeIDs": [
-          "e_multi_switch_chain_four_switch_switch_d_multi_switch_chain_four_switch_dead_end_d",
-          "e_multi_switch_chain_four_switch_switch_d_destination"
+          "e_switch_exit_dead_end_c",
+          "e_switch_exit_destination"
         ]
       },
       {
         "id": "destination",
-        "x": 1.0,
-        "y": -0.3,
+        "x": 1.05,
+        "y": -1.15,
         "outgoingEdgeIDs": []
       },
       {
-        "id": "multi_switch_chain_four_switch_dead_end_a",
-        "x": -0.65,
+        "id": "dead_end_a",
+        "x": -1.05,
+        "y": -0.1,
+        "outgoingEdgeIDs": []
+      },
+      {
+        "id": "dead_end_b",
+        "x": 0.7,
         "y": 0.8,
         "outgoingEdgeIDs": []
       },
       {
-        "id": "multi_switch_chain_four_switch_dead_end_b",
-        "x": 0.0,
-        "y": 0.8,
-        "outgoingEdgeIDs": []
-      },
-      {
-        "id": "multi_switch_chain_four_switch_dead_end_c",
-        "x": 0.35,
-        "y": 0.4,
-        "outgoingEdgeIDs": []
-      },
-      {
-        "id": "multi_switch_chain_four_switch_dead_end_d",
-        "x": 0.65,
-        "y": 0.8,
+        "id": "dead_end_c",
+        "x": 0.75,
+        "y": -0.5,
         "outgoingEdgeIDs": []
       }
     ],
     "edges": [
       {
-        "id": "e_start_multi_switch_chain_four_switch_switch_a",
+        "id": "e_start_repeat_switch",
         "fromNodeID": "start",
-        "toNodeID": "multi_switch_chain_four_switch_switch_a",
+        "toNodeID": "repeat_switch",
         "roadShape": "horizontalFirst"
       },
       {
-        "id": "e_multi_switch_chain_four_switch_switch_a_multi_switch_chain_four_switch_dead_end_a",
-        "fromNodeID": "multi_switch_chain_four_switch_switch_a",
-        "toNodeID": "multi_switch_chain_four_switch_dead_end_a",
+        "id": "e_repeat_switch_dead_end_a",
+        "fromNodeID": "repeat_switch",
+        "toNodeID": "dead_end_a",
         "roadShape": "horizontalFirst"
       },
       {
-        "id": "e_multi_switch_chain_four_switch_switch_a_package",
-        "fromNodeID": "multi_switch_chain_four_switch_switch_a",
-        "toNodeID": "package",
-        "roadShape": "horizontalFirst"
-      },
-      {
-        "id": "e_package_multi_switch_chain_four_switch_switch_b",
-        "fromNodeID": "package",
-        "toNodeID": "multi_switch_chain_four_switch_switch_b",
-        "roadShape": "horizontalFirst"
-      },
-      {
-        "id": "e_multi_switch_chain_four_switch_switch_b_multi_switch_chain_four_switch_dead_end_b",
-        "fromNodeID": "multi_switch_chain_four_switch_switch_b",
-        "toNodeID": "multi_switch_chain_four_switch_dead_end_b",
-        "roadShape": "horizontalFirst"
-      },
-      {
-        "id": "e_multi_switch_chain_four_switch_switch_b_multi_switch_chain_four_switch_switch_c",
-        "fromNodeID": "multi_switch_chain_four_switch_switch_b",
-        "toNodeID": "multi_switch_chain_four_switch_switch_c",
+        "id": "e_repeat_switch_package_lane",
+        "fromNodeID": "repeat_switch",
+        "toNodeID": "package_lane",
         "roadShape": "verticalFirst"
       },
       {
-        "id": "e_multi_switch_chain_four_switch_switch_c_multi_switch_chain_four_switch_dead_end_c",
-        "fromNodeID": "multi_switch_chain_four_switch_switch_c",
-        "toNodeID": "multi_switch_chain_four_switch_dead_end_c",
+        "id": "e_repeat_switch_exit_lane",
+        "fromNodeID": "repeat_switch",
+        "toNodeID": "exit_lane",
+        "roadShape": "verticalFirst"
+      },
+      {
+        "id": "e_package_lane_package",
+        "fromNodeID": "package_lane",
+        "toNodeID": "package",
+        "roadShape": "verticalFirst"
+      },
+      {
+        "id": "e_package_loop_switch",
+        "fromNodeID": "package",
+        "toNodeID": "loop_switch",
         "roadShape": "horizontalFirst"
       },
       {
-        "id": "e_multi_switch_chain_four_switch_switch_c_multi_switch_chain_four_switch_switch_d",
-        "fromNodeID": "multi_switch_chain_four_switch_switch_c",
-        "toNodeID": "multi_switch_chain_four_switch_switch_d",
+        "id": "e_loop_switch_dead_end_b",
+        "fromNodeID": "loop_switch",
+        "toNodeID": "dead_end_b",
+        "roadShape": "verticalFirst"
+      },
+      {
+        "id": "e_loop_switch_return_lane",
+        "fromNodeID": "loop_switch",
+        "toNodeID": "return_lane",
+        "roadShape": "verticalFirst"
+      },
+      {
+        "id": "e_return_lane_repeat_switch",
+        "fromNodeID": "return_lane",
+        "toNodeID": "repeat_switch",
+        "roadShape": "verticalFirst"
+      },
+      {
+        "id": "e_exit_lane_switch_exit",
+        "fromNodeID": "exit_lane",
+        "toNodeID": "switch_exit",
         "roadShape": "horizontalFirst"
       },
       {
-        "id": "e_multi_switch_chain_four_switch_switch_d_multi_switch_chain_four_switch_dead_end_d",
-        "fromNodeID": "multi_switch_chain_four_switch_switch_d",
-        "toNodeID": "multi_switch_chain_four_switch_dead_end_d",
-        "roadShape": "horizontalFirst"
+        "id": "e_switch_exit_dead_end_c",
+        "fromNodeID": "switch_exit",
+        "toNodeID": "dead_end_c",
+        "roadShape": "verticalFirst"
       },
       {
-        "id": "e_multi_switch_chain_four_switch_switch_d_destination",
-        "fromNodeID": "multi_switch_chain_four_switch_switch_d",
+        "id": "e_switch_exit_destination",
+        "fromNodeID": "switch_exit",
         "toNodeID": "destination",
         "roadShape": "horizontalFirst"
       }
@@ -152,6 +174,6 @@
   "startNodeID": "start",
   "packageNodeID": "package",
   "destinationNodeID": "destination",
-  "timeLimitSeconds": 30,
+  "timeLimitSeconds": 33,
   "parTaps": 4
 }

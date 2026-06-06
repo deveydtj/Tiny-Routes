@@ -21,6 +21,7 @@ DEFAULT_MAX_ATTEMPTS_PER_LEVEL = 120
 DEFAULT_LAYOUT_ORIENTATION_PREFERENCE = "portrait_vertical"
 DEFAULT_LAYOUT_SIZE_PROFILE = "difficulty_curve"
 DEFAULT_VERTICAL_ROUTE_PROBABILITY = 0.35
+DEFAULT_PLAYTEST_PORTFOLIO_UNIQUENESS_WINDOW = 6
 
 
 @dataclass(frozen=True)
@@ -56,6 +57,8 @@ class GenerationConfig:
     swift_timeout_seconds: int = 180
     sync_xcode_project: bool = True
     compare_against_existing: bool = True
+    playtest_portfolio: bool = False
+    playtest_uniqueness_window: int = DEFAULT_PLAYTEST_PORTFOLIO_UNIQUENESS_WINDOW
     command_arguments: list[str] | None = None
 
     def __post_init__(self) -> None:
@@ -67,6 +70,8 @@ class GenerationConfig:
             raise ValueError("max_attempts_per_level must be greater than zero")
         if self.candidate_pool_size <= 0:
             raise ValueError("candidate_pool_size must be greater than zero")
+        if self.playtest_uniqueness_window <= 0:
+            raise ValueError("playtest_uniqueness_window must be greater than zero")
 
         object.__setattr__(self, "difficulty", self.difficulty.strip().lower())
         object.__setattr__(self, "template_name", self.template_name.strip().lower())

@@ -5,141 +5,168 @@
     "nodes": [
       {
         "id": "start",
-        "x": -1.0,
-        "y": 0.55,
+        "x": -1.05,
+        "y": -1.05,
         "outgoingEdgeIDs": [
-          "e_start_hub"
+          "e_start_loop_entry_switch"
         ]
       },
       {
-        "id": "hub",
-        "x": -0.7,
-        "y": -0.25,
+        "id": "loop_entry_switch",
+        "x": -0.55,
+        "y": -0.8,
         "outgoingEdgeIDs": [
-          "e_hub_ring_a",
-          "e_hub_package"
+          "e_loop_entry_switch_dead_end_a",
+          "e_loop_entry_switch_outer_loop",
+          "e_loop_entry_switch_exit_lane"
         ]
       },
       {
-        "id": "ring_a",
-        "x": -0.35,
-        "y": 0.05,
+        "id": "outer_loop",
+        "x": -0.55,
+        "y": 0.1,
         "outgoingEdgeIDs": [
-          "e_ring_a_ring_b"
+          "e_outer_loop_package_switch"
         ]
       },
       {
-        "id": "ring_b",
-        "x": 0.7,
-        "y": -0.25,
+        "id": "package_switch",
+        "x": 0.0,
+        "y": 0.6,
         "outgoingEdgeIDs": [
-          "e_ring_b_ring_a",
-          "e_ring_b_gate",
-          "e_ring_b_dead_end_a"
+          "e_package_switch_dead_end_b",
+          "e_package_switch_package"
         ]
       },
       {
         "id": "package",
-        "x": 0.0,
-        "y": -0.55,
+        "x": 0.6,
+        "y": 0.45,
         "outgoingEdgeIDs": [
-          "e_package_ring_b"
+          "e_package_loop_return"
         ]
       },
       {
-        "id": "gate",
-        "x": 0.7,
-        "y": 0.25,
+        "id": "loop_return",
+        "x": 0.2,
+        "y": -0.2,
         "outgoingEdgeIDs": [
-          "e_gate_dead_end_b",
-          "e_gate_destination",
-          "e_gate_ring_a"
+          "e_loop_return_loop_entry_switch"
+        ]
+      },
+      {
+        "id": "exit_lane",
+        "x": -0.1,
+        "y": -0.95,
+        "outgoingEdgeIDs": [
+          "e_exit_lane_switch_exit"
+        ]
+      },
+      {
+        "id": "switch_exit",
+        "x": 0.6,
+        "y": -0.95,
+        "outgoingEdgeIDs": [
+          "e_switch_exit_dead_end_c",
+          "e_switch_exit_destination"
         ]
       },
       {
         "id": "destination",
-        "x": 1.0,
-        "y": 0.5,
+        "x": 1.05,
+        "y": -0.65,
         "outgoingEdgeIDs": []
       },
       {
         "id": "dead_end_a",
-        "x": 0.35,
-        "y": -0.85,
+        "x": -0.2,
+        "y": -0.55,
         "outgoingEdgeIDs": []
       },
       {
         "id": "dead_end_b",
-        "x": 0.7,
-        "y": 0.85,
+        "x": -0.5,
+        "y": 0.9,
+        "outgoingEdgeIDs": []
+      },
+      {
+        "id": "dead_end_c",
+        "x": 0.6,
+        "y": -0.5,
         "outgoingEdgeIDs": []
       }
     ],
     "edges": [
       {
-        "id": "e_start_hub",
+        "id": "e_start_loop_entry_switch",
         "fromNodeID": "start",
-        "toNodeID": "hub",
-        "roadShape": "verticalFirst"
-      },
-      {
-        "id": "e_hub_ring_a",
-        "fromNodeID": "hub",
-        "toNodeID": "ring_a",
+        "toNodeID": "loop_entry_switch",
         "roadShape": "horizontalFirst"
       },
       {
-        "id": "e_hub_package",
-        "fromNodeID": "hub",
-        "toNodeID": "package",
-        "roadShape": "verticalFirst"
-      },
-      {
-        "id": "e_ring_a_ring_b",
-        "fromNodeID": "ring_a",
-        "toNodeID": "ring_b",
-        "roadShape": "horizontalFirst"
-      },
-      {
-        "id": "e_ring_b_ring_a",
-        "fromNodeID": "ring_b",
-        "toNodeID": "ring_a",
-        "roadShape": "horizontalFirst"
-      },
-      {
-        "id": "e_ring_b_gate",
-        "fromNodeID": "ring_b",
-        "toNodeID": "gate",
-        "roadShape": "horizontalFirst"
-      },
-      {
-        "id": "e_ring_b_dead_end_a",
-        "fromNodeID": "ring_b",
+        "id": "e_loop_entry_switch_dead_end_a",
+        "fromNodeID": "loop_entry_switch",
         "toNodeID": "dead_end_a",
-        "roadShape": "verticalFirst"
-      },
-      {
-        "id": "e_package_ring_b",
-        "fromNodeID": "package",
-        "toNodeID": "ring_b",
         "roadShape": "horizontalFirst"
       },
       {
-        "id": "e_gate_dead_end_b",
-        "fromNodeID": "gate",
+        "id": "e_loop_entry_switch_outer_loop",
+        "fromNodeID": "loop_entry_switch",
+        "toNodeID": "outer_loop",
+        "roadShape": "horizontalFirst"
+      },
+      {
+        "id": "e_loop_entry_switch_exit_lane",
+        "fromNodeID": "loop_entry_switch",
+        "toNodeID": "exit_lane",
+        "roadShape": "verticalFirst"
+      },
+      {
+        "id": "e_outer_loop_package_switch",
+        "fromNodeID": "outer_loop",
+        "toNodeID": "package_switch",
+        "roadShape": "horizontalFirst"
+      },
+      {
+        "id": "e_package_switch_dead_end_b",
+        "fromNodeID": "package_switch",
         "toNodeID": "dead_end_b",
         "roadShape": "horizontalFirst"
       },
       {
-        "id": "e_gate_destination",
-        "fromNodeID": "gate",
-        "toNodeID": "destination",
+        "id": "e_package_switch_package",
+        "fromNodeID": "package_switch",
+        "toNodeID": "package",
         "roadShape": "horizontalFirst"
       },
       {
-        "id": "e_gate_ring_a",
-        "fromNodeID": "gate",
-        "toNodeID": "ring_a",
+        "id": "e_package_loop_return",
+        "fromNodeID": "package",
+        "toNodeID": "loop_return",
+        "roadShape": "verticalFirst"
+      },
+      {
+        "id": "e_loop_return_loop_entry_switch",
+        "fromNodeID": "loop_return",
+        "toNodeID": "loop_entry_switch",
+        "roadShape": "horizontalFirst"
+      },
+      {
+        "id": "e_exit_lane_switch_exit",
+        "fromNodeID": "exit_lane",
+        "toNodeID": "switch_exit",
+        "roadShape": "horizontalFirst"
+      },
+      {
+        "id": "e_switch_exit_dead_end_c",
+        "fromNodeID": "switch_exit",
+        "toNodeID": "dead_end_c",
+        "roadShape": "horizontalFirst"
+      },
+      {
+        "id": "e_switch_exit_destination",
+        "fromNodeID": "switch_exit",
+        "toNodeID": "destination",
         "roadShape": "horizontalFirst"
       }
     ]
@@ -147,6 +174,6 @@
   "startNodeID": "start",
   "packageNodeID": "package",
   "destinationNodeID": "destination",
-  "timeLimitSeconds": 30,
-  "parTaps": 3
+  "timeLimitSeconds": 32,
+  "parTaps": 4
 }

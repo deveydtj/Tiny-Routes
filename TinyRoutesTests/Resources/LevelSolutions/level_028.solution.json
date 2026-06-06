@@ -6,66 +6,69 @@
   "requiresWithinTimeLimit": true,
   "actions": [
     {
-      "timeSeconds": 0.1,
-      "tapNodeID": "multi_switch_chain_four_switch_switch_a",
-      "reason": "Rotate switch 'multi_switch_chain_four_switch_switch_a' toward 'package' before arrival.",
-      "expectedEdgeAfterTap": "e_multi_switch_chain_four_switch_switch_a_package",
-      "expectedRouteNodeAfterTap": "package",
-      "reactionWindowSeconds": 0.41,
-      "switchStateBeforeTap": "e_multi_switch_chain_four_switch_switch_a_multi_switch_chain_four_switch_dead_end_a",
-      "switchStateAfterTap": "e_multi_switch_chain_four_switch_switch_a_package"
-    },
-    {
-      "timeSeconds": 1.02,
-      "tapNodeID": "multi_switch_chain_four_switch_switch_b",
-      "reason": "Rotate switch 'multi_switch_chain_four_switch_switch_b' toward 'multi_switch_chain_four_switch_switch_c' before arrival.",
-      "expectedEdgeAfterTap": "e_multi_switch_chain_four_switch_switch_b_multi_switch_chain_four_switch_switch_c",
-      "expectedRouteNodeAfterTap": "multi_switch_chain_four_switch_switch_c",
+      "timeSeconds": 0.32,
+      "tapNodeID": "repeat_switch",
+      "reason": "Rotate switch 'repeat_switch' toward 'package_lane' before arrival.",
+      "expectedEdgeAfterTap": "e_repeat_switch_package_lane",
+      "expectedRouteNodeAfterTap": "package_lane",
       "reactionWindowSeconds": 0.45,
-      "switchStateBeforeTap": "e_multi_switch_chain_four_switch_switch_b_multi_switch_chain_four_switch_dead_end_b",
-      "switchStateAfterTap": "e_multi_switch_chain_four_switch_switch_b_multi_switch_chain_four_switch_switch_c"
+      "switchStateBeforeTap": "e_repeat_switch_dead_end_a",
+      "switchStateAfterTap": "e_repeat_switch_package_lane"
     },
     {
-      "timeSeconds": 1.7,
-      "tapNodeID": "multi_switch_chain_four_switch_switch_c",
-      "reason": "Rotate switch 'multi_switch_chain_four_switch_switch_c' toward 'multi_switch_chain_four_switch_switch_d' before arrival.",
-      "expectedEdgeAfterTap": "e_multi_switch_chain_four_switch_switch_c_multi_switch_chain_four_switch_switch_d",
-      "expectedRouteNodeAfterTap": "multi_switch_chain_four_switch_switch_d",
+      "timeSeconds": 2.77,
+      "tapNodeID": "loop_switch",
+      "reason": "Rotate switch 'loop_switch' toward 'return_lane' before arrival.",
+      "expectedEdgeAfterTap": "e_loop_switch_return_lane",
+      "expectedRouteNodeAfterTap": "return_lane",
       "reactionWindowSeconds": 0.45,
-      "switchStateBeforeTap": "e_multi_switch_chain_four_switch_switch_c_multi_switch_chain_four_switch_dead_end_c",
-      "switchStateAfterTap": "e_multi_switch_chain_four_switch_switch_c_multi_switch_chain_four_switch_switch_d"
+      "switchStateBeforeTap": "e_loop_switch_dead_end_b",
+      "switchStateAfterTap": "e_loop_switch_return_lane"
     },
     {
-      "timeSeconds": 2.33,
-      "tapNodeID": "multi_switch_chain_four_switch_switch_d",
-      "reason": "Rotate switch 'multi_switch_chain_four_switch_switch_d' toward 'destination' before arrival.",
-      "expectedEdgeAfterTap": "e_multi_switch_chain_four_switch_switch_d_destination",
+      "timeSeconds": 5.86,
+      "tapNodeID": "repeat_switch",
+      "reason": "Rotate switch 'repeat_switch' toward 'exit_lane' before arrival.",
+      "expectedEdgeAfterTap": "e_repeat_switch_exit_lane",
+      "expectedRouteNodeAfterTap": "exit_lane",
+      "reactionWindowSeconds": 0.45,
+      "switchStateBeforeTap": "e_repeat_switch_package_lane",
+      "switchStateAfterTap": "e_repeat_switch_exit_lane"
+    },
+    {
+      "timeSeconds": 7.9,
+      "tapNodeID": "switch_exit",
+      "reason": "Rotate switch 'switch_exit' toward 'destination' before arrival.",
+      "expectedEdgeAfterTap": "e_switch_exit_destination",
       "expectedRouteNodeAfterTap": "destination",
       "reactionWindowSeconds": 0.45,
-      "switchStateBeforeTap": "e_multi_switch_chain_four_switch_switch_d_multi_switch_chain_four_switch_dead_end_d",
-      "switchStateAfterTap": "e_multi_switch_chain_four_switch_switch_d_destination"
+      "switchStateBeforeTap": "e_switch_exit_dead_end_c",
+      "switchStateAfterTap": "e_switch_exit_destination"
     }
   ],
   "metadata": {
     "validationVersion": "solution_sidecar_v1",
     "solutionRoute": [
       "start",
-      "multi_switch_chain_four_switch_switch_a",
+      "repeat_switch",
+      "package_lane",
       "package",
-      "multi_switch_chain_four_switch_switch_b",
-      "multi_switch_chain_four_switch_switch_c",
-      "multi_switch_chain_four_switch_switch_d",
+      "loop_switch",
+      "return_lane",
+      "repeat_switch",
+      "exit_lane",
+      "switch_exit",
       "destination"
     ],
     "requiredTapOrder": [
-      "multi_switch_chain_four_switch_switch_a",
-      "multi_switch_chain_four_switch_switch_b",
-      "multi_switch_chain_four_switch_switch_c",
-      "multi_switch_chain_four_switch_switch_d"
+      "repeat_switch",
+      "loop_switch",
+      "repeat_switch",
+      "switch_exit"
     ],
-    "template": "multi_switch_chain",
-    "generatedSeed": 1874523060,
-    "recipeFamily": "multi_switch_chain",
-    "recipeVariant": "multi_switch_chain_four_switch"
+    "template": "return_loop_with_gate",
+    "generatedSeed": 2380406737,
+    "recipeFamily": "return_loop_with_gate",
+    "recipeVariant": "return_loop_with_gate_primary"
   }
 }

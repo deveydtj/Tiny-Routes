@@ -1,30 +1,25 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="420" height="320" viewBox="0 0 420 320">
 <rect width="100%" height="100%" fill="#f8fafc"/>
 <text x="16" y="22" font-family="Arial" font-size="14" fill="#0f172a">level_024</text>
-<line x1="30.0" y1="219.1" x2="102.0" y2="171.8" stroke="#64748b" stroke-width="3"/>
-<line x1="102.0" y1="171.8" x2="102.0" y2="30.0" stroke="#64748b" stroke-width="3"/>
-<line x1="102.0" y1="171.8" x2="174.0" y2="124.5" stroke="#64748b" stroke-width="3"/>
-<line x1="174.0" y1="124.5" x2="246.0" y2="171.8" stroke="#64748b" stroke-width="3"/>
-<line x1="246.0" y1="171.8" x2="246.0" y2="30.0" stroke="#64748b" stroke-width="3"/>
-<line x1="246.0" y1="171.8" x2="318.0" y2="266.4" stroke="#64748b" stroke-width="3"/>
-<line x1="318.0" y1="266.4" x2="318.0" y2="124.5" stroke="#64748b" stroke-width="3"/>
-<line x1="318.0" y1="266.4" x2="390.0" y2="290.0" stroke="#64748b" stroke-width="3"/>
-<circle cx="30.0" cy="219.1" r="8" fill="#22c55e" stroke="#0f172a" stroke-width="1"/>
-<text x="40.0" y="209.1" font-family="Arial" font-size="11" fill="#0f172a">start</text>
-<circle cx="102.0" cy="171.8" r="8" fill="#3b82f6" stroke="#0f172a" stroke-width="1"/>
-<text x="112.0" y="161.8" font-family="Arial" font-size="11" fill="#0f172a">1</text>
-<circle cx="174.0" cy="124.5" r="8" fill="#f59e0b" stroke="#0f172a" stroke-width="1"/>
-<text x="184.0" y="114.5" font-family="Arial" font-size="11" fill="#0f172a">package</text>
-<circle cx="246.0" cy="171.8" r="8" fill="#3b82f6" stroke="#0f172a" stroke-width="1"/>
-<text x="256.0" y="161.8" font-family="Arial" font-size="11" fill="#0f172a">2</text>
-<circle cx="318.0" cy="266.4" r="8" fill="#3b82f6" stroke="#0f172a" stroke-width="1"/>
-<text x="328.0" y="256.4" font-family="Arial" font-size="11" fill="#0f172a">3</text>
-<circle cx="390.0" cy="290.0" r="8" fill="#ef4444" stroke="#0f172a" stroke-width="1"/>
-<text x="400.0" y="280.0" font-family="Arial" font-size="11" fill="#0f172a">destination</text>
-<circle cx="102.0" cy="30.0" r="8" fill="#94a3b8" stroke="#0f172a" stroke-width="1"/>
-<text x="112.0" y="20.0" font-family="Arial" font-size="11" fill="#0f172a">multi_switch_chain_zigzag_dead_end_a</text>
-<circle cx="246.0" cy="30.0" r="8" fill="#94a3b8" stroke="#0f172a" stroke-width="1"/>
-<text x="256.0" y="20.0" font-family="Arial" font-size="11" fill="#0f172a">multi_switch_chain_zigzag_dead_end_b</text>
-<circle cx="318.0" cy="124.5" r="8" fill="#94a3b8" stroke="#0f172a" stroke-width="1"/>
-<text x="328.0" y="114.5" font-family="Arial" font-size="11" fill="#0f172a">multi_switch_chain_zigzag_dead_end_c</text>
+<line x1="390.0" y1="30.0" x2="104.5" y2="131.1" stroke="#64748b" stroke-width="3"/>
+<line x1="104.5" y1="131.1" x2="30.0" y2="290.0" stroke="#64748b" stroke-width="3"/>
+<line x1="104.5" y1="131.1" x2="340.3" y2="145.6" stroke="#64748b" stroke-width="3"/>
+<line x1="340.3" y1="145.6" x2="216.2" y2="275.6" stroke="#64748b" stroke-width="3"/>
+<line x1="216.2" y1="275.6" x2="365.2" y2="275.6" stroke="#64748b" stroke-width="3"/>
+<line x1="216.2" y1="275.6" x2="129.3" y2="225.0" stroke="#64748b" stroke-width="3"/>
+<line x1="129.3" y1="225.0" x2="104.5" y2="131.1" stroke="#64748b" stroke-width="3"/>
+<circle cx="390.0" cy="30.0" r="8" fill="#22c55e" stroke="#0f172a" stroke-width="1"/>
+<text x="400.0" y="20.0" font-family="Arial" font-size="11" fill="#0f172a">start</text>
+<circle cx="104.5" cy="131.1" r="8" fill="#3b82f6" stroke="#0f172a" stroke-width="1"/>
+<text x="114.5" y="121.1" font-family="Arial" font-size="11" fill="#0f172a">3</text>
+<circle cx="340.3" cy="145.6" r="8" fill="#f59e0b" stroke="#0f172a" stroke-width="1"/>
+<text x="350.3" y="135.6" font-family="Arial" font-size="11" fill="#0f172a">package</text>
+<circle cx="216.2" cy="275.6" r="8" fill="#3b82f6" stroke="#0f172a" stroke-width="1"/>
+<text x="226.2" y="265.6" font-family="Arial" font-size="11" fill="#0f172a">2</text>
+<circle cx="129.3" cy="225.0" r="8" fill="#94a3b8" stroke="#0f172a" stroke-width="1"/>
+<text x="139.3" y="215.0" font-family="Arial" font-size="11" fill="#0f172a">lower_return</text>
+<circle cx="30.0" cy="290.0" r="8" fill="#ef4444" stroke="#0f172a" stroke-width="1"/>
+<text x="40.0" y="280.0" font-family="Arial" font-size="11" fill="#0f172a">destination</text>
+<circle cx="365.2" cy="275.6" r="8" fill="#94a3b8" stroke="#0f172a" stroke-width="1"/>
+<text x="375.2" y="265.6" font-family="Arial" font-size="11" fill="#0f172a">lower_dead_end</text>
 </svg>

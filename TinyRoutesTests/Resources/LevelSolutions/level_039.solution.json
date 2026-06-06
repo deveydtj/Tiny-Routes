@@ -2,38 +2,28 @@
   "levelID": "level_039",
   "description": "Follow the generated graph recipe route and rotate each switch before arrival.",
   "expectedOutcome": "completed",
-  "maxTaps": 3,
+  "maxTaps": 2,
   "requiresWithinTimeLimit": true,
   "actions": [
     {
-      "timeSeconds": 0.5,
+      "timeSeconds": 0.1,
       "tapNodeID": "switch_a",
       "reason": "Rotate switch 'switch_a' toward 'package' before arrival.",
       "expectedEdgeAfterTap": "e_switch_a_package",
       "expectedRouteNodeAfterTap": "package",
-      "reactionWindowSeconds": 0.45,
+      "reactionWindowSeconds": 0.4,
       "switchStateBeforeTap": "e_switch_a_dead_end_a",
       "switchStateAfterTap": "e_switch_a_package"
     },
     {
-      "timeSeconds": 1.84,
+      "timeSeconds": 1.7,
       "tapNodeID": "switch_b",
-      "reason": "Rotate switch 'switch_b' toward 'route_mid' before arrival.",
-      "expectedEdgeAfterTap": "e_switch_b_route_mid",
-      "expectedRouteNodeAfterTap": "route_mid",
-      "reactionWindowSeconds": 0.45,
-      "switchStateBeforeTap": "e_switch_b_dead_end_b",
-      "switchStateAfterTap": "e_switch_b_route_mid"
-    },
-    {
-      "timeSeconds": 3.09,
-      "tapNodeID": "switch_c",
-      "reason": "Rotate switch 'switch_c' toward 'destination' before arrival.",
-      "expectedEdgeAfterTap": "e_switch_c_destination",
+      "reason": "Rotate switch 'switch_b' toward 'destination' before arrival.",
+      "expectedEdgeAfterTap": "e_switch_b_destination",
       "expectedRouteNodeAfterTap": "destination",
       "reactionWindowSeconds": 0.45,
-      "switchStateBeforeTap": "e_switch_c_dead_end_c",
-      "switchStateAfterTap": "e_switch_c_destination"
+      "switchStateBeforeTap": "e_switch_b_dead_end_b",
+      "switchStateAfterTap": "e_switch_b_destination"
     }
   ],
   "metadata": {
@@ -43,18 +33,15 @@
       "switch_a",
       "package",
       "switch_b",
-      "route_mid",
-      "switch_c",
       "destination"
     ],
     "requiredTapOrder": [
       "switch_a",
-      "switch_b",
-      "switch_c"
+      "switch_b"
     ],
-    "template": "return_loop_with_gate",
-    "generatedSeed": 3904544081,
-    "recipeFamily": "return_loop_with_gate",
-    "recipeVariant": "return_loop_with_gate_alternate"
+    "template": "package_gate_double_choice",
+    "generatedSeed": 2604915977,
+    "recipeFamily": "package_gate_double_choice",
+    "recipeVariant": "package_gate_double_choice_primary"
   }
 }

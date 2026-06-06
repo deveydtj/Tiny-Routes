@@ -7,31 +7,30 @@
   "actions": [
     {
       "timeSeconds": 0.1,
-      "tapNodeID": "switch_gate",
-      "reason": "Rotate switch 'switch_gate' toward 'detour' before arrival.",
-      "expectedEdgeAfterTap": "e_switch_gate_detour",
+      "tapNodeID": "choice",
+      "reason": "Rotate switch 'choice' toward 'detour' before arrival.",
+      "expectedEdgeAfterTap": "e_choice_detour",
       "expectedRouteNodeAfterTap": "detour",
-      "reactionWindowSeconds": 0.41,
-      "switchStateBeforeTap": "e_switch_gate_direct_dead_end",
-      "switchStateAfterTap": "e_switch_gate_detour"
+      "reactionWindowSeconds": 0.4,
+      "switchStateBeforeTap": "e_choice_shortcut_dead_end",
+      "switchStateAfterTap": "e_choice_detour"
     }
   ],
   "metadata": {
     "validationVersion": "solution_sidecar_v1",
     "solutionRoute": [
       "start",
-      "switch_gate",
+      "choice",
       "detour",
       "package",
-      "rejoin",
       "destination"
     ],
     "requiredTapOrder": [
-      "switch_gate"
+      "choice"
     ],
-    "template": "long_detour_gate",
-    "generatedSeed": 1185477608,
-    "recipeFamily": "long_detour_gate",
-    "recipeVariant": "long_detour_gate_primary"
+    "template": "fake_shortcut",
+    "generatedSeed": 1571341768,
+    "recipeFamily": "fake_shortcut",
+    "recipeVariant": "fake_shortcut_alternate"
   }
 }

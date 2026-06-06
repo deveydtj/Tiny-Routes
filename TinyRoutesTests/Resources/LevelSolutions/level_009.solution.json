@@ -7,41 +7,41 @@
   "actions": [
     {
       "timeSeconds": 0.1,
-      "tapNodeID": "lower_entry_switch",
-      "reason": "Rotate switch 'lower_entry_switch' toward 'package' before arrival.",
-      "expectedEdgeAfterTap": "e_lower_entry_switch_package",
+      "tapNodeID": "short_entry_switch",
+      "reason": "Rotate switch 'short_entry_switch' toward 'package' before arrival.",
+      "expectedEdgeAfterTap": "e_short_entry_switch_package",
       "expectedRouteNodeAfterTap": "package",
       "reactionWindowSeconds": 0.4,
-      "switchStateBeforeTap": "e_lower_entry_switch_lower_bypass",
-      "switchStateAfterTap": "e_lower_entry_switch_package"
+      "switchStateBeforeTap": "e_short_entry_switch_short_bypass",
+      "switchStateAfterTap": "e_short_entry_switch_package"
     },
     {
       "timeSeconds": 1.7,
-      "tapNodeID": "lower_finish_switch",
-      "reason": "Rotate switch 'lower_finish_switch' toward 'destination' before arrival.",
-      "expectedEdgeAfterTap": "e_lower_finish_switch_destination",
+      "tapNodeID": "short_finish_switch",
+      "reason": "Rotate switch 'short_finish_switch' toward 'destination' before arrival.",
+      "expectedEdgeAfterTap": "e_short_finish_switch_destination",
       "expectedRouteNodeAfterTap": "destination",
       "reactionWindowSeconds": 0.45,
-      "switchStateBeforeTap": "e_lower_finish_switch_lower_dead_end",
-      "switchStateAfterTap": "e_lower_finish_switch_destination"
+      "switchStateBeforeTap": "e_short_finish_switch_short_dead_end",
+      "switchStateAfterTap": "e_short_finish_switch_destination"
     }
   ],
   "metadata": {
     "validationVersion": "solution_sidecar_v1",
     "solutionRoute": [
       "start",
-      "lower_entry_switch",
+      "short_entry_switch",
       "package",
-      "lower_finish_switch",
+      "short_finish_switch",
       "destination"
     ],
     "requiredTapOrder": [
-      "lower_entry_switch",
-      "lower_finish_switch"
+      "short_entry_switch",
+      "short_finish_switch"
     ],
     "template": "package_gate",
-    "generatedSeed": 2409022145,
+    "generatedSeed": 2497962111,
     "recipeFamily": "package_gate",
-    "recipeVariant": "package_gate_lower_package"
+    "recipeVariant": "package_gate_crossing_avoidance"
   }
 }

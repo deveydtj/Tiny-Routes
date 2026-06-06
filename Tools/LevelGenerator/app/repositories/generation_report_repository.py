@@ -44,10 +44,13 @@ class GenerationReportRepository:
             "solutionsOutputDir": str(config.solutions_output_dir),
             "difficulty": config.difficulty,
             "template": config.template_name,
+            "generationProfile": "playtest_portfolio" if getattr(config, "playtest_portfolio", False) else "production",
+            "playtestPortfolio": bool(getattr(config, "playtest_portfolio", False)),
             "generationMode": config.generation_mode,
             "recipePoolSize": config.recipe_pool_size,
             "layoutsPerRecipe": config.layouts_per_recipe,
             "roadShapesPerLayout": config.road_shapes_per_layout,
+            "playtestUniquenessWindow": getattr(config, "playtest_uniqueness_window", None),
             "layoutOrientationPreference": getattr(config, "layout_orientation_preference", "auto"),
             "layoutProfile": getattr(config, "layout_orientation_preference", "auto"),
             "layoutSizeProfile": getattr(config, "layout_size_profile", "standard_portrait"),
@@ -62,6 +65,11 @@ class GenerationReportRepository:
             "candidatePoolSize": config.candidate_pool_size,
             "candidateGenerationCount": int(getattr(result, "candidate_generation_count", 0)),
             "candidateValidationCount": int(getattr(result, "candidate_validation_count", 0)),
+            "rejectionPhaseCounts": {
+                "generationErrors": int(getattr(result, "generation_error_count", 0)),
+                "validationFailures": int(getattr(result, "validation_rejection_count", 0)),
+                "selectionFilters": int(getattr(result, "filter_rejection_count", 0)),
+            },
             "candidateGenerationCountsByDifficulty": dict(
                 sorted(getattr(result, "candidate_generation_counts_by_difficulty", {}).items())
             ),
@@ -209,6 +217,7 @@ class GenerationReportRepository:
             f"- Repo root: `{payload['repoRoot']}`",
             f"- Difficulty: `{payload['difficulty']}`",
             f"- Template mode: `{payload['template']}`",
+            f"- Generation profile: `{payload['generationProfile']}`",
             f"- Generation mode: `{payload['generationMode']}`",
             f"- Base seed: `{payload['baseSeed']}`",
             f"- Dry run: `{payload['dryRun']}`",
@@ -217,9 +226,11 @@ class GenerationReportRepository:
             f"- Candidate pool size: `{payload['candidatePoolSize']}`",
             f"- Candidate generation count: `{payload['candidateGenerationCount']}`",
             f"- Candidate validation count: `{payload['candidateValidationCount']}`",
+            f"- Rejection phases: `{payload['rejectionPhaseCounts']}`",
             f"- Recipe pool size: `{payload['recipePoolSize']}`",
             f"- Layouts per recipe: `{payload['layoutsPerRecipe']}`",
             f"- Road shapes per layout: `{payload['roadShapesPerLayout']}`",
+            f"- Playtest uniqueness window: `{payload['playtestUniquenessWindow']}`",
             f"- Layout orientation preference: `{payload['layoutOrientationPreference']}`",
             f"- Layout profile: `{payload['layoutProfile']}`",
             f"- Layout size profile: `{payload['layoutSizeProfile']}`",
@@ -783,6 +794,11 @@ class GenerationReportRepository:
         sorted_categories = sorted(categories.items(), key=lambda item: item[1], reverse=True)
         return {
             "totalRejections": total,
+            "phaseCounts": {
+                "generationErrors": int(getattr(result, "generation_error_count", 0)),
+                "validationFailures": int(getattr(result, "validation_rejection_count", 0)),
+                "selectionFilters": int(getattr(result, "filter_rejection_count", 0)),
+            },
             "topCategories": [
                 {
                     "category": category,
@@ -980,6 +996,7 @@ class GenerationReportRepository:
         if most_common_reason == "candidate_too_similar_to_batch":
             recommendations.extend(
                 [
+                    "For playtest batches, rerun with `--playtest-mode`.",
                     "Increase `--candidate-pool-size`.",
                     "Enable more hard templates with `--swift-tests`.",
                     "Use `--difficulty auto` instead of hard-only.",

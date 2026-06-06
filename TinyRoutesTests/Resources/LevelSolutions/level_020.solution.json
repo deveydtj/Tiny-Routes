@@ -2,46 +2,59 @@
   "levelID": "level_020",
   "description": "Follow the generated graph recipe route and rotate each switch before arrival.",
   "expectedOutcome": "completed",
-  "maxTaps": 2,
+  "maxTaps": 3,
   "requiresWithinTimeLimit": true,
   "actions": [
     {
-      "timeSeconds": 0.16,
-      "tapNodeID": "right_entry_switch",
-      "reason": "Rotate switch 'right_entry_switch' toward 'package' before arrival.",
-      "expectedEdgeAfterTap": "e_right_entry_switch_package",
+      "timeSeconds": 1.36,
+      "tapNodeID": "alpha_switch",
+      "reason": "Rotate switch 'alpha_switch' toward 'package' before arrival.",
+      "expectedEdgeAfterTap": "e_alpha_switch_package",
       "expectedRouteNodeAfterTap": "package",
       "reactionWindowSeconds": 0.45,
-      "switchStateBeforeTap": "e_right_entry_switch_right_bypass",
-      "switchStateAfterTap": "e_right_entry_switch_package"
+      "switchStateBeforeTap": "e_alpha_switch_destination",
+      "switchStateAfterTap": "e_alpha_switch_package"
     },
     {
-      "timeSeconds": 2.05,
-      "tapNodeID": "right_finish_switch",
-      "reason": "Rotate switch 'right_finish_switch' toward 'destination' before arrival.",
-      "expectedEdgeAfterTap": "e_right_finish_switch_destination",
+      "timeSeconds": 3.22,
+      "tapNodeID": "beta_switch",
+      "reason": "Rotate switch 'beta_switch' toward 'return_a' before arrival.",
+      "expectedEdgeAfterTap": "e_beta_switch_return_a",
+      "expectedRouteNodeAfterTap": "return_a",
+      "reactionWindowSeconds": 0.45,
+      "switchStateBeforeTap": "e_beta_switch_dead_end_a",
+      "switchStateAfterTap": "e_beta_switch_return_a"
+    },
+    {
+      "timeSeconds": 4.46,
+      "tapNodeID": "alpha_switch",
+      "reason": "Rotate switch 'alpha_switch' toward 'destination' before arrival.",
+      "expectedEdgeAfterTap": "e_alpha_switch_destination",
       "expectedRouteNodeAfterTap": "destination",
       "reactionWindowSeconds": 0.45,
-      "switchStateBeforeTap": "e_right_finish_switch_right_dead_end",
-      "switchStateAfterTap": "e_right_finish_switch_destination"
+      "switchStateBeforeTap": "e_alpha_switch_package",
+      "switchStateAfterTap": "e_alpha_switch_destination"
     }
   ],
   "metadata": {
     "validationVersion": "solution_sidecar_v1",
     "solutionRoute": [
       "start",
-      "right_entry_switch",
+      "alpha_switch",
       "package",
-      "right_finish_switch",
+      "beta_switch",
+      "return_a",
+      "alpha_switch",
       "destination"
     ],
     "requiredTapOrder": [
-      "right_entry_switch",
-      "right_finish_switch"
+      "alpha_switch",
+      "beta_switch",
+      "alpha_switch"
     ],
-    "template": "package_gate",
-    "generatedSeed": 1007697055,
-    "recipeFamily": "package_gate",
-    "recipeVariant": "package_gate_right_entry"
+    "template": "return_loop",
+    "generatedSeed": 2724469286,
+    "recipeFamily": "return_loop",
+    "recipeVariant": "return_loop_classic"
   }
 }

@@ -6,57 +6,55 @@
   "requiresWithinTimeLimit": true,
   "actions": [
     {
-      "timeSeconds": 0.1,
-      "tapNodeID": "choice",
-      "reason": "Rotate switch 'choice' toward 'detour_a' before arrival.",
-      "expectedEdgeAfterTap": "e_choice_detour_a",
-      "expectedRouteNodeAfterTap": "detour_a",
-      "reactionWindowSeconds": 0.4,
-      "switchStateBeforeTap": "e_choice_shortcut_dead_end",
-      "switchStateAfterTap": "e_choice_detour_a"
-    },
-    {
-      "timeSeconds": 0.9,
-      "tapNodeID": "switch_b",
-      "reason": "Rotate switch 'switch_b' toward 'package' before arrival.",
-      "expectedEdgeAfterTap": "e_switch_b_package",
+      "timeSeconds": 1.36,
+      "tapNodeID": "alpha_switch",
+      "reason": "Rotate switch 'alpha_switch' toward 'package' before arrival.",
+      "expectedEdgeAfterTap": "e_alpha_switch_package",
       "expectedRouteNodeAfterTap": "package",
       "reactionWindowSeconds": 0.45,
-      "switchStateBeforeTap": "e_switch_b_dead_end_b",
-      "switchStateAfterTap": "e_switch_b_package"
+      "switchStateBeforeTap": "e_alpha_switch_destination",
+      "switchStateAfterTap": "e_alpha_switch_package"
     },
     {
-      "timeSeconds": 4.08,
-      "tapNodeID": "switch_c",
-      "reason": "Rotate switch 'switch_c' toward 'destination' before arrival.",
-      "expectedEdgeAfterTap": "e_switch_c_destination",
+      "timeSeconds": 3.22,
+      "tapNodeID": "beta_switch",
+      "reason": "Rotate switch 'beta_switch' toward 'return_a' before arrival.",
+      "expectedEdgeAfterTap": "e_beta_switch_return_a",
+      "expectedRouteNodeAfterTap": "return_a",
+      "reactionWindowSeconds": 0.45,
+      "switchStateBeforeTap": "e_beta_switch_dead_end_a",
+      "switchStateAfterTap": "e_beta_switch_return_a"
+    },
+    {
+      "timeSeconds": 4.46,
+      "tapNodeID": "alpha_switch",
+      "reason": "Rotate switch 'alpha_switch' toward 'destination' before arrival.",
+      "expectedEdgeAfterTap": "e_alpha_switch_destination",
       "expectedRouteNodeAfterTap": "destination",
       "reactionWindowSeconds": 0.45,
-      "switchStateBeforeTap": "e_switch_c_dead_end_c",
-      "switchStateAfterTap": "e_switch_c_destination"
+      "switchStateBeforeTap": "e_alpha_switch_package",
+      "switchStateAfterTap": "e_alpha_switch_destination"
     }
   ],
   "metadata": {
     "validationVersion": "solution_sidecar_v1",
     "solutionRoute": [
       "start",
-      "choice",
-      "detour_a",
-      "switch_b",
+      "alpha_switch",
       "package",
-      "detour_b",
-      "rejoin",
-      "switch_c",
+      "beta_switch",
+      "return_a",
+      "alpha_switch",
       "destination"
     ],
     "requiredTapOrder": [
-      "choice",
-      "switch_b",
-      "switch_c"
+      "alpha_switch",
+      "beta_switch",
+      "alpha_switch"
     ],
-    "template": "fake_shortcut",
-    "generatedSeed": 89247374,
-    "recipeFamily": "fake_shortcut",
-    "recipeVariant": "fake_shortcut_primary"
+    "template": "return_loop",
+    "generatedSeed": 3106047037,
+    "recipeFamily": "return_loop",
+    "recipeVariant": "return_loop_classic"
   }
 }

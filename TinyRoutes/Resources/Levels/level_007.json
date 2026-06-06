@@ -6,38 +6,24 @@
       {
         "id": "start",
         "x": -1.0,
-        "y": 0.0,
+        "y": -0.1,
         "outgoingEdgeIDs": [
-          "e_start_approach"
+          "e_start_gate"
         ]
       },
       {
-        "id": "approach",
-        "x": -0.5,
-        "y": 0.0,
+        "id": "gate",
+        "x": -0.35,
+        "y": -0.1,
         "outgoingEdgeIDs": [
-          "e_approach_short_choice"
+          "e_gate_dead_end_a",
+          "e_gate_package"
         ]
-      },
-      {
-        "id": "short_choice",
-        "x": 0.0,
-        "y": 0.0,
-        "outgoingEdgeIDs": [
-          "e_short_choice_short_dead_end",
-          "e_short_choice_package"
-        ]
-      },
-      {
-        "id": "short_dead_end",
-        "x": 0.0,
-        "y": 0.6,
-        "outgoingEdgeIDs": []
       },
       {
         "id": "package",
-        "x": 0.5,
-        "y": 0.4,
+        "x": 0.35,
+        "y": 0.3,
         "outgoingEdgeIDs": [
           "e_package_destination"
         ]
@@ -45,32 +31,32 @@
       {
         "id": "destination",
         "x": 1.0,
-        "y": -0.3,
+        "y": -0.1,
+        "outgoingEdgeIDs": []
+      },
+      {
+        "id": "dead_end_a",
+        "x": -0.35,
+        "y": 0.8,
         "outgoingEdgeIDs": []
       }
     ],
     "edges": [
       {
-        "id": "e_start_approach",
+        "id": "e_start_gate",
         "fromNodeID": "start",
-        "toNodeID": "approach",
+        "toNodeID": "gate",
         "roadShape": "horizontalFirst"
       },
       {
-        "id": "e_approach_short_choice",
-        "fromNodeID": "approach",
-        "toNodeID": "short_choice",
-        "roadShape": "horizontalFirst"
+        "id": "e_gate_dead_end_a",
+        "fromNodeID": "gate",
+        "toNodeID": "dead_end_a",
+        "roadShape": "verticalFirst"
       },
       {
-        "id": "e_short_choice_short_dead_end",
-        "fromNodeID": "short_choice",
-        "toNodeID": "short_dead_end",
-        "roadShape": "horizontalFirst"
-      },
-      {
-        "id": "e_short_choice_package",
-        "fromNodeID": "short_choice",
+        "id": "e_gate_package",
+        "fromNodeID": "gate",
         "toNodeID": "package",
         "roadShape": "horizontalFirst"
       },

@@ -6,54 +6,55 @@
   "requiresWithinTimeLimit": true,
   "actions": [
     {
-      "timeSeconds": 0.1,
-      "tapNodeID": "double_entry_switch",
-      "reason": "Rotate switch 'double_entry_switch' toward 'package' before arrival.",
-      "expectedEdgeAfterTap": "e_double_entry_switch_package",
+      "timeSeconds": 1.36,
+      "tapNodeID": "lower_alpha_switch",
+      "reason": "Rotate switch 'lower_alpha_switch' toward 'package' before arrival.",
+      "expectedEdgeAfterTap": "e_lower_alpha_switch_package",
       "expectedRouteNodeAfterTap": "package",
-      "reactionWindowSeconds": 0.41,
-      "switchStateBeforeTap": "e_double_entry_switch_double_bypass",
-      "switchStateAfterTap": "e_double_entry_switch_package"
-    },
-    {
-      "timeSeconds": 1.75,
-      "tapNodeID": "double_mid_switch",
-      "reason": "Rotate switch 'double_mid_switch' toward 'double_finish_switch' before arrival.",
-      "expectedEdgeAfterTap": "e_double_mid_switch_double_finish_switch",
-      "expectedRouteNodeAfterTap": "double_finish_switch",
       "reactionWindowSeconds": 0.45,
-      "switchStateBeforeTap": "e_double_mid_switch_double_dead_end_a",
-      "switchStateAfterTap": "e_double_mid_switch_double_finish_switch"
+      "switchStateBeforeTap": "e_lower_alpha_switch_destination",
+      "switchStateAfterTap": "e_lower_alpha_switch_package"
     },
     {
-      "timeSeconds": 2.48,
-      "tapNodeID": "double_finish_switch",
-      "reason": "Rotate switch 'double_finish_switch' toward 'destination' before arrival.",
-      "expectedEdgeAfterTap": "e_double_finish_switch_destination",
+      "timeSeconds": 3.22,
+      "tapNodeID": "lower_beta_switch",
+      "reason": "Rotate switch 'lower_beta_switch' toward 'lower_return' before arrival.",
+      "expectedEdgeAfterTap": "e_lower_beta_switch_lower_return",
+      "expectedRouteNodeAfterTap": "lower_return",
+      "reactionWindowSeconds": 0.45,
+      "switchStateBeforeTap": "e_lower_beta_switch_lower_dead_end",
+      "switchStateAfterTap": "e_lower_beta_switch_lower_return"
+    },
+    {
+      "timeSeconds": 4.46,
+      "tapNodeID": "lower_alpha_switch",
+      "reason": "Rotate switch 'lower_alpha_switch' toward 'destination' before arrival.",
+      "expectedEdgeAfterTap": "e_lower_alpha_switch_destination",
       "expectedRouteNodeAfterTap": "destination",
       "reactionWindowSeconds": 0.45,
-      "switchStateBeforeTap": "e_double_finish_switch_double_dead_end_b",
-      "switchStateAfterTap": "e_double_finish_switch_destination"
+      "switchStateBeforeTap": "e_lower_alpha_switch_package",
+      "switchStateAfterTap": "e_lower_alpha_switch_destination"
     }
   ],
   "metadata": {
     "validationVersion": "solution_sidecar_v1",
     "solutionRoute": [
       "start",
-      "double_entry_switch",
+      "lower_alpha_switch",
       "package",
-      "double_mid_switch",
-      "double_finish_switch",
+      "lower_beta_switch",
+      "lower_return",
+      "lower_alpha_switch",
       "destination"
     ],
     "requiredTapOrder": [
-      "double_entry_switch",
-      "double_mid_switch",
-      "double_finish_switch"
+      "lower_alpha_switch",
+      "lower_beta_switch",
+      "lower_alpha_switch"
     ],
-    "template": "package_gate",
-    "generatedSeed": 2640705482,
-    "recipeFamily": "package_gate",
-    "recipeVariant": "package_gate_double_choice"
+    "template": "return_loop",
+    "generatedSeed": 3966056211,
+    "recipeFamily": "return_loop",
+    "recipeVariant": "return_loop_lower"
   }
 }

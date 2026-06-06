@@ -1,0 +1,60 @@
+{
+  "levelID": "level_050",
+  "description": "Follow the generated graph recipe route and rotate each switch before arrival.",
+  "expectedOutcome": "completed",
+  "maxTaps": 3,
+  "requiresWithinTimeLimit": true,
+  "actions": [
+    {
+      "timeSeconds": 1.32,
+      "tapNodeID": "upper_alpha_switch",
+      "reason": "Rotate switch 'upper_alpha_switch' toward 'package' before arrival.",
+      "expectedEdgeAfterTap": "e_upper_alpha_switch_package",
+      "expectedRouteNodeAfterTap": "package",
+      "reactionWindowSeconds": 0.45,
+      "switchStateBeforeTap": "e_upper_alpha_switch_destination",
+      "switchStateAfterTap": "e_upper_alpha_switch_package"
+    },
+    {
+      "timeSeconds": 3.67,
+      "tapNodeID": "upper_beta_switch",
+      "reason": "Rotate switch 'upper_beta_switch' toward 'upper_return' before arrival.",
+      "expectedEdgeAfterTap": "e_upper_beta_switch_upper_return",
+      "expectedRouteNodeAfterTap": "upper_return",
+      "reactionWindowSeconds": 0.45,
+      "switchStateBeforeTap": "e_upper_beta_switch_upper_dead_end",
+      "switchStateAfterTap": "e_upper_beta_switch_upper_return"
+    },
+    {
+      "timeSeconds": 5.03,
+      "tapNodeID": "upper_alpha_switch",
+      "reason": "Rotate switch 'upper_alpha_switch' toward 'destination' before arrival.",
+      "expectedEdgeAfterTap": "e_upper_alpha_switch_destination",
+      "expectedRouteNodeAfterTap": "destination",
+      "reactionWindowSeconds": 0.45,
+      "switchStateBeforeTap": "e_upper_alpha_switch_package",
+      "switchStateAfterTap": "e_upper_alpha_switch_destination"
+    }
+  ],
+  "metadata": {
+    "validationVersion": "solution_sidecar_v1",
+    "solutionRoute": [
+      "start",
+      "upper_alpha_switch",
+      "package",
+      "upper_beta_switch",
+      "upper_return",
+      "upper_alpha_switch",
+      "destination"
+    ],
+    "requiredTapOrder": [
+      "upper_alpha_switch",
+      "upper_beta_switch",
+      "upper_alpha_switch"
+    ],
+    "template": "return_loop",
+    "generatedSeed": 3742089021,
+    "recipeFamily": "return_loop",
+    "recipeVariant": "return_loop_upper"
+  }
+}

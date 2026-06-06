@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="420" height="320" viewBox="0 0 420 320">
+<rect width="100%" height="100%" fill="#f8fafc"/>
+<text x="16" y="22" font-family="Arial" font-size="14" fill="#0f172a">level_080</text>
+<line x1="390.0" y1="30.0" x2="105.0" y2="132.1" stroke="#64748b" stroke-width="3"/>
+<line x1="105.0" y1="132.1" x2="30.0" y2="290.0" stroke="#64748b" stroke-width="3"/>
+<line x1="105.0" y1="132.1" x2="345.0" y2="146.1" stroke="#64748b" stroke-width="3"/>
+<line x1="345.0" y1="146.1" x2="210.0" y2="276.1" stroke="#64748b" stroke-width="3"/>
+<line x1="210.0" y1="276.1" x2="360.0" y2="276.1" stroke="#64748b" stroke-width="3"/>
+<line x1="210.0" y1="276.1" x2="135.0" y2="225.0" stroke="#64748b" stroke-width="3"/>
+<line x1="135.0" y1="225.0" x2="105.0" y2="132.1" stroke="#64748b" stroke-width="3"/>
+<circle cx="390.0" cy="30.0" r="8" fill="#22c55e" stroke="#0f172a" stroke-width="1"/>
+<text x="400.0" y="20.0" font-family="Arial" font-size="11" fill="#0f172a">start</text>
+<circle cx="105.0" cy="132.1" r="8" fill="#3b82f6" stroke="#0f172a" stroke-width="1"/>
+<text x="115.0" y="122.1" font-family="Arial" font-size="11" fill="#0f172a">3</text>
+<circle cx="345.0" cy="146.1" r="8" fill="#f59e0b" stroke="#0f172a" stroke-width="1"/>
+<text x="355.0" y="136.1" font-family="Arial" font-size="11" fill="#0f172a">package</text>
+<circle cx="210.0" cy="276.1" r="8" fill="#3b82f6" stroke="#0f172a" stroke-width="1"/>
+<text x="220.0" y="266.1" font-family="Arial" font-size="11" fill="#0f172a">2</text>
+<circle cx="135.0" cy="225.0" r="8" fill="#94a3b8" stroke="#0f172a" stroke-width="1"/>
+<text x="145.0" y="215.0" font-family="Arial" font-size="11" fill="#0f172a">lower_return</text>
+<circle cx="30.0" cy="290.0" r="8" fill="#ef4444" stroke="#0f172a" stroke-width="1"/>
+<text x="40.0" y="280.0" font-family="Arial" font-size="11" fill="#0f172a">destination</text>
+<circle cx="360.0" cy="276.1" r="8" fill="#94a3b8" stroke="#0f172a" stroke-width="1"/>
+<text x="370.0" y="266.1" font-family="Arial" font-size="11" fill="#0f172a">lower_dead_end</text>
+</svg>

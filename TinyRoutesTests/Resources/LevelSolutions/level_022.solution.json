@@ -2,46 +2,59 @@
   "levelID": "level_022",
   "description": "Follow the generated graph recipe route and rotate each switch before arrival.",
   "expectedOutcome": "completed",
-  "maxTaps": 2,
+  "maxTaps": 3,
   "requiresWithinTimeLimit": true,
   "actions": [
     {
-      "timeSeconds": 0.1,
-      "tapNodeID": "multi_switch_chain_split_dead_ends_switch_a",
-      "reason": "Rotate switch 'multi_switch_chain_split_dead_ends_switch_a' toward 'package' before arrival.",
-      "expectedEdgeAfterTap": "e_multi_switch_chain_split_dead_ends_switch_a_package",
+      "timeSeconds": 1.32,
+      "tapNodeID": "upper_alpha_switch",
+      "reason": "Rotate switch 'upper_alpha_switch' toward 'package' before arrival.",
+      "expectedEdgeAfterTap": "e_upper_alpha_switch_package",
       "expectedRouteNodeAfterTap": "package",
-      "reactionWindowSeconds": 0.4,
-      "switchStateBeforeTap": "e_multi_switch_chain_split_dead_ends_switch_a_multi_switch_chain_split_dead_ends_dead_end_a",
-      "switchStateAfterTap": "e_multi_switch_chain_split_dead_ends_switch_a_package"
+      "reactionWindowSeconds": 0.45,
+      "switchStateBeforeTap": "e_upper_alpha_switch_destination",
+      "switchStateAfterTap": "e_upper_alpha_switch_package"
     },
     {
-      "timeSeconds": 1.7,
-      "tapNodeID": "multi_switch_chain_split_dead_ends_switch_b",
-      "reason": "Rotate switch 'multi_switch_chain_split_dead_ends_switch_b' toward 'destination' before arrival.",
-      "expectedEdgeAfterTap": "e_multi_switch_chain_split_dead_ends_switch_b_destination",
+      "timeSeconds": 3.67,
+      "tapNodeID": "upper_beta_switch",
+      "reason": "Rotate switch 'upper_beta_switch' toward 'upper_return' before arrival.",
+      "expectedEdgeAfterTap": "e_upper_beta_switch_upper_return",
+      "expectedRouteNodeAfterTap": "upper_return",
+      "reactionWindowSeconds": 0.45,
+      "switchStateBeforeTap": "e_upper_beta_switch_upper_dead_end",
+      "switchStateAfterTap": "e_upper_beta_switch_upper_return"
+    },
+    {
+      "timeSeconds": 5.03,
+      "tapNodeID": "upper_alpha_switch",
+      "reason": "Rotate switch 'upper_alpha_switch' toward 'destination' before arrival.",
+      "expectedEdgeAfterTap": "e_upper_alpha_switch_destination",
       "expectedRouteNodeAfterTap": "destination",
       "reactionWindowSeconds": 0.45,
-      "switchStateBeforeTap": "e_multi_switch_chain_split_dead_ends_switch_b_multi_switch_chain_split_dead_ends_dead_end_b",
-      "switchStateAfterTap": "e_multi_switch_chain_split_dead_ends_switch_b_destination"
+      "switchStateBeforeTap": "e_upper_alpha_switch_package",
+      "switchStateAfterTap": "e_upper_alpha_switch_destination"
     }
   ],
   "metadata": {
     "validationVersion": "solution_sidecar_v1",
     "solutionRoute": [
       "start",
-      "multi_switch_chain_split_dead_ends_switch_a",
+      "upper_alpha_switch",
       "package",
-      "multi_switch_chain_split_dead_ends_switch_b",
+      "upper_beta_switch",
+      "upper_return",
+      "upper_alpha_switch",
       "destination"
     ],
     "requiredTapOrder": [
-      "multi_switch_chain_split_dead_ends_switch_a",
-      "multi_switch_chain_split_dead_ends_switch_b"
+      "upper_alpha_switch",
+      "upper_beta_switch",
+      "upper_alpha_switch"
     ],
-    "template": "multi_switch_chain",
-    "generatedSeed": 1153220041,
-    "recipeFamily": "multi_switch_chain",
-    "recipeVariant": "multi_switch_chain_split_dead_ends"
+    "template": "return_loop",
+    "generatedSeed": 2675739903,
+    "recipeFamily": "return_loop",
+    "recipeVariant": "return_loop_upper"
   }
 }
