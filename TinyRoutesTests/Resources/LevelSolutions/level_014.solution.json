@@ -2,48 +2,58 @@
   "levelID": "level_014",
   "description": "Follow the generated graph recipe route and rotate each switch before arrival.",
   "expectedOutcome": "completed",
-  "maxTaps": 2,
+  "maxTaps": 3,
   "requiresWithinTimeLimit": true,
   "actions": [
     {
       "timeSeconds": 0.1,
-      "tapNodeID": "choice",
-      "reason": "Rotate switch 'choice' toward 'detour_a' before arrival.",
-      "expectedEdgeAfterTap": "e_choice_detour_a",
-      "expectedRouteNodeAfterTap": "detour_a",
-      "reactionWindowSeconds": 0.25,
-      "switchStateBeforeTap": "e_choice_shortcut_dead_end",
-      "switchStateAfterTap": "e_choice_detour_a"
+      "tapNodeID": "double_entry_switch",
+      "reason": "Rotate switch 'double_entry_switch' toward 'package' before arrival.",
+      "expectedEdgeAfterTap": "e_double_entry_switch_package",
+      "expectedRouteNodeAfterTap": "package",
+      "reactionWindowSeconds": 0.41,
+      "switchStateBeforeTap": "e_double_entry_switch_double_bypass",
+      "switchStateAfterTap": "e_double_entry_switch_package"
     },
     {
-      "timeSeconds": 1.85,
-      "tapNodeID": "switch_b",
-      "reason": "Rotate switch 'switch_b' toward 'destination' before arrival.",
-      "expectedEdgeAfterTap": "e_switch_b_destination",
+      "timeSeconds": 1.75,
+      "tapNodeID": "double_mid_switch",
+      "reason": "Rotate switch 'double_mid_switch' toward 'double_finish_switch' before arrival.",
+      "expectedEdgeAfterTap": "e_double_mid_switch_double_finish_switch",
+      "expectedRouteNodeAfterTap": "double_finish_switch",
+      "reactionWindowSeconds": 0.45,
+      "switchStateBeforeTap": "e_double_mid_switch_double_dead_end_a",
+      "switchStateAfterTap": "e_double_mid_switch_double_finish_switch"
+    },
+    {
+      "timeSeconds": 2.48,
+      "tapNodeID": "double_finish_switch",
+      "reason": "Rotate switch 'double_finish_switch' toward 'destination' before arrival.",
+      "expectedEdgeAfterTap": "e_double_finish_switch_destination",
       "expectedRouteNodeAfterTap": "destination",
       "reactionWindowSeconds": 0.45,
-      "switchStateBeforeTap": "e_switch_b_dead_end_b",
-      "switchStateAfterTap": "e_switch_b_destination"
+      "switchStateBeforeTap": "e_double_finish_switch_double_dead_end_b",
+      "switchStateAfterTap": "e_double_finish_switch_destination"
     }
   ],
   "metadata": {
     "validationVersion": "solution_sidecar_v1",
     "solutionRoute": [
       "start",
-      "choice",
-      "detour_a",
+      "double_entry_switch",
       "package",
-      "detour_b",
-      "switch_b",
+      "double_mid_switch",
+      "double_finish_switch",
       "destination"
     ],
     "requiredTapOrder": [
-      "choice",
-      "switch_b"
+      "double_entry_switch",
+      "double_mid_switch",
+      "double_finish_switch"
     ],
-    "template": "fake_shortcut",
-    "generatedSeed": 1545632932,
-    "recipeFamily": "fake_shortcut",
-    "recipeVariant": "fake_shortcut_primary"
+    "template": "package_gate",
+    "generatedSeed": 209111152,
+    "recipeFamily": "package_gate",
+    "recipeVariant": "package_gate_double_choice"
   }
 }

@@ -259,7 +259,7 @@ def _variant_spec(
             "double_bypass": (-0.1, -0.82),
             "package": (-0.02, 0.68),
             "double_mid_switch": (0.42, 0.42),
-            "double_dead_end_a": (0.76, -0.46),
+            "double_dead_end_a": (0.58, -0.46),
             "double_finish_switch": (0.84, 0.18),
             "double_dead_end_b": (1.15, -0.72),
             "destination": (1.12, 0.82),

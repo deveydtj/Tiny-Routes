@@ -6,55 +6,55 @@
   "requiresWithinTimeLimit": true,
   "actions": [
     {
-      "timeSeconds": 1.36,
-      "tapNodeID": "upper_alpha_switch",
-      "reason": "Rotate switch 'upper_alpha_switch' toward 'package' before arrival.",
-      "expectedEdgeAfterTap": "e_upper_alpha_switch_package",
+      "timeSeconds": 1.24,
+      "tapNodeID": "alpha_switch",
+      "reason": "Rotate switch 'alpha_switch' toward 'package' before arrival.",
+      "expectedEdgeAfterTap": "e_alpha_switch_package",
       "expectedRouteNodeAfterTap": "package",
       "reactionWindowSeconds": 0.45,
-      "switchStateBeforeTap": "e_upper_alpha_switch_destination",
-      "switchStateAfterTap": "e_upper_alpha_switch_package"
+      "switchStateBeforeTap": "e_alpha_switch_destination",
+      "switchStateAfterTap": "e_alpha_switch_package"
     },
     {
-      "timeSeconds": 3.22,
-      "tapNodeID": "upper_beta_switch",
-      "reason": "Rotate switch 'upper_beta_switch' toward 'upper_return' before arrival.",
-      "expectedEdgeAfterTap": "e_upper_beta_switch_upper_return",
-      "expectedRouteNodeAfterTap": "upper_return",
+      "timeSeconds": 3.28,
+      "tapNodeID": "beta_switch",
+      "reason": "Rotate switch 'beta_switch' toward 'return_a' before arrival.",
+      "expectedEdgeAfterTap": "e_beta_switch_return_a",
+      "expectedRouteNodeAfterTap": "return_a",
       "reactionWindowSeconds": 0.45,
-      "switchStateBeforeTap": "e_upper_beta_switch_upper_dead_end",
-      "switchStateAfterTap": "e_upper_beta_switch_upper_return"
+      "switchStateBeforeTap": "e_beta_switch_dead_end_a",
+      "switchStateAfterTap": "e_beta_switch_return_a"
     },
     {
-      "timeSeconds": 4.46,
-      "tapNodeID": "upper_alpha_switch",
-      "reason": "Rotate switch 'upper_alpha_switch' toward 'destination' before arrival.",
-      "expectedEdgeAfterTap": "e_upper_alpha_switch_destination",
+      "timeSeconds": 5.92,
+      "tapNodeID": "alpha_switch",
+      "reason": "Rotate switch 'alpha_switch' toward 'destination' before arrival.",
+      "expectedEdgeAfterTap": "e_alpha_switch_destination",
       "expectedRouteNodeAfterTap": "destination",
       "reactionWindowSeconds": 0.45,
-      "switchStateBeforeTap": "e_upper_alpha_switch_package",
-      "switchStateAfterTap": "e_upper_alpha_switch_destination"
+      "switchStateBeforeTap": "e_alpha_switch_package",
+      "switchStateAfterTap": "e_alpha_switch_destination"
     }
   ],
   "metadata": {
     "validationVersion": "solution_sidecar_v1",
     "solutionRoute": [
       "start",
-      "upper_alpha_switch",
+      "alpha_switch",
       "package",
-      "upper_beta_switch",
-      "upper_return",
-      "upper_alpha_switch",
+      "beta_switch",
+      "return_a",
+      "alpha_switch",
       "destination"
     ],
     "requiredTapOrder": [
-      "upper_alpha_switch",
-      "upper_beta_switch",
-      "upper_alpha_switch"
+      "alpha_switch",
+      "beta_switch",
+      "alpha_switch"
     ],
     "template": "return_loop",
-    "generatedSeed": 798731464,
+    "generatedSeed": 1084150581,
     "recipeFamily": "return_loop",
-    "recipeVariant": "return_loop_upper"
+    "recipeVariant": "return_loop_classic"
   }
 }

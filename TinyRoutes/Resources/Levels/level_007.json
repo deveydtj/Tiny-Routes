@@ -8,21 +8,30 @@
         "x": 0.0,
         "y": 0.85,
         "outgoingEdgeIDs": [
-          "e_start_node_a"
+          "e_start_gate"
         ]
       },
       {
-        "id": "node_a",
-        "x": 0.0,
-        "y": 0.25,
+        "id": "gate",
+        "x": 0.2,
+        "y": 0.4,
         "outgoingEdgeIDs": [
-          "e_node_a_package"
+          "e_gate_dead_end_a",
+          "e_gate_detour"
+        ]
+      },
+      {
+        "id": "detour",
+        "x": 0.0,
+        "y": -0.1,
+        "outgoingEdgeIDs": [
+          "e_detour_package"
         ]
       },
       {
         "id": "package",
         "x": 0.4,
-        "y": -0.4,
+        "y": -0.55,
         "outgoingEdgeIDs": [
           "e_package_destination"
         ]
@@ -32,26 +41,44 @@
         "x": -0.3,
         "y": -1.0,
         "outgoingEdgeIDs": []
+      },
+      {
+        "id": "dead_end_a",
+        "x": 0.8,
+        "y": 0.4,
+        "outgoingEdgeIDs": []
       }
     ],
     "edges": [
       {
-        "id": "e_start_node_a",
+        "id": "e_start_gate",
         "fromNodeID": "start",
-        "toNodeID": "node_a",
+        "toNodeID": "gate",
+        "roadShape": "horizontalFirst"
+      },
+      {
+        "id": "e_gate_dead_end_a",
+        "fromNodeID": "gate",
+        "toNodeID": "dead_end_a",
+        "roadShape": "horizontalFirst"
+      },
+      {
+        "id": "e_gate_detour",
+        "fromNodeID": "gate",
+        "toNodeID": "detour",
         "roadShape": "verticalFirst"
       },
       {
-        "id": "e_node_a_package",
-        "fromNodeID": "node_a",
+        "id": "e_detour_package",
+        "fromNodeID": "detour",
         "toNodeID": "package",
-        "roadShape": "verticalFirst"
+        "roadShape": "horizontalFirst"
       },
       {
         "id": "e_package_destination",
         "fromNodeID": "package",
         "toNodeID": "destination",
-        "roadShape": "horizontalFirst"
+        "roadShape": "verticalFirst"
       }
     ]
   },
@@ -59,5 +86,5 @@
   "packageNodeID": "package",
   "destinationNodeID": "destination",
   "timeLimitSeconds": 30,
-  "parTaps": 0
+  "parTaps": 1
 }

@@ -568,6 +568,8 @@ class LevelGenerationService:
 
     def _effective_max_attempts(self, config: GenerationConfig, preset) -> int:
         if config.playtest_portfolio:
+            if config.candidate_pool_size > 1:
+                return config.max_attempts_per_level
             if preset.name == "medium":
                 return min(max(config.max_attempts_per_level, 40), 70)
             if preset.name == "hard":
@@ -588,6 +590,12 @@ class LevelGenerationService:
         layouts_per_recipe = config.layouts_per_recipe
         road_shapes_per_layout = config.road_shapes_per_layout
         if config.playtest_portfolio:
+            if config.candidate_pool_size > 1:
+                return {
+                    "recipe_pool_size": recipe_pool_size,
+                    "layouts_per_recipe": layouts_per_recipe,
+                    "road_shapes_per_layout": road_shapes_per_layout,
+                }
             if preset.name in {"medium", "hard"}:
                 recipe_pool_size = min(max(recipe_pool_size, 1), 3)
                 layouts_per_recipe = 1

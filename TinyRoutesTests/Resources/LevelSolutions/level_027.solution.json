@@ -6,27 +6,27 @@
   "requiresWithinTimeLimit": true,
   "actions": [
     {
-      "timeSeconds": 0.5,
+      "timeSeconds": 0.1,
       "tapNodeID": "switch_a",
-      "reason": "Rotate switch 'switch_a' toward 'package' before arrival.",
-      "expectedEdgeAfterTap": "e_switch_a_package",
+      "reason": "Rotate switch 'switch_a' toward 'upper_branch' before arrival.",
+      "expectedEdgeAfterTap": "e_switch_a_upper_branch",
+      "expectedRouteNodeAfterTap": "upper_branch",
+      "reactionWindowSeconds": 0.4,
+      "switchStateBeforeTap": "e_switch_a_lower_shortcut",
+      "switchStateAfterTap": "e_switch_a_upper_branch"
+    },
+    {
+      "timeSeconds": 0.88,
+      "tapNodeID": "switch_b",
+      "reason": "Rotate switch 'switch_b' toward 'package' before arrival.",
+      "expectedEdgeAfterTap": "e_switch_b_package",
       "expectedRouteNodeAfterTap": "package",
       "reactionWindowSeconds": 0.45,
-      "switchStateBeforeTap": "e_switch_a_dead_end_a",
-      "switchStateAfterTap": "e_switch_a_package"
-    },
-    {
-      "timeSeconds": 1.92,
-      "tapNodeID": "switch_b",
-      "reason": "Rotate switch 'switch_b' toward 'route_mid' before arrival.",
-      "expectedEdgeAfterTap": "e_switch_b_route_mid",
-      "expectedRouteNodeAfterTap": "route_mid",
-      "reactionWindowSeconds": 0.45,
       "switchStateBeforeTap": "e_switch_b_dead_end_b",
-      "switchStateAfterTap": "e_switch_b_route_mid"
+      "switchStateAfterTap": "e_switch_b_package"
     },
     {
-      "timeSeconds": 3.16,
+      "timeSeconds": 2.46,
       "tapNodeID": "switch_c",
       "reason": "Rotate switch 'switch_c' toward 'destination' before arrival.",
       "expectedEdgeAfterTap": "e_switch_c_destination",
@@ -41,9 +41,10 @@
     "solutionRoute": [
       "start",
       "switch_a",
-      "package",
+      "upper_branch",
       "switch_b",
-      "route_mid",
+      "package",
+      "rejoin",
       "switch_c",
       "destination"
     ],
@@ -52,9 +53,9 @@
       "switch_b",
       "switch_c"
     ],
-    "template": "ring_route_gate",
-    "generatedSeed": 1295884768,
-    "recipeFamily": "ring_route_gate",
-    "recipeVariant": "ring_route_gate_primary"
+    "template": "split_path_rejoin",
+    "generatedSeed": 1137362672,
+    "recipeFamily": "split_path_rejoin",
+    "recipeVariant": "split_path_rejoin_primary"
   }
 }

@@ -6,55 +6,57 @@
   "requiresWithinTimeLimit": true,
   "actions": [
     {
-      "timeSeconds": 1.32,
-      "tapNodeID": "upper_alpha_switch",
-      "reason": "Rotate switch 'upper_alpha_switch' toward 'package' before arrival.",
-      "expectedEdgeAfterTap": "e_upper_alpha_switch_package",
-      "expectedRouteNodeAfterTap": "package",
-      "reactionWindowSeconds": 0.45,
-      "switchStateBeforeTap": "e_upper_alpha_switch_destination",
-      "switchStateAfterTap": "e_upper_alpha_switch_package"
+      "timeSeconds": 0.1,
+      "tapNodeID": "phase_one_switch",
+      "reason": "Rotate switch 'phase_one_switch' toward 'package_lane' before arrival.",
+      "expectedEdgeAfterTap": "e_phase_one_switch_package_lane",
+      "expectedRouteNodeAfterTap": "package_lane",
+      "reactionWindowSeconds": 0.35,
+      "switchStateBeforeTap": "e_phase_one_switch_early_exit",
+      "switchStateAfterTap": "e_phase_one_switch_package_lane"
     },
     {
-      "timeSeconds": 3.67,
-      "tapNodeID": "upper_beta_switch",
-      "reason": "Rotate switch 'upper_beta_switch' toward 'upper_return' before arrival.",
-      "expectedEdgeAfterTap": "e_upper_beta_switch_upper_return",
-      "expectedRouteNodeAfterTap": "upper_return",
+      "timeSeconds": 2.15,
+      "tapNodeID": "exit_choice",
+      "reason": "Rotate switch 'exit_choice' toward 'exit_lane' before arrival.",
+      "expectedEdgeAfterTap": "e_exit_choice_exit_lane",
+      "expectedRouteNodeAfterTap": "exit_lane",
       "reactionWindowSeconds": 0.45,
-      "switchStateBeforeTap": "e_upper_beta_switch_upper_dead_end",
-      "switchStateAfterTap": "e_upper_beta_switch_upper_return"
+      "switchStateBeforeTap": "e_exit_choice_dead_end_b",
+      "switchStateAfterTap": "e_exit_choice_exit_lane"
     },
     {
-      "timeSeconds": 5.03,
-      "tapNodeID": "upper_alpha_switch",
-      "reason": "Rotate switch 'upper_alpha_switch' toward 'destination' before arrival.",
-      "expectedEdgeAfterTap": "e_upper_alpha_switch_destination",
+      "timeSeconds": 3.21,
+      "tapNodeID": "switch_final",
+      "reason": "Rotate switch 'switch_final' toward 'destination' before arrival.",
+      "expectedEdgeAfterTap": "e_switch_final_destination",
       "expectedRouteNodeAfterTap": "destination",
       "reactionWindowSeconds": 0.45,
-      "switchStateBeforeTap": "e_upper_alpha_switch_package",
-      "switchStateAfterTap": "e_upper_alpha_switch_destination"
+      "switchStateBeforeTap": "e_switch_final_dead_end_c",
+      "switchStateAfterTap": "e_switch_final_destination"
     }
   ],
   "metadata": {
     "validationVersion": "solution_sidecar_v1",
     "solutionRoute": [
       "start",
-      "upper_alpha_switch",
+      "phase_one_switch",
+      "package_lane",
       "package",
-      "upper_beta_switch",
-      "upper_return",
-      "upper_alpha_switch",
+      "phase_bridge",
+      "exit_choice",
+      "exit_lane",
+      "switch_final",
       "destination"
     ],
     "requiredTapOrder": [
-      "upper_alpha_switch",
-      "upper_beta_switch",
-      "upper_alpha_switch"
+      "phase_one_switch",
+      "exit_choice",
+      "switch_final"
     ],
-    "template": "return_loop",
-    "generatedSeed": 2675739903,
-    "recipeFamily": "return_loop",
-    "recipeVariant": "return_loop_upper"
+    "template": "two_phase_route",
+    "generatedSeed": 1346241903,
+    "recipeFamily": "two_phase_route",
+    "recipeVariant": "two_phase_route_primary"
   }
 }

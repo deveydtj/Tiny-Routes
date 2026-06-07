@@ -6,55 +6,54 @@
   "requiresWithinTimeLimit": true,
   "actions": [
     {
-      "timeSeconds": 1.32,
-      "tapNodeID": "lower_alpha_switch",
-      "reason": "Rotate switch 'lower_alpha_switch' toward 'package' before arrival.",
-      "expectedEdgeAfterTap": "e_lower_alpha_switch_package",
+      "timeSeconds": 0.5,
+      "tapNodeID": "hub",
+      "reason": "Rotate switch 'hub' toward 'package' before arrival.",
+      "expectedEdgeAfterTap": "e_hub_package",
       "expectedRouteNodeAfterTap": "package",
       "reactionWindowSeconds": 0.45,
-      "switchStateBeforeTap": "e_lower_alpha_switch_destination",
-      "switchStateAfterTap": "e_lower_alpha_switch_package"
+      "switchStateBeforeTap": "e_hub_ring_a",
+      "switchStateAfterTap": "e_hub_package"
     },
     {
-      "timeSeconds": 3.67,
-      "tapNodeID": "lower_beta_switch",
-      "reason": "Rotate switch 'lower_beta_switch' toward 'lower_return' before arrival.",
-      "expectedEdgeAfterTap": "e_lower_beta_switch_lower_return",
-      "expectedRouteNodeAfterTap": "lower_return",
+      "timeSeconds": 2.19,
+      "tapNodeID": "ring_b",
+      "reason": "Rotate switch 'ring_b' toward 'gate' before arrival.",
+      "expectedEdgeAfterTap": "e_ring_b_gate",
+      "expectedRouteNodeAfterTap": "gate",
       "reactionWindowSeconds": 0.45,
-      "switchStateBeforeTap": "e_lower_beta_switch_lower_dead_end",
-      "switchStateAfterTap": "e_lower_beta_switch_lower_return"
+      "switchStateBeforeTap": "e_ring_b_ring_a",
+      "switchStateAfterTap": "e_ring_b_gate"
     },
     {
-      "timeSeconds": 5.03,
-      "tapNodeID": "lower_alpha_switch",
-      "reason": "Rotate switch 'lower_alpha_switch' toward 'destination' before arrival.",
-      "expectedEdgeAfterTap": "e_lower_alpha_switch_destination",
+      "timeSeconds": 2.69,
+      "tapNodeID": "gate",
+      "reason": "Rotate switch 'gate' toward 'destination' before arrival.",
+      "expectedEdgeAfterTap": "e_gate_destination",
       "expectedRouteNodeAfterTap": "destination",
       "reactionWindowSeconds": 0.45,
-      "switchStateBeforeTap": "e_lower_alpha_switch_package",
-      "switchStateAfterTap": "e_lower_alpha_switch_destination"
+      "switchStateBeforeTap": "e_gate_dead_end_b",
+      "switchStateAfterTap": "e_gate_destination"
     }
   ],
   "metadata": {
     "validationVersion": "solution_sidecar_v1",
     "solutionRoute": [
       "start",
-      "lower_alpha_switch",
+      "hub",
       "package",
-      "lower_beta_switch",
-      "lower_return",
-      "lower_alpha_switch",
+      "ring_b",
+      "gate",
       "destination"
     ],
     "requiredTapOrder": [
-      "lower_alpha_switch",
-      "lower_beta_switch",
-      "lower_alpha_switch"
+      "hub",
+      "ring_b",
+      "gate"
     ],
-    "template": "return_loop",
-    "generatedSeed": 3358837930,
-    "recipeFamily": "return_loop",
-    "recipeVariant": "return_loop_lower"
+    "template": "ring_route",
+    "generatedSeed": 3220785920,
+    "recipeFamily": "ring_route",
+    "recipeVariant": "ring_route_package_inside"
   }
 }

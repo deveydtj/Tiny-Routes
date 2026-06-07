@@ -35,8 +35,12 @@ class ReturnLoopTemplate(LevelTemplate):
         for node_id in positions:
             builder.add_node(node_id, *positions[node_id])
         for from_node_id, to_node_id in edges:
-            destination_shape = "horizontalFirst" if to_node_id == "destination" else None
-            builder.add_edge(from_node_id, to_node_id, road_shape=destination_shape)
+            road_shape = None
+            if to_node_id == "destination":
+                road_shape = "verticalFirst"
+            elif "return" in from_node_id and "alpha_switch" in to_node_id:
+                road_shape = "verticalFirst"
+            builder.add_edge(from_node_id, to_node_id, road_shape=road_shape)
 
         time_limit = self.calculate_time_limit([positions[node_id] for node_id in route], preset)
         level = builder.build_level_document(
@@ -93,16 +97,16 @@ def _variant_spec(
     list[str],
 ]:
     if variant == "return_loop_upper":
-        # Keep the return leg on the switch corridor and the destination leg on a
-        # separate left corridor so the loop never reads as a shortcut.
+        # Keep the revisit wide and directional: package exits north, destination
+        # exits south, and the return corridor approaches alpha from the side.
         positions = {
             "start": (-1.15, -0.18),
-            "upper_alpha_switch": (-0.25, -0.06),
-            "package": (0.02, 0.68),
-            "upper_beta_switch": (0.58, 0.52),
-            "upper_return": (0.9, -0.58),
-            "destination": (-0.75, -1.08),
-            "upper_dead_end": (1.05, 0.18),
+            "upper_alpha_switch": (-0.82, -0.18),
+            "package": (-0.5, 0.72),
+            "upper_beta_switch": (0.72, 0.72),
+            "upper_return": (1.04, -0.18),
+            "destination": (-0.82, -1.05),
+            "upper_dead_end": (1.04, 0.3),
         }
         edges = [
             ("start", "upper_alpha_switch"),
@@ -124,16 +128,16 @@ def _variant_spec(
         ]
 
     if variant == "return_loop_lower":
-        # Mirror the upper variant's spacing: destination routes outside the
-        # loop while the return path rejoins alpha from the interior corridor.
+        # Mirror the upper variant's spacing: destination and package leave on
+        # opposite vertical corridors while the return approaches from the side.
         positions = {
-            "start": (-1.15, 0.22),
-            "lower_alpha_switch": (-0.25, 0.02),
-            "package": (0.04, -0.68),
-            "lower_beta_switch": (0.58, -0.52),
-            "lower_return": (0.9, 0.58),
-            "destination": (-0.75, 0.94),
-            "lower_dead_end": (1.05, -0.14),
+            "start": (-1.15, 0.16),
+            "lower_alpha_switch": (-0.82, 0.16),
+            "package": (-0.5, -0.72),
+            "lower_beta_switch": (0.72, -0.72),
+            "lower_return": (1.04, 0.16),
+            "destination": (-0.82, 1.0),
+            "lower_dead_end": (1.04, -0.3),
         }
         edges = [
             ("start", "lower_alpha_switch"),
@@ -155,15 +159,15 @@ def _variant_spec(
         ]
 
     # Classic uses the same spacing rule as the offset variants: the return
-    # path approaches alpha on the inner corridor, away from the destination leg.
+    # path is a wide side corridor rather than a compact circular enclosure.
     positions = {
-        "start": (-1.15, 0.0),
-        "alpha_switch": (-0.25, 0.0),
-        "package": (0.08, 0.64),
-        "beta_switch": (0.62, 0.52),
-        "return_a": (0.9, -0.62),
-        "destination": (-0.75, -1.05),
-        "dead_end_a": (1.08, 0.12),
+        "start": (-1.15, -0.28),
+        "alpha_switch": (-0.82, -0.28),
+        "package": (-0.52, 0.58),
+        "beta_switch": (0.7, 0.58),
+        "return_a": (1.02, -0.28),
+        "destination": (-0.82, -1.08),
+        "dead_end_a": (1.04, 0.18),
     }
     edges = [
         ("start", "alpha_switch"),

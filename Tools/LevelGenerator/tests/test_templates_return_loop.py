@@ -77,8 +77,12 @@ def _level_for_variant(variant: str, positions: dict[str, tuple[float, float]] |
     for node_id, position in positions.items():
         builder.add_node(node_id, *position)
     for from_node_id, to_node_id in edges:
-        destination_shape = "horizontalFirst" if to_node_id == "destination" else None
-        builder.add_edge(from_node_id, to_node_id, road_shape=destination_shape)
+        road_shape = None
+        if to_node_id == "destination":
+            road_shape = "verticalFirst"
+        elif "return" in from_node_id and "alpha_switch" in to_node_id:
+            road_shape = "verticalFirst"
+        builder.add_edge(from_node_id, to_node_id, road_shape=road_shape)
     return (
         builder.build_level_document(
             level_id=f"level_{variant}",

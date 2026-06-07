@@ -45,6 +45,7 @@ class FourWayIntersectionTemplate(LevelTemplate):
             strategy="auto",
             important_node_ids=("start", "package", "destination"),
         ).edge_shapes
+        _apply_revisited_route_shape_overrides(road_shapes, route)
         for from_node_id, to_node_id in edges:
             builder.add_edge(from_node_id, to_node_id, road_shape=road_shapes[(from_node_id, to_node_id)])
 
@@ -86,54 +87,21 @@ def _variant_spec(
     list[str],
     list[str],
 ]:
-    if variant == "package_up_destination_right":
-        positions = {
-            "start": (-1.05, 0.0),
-            "entry": (-0.5, 0.0),
-            "central_switch": (0.0, 0.0),
-            "dead_end": (0.0, -0.78),
-            "package": (0.0, 0.78),
-            "return_node": (-0.45, 0.35),
-            "destination": (0.95, 0.0),
-            "side_branch": (-0.45, -0.62),
-        }
-        return positions, _edges(), ["central_switch", "central_switch"], _route()
-
-    if variant == "package_left_destination_up":
-        positions = {
-            "start": (0.0, -1.05),
-            "entry": (0.0, -0.5),
-            "central_switch": (0.0, 0.0),
-            "dead_end": (0.78, 0.0),
-            "package": (-0.78, 0.0),
-            "return_node": (-0.35, -0.45),
-            "destination": (0.0, 0.95),
-            "side_branch": (0.62, -0.45),
-        }
-        return positions, _edges(), ["central_switch", "central_switch"], _route()
-
-    if variant == "package_right_destination_down":
-        positions = {
-            "start": (0.0, 0.98),
-            "entry": (0.0, 0.48),
-            "central_switch": (0.0, 0.0),
-            "dead_end": (-0.78, 0.0),
-            "package": (0.78, 0.0),
-            "return_node": (0.35, 0.35),
-            "destination": (0.0, -0.95),
-            "side_branch": (-0.62, 0.45),
-        }
-        return positions, _edges(), ["central_switch", "central_switch"], _route()
-
+    package_y = {
+        "package_down_destination_right": 0.56,
+        "package_up_destination_right": 0.6,
+        "package_left_destination_up": 0.64,
+        "package_right_destination_down": 0.68,
+    }.get(variant, 0.62)
     positions = {
-        "start": (-1.05, 0.0),
-        "entry": (-0.5, 0.0),
-        "central_switch": (0.0, 0.0),
-        "dead_end": (0.0, 0.78),
-        "package": (0.0, -0.78),
-        "return_node": (-0.45, -0.35),
-        "destination": (0.95, 0.0),
-        "side_branch": (-0.45, 0.62),
+        "start": (-1.15, -0.45),
+        "entry": (-0.75, -0.18),
+        "central_switch": (-0.35, 0.0),
+        "dead_end": (-1.05, 0.0),
+        "package": (-0.35, package_y),
+        "return_node": (0.95, package_y),
+        "destination": (-0.35, -0.95),
+        "side_branch": (0.55, -0.35),
     }
     return positions, _edges(), ["central_switch", "central_switch"], _route()
 
@@ -161,3 +129,23 @@ def _route() -> list[str]:
         "central_switch",
         "destination",
     ]
+
+
+def _apply_revisited_route_shape_overrides(
+    road_shapes: dict[tuple[str, str], str],
+    route: list[str],
+) -> None:
+    seen: dict[str, int] = {}
+    for index, node_id in enumerate(route):
+        first_index = seen.get(node_id)
+        if first_index is None:
+            seen[node_id] = index
+            continue
+        if index <= first_index + 1:
+            continue
+        for edge in (
+            (node_id, route[first_index + 1]) if first_index + 1 < len(route) else None,
+            (route[index - 1], node_id) if index > 0 else None,
+        ):
+            if edge in road_shapes:
+                road_shapes[edge] = "verticalFirst"

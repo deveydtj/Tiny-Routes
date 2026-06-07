@@ -25,6 +25,15 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--road-shapes-per-layout", type=int, default=2)
     parser.add_argument("--candidate-pool-size", type=int, default=8)
     parser.add_argument("--max-attempts-per-level", type=int, default=120)
+    parser.add_argument(
+        "--production-profile",
+        action="store_true",
+        help=(
+            "Use production portfolio filters. By default stress runs use the playtest "
+            "portfolio profile so large dry-run batches still keep strict validation "
+            "without starving on full-batch similarity."
+        ),
+    )
     args = parser.parse_args(argv)
 
     output_dir = args.output_dir
@@ -46,6 +55,7 @@ def main(argv: list[str] | None = None) -> int:
         road_shapes_per_layout=args.road_shapes_per_layout,
         candidate_pool_size=args.candidate_pool_size,
         max_attempts_per_level=args.max_attempts_per_level,
+        playtest_portfolio=not args.production_profile,
         command_arguments=list(argv) if argv is not None else sys.argv[1:],
     )
     result = LevelGenerationService().generate(config)

@@ -8,6 +8,7 @@ from ..models.difficulty_preset import DifficultyPreset
 from .difficulty_service import DifficultyService
 from .graph_layout_service import BoundingBox, GraphLayoutService
 from .python_solution_simulator_service import PythonSolutionSimulatorService
+from .road_geometry_validation_service import RoadGeometryValidationService
 from .road_shape_service import RoadShapeService
 from .switch_classification_service import (
     MAX_SUPPORTED_OUTGOING_EDGES,
@@ -62,6 +63,7 @@ class GeneratedLevelValidationService:
         self.solution_validation_service = SolutionValidationService()
         self.difficulty_service = DifficultyService()
         self.road_shape_service = RoadShapeService()
+        self.road_geometry_validation_service = RoadGeometryValidationService()
         self.solution_simulator = PythonSolutionSimulatorService()
         self.switch_classification_service = SwitchClassificationService()
         self.visual_clarity_validation_service = VisualClarityValidationService()
@@ -161,6 +163,7 @@ class GeneratedLevelValidationService:
                     )
                 )
         messages.extend(self._road_shape_plan_messages(generated_level))
+        messages.extend(self._road_geometry_messages(generated_level, preset))
         messages.extend(self._layout_profile_messages(generated_level))
 
         for node in level.graph.nodes:
@@ -306,6 +309,30 @@ class GeneratedLevelValidationService:
                 )
             )
         return messages
+
+    def _road_geometry_messages(
+        self,
+        generated_level,
+        preset: DifficultyPreset | None,
+    ) -> list[GeneratorValidationMessage]:
+        report = self.road_geometry_validation_service.report_for_generated_level(generated_level, preset=preset)
+        hard_error_codes = {
+            "road_visually_circles_back_on_itself",
+            "revisited_switch_corridor_too_tight",
+            "return_path_too_close_to_destination_branch",
+            "non_adjacent_roads_too_close",
+        }
+        return [
+            GeneratorValidationMessage(
+                severity="error" if issue.code in hard_error_codes else issue.severity,
+                code=issue.code,
+                message=issue.message,
+                related_node_id=issue.related_node_id,
+                related_edge_id=issue.related_edge_id,
+                related_edge_ids=issue.related_edge_ids,
+            )
+            for issue in report.issues
+        ]
 
     def _four_way_solution_complexity_messages(
         self,

@@ -4,6 +4,11 @@ from .generated_level_validation_service import GeneratedLevelValidationService
 from .graph_builder_service import GraphBuilderService
 from .graph_layout_service import BoundingBox, GraphLayoutPlannerService, GraphLayoutService, LayoutPlanResult
 from .level_naming_service import LevelNamingService
+from .road_geometry_validation_service import (
+    RoadGeometryIssue,
+    RoadGeometryReport,
+    RoadGeometryValidationService,
+)
 from .road_shape_service import RoadShapeService
 from .solution_builder_service import SolutionBuilderService
 from .switch_classification_service import (
@@ -31,6 +36,9 @@ __all__ = [
     "LayoutPlanResult",
     "LevelNamingService",
     "MAX_SUPPORTED_OUTGOING_EDGES",
+    "RoadGeometryIssue",
+    "RoadGeometryReport",
+    "RoadGeometryValidationService",
     "RoadShapeService",
     "SolutionBuilderService",
     "SwitchClassificationService",

@@ -7,29 +7,29 @@
   "actions": [
     {
       "timeSeconds": 0.31,
-      "tapNodeID": "choice",
-      "reason": "Rotate switch 'choice' toward 'package' before arrival.",
-      "expectedEdgeAfterTap": "e_choice_package",
+      "tapNodeID": "gate",
+      "reason": "Rotate switch 'gate' toward 'package' before arrival.",
+      "expectedEdgeAfterTap": "e_gate_package",
       "expectedRouteNodeAfterTap": "package",
       "reactionWindowSeconds": 0.45,
-      "switchStateBeforeTap": "e_choice_dead_end_a",
-      "switchStateAfterTap": "e_choice_package"
+      "switchStateBeforeTap": "e_gate_dead_end_a",
+      "switchStateAfterTap": "e_gate_package"
     }
   ],
   "metadata": {
     "validationVersion": "solution_sidecar_v1",
     "solutionRoute": [
       "start",
-      "choice",
+      "gate",
       "package",
       "destination"
     ],
     "requiredTapOrder": [
-      "choice"
+      "gate"
     ],
-    "template": "single_switch_intro",
-    "generatedSeed": 3008145547,
-    "recipeFamily": "single_switch_intro",
-    "recipeVariant": "single_switch_intro_primary"
+    "template": "package_gate_simple",
+    "generatedSeed": 2950363658,
+    "recipeFamily": "package_gate_simple",
+    "recipeVariant": "package_gate_simple_alternate"
   }
 }

@@ -62,6 +62,11 @@ class RecipeToLevelBuilderService:
             strategy=road_shape_strategy,
             important_node_ids=("start", recipe.package_node_id, recipe.destination_node_id),
         )
+        edge_shapes = dict(road_shape_plan.edge_shapes)
+        revisited_route_shape_overrides = self._apply_revisited_route_shape_overrides(
+            edge_shapes,
+            recipe.required_path,
+        )
         builder = GraphBuilderService()
         for node in recipe.nodes:
             builder.add_node(node.id, *positions[node.id])
@@ -69,7 +74,7 @@ class RecipeToLevelBuilderService:
             builder.add_edge(
                 edge.from_node_id,
                 edge.to_node_id,
-                road_shape=road_shape_plan.edge_shapes[(edge.from_node_id, edge.to_node_id)],
+                road_shape=edge_shapes[(edge.from_node_id, edge.to_node_id)],
             )
 
         time_limit = self._time_limit(recipe.required_path, positions, preset.time_limit_padding_seconds)
@@ -153,7 +158,10 @@ class RecipeToLevelBuilderService:
             selected_road_shape_strategy=road_shape_plan.strategy,
             abstract_solution_metadata=recipe.solved_metadata,
             layout_metadata=layout_plan.metadata,
-            road_shape_metadata=road_shape_plan.metadata,
+            road_shape_metadata={
+                **road_shape_plan.metadata,
+                "revisitedRouteShapeOverrides": revisited_route_shape_overrides,
+            },
             mechanic_tags=recipe.mechanic_tags,
             primary_mechanic_tag=recipe.primary_mechanic_tag,
             topology_class=recipe.topology_class,
@@ -183,3 +191,38 @@ class RecipeToLevelBuilderService:
             to_position = positions[to_node_id]
             distance += abs(from_position[0] - to_position[0]) + abs(from_position[1] - to_position[1])
         return max(30, int(round(distance + padding_seconds + 6)))
+
+    def _apply_revisited_route_shape_overrides(
+        self,
+        edge_shapes: dict[tuple[str, str], str],
+        required_path: tuple[str, ...],
+    ) -> list[dict[str, str]]:
+        overrides: list[dict[str, str]] = []
+        seen: dict[str, int] = {}
+        for index, node_id in enumerate(required_path):
+            first_index = seen.get(node_id)
+            if first_index is None:
+                seen[node_id] = index
+                continue
+            if index <= first_index + 1:
+                continue
+
+            candidate_edges = [
+                (node_id, required_path[first_index + 1]) if first_index + 1 < len(required_path) else None,
+                (required_path[index - 1], node_id) if index > 0 else None,
+            ]
+            for edge in candidate_edges:
+                if edge is None or edge not in edge_shapes:
+                    continue
+                previous = edge_shapes[edge]
+                edge_shapes[edge] = "verticalFirst"
+                if previous != "verticalFirst":
+                    overrides.append(
+                        {
+                            "fromNodeID": edge[0],
+                            "toNodeID": edge[1],
+                            "fromRoadShape": previous,
+                            "toRoadShape": "verticalFirst",
+                        }
+                    )
+        return overrides

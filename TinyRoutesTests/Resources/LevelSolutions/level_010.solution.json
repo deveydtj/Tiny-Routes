@@ -2,35 +2,46 @@
   "levelID": "level_010",
   "description": "Follow the generated graph recipe route and rotate each switch before arrival.",
   "expectedOutcome": "completed",
-  "maxTaps": 1,
+  "maxTaps": 2,
   "requiresWithinTimeLimit": true,
   "actions": [
     {
-      "timeSeconds": 0.21,
-      "tapNodeID": "gate",
-      "reason": "Rotate switch 'gate' toward 'detour' before arrival.",
-      "expectedEdgeAfterTap": "e_gate_detour",
-      "expectedRouteNodeAfterTap": "detour",
+      "timeSeconds": 0.16,
+      "tapNodeID": "short_entry_switch",
+      "reason": "Rotate switch 'short_entry_switch' toward 'package' before arrival.",
+      "expectedEdgeAfterTap": "e_short_entry_switch_package",
+      "expectedRouteNodeAfterTap": "package",
       "reactionWindowSeconds": 0.45,
-      "switchStateBeforeTap": "e_gate_dead_end_a",
-      "switchStateAfterTap": "e_gate_detour"
+      "switchStateBeforeTap": "e_short_entry_switch_short_bypass",
+      "switchStateAfterTap": "e_short_entry_switch_package"
+    },
+    {
+      "timeSeconds": 2.05,
+      "tapNodeID": "short_finish_switch",
+      "reason": "Rotate switch 'short_finish_switch' toward 'destination' before arrival.",
+      "expectedEdgeAfterTap": "e_short_finish_switch_destination",
+      "expectedRouteNodeAfterTap": "destination",
+      "reactionWindowSeconds": 0.45,
+      "switchStateBeforeTap": "e_short_finish_switch_short_dead_end",
+      "switchStateAfterTap": "e_short_finish_switch_destination"
     }
   ],
   "metadata": {
     "validationVersion": "solution_sidecar_v1",
     "solutionRoute": [
       "start",
-      "gate",
-      "detour",
+      "short_entry_switch",
       "package",
+      "short_finish_switch",
       "destination"
     ],
     "requiredTapOrder": [
-      "gate"
+      "short_entry_switch",
+      "short_finish_switch"
     ],
-    "template": "short_detour_gate",
-    "generatedSeed": 782156390,
-    "recipeFamily": "short_detour_gate",
-    "recipeVariant": "short_detour_gate_primary"
+    "template": "package_gate",
+    "generatedSeed": 1371156232,
+    "recipeFamily": "package_gate",
+    "recipeVariant": "package_gate_crossing_avoidance"
   }
 }

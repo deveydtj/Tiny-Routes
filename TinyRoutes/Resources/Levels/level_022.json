@@ -1,0 +1,180 @@
+{
+  "id": "level_022",
+  "name": "Level 022",
+  "graph": {
+    "nodes": [
+      {
+        "id": "start",
+        "x": -0.25,
+        "y": 0.9,
+        "outgoingEdgeIDs": [
+          "e_start_phase_one_switch"
+        ]
+      },
+      {
+        "id": "phase_one_switch",
+        "x": -0.25,
+        "y": 0.45,
+        "outgoingEdgeIDs": [
+          "e_phase_one_switch_early_exit",
+          "e_phase_one_switch_package_lane"
+        ]
+      },
+      {
+        "id": "package_lane",
+        "x": 0.45,
+        "y": 0.45,
+        "outgoingEdgeIDs": [
+          "e_package_lane_package"
+        ]
+      },
+      {
+        "id": "package",
+        "x": 0.45,
+        "y": 0.05,
+        "outgoingEdgeIDs": [
+          "e_package_phase_bridge"
+        ]
+      },
+      {
+        "id": "phase_bridge",
+        "x": 0.1,
+        "y": -0.15,
+        "outgoingEdgeIDs": [
+          "e_phase_bridge_exit_choice"
+        ]
+      },
+      {
+        "id": "exit_choice",
+        "x": -0.25,
+        "y": -0.4,
+        "outgoingEdgeIDs": [
+          "e_exit_choice_dead_end_b",
+          "e_exit_choice_exit_lane"
+        ]
+      },
+      {
+        "id": "exit_lane",
+        "x": 0.35,
+        "y": -0.6,
+        "outgoingEdgeIDs": [
+          "e_exit_lane_switch_final"
+        ]
+      },
+      {
+        "id": "switch_final",
+        "x": 0.35,
+        "y": -0.9,
+        "outgoingEdgeIDs": [
+          "e_switch_final_dead_end_c",
+          "e_switch_final_destination"
+        ]
+      },
+      {
+        "id": "destination",
+        "x": 0.8,
+        "y": -1.1,
+        "outgoingEdgeIDs": []
+      },
+      {
+        "id": "early_exit",
+        "x": -0.95,
+        "y": 0.45,
+        "outgoingEdgeIDs": [
+          "e_early_exit_exit_choice"
+        ]
+      },
+      {
+        "id": "dead_end_b",
+        "x": -0.8,
+        "y": -1.05,
+        "outgoingEdgeIDs": []
+      },
+      {
+        "id": "dead_end_c",
+        "x": -0.1,
+        "y": -0.9,
+        "outgoingEdgeIDs": []
+      }
+    ],
+    "edges": [
+      {
+        "id": "e_start_phase_one_switch",
+        "fromNodeID": "start",
+        "toNodeID": "phase_one_switch",
+        "roadShape": "verticalFirst"
+      },
+      {
+        "id": "e_phase_one_switch_early_exit",
+        "fromNodeID": "phase_one_switch",
+        "toNodeID": "early_exit",
+        "roadShape": "horizontalFirst"
+      },
+      {
+        "id": "e_phase_one_switch_package_lane",
+        "fromNodeID": "phase_one_switch",
+        "toNodeID": "package_lane",
+        "roadShape": "horizontalFirst"
+      },
+      {
+        "id": "e_early_exit_exit_choice",
+        "fromNodeID": "early_exit",
+        "toNodeID": "exit_choice",
+        "roadShape": "verticalFirst"
+      },
+      {
+        "id": "e_package_lane_package",
+        "fromNodeID": "package_lane",
+        "toNodeID": "package",
+        "roadShape": "verticalFirst"
+      },
+      {
+        "id": "e_package_phase_bridge",
+        "fromNodeID": "package",
+        "toNodeID": "phase_bridge",
+        "roadShape": "verticalFirst"
+      },
+      {
+        "id": "e_phase_bridge_exit_choice",
+        "fromNodeID": "phase_bridge",
+        "toNodeID": "exit_choice",
+        "roadShape": "horizontalFirst"
+      },
+      {
+        "id": "e_exit_choice_dead_end_b",
+        "fromNodeID": "exit_choice",
+        "toNodeID": "dead_end_b",
+        "roadShape": "verticalFirst"
+      },
+      {
+        "id": "e_exit_choice_exit_lane",
+        "fromNodeID": "exit_choice",
+        "toNodeID": "exit_lane",
+        "roadShape": "horizontalFirst"
+      },
+      {
+        "id": "e_exit_lane_switch_final",
+        "fromNodeID": "exit_lane",
+        "toNodeID": "switch_final",
+        "roadShape": "verticalFirst"
+      },
+      {
+        "id": "e_switch_final_dead_end_c",
+        "fromNodeID": "switch_final",
+        "toNodeID": "dead_end_c",
+        "roadShape": "horizontalFirst"
+      },
+      {
+        "id": "e_switch_final_destination",
+        "fromNodeID": "switch_final",
+        "toNodeID": "destination",
+        "roadShape": "horizontalFirst"
+      }
+    ]
+  },
+  "startNodeID": "start",
+  "packageNodeID": "package",
+  "destinationNodeID": "destination",
+  "timeLimitSeconds": 30,
+  "parTaps": 3
+}

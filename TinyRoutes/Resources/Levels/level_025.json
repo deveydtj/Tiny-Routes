@@ -1,0 +1,172 @@
+{
+  "id": "level_025",
+  "name": "Level 025",
+  "graph": {
+    "nodes": [
+      {
+        "id": "start",
+        "x": 0.0,
+        "y": 1.15,
+        "outgoingEdgeIDs": [
+          "e_start_choice"
+        ]
+      },
+      {
+        "id": "choice",
+        "x": 0.15,
+        "y": 0.75,
+        "outgoingEdgeIDs": [
+          "e_choice_shortcut_dead_end",
+          "e_choice_detour_a"
+        ]
+      },
+      {
+        "id": "detour_a",
+        "x": 0.0,
+        "y": 0.45,
+        "outgoingEdgeIDs": [
+          "e_detour_a_switch_b"
+        ]
+      },
+      {
+        "id": "switch_b",
+        "x": 0.15,
+        "y": 0.05,
+        "outgoingEdgeIDs": [
+          "e_switch_b_dead_end_b",
+          "e_switch_b_package"
+        ]
+      },
+      {
+        "id": "package",
+        "x": -0.3,
+        "y": -0.3,
+        "outgoingEdgeIDs": [
+          "e_package_detour_b"
+        ]
+      },
+      {
+        "id": "detour_b",
+        "x": 0.0,
+        "y": -0.6,
+        "outgoingEdgeIDs": [
+          "e_detour_b_rejoin"
+        ]
+      },
+      {
+        "id": "rejoin",
+        "x": 0.0,
+        "y": -1.0,
+        "outgoingEdgeIDs": [
+          "e_rejoin_switch_c"
+        ]
+      },
+      {
+        "id": "switch_c",
+        "x": 0.15,
+        "y": -1.3,
+        "outgoingEdgeIDs": [
+          "e_switch_c_dead_end_c",
+          "e_switch_c_destination"
+        ]
+      },
+      {
+        "id": "destination",
+        "x": 0.3,
+        "y": -1.7,
+        "outgoingEdgeIDs": []
+      },
+      {
+        "id": "shortcut_dead_end",
+        "x": -0.4,
+        "y": 0.7,
+        "outgoingEdgeIDs": []
+      },
+      {
+        "id": "dead_end_b",
+        "x": 0.75,
+        "y": 0.15,
+        "outgoingEdgeIDs": []
+      },
+      {
+        "id": "dead_end_c",
+        "x": -0.4,
+        "y": -1.4,
+        "outgoingEdgeIDs": []
+      }
+    ],
+    "edges": [
+      {
+        "id": "e_start_choice",
+        "fromNodeID": "start",
+        "toNodeID": "choice",
+        "roadShape": "verticalFirst"
+      },
+      {
+        "id": "e_choice_shortcut_dead_end",
+        "fromNodeID": "choice",
+        "toNodeID": "shortcut_dead_end",
+        "roadShape": "verticalFirst"
+      },
+      {
+        "id": "e_choice_detour_a",
+        "fromNodeID": "choice",
+        "toNodeID": "detour_a",
+        "roadShape": "horizontalFirst"
+      },
+      {
+        "id": "e_detour_a_switch_b",
+        "fromNodeID": "detour_a",
+        "toNodeID": "switch_b",
+        "roadShape": "verticalFirst"
+      },
+      {
+        "id": "e_switch_b_dead_end_b",
+        "fromNodeID": "switch_b",
+        "toNodeID": "dead_end_b",
+        "roadShape": "horizontalFirst"
+      },
+      {
+        "id": "e_switch_b_package",
+        "fromNodeID": "switch_b",
+        "toNodeID": "package",
+        "roadShape": "horizontalFirst"
+      },
+      {
+        "id": "e_package_detour_b",
+        "fromNodeID": "package",
+        "toNodeID": "detour_b",
+        "roadShape": "horizontalFirst"
+      },
+      {
+        "id": "e_detour_b_rejoin",
+        "fromNodeID": "detour_b",
+        "toNodeID": "rejoin",
+        "roadShape": "verticalFirst"
+      },
+      {
+        "id": "e_rejoin_switch_c",
+        "fromNodeID": "rejoin",
+        "toNodeID": "switch_c",
+        "roadShape": "verticalFirst"
+      },
+      {
+        "id": "e_switch_c_dead_end_c",
+        "fromNodeID": "switch_c",
+        "toNodeID": "dead_end_c",
+        "roadShape": "horizontalFirst"
+      },
+      {
+        "id": "e_switch_c_destination",
+        "fromNodeID": "switch_c",
+        "toNodeID": "destination",
+        "roadShape": "horizontalFirst"
+      }
+    ]
+  },
+  "startNodeID": "start",
+  "packageNodeID": "package",
+  "destinationNodeID": "destination",
+  "timeLimitSeconds": 30,
+  "parTaps": 3
+}

@@ -1,0 +1,103 @@
+{
+  "id": "level_020",
+  "name": "Level 020",
+  "graph": {
+    "nodes": [
+      {
+        "id": "start",
+        "x": 0.0,
+        "y": 0.85,
+        "outgoingEdgeIDs": [
+          "e_start_approach_switch"
+        ]
+      },
+      {
+        "id": "approach_switch",
+        "x": 0.2,
+        "y": 0.4,
+        "outgoingEdgeIDs": [
+          "e_approach_switch_bypass",
+          "e_approach_switch_package"
+        ]
+      },
+      {
+        "id": "bypass",
+        "x": -0.5,
+        "y": 0.35,
+        "outgoingEdgeIDs": []
+      },
+      {
+        "id": "package",
+        "x": -0.35,
+        "y": -0.1,
+        "outgoingEdgeIDs": [
+          "e_package_finish_switch"
+        ]
+      },
+      {
+        "id": "finish_switch",
+        "x": 0.2,
+        "y": -0.55,
+        "outgoingEdgeIDs": [
+          "e_finish_switch_dead_end_a",
+          "e_finish_switch_destination"
+        ]
+      },
+      {
+        "id": "dead_end_a",
+        "x": -0.5,
+        "y": -0.6,
+        "outgoingEdgeIDs": []
+      },
+      {
+        "id": "destination",
+        "x": 0.35,
+        "y": -1.0,
+        "outgoingEdgeIDs": []
+      }
+    ],
+    "edges": [
+      {
+        "id": "e_start_approach_switch",
+        "fromNodeID": "start",
+        "toNodeID": "approach_switch",
+        "roadShape": "horizontalFirst"
+      },
+      {
+        "id": "e_approach_switch_bypass",
+        "fromNodeID": "approach_switch",
+        "toNodeID": "bypass",
+        "roadShape": "horizontalFirst"
+      },
+      {
+        "id": "e_approach_switch_package",
+        "fromNodeID": "approach_switch",
+        "toNodeID": "package",
+        "roadShape": "verticalFirst"
+      },
+      {
+        "id": "e_package_finish_switch",
+        "fromNodeID": "package",
+        "toNodeID": "finish_switch",
+        "roadShape": "horizontalFirst"
+      },
+      {
+        "id": "e_finish_switch_dead_end_a",
+        "fromNodeID": "finish_switch",
+        "toNodeID": "dead_end_a",
+        "roadShape": "horizontalFirst"
+      },
+      {
+        "id": "e_finish_switch_destination",
+        "fromNodeID": "finish_switch",
+        "toNodeID": "destination",
+        "roadShape": "verticalFirst"
+      }
+    ]
+  },
+  "startNodeID": "start",
+  "packageNodeID": "package",
+  "destinationNodeID": "destination",
+  "timeLimitSeconds": 30,
+  "parTaps": 2
+}
