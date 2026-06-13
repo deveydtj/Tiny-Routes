@@ -341,6 +341,8 @@ Check:
 
 Prove the puzzle has exactly one valid solution before layout.
 
+Implementation status: the current `UniqueSolutionValidatorService` performs bounded structural enumeration on generated concrete levels after scripted simulation succeeds. It counts package-before-destination terminal routes and rejects `solutionCount != 1` or limit-truncated searches. Dedicated shortcut labeling, full runtime timing parity, and optimized loop/revisit proof logic remain future work.
+
 Create or improve:
 
     UniqueSolutionValidator
