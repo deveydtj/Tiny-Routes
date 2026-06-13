@@ -22,6 +22,7 @@ class GeneratedLevel:
     requires_swift_validation: bool = False
     candidate_signature: CandidateSignature | None = None
     simulation_result: SimulationResult | None = None
+    unique_solution_validation_result: Any | None = None
     quality_score: GenerationQualityScore | None = None
     preview_path: Path | None = None
     warning_messages: list[str] = field(default_factory=list)

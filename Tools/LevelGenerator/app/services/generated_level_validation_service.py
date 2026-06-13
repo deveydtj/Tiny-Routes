@@ -15,6 +15,7 @@ from .switch_classification_service import (
     SwitchClassificationService,
     SwitchNodeKind,
 )
+from .unique_solution_validator_service import UniqueSolutionValidatorService
 from .visual_clarity_validation_service import VisualClarityValidationService
 
 
@@ -66,6 +67,7 @@ class GeneratedLevelValidationService:
         self.road_geometry_validation_service = RoadGeometryValidationService()
         self.solution_simulator = PythonSolutionSimulatorService()
         self.switch_classification_service = SwitchClassificationService()
+        self.unique_solution_validator = UniqueSolutionValidatorService()
         self.visual_clarity_validation_service = VisualClarityValidationService()
 
     def validate(
@@ -264,10 +266,26 @@ class GeneratedLevelValidationService:
                         message=f"Python solution simulation failed: {self._simulation_failure_detail(simulation)}",
                     )
                 )
-            elif preset is not None and enforce_difficulty:
-                messages.extend(self._simulation_difficulty_messages(simulation, preset))
+            else:
+                if preset is not None and enforce_difficulty:
+                    messages.extend(self._simulation_difficulty_messages(simulation, preset))
+                messages.extend(self._unique_solution_messages(generated_level))
 
         return messages
+
+    def _unique_solution_messages(self, generated_level) -> list[GeneratorValidationMessage]:
+        result = self.unique_solution_validator.validate_unique_solution(generated_level)
+        generated_level.unique_solution_validation_result = result
+        return [
+            GeneratorValidationMessage(
+                severity=issue.severity,
+                code=issue.code,
+                message=issue.message,
+                related_node_id=issue.related_node_id,
+                related_edge_id=issue.related_edge_id,
+            )
+            for issue in result.issues
+        ]
 
     def _layout_profile_messages(self, generated_level) -> list[GeneratorValidationMessage]:
         metadata = getattr(generated_level, "layout_metadata", None) or {}
