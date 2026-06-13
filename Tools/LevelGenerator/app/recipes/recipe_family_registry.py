@@ -16,6 +16,7 @@ class RecipeFamilyRegistry(MechanicRecipeGenerator):
                 *[ExpandedRecipeFamily(definition) for definition in expanded_recipe_family_definitions()],
             ]
         }
+        self._validate_topology_rules()
 
     def valid_family_names(self) -> list[str]:
         return sorted([*self._families, "mixed"])
@@ -124,3 +125,18 @@ class RecipeFamilyRegistry(MechanicRecipeGenerator):
             },
         }
         return weights.get(difficulty_name, {}).get(family_name, 1)
+
+    def _validate_topology_rules(self) -> None:
+        for family in self._families.values():
+            if not family.variants:
+                raise ValueError(f"Recipe family '{family.name}' must define at least one variant")
+            for variant in family.variants:
+                rules = variant.topology_rules
+                if rules is None:
+                    raise ValueError(
+                        f"Recipe family '{family.name}' variant '{variant.name}' is missing topology rules"
+                    )
+                if variant.requires_swift_validation != rules.requires_swift_runtime_validation:
+                    raise ValueError(
+                        f"Recipe family '{family.name}' variant '{variant.name}' has mismatched Swift validation rules"
+                    )

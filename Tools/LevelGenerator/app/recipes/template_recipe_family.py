@@ -5,6 +5,7 @@ from dataclasses import dataclass
 
 from ..models.difficulty_preset import DifficultyPreset
 from ..models.graph_recipe import GraphRecipe, GraphRecipeEdge, GraphRecipeNode
+from ..models.recipe_topology_rules import RecipeTopologyRules
 from ..models.recipe_variant_spec import RecipeVariantSpec
 from ..random_source import RandomSource
 from ..templates.four_way_intersection_template import FourWayIntersectionTemplate
@@ -35,6 +36,7 @@ class TemplateRecipeFamilyDefinition:
     mechanic_tags: tuple[str, ...]
     primary_mechanic_tag: str
     topology_class: str
+    topology_rules: RecipeTopologyRules
     requires_swift_validation: bool = False
 
 
@@ -79,6 +81,7 @@ class TemplateRecipeFamily(RecipeFamily):
             mechanic_tags=selected_variant.mechanic_tags,
             primary_mechanic_tag=selected_variant.primary_mechanic_tag,
             topology_class=selected_variant.topology_class,
+            topology_rules=selected_variant.topology_rules,
             unlock_requirement=selected_variant.unlock_requirement,
             prior_mechanic_dependency=selected_variant.prior_mechanic_dependency,
             mechanic_metadata=selected_variant.mechanic_metadata(),
@@ -99,6 +102,7 @@ def template_recipe_family_definitions() -> list[TemplateRecipeFamilyDefinition]
                     family_name=StraightDeliveryTemplate.name,
                     difficulty_names=("tutorial",),
                     legacy_template_name=StraightDeliveryTemplate.name,
+                    topology_rules=_TOPOLOGY_RULES["straight_delivery"],
                     mechanic_tags=("straight_delivery",) if count < 2 else ("straight_delivery", "long_route"),
                     primary_mechanic_tag="straight_delivery",
                     topology_class="straight_line",
@@ -109,6 +113,7 @@ def template_recipe_family_definitions() -> list[TemplateRecipeFamilyDefinition]
             mechanic_tags=("straight_delivery",),
             primary_mechanic_tag="straight_delivery",
             topology_class="straight_line",
+            topology_rules=_TOPOLOGY_RULES["straight_delivery"],
         ),
         TemplateRecipeFamilyDefinition(
             name=SingleSwitchTemplate.name,
@@ -117,11 +122,13 @@ def template_recipe_family_definitions() -> list[TemplateRecipeFamilyDefinition]
                 mechanic_tags=("single_switch", "dead_end"),
                 primary_mechanic_tag="single_switch",
                 topology_class="single_branch",
+                topology_rules=_TOPOLOGY_RULES["single_switch"],
             ),
             build_spec=_single_switch_spec,
             mechanic_tags=("single_switch", "dead_end"),
             primary_mechanic_tag="single_switch",
             topology_class="single_branch",
+            topology_rules=_TOPOLOGY_RULES["single_switch"],
         ),
         TemplateRecipeFamilyDefinition(
             name=PackageGateTemplate.name,
@@ -130,11 +137,13 @@ def template_recipe_family_definitions() -> list[TemplateRecipeFamilyDefinition]
                 mechanic_tags=("package_gate", "multi_switch"),
                 primary_mechanic_tag="package_gate",
                 topology_class="package_gate",
+                topology_rules=_TOPOLOGY_RULES["package_gate"],
             ),
             build_spec=_package_gate_spec,
             mechanic_tags=("package_gate", "multi_switch"),
             primary_mechanic_tag="package_gate",
             topology_class="package_gate",
+            topology_rules=_TOPOLOGY_RULES["package_gate"],
         ),
         TemplateRecipeFamilyDefinition(
             name=ReturnLoopTemplate.name,
@@ -143,11 +152,13 @@ def template_recipe_family_definitions() -> list[TemplateRecipeFamilyDefinition]
                 mechanic_tags=("loop", "repeated_tap"),
                 primary_mechanic_tag="loop",
                 topology_class="return_loop",
+                topology_rules=_TOPOLOGY_RULES["return_loop"],
             ),
             build_spec=_return_loop_spec,
             mechanic_tags=("loop", "repeated_tap"),
             primary_mechanic_tag="loop",
             topology_class="return_loop",
+            topology_rules=_TOPOLOGY_RULES["return_loop"],
         ),
         TemplateRecipeFamilyDefinition(
             name=MultiSwitchChainTemplate.name,
@@ -156,11 +167,13 @@ def template_recipe_family_definitions() -> list[TemplateRecipeFamilyDefinition]
                 mechanic_tags=("multi_switch",),
                 primary_mechanic_tag="multi_switch",
                 topology_class="two_switch_order",
+                topology_rules=_TOPOLOGY_RULES["multi_switch_chain"],
             ),
             build_spec=_multi_switch_chain_spec,
             mechanic_tags=("multi_switch",),
             primary_mechanic_tag="multi_switch",
             topology_class="two_switch_order",
+            topology_rules=_TOPOLOGY_RULES["multi_switch_chain"],
         ),
         TemplateRecipeFamilyDefinition(
             name=RingRouteTemplate.name,
@@ -169,11 +182,13 @@ def template_recipe_family_definitions() -> list[TemplateRecipeFamilyDefinition]
                 mechanic_tags=("ring", "package_gate"),
                 primary_mechanic_tag="ring",
                 topology_class="ring",
+                topology_rules=_TOPOLOGY_RULES["ring_route"],
             ),
             build_spec=_ring_route_spec,
             mechanic_tags=("ring", "package_gate"),
             primary_mechanic_tag="ring",
             topology_class="ring",
+            topology_rules=_TOPOLOGY_RULES["ring_route"],
             requires_swift_validation=True,
         ),
         TemplateRecipeFamilyDefinition(
@@ -183,11 +198,13 @@ def template_recipe_family_definitions() -> list[TemplateRecipeFamilyDefinition]
                 mechanic_tags=("four_way", "repeated_tap"),
                 primary_mechanic_tag="four_way",
                 topology_class="four_way_gate",
+                topology_rules=_TOPOLOGY_RULES["four_way_intersection"],
             ),
             build_spec=_four_way_intersection_spec,
             mechanic_tags=("four_way", "repeated_tap"),
             primary_mechanic_tag="four_way",
             topology_class="four_way_gate",
+            topology_rules=_TOPOLOGY_RULES["four_way_intersection"],
         ),
     ]
 
@@ -198,12 +215,14 @@ def _variants_from_template(
     mechanic_tags: tuple[str, ...],
     primary_mechanic_tag: str,
     topology_class: str,
+    topology_rules: RecipeTopologyRules,
 ) -> tuple[RecipeVariantSpec, ...]:
     return tuple(
         RecipeVariantSpec(
             name=spec.name,
             family_name=spec.template_name,
             difficulty_names=spec.difficulty_names,
+            topology_rules=topology_rules,
             legacy_template_name=spec.template_name,
             requires_swift_validation=spec.requires_swift_validation,
             notes=spec.notes,
@@ -213,6 +232,87 @@ def _variants_from_template(
         )
         for spec in template_class.variant_specs
     )
+
+
+_TOPOLOGY_RULES = {
+    "straight_delivery": RecipeTopologyRules(
+        allows_cycles=False,
+        allows_rejoin=False,
+        allows_revisit=False,
+        allows_return_path=False,
+        allows_ring=False,
+        allowed_cycle_count=0,
+        requires_package_gate=False,
+        requires_unique_solution=True,
+        requires_swift_runtime_validation=False,
+    ),
+    "single_switch": RecipeTopologyRules(
+        allows_cycles=False,
+        allows_rejoin=False,
+        allows_revisit=False,
+        allows_return_path=False,
+        allows_ring=False,
+        allowed_cycle_count=0,
+        requires_package_gate=False,
+        requires_unique_solution=True,
+        requires_swift_runtime_validation=False,
+    ),
+    "package_gate": RecipeTopologyRules(
+        allows_cycles=False,
+        allows_rejoin=False,
+        allows_revisit=False,
+        allows_return_path=False,
+        allows_ring=False,
+        allowed_cycle_count=0,
+        requires_package_gate=True,
+        requires_unique_solution=True,
+        requires_swift_runtime_validation=False,
+    ),
+    "return_loop": RecipeTopologyRules(
+        allows_cycles=True,
+        allows_rejoin=False,
+        allows_revisit=True,
+        allows_return_path=True,
+        allows_ring=False,
+        allowed_cycle_count=1,
+        requires_package_gate=False,
+        requires_unique_solution=True,
+        requires_swift_runtime_validation=False,
+    ),
+    "multi_switch_chain": RecipeTopologyRules(
+        allows_cycles=False,
+        allows_rejoin=False,
+        allows_revisit=False,
+        allows_return_path=False,
+        allows_ring=False,
+        allowed_cycle_count=0,
+        requires_package_gate=False,
+        requires_unique_solution=True,
+        requires_swift_runtime_validation=False,
+    ),
+    "ring_route": RecipeTopologyRules(
+        allows_cycles=True,
+        allows_rejoin=True,
+        allows_revisit=False,
+        allows_return_path=False,
+        allows_ring=True,
+        allowed_cycle_count=2,
+        requires_package_gate=True,
+        requires_unique_solution=True,
+        requires_swift_runtime_validation=True,
+    ),
+    "four_way_intersection": RecipeTopologyRules(
+        allows_cycles=True,
+        allows_rejoin=False,
+        allows_revisit=True,
+        allows_return_path=True,
+        allows_ring=False,
+        allowed_cycle_count=1,
+        requires_package_gate=False,
+        requires_unique_solution=True,
+        requires_swift_runtime_validation=False,
+    ),
+}
 
 
 def _straight_delivery_spec(

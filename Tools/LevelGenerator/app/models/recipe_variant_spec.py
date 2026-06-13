@@ -2,12 +2,15 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
+from .recipe_topology_rules import RecipeTopologyRules
+
 
 @dataclass(frozen=True)
 class RecipeVariantSpec:
     name: str
     family_name: str
     difficulty_names: tuple[str, ...]
+    topology_rules: RecipeTopologyRules
     legacy_template_name: str | None = None
     requires_swift_validation: bool = False
     notes: tuple[str, ...] = field(default_factory=tuple)
@@ -31,6 +34,8 @@ class RecipeVariantSpec:
             raise ValueError("Recipe family name is required")
         if not self.difficulty_names:
             raise ValueError("At least one difficulty is required")
+        if self.topology_rules is None:
+            raise ValueError("Recipe topology rules are required")
         object.__setattr__(self, "name", self.name.strip().lower())
         object.__setattr__(self, "family_name", self.family_name.strip().lower())
         object.__setattr__(
@@ -80,6 +85,7 @@ class RecipeVariantSpec:
             "mechanicTags": list(self.mechanic_tags),
             "primaryMechanicTag": self.primary_mechanic_tag,
             "topologyClass": self.topology_class,
+            "topologyRules": self.topology_rules.to_metadata(),
             "unlockRequirement": self.unlock_requirement,
             "priorMechanicDependency": self.prior_mechanic_dependency,
         }

@@ -5,6 +5,7 @@ from dataclasses import dataclass
 
 from ..models.difficulty_preset import DifficultyPreset
 from ..models.graph_recipe import GraphRecipe, GraphRecipeEdge, GraphRecipeNode
+from ..models.recipe_topology_rules import RecipeTopologyRules
 from ..models.recipe_variant_spec import RecipeVariantSpec
 from ..random_source import RandomSource
 from .base_recipe import RecipeFamily
@@ -23,6 +24,7 @@ class ExpandedRecipeFamilyDefinition:
     mechanic_tags: tuple[str, ...]
     primary_mechanic_tag: str
     topology_class: str
+    topology_rules: RecipeTopologyRules
     intended_mechanic: str
     required_player_skill: str
     allowed_switch_counts: tuple[int, int]
@@ -88,6 +90,7 @@ class ExpandedRecipeFamily(RecipeFamily):
             mechanic_tags=selected_variant.mechanic_tags,
             primary_mechanic_tag=selected_variant.primary_mechanic_tag,
             topology_class=selected_variant.topology_class,
+            topology_rules=selected_variant.topology_rules,
             unlock_requirement=selected_variant.unlock_requirement,
             prior_mechanic_dependency=selected_variant.prior_mechanic_dependency,
             mechanic_metadata=selected_variant.mechanic_metadata(),
@@ -103,6 +106,7 @@ class ExpandedRecipeFamily(RecipeFamily):
             name=f"{definition.name}_{suffix}",
             family_name=definition.name,
             difficulty_names=definition.difficulty_names,
+            topology_rules=definition.topology_rules,
             requires_swift_validation=definition.requires_swift_validation,
             intended_mechanic=definition.intended_mechanic,
             required_player_skill=definition.required_player_skill,
@@ -599,6 +603,7 @@ def _definition(
         mechanic_tags=mechanic_tags,
         primary_mechanic_tag=mechanic_tags[0] if mechanic_tags else "",
         topology_class=topology_class,
+        topology_rules=_topology_rules_for(name),
         intended_mechanic=intended_mechanic,
         required_player_skill=required_player_skill,
         allowed_switch_counts=allowed_switch_counts,
@@ -611,6 +616,144 @@ def _definition(
         build_spec=build_spec,
         requires_swift_validation=requires_swift_validation,
     )
+
+
+def _topology_rules_for(name: str) -> RecipeTopologyRules:
+    try:
+        return _TOPOLOGY_RULES[name]
+    except KeyError as exc:
+        raise ValueError(f"Missing topology rules for expanded recipe family: {name}") from exc
+
+
+_NO_CYCLES = RecipeTopologyRules(
+    allows_cycles=False,
+    allows_rejoin=False,
+    allows_revisit=False,
+    allows_return_path=False,
+    allows_ring=False,
+    allowed_cycle_count=0,
+    requires_package_gate=False,
+    requires_unique_solution=True,
+    requires_swift_runtime_validation=False,
+)
+_PACKAGE_GATE = RecipeTopologyRules(
+    allows_cycles=False,
+    allows_rejoin=False,
+    allows_revisit=False,
+    allows_return_path=False,
+    allows_ring=False,
+    allowed_cycle_count=0,
+    requires_package_gate=True,
+    requires_unique_solution=True,
+    requires_swift_runtime_validation=False,
+)
+_REJOIN = RecipeTopologyRules(
+    allows_cycles=False,
+    allows_rejoin=True,
+    allows_revisit=False,
+    allows_return_path=False,
+    allows_ring=False,
+    allowed_cycle_count=0,
+    requires_package_gate=False,
+    requires_unique_solution=True,
+    requires_swift_runtime_validation=False,
+)
+_PACKAGE_REJOIN = RecipeTopologyRules(
+    allows_cycles=False,
+    allows_rejoin=True,
+    allows_revisit=False,
+    allows_return_path=False,
+    allows_ring=False,
+    allowed_cycle_count=0,
+    requires_package_gate=True,
+    requires_unique_solution=True,
+    requires_swift_runtime_validation=False,
+)
+_LOOP_REVISIT = RecipeTopologyRules(
+    allows_cycles=True,
+    allows_rejoin=False,
+    allows_revisit=True,
+    allows_return_path=True,
+    allows_ring=False,
+    allowed_cycle_count=1,
+    requires_package_gate=False,
+    requires_unique_solution=True,
+    requires_swift_runtime_validation=False,
+)
+_PACKAGE_LOOP_REVISIT = RecipeTopologyRules(
+    allows_cycles=True,
+    allows_rejoin=False,
+    allows_revisit=True,
+    allows_return_path=True,
+    allows_ring=False,
+    allowed_cycle_count=1,
+    requires_package_gate=True,
+    requires_unique_solution=True,
+    requires_swift_runtime_validation=False,
+)
+_FOUR_WAY_LOOP_REVISIT = RecipeTopologyRules(
+    allows_cycles=True,
+    allows_rejoin=False,
+    allows_revisit=True,
+    allows_return_path=True,
+    allows_ring=False,
+    allowed_cycle_count=1,
+    requires_package_gate=False,
+    requires_unique_solution=True,
+    requires_swift_runtime_validation=True,
+)
+_FOUR_WAY_PACKAGE_REJOIN = RecipeTopologyRules(
+    allows_cycles=False,
+    allows_rejoin=True,
+    allows_revisit=False,
+    allows_return_path=False,
+    allows_ring=False,
+    allowed_cycle_count=0,
+    requires_package_gate=True,
+    requires_unique_solution=True,
+    requires_swift_runtime_validation=True,
+)
+_FOUR_WAY_RING = RecipeTopologyRules(
+    allows_cycles=True,
+    allows_rejoin=False,
+    allows_revisit=False,
+    allows_return_path=False,
+    allows_ring=True,
+    allowed_cycle_count=1,
+    requires_package_gate=True,
+    requires_unique_solution=True,
+    requires_swift_runtime_validation=True,
+)
+_TOPOLOGY_RULES = {
+    "straight_delivery_intro": _NO_CYCLES,
+    "single_switch_intro": _NO_CYCLES,
+    "single_switch_wrong_dead_end": _NO_CYCLES,
+    "package_before_destination_intro": _NO_CYCLES,
+    "single_switch_package_choice": _NO_CYCLES,
+    "two_switch_order_intro": _NO_CYCLES,
+    "short_detour_gate": _NO_CYCLES,
+    "safe_dead_end_choice": _NO_CYCLES,
+    "package_gate_simple": _PACKAGE_GATE,
+    "multi_switch_order": _NO_CYCLES,
+    "package_gate_double_choice": _PACKAGE_GATE,
+    "return_loop_intro": _NO_CYCLES,
+    "split_path_rejoin": _PACKAGE_REJOIN,
+    "fake_shortcut": _PACKAGE_GATE,
+    "hub_choice": _REJOIN,
+    "long_detour_gate": _PACKAGE_REJOIN,
+    "return_loop_with_gate": _PACKAGE_LOOP_REVISIT,
+    "ring_route_gate": _NO_CYCLES,
+    "multi_switch_revisit": _LOOP_REVISIT,
+    "package_inside_loop": _PACKAGE_LOOP_REVISIT,
+    "two_phase_route": _PACKAGE_REJOIN,
+    "branch_then_rejoin_with_wrong_order": _NO_CYCLES,
+    "four_way_intro": _FOUR_WAY_LOOP_REVISIT,
+    "four_way_package_gate": _FOUR_WAY_PACKAGE_REJOIN,
+    "four_way_ring": _FOUR_WAY_RING,
+    "multi_four_way_route": _FOUR_WAY_PACKAGE_REJOIN,
+    "controlled_repeated_taps": _LOOP_REVISIT,
+    "late_route_reversal": _LOOP_REVISIT,
+}
 
 
 def _straight_intro(variant_name: str, preset: DifficultyPreset, rng: RandomSource):

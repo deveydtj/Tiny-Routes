@@ -6,6 +6,7 @@ from dataclasses import dataclass, field
 from typing import Any
 
 from .abstract_puzzle_solution import AbstractPuzzleSolutionMetadata
+from .recipe_topology_rules import RecipeTopologyRules
 
 
 @dataclass(frozen=True)
@@ -37,6 +38,7 @@ class GraphRecipe:
     mechanic_tags: tuple[str, ...] = field(default_factory=tuple)
     primary_mechanic_tag: str = ""
     topology_class: str = ""
+    topology_rules: RecipeTopologyRules | None = None
     unlock_requirement: str | None = None
     prior_mechanic_dependency: str | None = None
     mechanic_metadata: dict[str, Any] = field(default_factory=dict)

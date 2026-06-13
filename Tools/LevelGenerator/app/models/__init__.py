@@ -6,6 +6,7 @@ from .generation_batch_plan import GenerationBatchPlan, GenerationBatchPlanEntry
 from .generation_result import GenerationResult, SwiftTestSummary
 from .graph_recipe import GraphRecipe, GraphRecipeEdge, GraphRecipeNode
 from .recipe_variant_spec import RecipeVariantSpec
+from .recipe_topology_rules import RecipeTopologyRules
 from .simulation import SimulationResult, SimulationStep
 from .template_spec import TemplateSpec
 from .template_variant_spec import TemplateVariantSpec
@@ -21,6 +22,7 @@ __all__ = [
     "GraphRecipe",
     "GraphRecipeEdge",
     "GraphRecipeNode",
+    "RecipeTopologyRules",
     "RecipeVariantSpec",
     "SimulationResult",
     "SimulationStep",

@@ -1,5 +1,8 @@
 from __future__ import annotations
 
+import pytest
+
+from app.models.recipe_topology_rules import RecipeTopologyRules
 from app.models.recipe_variant_spec import RecipeVariantSpec
 from app.random_source import RandomSource
 from app.recipes import RecipeFamilyRegistry
@@ -15,6 +18,7 @@ def test_recipe_variant_spec_normalizes_names() -> None:
         name=" Default ",
         family_name=" Single_Switch ",
         difficulty_names=(" Easy ",),
+        topology_rules=_simple_topology_rules(),
         legacy_template_name=" Single_Switch ",
         mechanic_tags=(" Single_Switch ",),
         topology_class=" Single_Branch ",
@@ -27,6 +31,18 @@ def test_recipe_variant_spec_normalizes_names() -> None:
     assert variant.mechanic_tags == ("single_switch",)
     assert variant.primary_mechanic_tag == "single_switch"
     assert variant.topology_class == "single_branch"
+    assert variant.topology_rules.allowsCycles is False
+    assert variant.mechanic_metadata()["topologyRules"]["allowsCycles"] is False
+
+
+def test_recipe_variant_spec_requires_topology_rules() -> None:
+    with pytest.raises(ValueError, match="topology rules are required"):
+        RecipeVariantSpec(
+            name="missing_rules",
+            family_name="single_switch",
+            difficulty_names=("easy",),
+            topology_rules=None,
+        )
 
 
 def test_recipe_family_registry_exposes_current_template_families() -> None:
@@ -101,10 +117,60 @@ def test_every_registered_recipe_family_exposes_mechanic_and_topology_metadata()
         assert family.mechanic_tags, family_name
         assert family.primary_mechanic_tag, family_name
         assert family.topology_class, family_name
+        assert family.topology_rules, family_name
         for variant in family.variants:
             assert variant.mechanic_tags, (family_name, variant.name)
             assert variant.primary_mechanic_tag, (family_name, variant.name)
             assert variant.topology_class, (family_name, variant.name)
+            assert variant.topology_rules, (family_name, variant.name)
+            assert variant.mechanic_metadata()["topologyRules"]["requiresUniqueSolution"] is True
+
+
+def test_tutorial_and_easy_recipe_families_disallow_cycles() -> None:
+    registry = RecipeFamilyRegistry()
+    difficulty = DifficultyService()
+
+    for difficulty_name in ("tutorial", "easy"):
+        preset = difficulty.get_preset(difficulty_name)
+        for family in registry.supported_families(preset):
+            for variant in family.variants_for_difficulty(preset):
+                assert variant.topology_rules.allows_cycles is False, (difficulty_name, family.name, variant.name)
+                assert variant.topology_rules.allowed_cycle_count == 0, (difficulty_name, family.name, variant.name)
+
+
+def test_advanced_loop_ring_and_revisit_families_declare_topology_permissions() -> None:
+    registry = RecipeFamilyRegistry()
+
+    revisit_families = {
+        "return_loop",
+        "return_loop_with_gate",
+        "multi_switch_revisit",
+        "package_inside_loop",
+        "four_way_intro",
+        "controlled_repeated_taps",
+        "late_route_reversal",
+    }
+    for family_name in revisit_families:
+        rules = registry.get_family(family_name).topology_rules
+        assert rules.allows_cycles is True, family_name
+        assert rules.allows_revisit is True, family_name
+        assert rules.allows_return_path is True, family_name
+
+    ring_families = {"ring_route", "four_way_ring"}
+    for family_name in ring_families:
+        rules = registry.get_family(family_name).topology_rules
+        assert rules.allows_cycles is True, family_name
+        assert rules.allows_ring is True, family_name
+        assert rules.requires_swift_runtime_validation is True, family_name
+
+
+def test_topology_name_mismatches_do_not_claim_loop_permissions() -> None:
+    registry = RecipeFamilyRegistry()
+
+    for family_name in ("return_loop_intro", "ring_route_gate", "branch_then_rejoin_with_wrong_order"):
+        rules = registry.get_family(family_name).topology_rules
+        assert rules.allows_cycles is False, family_name
+        assert rules.allows_ring is False, family_name
 
 
 def test_recipe_family_generates_valid_graph_recipe() -> None:
@@ -121,6 +187,8 @@ def test_recipe_family_generates_valid_graph_recipe() -> None:
     assert recipe.topology_class == "single_branch"
     assert recipe.mechanic_metadata["primaryMechanicTag"] == "single_switch"
     assert recipe.mechanic_metadata["topologyClass"] == "single_branch"
+    assert recipe.mechanic_metadata["topologyRules"]["allowsCycles"] is False
+    assert recipe.topology_rules is not None
     assert recipe.validate() == []
 
 
@@ -148,3 +216,17 @@ def test_expanded_recipe_families_solve_layout_and_validate() -> None:
         assert generated.mechanic_metadata["primaryMechanicTag"] == generated.primary_mechanic_tag
         assert generated.mechanic_metadata["topologyClass"] == generated.topology_class
         assert generated.unlock_requirement is not None
+
+
+def _simple_topology_rules() -> RecipeTopologyRules:
+    return RecipeTopologyRules(
+        allows_cycles=False,
+        allows_rejoin=False,
+        allows_revisit=False,
+        allows_return_path=False,
+        allows_ring=False,
+        allowed_cycle_count=0,
+        requires_package_gate=False,
+        requires_unique_solution=True,
+        requires_swift_runtime_validation=False,
+    )

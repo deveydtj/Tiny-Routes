@@ -4,6 +4,7 @@ from abc import ABC, abstractmethod
 
 from ..models.difficulty_preset import DifficultyPreset
 from ..models.graph_recipe import GraphRecipe
+from ..models.recipe_topology_rules import RecipeTopologyRules
 from ..models.recipe_variant_spec import RecipeVariantSpec
 from ..random_source import RandomSource
 
@@ -36,6 +37,13 @@ class RecipeFamily(ABC):
             if variant.topology_class:
                 return variant.topology_class
         return ""
+
+    @property
+    def topology_rules(self) -> RecipeTopologyRules:
+        for variant in self.variants:
+            if variant.topology_rules is not None:
+                return variant.topology_rules
+        raise ValueError(f"Recipe family '{self.name}' has no topology rules")
 
     def supports_difficulty(self, preset: DifficultyPreset) -> bool:
         return any(variant.supports_difficulty(preset.name) for variant in self.variants)
