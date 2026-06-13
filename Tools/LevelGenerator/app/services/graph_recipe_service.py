@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from ..models.difficulty_preset import DifficultyPreset
 from ..models.graph_recipe import GraphRecipe, GraphRecipeEdge, GraphRecipeNode
+from ..models.recipe_topology_rules import RecipeTopologyRules
 from ..random_source import RandomSource
 
 
@@ -44,6 +45,10 @@ class GraphRecipeService:
             required_path=tuple(required_path),
             tap_node_ids=tuple(tap_node_ids[: preset.required_tap_range[1]]),
             notes=tuple(notes),
+            mechanic_tags=tuple(notes),
+            primary_mechanic_tag=notes[0] if notes else "linear_route",
+            topology_class=self._topology_class_for_notes(notes),
+            topology_rules=self._topology_rules_for_notes(notes),
         )
         issues = recipe.validate()
         if issues:
@@ -77,3 +82,26 @@ class GraphRecipeService:
         if node_id.startswith("switch_"):
             return "switch"
         return "route"
+
+    def _topology_class_for_notes(self, notes: list[str]) -> str:
+        if "ring_loop" in notes:
+            return "ring_route"
+        if "return_loop" in notes:
+            return "return_loop"
+        return "linear_graph"
+
+    def _topology_rules_for_notes(self, notes: list[str]) -> RecipeTopologyRules:
+        has_return_loop = "return_loop" in notes
+        has_ring_loop = "ring_loop" in notes
+        allows_cycles = has_return_loop or has_ring_loop
+        return RecipeTopologyRules(
+            allows_cycles=allows_cycles,
+            allows_rejoin=False,
+            allows_revisit=has_return_loop,
+            allows_return_path=has_return_loop,
+            allows_ring=has_ring_loop,
+            allowed_cycle_count=len(notes) if allows_cycles else 0,
+            requires_package_gate=False,
+            requires_unique_solution=True,
+            requires_swift_runtime_validation=False,
+        )
