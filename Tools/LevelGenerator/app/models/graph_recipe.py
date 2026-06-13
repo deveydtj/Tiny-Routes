@@ -77,15 +77,16 @@ class GraphRecipe:
         cycles = self._detected_cycles()
         if not cycles:
             return []
+        context = self._cycle_validation_context(cycles)
         if self.topology_rules is None:
-            return ["topology_rules_missing_for_cycle_validation"]
+            return [f"topology_rules_missing_for_cycle_validation:{context}"]
         if not self.topology_rules.allows_cycles:
             return [
-                f"undeclared_cycle:{self._cycle_description(cycle)}"
+                f"undeclared_cycle:{self._cycle_description(cycle)}:{context}"
                 for cycle in cycles
             ]
         return [
-            f"undeclared_cycle:{self._cycle_description(cycle)}"
+            f"undeclared_cycle:{self._cycle_description(cycle)}:{context}"
             for cycle in cycles
             if not self._cycle_matches_declared_topology(cycle)
         ]
@@ -95,36 +96,46 @@ class GraphRecipe:
 
     def validate_declared_loops(self) -> list[str]:
         cycles = self._detected_cycles()
-        if not cycles:
-            return []
         messages: list[str] = []
         if self.topology_rules is None:
-            return ["topology_rules_missing_for_declared_loop_validation"]
+            if cycles:
+                return [
+                    f"topology_rules_missing_for_declared_loop_validation:"
+                    f"{self._cycle_validation_context(cycles)}"
+                ]
+            return []
 
         rules = self.topology_rules
+        context = self._cycle_validation_context(cycles)
+        messages.extend(self._validate_loop_metadata_consistency(cycles))
+        if not cycles:
+            return messages
+
         if len(cycles) > rules.allowed_cycle_count:
-            messages.append(f"declared_loop_count_exceeds_allowed:{len(cycles)}:{rules.allowed_cycle_count}")
+            messages.append(f"declared_loop_count_exceeds_allowed:{context}")
         if rules.allows_cycles and rules.allowed_cycle_count <= 0:
-            messages.append("declared_loop_allowed_count_must_be_positive")
+            messages.append(f"declared_loop_allowed_count_must_be_positive:{context}")
         if rules.allows_ring and not self._declares_ring_topology():
-            messages.append("declared_loop_ring_rule_without_ring_topology")
+            messages.append(f"declared_loop_ring_rule_without_ring_topology:{context}")
         if rules.allows_cycles and not (
             rules.allows_ring
             or rules.allows_return_path
             or rules.allows_revisit
             or self._declares_loop_topology()
         ):
-            messages.append("declared_loop_topology_missing")
+            messages.append(f"declared_loop_topology_missing:{context}")
 
         required_node_ids = set(self.required_path)
         for cycle in cycles:
             cycle_node_ids = set(cycle)
             if not cycle_node_ids.intersection(required_node_ids):
-                messages.append(f"declared_loop_disconnected_from_required_route:{self._cycle_description(cycle)}")
+                messages.append(
+                    f"declared_loop_disconnected_from_required_route:"
+                    f"{self._cycle_description(cycle)}:{context}"
+                )
             if not self._cycle_matches_declared_topology(cycle):
-                messages.append(f"declared_loop_topology_mismatch:{self._cycle_description(cycle)}")
+                messages.append(f"declared_loop_topology_mismatch:{self._cycle_description(cycle)}:{context}")
 
-        messages.extend(self._validate_loop_metadata_consistency())
         return messages
 
     def validateDeclaredLoops(self) -> list[str]:
@@ -200,27 +211,74 @@ class GraphRecipe:
             normalized.update(part for part in normalized_term.split("_") if part)
         return normalized
 
-    def _validate_loop_metadata_consistency(self) -> list[str]:
+    def _validate_loop_metadata_consistency(self, cycles: tuple[tuple[str, ...], ...]) -> list[str]:
         messages: list[str] = []
         topology_rules_metadata = self.mechanic_metadata.get("topologyRules")
+        context = self._cycle_validation_context(cycles)
+        if self.topology_rules is not None and self.topology_rules.allows_cycles and not isinstance(
+            topology_rules_metadata,
+            dict,
+        ):
+            messages.append(f"declared_loop_metadata_missing:{context}")
         if isinstance(topology_rules_metadata, dict) and self.topology_rules is not None:
             if topology_rules_metadata.get("allowsCycles") != self.topology_rules.allows_cycles:
-                messages.append("declared_loop_metadata_allows_cycles_mismatch")
+                messages.append(
+                    f"declared_loop_metadata_allows_cycles_mismatch:"
+                    f"metadataAllowsCycles={self._format_context_value(topology_rules_metadata.get('allowsCycles'))}:"
+                    f"ruleAllowsCycles={self._format_context_value(self.topology_rules.allows_cycles)}:"
+                    f"{context}"
+                )
             if topology_rules_metadata.get("allowedCycleCount") != self.topology_rules.allowed_cycle_count:
-                messages.append("declared_loop_metadata_allowed_cycle_count_mismatch")
+                messages.append(
+                    f"declared_loop_metadata_allowed_cycle_count_mismatch:"
+                    f"metadataAllowedCycleCount="
+                    f"{self._format_context_value(topology_rules_metadata.get('allowedCycleCount'))}:"
+                    f"ruleAllowedCycleCount={self.topology_rules.allowed_cycle_count}:"
+                    f"{context}"
+                )
         metadata_topology_class = self.mechanic_metadata.get("topologyClass")
         if (
             isinstance(metadata_topology_class, str)
             and self.topology_class
             and metadata_topology_class.strip().lower() != self.topology_class
         ):
-            messages.append("declared_loop_metadata_topology_class_mismatch")
+            messages.append(
+                f"declared_loop_metadata_topology_class_mismatch:"
+                f"metadataTopologyClass={metadata_topology_class}:"
+                f"recipeTopologyClass={self.topology_class}:"
+                f"{context}"
+            )
         return messages
 
     def _cycle_description(self, cycle: tuple[str, ...]) -> str:
         if not cycle:
             return ""
         return "->".join((*cycle, cycle[0]))
+
+    def _cycle_validation_context(self, cycles: tuple[tuple[str, ...], ...]) -> str:
+        rules = self.topology_rules
+        allows_cycles = rules.allows_cycles if rules is not None else "missing"
+        allowed_cycle_count = rules.allowed_cycle_count if rules is not None else "missing"
+        return (
+            f"recipe={self.family_name}/{self.variant_name}:"
+            f"allowsCycles={self._format_context_value(allows_cycles)}:"
+            f"allowedCycleCount={self._format_context_value(allowed_cycle_count)}:"
+            f"actualCycleCount={len(cycles)}:"
+            f"declaredCycleCount={self._declared_cycle_count_context_value()}"
+        )
+
+    def _declared_cycle_count_context_value(self) -> str:
+        topology_rules_metadata = self.mechanic_metadata.get("topologyRules")
+        if not isinstance(topology_rules_metadata, dict):
+            return "missing"
+        return self._format_context_value(topology_rules_metadata.get("allowedCycleCount"))
+
+    def _format_context_value(self, value: Any) -> str:
+        if isinstance(value, bool):
+            return str(value).lower()
+        if value is None:
+            return "missing"
+        return str(value)
 
     @property
     def abstract_signature(self) -> str:

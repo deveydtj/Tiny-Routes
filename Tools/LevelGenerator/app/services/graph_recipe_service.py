@@ -37,6 +37,9 @@ class GraphRecipeService:
             edges.append(GraphRecipeEdge(required_path[-3], required_path[1]))
             notes.append("ring_loop")
 
+        topology_class = self._topology_class_for_notes(notes)
+        topology_rules = self._topology_rules_for_notes(notes)
+        primary_mechanic_tag = notes[0] if notes else "linear_route"
         recipe = GraphRecipe(
             level_id=level_id,
             difficulty=preset.name,
@@ -46,9 +49,15 @@ class GraphRecipeService:
             tap_node_ids=tuple(tap_node_ids[: preset.required_tap_range[1]]),
             notes=tuple(notes),
             mechanic_tags=tuple(notes),
-            primary_mechanic_tag=notes[0] if notes else "linear_route",
-            topology_class=self._topology_class_for_notes(notes),
-            topology_rules=self._topology_rules_for_notes(notes),
+            primary_mechanic_tag=primary_mechanic_tag,
+            topology_class=topology_class,
+            topology_rules=topology_rules,
+            mechanic_metadata={
+                "mechanicTags": list(notes),
+                "primaryMechanicTag": primary_mechanic_tag,
+                "topologyClass": topology_class,
+                "topologyRules": topology_rules.to_metadata(),
+            },
         )
         issues = recipe.validate()
         if issues:
@@ -94,13 +103,14 @@ class GraphRecipeService:
         has_return_loop = "return_loop" in notes
         has_ring_loop = "ring_loop" in notes
         allows_cycles = has_return_loop or has_ring_loop
+        allowed_cycle_count = int(has_return_loop) + int(has_ring_loop)
         return RecipeTopologyRules(
             allows_cycles=allows_cycles,
             allows_rejoin=False,
             allows_revisit=has_return_loop,
             allows_return_path=has_return_loop,
             allows_ring=has_ring_loop,
-            allowed_cycle_count=len(notes) if allows_cycles else 0,
+            allowed_cycle_count=allowed_cycle_count if allows_cycles else 0,
             requires_package_gate=False,
             requires_unique_solution=True,
             requires_swift_runtime_validation=False,
