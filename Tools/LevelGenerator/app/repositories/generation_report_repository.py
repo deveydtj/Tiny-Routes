@@ -12,6 +12,7 @@ from ..services.route_timing_service import RouteTimingService
 from ..services.switch_visual_clarity_service import SwitchVisualClarityService
 from ..services.layout_readability_validator import LayoutReadabilityValidator
 from ..services.visual_clarity_validation_service import VisualClarityValidationService
+from ..services.candidate_rejection_service import CandidateRejectionService
 
 
 class GenerationReportRepository:
@@ -81,6 +82,12 @@ class GenerationReportRepository:
             "passed": getattr(result, "passed", True),
             "acceptedLevels": [
                 {
+                    **self._candidate_status_payload(
+                        level,
+                        status="accepted",
+                        reason="accepted",
+                        detail="Accepted during candidate selection.",
+                    ),
                     "levelID": level.level_id,
                     "selectedPreset": level.difficulty,
                     "template": level.template_name,
@@ -89,6 +96,7 @@ class GenerationReportRepository:
                     "mechanicTags": list(getattr(level, "mechanic_tags", ()) or ()),
                     "primaryMechanicTag": getattr(level, "primary_mechanic_tag", "") or None,
                     "topologyClass": getattr(level, "topology_class", "") or None,
+                    **self._topology_reporting_payload(level),
                     "requiredPathLength": self._required_path_length(level),
                     "layoutOrientation": self._layout_orientation(level),
                     "layoutProfile": (level.layout_metadata or {}).get("layoutProfile"),
@@ -100,6 +108,7 @@ class GenerationReportRepository:
                     "portraitCheckIssues": (level.layout_metadata or {}).get("portraitCheckIssues", []),
                     "requiresSwiftValidation": bool(getattr(level, "requires_swift_validation", False)),
                     "runtimeParity": (runtime_parity := self._runtime_parity_payload(level)),
+                    "runtimeParityReport": runtime_parity,
                     "runtimeValidationRequired": runtime_parity["runtimeValidationRequired"],
                     "runtimeValidationStatus": runtime_parity["runtimeValidationStatus"],
                     "runtimeValidationReason": runtime_parity["runtimeValidationReason"],
@@ -140,11 +149,34 @@ class GenerationReportRepository:
                     "requiredTaps": level.required_tap_count,
                     "signature": self._signature_payload(level),
                     "quality": self._quality_payload(level),
+                    "qualityScoreBreakdown": self._quality_breakdown_payload(level),
+                    "totalQualityScore": (
+                        self._quality_breakdown_payload(level).get("totalQualityScore")
+                        if self._quality_breakdown_payload(level)
+                        else None
+                    ),
+                    "logicScore": (
+                        self._quality_breakdown_payload(level).get("logicScore")
+                        if self._quality_breakdown_payload(level)
+                        else None
+                    ),
+                    "layoutScore": (
+                        self._quality_breakdown_payload(level).get("layoutScore")
+                        if self._quality_breakdown_payload(level)
+                        else None
+                    ),
+                    "difficultyFitScore": (
+                        self._quality_breakdown_payload(level).get("difficultyFitScore")
+                        if self._quality_breakdown_payload(level)
+                        else None
+                    ),
                     "routeInterestScore": (
                         self._route_interest_audit(level).get("score")
                         if self._route_interest_audit(level)
                         else None
                     ),
+                    "routeInterestFit": self._route_interest_audit(level),
+                    "difficultyFit": self._difficulty_fit_payload(level),
                     "difficultyScore": (
                         self._quality_payload(level).get("difficultyFit")
                         if self._quality_payload(level)
@@ -153,20 +185,33 @@ class GenerationReportRepository:
                     "pacingPenalties": self._pacing_penalties(level),
                     "validationResult": "passed",
                     "acceptedOrRejectedReason": "accepted",
+                    "validationStage": "candidate_selection",
+                    "rejectionCode": None,
+                    "rejectionDetails": None,
                     "simulation": self._simulation_payload(level),
                     "uniqueSolutionValidation": self._unique_solution_payload(level),
+                    "solverReport": (solver_report := self._solver_reporting_payload(level)),
+                    **solver_report,
                     "solution": self._solution_payload(level),
                     "switchPreview": self._switch_preview_payload(level),
                     "visualClarity": self._visual_clarity_payload(level),
-                    "layoutReadability": self._layout_readability_payload(level),
+                    "layoutReadability": (layout_readability := self._layout_readability_payload(level)),
+                    "layoutReadabilityReport": (
+                        layout_readability_report := self._layout_readability_report_payload(layout_readability)
+                    ),
+                    **layout_readability_report,
+                    "roadShapeReport": (road_shape_report := self._road_shape_report_payload(level)),
+                    **road_shape_report,
                     "previewPath": str(level.preview_path) if level.preview_path else None,
-                    "status": "passed",
+                    "status": "accepted",
                     "notes": level.generation_notes,
                     "warnings": list(getattr(level, "warning_messages", [])),
                 }
                 for level in result.accepted
             ],
             "candidateSelection": list(getattr(result, "candidate_selection_summaries", [])),
+            "rejectedCandidateSummaries": list(getattr(result, "rejected_candidate_summaries", [])),
+            "topRejectedNearMisses": self._top_rejected_near_misses(result),
             "acceptedDifficultyDistribution": self._distribution(
                 (level.difficulty for level in result.accepted)
             ),
@@ -175,6 +220,11 @@ class GenerationReportRepository:
             ),
             "acceptedTopologyDistribution": self._distribution(
                 (getattr(level, "topology_class", "") or "unknown" for level in result.accepted)
+            ),
+            "acceptedMechanicDistribution": self._distribution(
+                tag
+                for level in result.accepted
+                for tag in (getattr(level, "mechanic_tags", ()) or ("unknown",))
             ),
             "acceptedFamilyStreaks": self._accepted_streaks(
                 level.recipe_family or level.template_name for level in result.accepted
@@ -195,6 +245,9 @@ class GenerationReportRepository:
             "starvationCauseSummary": self._starvation_cause_summary(result),
             "rejectedCandidateCount": result.rejected_candidate_count,
             "rejectionReasonCounts": result.rejection_reason_counts,
+            "rejectionStageCounts": dict(
+                sorted(getattr(result, "rejection_stage_counts", {}).items())
+            ),
             "rejectionReasonCountsByDifficulty": dict(
                 sorted(getattr(result, "rejection_reason_counts_by_difficulty", {}).items())
             ),
@@ -258,6 +311,7 @@ class GenerationReportRepository:
             f"- Difficulty: `{payload['acceptedDifficultyDistribution']}`",
             f"- Recipe: `{payload['acceptedRecipeDistribution']}`",
             f"- Topology: `{payload['acceptedTopologyDistribution']}`",
+            f"- Mechanics: `{payload['acceptedMechanicDistribution']}`",
             f"- Family streaks: `{payload['acceptedFamilyStreaks']}`",
             f"- Topology streaks: `{payload['acceptedTopologyStreaks']}`",
             f"- Map size: `{payload['acceptedMapSizeDistribution']}`",
@@ -268,6 +322,7 @@ class GenerationReportRepository:
             f"- Accepted vs rejected by difficulty: `{payload['acceptedRejectedCountsByDifficulty']}`",
             f"- Similarity rejections by difficulty: `{payload['similarityRejectionCountsByDifficulty']}`",
             f"- Starvation causes: `{payload['starvationCauseSummary']}`",
+            f"- Rejection stages: `{payload['rejectionStageCounts']}`",
             "",
             "## Accepted Levels",
             "",
@@ -382,11 +437,22 @@ class GenerationReportRepository:
                             f"{abstract['alternatePathCount']} alternate paths, "
                             f"{abstract['deadEndCount']} dead ends, {abstract['loopCount']} loops."
                         )
+                    topology = level["topologyReport"]
+                    lines.append(
+                        f"- Topology rules: cycles `{topology['allowsCycles']}` "
+                        f"allowed `{topology['allowedCycleCount']}` actual `{topology['actualCycleCount']}`; "
+                        f"rejoin `{topology['allowsRejoin']}` declared `{topology['declaredRejoinCount']}`; "
+                        f"revisit `{topology['allowsRevisit']}` declared `{topology['declaredRevisitCount']}`; "
+                        f"return path `{topology['allowsReturnPath']}`; ring `{topology['allowsRing']}`."
+                    )
                     if level["uniqueSolutionValidation"]:
                         unique = level["uniqueSolutionValidation"]
                         lines.append(
                             f"- Unique solution validation: solutions `{unique['solutionCount']}`, "
                             f"exhaustive `{unique['isExhaustive']}`, "
+                            f"explored states `{unique['exploredStates']}`, "
+                            f"max depth `{unique['maxDepthReached']}`, "
+                            f"traversal limit `{unique['traversalLimitHit']}`, "
                             f"shortcut `{unique['shortcutDetected']}`, "
                             f"package bypass `{unique['packageBypassDetected']}`, "
                             f"wrong branch reached goal `{unique['wrongBranchReachedGoal']}`, "
@@ -430,6 +496,8 @@ class GenerationReportRepository:
                         f"- Quality factors: positives `{', '.join(quality.get('topPositiveFactors') or []) or 'none'}`; "
                         f"negatives `{', '.join(quality.get('topNegativeFactors') or []) or 'none'}`."
                     )
+                    if level["pacingPenalties"]:
+                        lines.append(f"- Pacing penalties: `{', '.join(level['pacingPenalties'])}`.")
                     lines.append(
                         f"- Difficulty model: estimated `{quality['estimatedDifficultyBand']}`, "
                         f"mechanical `{quality['mechanicalDifficulty']}`, "
@@ -517,6 +585,13 @@ class GenerationReportRepository:
                             f"route interest `{(near_miss.get('routeInterestAudit') or {}).get('score')}` "
                             f"diversity `{self._diversity_summary(near_miss.get('diversityAudit') or {})}`."
                         )
+                    not_selected = selection.get("notSelectedCandidates") or []
+                    if not_selected:
+                        lines.append(
+                            f"- Not selected after quality scoring: `{len(not_selected)}` candidate(s); "
+                            f"top status `{not_selected[0].get('acceptedOrRejectedReason')}` "
+                            f"seed `{not_selected[0].get('seed')}`."
+                        )
                 for switch in level["switchPreview"]:
                     transition_summary = ", ".join(
                         (
@@ -546,8 +621,20 @@ class GenerationReportRepository:
 
         lines.extend(["", "## Rejections", ""])
         lines.append(f"- Rejected candidates: `{payload['rejectedCandidateCount']}`")
+        lines.append(f"- Rejection stages: `{payload['rejectionStageCounts']}`")
         for reason, count in sorted(payload["rejectionReasonCounts"].items()):
             lines.append(f"- `{reason}`: {count}")
+        if payload["topRejectedNearMisses"]:
+            lines.extend(["", "### Top Rejected Near Misses", ""])
+            for near_miss in payload["topRejectedNearMisses"][:10]:
+                quality = near_miss.get("quality") or near_miss.get("qualityScoreBreakdown") or {}
+                score = quality.get("totalScore", quality.get("totalQualityScore"))
+                lines.append(
+                    f"- `{near_miss.get('candidateID')}` stage `{near_miss.get('validationStage')}` "
+                    f"code `{near_miss.get('rejectionCode')}` score `{score}` "
+                    f"difficulty `{near_miss.get('difficulty')}` family `{near_miss.get('recipeFamily') or 'none'}` "
+                    f"topology `{near_miss.get('topologyClass') or 'none'}` seed `{near_miss.get('seed')}`."
+                )
 
         if payload["messages"]:
             lines.extend(["", "## Messages", ""])
@@ -633,6 +720,210 @@ class GenerationReportRepository:
             "solutionHashShort": signature.solution_hash[:8],
             "normalizedPositions": list(signature.normalized_positions),
         }
+
+    def _candidate_status_payload(
+        self,
+        level,
+        *,
+        status: str,
+        reason: str,
+        detail: str | None,
+    ) -> dict[str, Any]:
+        rejection_code = None if status == "accepted" else reason
+        return {
+            "candidateID": f"{level.level_id}:{level.seed}",
+            "status": status,
+            "acceptedOrRejectedReason": reason,
+            "validationStage": (
+                "candidate_selection"
+                if status == "accepted"
+                else CandidateRejectionService.validation_stage_for_code(rejection_code)
+            ),
+            "rejectionCode": rejection_code,
+            "rejectionDetails": detail,
+        }
+
+    def _topology_reporting_payload(self, level) -> dict[str, Any]:
+        metadata = getattr(level, "mechanic_metadata", {}) or {}
+        raw_rules = metadata.get("topologyRules") if isinstance(metadata, dict) else None
+        topology_rules = dict(raw_rules) if isinstance(raw_rules, dict) else {}
+        unique = getattr(level, "unique_solution_validation_result", None)
+        abstract = getattr(level, "abstract_solution_metadata", None)
+        declared_loop_count = self._declared_int(metadata, ("declaredLoopCount", "declaredCycleCount", "loopCount"))
+        if declared_loop_count is None:
+            declared_loop_count = getattr(abstract, "loop_count", None)
+        declared_rejoin_count = getattr(unique, "declared_rejoin_count", None)
+        if declared_rejoin_count is None:
+            declared_rejoin_count = self._declared_count(
+                metadata,
+                ("declaredRejoinCount", "allowedRejoinCount", "rejoinCount"),
+                ("declaredRejoinNodeIDs", "rejoinNodeIDs"),
+            )
+        declared_revisit_count = getattr(unique, "declared_revisit_count", None)
+        if declared_revisit_count is None:
+            declared_revisit_count = self._declared_count(
+                metadata,
+                ("declaredRevisitCount", "allowedRevisitCount", "revisitCount"),
+                ("declaredRevisitNodeIDs", "revisitNodeIDs", "repeatedNodeIDs"),
+            )
+        report = {
+            "topologyRules": topology_rules,
+            "allowsCycles": bool(topology_rules.get("allowsCycles", False)),
+            "allowsRejoin": bool(topology_rules.get("allowsRejoin", False)),
+            "allowsRevisit": bool(topology_rules.get("allowsRevisit", False)),
+            "allowsReturnPath": bool(topology_rules.get("allowsReturnPath", False)),
+            "allowsRing": bool(topology_rules.get("allowsRing", False)),
+            "allowedCycleCount": int(topology_rules.get("allowedCycleCount", 0) or 0),
+            "actualCycleCount": self._actual_cycle_count(level),
+            "declaredLoopCount": int(declared_loop_count or 0),
+            "declaredRejoinCount": int(declared_rejoin_count or 0),
+            "declaredRevisitCount": int(declared_revisit_count or 0),
+        }
+        return {
+            "topologyReport": report,
+            **report,
+        }
+
+    def _solver_reporting_payload(self, level) -> dict[str, Any]:
+        result = getattr(level, "unique_solution_validation_result", None)
+        if result is None:
+            return {
+                "solutionCount": None,
+                "exploredStates": 0,
+                "maxDepthReached": 0,
+                "traversalLimitHit": False,
+                "packageReachabilityStatus": "not_evaluated",
+                "shortestValidRouteLength": None,
+                "intendedRouteLength": self._required_path_length(level),
+                "shortcutDetected": False,
+                "packageBypassDetected": False,
+                "wrongBranchReachedGoal": False,
+            }
+        terminal_reason_counts = dict(result.terminal_reason_counts)
+        return {
+            "solutionCount": result.solution_count,
+            "exploredStates": result.explored_states,
+            "maxDepthReached": result.max_depth_reached,
+            "traversalLimitHit": (
+                result.termination_reason in {"max_explored_states_reached", "max_traversal_depth_reached"}
+                or terminal_reason_counts.get("max_traversal_depth_reached", 0) > 0
+                or terminal_reason_counts.get("max_taps_reached", 0) > 0
+            ),
+            "packageReachabilityStatus": result.package_reachability_status,
+            "shortestValidRouteLength": result.shortest_valid_route_length,
+            "intendedRouteLength": result.intended_route_length,
+            "shortcutDetected": result.shortcut_detected,
+            "packageBypassDetected": result.package_bypass_detected,
+            "wrongBranchReachedGoal": result.wrong_branch_reached_goal,
+        }
+
+    def _layout_readability_report_payload(self, payload: dict[str, Any]) -> dict[str, Any]:
+        metadata = dict(payload.get("metadata") or {})
+        return {
+            "layoutReadabilityPassed": bool(metadata.get("passed", payload.get("passed", False))),
+            "nodeOverlapDetected": bool(metadata.get("nodeOverlapDetected", False)),
+            "implicitIntersectionDetected": bool(metadata.get("implicitIntersectionDetected", False)),
+            "roadsTooCloseDetected": bool(metadata.get("roadsTooCloseDetected", False)),
+            "switchExitOverlapDetected": bool(metadata.get("switchExitOverlapDetected", False)),
+            "importantNodeBlocked": bool(metadata.get("importantNodeBlocked", False)),
+            "startGoalTooClose": bool(metadata.get("startGoalTooClose", False)),
+            "portraitSafetyFailure": bool(metadata.get("portraitSafetyFailure", False)),
+            "offendingNodes": list(metadata.get("offendingNodes", [])),
+            "offendingRoads": list(metadata.get("offendingRoads", [])),
+            "measuredDistances": list(metadata.get("measuredDistances", [])),
+            "measuredAngles": list(metadata.get("measuredAngles", [])),
+        }
+
+    def _road_shape_report_payload(self, level) -> dict[str, Any]:
+        metadata = getattr(level, "road_shape_metadata", None) or {}
+        return {
+            "switchDirectionQuality": metadata.get("switchClarityScore"),
+            "ambiguousSwitchDetected": bool(metadata.get("ambiguousSwitchDetected", False)),
+            "directionBucketAssignments": metadata.get("directionBucketAssignments", {}),
+            "switchExitAngleSeparation": metadata.get("switchExitAngleSeparation", {}),
+            "roadShapeWarnings": list(metadata.get("warnings", [])),
+            "roadShapeIssues": list(metadata.get("issues", [])),
+            "readabilityAdjustments": list(metadata.get("readabilityAdjustments", [])),
+        }
+
+    def _quality_breakdown_payload(self, level) -> dict[str, Any] | None:
+        quality = getattr(level, "quality_score", None)
+        if quality is None:
+            return None
+        categories = quality.category_scores or {}
+        return {
+            "totalQualityScore": quality.total_score,
+            "logicScore": categories.get("logicScore"),
+            "routeInterestScore": categories.get("routeInterestScore"),
+            "layoutScore": categories.get("layoutScore"),
+            "difficultyFitScore": categories.get("difficultyFitScore"),
+            "diversityScore": categories.get("diversityScore"),
+            "topPositiveFactors": list(quality.top_positive_factors),
+            "topNegativeFactors": list(quality.top_negative_factors),
+            "pacingPenalties": [penalty for penalty in quality.penalties if penalty.startswith("campaign_")],
+        }
+
+    def _difficulty_fit_payload(self, level) -> dict[str, Any]:
+        quality = getattr(level, "quality_score", None)
+        if quality is None:
+            return {}
+        return {
+            "difficultyFitScore": quality.difficulty_fit,
+            "estimatedDifficultyBand": quality.estimated_difficulty_band,
+            "mechanicalDifficulty": quality.mechanical_difficulty,
+            "visualDifficulty": quality.visual_difficulty,
+            "presetContentFit": quality.details.get("presetContentFit", {}),
+        }
+
+    def _top_rejected_near_misses(self, result) -> list[dict[str, Any]]:
+        rejected = list(getattr(result, "rejected_candidate_summaries", []) or [])
+        return sorted(
+            rejected,
+            key=lambda item: (item.get("quality") or {}).get(
+                "totalScore",
+                (item.get("qualityScoreBreakdown") or {}).get("totalQualityScore") or 0.0,
+            ),
+            reverse=True,
+        )[:10]
+
+    def _actual_cycle_count(self, level) -> int:
+        adjacency: dict[str, list[str]] = {}
+        for edge in level.level_document.graph.edges:
+            adjacency.setdefault(edge.fromNodeID, []).append(edge.toNodeID)
+        cycles: set[tuple[str, ...]] = set()
+        for start in sorted(adjacency):
+            stack = [(start, [start])]
+            while stack:
+                node_id, path = stack.pop()
+                for next_id in adjacency.get(node_id, []):
+                    if next_id == start and len(path) > 1:
+                        cycles.add(self._canonical_cycle(tuple(path)))
+                        continue
+                    if next_id in path or len(path) > len(adjacency):
+                        continue
+                    stack.append((next_id, [*path, next_id]))
+        return len(cycles)
+
+    def _canonical_cycle(self, cycle: tuple[str, ...]) -> tuple[str, ...]:
+        rotations = [cycle[index:] + cycle[:index] for index in range(len(cycle))]
+        return min(rotations)
+
+    def _declared_count(self, metadata: dict[str, Any], count_keys: tuple[str, ...], node_keys: tuple[str, ...]) -> int | None:
+        explicit = self._declared_int(metadata, count_keys)
+        if explicit is not None:
+            return explicit
+        for key in node_keys:
+            value = metadata.get(key)
+            if isinstance(value, (list, tuple)):
+                return len(value)
+        return None
+
+    def _declared_int(self, metadata: dict[str, Any], keys: tuple[str, ...]) -> int | None:
+        for key in keys:
+            value = metadata.get(key)
+            if isinstance(value, int) and value >= 0:
+                return value
+        return None
 
     def _required_path_length(self, level) -> int | None:
         signature = getattr(level, "candidate_signature", None)
@@ -766,6 +1057,7 @@ class GenerationReportRepository:
             ),
             "routeInterestScoreByDifficulty": self._route_interest_by_difficulty(result),
             "rejectionReasons": dict(getattr(result, "rejection_reason_counts", {})),
+            "rejectionStageCounts": dict(getattr(result, "rejection_stage_counts", {})),
             "rejectionReasonCountsByDifficulty": dict(
                 sorted(getattr(result, "rejection_reason_counts_by_difficulty", {}).items())
             ),
@@ -972,14 +1264,20 @@ class GenerationReportRepository:
         if result is None:
             return None
         bypass_summary = result.bypass_path_summary.to_dict() if result.bypass_path_summary else None
+        terminal_reason_counts = dict(result.terminal_reason_counts)
         return {
             "requiresUniqueSolution": result.requires_unique_solution,
             "isExhaustive": result.is_exhaustive,
             "solutionCount": result.solution_count,
             "exploredStates": result.explored_states,
             "maxDepthReached": result.max_depth_reached,
+            "traversalLimitHit": (
+                result.termination_reason in {"max_explored_states_reached", "max_traversal_depth_reached"}
+                or terminal_reason_counts.get("max_traversal_depth_reached", 0) > 0
+                or terminal_reason_counts.get("max_taps_reached", 0) > 0
+            ),
             "terminationReason": result.termination_reason,
-            "terminalReasonCounts": dict(result.terminal_reason_counts),
+            "terminalReasonCounts": terminal_reason_counts,
             "shortcutDetected": result.shortcut_detected,
             "packageBypassDetected": result.package_bypass_detected,
             "wrongBranchReachedGoal": result.wrong_branch_reached_goal,

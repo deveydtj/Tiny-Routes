@@ -860,7 +860,39 @@ These thresholds are quality gates for already-valid candidates:
 
 ## Phase 12 – Reporting and Debuggability
 
-Every generated candidate report should include:
+Implementation status: JSON and Markdown generation reports now standardize candidate status metadata and expose stage-specific debug payloads for accepted, rejected, and not-selected candidates. Existing report fields are preserved where possible; new fields are additive.
+
+Every generated candidate status payload includes:
+
+    candidateID
+    levelID
+    seed
+    difficulty
+    recipeFamily
+    recipeVariant
+    topologyClass
+    mechanicTags
+    status
+    acceptedOrRejectedReason
+    validationStage
+    rejectionCode
+    rejectionDetails
+
+Validation stages:
+
+    topology_validation
+    unique_solution_validation
+    shortcut_validation
+    package_validation
+    rejoin_validation
+    revisit_validation
+    layout_readability_validation
+    road_shape_validation
+    runtime_parity_validation
+    quality_scoring
+    candidate_selection
+
+Every generated candidate report should include enough metadata to answer:
 
     seed
     difficulty
@@ -882,6 +914,85 @@ Every generated candidate report should include:
     quality score
     rejection reason
     runtime validation result
+
+### Report Structure
+
+JSON report fields:
+
+    acceptedLevels[]
+    candidateSelection[]
+    candidateSelection[].acceptedCandidate
+    candidateSelection[].notSelectedCandidates[]
+    candidateSelection[].topRejectedNearMisses[]
+    rejectedCandidateSummaries[]
+    topRejectedNearMisses[]
+    rejectionReasonCounts
+    rejectionStageCounts
+    acceptedDifficultyDistribution
+    acceptedRecipeDistribution
+    acceptedTopologyDistribution
+    acceptedMechanicDistribution
+    acceptedMapSizeDistribution
+
+Accepted and rejected candidate summaries expose:
+
+    topologyReport
+    solverReport
+    layoutReadabilityReport
+    roadShapeReport
+    runtimeParityReport
+    qualityScoreBreakdown
+    difficultyFit
+    routeInterestFit
+    pacingPenalties
+
+Topology reporting exposes `topologyRules`, `allowsCycles`, `allowsRejoin`, `allowsRevisit`, `allowsReturnPath`, `allowsRing`, `allowedCycleCount`, `actualCycleCount`, `declaredLoopCount`, `declaredRejoinCount`, and `declaredRevisitCount`.
+
+Solver reporting exposes `solutionCount`, `exploredStates`, `maxDepthReached`, `traversalLimitHit`, `packageReachabilityStatus`, `shortestValidRouteLength`, `intendedRouteLength`, `shortcutDetected`, `packageBypassDetected`, and `wrongBranchReachedGoal`.
+
+Layout readability reporting exposes `layoutReadabilityPassed`, `nodeOverlapDetected`, `implicitIntersectionDetected`, `roadsTooCloseDetected`, `switchExitOverlapDetected`, `importantNodeBlocked`, `startGoalTooClose`, `portraitSafetyFailure`, `offendingNodes`, `offendingRoads`, `measuredDistances`, and `measuredAngles`.
+
+Road-shape reporting exposes `switchDirectionQuality`, `ambiguousSwitchDetected`, `directionBucketAssignments`, `switchExitAngleSeparation`, `roadShapeWarnings`, and `readabilityAdjustments`.
+
+Runtime parity reporting exposes `runtimeValidationRequired`, `runtimeValidationStatus`, `runtimeValidationReason`, `swiftValidationPassed`, `swiftValidationSkippedReason`, and `riskyMechanicTags`.
+
+Quality reporting exposes `totalQualityScore`, `logicScore`, `routeInterestScore`, `layoutScore`, `difficultyFitScore`, `diversityScore`, `topPositiveFactors`, `topNegativeFactors`, and `pacingPenalties`.
+
+### Rejection Codes
+
+Rejection codes are stable strings emitted by the stage that rejects the candidate. Common families:
+
+    quality_*                      -> quality_scoring
+    route_interest_below_*         -> quality_scoring
+    boring_topology_for_difficulty -> quality_scoring
+    large_portrait_without_puzzle_need -> quality_scoring
+    candidate_too_similar_*        -> candidate_selection
+    not_selected                   -> candidate_selection
+    missing_required_swift_validation -> runtime_parity_validation
+    swift_runtime_parity_failed    -> runtime_parity_validation
+    node_spacing_failure           -> layout_readability_validation
+    implicit_intersection_without_node -> layout_readability_validation
+    road_proximity_failure         -> layout_readability_validation
+    switch_exit_overlap            -> layout_readability_validation
+    portrait_safety_failure        -> layout_readability_validation
+    ambiguous_switch_exit          -> road_shape_validation
+    conflicting_direction_bucket   -> road_shape_validation
+    insufficient_exit_separation   -> road_shape_validation
+
+Codes containing `shortcut`, `package`/`bypass`, `rejoin`, or `revisit` map to their matching validation stage.
+
+### Debug Workflow
+
+To debug a failed or starved batch:
+
+1. Inspect `rejectionStageCounts` to find the bottleneck stage.
+2. Inspect `rejectionReasonCounts` and `rejectionReasonCountsByDifficulty` to see whether hard/expert candidates fail for the same reason.
+3. Inspect `topRejectedNearMisses` for high-scoring candidates that narrowly failed.
+4. Use the candidate `seed`, `recipeFamily`, `recipeVariant`, `topologyClass`, and `mechanicTags` to reproduce the candidate.
+5. Inspect the nested report matching `validationStage`.
+6. Compare accepted distributions for difficulty, recipe, topology, mechanic, and map-size diversity.
+
+The Markdown report mirrors the same audit path with human-readable summaries for accepted candidates, near misses, rejection stages, and accepted-candidate diversity.
 
 ### Acceptance Criteria
 

@@ -152,6 +152,51 @@ Generation reports include the selected layout profile, layout size profile, and
 
 `--candidate-pool-size` scores multiple valid candidates for each level and accepts the highest-scoring one. Reports include quality, pacing, route-interest, difficulty-fit, and simulation details.
 
+### Generation Reports
+
+The CLI and GUI write the same Markdown and JSON reports when report paths are configured. The JSON report is the audit source of truth; the Markdown report is optimized for quick human review.
+
+Each accepted level and candidate-selection summary uses standardized candidate status fields:
+
+- `candidateID`, `levelID`, `seed`, `difficulty`
+- `recipeFamily`, `recipeVariant`, `topologyClass`, `mechanicTags`
+- `status`
+- `acceptedOrRejectedReason`
+- `validationStage`
+- `rejectionCode`
+- `rejectionDetails`
+
+`status` is `accepted`, `rejected`, or `not_selected`. `validationStage` identifies the gate that accepted or rejected the candidate:
+
+- `topology_validation`
+- `unique_solution_validation`
+- `shortcut_validation`
+- `package_validation`
+- `rejoin_validation`
+- `revisit_validation`
+- `layout_readability_validation`
+- `road_shape_validation`
+- `runtime_parity_validation`
+- `quality_scoring`
+- `candidate_selection`
+
+Accepted candidates expose nested reports for `topologyReport`, `solverReport`, `layoutReadabilityReport`, `roadShapeReport`, `runtimeParityReport`, and `qualityScoreBreakdown`. Rejected candidates are recorded in `rejectedCandidateSummaries` with the same status fields plus any available topology, solver, layout, road-shape, runtime, and quality metadata. Valid candidates that pass all hard gates but lose candidate selection are listed under `candidateSelection[].notSelectedCandidates`; they are not counted as hard rejections.
+
+Use these aggregate fields first when debugging a failed or starved batch:
+
+- `rejectionReasonCounts`
+- `rejectionStageCounts`
+- `topRejectedNearMisses`
+- `acceptedDifficultyDistribution`
+- `acceptedRecipeDistribution`
+- `acceptedTopologyDistribution`
+- `acceptedMechanicDistribution`
+- `acceptedMapSizeDistribution`
+
+Common rejection-code families map directly to stages. `quality_*`, `route_interest_below_*`, `boring_topology_for_difficulty`, and `large_portrait_without_puzzle_need` are quality-scoring rejections. `candidate_too_similar_to_batch`, `candidate_too_similar_to_existing`, and `not_selected` are candidate-selection outcomes. `missing_required_swift_validation` and `swift_runtime_parity_failed` are runtime-parity failures. Layout readability codes include `node_spacing_failure`, `implicit_intersection_without_node`, `road_proximity_failure`, `switch_exit_overlap`, `important_node_visibility_failure`, `start_goal_separation_failure`, and `portrait_safety_failure`. Road-shape codes include `ambiguous_switch_exit`, `conflicting_direction_bucket`, `insufficient_exit_separation`, and crossing/proximity road-shape issues.
+
+Debug a rejected candidate by starting with `candidateID`, `seed`, `recipeFamily`, `recipeVariant`, `validationStage`, `rejectionCode`, and `rejectionDetails`. Then inspect the stage-specific nested report. For example, use `solverReport` for solution count, package bypass, wrong-branch, shortcut, and traversal-limit questions; use `layoutReadabilityReport` for offending nodes/roads and measured distances; use `roadShapeReport` for switch direction buckets and exit-angle separation; use `qualityScoreBreakdown`, `difficultyFit`, `routeInterestFit`, and `pacingPenalties` for technically valid candidates rejected by scoring.
+
 Run a safe stress dry-run into a scratch folder when tuning the curve:
 
 ```bash

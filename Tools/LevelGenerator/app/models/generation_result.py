@@ -24,6 +24,7 @@ class SwiftTestSummary:
 class GenerationResult:
     accepted: list[GeneratedLevel] = field(default_factory=list)
     candidate_selection_summaries: list[dict[str, Any]] = field(default_factory=list)
+    rejected_candidate_summaries: list[dict[str, Any]] = field(default_factory=list)
     candidate_generation_count: int = 0
     candidate_validation_count: int = 0
     candidate_generation_counts_by_difficulty: dict[str, int] = field(default_factory=dict)
@@ -33,6 +34,7 @@ class GenerationResult:
     filter_rejection_count: int = 0
     generation_error_count: int = 0
     rejection_reason_counts: dict[str, int] = field(default_factory=dict)
+    rejection_stage_counts: dict[str, int] = field(default_factory=dict)
     rejection_reason_counts_by_difficulty: dict[str, dict[str, int]] = field(default_factory=dict)
     similarity_rejection_counts_by_difficulty: dict[str, int] = field(default_factory=dict)
     diversity_adjustment_decisions: list[dict[str, Any]] = field(default_factory=list)

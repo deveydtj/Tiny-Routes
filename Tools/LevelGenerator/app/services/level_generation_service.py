@@ -160,6 +160,14 @@ class LevelGenerationService:
                     rejection_service.reason_counts[rejection_code] += 1
                     self._record_rejection_by_difficulty(result, preset.name, rejection_code)
                     self._record_generation_error(result)
+                    self._record_generation_error_summary(
+                        result,
+                        level_id=level_id,
+                        seed=candidate_seed,
+                        difficulty=preset.name,
+                        reason=rejection_code,
+                        detail=str(exc),
+                    )
                     result.messages.append(f"Rejected candidate {level_id} attempt={attempt}: {exc}")
                     continue
 
@@ -196,6 +204,7 @@ class LevelGenerationService:
                                 detail,
                                 config.debug_failures_dir,
                             )
+                            self._record_rejected_candidate_summary(result, candidate, reason, detail)
                             self._record_rejection_by_difficulty(result, candidate.difficulty, reason)
                             self._record_validation_rejection(result)
                             self._append_rejection_message(result, message)
@@ -224,6 +233,12 @@ class LevelGenerationService:
                                 duplicate_result.message,
                                 config.debug_failures_dir,
                             )
+                            self._record_rejected_candidate_summary(
+                                result,
+                                candidate,
+                                "candidate_too_similar_to_batch",
+                                duplicate_result.message,
+                            )
                             self._record_rejection_by_difficulty(
                                 result,
                                 candidate.difficulty,
@@ -245,6 +260,12 @@ class LevelGenerationService:
                                     "candidate_too_similar_to_existing",
                                     existing_duplicate_result.message,
                                     config.debug_failures_dir,
+                                )
+                                self._record_rejected_candidate_summary(
+                                    result,
+                                    candidate,
+                                    "candidate_too_similar_to_existing",
+                                    existing_duplicate_result.message,
                                 )
                                 self._record_rejection_by_difficulty(
                                     result,
@@ -275,13 +296,14 @@ class LevelGenerationService:
                         )
                         if quality_rejection is not None:
                             reason, detail = quality_rejection
-                            near_miss_candidates.append(self._candidate_summary(candidate, reason))
+                            near_miss_candidates.append(self._candidate_summary(candidate, "rejected", reason, detail))
                             message = rejection_service.record_custom_rejection(
                                 candidate,
                                 reason,
                                 detail,
                                 config.debug_failures_dir,
                             )
+                            self._record_rejected_candidate_summary(result, candidate, reason, detail)
                             self._record_rejection_by_difficulty(result, candidate.difficulty, reason)
                             self._record_filter_rejection(result)
                             self._append_rejection_message(result, message)
@@ -300,6 +322,12 @@ class LevelGenerationService:
                     )
                     self._record_validation_rejection(result)
                     rejection_service.record_rejection(candidate, validation_result, config.debug_failures_dir)
+                    self._record_rejected_candidate_summary(
+                        result,
+                        candidate,
+                        first_error.code if first_error is not None else "unknown",
+                        first_error.message if first_error is not None else "No validation detail available.",
+                    )
 
                 if self._candidate_pool_ready(candidate_pool, config, preset):
                     break
@@ -962,6 +990,8 @@ class LevelGenerationService:
         reason_key = reason or "unknown"
         by_reason = result.rejection_reason_counts_by_difficulty.setdefault(difficulty_key, {})
         by_reason[reason_key] = by_reason.get(reason_key, 0) + 1
+        stage = CandidateRejectionService.validation_stage_for_code(reason_key)
+        result.rejection_stage_counts[stage] = result.rejection_stage_counts.get(stage, 0) + 1
         if reason_key == "candidate_too_similar_to_batch":
             result.similarity_rejection_counts_by_difficulty[difficulty_key] = (
                 result.similarity_rejection_counts_by_difficulty.get(difficulty_key, 0) + 1
@@ -1513,7 +1543,12 @@ class LevelGenerationService:
         scored_candidates = [candidate for candidate in candidate_pool if candidate.quality_score is not None]
         sorted_candidates = sorted(scored_candidates, key=self._candidate_selection_key, reverse=True)
         runner_ups = [
-            self._candidate_summary(candidate, "not_selected")
+            self._candidate_summary(
+                candidate,
+                "not_selected",
+                "not_selected",
+                "Candidate passed validation and quality gates but was not selected.",
+            )
             for candidate in sorted_candidates
             if candidate is not accepted_candidate
         ]
@@ -1530,13 +1565,19 @@ class LevelGenerationService:
                 if near_miss.get("quality", {}).get("totalScore") is not None
             ],
         ]
-        accepted_summary = self._candidate_summary(accepted_candidate, "accepted")
+        accepted_summary = self._candidate_summary(
+            accepted_candidate,
+            "accepted",
+            "accepted",
+            "Accepted during candidate selection.",
+        )
         accepted_score = accepted_candidate.quality_score.total_score if accepted_candidate.quality_score is not None else 0.0
         next_summary = top_rejected[0] if top_rejected else None
         return {
             "levelID": level_id,
             "candidateCount": len(scores),
             "acceptedCandidate": accepted_summary,
+            "notSelectedCandidates": runner_ups,
             "scoreStats": {
                 "minimum": round(min(scores), 4) if scores else None,
                 "average": round(sum(scores) / len(scores), 4) if scores else None,
@@ -1573,10 +1614,23 @@ class LevelGenerationService:
             )
         return f"Accepted candidate had the highest deterministic quality score ({accepted_score:.4f} vs {next_score:.4f})."
 
-    def _candidate_summary(self, candidate, status: str) -> dict:
+    def _candidate_summary(
+        self,
+        candidate,
+        status: str,
+        reason: str | None = None,
+        detail: str | None = None,
+    ) -> dict:
         quality = candidate.quality_score
         runtime_parity = self._runtime_parity_summary(candidate)
+        status_metadata = self._candidate_status_metadata(candidate, status, reason, detail)
+        topology_report = self._topology_report(candidate)
+        solver_report = self._solver_report(candidate)
+        layout_readability_report = self._layout_readability_summary(candidate)
+        road_shape_report = self._road_shape_summary(candidate)
+        quality_breakdown = self._quality_breakdown(quality)
         return {
+            **status_metadata,
             "levelID": candidate.level_id,
             "seed": candidate.seed,
             "difficulty": candidate.difficulty,
@@ -1616,9 +1670,27 @@ class LevelGenerationService:
             "routeInterestAudit": self._route_interest_audit(candidate),
             "layoutVariant": candidate.selected_layout_variant,
             "roadShapeStrategy": candidate.selected_road_shape_strategy,
-            "status": status,
-            "validationResult": "passed",
-            "acceptedOrRejectedReason": status,
+            "topologyReport": topology_report,
+            **topology_report,
+            "solverReport": solver_report,
+            **solver_report,
+            "layoutReadabilityReport": layout_readability_report,
+            **layout_readability_report,
+            "roadShapeReport": road_shape_report,
+            **road_shape_report,
+            "runtimeParityReport": runtime_parity,
+            "qualityScoreBreakdown": quality_breakdown,
+            "totalQualityScore": quality_breakdown.get("totalQualityScore"),
+            "logicScore": quality_breakdown.get("logicScore"),
+            "routeInterestScore": quality_breakdown.get("routeInterestScore"),
+            "layoutScore": quality_breakdown.get("layoutScore"),
+            "difficultyFitScore": quality_breakdown.get("difficultyFitScore"),
+            "topPositiveFactors": quality_breakdown.get("topPositiveFactors", []),
+            "topNegativeFactors": quality_breakdown.get("topNegativeFactors", []),
+            "difficultyFit": self._difficulty_fit_summary(quality),
+            "routeInterestFit": self._route_interest_audit(candidate),
+            "pacingPenalties": self._pacing_penalties(candidate),
+            "validationResult": "passed" if status in {"accepted", "not_selected"} else "failed",
             "quality": self._quality_summary(quality),
             "signature": (
                 {
@@ -1630,6 +1702,249 @@ class LevelGenerationService:
                 else None
             ),
         }
+
+    def _candidate_status_metadata(
+        self,
+        candidate,
+        status: str,
+        reason: str | None,
+        detail: str | None,
+    ) -> dict:
+        rejection_code = None if status == "accepted" else (reason or status)
+        stage = (
+            "candidate_selection"
+            if status in {"accepted", "not_selected"}
+            else CandidateRejectionService.validation_stage_for_code(rejection_code)
+        )
+        accepted_or_rejected_reason = reason or ("accepted" if status == "accepted" else status)
+        return {
+            "candidateID": self._candidate_id(candidate),
+            "status": status,
+            "acceptedOrRejectedReason": accepted_or_rejected_reason,
+            "validationStage": stage,
+            "rejectionCode": rejection_code,
+            "rejectionDetails": detail,
+        }
+
+    def _candidate_id(self, candidate) -> str:
+        return f"{candidate.level_id}:{candidate.seed}"
+
+    def _record_rejected_candidate_summary(
+        self,
+        result: GenerationResult,
+        candidate,
+        reason: str,
+        detail: str,
+    ) -> None:
+        result.rejected_candidate_summaries.append(
+            self._candidate_summary(candidate, "rejected", reason, detail)
+        )
+
+    def _record_generation_error_summary(
+        self,
+        result: GenerationResult,
+        *,
+        level_id: str,
+        seed: int,
+        difficulty: str,
+        reason: str,
+        detail: str,
+    ) -> None:
+        stage = CandidateRejectionService.validation_stage_for_code(reason)
+        result.rejected_candidate_summaries.append(
+            {
+                "candidateID": f"{level_id}:{seed}",
+                "levelID": level_id,
+                "seed": seed,
+                "difficulty": difficulty,
+                "recipeFamily": None,
+                "recipeVariant": None,
+                "topologyClass": None,
+                "mechanicTags": [],
+                "status": "rejected",
+                "acceptedOrRejectedReason": reason,
+                "validationStage": stage,
+                "rejectionCode": reason,
+                "rejectionDetails": detail,
+            }
+        )
+
+    def _topology_report(self, candidate) -> dict:
+        metadata = getattr(candidate, "mechanic_metadata", {}) or {}
+        rules = metadata.get("topologyRules") if isinstance(metadata, dict) else None
+        topology_rules = dict(rules) if isinstance(rules, dict) else {}
+        abstract = getattr(candidate, "abstract_solution_metadata", None)
+        unique = getattr(candidate, "unique_solution_validation_result", None)
+        actual_cycle_count = self._actual_cycle_count(candidate)
+        declared_loop_count = self._declared_int(metadata, ("declaredLoopCount", "declaredCycleCount", "loopCount"))
+        if declared_loop_count is None:
+            declared_loop_count = getattr(abstract, "loop_count", None)
+        declared_rejoin_count = getattr(unique, "declared_rejoin_count", None)
+        if declared_rejoin_count is None:
+            declared_rejoin_count = self._declared_count(metadata, ("declaredRejoinCount", "allowedRejoinCount", "rejoinCount"), ("declaredRejoinNodeIDs", "rejoinNodeIDs"))
+        declared_revisit_count = getattr(unique, "declared_revisit_count", None)
+        if declared_revisit_count is None:
+            declared_revisit_count = self._declared_count(metadata, ("declaredRevisitCount", "allowedRevisitCount", "revisitCount"), ("declaredRevisitNodeIDs", "revisitNodeIDs", "repeatedNodeIDs"))
+        return {
+            "topologyRules": topology_rules,
+            "allowsCycles": bool(topology_rules.get("allowsCycles", False)),
+            "allowsRejoin": bool(topology_rules.get("allowsRejoin", False)),
+            "allowsRevisit": bool(topology_rules.get("allowsRevisit", False)),
+            "allowsReturnPath": bool(topology_rules.get("allowsReturnPath", False)),
+            "allowsRing": bool(topology_rules.get("allowsRing", False)),
+            "allowedCycleCount": int(topology_rules.get("allowedCycleCount", 0) or 0),
+            "actualCycleCount": actual_cycle_count,
+            "declaredLoopCount": int(declared_loop_count or 0),
+            "declaredRejoinCount": int(declared_rejoin_count or 0),
+            "declaredRevisitCount": int(declared_revisit_count or 0),
+        }
+
+    def _solver_report(self, candidate) -> dict:
+        result = getattr(candidate, "unique_solution_validation_result", None)
+        if result is None:
+            return {
+                "solutionCount": None,
+                "exploredStates": 0,
+                "maxDepthReached": 0,
+                "traversalLimitHit": False,
+                "packageReachabilityStatus": "not_evaluated",
+                "shortestValidRouteLength": None,
+                "intendedRouteLength": self._required_path_length(candidate),
+                "shortcutDetected": False,
+                "packageBypassDetected": False,
+                "wrongBranchReachedGoal": False,
+            }
+        terminal_reason_counts = dict(result.terminal_reason_counts)
+        traversal_limit_hit = (
+            result.termination_reason in {"max_explored_states_reached", "max_traversal_depth_reached"}
+            or terminal_reason_counts.get("max_traversal_depth_reached", 0) > 0
+            or terminal_reason_counts.get("max_taps_reached", 0) > 0
+        )
+        return {
+            "solutionCount": result.solution_count,
+            "exploredStates": result.explored_states,
+            "maxDepthReached": result.max_depth_reached,
+            "traversalLimitHit": traversal_limit_hit,
+            "packageReachabilityStatus": result.package_reachability_status,
+            "shortestValidRouteLength": result.shortest_valid_route_length,
+            "intendedRouteLength": result.intended_route_length,
+            "shortcutDetected": result.shortcut_detected,
+            "packageBypassDetected": result.package_bypass_detected,
+            "wrongBranchReachedGoal": result.wrong_branch_reached_goal,
+        }
+
+    def _layout_readability_summary(self, candidate) -> dict:
+        report = getattr(candidate, "layout_readability_validation_result", None)
+        metadata = dict(getattr(report, "metadata", {}) or {})
+        return {
+            "layoutReadabilityPassed": bool(metadata.get("passed", report is not None and not report.has_errors)),
+            "nodeOverlapDetected": bool(metadata.get("nodeOverlapDetected", False)),
+            "implicitIntersectionDetected": bool(metadata.get("implicitIntersectionDetected", False)),
+            "roadsTooCloseDetected": bool(metadata.get("roadsTooCloseDetected", False)),
+            "switchExitOverlapDetected": bool(metadata.get("switchExitOverlapDetected", False)),
+            "importantNodeBlocked": bool(metadata.get("importantNodeBlocked", False)),
+            "startGoalTooClose": bool(metadata.get("startGoalTooClose", False)),
+            "portraitSafetyFailure": bool(metadata.get("portraitSafetyFailure", False)),
+            "offendingNodes": list(metadata.get("offendingNodes", [])),
+            "offendingRoads": list(metadata.get("offendingRoads", [])),
+            "measuredDistances": list(metadata.get("measuredDistances", [])),
+            "measuredAngles": list(metadata.get("measuredAngles", [])),
+        }
+
+    def _road_shape_summary(self, candidate) -> dict:
+        metadata = getattr(candidate, "road_shape_metadata", None) or {}
+        return {
+            "switchDirectionQuality": metadata.get("switchClarityScore"),
+            "ambiguousSwitchDetected": bool(metadata.get("ambiguousSwitchDetected", False)),
+            "directionBucketAssignments": metadata.get("directionBucketAssignments", {}),
+            "switchExitAngleSeparation": metadata.get("switchExitAngleSeparation", {}),
+            "roadShapeWarnings": list(metadata.get("warnings", [])),
+            "roadShapeIssues": list(metadata.get("issues", [])),
+            "readabilityAdjustments": list(metadata.get("readabilityAdjustments", [])),
+        }
+
+    def _quality_breakdown(self, quality) -> dict:
+        if quality is None:
+            return {
+                "totalQualityScore": None,
+                "logicScore": None,
+                "routeInterestScore": None,
+                "layoutScore": None,
+                "difficultyFitScore": None,
+                "diversityScore": None,
+                "topPositiveFactors": [],
+                "topNegativeFactors": [],
+                "pacingPenalties": [],
+            }
+        categories = quality.category_scores or {}
+        return {
+            "totalQualityScore": quality.total_score,
+            "logicScore": categories.get("logicScore"),
+            "routeInterestScore": categories.get("routeInterestScore"),
+            "layoutScore": categories.get("layoutScore"),
+            "difficultyFitScore": categories.get("difficultyFitScore"),
+            "diversityScore": categories.get("diversityScore"),
+            "topPositiveFactors": list(quality.top_positive_factors),
+            "topNegativeFactors": list(quality.top_negative_factors),
+            "pacingPenalties": [penalty for penalty in quality.penalties if penalty.startswith("campaign_")],
+        }
+
+    def _difficulty_fit_summary(self, quality) -> dict:
+        if quality is None:
+            return {}
+        return {
+            "difficultyFitScore": quality.difficulty_fit,
+            "estimatedDifficultyBand": quality.estimated_difficulty_band,
+            "mechanicalDifficulty": quality.mechanical_difficulty,
+            "visualDifficulty": quality.visual_difficulty,
+            "presetContentFit": quality.details.get("presetContentFit", {}),
+        }
+
+    def _pacing_penalties(self, candidate) -> list[str]:
+        quality = getattr(candidate, "quality_score", None)
+        if quality is None:
+            return []
+        return [penalty for penalty in quality.penalties if penalty.startswith("campaign_")]
+
+    def _actual_cycle_count(self, candidate) -> int:
+        level = candidate.level_document
+        adjacency: dict[str, list[str]] = {}
+        for edge in level.graph.edges:
+            adjacency.setdefault(edge.fromNodeID, []).append(edge.toNodeID)
+        cycles: set[tuple[str, ...]] = set()
+        for start in sorted(adjacency):
+            stack = [(start, [start])]
+            while stack:
+                node_id, path = stack.pop()
+                for next_id in adjacency.get(node_id, []):
+                    if next_id == start and len(path) > 1:
+                        cycles.add(self._canonical_cycle(tuple(path)))
+                        continue
+                    if next_id in path or len(path) > len(adjacency):
+                        continue
+                    stack.append((next_id, [*path, next_id]))
+        return len(cycles)
+
+    def _canonical_cycle(self, cycle: tuple[str, ...]) -> tuple[str, ...]:
+        rotations = [cycle[index:] + cycle[:index] for index in range(len(cycle))]
+        return min(rotations)
+
+    def _declared_count(self, metadata: dict, count_keys: tuple[str, ...], node_keys: tuple[str, ...]) -> int | None:
+        explicit = self._declared_int(metadata, count_keys)
+        if explicit is not None:
+            return explicit
+        for key in node_keys:
+            value = metadata.get(key)
+            if isinstance(value, (list, tuple)):
+                return len(value)
+        return None
+
+    def _declared_int(self, metadata: dict, keys: tuple[str, ...]) -> int | None:
+        for key in keys:
+            value = metadata.get(key)
+            if isinstance(value, int) and value >= 0:
+                return value
+        return None
 
     def _runtime_parity_summary(self, candidate) -> dict:
         result = getattr(candidate, "runtime_parity_validation_result", None)

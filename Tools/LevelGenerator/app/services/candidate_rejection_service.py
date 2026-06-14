@@ -8,6 +8,20 @@ from .generated_level_validation_service import GeneratorValidationMessage, Gene
 
 
 class CandidateRejectionService:
+    VALIDATION_STAGE_ORDER = (
+        "topology_validation",
+        "unique_solution_validation",
+        "shortcut_validation",
+        "package_validation",
+        "rejoin_validation",
+        "revisit_validation",
+        "layout_readability_validation",
+        "road_shape_validation",
+        "runtime_parity_validation",
+        "quality_scoring",
+        "candidate_selection",
+    )
+
     LAYOUT_READABILITY_REJECTION_CODES = {
         "implicit_intersection_without_node",
         "switch_exit_overlap",
@@ -16,6 +30,37 @@ class CandidateRejectionService:
         "road_proximity_failure",
         "important_node_visibility_failure",
         "portrait_safety_failure",
+    }
+    ROAD_SHAPE_REJECTION_PREFIXES = (
+        "ambiguous_switch_exit",
+        "conflicting_direction_bucket",
+        "insufficient_exit_separation",
+        "same_switch_first_segments_overlap",
+        "required_and_wrong_route_first_segments_overlap",
+        "road_crossing_near_important_node",
+        "implicit_intersection_without_graph_node",
+        "road_crosses_through_unconnected_node",
+        "unconnected_road_endpoint_touches_segment",
+        "unconnected_parallel_road_overlap",
+        "return_loop_false_shortcut",
+        "invalid_road_shape",
+        "zero_length_edge",
+        "unreadable_road_geometry",
+        "road_visually_circles_back_on_itself",
+        "revisited_switch_corridor_too_tight",
+        "return_path_too_close_to_destination_branch",
+        "non_adjacent_roads_too_close",
+    )
+    PACKAGE_REJECTION_CODES = {
+        "package_required_but_unreachable",
+        "destination_reachable_before_package",
+        "package_bypass_detected",
+        "package_state_ambiguous",
+    }
+    UNIQUE_SOLUTION_REJECTION_CODES = {
+        "multiple_solutions_found",
+        "unique_solution_not_proven",
+        "no_valid_solution_found",
     }
 
     def __init__(self) -> None:
@@ -42,6 +87,49 @@ class CandidateRejectionService:
         if debug_failures_dir is not None:
             self._save_debug_candidate(generated_level, validation_result, debug_failures_dir)
         return message
+
+    @classmethod
+    def validation_stage_for_code(cls, code: str | None) -> str:
+        code = str(code or "unknown")
+        if code.startswith("quality_") or code in {
+            "large_portrait_without_puzzle_need",
+            "boring_topology_for_difficulty",
+        } or code.startswith("route_interest_below_"):
+            return "quality_scoring"
+        if code in {
+            "missing_required_swift_validation",
+            "swift_runtime_parity_failed",
+            "solution_sidecar_runtime_mismatch",
+            "switch_tap_runtime_mismatch",
+            "package_order_runtime_mismatch",
+        }:
+            return "runtime_parity_validation"
+        if code in {
+            "candidate_too_similar_to_batch",
+            "candidate_too_similar_to_existing",
+            "not_selected",
+            "candidate_selection_filtered",
+        }:
+            return "candidate_selection"
+        if code in cls.LAYOUT_READABILITY_REJECTION_CODES or code.startswith("layout_") or code.startswith("portrait_layout"):
+            return "layout_readability_validation"
+        if code.startswith(cls.ROAD_SHAPE_REJECTION_PREFIXES):
+            return "road_shape_validation"
+        if "shortcut" in code:
+            return "shortcut_validation"
+        if code in cls.PACKAGE_REJECTION_CODES or "package" in code or "bypass" in code:
+            return "package_validation"
+        if "wrong_branch" in code:
+            return "package_validation"
+        if "rejoin" in code:
+            return "rejoin_validation"
+        if "revisit" in code or "repeated_node" in code:
+            return "revisit_validation"
+        if code in cls.UNIQUE_SOLUTION_REJECTION_CODES or "solution" in code:
+            return "unique_solution_validation"
+        if "topology" in code or code.startswith("declared_loop_") or code.startswith("candidate_generation"):
+            return "topology_validation"
+        return "topology_validation"
 
     def preferred_rejection_message(self, validation_result: GeneratorValidationResult) -> GeneratorValidationMessage | None:
         errors = [message for message in validation_result.messages if message.severity == "error"]
