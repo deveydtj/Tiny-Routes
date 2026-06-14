@@ -7,6 +7,7 @@ from ..id_allocator import IDAllocator
 from ..level_editor_imports import LevelDocument, RouteEdgeModel, RouteGraphModel, RouteNodeModel
 from .road_shape_service import RoadShapeService
 from .route_timing_service import RouteTimingService
+from .switch_direction_assignment_service import SwitchDirectionAssignmentService
 
 
 @dataclass
@@ -14,6 +15,7 @@ class GraphBuilderService:
     id_allocator: IDAllocator = field(default_factory=IDAllocator)
     road_shape_service: RoadShapeService = field(default_factory=RoadShapeService)
     route_timing_service: RouteTimingService = field(default_factory=RouteTimingService)
+    switch_direction_assignment_service: SwitchDirectionAssignmentService = field(default_factory=SwitchDirectionAssignmentService)
 
     def __post_init__(self) -> None:
         self._nodes: list[RouteNodeModel] = []
@@ -138,9 +140,17 @@ class GraphBuilderService:
                     for edge, shape in zip(flexible_edges, shape_options)
                 }
             )
+            report = self.switch_direction_assignment_service.report_for_switch(
+                node,
+                valid_edges,
+                self._node_by_id,
+                road_shape_by_edge_id=assignment,
+            )
+            if report.issues:
+                continue
             buckets = [
-                self._visual_bucket_for_edge(node, edge, assignment[edge.id])
-                for edge in valid_edges
+                assignment.bucket
+                for assignment in report.assignments
             ]
             if any(bucket is None for bucket in buckets) or len(set(buckets)) != len(buckets):
                 continue

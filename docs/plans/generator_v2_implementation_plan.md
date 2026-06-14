@@ -596,6 +596,12 @@ Create or strengthen:
     SwitchDirectionAssignmentService
     SwitchVisualClarityService
 
+Implemented locations:
+
+    Tools/LevelGenerator/app/services/road_shape_service.py
+    Tools/LevelGenerator/app/services/switch_direction_assignment_service.py
+    Tools/LevelGenerator/app/services/switch_visual_clarity_service.py
+
 ### Rules
 
 - Solution path must remain valid.
@@ -605,6 +611,50 @@ Create or strengthen:
 - Direction buckets must be distinct for switch exits.
 - Runtime simulation must match generated solution sidecar.
 
+### Direction Buckets
+
+Switch choices are bucketed by the rendered road-path start tangent, not by the target-node vector. This matches gameplay arrows: an L-shaped road that starts horizontally is an east/west choice even if the target node is diagonally placed.
+
+The assignment layer rejects or penalizes:
+
+- `ambiguous_switch_exit`: the exit has no readable first segment or cannot resolve to a valid rendered direction.
+- `conflicting_direction_bucket`: two exits from the same switch occupy the same visual bucket.
+- `insufficient_exit_separation`: exit buckets are too close to communicate distinct choices at gameplay scale.
+- `unreadable_road_geometry`: the final road-shape plan scores below the readable-geometry threshold.
+
+Tiny coordinate differences are not treated as meaningful choices. If two exits only differ by a small first segment or collapse into the same cardinal direction, the candidate is considered visually ambiguous even if the abstract graph is logically valid.
+
+### Road-Shape Readability Goals
+
+Road-shape planning optimizes `horizontalFirst` and `verticalFirst` choices after layout. It favors assignments that:
+
+- keep switch exits in distinct buckets
+- avoid overlapping first segments from the same switch
+- keep wrong branches visually distinct from the required route
+- reduce accidental crossings, parallel merges, and unconnected endpoint touches
+- keep return-loop/revisit geometry from reading as a shortcut
+- preserve ring and rejoin mechanics without hiding the intended route flow
+
+Revisit-specific overrides are re-evaluated after assignment so metadata describes the actual road shapes written to the level.
+
+### Relationship to Layout Readability
+
+Layout readability validates node placement, implicit intersections, spacing, portrait safety, and important-node visibility before candidate scoring. Road-shape assignment runs on top of that layout and decides how each edge bends and which visual bucket each switch exit occupies.
+
+Layout readability can reject a candidate whose coordinates are unclear. Road-shape validation can still reject a coordinate-valid candidate if the selected bends make switch arrows, loops, rejoins, or revisits visually confusing.
+
+### Reporting Metadata
+
+Road-shape and visual-clarity reports expose:
+
+- `switchDirectionQuality`
+- `switchExitAngleSeparation`
+- `ambiguousSwitchDetected`
+- `roadShapeWarnings`
+- `readabilityAdjustments`
+- `directionBucketAssignments`
+- `switchDirectionBuckets`
+
 ### Acceptance Criteria
 
 - Assigned road shapes preserve unique solution.
@@ -612,6 +662,13 @@ Create or strengthen:
 - No ambiguous switch arrows.
 - Python simulation passes.
 - Swift runtime validation passes for risky mechanics.
+
+### Current Limitations
+
+- Buckets are cardinal because generated roads currently use orthogonal first segments.
+- The generator approximates arrow readability from board-unit geometry; it does not perform Swift-rendered pixel inspection in this phase.
+- Rounded road corners are approximated by straight planning segments for validation.
+- This phase does not implement runtime parity validation; Phase 10 covers Swift/runtime parity.
 
 ## Phase 10 – Runtime Parity Validation
 
@@ -656,7 +713,7 @@ Examples:
 - Python-only validation is allowed only for low-risk dry-run experiments.
 - Swift validation failures include candidate seed and recipe metadata.
 
-## Phase 11 – Quality Scoring
+## Phase 11 – Quality Scoring V2
 
 Create or improve:
 
@@ -665,6 +722,21 @@ Create or improve:
 Output:
 
     0...100
+
+Quality scoring is a selection layer, not a validation layer. Hard validation runs first and rejects invalid graph, solution, package, topology, layout-readability, and runtime-risk candidates. The scorer only ranks and rejects candidates that already passed validation, so scoring can never override a validation failure.
+
+The V2 scorer preserves existing route-interest, difficulty-fit, readability, visual-clarity, campaign-pacing, and signature-diversity signals, then exposes them through a smaller explainable category model:
+
+    totalScore
+    categoryScores.logicScore
+    categoryScores.routeInterestScore
+    categoryScores.layoutScore
+    categoryScores.difficultyFitScore
+    categoryScores.diversityScore
+    topPositiveFactors
+    topNegativeFactors
+
+Candidate comparison is deterministic. It sorts by `totalScore`, then route interest, layout, difficulty fit, diversity, logic, and seed. This makes interesting, readable, difficulty-appropriate candidates beat merely valid candidates.
 
 ### Score Categories
 
@@ -676,6 +748,8 @@ Rewards:
 - No shortcut
 - Correct package order
 - Clean branch behavior
+- Safe declared rejoin/revisit behavior
+- Runtime confidence
 
 #### Route-Interest Score
 
@@ -695,6 +769,7 @@ Penalizes:
 - Extra switches without decisions
 - Repeated topology
 - Branches that do not matter
+- Difficulty inflated by node, switch, or branch count alone
 
 #### Layout Score
 
@@ -723,6 +798,14 @@ Rewards:
 - Correct tap count
 - Correct mechanic complexity
 - Appropriate route length
+- Estimated difficulty band matching the target preset
+- Tap pacing appropriate to the target preset
+
+Penalizes:
+
+- Difficulty mismatch
+- Inflated complexity
+- Excess visual complexity for the preset
 
 #### Diversity/Pacing Score
 
@@ -747,12 +830,21 @@ Penalizes:
     hard: 80+
     expert: 85+
 
+These thresholds are quality gates for already-valid candidates:
+
+    tutorial: totalScore >= 65
+    easy: totalScore >= 70
+    medium: totalScore >= 75
+    hard: totalScore >= 80
+    expert: totalScore >= 85
+
 ### Acceptance Criteria
 
 - Hard validation runs before scoring.
 - Scoring never allows invalid puzzles.
 - Candidate reports explain why the winning candidate was selected.
 - Weak but technically valid puzzles are rejected.
+- Reports include total score, category scores, top positive factors, and top negative factors.
 
 ## Phase 12 – Reporting and Debuggability
 

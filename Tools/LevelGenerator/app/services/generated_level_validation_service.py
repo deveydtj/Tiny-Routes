@@ -331,6 +331,9 @@ class GeneratedLevelValidationService:
         for issue in metadata.get("issues", []):
             code, *detail = str(issue).split(":")
             severity = "error" if code in {
+                "ambiguous_switch_exit",
+                "conflicting_direction_bucket",
+                "insufficient_exit_separation",
                 "same_switch_first_segments_overlap",
                 "required_and_wrong_route_first_segments_overlap",
                 "road_crossing_near_important_node",
@@ -346,6 +349,14 @@ class GeneratedLevelValidationService:
                     code=code,
                     message=f"Road-shape issue: {issue}",
                     related_node_id=detail[0] if detail else None,
+                )
+            )
+        if metadata and float(metadata.get("score", 1.0)) < 0.35:
+            messages.append(
+                GeneratorValidationMessage(
+                    severity="error",
+                    code="unreadable_road_geometry",
+                    message=f"Road-shape score {metadata.get('score')} is below the readable-geometry threshold.",
                 )
             )
         return messages

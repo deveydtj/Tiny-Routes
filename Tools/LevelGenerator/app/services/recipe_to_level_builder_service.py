@@ -67,6 +67,15 @@ class RecipeToLevelBuilderService:
             edge_shapes,
             recipe.required_path,
         )
+        if revisited_route_shape_overrides:
+            road_shape_plan = self.road_shape_service.plan_for_assignment(
+                positions,
+                recipe_edges,
+                edge_shapes,
+                required_path=recipe.required_path,
+                strategy=f"{road_shape_plan.strategy}_with_revisit_overrides",
+                important_node_ids=("start", recipe.package_node_id, recipe.destination_node_id),
+            )
         builder = GraphBuilderService()
         for node in recipe.nodes:
             builder.add_node(node.id, *positions[node.id])

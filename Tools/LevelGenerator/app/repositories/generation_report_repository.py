@@ -392,6 +392,19 @@ class GenerationReportRepository:
                         )
                 if level["quality"]:
                     quality = level["quality"]
+                    categories = quality.get("categoryScores") or {}
+                    lines.append(
+                        f"- Quality score: `{quality.get('totalScore')}`/100; "
+                        f"logic `{categories.get('logicScore')}`, "
+                        f"route interest `{categories.get('routeInterestScore')}`, "
+                        f"layout `{categories.get('layoutScore')}`, "
+                        f"difficulty fit `{categories.get('difficultyFitScore')}`, "
+                        f"diversity `{categories.get('diversityScore')}`."
+                    )
+                    lines.append(
+                        f"- Quality factors: positives `{', '.join(quality.get('topPositiveFactors') or []) or 'none'}`; "
+                        f"negatives `{', '.join(quality.get('topNegativeFactors') or []) or 'none'}`."
+                    )
                     lines.append(
                         f"- Difficulty model: estimated `{quality['estimatedDifficultyBand']}`, "
                         f"mechanical `{quality['mechanicalDifficulty']}`, "
@@ -462,7 +475,7 @@ class GenerationReportRepository:
                         near_quality = near_miss.get("quality", {})
                         lines.append(
                             f"- Near miss `{near_miss.get('status')}` seed `{near_miss.get('seed')}` "
-                            f"score `{near_quality.get('total')}` "
+                            f"score `{near_quality.get('totalScore', near_quality.get('total'))}` "
                             f"family `{near_miss.get('recipeFamily') or 'none'}` "
                             f"variant `{near_miss.get('recipeVariant') or 'none'}` "
                             f"tags `{', '.join(near_miss.get('mechanicTags') or []) or 'none'}` "
@@ -647,6 +660,8 @@ class GenerationReportRepository:
         if quality is None:
             return None
         return {
+            "totalScore": quality.total_score,
+            "categoryScores": quality.category_scores,
             "total": quality.total,
             "abstractMechanicQuality": quality.abstract_mechanic_quality,
             "runtimeSolvability": quality.runtime_solvability,
@@ -665,6 +680,8 @@ class GenerationReportRepository:
             "mechanicalDifficulty": quality.mechanical_difficulty,
             "visualDifficulty": quality.visual_difficulty,
             "estimatedDifficultyBand": quality.estimated_difficulty_band,
+            "topPositiveFactors": list(quality.top_positive_factors),
+            "topNegativeFactors": list(quality.top_negative_factors),
             "penalties": list(quality.penalties),
             "baseQualityScore": quality.details.get("baseQualityScore", quality.total),
             "presetContentFit": quality.details.get("presetContentFit", {}),

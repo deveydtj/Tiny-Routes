@@ -122,6 +122,7 @@ class VisualClarityValidationService:
             "importantNodeIDs": list(important_node_ids),
             "switchNodeIDs": list(switch_node_ids),
             "segmentCount": len(segments),
+            **self._switch_direction_metadata(level),
         }
         return VisualClarityReport(issues=deduped_issues, score=score, metadata=metadata)
 
@@ -140,6 +141,18 @@ class VisualClarityValidationService:
                     issues.append(
                         VisualClarityIssue(
                             severity="error",
+                            code="ambiguous_switch_exit",
+                            message=(
+                                f"Switch '{report.switch_id}' edge '{direction.edge_id}' has no clearly readable exit: "
+                                f"{direction.ambiguous_reason or 'unknown'}."
+                            ),
+                            related_node_id=report.switch_id,
+                            related_edge_id=direction.edge_id,
+                        )
+                    )
+                    issues.append(
+                        VisualClarityIssue(
+                            severity="error",
                             code="switch_choice_visual_direction_ambiguous",
                             message=(
                                 f"Switch '{report.switch_id}' edge '{direction.edge_id}' has ambiguous "
@@ -153,6 +166,19 @@ class VisualClarityValidationService:
                 issues.append(
                     VisualClarityIssue(
                         severity="error",
+                        code="conflicting_direction_bucket",
+                        message=(
+                            f"Switch '{report.switch_id}' has multiple outgoing choices in the "
+                            f"{bucket} visual bucket: {', '.join(edge_ids)}."
+                        ),
+                        related_node_id=report.switch_id,
+                        related_edge_id=edge_ids[0] if edge_ids else None,
+                        related_edge_ids=tuple(edge_ids),
+                    )
+                )
+                issues.append(
+                    VisualClarityIssue(
+                        severity="error",
                         code="switch_choices_same_visual_direction",
                         message=(
                             f"Switch '{report.switch_id}' has multiple outgoing choices in the "
@@ -161,6 +187,19 @@ class VisualClarityValidationService:
                         related_node_id=report.switch_id,
                         related_edge_id=edge_ids[0] if edge_ids else None,
                         related_edge_ids=tuple(edge_ids),
+                    )
+                )
+            for issue in report.issues:
+                if not issue.startswith("insufficient_exit_separation"):
+                    continue
+                _, _, edge_id = issue.split(":", 2)
+                issues.append(
+                    VisualClarityIssue(
+                        severity="error",
+                        code="insufficient_exit_separation",
+                        message=f"Switch '{report.switch_id}' edge '{edge_id}' is too close to another exit direction.",
+                        related_node_id=report.switch_id,
+                        related_edge_id=edge_id,
                     )
                 )
             if report.directions:
@@ -213,6 +252,39 @@ class VisualClarityValidationService:
                         )
                     )
         return issues
+
+    def _switch_direction_metadata(self, level) -> dict:
+        switch_reports = self.switch_visual_clarity.report_for_level(level)
+        quality_by_switch = {
+            report.switch_id: report.quality
+            for report in switch_reports
+        }
+        return {
+            "switchDirectionQuality": {
+                "overall": round(min(quality_by_switch.values()), 4) if quality_by_switch else 1.0,
+                "bySwitch": quality_by_switch,
+            },
+            "switchExitAngleSeparation": {
+                report.switch_id: report.minimum_exit_angle_separation_degrees
+                for report in switch_reports
+            },
+            "ambiguousSwitchDetected": any(report.issues for report in switch_reports),
+            "directionBucketAssignments": {
+                report.switch_id: [
+                    {
+                        "edgeID": direction.edge_id,
+                        "targetNodeID": direction.target_node_id,
+                        "bucket": direction.bucket,
+                        "angleDegrees": direction.angle_degrees,
+                        "firstSegmentLength": direction.first_segment_length,
+                        "nearestBucketSeparationDegrees": direction.nearest_bucket_separation_degrees,
+                        "ambiguousReason": direction.ambiguous_reason,
+                    }
+                    for direction in report.directions
+                ]
+                for report in switch_reports
+            },
+        }
 
     def _visual_topology_issues(
         self,

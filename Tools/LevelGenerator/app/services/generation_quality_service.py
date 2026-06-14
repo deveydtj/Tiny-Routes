@@ -14,7 +14,7 @@ from .graph_layout_service import GraphLayoutService
 from .visual_clarity_validation_service import VisualClarityValidationService
 
 
-class GenerationQualityService:
+class PuzzleQualityScorer:
     def __init__(self) -> None:
         self.layout = GraphLayoutService()
         self.uniqueness = CandidateUniquenessService()
@@ -160,7 +160,7 @@ class GenerationQualityService:
             + (mobile_tap_comfort * 0.07)
             + (visual_appeal * 0.06)
         )
-        total = (
+        legacy_total = (
             (abstract_mechanic_quality * 0.12)
             + (runtime_solvability * 0.12)
             + (readability * 0.10)
@@ -173,8 +173,31 @@ class GenerationQualityService:
             + (visual_appeal * 0.06)
             + (diversity["diversityScore"] * 0.06)
         )
+        v2_breakdown = self._v2_quality_breakdown(
+            generated_level=generated_level,
+            preset=preset,
+            abstract_mechanic_quality=abstract_mechanic_quality,
+            runtime_solvability=runtime_solvability,
+            readability=readability,
+            switch_clarity=switch_clarity,
+            difficulty_fit=difficulty_fit,
+            uniqueness=uniqueness,
+            route_interest=route_interest,
+            mobile_tap_comfort=mobile_tap_comfort,
+            visual_appeal=visual_appeal,
+            campaign_pacing_score=campaign_pacing_score,
+            diversity_score=diversity["diversityScore"],
+            difficulty_metrics=difficulty_metrics,
+            route_interest_audit=route_interest_audit,
+            preset_fit=preset_fit,
+            road_shape_score=road_shape_score,
+            visual_clarity_score=visual_clarity_report.score,
+        )
+        total_score = v2_breakdown["totalScore"]
         return GenerationQualityScore(
-            total=round(self._clamp(total), 4),
+            total_score=total_score,
+            category_scores=v2_breakdown["categoryScores"],
+            total=round(self._clamp(total_score / 100.0), 4),
             readability=round(readability, 4),
             uniqueness=round(uniqueness, 4),
             difficulty_fit=round(difficulty_fit, 4),
@@ -192,6 +215,8 @@ class GenerationQualityService:
             mechanical_difficulty=difficulty_metrics.mechanical_score,
             visual_difficulty=difficulty_metrics.visual_score,
             estimated_difficulty_band=difficulty_metrics.estimated_band,
+            top_positive_factors=tuple(v2_breakdown["topPositiveFactors"]),
+            top_negative_factors=tuple(v2_breakdown["topNegativeFactors"]),
             penalties=tuple(dict.fromkeys(penalties)),
             details={
                 **readability_details,
@@ -212,6 +237,12 @@ class GenerationQualityService:
                 "visualAppeal": round(visual_appeal, 4),
                 "presetContentFit": preset_fit,
                 "baseQualityScore": round(self._clamp(base_total), 4),
+                "legacyIngredientScore": round(self._clamp(legacy_total), 4),
+                "totalScore": total_score,
+                "categoryScores": v2_breakdown["categoryScores"],
+                "topPositiveFactors": v2_breakdown["topPositiveFactors"],
+                "topNegativeFactors": v2_breakdown["topNegativeFactors"],
+                "scoreWeights": v2_breakdown["scoreWeights"],
                 "routeInterest": route_interest_audit,
                 "topologyDiversityScore": diversity["topologyDiversityScore"],
                 "nearbyMechanicTagPenalty": diversity["nearbyMechanicTagPenalty"],
@@ -231,6 +262,345 @@ class GenerationQualityService:
                 ],
             },
         )
+
+    def _v2_quality_breakdown(
+        self,
+        *,
+        generated_level,
+        preset: DifficultyPreset,
+        abstract_mechanic_quality: float,
+        runtime_solvability: float,
+        readability: float,
+        switch_clarity: float,
+        difficulty_fit: float,
+        uniqueness: float,
+        route_interest: float,
+        mobile_tap_comfort: float,
+        visual_appeal: float,
+        campaign_pacing_score: float,
+        diversity_score: float,
+        difficulty_metrics,
+        route_interest_audit: dict,
+        preset_fit: dict,
+        road_shape_score: float,
+        visual_clarity_score: float,
+    ) -> dict:
+        positive_factors: list[tuple[float, str]] = []
+        negative_factors: list[tuple[float, str]] = []
+
+        logic_score = self._logic_category_score(
+            generated_level,
+            abstract_mechanic_quality,
+            runtime_solvability,
+            switch_clarity,
+            positive_factors,
+            negative_factors,
+        )
+        route_interest_score = self._route_interest_category_score(
+            generated_level,
+            preset,
+            route_interest,
+            route_interest_audit,
+            positive_factors,
+            negative_factors,
+        )
+        layout_score = self._layout_category_score(
+            generated_level,
+            readability,
+            switch_clarity,
+            visual_appeal,
+            visual_clarity_score,
+            road_shape_score,
+            positive_factors,
+            negative_factors,
+        )
+        difficulty_fit_score = self._difficulty_fit_category_score(
+            generated_level,
+            preset,
+            difficulty_fit,
+            mobile_tap_comfort,
+            difficulty_metrics,
+            preset_fit,
+            positive_factors,
+            negative_factors,
+        )
+        diversity_category_score = self._diversity_category_score(
+            uniqueness,
+            campaign_pacing_score,
+            diversity_score,
+            positive_factors,
+            negative_factors,
+        )
+        category_scores = {
+            "logicScore": logic_score,
+            "routeInterestScore": route_interest_score,
+            "layoutScore": layout_score,
+            "difficultyFitScore": difficulty_fit_score,
+            "diversityScore": diversity_category_score,
+        }
+        weights = {
+            "logicScore": 0.26,
+            "routeInterestScore": 0.22,
+            "layoutScore": 0.18,
+            "difficultyFitScore": 0.20,
+            "diversityScore": 0.14,
+        }
+        total_score = round(
+            sum(category_scores[key] * weight for key, weight in weights.items()),
+            2,
+        )
+        return {
+            "totalScore": total_score,
+            "categoryScores": category_scores,
+            "topPositiveFactors": self._top_factor_labels(positive_factors),
+            "topNegativeFactors": self._top_factor_labels(negative_factors),
+            "scoreWeights": weights,
+        }
+
+    def _logic_category_score(
+        self,
+        generated_level,
+        abstract_mechanic_quality: float,
+        runtime_solvability: float,
+        switch_clarity: float,
+        positive_factors: list[tuple[float, str]],
+        negative_factors: list[tuple[float, str]],
+    ) -> float:
+        validation_factor = self._logic_validation_factor(generated_level, positive_factors, negative_factors)
+        score = (
+            (validation_factor * 0.42)
+            + (runtime_solvability * 0.26)
+            + (abstract_mechanic_quality * 0.18)
+            + (switch_clarity * 0.14)
+        ) * 100.0
+        if runtime_solvability >= 0.95:
+            positive_factors.append((5.0, "comfortable runtime solution margin"))
+        elif runtime_solvability < 0.85:
+            negative_factors.append((8.0, "thin runtime solution margin"))
+        return round(self._clamp_score(score), 2)
+
+    def _logic_validation_factor(
+        self,
+        generated_level,
+        positive_factors: list[tuple[float, str]],
+        negative_factors: list[tuple[float, str]],
+    ) -> float:
+        result = getattr(generated_level, "unique_solution_validation_result", None)
+        if result is None:
+            negative_factors.append((6.0, "missing unique-solution audit"))
+            return 0.86
+
+        factor = 0.90
+        if result.requires_unique_solution and result.solution_count == 1:
+            factor += 0.06
+            positive_factors.append((10.0, "unique solution confirmed"))
+        elif result.requires_unique_solution:
+            factor -= 0.32
+            negative_factors.append((18.0, "unique-solution count is not exactly one"))
+
+        if result.is_exhaustive:
+            factor += 0.02
+        else:
+            factor -= 0.08
+            negative_factors.append((7.0, "unique-solution search was not exhaustive"))
+
+        issue_penalty = 0.0
+        for issue in result.issues:
+            issue_penalty += 0.12 if issue.severity == "error" else 0.05
+        if issue_penalty:
+            factor -= min(issue_penalty, 0.36)
+            negative_factors.append((min(issue_penalty, 0.36) * 100.0, "unique-solution audit reported issues"))
+
+        if result.shortcut_detected:
+            factor -= 0.22
+            negative_factors.append((20.0, "shortcut route detected"))
+        else:
+            positive_factors.append((6.0, "no shortcut route detected"))
+
+        if result.package_bypass_detected or result.package_reachability_status not in {
+            "package_before_destination_on_intended_route",
+            "package_not_required",
+        }:
+            factor -= 0.20
+            negative_factors.append((18.0, "package route behavior is ambiguous"))
+        else:
+            positive_factors.append((6.0, "package order is clean"))
+
+        if result.wrong_branch_reached_goal:
+            factor -= 0.18
+            negative_factors.append((14.0, "wrong branch can still reach the goal"))
+        if result.unsafe_rejoin_detected:
+            factor -= 0.16
+            negative_factors.append((13.0, "unsafe rejoin behavior"))
+        if result.unsafe_revisit_detected:
+            factor -= 0.16
+            negative_factors.append((13.0, "unsafe revisit behavior"))
+        if result.rejoin_detected and not result.unsafe_rejoin_detected:
+            positive_factors.append((5.0, "declared rejoin behavior is safe"))
+        if result.revisit_detected and not result.unsafe_revisit_detected:
+            positive_factors.append((5.0, "declared revisit behavior is safe"))
+        return self._clamp(factor)
+
+    def _route_interest_category_score(
+        self,
+        generated_level,
+        preset: DifficultyPreset,
+        route_interest: float,
+        route_interest_audit: dict,
+        positive_factors: list[tuple[float, str]],
+        negative_factors: list[tuple[float, str]],
+    ) -> float:
+        score = route_interest * 100.0
+        tags = set(route_interest_audit.get("tags", ()) or ())
+        strong_tags = {
+            "fake_shortcut",
+            "split_rejoin",
+            "correct_detour",
+            "loop_or_revisit",
+            "two_phase",
+            "package_gate_tension",
+            "multi_exit_hub",
+        }
+        for key, value in sorted((route_interest_audit.get("bonuses") or {}).items()):
+            positive_factors.append((float(value) * 100.0, f"route interest: {key}"))
+        for key, value in sorted((route_interest_audit.get("penaltyValues") or {}).items()):
+            negative_factors.append((float(value) * 100.0, f"route weakness: {key}"))
+
+        if tags & strong_tags:
+            positive_factors.append((9.0, "meaningful route decision tags present"))
+        elif preset.name in {"medium", "hard", "expert"}:
+            score = min(score, 62.0)
+            negative_factors.append((14.0, "few meaningful route decisions for target difficulty"))
+
+        if generated_level.switch_count >= 3 and len(tags & strong_tags) == 0:
+            score = min(score, 58.0)
+            negative_factors.append((12.0, "switch count adds complexity without enough decisions"))
+
+        if route_interest_audit.get("fillerNodeCount", 0) == 0:
+            positive_factors.append((4.0, "route has no filler nodes"))
+        if route_interest_audit.get("meaningfulTurnCount", 0) >= 2:
+            positive_factors.append((4.0, "route has meaningful turns"))
+        return round(self._clamp_score(score), 2)
+
+    def _layout_category_score(
+        self,
+        generated_level,
+        readability: float,
+        switch_clarity: float,
+        visual_appeal: float,
+        visual_clarity_score: float,
+        road_shape_score: float,
+        positive_factors: list[tuple[float, str]],
+        negative_factors: list[tuple[float, str]],
+    ) -> float:
+        score = (
+            (readability * 0.34)
+            + (switch_clarity * 0.24)
+            + (visual_appeal * 0.22)
+            + (visual_clarity_score * 0.12)
+            + (road_shape_score * 0.08)
+        ) * 100.0
+        report = getattr(generated_level, "layout_readability_validation_result", None)
+        if report is not None:
+            warnings = sum(1 for issue in report.issues if issue.severity == "warning")
+            infos = sum(1 for issue in report.issues if issue.severity == "info")
+            if warnings or infos:
+                penalty = min(12.0, warnings * 4.0 + infos * 1.5)
+                score -= penalty
+                negative_factors.append((penalty, "layout readability warnings"))
+            else:
+                positive_factors.append((7.0, "layout readability audit is clean"))
+        if switch_clarity >= 0.90:
+            positive_factors.append((5.0, "switch exits are visually clear"))
+        if visual_appeal < 0.70:
+            negative_factors.append((7.0, "layout composition is visually weak"))
+        return round(self._clamp_score(score), 2)
+
+    def _difficulty_fit_category_score(
+        self,
+        generated_level,
+        preset: DifficultyPreset,
+        difficulty_fit: float,
+        mobile_tap_comfort: float,
+        difficulty_metrics,
+        preset_fit: dict,
+        positive_factors: list[tuple[float, str]],
+        negative_factors: list[tuple[float, str]],
+    ) -> float:
+        range_fit = self._range_fit_average(
+            (
+                (generated_level.node_count, preset.node_count_range),
+                (generated_level.switch_count, preset.switch_count_range),
+                (generated_level.required_tap_count, preset.required_tap_range),
+                (difficulty_metrics.solution_path_length, preset.route_length_range),
+            )
+        )
+        band_distance = abs(
+            self.difficulty.band_index(difficulty_metrics.estimated_band)
+            - self.difficulty.band_index(preset.name)
+        )
+        band_fit = self._clamp(1.0 - (band_distance * 0.24))
+        visual_complexity_fit = self._clamp(
+            1.0 - max(0.0, difficulty_metrics.visual_complexity_score - preset.max_visual_complexity) * 0.85
+        )
+        score = (
+            (difficulty_fit * 0.36)
+            + (range_fit * 0.28)
+            + (band_fit * 0.16)
+            + (mobile_tap_comfort * 0.12)
+            + (visual_complexity_fit * 0.08)
+        ) * 100.0
+        if range_fit >= 0.98 and band_fit >= 0.98:
+            positive_factors.append((8.0, "content fits target difficulty ranges"))
+        if preset_fit.get("penalties"):
+            negative_factors.append((9.0, "preset content fit penalties"))
+        if band_distance:
+            negative_factors.append((8.0, "estimated difficulty band differs from target"))
+        if mobile_tap_comfort < 0.85:
+            negative_factors.append((7.0, "tap pacing is awkward for target difficulty"))
+        return round(self._clamp_score(score), 2)
+
+    def _diversity_category_score(
+        self,
+        uniqueness: float,
+        campaign_pacing_score: float,
+        diversity_score: float,
+        positive_factors: list[tuple[float, str]],
+        negative_factors: list[tuple[float, str]],
+    ) -> float:
+        score = ((diversity_score * 0.50) + (campaign_pacing_score * 0.28) + (uniqueness * 0.22)) * 100.0
+        if diversity_score >= 0.90:
+            positive_factors.append((8.0, "topology and mechanics differ from nearby accepted levels"))
+        elif diversity_score < 0.70:
+            negative_factors.append((10.0, "nearby accepted levels share similar topology or mechanics"))
+        if uniqueness < 0.70:
+            negative_factors.append((8.0, "candidate resembles comparison signatures"))
+        if campaign_pacing_score < 0.80:
+            negative_factors.append((7.0, "campaign pacing penalty"))
+        return round(self._clamp_score(score), 2)
+
+    def _range_fit_average(self, values: tuple[tuple[int, tuple[int, int]], ...]) -> float:
+        if not values:
+            return 1.0
+        return sum(self._range_fit(value, target_range) for value, target_range in values) / len(values)
+
+    def _range_fit(self, value: int, target_range: tuple[int, int]) -> float:
+        minimum, maximum = target_range
+        if minimum <= value <= maximum:
+            return 1.0
+        span = max(maximum - minimum + 1, 1)
+        distance = minimum - value if value < minimum else value - maximum
+        return self._clamp(1.0 - min(0.70, distance * 0.22 / span))
+
+    def _top_factor_labels(self, factors: list[tuple[float, str]]) -> list[str]:
+        deduped: dict[str, float] = {}
+        for impact, label in factors:
+            deduped[label] = max(deduped.get(label, 0.0), impact)
+        ordered = sorted(deduped.items(), key=lambda item: (-item[1], item[0]))
+        return [label for label, _ in ordered[:5]]
+
+    def _clamp_score(self, value: float) -> float:
+        return max(0.0, min(100.0, value))
 
     def _preset_content_fit(
         self,
@@ -817,3 +1187,9 @@ class GenerationQualityService:
 
     def _clamp(self, value: float) -> float:
         return max(0.0, min(1.0, value))
+
+
+class GenerationQualityService(PuzzleQualityScorer):
+    """Backward-compatible service name for the V2 puzzle quality scorer."""
+
+    pass

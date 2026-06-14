@@ -46,6 +46,8 @@ class DifficultyMetrics:
 
 @dataclass(frozen=True)
 class GenerationQualityScore:
+    total_score: float
+    category_scores: dict[str, float]
     total: float
     readability: float
     uniqueness: float
@@ -64,5 +66,7 @@ class GenerationQualityScore:
     mechanical_difficulty: float = 0.0
     visual_difficulty: float = 0.0
     estimated_difficulty_band: str | None = None
+    top_positive_factors: tuple[str, ...] = field(default_factory=tuple)
+    top_negative_factors: tuple[str, ...] = field(default_factory=tuple)
     penalties: tuple[str, ...] = field(default_factory=tuple)
     details: dict[str, Any] = field(default_factory=dict)

@@ -35,6 +35,13 @@ from .swift_test_service import SwiftTestService
 
 class LevelGenerationService:
     MINIMUM_TOTAL_QUALITY = 0.45
+    MINIMUM_TOTAL_SCORE_BY_DIFFICULTY = {
+        "tutorial": 65.0,
+        "easy": 70.0,
+        "medium": 75.0,
+        "hard": 80.0,
+        "expert": 85.0,
+    }
     MINIMUM_SWITCH_CLARITY = 0.40
     MINIMUM_RUNTIME_CONFIDENCE = 0.75
     MAXIMUM_SELECTION_SIMILARITY = 0.87
@@ -1185,11 +1192,20 @@ class LevelGenerationService:
         if suppression_message not in result.messages:
             result.messages.append(suppression_message)
 
-    def _candidate_selection_key(self, candidate) -> tuple[float, float, float, float, int]:
+    def _candidate_selection_key(self, candidate) -> tuple[float, float, float, float, float, float, int]:
         quality = candidate.quality_score
         if quality is None:
-            return (0.0, 0.0, 0.0, -candidate.seed)
-        return (quality.total, quality.diversity_score, quality.switch_clarity, quality.uniqueness, -candidate.seed)
+            return (0.0, 0.0, 0.0, 0.0, 0.0, 0.0, -candidate.seed)
+        categories = quality.category_scores
+        return (
+            quality.total_score,
+            categories.get("routeInterestScore", 0.0),
+            categories.get("layoutScore", 0.0),
+            categories.get("difficultyFitScore", 0.0),
+            categories.get("diversityScore", 0.0),
+            categories.get("logicScore", 0.0),
+            -candidate.seed,
+        )
 
     def _candidate_pool_ready(self, candidate_pool: list, config: GenerationConfig, preset) -> bool:
         if len(candidate_pool) >= config.candidate_pool_size:
@@ -1202,7 +1218,7 @@ class LevelGenerationService:
         families = {candidate.recipe_family or candidate.template_name for candidate in candidate_pool}
         topologies = {getattr(candidate, "topology_class", "") or "unknown" for candidate in candidate_pool}
         best_quality = max(
-            (candidate.quality_score.total for candidate in candidate_pool if candidate.quality_score is not None),
+            (candidate.quality_score.total_score for candidate in candidate_pool if candidate.quality_score is not None),
             default=0.0,
         )
         best_diversity = max(
@@ -1212,7 +1228,7 @@ class LevelGenerationService:
         return (
             len(families) >= 3
             and len(topologies) >= 3
-            and best_quality >= 0.72
+            and best_quality >= self.MINIMUM_TOTAL_SCORE_BY_DIFFICULTY.get(preset.name, 75.0)
             and best_diversity >= 0.70
         )
 
@@ -1269,10 +1285,14 @@ class LevelGenerationService:
                 "quality_similarity_above_threshold",
                 f"similarity {max_similarity:.2f} > {maximum_selection_similarity:.2f}",
             )
-        if quality.total < self.MINIMUM_TOTAL_QUALITY:
+        minimum_total_score = self.MINIMUM_TOTAL_SCORE_BY_DIFFICULTY.get(
+            str(getattr(candidate, "difficulty", "") or "").strip().lower(),
+            self.MINIMUM_TOTAL_QUALITY * 100.0,
+        )
+        if quality.total_score < minimum_total_score:
             return (
-                "quality_total_below_threshold",
-                f"quality total {quality.total:.2f} < {self.MINIMUM_TOTAL_QUALITY:.2f}",
+                "quality_total_below_difficulty_threshold",
+                f"quality score {quality.total_score:.2f} < {minimum_total_score:.2f}",
             )
         return None
 
@@ -1424,19 +1444,19 @@ class LevelGenerationService:
         ]
         top_rejected = sorted(
             [*runner_ups, *near_miss_candidates],
-            key=lambda item: item.get("quality", {}).get("total", 0.0),
+            key=lambda item: item.get("quality", {}).get("totalScore", item.get("quality", {}).get("total", 0.0)),
             reverse=True,
         )[:5]
         scores = [
-            *[candidate.quality_score.total for candidate in scored_candidates],
+            *[candidate.quality_score.total_score for candidate in scored_candidates],
             *[
-                near_miss.get("quality", {}).get("total")
+                near_miss.get("quality", {}).get("totalScore")
                 for near_miss in near_miss_candidates
-                if near_miss.get("quality", {}).get("total") is not None
+                if near_miss.get("quality", {}).get("totalScore") is not None
             ],
         ]
         accepted_summary = self._candidate_summary(accepted_candidate, "accepted")
-        accepted_score = accepted_candidate.quality_score.total if accepted_candidate.quality_score is not None else 0.0
+        accepted_score = accepted_candidate.quality_score.total_score if accepted_candidate.quality_score is not None else 0.0
         next_summary = top_rejected[0] if top_rejected else None
         return {
             "levelID": level_id,
@@ -1455,7 +1475,7 @@ class LevelGenerationService:
         if next_summary is None:
             return "Only one scored candidate passed validation and quality thresholds."
         next_quality = next_summary.get("quality", {})
-        next_score = next_quality.get("total")
+        next_score = next_quality.get("totalScore")
         accepted_quality = accepted_summary.get("quality", {})
         accepted_base = accepted_quality.get("baseQualityScore")
         next_base = next_quality.get("baseQualityScore")
@@ -1530,6 +1550,8 @@ class LevelGenerationService:
         if quality is None:
             return {}
         return {
+            "totalScore": quality.total_score,
+            "categoryScores": quality.category_scores,
             "total": quality.total,
             "abstractMechanicQuality": quality.abstract_mechanic_quality,
             "runtimeSolvability": quality.runtime_solvability,
@@ -1547,6 +1569,8 @@ class LevelGenerationService:
             "baseQualityScore": quality.details.get("baseQualityScore", quality.total),
             "mobileTapComfort": quality.mobile_tap_comfort,
             "visualAppeal": quality.visual_appeal,
+            "topPositiveFactors": list(quality.top_positive_factors),
+            "topNegativeFactors": list(quality.top_negative_factors),
             "penalties": list(quality.penalties),
             "maxSimilarity": quality.details.get("maxSimilarity", 0.0),
             "presetContentFit": quality.details.get("presetContentFit", {}),

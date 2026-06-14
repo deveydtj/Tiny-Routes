@@ -7,6 +7,7 @@ from itertools import product
 from typing import Any
 
 from .route_timing_service import RouteTimingService
+from .switch_direction_assignment_service import SwitchDirectionAssignmentService
 
 
 @dataclass(frozen=True)
@@ -36,6 +37,9 @@ class RoadShapeService:
     _merge_distance = 0.16
     _important_node_clearance = 0.18
     _return_loop_false_shortcut_clearance = 0.14
+
+    def __init__(self) -> None:
+        self.switch_direction_assignment = SwitchDirectionAssignmentService()
 
     def pick_for_positions(
         self,
@@ -94,6 +98,30 @@ class RoadShapeService:
             for assignment in candidate_assignments
         ]
         return max(scored_plans, key=lambda plan: (plan.score, -len(plan.issues)))
+
+    def plan_for_assignment(
+        self,
+        positions: dict[str, tuple[float, float]],
+        edges: list[tuple[str, str]],
+        edge_shapes: dict[tuple[str, str], str],
+        *,
+        required_path: tuple[str, ...] = (),
+        strategy: str = "assigned",
+        important_node_ids: tuple[str, ...] = (),
+    ) -> RoadShapePlan:
+        for edge in edges:
+            if edge not in edge_shapes:
+                raise ValueError(f"Missing roadShape assignment for edge: {edge[0]}->{edge[1]}")
+            if not self.is_allowed(edge_shapes[edge]):
+                raise ValueError(f"Invalid roadShape assignment for edge {edge[0]}->{edge[1]}: {edge_shapes[edge]}")
+        return self._score_assignment(
+            positions,
+            edges,
+            dict(edge_shapes),
+            strategy,
+            required_path,
+            important_node_ids,
+        )
 
     def _normalized_strategy(self, strategy: str) -> str:
         normalized = strategy.strip().lower().replace("-", "_")
@@ -193,6 +221,9 @@ class RoadShapeService:
         issues: list[str] = []
         edge_plans: list[RoadShapeEdgePlan] = []
         switch_direction_buckets: dict[str, dict[str, str]] = {}
+        switch_exit_angle_separation: dict[str, float | None] = {}
+        switch_direction_quality_by_switch: dict[str, float] = {}
+        direction_bucket_assignments: dict[str, list[dict[str, Any]]] = {}
         endpoint_mismatch_count = 0
         for edge in edges:
             from_node_id, to_node_id = edge
@@ -223,11 +254,20 @@ class RoadShapeService:
         for node_id, outgoing_edges in outgoing_edges_by_node.items():
             if len(outgoing_edges) < 2 or len(outgoing_edges) > 4:
                 continue
-            buckets = {
-                f"{edge[0]}->{edge[1]}": edge_plan_by_edge[edge].start_direction
-                for edge in outgoing_edges
-            }
+            switch_direction_report = self.switch_direction_assignment.report_for_switch_positions(
+                node_id,
+                positions,
+                [
+                    (f"{edge[0]}->{edge[1]}", edge[1], assignment[edge])
+                    for edge in outgoing_edges
+                ],
+            )
+            buckets = switch_direction_report.direction_buckets
             switch_direction_buckets[node_id] = buckets
+            switch_exit_angle_separation[node_id] = switch_direction_report.minimum_exit_angle_separation_degrees
+            switch_direction_quality_by_switch[node_id] = switch_direction_report.quality
+            direction_bucket_assignments[node_id] = switch_direction_report.to_metadata()["assignments"]
+            issues.extend(switch_direction_report.issues)
             duplicated = [
                 bucket
                 for bucket, count in Counter(buckets.values()).items()
@@ -283,13 +323,35 @@ class RoadShapeService:
         if return_loop_false_shortcut_count:
             issues.append(f"return_loop_false_shortcut:{return_loop_false_shortcut_count}")
 
+        switch_direction_quality = min(switch_direction_quality_by_switch.values()) if switch_direction_quality_by_switch else 1.0
+        ambiguous_switch_detected = any(
+            issue.startswith("ambiguous_switch_exit")
+            or issue.startswith("conflicting_direction_bucket")
+            or issue.startswith("insufficient_exit_separation")
+            or issue.startswith("switch_choices_same_visual_direction")
+            or issue.startswith("same_switch_first_segments_overlap")
+            for issue in issues
+        )
         duplicate_switch_penalty = sum(
             1
             for issue in issues
             if issue.startswith("switch_choices_same_visual_direction")
             or issue.startswith("same_switch_first_segments_overlap")
             or issue.startswith("required_and_wrong_route_first_segments_overlap")
+            or issue.startswith("conflicting_direction_bucket")
+            or issue.startswith("ambiguous_switch_exit")
+            or issue.startswith("insufficient_exit_separation")
         )
+        readability_adjustments = self._readability_adjustments(positions, edges, assignment)
+        road_shape_warnings = [
+            issue
+            for issue in issues
+            if issue.startswith("long_parallel_road_segments")
+            or issue.startswith("return_loop_false_shortcut")
+            or issue.startswith("road_segment_too_close_to_important_node")
+            or issue.startswith("required_path_crossing")
+            or issue.startswith("road_crossing_near_important_node")
+        ]
         score = 1.0
         score -= duplicate_switch_penalty * 0.35
         score -= crossing_count * 0.04
@@ -310,6 +372,8 @@ class RoadShapeService:
             score -= smooth_break_count * 0.03
         if strategy in {"switch_clarity_optimized", "auto"}:
             score -= endpoint_mismatch_count * 0.01
+        score -= (1.0 - switch_direction_quality) * 0.25
+        score -= min(len(readability_adjustments), 6) * 0.01
         score = max(0.0, min(1.0, score))
 
         return RoadShapePlan(
@@ -331,6 +395,16 @@ class RoadShapeService:
                 "mainRouteSmoothBreakCount": smooth_break_count,
                 "endpointVectorMismatchCount": endpoint_mismatch_count,
                 "switchDirectionBuckets": switch_direction_buckets,
+                "switchClarityScore": round(switch_direction_quality, 4),
+                "switchDirectionQuality": {
+                    "overall": round(switch_direction_quality, 4),
+                    "bySwitch": switch_direction_quality_by_switch,
+                },
+                "switchExitAngleSeparation": switch_exit_angle_separation,
+                "ambiguousSwitchDetected": ambiguous_switch_detected,
+                "roadShapeWarnings": road_shape_warnings,
+                "readabilityAdjustments": readability_adjustments,
+                "directionBucketAssignments": direction_bucket_assignments,
                 "edgePlans": [
                     {
                         "fromNodeID": plan.from_node_id,
@@ -353,6 +427,29 @@ class RoadShapeService:
             if 2 <= len(outgoing_edges) <= 4
             for edge in outgoing_edges
         }
+
+    def _readability_adjustments(
+        self,
+        positions: dict[str, tuple[float, float]],
+        edges: list[tuple[str, str]],
+        assignment: dict[tuple[str, str], str],
+    ) -> list[dict[str, str]]:
+        adjustments: list[dict[str, str]] = []
+        for edge in edges:
+            preferred_shape = self.pick_for_positions(*positions[edge[0]], *positions[edge[1]])
+            assigned_shape = assignment[edge]
+            if assigned_shape == preferred_shape:
+                continue
+            adjustments.append(
+                {
+                    "fromNodeID": edge[0],
+                    "toNodeID": edge[1],
+                    "fromRoadShape": preferred_shape,
+                    "toRoadShape": assigned_shape,
+                    "reason": "switch_exit_or_route_readability",
+                }
+            )
+        return adjustments
 
     def _outgoing_edges_by_node(self, edges: list[tuple[str, str]]) -> dict[str, list[tuple[str, str]]]:
         outgoing: dict[str, list[tuple[str, str]]] = {}

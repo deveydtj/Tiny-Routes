@@ -183,7 +183,17 @@ Supported difficulty presets:
 - `expert`: 8-13 nodes, 1-5 switches, 2-6 taps, route length 6-11, standard and large portrait candidates allowed when four-way, ring, revisit, or route-phase structures benefit, max visual complexity 0.86.
 - `auto`
 
-Preset scoring checks node/switch/tap fit through existing strict validation, then quality scoring checks route length, route-interest threshold, topology class, optional/required route-interest tag match, visual complexity ceiling, repeated mechanics, empty map space, and whether large portrait adds puzzle value. These are selection penalties, not validation-rule weakenings.
+Quality scoring runs after strict validation. Validation decides whether a candidate is legal; scoring decides whether a legal candidate is worth selecting. A score can reject a weak candidate, but it cannot make an invalid candidate acceptable.
+
+`PuzzleQualityScorer` reports a deterministic `0...100` `totalScore` plus five category scores:
+
+- `logicScore`: unique-solution confidence, package order, shortcut absence, runtime confidence, and safe branch/rejoin/revisit behavior.
+- `routeInterestScore`: meaningful decisions, fake shortcuts, split/rejoin structure, package tension, revisit/ring behavior, hubs, and meaningful turns. It caps candidates that get harder only by adding switches, nodes, or repetitive branches.
+- `layoutScore`: readability, switch-exit clarity, road shape, visual clarity, spacing, and composition.
+- `difficultyFitScore`: node/switch/tap counts, route length, estimated difficulty band, visual complexity, and tap pacing against the target preset.
+- `diversityScore`: topology/mechanic difference from nearby accepted levels, campaign pacing, and signature uniqueness.
+
+The generator prefers the highest `totalScore`, then route interest, layout, difficulty fit, diversity, logic, and finally the lower seed for deterministic tie-breaking. Difficulty minimums are tutorial `65`, easy `70`, medium `75`, hard `80`, and expert `85`. Reports include `categoryScores`, `topPositiveFactors`, and `topNegativeFactors` for accepted candidates and near misses.
 
 Pacing rules compare each accepted candidate to nearby accepted signatures. They penalize adjacent recipe-family repeats, topology-class repeats, repeated fake shortcuts, repeated hubs, repeated loop/revisit usage, repeated switch-count/tap-count patterns, nearby mechanic-tag overlap, difficulty cliffs, and consecutive large portrait profiles. The scorer can still accept a repeated element when the rest of the candidate is clearly better, but the report shows the pacing penalty.
 
