@@ -268,10 +268,7 @@ class LevelGenerationService:
                             break
                         continue
 
-                    first_error = next(
-                        (message for message in validation_result.messages if message.severity == "error"),
-                        None,
-                    )
+                    first_error = rejection_service.preferred_rejection_message(validation_result)
                     self._record_rejection_by_difficulty(
                         result,
                         candidate.difficulty,

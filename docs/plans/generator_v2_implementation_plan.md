@@ -501,6 +501,12 @@ Create:
 
     LayoutReadabilityValidator
 
+Implemented location:
+
+    Tools/LevelGenerator/app/services/layout_readability_validator.py
+
+The validator emits a `LayoutReadabilityReport` and stores the latest report on each generated candidate as `layout_readability_validation_result`. JSON/Markdown generation reports expose the result under `layoutReadability`.
+
 Checks:
 
     validateNoNodeOverlap()
@@ -544,6 +550,39 @@ Reject when package, switch, start, or goal is visually obscured.
 - Switch exits are visually distinct.
 - Road crossings are intentional only if represented by a node.
 - Readability checks run before candidate scoring.
+
+### Reporting Metadata
+
+The report exposes:
+
+- `nodeOverlapDetected`
+- `implicitIntersectionDetected`
+- `roadsTooCloseDetected`
+- `switchExitOverlapDetected`
+- `importantNodeBlocked`
+- `startGoalTooClose`
+- `portraitSafetyFailure`
+- `offendingNodes`
+- `offendingRoads`
+- `measuredDistances`
+- `measuredAngles`
+- `thresholds`
+
+Primary rejection codes:
+
+- `implicit_intersection_without_node`
+- `switch_exit_overlap`
+- `node_spacing_failure`
+- `start_goal_separation_failure`
+- `road_proximity_failure`
+- `important_node_visibility_failure`
+- `portrait_safety_failure`
+
+Current limitations:
+
+- Uses generator road geometry rather than Swift-rendered rounded-corner paths.
+- Approximates artwork and label visibility with board-unit clearance thresholds.
+- Treats all switchable nodes as important nodes until recipe metadata distinguishes major/minor switches.
 
 ## Phase 9 – Road Shape and Direction Assignment
 

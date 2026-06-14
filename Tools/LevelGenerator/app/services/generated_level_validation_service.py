@@ -7,6 +7,7 @@ from ..level_editor_imports import LevelValidationService, SolutionValidationSer
 from ..models.difficulty_preset import DifficultyPreset
 from .difficulty_service import DifficultyService
 from .graph_layout_service import BoundingBox, GraphLayoutService
+from .layout_readability_validator import LayoutReadabilityValidator
 from .python_solution_simulator_service import PythonSolutionSimulatorService
 from .road_geometry_validation_service import RoadGeometryValidationService
 from .road_shape_service import RoadShapeService
@@ -69,6 +70,7 @@ class GeneratedLevelValidationService:
         self.switch_classification_service = SwitchClassificationService()
         self.unique_solution_validator = UniqueSolutionValidatorService()
         self.visual_clarity_validation_service = VisualClarityValidationService()
+        self.layout_readability_validator = LayoutReadabilityValidator()
 
     def validate(
         self,
@@ -270,6 +272,7 @@ class GeneratedLevelValidationService:
                 if preset is not None and enforce_difficulty:
                     messages.extend(self._simulation_difficulty_messages(simulation, preset))
                 messages.extend(self._unique_solution_messages(generated_level))
+                messages.extend(self._layout_readability_messages(generated_level, preset))
 
         return messages
 
@@ -285,6 +288,25 @@ class GeneratedLevelValidationService:
                 related_edge_id=issue.related_edge_id,
             )
             for issue in result.issues
+        ]
+
+    def _layout_readability_messages(
+        self,
+        generated_level,
+        preset: DifficultyPreset | None,
+    ) -> list[GeneratorValidationMessage]:
+        report = self.layout_readability_validator.report_for_generated_level(generated_level, preset=preset)
+        generated_level.layout_readability_validation_result = report
+        return [
+            GeneratorValidationMessage(
+                severity=issue.severity,
+                code=issue.code,
+                message=issue.message,
+                related_node_id=issue.related_node_id,
+                related_edge_id=issue.related_edge_id,
+                related_edge_ids=issue.related_edge_ids,
+            )
+            for issue in report.issues
         ]
 
     def _layout_profile_messages(self, generated_level) -> list[GeneratorValidationMessage]:

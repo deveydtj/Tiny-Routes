@@ -10,6 +10,7 @@ from ..paths import find_repo_root
 from ..services.preview_image_service import PreviewImageService
 from ..services.route_timing_service import RouteTimingService
 from ..services.switch_visual_clarity_service import SwitchVisualClarityService
+from ..services.layout_readability_validator import LayoutReadabilityValidator
 from ..services.visual_clarity_validation_service import VisualClarityValidationService
 
 
@@ -18,6 +19,7 @@ class GenerationReportRepository:
         self.preview_image_service = PreviewImageService()
         self.route_timing = RouteTimingService()
         self.switch_visual_clarity = SwitchVisualClarityService()
+        self.layout_readability_validator = LayoutReadabilityValidator()
         self.visual_clarity_validation = VisualClarityValidationService()
 
     def write_markdown(self, path: Path, config, result) -> Path:
@@ -147,6 +149,7 @@ class GenerationReportRepository:
                     "solution": self._solution_payload(level),
                     "switchPreview": self._switch_preview_payload(level),
                     "visualClarity": self._visual_clarity_payload(level),
+                    "layoutReadability": self._layout_readability_payload(level),
                     "previewPath": str(level.preview_path) if level.preview_path else None,
                     "status": "passed",
                     "notes": level.generation_notes,
@@ -355,6 +358,12 @@ class GenerationReportRepository:
                         f"- Visual clarity: score `{visual_clarity['score']}`, "
                         f"{len(visual_clarity['issues'])} issue(s)."
                     )
+                    layout_readability = level["layoutReadability"]
+                    lines.append(
+                        f"- Layout readability: passed `{layout_readability['passed']}`, "
+                        f"{len(layout_readability['issues'])} issue(s); "
+                        f"flags `{layout_readability['metadata']['issueCounts']}`."
+                    )
                     if level["abstractSolution"]:
                         abstract = level["abstractSolution"]
                         lines.append(
@@ -486,6 +495,11 @@ class GenerationReportRepository:
                     lines.append(
                         f"- Visual clarity {issue['severity']}: `{issue['code']}` "
                         f"node `{issue['relatedNodeID']}` edge `{issue['relatedEdgeID']}`."
+                    )
+                for issue in level["layoutReadability"]["issues"]:
+                    lines.append(
+                        f"- Layout readability {issue['severity']}: `{issue['code']}` "
+                        f"nodes `{issue['relatedNodeIDs']}` roads `{issue['relatedEdgeIDs']}`."
                     )
                 if not level["switchPreview"] and not level["warnings"]:
                     lines.append("- No switch-specific review notes.")
@@ -806,7 +820,17 @@ class GenerationReportRepository:
                 for reason, count in counts.items()
                 if reason.startswith("layout_")
                 or reason.startswith("portrait_layout")
-                or reason in {"implicit_intersection_without_graph_node", "same_switch_first_segments_overlap"}
+                or reason in {
+                    "implicit_intersection_without_graph_node",
+                    "same_switch_first_segments_overlap",
+                    "implicit_intersection_without_node",
+                    "switch_exit_overlap",
+                    "node_spacing_failure",
+                    "start_goal_separation_failure",
+                    "portrait_safety_failure",
+                    "road_proximity_failure",
+                    "important_node_visibility_failure",
+                }
             ),
             "routeInterestGate": sum(count for reason, count in counts.items() if "route_interest" in reason or "boring_topology" in reason),
             "largePortraitNeedGate": counts.get("large_portrait_without_puzzle_need", 0),
@@ -953,6 +977,16 @@ class GenerationReportRepository:
                 }
                 for issue in report.issues
             ],
+        }
+
+    def _layout_readability_payload(self, level) -> dict[str, Any]:
+        report = getattr(level, "layout_readability_validation_result", None)
+        if report is None:
+            report = self.layout_readability_validator.report_for_generated_level(level)
+        return {
+            "passed": not report.has_errors,
+            "metadata": report.metadata,
+            "issues": [issue.to_dict() for issue in report.issues],
         }
 
     def _solution_payload(self, level) -> dict[str, Any]:

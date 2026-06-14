@@ -8,6 +8,16 @@ from .generated_level_validation_service import GeneratorValidationMessage, Gene
 
 
 class CandidateRejectionService:
+    LAYOUT_READABILITY_REJECTION_CODES = {
+        "implicit_intersection_without_node",
+        "switch_exit_overlap",
+        "node_spacing_failure",
+        "start_goal_separation_failure",
+        "road_proximity_failure",
+        "important_node_visibility_failure",
+        "portrait_safety_failure",
+    }
+
     def __init__(self) -> None:
         self.reason_counts: Counter[str] = Counter()
 
@@ -20,7 +30,7 @@ class CandidateRejectionService:
         validation_result: GeneratorValidationResult,
         debug_failures_dir: Path | None = None,
     ) -> str:
-        first_error = next((message for message in validation_result.messages if message.severity == "error"), None)
+        first_error = self.preferred_rejection_message(validation_result)
         reason = first_error.code if first_error is not None else "unknown"
         self.reason_counts[reason] += 1
         detail = first_error.message if first_error is not None else "No validation detail available."
@@ -32,6 +42,13 @@ class CandidateRejectionService:
         if debug_failures_dir is not None:
             self._save_debug_candidate(generated_level, validation_result, debug_failures_dir)
         return message
+
+    def preferred_rejection_message(self, validation_result: GeneratorValidationResult) -> GeneratorValidationMessage | None:
+        errors = [message for message in validation_result.messages if message.severity == "error"]
+        return next(
+            (message for message in errors if message.code in self.LAYOUT_READABILITY_REJECTION_CODES),
+            errors[0] if errors else None,
+        )
 
     def record_custom_rejection(
         self,

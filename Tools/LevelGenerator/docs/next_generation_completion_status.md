@@ -415,6 +415,24 @@ Result: `18 passed`.
 
 Result: `175 passed`.
 
+## Phase 7 - Layout Readability Validation
+
+Implemented:
+
+- [x] Added standalone `LayoutReadabilityValidator`.
+- [x] Added centralized `LayoutReadabilityThresholds` in board units.
+- [x] Added hard-failure checks for node spacing, implicit intersections, road proximity, switch exit overlap, overlapping first segments, important-node visibility, start/goal separation, and portrait safety.
+- [x] Added structured `LayoutReadabilityReport` metadata with detection flags, offending nodes/roads, measured distances, measured angles, thresholds, and issue counts.
+- [x] Wired layout readability into candidate validation after unique-solution/shortcut/package/rejoin/revisit validation and before candidate quality scoring.
+- [x] Added accepted-level report serialization under `layoutReadability`.
+- [x] Documented goals, thresholds, reporting, and current limitations in `layout_readability_validation.md`.
+
+Verification not run in this phase by request. Future verification should include:
+
+```bash
+python -m pytest Tools/LevelGenerator/tests/test_layout_readability_validator.py Tools/LevelGenerator/tests/test_generated_level_validation_service.py Tools/LevelGenerator/tests/test_generation_report_repository.py
+```
+
 ## Phase 7 - Runtime-Parity Simulation
 
 Completed:
