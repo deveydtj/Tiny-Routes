@@ -143,6 +143,7 @@ class GenerationReportRepository:
                     "validationResult": "passed",
                     "acceptedOrRejectedReason": "accepted",
                     "simulation": self._simulation_payload(level),
+                    "uniqueSolutionValidation": self._unique_solution_payload(level),
                     "solution": self._solution_payload(level),
                     "switchPreview": self._switch_preview_payload(level),
                     "visualClarity": self._visual_clarity_payload(level),
@@ -360,6 +361,17 @@ class GenerationReportRepository:
                             f"- Abstract solution: {abstract['minimumRequiredTaps']} required taps, "
                             f"{abstract['alternatePathCount']} alternate paths, "
                             f"{abstract['deadEndCount']} dead ends, {abstract['loopCount']} loops."
+                        )
+                    if level["uniqueSolutionValidation"]:
+                        unique = level["uniqueSolutionValidation"]
+                        lines.append(
+                            f"- Unique solution validation: solutions `{unique['solutionCount']}`, "
+                            f"exhaustive `{unique['isExhaustive']}`, "
+                            f"shortcut `{unique['shortcutDetected']}`, "
+                            f"package bypass `{unique['packageBypassDetected']}`, "
+                            f"wrong branch reached goal `{unique['wrongBranchReachedGoal']}`, "
+                            f"package status `{unique['packageReachabilityStatus']}`, "
+                            f"shortest route `{unique['shortestValidRouteLength']}`."
                         )
                 if level["quality"]:
                     quality = level["quality"]
@@ -857,6 +869,51 @@ class GenerationReportRepository:
             "tapCount": simulation.tap_count,
             "reachedPackage": simulation.reached_package,
             "reachedDestination": simulation.reached_destination,
+        }
+
+    def _unique_solution_payload(self, level) -> dict[str, Any] | None:
+        result = getattr(level, "unique_solution_validation_result", None)
+        if result is None:
+            return None
+        bypass_summary = result.bypass_path_summary.to_dict() if result.bypass_path_summary else None
+        return {
+            "requiresUniqueSolution": result.requires_unique_solution,
+            "isExhaustive": result.is_exhaustive,
+            "solutionCount": result.solution_count,
+            "exploredStates": result.explored_states,
+            "maxDepthReached": result.max_depth_reached,
+            "terminationReason": result.termination_reason,
+            "terminalReasonCounts": dict(result.terminal_reason_counts),
+            "shortcutDetected": result.shortcut_detected,
+            "packageBypassDetected": result.package_bypass_detected,
+            "wrongBranchReachedGoal": result.wrong_branch_reached_goal,
+            "bypassPathSummary": bypass_summary,
+            "intendedRouteLength": result.intended_route_length,
+            "shortestValidRouteLength": result.shortest_valid_route_length,
+            "packageReachabilityStatus": result.package_reachability_status,
+            "issues": [
+                {
+                    "severity": issue.severity,
+                    "code": issue.code,
+                    "message": issue.message,
+                    "relatedNodeID": issue.related_node_id,
+                    "relatedEdgeID": issue.related_edge_id,
+                }
+                for issue in result.issues
+            ],
+            "successfulPathSummaries": [
+                summary.to_dict()
+                for summary in result.successful_path_summaries[:3]
+            ],
+            "destinationBeforePackageSummaries": [
+                summary.to_dict()
+                for summary in result.destination_before_package_summaries[:3]
+            ],
+            "failurePathSummaries": [
+                summary.to_dict()
+                for summary in result.failure_path_summaries[:3]
+            ],
+            "notes": list(result.notes),
         }
 
     def _visual_clarity_payload(self, level) -> dict[str, Any]:

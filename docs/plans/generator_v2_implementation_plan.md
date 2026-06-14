@@ -341,7 +341,7 @@ Check:
 
 Prove the puzzle has exactly one valid solution before layout.
 
-Implementation status: the current `UniqueSolutionValidatorService` performs bounded structural enumeration on generated concrete levels after scripted simulation succeeds. It counts package-before-destination terminal routes and rejects `solutionCount != 1` or limit-truncated searches. Dedicated shortcut labeling, full runtime timing parity, and optimized loop/revisit proof logic remain future work.
+Implementation status: the current `UniqueSolutionValidatorService` performs bounded structural enumeration on generated concrete levels after scripted simulation succeeds. It counts package-before-destination terminal routes, rejects `solutionCount != 1` or limit-truncated searches when topology rules require uniqueness, and now layers shortcut, package-before-goal, and wrong-branch validation on the same search results. Full runtime timing parity plus dedicated rejoin/revisit proof logic remain future work.
 
 Create or improve:
 
@@ -394,6 +394,22 @@ For declared loops:
 - Package bypasses are rejected.
 - Infinite loop traversal is bounded and rejected if ambiguous.
 - Solver failures include useful rejection reasons.
+
+### Phase 5 Shortcut/Package Validation Status
+
+Implemented route-safety checks:
+
+- `validatePackageBeforeGoal()` rejects destination-before-package terminal routes, ambiguous package state, missing package/destination order in the intended route, and missing intended-route edges.
+- `validateNoShortcutPath()` compares successful enumerated routes against `solutionRoute` and `requiredTapOrder`, rejects shorter valid routes, alternate valid routes, package-bypass goal reaches, and tap-order bypasses.
+- `validateWrongBranchesFailCorrectly()` inspects off-route branches from the intended route and rejects branches that reach the goal, become valid solutions after package collection, or terminate only at traversal/tap limits.
+
+Reporting now exposes `shortcutDetected`, `packageBypassDetected`, `wrongBranchReachedGoal`, `bypassPathSummary`, `intendedRouteLength`, `shortestValidRouteLength`, and `packageReachabilityStatus` in the unique-solution validation payload.
+
+Current limitations:
+
+- The checks are structural and reuse bounded enumeration; they do not model exact Swift movement timing or ignored-tap windows.
+- Wrong-branch validation infers branches from edges leaving the intended route. Full rejoin-specific and revisit-specific validators are intentionally deferred.
+- Declared loops are not rejected by default; they fail only when they create a shortcut, package bypass, extra valid solution, or ambiguous termination.
 
 ## Phase 6 – Layout Generation
 

@@ -20,6 +20,7 @@ from .switch_classification_service import (
 from .switch_visual_clarity_service import SwitchVisualClarityService
 from .swift_test_service import SwiftTestService
 from .unique_solution_validator_service import (
+    UniqueSolutionPathSummary,
     UniqueSolutionSearchState,
     UniqueSolutionValidationConfig,
     UniqueSolutionValidationIssue,
@@ -53,6 +54,7 @@ __all__ = [
     "SwitchNodeKind",
     "SwitchVisualClarityService",
     "SwiftTestService",
+    "UniqueSolutionPathSummary",
     "UniqueSolutionSearchState",
     "UniqueSolutionValidationConfig",
     "UniqueSolutionValidationIssue",
