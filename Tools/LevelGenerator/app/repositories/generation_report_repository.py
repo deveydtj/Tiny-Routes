@@ -99,6 +99,15 @@ class GenerationReportRepository:
                     "portraitChecksPassed": (level.layout_metadata or {}).get("portraitChecksPassed"),
                     "portraitCheckIssues": (level.layout_metadata or {}).get("portraitCheckIssues", []),
                     "requiresSwiftValidation": bool(getattr(level, "requires_swift_validation", False)),
+                    "runtimeParity": (runtime_parity := self._runtime_parity_payload(level)),
+                    "runtimeValidationRequired": runtime_parity["runtimeValidationRequired"],
+                    "runtimeValidationStatus": runtime_parity["runtimeValidationStatus"],
+                    "runtimeValidationReason": runtime_parity["runtimeValidationReason"],
+                    "swiftValidationCommand": runtime_parity["swiftValidationCommand"],
+                    "swiftValidationPassed": runtime_parity["swiftValidationPassed"],
+                    "swiftValidationSkippedReason": runtime_parity["swiftValidationSkippedReason"],
+                    "riskyMechanicTags": runtime_parity["riskyMechanicTags"],
+                    "requiresSwiftRuntimeValidation": runtime_parity["requiresSwiftRuntimeValidation"],
                     "layoutStrategy": (level.layout_metadata or {}).get("strategy"),
                     "layoutVariant": level.selected_layout_variant,
                     "layoutOrientationSelectionReason": (level.layout_metadata or {}).get("orientationSelectionReason"),
@@ -203,6 +212,7 @@ class GenerationReportRepository:
                 "passed": result.swift_test_summary.passed,
                 "summary": result.swift_test_summary.summary,
                 "failureDetails": getattr(result.swift_test_summary, "failure_details", []),
+                "failureReasons": getattr(result.swift_test_summary, "failure_reasons", []),
             },
             "messages": list(result.messages),
             "recommendations": self._recommendations(config, result),
@@ -319,6 +329,7 @@ class GenerationReportRepository:
                             f"layout orientation `{level['layoutOrientation']}` "
                             f"via `{level['layoutOrientationSelectionReason'] or 'unknown'}`; "
                             f"Swift-required `{level['requiresSwiftValidation']}`; "
+                            f"runtime validation `{level['runtimeValidationStatus']}`; "
                             f"unlock `{level['unlockRequirement'] or 'none'}`; "
                             f"depends on `{level['priorMechanicDependency'] or 'none'}`."
                         )
@@ -390,6 +401,20 @@ class GenerationReportRepository:
                             f"declared `{unique['declaredRevisitCount']}` unsafe `{unique['unsafeRevisitDetected']}` "
                             f"reason `{unique['unsafeRevisitReason']}`."
                         )
+                runtime = level["runtimeParity"]
+                lines.append(
+                    f"- Runtime parity: required `{runtime['runtimeValidationRequired']}`; "
+                    f"status `{runtime['runtimeValidationStatus']}`; "
+                    f"requiresSwiftRuntimeValidation `{runtime['requiresSwiftRuntimeValidation']}`; "
+                    f"risky tags `{', '.join(runtime['riskyMechanicTags']) or 'none'}`; "
+                    f"reason `{runtime['runtimeValidationReason']}`."
+                )
+                if runtime["swiftValidationSkippedReason"]:
+                    lines.append(
+                        f"- Runtime parity skipped reason: `{runtime['swiftValidationSkippedReason']}`."
+                    )
+                if runtime["failureReason"]:
+                    lines.append(f"- Runtime parity failure reason: `{runtime['failureReason']}`.")
                 if level["quality"]:
                     quality = level["quality"]
                     categories = quality.get("categoryScores") or {}
@@ -465,6 +490,7 @@ class GenerationReportRepository:
                         f"path `{accepted_summary.get('requiredPathLength')}`; "
                         f"orientation `{accepted_summary.get('layoutOrientation', 'unknown')}`; "
                         f"Swift-required `{accepted_summary.get('requiresSwiftValidation', False)}`; "
+                        f"runtime validation `{accepted_summary.get('runtimeValidationStatus', 'unknown')}`; "
                         f"strategy `{accepted_summary.get('layoutStrategy', 'unknown')}`; "
                         f"variant `{accepted_summary.get('layoutVariant', 'unknown')}`; "
                         f"orientation reason `{accepted_summary.get('layoutOrientationSelectionReason', 'unknown')}`; "
@@ -484,6 +510,7 @@ class GenerationReportRepository:
                             f"path `{near_miss.get('requiredPathLength')}` "
                             f"orientation `{near_miss.get('layoutOrientation', 'unknown')}` "
                             f"Swift-required `{near_miss.get('requiresSwiftValidation', False)}` "
+                            f"runtime validation `{near_miss.get('runtimeValidationStatus', 'unknown')}` "
                             f"strategy `{near_miss.get('layoutStrategy', 'unknown')}` "
                             f"variant `{near_miss.get('layoutVariant', 'unknown')}` "
                             f"orientation reason `{near_miss.get('layoutOrientationSelectionReason', 'unknown')}` "
@@ -547,6 +574,8 @@ class GenerationReportRepository:
             lines.append("- Failure details:")
             for detail in payload["swiftTests"]["failureDetails"]:
                 lines.append(f"  - `{detail}`")
+        if payload["swiftTests"].get("failureReasons"):
+            lines.append(f"- Failure reasons: `{payload['swiftTests']['failureReasons']}`")
         lines.extend(
             [
                 "",
@@ -920,6 +949,24 @@ class GenerationReportRepository:
             "reachedDestination": simulation.reached_destination,
         }
 
+    def _runtime_parity_payload(self, level) -> dict[str, Any]:
+        result = getattr(level, "runtime_parity_validation_result", None)
+        if result is not None:
+            return result.to_metadata()
+        return {
+            "runtimeValidationRequired": bool(getattr(level, "requires_swift_validation", False)),
+            "runtimeValidationStatus": "unknown",
+            "runtimeValidationReason": "Runtime parity gate has not evaluated this level.",
+            "swiftValidationCommand": [],
+            "swiftValidationEnvironment": {},
+            "swiftValidationPassed": None,
+            "swiftValidationSkippedReason": None,
+            "riskyMechanicTags": [],
+            "requiresSwiftRuntimeValidation": bool(getattr(level, "requires_swift_validation", False)),
+            "failureReason": None,
+            "failureDetails": [],
+        }
+
     def _unique_solution_payload(self, level) -> dict[str, Any] | None:
         result = getattr(level, "unique_solution_validation_result", None)
         if result is None:
@@ -1139,6 +1186,27 @@ class GenerationReportRepository:
                     "Increase timed-tap lead time or route the switch earlier in the path.",
                     "Review switch preview metadata for dead-end-first defaults.",
                     "Run with `--swift-tests` before writing production files.",
+                ]
+            )
+        elif most_common_reason == "missing_required_swift_validation":
+            recommendations.extend(
+                [
+                    "Rerun production generation with `--swift-tests`.",
+                    "Use `--dry-run` when you only need Python-side reporting for risky mechanics.",
+                    "Review `riskyMechanicTags` and `runtimeValidationReason` in the JSON report.",
+                ]
+            )
+        elif most_common_reason in {
+            "swift_runtime_parity_failed",
+            "solution_sidecar_runtime_mismatch",
+            "switch_tap_runtime_mismatch",
+            "package_order_runtime_mismatch",
+        }:
+            recommendations.extend(
+                [
+                    "Inspect the Swift test failure details for the affected level.",
+                    "Compare the sidecar `expectedEdgeAfterTap` metadata against RouteEngine replay.",
+                    "Regenerate or reject the candidate before committing production files.",
                 ]
             )
         return recommendations

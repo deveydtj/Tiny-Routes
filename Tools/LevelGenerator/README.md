@@ -107,6 +107,37 @@ Use a Python 3.10+ interpreter with Tkinter enabled.
 
 `--swift-tests` runs the real Swift solvability tests after files are written. `--no-swift-tests` skips them.
 
+### Runtime Parity Validation
+
+Runtime parity means the Python generator and the real Tiny Routes Swift runtime agree about a generated level. Python validation checks graph structure, solution sidecars, unique-solution evidence, road geometry, and tap timing before a candidate can be selected. Runtime parity is the extra gate for mechanics where the exact `RouteEngine` behavior matters: the generated level must load in Swift, the solution sidecar must replay through the runtime, switch taps must rotate to the expected runtime edge, package collection must happen before completion, repeated taps must behave correctly, and the road-shape choices must be interpreted by gameplay in the same way the generator expected.
+
+The generator marks runtime parity as required when any of these are present:
+
+- `RecipeTopologyRules.requiresSwiftRuntimeValidation`
+- candidate-level `requires_swift_validation`
+- four-way switches
+- rings, loops, return paths, revisits, repeated taps, or route reversal
+- split/rejoin or declared rejoin mechanics
+- package-inside-loop or multi-phase/two-phase route mechanics
+- concrete graph evidence of four-way fanout, cycles, repeated route nodes, repeated tap nodes, rejoins, or package nodes inside a detected cycle
+
+Dry runs may skip Swift validation so iteration stays fast. Reports still show the production requirement with fields such as `runtimeValidationRequired`, `runtimeValidationStatus`, `runtimeValidationReason`, `swiftValidationCommand`, `swiftValidationPassed`, `swiftValidationSkippedReason`, `riskyMechanicTags`, and `requiresSwiftRuntimeValidation`. For a dry run that finds a risky candidate, expect `runtimeValidationStatus: skipped_required_for_production`.
+
+Production writes are stricter. If a candidate requires runtime parity and `--swift-tests` is not enabled, the candidate is rejected with `missing_required_swift_validation`. With `--swift-tests`, the candidate is marked pending while files are written, then the generator runs:
+
+```bash
+xcodebuild test -project TinyRoutes.xcodeproj -scheme TinyRoutes -destination 'platform=iOS Simulator,name=iPhone 16,OS=18.5' -only-testing:TinyRoutesTests/LevelSolvabilityTests/testRequestedGeneratedLevelsCompleteFromEnvironmentDirectories
+```
+
+The command receives `TINY_ROUTES_VALIDATION_LEVEL_IDS`, `TINY_ROUTES_LEVELS_DIR`, and `TINY_ROUTES_SOLUTIONS_DIR` so Swift replays only the generated level and solution sidecar files for that batch. Swift failures are surfaced as `swift_runtime_parity_failed`, `solution_sidecar_runtime_mismatch`, `switch_tap_runtime_mismatch`, or `package_order_runtime_mismatch` when the xcodebuild output contains enough detail to classify them.
+
+Current limitations:
+
+- Swift parity runs after generated files are written because the existing Swift test harness loads level and solution sidecar directories from disk.
+- Failure attribution is batch-level when xcodebuild fails; inspect the Swift failure details for the exact level.
+- Road-shape parity is covered through RouteEngine movement and switch-direction metadata in reports, not by Swift-rendered pixel inspection.
+- Dry-run reports are advisory for runtime parity; run production generation with `--swift-tests` before committing risky mechanics.
+
 `--compare-existing` rejects candidates that are too similar to existing level files in the configured output folders. This is enabled by default; use `--no-compare-existing` for scratch experiments.
 
 `--generation-mode` controls the generation architecture. `recipe-first` is the default and preferred path; `legacy-template` and `hybrid` remain available for comparison and fallback runs.

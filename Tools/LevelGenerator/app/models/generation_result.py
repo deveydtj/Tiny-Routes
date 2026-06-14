@@ -17,6 +17,7 @@ class SwiftTestSummary:
     stdout_tail: str = ""
     stderr_tail: str = ""
     failure_details: list[str] = field(default_factory=list)
+    failure_reasons: list[str] = field(default_factory=list)
 
 
 @dataclass

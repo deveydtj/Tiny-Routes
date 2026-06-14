@@ -30,6 +30,7 @@ from .generation_quality_service import GenerationQualityService
 from .level_resource_sync_service import LevelResourceSyncService
 from .layout_variant_service import LayoutVariantService
 from .recipe_to_level_builder_service import RecipeToLevelBuilderService
+from .runtime_parity_validator import RuntimeParityValidator
 from .swift_test_service import SwiftTestService
 
 
@@ -85,6 +86,7 @@ class LevelGenerationService:
         self.recipe_to_level_builder = RecipeToLevelBuilderService()
         self.layout_variant_service = LayoutVariantService()
         self.abstract_puzzle_solver = AbstractPuzzleSolverService()
+        self.runtime_parity_validator = RuntimeParityValidator()
 
     def generate(self, config: GenerationConfig) -> GenerationResult:
         result = GenerationResult()
@@ -183,7 +185,22 @@ class LevelGenerationService:
                         for message in validation_result.messages
                         if message.severity != "error"
                     ]
+                    self._annotate_runtime_parity(candidate, config)
                     if rejection_service.can_save(validation_result):
+                        runtime_rejection = self._runtime_validation_rejection(candidate)
+                        if runtime_rejection is not None:
+                            reason, detail = runtime_rejection
+                            message = rejection_service.record_custom_rejection(
+                                candidate,
+                                reason,
+                                detail,
+                                config.debug_failures_dir,
+                            )
+                            self._record_rejection_by_difficulty(result, candidate.difficulty, reason)
+                            self._record_validation_rejection(result)
+                            self._append_rejection_message(result, message)
+                            continue
+
                         candidate_signature = self.signature_service.signature_for(candidate)
                         batch_signatures = self._batch_similarity_signatures(
                             config,
@@ -318,9 +335,15 @@ class LevelGenerationService:
                 solutions_output_dir=config.solutions_output_dir,
             ).run()
             result.swift_test_summary = swift_summary
+            self._apply_swift_validation_summary(config, result, swift_summary)
             if swift_summary.passed is not True:
                 result.passed = False
                 result.messages.append(swift_summary.summary)
+                if swift_summary.failure_reasons:
+                    result.messages.append(
+                        "Swift runtime parity failure reason(s): "
+                        + ", ".join(swift_summary.failure_reasons)
+                    )
 
         self._write_reports(config, result)
         return result
@@ -375,19 +398,12 @@ class LevelGenerationService:
             include_swift_required = config.run_swift_tests or config.dry_run
             self.template_registry.choose(template_name, preset, RandomSource(config.base_seed), include_swift_required)
 
-    def _validate_swift_validation_policy(self, config: GenerationConfig, planned_difficulties: list[str]) -> None:
+    def _validate_swift_validation_policy(self, config: GenerationConfig, _planned_difficulties: list[str]) -> None:
         if config.dry_run or config.run_swift_tests:
             return
-        risky_difficulties = {"hard", "expert"}
-        risky_templates = {"ring_route", "four_way_intersection"}
-        planned_risky_difficulties = sorted(risky_difficulties.intersection(planned_difficulties))
-        if planned_risky_difficulties:
-            joined = ", ".join(planned_risky_difficulties)
-            raise ValueError(
-                f"Production generation for {joined} levels requires `--swift-tests`. "
-                "Use `--dry-run` for Python-only iteration."
-            )
-        if config.template_name in risky_templates:
+        if config.template_name != "mixed" and self.runtime_parity_validator.gate.source_requires_runtime_validation(
+            config.template_name
+        ):
             raise ValueError(
                 f"Production generation for `{config.template_name}` requires `--swift-tests` "
                 "because this mechanic needs Swift runtime validation."
@@ -1192,6 +1208,65 @@ class LevelGenerationService:
         if suppression_message not in result.messages:
             result.messages.append(suppression_message)
 
+    def _annotate_runtime_parity(self, candidate, config: GenerationConfig, swift_summary=None):
+        swift_service = SwiftTestService(
+            find_repo_root(),
+            timeout_seconds=config.swift_timeout_seconds,
+            level_ids=(candidate.level_id,),
+            levels_output_dir=config.levels_output_dir,
+            solutions_output_dir=config.solutions_output_dir,
+        )
+        result = self.runtime_parity_validator.evaluate_candidate(
+            candidate,
+            dry_run=config.dry_run,
+            run_swift_tests=config.run_swift_tests,
+            swift_validation_command=swift_service.build_command(),
+            swift_validation_environment=swift_service.build_environment(),
+            swift_summary=swift_summary,
+        )
+        candidate.runtime_parity_validation_result = result
+        candidate.requires_swift_validation = bool(
+            getattr(candidate, "requires_swift_validation", False)
+            or result.runtime_validation_required
+        )
+        return result
+
+    def _runtime_validation_rejection(self, candidate) -> tuple[str, str] | None:
+        result = getattr(candidate, "runtime_parity_validation_result", None)
+        if result is None or not result.runtime_validation_required:
+            return None
+        if result.runtime_validation_status == "missing_required_swift_validation":
+            return (
+                "missing_required_swift_validation",
+                (
+                    f"{result.runtime_validation_reason}; "
+                    "rerun production generation with `--swift-tests` or use `--dry-run` for reporting only"
+                ),
+            )
+        if result.runtime_validation_status == "failed":
+            return (
+                result.failure_reason or "swift_runtime_parity_failed",
+                result.runtime_validation_reason,
+            )
+        return None
+
+    def _apply_swift_validation_summary(self, config: GenerationConfig, result: GenerationResult, swift_summary) -> None:
+        batch_command = list(getattr(swift_summary, "command", []) or [])
+        batch_environment = dict(getattr(swift_summary, "environment", {}) or {})
+        for candidate in result.accepted:
+            existing = getattr(candidate, "runtime_parity_validation_result", None)
+            if existing is None:
+                self._annotate_runtime_parity(candidate, config, swift_summary=swift_summary)
+                continue
+            candidate.runtime_parity_validation_result = self.runtime_parity_validator.evaluate_candidate(
+                candidate,
+                dry_run=config.dry_run,
+                run_swift_tests=config.run_swift_tests,
+                swift_validation_command=batch_command,
+                swift_validation_environment=batch_environment,
+                swift_summary=swift_summary if existing.runtime_validation_required else None,
+            )
+
     def _candidate_selection_key(self, candidate) -> tuple[float, float, float, float, float, float, int]:
         quality = candidate.quality_score
         if quality is None:
@@ -1500,6 +1575,7 @@ class LevelGenerationService:
 
     def _candidate_summary(self, candidate, status: str) -> dict:
         quality = candidate.quality_score
+        runtime_parity = self._runtime_parity_summary(candidate)
         return {
             "levelID": candidate.level_id,
             "seed": candidate.seed,
@@ -1520,6 +1596,15 @@ class LevelGenerationService:
             "portraitMetrics": (candidate.layout_metadata or {}).get("portraitMetrics"),
             "portraitChecksPassed": (candidate.layout_metadata or {}).get("portraitChecksPassed"),
             "requiresSwiftValidation": bool(getattr(candidate, "requires_swift_validation", False)),
+            "runtimeParity": runtime_parity,
+            "runtimeValidationRequired": runtime_parity.get("runtimeValidationRequired", False),
+            "runtimeValidationStatus": runtime_parity.get("runtimeValidationStatus"),
+            "runtimeValidationReason": runtime_parity.get("runtimeValidationReason"),
+            "swiftValidationCommand": runtime_parity.get("swiftValidationCommand", []),
+            "swiftValidationPassed": runtime_parity.get("swiftValidationPassed"),
+            "swiftValidationSkippedReason": runtime_parity.get("swiftValidationSkippedReason"),
+            "riskyMechanicTags": runtime_parity.get("riskyMechanicTags", []),
+            "requiresSwiftRuntimeValidation": runtime_parity.get("requiresSwiftRuntimeValidation", False),
             "layoutStrategy": (candidate.layout_metadata or {}).get("strategy"),
             "layoutOrientationSelectionReason": (candidate.layout_metadata or {}).get("orientationSelectionReason"),
             "verticalCandidateRejectedReason": (candidate.layout_metadata or {}).get("verticalCandidateRejectedReason"),
@@ -1544,6 +1629,24 @@ class LevelGenerationService:
                 if candidate.candidate_signature is not None
                 else None
             ),
+        }
+
+    def _runtime_parity_summary(self, candidate) -> dict:
+        result = getattr(candidate, "runtime_parity_validation_result", None)
+        if result is not None:
+            return result.to_metadata()
+        return {
+            "runtimeValidationRequired": bool(getattr(candidate, "requires_swift_validation", False)),
+            "runtimeValidationStatus": "unknown",
+            "runtimeValidationReason": "Runtime parity gate has not evaluated this candidate.",
+            "swiftValidationCommand": [],
+            "swiftValidationEnvironment": {},
+            "swiftValidationPassed": None,
+            "swiftValidationSkippedReason": None,
+            "riskyMechanicTags": [],
+            "requiresSwiftRuntimeValidation": bool(getattr(candidate, "requires_swift_validation", False)),
+            "failureReason": None,
+            "failureDetails": [],
         }
 
     def _quality_summary(self, quality) -> dict:

@@ -668,7 +668,7 @@ Road-shape and visual-clarity reports expose:
 - Buckets are cardinal because generated roads currently use orthogonal first segments.
 - The generator approximates arrow readability from board-unit geometry; it does not perform Swift-rendered pixel inspection in this phase.
 - Rounded road corners are approximated by straight planning segments for validation.
-- This phase does not implement runtime parity validation; Phase 10 covers Swift/runtime parity.
+- Runtime parity is implemented as a production gate in Phase 10. Swift execution still runs through the existing xcodebuild test harness rather than an in-memory simulator bridge.
 
 ## Phase 10 – Runtime Parity Validation
 
@@ -680,6 +680,8 @@ Create or strengthen:
 
     RuntimeParityValidator
     SwiftValidationGate
+
+Implementation status: `SwiftValidationGate` now classifies runtime-risk from recipe topology rules, candidate flags, mechanic metadata, topology class, mechanic tags, and concrete graph evidence such as four-way fanout, cycles, repeated route nodes, repeated taps, rejoins, and package-inside-loop. `RuntimeParityValidator` records whether Swift validation is not required, skipped for dry-run reporting, pending for a production `--swift-tests` run, passed, failed, or missing.
 
 ### Required For
 
@@ -712,6 +714,16 @@ Examples:
 - Risky recipes cannot be accepted into production without runtime validation.
 - Python-only validation is allowed only for low-risk dry-run experiments.
 - Swift validation failures include candidate seed and recipe metadata.
+
+Production behavior: dry runs may report risky candidates with `runtimeValidationStatus: skipped_required_for_production`. Production generation without `--swift-tests` rejects risky candidates with `missing_required_swift_validation`. Production generation with `--swift-tests` writes the generated level and solution sidecar, then runs the existing `LevelSolvabilityTests/testRequestedGeneratedLevelsCompleteFromEnvironmentDirectories` xcodebuild hook with generated directories supplied through environment variables.
+
+Reporting now exposes `runtimeValidationRequired`, `runtimeValidationStatus`, `runtimeValidationReason`, `swiftValidationCommand`, `swiftValidationPassed`, `swiftValidationSkippedReason`, `riskyMechanicTags`, and `requiresSwiftRuntimeValidation` for accepted candidates and candidate-selection summaries.
+
+Current limitations:
+
+- Swift runtime parity uses the existing xcodebuild test harness and therefore validates files on disk after write, not in-memory candidates before write.
+- Failure classification is inferred from xcodebuild output and may fall back to `swift_runtime_parity_failed`.
+- Road-shape parity is validated through RouteEngine replay and generator switch-preview metadata; there is no Swift-rendered pixel comparison in this phase.
 
 ## Phase 11 – Quality Scoring V2
 

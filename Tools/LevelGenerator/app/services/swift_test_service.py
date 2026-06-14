@@ -88,6 +88,7 @@ class SwiftTestService:
                 stdout_tail=_tail(exc.stdout),
                 stderr_tail=_tail(exc.stderr),
                 failure_details=_failure_details(exc.stdout, exc.stderr),
+                failure_reasons=_failure_reasons(exc.stdout, exc.stderr),
             )
         except OSError as exc:
             return SwiftTestSummary(
@@ -100,6 +101,7 @@ class SwiftTestService:
 
         passed = completed.returncode == 0
         failure_details = [] if passed else _failure_details(completed.stdout, completed.stderr)
+        failure_reasons = [] if passed else _failure_reasons(completed.stdout, completed.stderr)
         return SwiftTestSummary(
             command=command,
             environment=environment,
@@ -113,6 +115,7 @@ class SwiftTestService:
             stdout_tail=_tail(completed.stdout),
             stderr_tail=_tail(completed.stderr),
             failure_details=failure_details,
+            failure_reasons=failure_reasons,
         )
 
 
@@ -133,11 +136,16 @@ def _failure_details(stdout: object, stderr: object, limit: int = 20) -> list[st
         "Level solvability failures:",
         "level id:",
         "script id:",
+        "expected outcome:",
         "actual outcome:",
         "elapsed time:",
+        "time remaining:",
         "tap count:",
         "final node:",
         "current edge:",
+        "progress along edge:",
+        "package collected:",
+        "last executed action:",
         "harness error:",
     )
     for raw_line in text.splitlines():
@@ -147,3 +155,21 @@ def _failure_details(stdout: object, stderr: object, limit: int = 20) -> list[st
         if len(details) >= limit:
             break
     return details
+
+
+def _failure_reasons(stdout: object, stderr: object) -> list[str]:
+    text = "\n".join(part for part in [_tail(stdout, 12_000), _tail(stderr, 12_000)] if part).lower()
+    reasons: list[str] = []
+    if "didrotate=false" in text or "invalid action node id" in text or "tap node ids must be non-empty" in text:
+        reasons.append("switch_tap_runtime_mismatch")
+    if (
+        "package collected: false" in text
+        or "didcollectpackage=false" in text
+        or "reached_destination_without_package" in text
+    ):
+        reasons.append("package_order_runtime_mismatch")
+    if "expected .completed" in text or "actual outcome:" in text or "external generated level harness threw" in text:
+        reasons.append("solution_sidecar_runtime_mismatch")
+    if not reasons:
+        reasons.append("swift_runtime_parity_failed")
+    return list(dict.fromkeys(reasons))
