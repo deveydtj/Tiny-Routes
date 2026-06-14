@@ -93,6 +93,19 @@ class UniqueSolutionValidationResult:
     intended_route_length: int | None = None
     shortest_valid_route_length: int | None = None
     package_reachability_status: str = "not_evaluated"
+    rejoin_detected: bool = False
+    rejoin_count: int = 0
+    declared_rejoin_count: int = 0
+    unsafe_rejoin_detected: bool = False
+    unsafe_rejoin_reason: str | None = None
+    revisit_detected: bool = False
+    revisit_count: int = 0
+    declared_revisit_count: int = 0
+    unsafe_revisit_detected: bool = False
+    unsafe_revisit_reason: str | None = None
+    repeated_node_ids: tuple[str, ...] = field(default_factory=tuple)
+    repeated_switch_ids: tuple[str, ...] = field(default_factory=tuple)
+    max_visit_count_by_node: tuple[tuple[str, int], ...] = field(default_factory=tuple)
 
 
 class UniqueSolutionValidatorService:
@@ -107,6 +120,8 @@ class UniqueSolutionValidatorService:
         initial_state = self._initial_state(generated_level)
         intended_route = self._intended_route(generated_level)
         intended_route_length = max(0, len(intended_route) - 1) if intended_route else None
+        rejoin_detection = self._detect_rejoins(generated_level, intended_route)
+        revisit_detection = self._detect_revisits(generated_level, intended_route)
         should_validate_route_safety = (
             requires_unique_solution
             or self._package_required(generated_level)
@@ -123,14 +138,36 @@ class UniqueSolutionValidatorService:
                 notes=("unique_solution_not_required_by_topology_rules",),
                 intended_route_length=intended_route_length,
                 package_reachability_status=package_status,
+                rejoin_detected=bool(rejoin_detection.node_ids),
+                rejoin_count=len(rejoin_detection.node_ids),
+                declared_rejoin_count=rejoin_detection.declared_count,
+                revisit_detected=bool(revisit_detection.repeated_node_ids),
+                revisit_count=revisit_detection.revisit_count,
+                declared_revisit_count=revisit_detection.declared_count,
+                repeated_node_ids=revisit_detection.repeated_node_ids,
+                repeated_switch_ids=revisit_detection.repeated_switch_ids,
+                max_visit_count_by_node=revisit_detection.max_visit_count_by_node,
             )
 
         enumeration = self._enumerate_solutions(generated_level, initial_state, config)
+        max_visit_count_by_node = self._max_visit_count_by_node(
+            revisit_detection.max_visit_count_by_node,
+            enumeration,
+        )
         package_issues = self.validate_package_before_goal(generated_level, enumeration)
         shortcut_issues = self.validate_no_shortcut_path(generated_level, enumeration)
         wrong_branch_issues = self.validate_wrong_branches_fail_correctly(generated_level, enumeration)
+        rejoin_issues = self.validate_declared_rejoins(generated_level, enumeration, rejoin_detection)
+        revisit_issues = self.validate_declared_revisits(generated_level, enumeration, revisit_detection)
         unique_issues = self._issues_for_result(enumeration) if requires_unique_solution else ()
-        issues = (*unique_issues, *package_issues, *shortcut_issues, *wrong_branch_issues)
+        issues = (
+            *unique_issues,
+            *package_issues,
+            *shortcut_issues,
+            *wrong_branch_issues,
+            *rejoin_issues,
+            *revisit_issues,
+        )
         destination_before_package_summary = (
             enumeration.destination_before_package_summaries[0]
             if enumeration.destination_before_package_summaries
@@ -165,6 +202,19 @@ class UniqueSolutionValidatorService:
             intended_route_length=intended_route_length,
             shortest_valid_route_length=enumeration.shortest_valid_route_length,
             package_reachability_status=self._package_reachability_status(generated_level, intended_route),
+            rejoin_detected=bool(rejoin_detection.node_ids),
+            rejoin_count=len(rejoin_detection.node_ids),
+            declared_rejoin_count=rejoin_detection.declared_count,
+            unsafe_rejoin_detected=bool(rejoin_issues),
+            unsafe_rejoin_reason=self._first_issue_code(rejoin_issues),
+            revisit_detected=bool(revisit_detection.repeated_node_ids),
+            revisit_count=revisit_detection.revisit_count,
+            declared_revisit_count=revisit_detection.declared_count,
+            unsafe_revisit_detected=bool(revisit_issues),
+            unsafe_revisit_reason=self._first_issue_code(revisit_issues),
+            repeated_node_ids=revisit_detection.repeated_node_ids,
+            repeated_switch_ids=revisit_detection.repeated_switch_ids,
+            max_visit_count_by_node=max_visit_count_by_node,
         )
 
     def validateUniqueSolution(self, generated_level) -> UniqueSolutionValidationResult:
@@ -665,6 +715,585 @@ class UniqueSolutionValidatorService:
     ) -> tuple[UniqueSolutionValidationIssue, ...]:
         return self.validate_wrong_branches_fail_correctly(generated_level, enumeration)
 
+    def validate_declared_rejoins(
+        self,
+        generated_level,
+        enumeration: "_EnumerationResult | None" = None,
+        detection: "_RejoinDetection | None" = None,
+    ) -> tuple[UniqueSolutionValidationIssue, ...]:
+        if detection is None:
+            detection = self._detect_rejoins(generated_level)
+        if not detection.node_ids:
+            return ()
+        if enumeration is None:
+            enumeration = self._enumerate_solutions(
+                generated_level,
+                self._initial_state(generated_level),
+                self._config(generated_level, self._topology_rules(generated_level)),
+            )
+
+        topology_rules = self._topology_rules(generated_level)
+        topology_rules_metadata = self._topology_rules_metadata(generated_level)
+        if topology_rules_metadata is None:
+            return (
+                UniqueSolutionValidationIssue(
+                    severity="error",
+                    code="topology_rules_missing_for_declared_rejoin_validation",
+                    message=(
+                        "Rejoin validation found converging route segments, but topologyRules metadata is missing "
+                        f"(rejoinCount={len(detection.node_ids)}, nodes={', '.join(detection.node_ids)})."
+                    ),
+                    related_node_id=detection.node_ids[0],
+                ),
+            )
+        if not bool(topology_rules.get("allowsRejoin", False)):
+            return (
+                UniqueSolutionValidationIssue(
+                    severity="error",
+                    code="undeclared_rejoin",
+                    message=(
+                        "Rejoin validation found converging route segments, but the recipe does not allow rejoins "
+                        f"(nodes={', '.join(detection.node_ids)})."
+                    ),
+                    related_node_id=detection.node_ids[0],
+                ),
+            )
+
+        issues: list[UniqueSolutionValidationIssue] = []
+        if detection.declared_count_is_explicit and len(detection.node_ids) > detection.declared_count:
+            issues.append(
+                UniqueSolutionValidationIssue(
+                    severity="error",
+                    code="declared_rejoin_count_exceeds_metadata",
+                    message=(
+                        "Rejoin validation found more converging nodes than declared "
+                        f"(actual={len(detection.node_ids)}, declared={detection.declared_count})."
+                    ),
+                    related_node_id=detection.node_ids[0],
+                )
+            )
+
+        if detection.declared_node_ids is not None and set(detection.declared_node_ids) != set(detection.node_ids):
+            issues.append(
+                UniqueSolutionValidationIssue(
+                    severity="error",
+                    code="declared_rejoin_metadata_node_mismatch",
+                    message=(
+                        "Declared rejoin node metadata does not match the graph "
+                        f"(actual={', '.join(detection.node_ids)}, "
+                        f"declared={', '.join(detection.declared_node_ids) or 'none'})."
+                    ),
+                    related_node_id=detection.node_ids[0],
+                )
+            )
+
+        issues.extend(self._rejoin_safety_issues(generated_level, enumeration, detection))
+        return tuple(issues)
+
+    def validateDeclaredRejoins(
+        self,
+        generated_level,
+        enumeration: "_EnumerationResult | None" = None,
+        detection: "_RejoinDetection | None" = None,
+    ) -> tuple[UniqueSolutionValidationIssue, ...]:
+        return self.validate_declared_rejoins(generated_level, enumeration, detection)
+
+    def validate_declared_revisits(
+        self,
+        generated_level,
+        enumeration: "_EnumerationResult | None" = None,
+        detection: "_RevisitDetection | None" = None,
+    ) -> tuple[UniqueSolutionValidationIssue, ...]:
+        if detection is None:
+            detection = self._detect_revisits(generated_level)
+        if not detection.repeated_node_ids:
+            return ()
+        if enumeration is None:
+            enumeration = self._enumerate_solutions(
+                generated_level,
+                self._initial_state(generated_level),
+                self._config(generated_level, self._topology_rules(generated_level)),
+            )
+
+        topology_rules = self._topology_rules(generated_level)
+        topology_rules_metadata = self._topology_rules_metadata(generated_level)
+        if topology_rules_metadata is None:
+            return (
+                UniqueSolutionValidationIssue(
+                    severity="error",
+                    code="topology_rules_missing_for_declared_revisit_validation",
+                    message=(
+                        "Revisit validation found repeated intended-route nodes, but topologyRules metadata is missing "
+                        f"(revisitCount={detection.revisit_count}, nodes={', '.join(detection.repeated_node_ids)})."
+                    ),
+                    related_node_id=detection.repeated_node_ids[0],
+                ),
+            )
+        if not bool(topology_rules.get("allowsRevisit", False)):
+            return (
+                UniqueSolutionValidationIssue(
+                    severity="error",
+                    code="undeclared_revisit",
+                    message=(
+                        "Revisit validation found repeated intended-route nodes, but the recipe does not allow revisits "
+                        f"(nodes={', '.join(detection.repeated_node_ids)})."
+                    ),
+                    related_node_id=detection.repeated_node_ids[0],
+                ),
+            )
+
+        issues: list[UniqueSolutionValidationIssue] = []
+        if detection.declared_count_is_explicit and detection.revisit_count > detection.declared_count:
+            issues.append(
+                UniqueSolutionValidationIssue(
+                    severity="error",
+                    code="declared_revisit_count_exceeds_metadata",
+                    message=(
+                        "Revisit validation found more repeated route visits than declared "
+                        f"(actual={detection.revisit_count}, declared={detection.declared_count})."
+                    ),
+                    related_node_id=detection.repeated_node_ids[0],
+                )
+            )
+
+        if (
+            detection.declared_node_ids is not None
+            and set(detection.declared_node_ids) != set(detection.repeated_node_ids)
+        ):
+            issues.append(
+                UniqueSolutionValidationIssue(
+                    severity="error",
+                    code="declared_revisit_metadata_node_mismatch",
+                    message=(
+                        "Declared revisit node metadata does not match the intended route "
+                        f"(actual={', '.join(detection.repeated_node_ids)}, "
+                        f"declared={', '.join(detection.declared_node_ids) or 'none'})."
+                    ),
+                    related_node_id=detection.repeated_node_ids[0],
+                )
+            )
+
+        if detection.repeated_tap_node_ids and not self._allows_repeated_taps(generated_level):
+            issues.append(
+                UniqueSolutionValidationIssue(
+                    severity="error",
+                    code="declared_revisit_repeated_taps_not_allowed",
+                    message=(
+                        "Revisit validation found repeated switch taps, but recipe metadata does not allow them "
+                        f"(nodes={', '.join(detection.repeated_tap_node_ids)})."
+                    ),
+                    related_node_id=detection.repeated_tap_node_ids[0],
+                )
+            )
+
+        issues.extend(self._revisit_safety_issues(generated_level, enumeration, detection))
+        return tuple(issues)
+
+    def validateDeclaredRevisits(
+        self,
+        generated_level,
+        enumeration: "_EnumerationResult | None" = None,
+        detection: "_RevisitDetection | None" = None,
+    ) -> tuple[UniqueSolutionValidationIssue, ...]:
+        return self.validate_declared_revisits(generated_level, enumeration, detection)
+
+    def _detect_rejoins(
+        self,
+        generated_level,
+        intended_route: tuple[str, ...] | None = None,
+    ) -> "_RejoinDetection":
+        level = generated_level.level_document
+        route = intended_route if intended_route is not None else self._intended_route(generated_level)
+        route_counts = Counter(route)
+        incoming: dict[str, list[Any]] = {}
+        outgoing: dict[str, list[str]] = {}
+        for edge in level.graph.edges:
+            incoming.setdefault(edge.toNodeID, []).append(edge)
+            outgoing.setdefault(edge.fromNodeID, []).append(edge.toNodeID)
+
+        rejoin_node_ids: list[str] = []
+        for node_id, incoming_edges in incoming.items():
+            if node_id == level.startNodeID or route_counts.get(node_id, 0) > 1:
+                continue
+            non_cycle_sources = {
+                edge.fromNodeID
+                for edge in incoming_edges
+                if not self._can_reach(node_id, edge.fromNodeID, outgoing)
+            }
+            if len(non_cycle_sources) >= 2:
+                rejoin_node_ids.append(node_id)
+
+        metadata = getattr(generated_level, "mechanic_metadata", {}) or {}
+        declared_node_ids = self._declared_node_ids(
+            metadata,
+            ("declaredRejoinNodeIDs", "rejoinNodeIDs"),
+        )
+        declared_count, count_is_explicit = self._declared_count(
+            metadata,
+            ("declaredRejoinCount", "allowedRejoinCount", "rejoinCount"),
+            declared_node_ids,
+            fallback_count=len(rejoin_node_ids) if self._topology_rules(generated_level).get("allowsRejoin") else 0,
+        )
+        return _RejoinDetection(
+            node_ids=tuple(sorted(rejoin_node_ids)),
+            declared_count=declared_count,
+            declared_count_is_explicit=count_is_explicit,
+            declared_node_ids=declared_node_ids,
+        )
+
+    def _detect_revisits(
+        self,
+        generated_level,
+        intended_route: tuple[str, ...] | None = None,
+    ) -> "_RevisitDetection":
+        route = intended_route if intended_route is not None else self._intended_route(generated_level)
+        visit_counts = Counter(route)
+        repeated_node_ids = tuple(sorted(node_id for node_id, count in visit_counts.items() if count > 1))
+        revisit_count = sum(count - 1 for count in visit_counts.values() if count > 1)
+        switch_node_ids = self._switch_node_ids(generated_level)
+        tap_counts = Counter(self._intended_tap_order(generated_level))
+        repeated_tap_node_ids = tuple(sorted(node_id for node_id, count in tap_counts.items() if count > 1))
+        repeated_switch_ids = tuple(
+            sorted(
+                {
+                    node_id
+                    for node_id in repeated_node_ids
+                    if node_id in switch_node_ids
+                }
+                | set(repeated_tap_node_ids)
+            )
+        )
+        max_visit_count_by_node = tuple(sorted((node_id, count) for node_id, count in visit_counts.items()))
+
+        metadata = getattr(generated_level, "mechanic_metadata", {}) or {}
+        declared_node_ids = self._declared_node_ids(
+            metadata,
+            ("declaredRevisitNodeIDs", "revisitNodeIDs", "repeatedNodeIDs"),
+        )
+        declared_count, count_is_explicit = self._declared_count(
+            metadata,
+            ("declaredRevisitCount", "allowedRevisitCount", "revisitCount"),
+            declared_node_ids,
+            fallback_count=revisit_count if self._topology_rules(generated_level).get("allowsRevisit") else 0,
+        )
+        return _RevisitDetection(
+            repeated_node_ids=repeated_node_ids,
+            repeated_switch_ids=repeated_switch_ids,
+            repeated_tap_node_ids=repeated_tap_node_ids,
+            max_visit_count_by_node=max_visit_count_by_node,
+            revisit_count=revisit_count,
+            declared_count=declared_count,
+            declared_count_is_explicit=count_is_explicit,
+            declared_node_ids=declared_node_ids,
+        )
+
+    def _rejoin_safety_issues(
+        self,
+        generated_level,
+        enumeration: "_EnumerationResult",
+        detection: "_RejoinDetection",
+    ) -> tuple[UniqueSolutionValidationIssue, ...]:
+        issues: list[UniqueSolutionValidationIssue] = []
+        rejoin_nodes = set(detection.node_ids)
+        bypass_summary = self._first_summary_through_nodes(
+            enumeration.destination_before_package_summaries,
+            rejoin_nodes,
+        )
+        if bypass_summary is not None:
+            issues.append(
+                UniqueSolutionValidationIssue(
+                    severity="error",
+                    code="declared_rejoin_package_bypass_detected",
+                    message=(
+                        "Declared rejoin allows the destination to be reached before package collection; "
+                        f"sample={self._summary_text(bypass_summary)}."
+                    ),
+                    related_node_id=self._first_matching_node(bypass_summary, rejoin_nodes),
+                    related_edge_id=bypass_summary.edge_ids[-1] if bypass_summary.edge_ids else None,
+                )
+            )
+
+        intended_route = self._intended_route(generated_level)
+        intended_taps = self._intended_tap_order(generated_level)
+        non_intended_summary = self._first_non_intended_success(enumeration, intended_route, intended_taps)
+        if enumeration.solution_count > 1 and self._summary_visits_any(non_intended_summary, rejoin_nodes):
+            issues.append(
+                UniqueSolutionValidationIssue(
+                    severity="error",
+                    code="declared_rejoin_multiple_solutions",
+                    message=(
+                        "Declared rejoin participates in more than one valid package-before-destination route "
+                        f"(solutions={enumeration.solution_count}); sample={self._summary_text(non_intended_summary)}."
+                    ),
+                    related_node_id=self._first_matching_node(non_intended_summary, rejoin_nodes),
+                    related_edge_id=(
+                        non_intended_summary.edge_ids[-1]
+                        if non_intended_summary and non_intended_summary.edge_ids
+                        else None
+                    ),
+                )
+            )
+        elif enumeration.solution_count <= 1:
+            shortcut_summary = self._first_shortcut_success(enumeration, intended_route, intended_taps)
+            if self._summary_visits_any(shortcut_summary, rejoin_nodes):
+                issues.append(
+                    UniqueSolutionValidationIssue(
+                        severity="error",
+                        code="declared_rejoin_shortcut_detected",
+                        message=(
+                            "Declared rejoin participates in a valid route that differs from the intended route; "
+                            f"sample={self._summary_text(shortcut_summary)}."
+                        ),
+                        related_node_id=self._first_matching_node(shortcut_summary, rejoin_nodes),
+                        related_edge_id=(
+                            shortcut_summary.edge_ids[-1]
+                            if shortcut_summary and shortcut_summary.edge_ids
+                            else None
+                        ),
+                    )
+                )
+
+        if not enumeration.is_exhaustive:
+            limited_summary = self._first_summary_through_nodes(
+                enumeration.failure_path_summaries,
+                rejoin_nodes,
+                terminal_reasons={"max_traversal_depth_reached", "max_taps_reached"},
+            )
+            if limited_summary is not None:
+                issues.append(
+                    UniqueSolutionValidationIssue(
+                        severity="error",
+                        code="declared_rejoin_search_limit_reached",
+                        message=(
+                            "Declared rejoin participates in a path that hit traversal limits before validation "
+                            f"could prove safety; sample={self._summary_text(limited_summary)}."
+                        ),
+                        related_node_id=self._first_matching_node(limited_summary, rejoin_nodes),
+                        related_edge_id=limited_summary.edge_ids[-1] if limited_summary.edge_ids else None,
+                    )
+                )
+
+        return tuple(issues)
+
+    def _revisit_safety_issues(
+        self,
+        generated_level,
+        enumeration: "_EnumerationResult",
+        detection: "_RevisitDetection",
+    ) -> tuple[UniqueSolutionValidationIssue, ...]:
+        issues: list[UniqueSolutionValidationIssue] = []
+        repeated_nodes = set(detection.repeated_node_ids)
+        bypass_summary = self._first_summary_through_nodes(
+            enumeration.destination_before_package_summaries,
+            repeated_nodes,
+        )
+        if bypass_summary is not None:
+            issues.append(
+                UniqueSolutionValidationIssue(
+                    severity="error",
+                    code="declared_revisit_package_bypass_detected",
+                    message=(
+                        "Declared revisit allows the destination to be reached before package collection; "
+                        f"sample={self._summary_text(bypass_summary)}."
+                    ),
+                    related_node_id=self._first_matching_node(bypass_summary, repeated_nodes),
+                    related_edge_id=bypass_summary.edge_ids[-1] if bypass_summary.edge_ids else None,
+                )
+            )
+
+        intended_route = self._intended_route(generated_level)
+        intended_taps = self._intended_tap_order(generated_level)
+        non_intended_summary = self._first_non_intended_success(enumeration, intended_route, intended_taps)
+        if enumeration.solution_count > 1 and self._summary_visits_any(non_intended_summary, repeated_nodes):
+            issues.append(
+                UniqueSolutionValidationIssue(
+                    severity="error",
+                    code="declared_revisit_multiple_solutions",
+                    message=(
+                        "Declared revisit participates in more than one valid package-before-destination route "
+                        f"(solutions={enumeration.solution_count}); sample={self._summary_text(non_intended_summary)}."
+                    ),
+                    related_node_id=self._first_matching_node(non_intended_summary, repeated_nodes),
+                    related_edge_id=(
+                        non_intended_summary.edge_ids[-1]
+                        if non_intended_summary and non_intended_summary.edge_ids
+                        else None
+                    ),
+                )
+            )
+        elif enumeration.solution_count <= 1:
+            shortcut_summary = self._first_shortcut_success(enumeration, intended_route, intended_taps)
+            if self._summary_visits_any(shortcut_summary, repeated_nodes):
+                issues.append(
+                    UniqueSolutionValidationIssue(
+                        severity="error",
+                        code="declared_revisit_shortcut_detected",
+                        message=(
+                            "Declared revisit participates in a valid route that differs from the intended route; "
+                            f"sample={self._summary_text(shortcut_summary)}."
+                        ),
+                        related_node_id=self._first_matching_node(shortcut_summary, repeated_nodes),
+                        related_edge_id=(
+                            shortcut_summary.edge_ids[-1]
+                            if shortcut_summary and shortcut_summary.edge_ids
+                            else None
+                        ),
+                    )
+                )
+
+        if not enumeration.is_exhaustive:
+            limited_summary = self._first_summary_through_nodes(
+                enumeration.failure_path_summaries,
+                repeated_nodes,
+                terminal_reasons={"max_traversal_depth_reached", "max_taps_reached"},
+            )
+            if limited_summary is not None:
+                issues.append(
+                    UniqueSolutionValidationIssue(
+                        severity="error",
+                        code="declared_revisit_infinite_traversal_risk",
+                        message=(
+                            "Declared revisit reaches a traversal limit before validation can prove bounded behavior; "
+                            f"sample={self._summary_text(limited_summary)}."
+                        ),
+                        related_node_id=self._first_matching_node(limited_summary, repeated_nodes),
+                        related_edge_id=limited_summary.edge_ids[-1] if limited_summary.edge_ids else None,
+                    )
+                )
+
+        return tuple(issues)
+
+    def _first_shortcut_success(
+        self,
+        result: "_EnumerationResult",
+        intended_route: tuple[str, ...],
+        intended_taps: tuple[str, ...],
+    ) -> UniqueSolutionPathSummary | None:
+        if not intended_route:
+            return None
+        intended_route_length = max(0, len(intended_route) - 1) if intended_route else None
+        for summary in result.successful_path_summaries:
+            path_differs = summary.node_ids != intended_route
+            tap_order_differs = summary.tap_history != intended_taps
+            shorter_than_intended = (
+                intended_route_length is not None
+                and summary.route_length < intended_route_length
+            )
+            fewer_taps_than_intended = len(summary.tap_history) < len(intended_taps)
+            if path_differs or tap_order_differs or shorter_than_intended or fewer_taps_than_intended:
+                return summary
+        return None
+
+    def _first_summary_through_nodes(
+        self,
+        summaries: tuple[UniqueSolutionPathSummary, ...],
+        node_ids: set[str],
+        terminal_reasons: set[str] | None = None,
+    ) -> UniqueSolutionPathSummary | None:
+        for summary in summaries:
+            if terminal_reasons is not None and summary.terminal_reason not in terminal_reasons:
+                continue
+            if self._summary_visits_any(summary, node_ids):
+                return summary
+        return None
+
+    def _summary_visits_any(
+        self,
+        summary: UniqueSolutionPathSummary | None,
+        node_ids: set[str],
+    ) -> bool:
+        if summary is None:
+            return False
+        return any(node_id in node_ids for node_id in summary.node_ids)
+
+    def _first_matching_node(
+        self,
+        summary: UniqueSolutionPathSummary | None,
+        node_ids: set[str],
+    ) -> str | None:
+        if summary is None:
+            return next(iter(sorted(node_ids)), None)
+        return next((node_id for node_id in summary.node_ids if node_id in node_ids), None)
+
+    def _can_reach(self, start_id: str, target_id: str, outgoing: dict[str, list[str]]) -> bool:
+        if start_id == target_id:
+            return True
+        stack = [start_id]
+        visited: set[str] = set()
+        while stack:
+            current_id = stack.pop()
+            if current_id in visited:
+                continue
+            visited.add(current_id)
+            for next_id in outgoing.get(current_id, ()):
+                if next_id == target_id:
+                    return True
+                if next_id not in visited:
+                    stack.append(next_id)
+        return False
+
+    def _switch_node_ids(self, generated_level) -> set[str]:
+        level = generated_level.level_document
+        edge_by_id = {edge.id: edge for edge in level.graph.edges}
+        return {
+            node.id
+            for node in level.graph.nodes
+            if len(self._valid_outgoing_edge_ids(node, edge_by_id)) > 1
+        }
+
+    def _declared_count(
+        self,
+        metadata: dict[str, Any],
+        count_keys: tuple[str, ...],
+        declared_node_ids: tuple[str, ...] | None,
+        fallback_count: int,
+    ) -> tuple[int, bool]:
+        for key in count_keys:
+            value = metadata.get(key)
+            if isinstance(value, int) and value >= 0:
+                return value, True
+        if declared_node_ids is not None:
+            return len(declared_node_ids), True
+        return fallback_count, False
+
+    def _declared_node_ids(
+        self,
+        metadata: dict[str, Any],
+        keys: tuple[str, ...],
+    ) -> tuple[str, ...] | None:
+        for key in keys:
+            value = metadata.get(key)
+            if isinstance(value, (list, tuple)):
+                return tuple(sorted(str(node_id) for node_id in value))
+        return None
+
+    def _topology_rules_metadata(self, generated_level) -> dict[str, Any] | None:
+        metadata = getattr(generated_level, "mechanic_metadata", {}) or {}
+        topology_rules = metadata.get("topologyRules")
+        return dict(topology_rules) if isinstance(topology_rules, dict) else None
+
+    def _allows_repeated_taps(self, generated_level) -> bool:
+        metadata = getattr(generated_level, "mechanic_metadata", {}) or {}
+        return metadata.get("allowsRepeatedTaps") is True
+
+    def _first_issue_code(self, issues: tuple[UniqueSolutionValidationIssue, ...]) -> str | None:
+        return issues[0].code if issues else None
+
+    def _max_visit_count_by_node(
+        self,
+        base_counts: tuple[tuple[str, int], ...],
+        result: "_EnumerationResult",
+    ) -> tuple[tuple[str, int], ...]:
+        counts = dict(base_counts)
+        for summary in (
+            *result.successful_path_summaries,
+            *result.destination_before_package_summaries,
+            *result.failure_path_summaries,
+        ):
+            for node_id, count in Counter(summary.node_ids).items():
+                counts[node_id] = max(counts.get(node_id, 0), count)
+        return tuple(sorted(counts.items()))
+
     def _issues_for_result(self, result: "_EnumerationResult") -> tuple[UniqueSolutionValidationIssue, ...]:
         if result.solution_count > 1:
             return (
@@ -940,3 +1569,23 @@ class _EnumerationResult:
     destination_before_package_summaries: tuple[UniqueSolutionPathSummary, ...]
     failure_path_summaries: tuple[UniqueSolutionPathSummary, ...]
     shortest_valid_route_length: int | None
+
+
+@dataclass(frozen=True)
+class _RejoinDetection:
+    node_ids: tuple[str, ...]
+    declared_count: int
+    declared_count_is_explicit: bool
+    declared_node_ids: tuple[str, ...] | None
+
+
+@dataclass(frozen=True)
+class _RevisitDetection:
+    repeated_node_ids: tuple[str, ...]
+    repeated_switch_ids: tuple[str, ...]
+    repeated_tap_node_ids: tuple[str, ...]
+    max_visit_count_by_node: tuple[tuple[str, int], ...]
+    revisit_count: int
+    declared_count: int
+    declared_count_is_explicit: bool
+    declared_node_ids: tuple[str, ...] | None

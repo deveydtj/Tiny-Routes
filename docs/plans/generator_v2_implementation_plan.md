@@ -341,7 +341,7 @@ Check:
 
 Prove the puzzle has exactly one valid solution before layout.
 
-Implementation status: the current `UniqueSolutionValidatorService` performs bounded structural enumeration on generated concrete levels after scripted simulation succeeds. It counts package-before-destination terminal routes, rejects `solutionCount != 1` or limit-truncated searches when topology rules require uniqueness, and now layers shortcut, package-before-goal, and wrong-branch validation on the same search results. Full runtime timing parity plus dedicated rejoin/revisit proof logic remain future work.
+Implementation status: the current `UniqueSolutionValidatorService` performs bounded structural enumeration on generated concrete levels after scripted simulation succeeds. It counts package-before-destination terminal routes, rejects `solutionCount != 1` or limit-truncated searches when topology rules require uniqueness, and layers shortcut, package-before-goal, wrong-branch, rejoin, and revisit validation on the same search results. Full runtime timing parity remains future work.
 
 Create or improve:
 
@@ -403,15 +403,51 @@ Implemented route-safety checks:
 - `validateNoShortcutPath()` compares successful enumerated routes against `solutionRoute` and `requiredTapOrder`, rejects shorter valid routes, alternate valid routes, package-bypass goal reaches, and tap-order bypasses.
 - `validateWrongBranchesFailCorrectly()` inspects off-route branches from the intended route and rejects branches that reach the goal, become valid solutions after package collection, or terminate only at traversal/tap limits.
 
-Reporting now exposes `shortcutDetected`, `packageBypassDetected`, `wrongBranchReachedGoal`, `bypassPathSummary`, `intendedRouteLength`, `shortestValidRouteLength`, and `packageReachabilityStatus` in the unique-solution validation payload.
+Reporting now exposes `shortcutDetected`, `packageBypassDetected`, `wrongBranchReachedGoal`, `bypassPathSummary`, `intendedRouteLength`, `shortestValidRouteLength`, `packageReachabilityStatus`, rejoin diagnostics, and revisit diagnostics in the unique-solution validation payload.
 
 Current limitations:
 
 - The checks are structural and reuse bounded enumeration; they do not model exact Swift movement timing or ignored-tap windows.
-- Wrong-branch validation infers branches from edges leaving the intended route. Full rejoin-specific and revisit-specific validators are intentionally deferred.
+- Wrong-branch validation infers branches from edges leaving the intended route.
 - Declared loops are not rejected by default; they fail only when they create a shortcut, package bypass, extra valid solution, or ambiguous termination.
 
-## Phase 6 – Layout Generation
+## Phase 6 – Rejoin and Revisit Validation
+
+### Declared vs Undeclared Rejoins
+
+A rejoin is an acyclic convergence point: two or more non-cycle incoming path segments flow into the same downstream node. Cycle-closing edges in ring or return-loop mechanics are classified by cycle/loop validation, not by rejoin validation.
+
+A declared rejoin is valid only when `RecipeTopologyRules.allowsRejoin` is true and the concrete graph remains safe under the solver. An undeclared rejoin fails with `undeclared_rejoin`. Optional metadata such as `declaredRejoinCount`, `allowedRejoinCount`, `rejoinNodeIDs`, or `declaredRejoinNodeIDs` is honored when present and is checked against the detected graph.
+
+`validateDeclaredRejoins()` runs after unique-solution, shortcut, wrong-branch, and package checks have produced solver evidence. It rejects rejoins that participate in package bypasses, alternate valid routes, shortcut routes, or traversal-limit ambiguity. Reporting exposes `rejoinDetected`, `rejoinCount`, `declaredRejoinCount`, `unsafeRejoinDetected`, and `unsafeRejoinReason`.
+
+### Declared vs Undeclared Revisits
+
+A revisit is an intended-route repeat of a node already visited earlier in that same route. Repeated switch taps are tracked separately from repeated node visits because a recipe can revisit a node without retapping it, and repeated taps require explicit recipe support through `allowsRepeatedTaps`.
+
+A declared revisit is valid only when `RecipeTopologyRules.allowsRevisit` is true. An undeclared revisit fails with `undeclared_revisit`. Optional metadata such as `declaredRevisitCount`, `allowedRevisitCount`, `revisitNodeIDs`, `repeatedNodeIDs`, or `declaredRevisitNodeIDs` is checked when present.
+
+`validateDeclaredRevisits()` reuses `UniqueSolutionValidatorService` enumeration output. It rejects revisits that create package bypasses, alternate valid routes, shortcut routes, repeated taps when the recipe disallows them, or traversal-limit paths that indicate unbounded loop risk. Reporting exposes `revisitDetected`, `revisitCount`, `declaredRevisitCount`, `unsafeRevisitDetected`, `unsafeRevisitReason`, `repeatedNodeIDs`, `repeatedSwitchIDs`, and `maxVisitCountByNode`.
+
+### Relationship To Topology Rules
+
+`GraphRecipe.validate()` now runs this logic in recipe order:
+
+    topology rules present
+    validateNoUndeclaredCycles()
+    validateDeclaredLoops()
+    validateDeclaredRejoins()
+    validateDeclaredRevisits()
+
+Generated-level validation preserves the existing concrete order: scripted simulation must pass first, then `UniqueSolutionValidatorService` performs unique-solution enumeration, package/shortcut/wrong-branch checks, rejoin checks, and revisit checks. This keeps rejoin/revisit safety tied to the same route evidence used for solution counting.
+
+### Current Limitations
+
+- Rejoin detection is graph-structural and intentionally excludes cycle-closing incoming edges so ring and return-loop mechanics stay under loop validation.
+- Revisit validation proves bounded behavior only through the current bounded structural enumerator. Swift runtime timing, missed-tap windows, and time-limit parity remain pending runtime validation work.
+- Layout readability for rejoins and revisits remains a later phase; these checks validate topology and route correctness only.
+
+## Phase 7 – Layout Generation
 
 ### Purpose
 
@@ -459,7 +495,7 @@ It must not create:
 - Layout failure rejects candidate, not recipe.
 - Layout reports include rejection reasons.
 
-## Phase 7 – Layout Readability Validation
+## Phase 8 – Layout Readability Validation
 
 Create:
 
@@ -509,7 +545,7 @@ Reject when package, switch, start, or goal is visually obscured.
 - Road crossings are intentional only if represented by a node.
 - Readability checks run before candidate scoring.
 
-## Phase 8 – Road Shape and Direction Assignment
+## Phase 9 – Road Shape and Direction Assignment
 
 ### Purpose
 
@@ -538,7 +574,7 @@ Create or strengthen:
 - Python simulation passes.
 - Swift runtime validation passes for risky mechanics.
 
-## Phase 9 – Runtime Parity Validation
+## Phase 10 – Runtime Parity Validation
 
 ### Purpose
 
@@ -581,7 +617,7 @@ Examples:
 - Python-only validation is allowed only for low-risk dry-run experiments.
 - Swift validation failures include candidate seed and recipe metadata.
 
-## Phase 10 – Quality Scoring
+## Phase 11 – Quality Scoring
 
 Create or improve:
 
@@ -679,7 +715,7 @@ Penalizes:
 - Candidate reports explain why the winning candidate was selected.
 - Weak but technically valid puzzles are rejected.
 
-## Phase 11 – Reporting and Debuggability
+## Phase 12 – Reporting and Debuggability
 
 Every generated candidate report should include:
 
@@ -711,7 +747,7 @@ Every generated candidate report should include:
 - Reports make starvation issues visible.
 - Reports separate logic failure, layout failure, runtime failure, and quality failure.
 
-## Phase 12 – Testing Plan
+## Phase 13 – Testing Plan
 
 ### Unit Tests
 
@@ -771,7 +807,7 @@ Every generated candidate report should include:
     testRepeatedTapRuntimeParity()
     testPackageInsideLoopRuntimeParity()
 
-## Phase 13 – Stress Testing
+## Phase 14 – Stress Testing
 
 ### Bounded Stress Tests
 

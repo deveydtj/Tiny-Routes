@@ -373,6 +373,14 @@ class GenerationReportRepository:
                             f"package status `{unique['packageReachabilityStatus']}`, "
                             f"shortest route `{unique['shortestValidRouteLength']}`."
                         )
+                        lines.append(
+                            f"- Rejoin/revisit validation: rejoin detected `{unique['rejoinDetected']}` "
+                            f"count `{unique['rejoinCount']}` declared `{unique['declaredRejoinCount']}` "
+                            f"unsafe `{unique['unsafeRejoinDetected']}` reason `{unique['unsafeRejoinReason']}`; "
+                            f"revisit detected `{unique['revisitDetected']}` count `{unique['revisitCount']}` "
+                            f"declared `{unique['declaredRevisitCount']}` unsafe `{unique['unsafeRevisitDetected']}` "
+                            f"reason `{unique['unsafeRevisitReason']}`."
+                        )
                 if level["quality"]:
                     quality = level["quality"]
                     lines.append(
@@ -891,6 +899,19 @@ class GenerationReportRepository:
             "intendedRouteLength": result.intended_route_length,
             "shortestValidRouteLength": result.shortest_valid_route_length,
             "packageReachabilityStatus": result.package_reachability_status,
+            "rejoinDetected": result.rejoin_detected,
+            "rejoinCount": result.rejoin_count,
+            "declaredRejoinCount": result.declared_rejoin_count,
+            "unsafeRejoinDetected": result.unsafe_rejoin_detected,
+            "unsafeRejoinReason": result.unsafe_rejoin_reason,
+            "revisitDetected": result.revisit_detected,
+            "revisitCount": result.revisit_count,
+            "declaredRevisitCount": result.declared_revisit_count,
+            "unsafeRevisitDetected": result.unsafe_revisit_detected,
+            "unsafeRevisitReason": result.unsafe_revisit_reason,
+            "repeatedNodeIDs": list(result.repeated_node_ids),
+            "repeatedSwitchIDs": list(result.repeated_switch_ids),
+            "maxVisitCountByNode": dict(result.max_visit_count_by_node),
             "issues": [
                 {
                     "severity": issue.severity,

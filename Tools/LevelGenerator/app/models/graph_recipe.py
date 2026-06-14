@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+from collections import Counter
 from dataclasses import dataclass, field
 from typing import Any
 
@@ -46,6 +47,8 @@ class GraphRecipe:
     def validate(self) -> list[str]:
         messages: list[str] = []
         node_ids = {node.id for node in self.nodes}
+        if self.topology_rules is None:
+            messages.append("topology_rules_missing")
         if not self.required_path:
             messages.append("required_path_empty")
             return messages
@@ -71,6 +74,8 @@ class GraphRecipe:
                 messages.append(f"required_path_missing_edge:{from_node_id}:{to_node_id}")
         messages.extend(self.validate_no_undeclared_cycles())
         messages.extend(self.validate_declared_loops())
+        messages.extend(self.validate_declared_rejoins())
+        messages.extend(self.validate_declared_revisits())
         return messages
 
     def validate_no_undeclared_cycles(self) -> list[str]:
@@ -141,6 +146,97 @@ class GraphRecipe:
     def validateDeclaredLoops(self) -> list[str]:
         return self.validate_declared_loops()
 
+    def validate_declared_rejoins(self) -> list[str]:
+        rejoins = self._detected_rejoins()
+        if self.topology_rules is None:
+            if rejoins:
+                return [
+                    f"topology_rules_missing_for_declared_rejoin_validation:"
+                    f"{self._rejoin_validation_context(rejoins)}"
+                ]
+            return []
+
+        rules = self.topology_rules
+        messages: list[str] = []
+        context = self._rejoin_validation_context(rejoins)
+        messages.extend(self._validate_rejoin_metadata_consistency(rejoins))
+        if not rejoins:
+            return messages
+
+        if not rules.allows_rejoin:
+            return [
+                f"undeclared_rejoin:{node_id}:{context}"
+                for node_id in rejoins
+            ]
+
+        declared_count, count_is_explicit = self._declared_rejoin_count()
+        if count_is_explicit and len(rejoins) > declared_count:
+            messages.append(f"declared_rejoin_count_exceeds_metadata:{context}")
+
+        declared_node_ids = self._declared_rejoin_node_ids()
+        if declared_node_ids is not None and set(declared_node_ids) != set(rejoins):
+            messages.append(
+                f"declared_rejoin_node_metadata_mismatch:"
+                f"metadataNodes={','.join(declared_node_ids) or 'none'}:"
+                f"actualNodes={','.join(rejoins) or 'none'}:"
+                f"{context}"
+            )
+
+        return messages
+
+    def validateDeclaredRejoins(self) -> list[str]:
+        return self.validate_declared_rejoins()
+
+    def validate_declared_revisits(self) -> list[str]:
+        repeated_nodes = self._repeated_required_path_nodes()
+        if self.topology_rules is None:
+            if repeated_nodes:
+                return [
+                    f"topology_rules_missing_for_declared_revisit_validation:"
+                    f"{self._revisit_validation_context(repeated_nodes)}"
+                ]
+            return []
+
+        rules = self.topology_rules
+        messages: list[str] = []
+        context = self._revisit_validation_context(repeated_nodes)
+        messages.extend(self._validate_revisit_metadata_consistency(repeated_nodes))
+        if not repeated_nodes:
+            return messages
+
+        if not rules.allows_revisit:
+            return [
+                f"undeclared_revisit:{node_id}:{context}"
+                for node_id in repeated_nodes
+            ]
+
+        declared_count, count_is_explicit = self._declared_revisit_count()
+        actual_count = self._revisit_count()
+        if count_is_explicit and actual_count > declared_count:
+            messages.append(f"declared_revisit_count_exceeds_metadata:{context}")
+
+        declared_node_ids = self._declared_revisit_node_ids()
+        if declared_node_ids is not None and set(declared_node_ids) != set(repeated_nodes):
+            messages.append(
+                f"declared_revisit_node_metadata_mismatch:"
+                f"metadataNodes={','.join(declared_node_ids) or 'none'}:"
+                f"actualNodes={','.join(repeated_nodes) or 'none'}:"
+                f"{context}"
+            )
+
+        repeated_tap_nodes = self._repeated_tap_node_ids()
+        if repeated_tap_nodes and self.mechanic_metadata.get("allowsRepeatedTaps") is False:
+            messages.append(
+                f"declared_revisit_repeated_taps_not_allowed:"
+                f"nodes={','.join(repeated_tap_nodes)}:"
+                f"{context}"
+            )
+
+        return messages
+
+    def validateDeclaredRevisits(self) -> list[str]:
+        return self.validate_declared_revisits()
+
     def _detected_cycles(self) -> tuple[tuple[str, ...], ...]:
         outgoing: dict[str, list[str]] = {}
         for edge in self.edges:
@@ -170,6 +266,44 @@ class GraphRecipe:
             return cycle
         rotations = [cycle[index:] + cycle[:index] for index in range(len(cycle))]
         return min(rotations)
+
+    def _detected_rejoins(self) -> tuple[str, ...]:
+        incoming: dict[str, list[GraphRecipeEdge]] = {}
+        outgoing: dict[str, list[str]] = {}
+        for edge in self.edges:
+            incoming.setdefault(edge.to_node_id, []).append(edge)
+            outgoing.setdefault(edge.from_node_id, []).append(edge.to_node_id)
+
+        route_counts = Counter(self.required_path)
+        rejoins: list[str] = []
+        for node_id, incoming_edges in incoming.items():
+            if node_id == "start" or route_counts.get(node_id, 0) > 1:
+                continue
+            non_cycle_sources = {
+                edge.from_node_id
+                for edge in incoming_edges
+                if not self._can_reach(node_id, edge.from_node_id, outgoing)
+            }
+            if len(non_cycle_sources) >= 2:
+                rejoins.append(node_id)
+        return tuple(sorted(rejoins))
+
+    def _can_reach(self, start_id: str, target_id: str, outgoing: dict[str, list[str]]) -> bool:
+        if start_id == target_id:
+            return True
+        stack = [start_id]
+        visited: set[str] = set()
+        while stack:
+            current_id = stack.pop()
+            if current_id in visited:
+                continue
+            visited.add(current_id)
+            for next_id in outgoing.get(current_id, ()):
+                if next_id == target_id:
+                    return True
+                if next_id not in visited:
+                    stack.append(next_id)
+        return False
 
     def _cycle_matches_declared_topology(self, cycle: tuple[str, ...]) -> bool:
         if self.topology_rules is None or not self.topology_rules.allows_cycles:
@@ -250,6 +384,38 @@ class GraphRecipe:
             )
         return messages
 
+    def _validate_rejoin_metadata_consistency(self, rejoins: tuple[str, ...]) -> list[str]:
+        messages: list[str] = []
+        topology_rules_metadata = self.mechanic_metadata.get("topologyRules")
+        context = self._rejoin_validation_context(rejoins)
+        if self.topology_rules is not None and rejoins and not isinstance(topology_rules_metadata, dict):
+            messages.append(f"declared_rejoin_metadata_missing:{context}")
+        if isinstance(topology_rules_metadata, dict) and self.topology_rules is not None:
+            if topology_rules_metadata.get("allowsRejoin") != self.topology_rules.allows_rejoin:
+                messages.append(
+                    f"declared_rejoin_metadata_allows_rejoin_mismatch:"
+                    f"metadataAllowsRejoin={self._format_context_value(topology_rules_metadata.get('allowsRejoin'))}:"
+                    f"ruleAllowsRejoin={self._format_context_value(self.topology_rules.allows_rejoin)}:"
+                    f"{context}"
+                )
+        return messages
+
+    def _validate_revisit_metadata_consistency(self, repeated_nodes: tuple[str, ...]) -> list[str]:
+        messages: list[str] = []
+        topology_rules_metadata = self.mechanic_metadata.get("topologyRules")
+        context = self._revisit_validation_context(repeated_nodes)
+        if self.topology_rules is not None and repeated_nodes and not isinstance(topology_rules_metadata, dict):
+            messages.append(f"declared_revisit_metadata_missing:{context}")
+        if isinstance(topology_rules_metadata, dict) and self.topology_rules is not None:
+            if topology_rules_metadata.get("allowsRevisit") != self.topology_rules.allows_revisit:
+                messages.append(
+                    f"declared_revisit_metadata_allows_revisit_mismatch:"
+                    f"metadataAllowsRevisit={self._format_context_value(topology_rules_metadata.get('allowsRevisit'))}:"
+                    f"ruleAllowsRevisit={self._format_context_value(self.topology_rules.allows_revisit)}:"
+                    f"{context}"
+                )
+        return messages
+
     def _cycle_description(self, cycle: tuple[str, ...]) -> str:
         if not cycle:
             return ""
@@ -267,11 +433,84 @@ class GraphRecipe:
             f"declaredCycleCount={self._declared_cycle_count_context_value()}"
         )
 
+    def _rejoin_validation_context(self, rejoins: tuple[str, ...]) -> str:
+        rules = self.topology_rules
+        allows_rejoin = rules.allows_rejoin if rules is not None else "missing"
+        declared_count, _ = self._declared_rejoin_count()
+        return (
+            f"recipe={self.family_name}/{self.variant_name}:"
+            f"allowsRejoin={self._format_context_value(allows_rejoin)}:"
+            f"actualRejoinCount={len(rejoins)}:"
+            f"declaredRejoinCount={self._format_context_value(declared_count)}:"
+            f"rejoinNodes={','.join(rejoins) or 'none'}"
+        )
+
+    def _revisit_validation_context(self, repeated_nodes: tuple[str, ...]) -> str:
+        rules = self.topology_rules
+        allows_revisit = rules.allows_revisit if rules is not None else "missing"
+        declared_count, _ = self._declared_revisit_count()
+        return (
+            f"recipe={self.family_name}/{self.variant_name}:"
+            f"allowsRevisit={self._format_context_value(allows_revisit)}:"
+            f"actualRevisitCount={self._revisit_count()}:"
+            f"declaredRevisitCount={self._format_context_value(declared_count)}:"
+            f"repeatedNodes={','.join(repeated_nodes) or 'none'}"
+        )
+
     def _declared_cycle_count_context_value(self) -> str:
         topology_rules_metadata = self.mechanic_metadata.get("topologyRules")
         if not isinstance(topology_rules_metadata, dict):
             return "missing"
         return self._format_context_value(topology_rules_metadata.get("allowedCycleCount"))
+
+    def _declared_rejoin_count(self) -> tuple[int | None, bool]:
+        for key in ("declaredRejoinCount", "allowedRejoinCount", "rejoinCount"):
+            value = self.mechanic_metadata.get(key)
+            if isinstance(value, int) and value >= 0:
+                return value, True
+        declared_nodes = self._declared_rejoin_node_ids()
+        if declared_nodes is not None:
+            return len(declared_nodes), True
+        if self.topology_rules is not None and self.topology_rules.allows_rejoin:
+            return len(self._detected_rejoins()), False
+        return 0, False
+
+    def _declared_revisit_count(self) -> tuple[int | None, bool]:
+        for key in ("declaredRevisitCount", "allowedRevisitCount", "revisitCount"):
+            value = self.mechanic_metadata.get(key)
+            if isinstance(value, int) and value >= 0:
+                return value, True
+        declared_nodes = self._declared_revisit_node_ids()
+        if declared_nodes is not None:
+            return len(declared_nodes), True
+        if self.topology_rules is not None and self.topology_rules.allows_revisit:
+            return self._revisit_count(), False
+        return 0, False
+
+    def _declared_rejoin_node_ids(self) -> tuple[str, ...] | None:
+        return self._declared_node_ids(("declaredRejoinNodeIDs", "rejoinNodeIDs"))
+
+    def _declared_revisit_node_ids(self) -> tuple[str, ...] | None:
+        return self._declared_node_ids(("declaredRevisitNodeIDs", "revisitNodeIDs", "repeatedNodeIDs"))
+
+    def _declared_node_ids(self, keys: tuple[str, ...]) -> tuple[str, ...] | None:
+        for key in keys:
+            value = self.mechanic_metadata.get(key)
+            if isinstance(value, (list, tuple)):
+                return tuple(sorted(str(node_id) for node_id in value))
+        return None
+
+    def _repeated_required_path_nodes(self) -> tuple[str, ...]:
+        counts = Counter(self.required_path)
+        return tuple(sorted(node_id for node_id, count in counts.items() if count > 1))
+
+    def _repeated_tap_node_ids(self) -> tuple[str, ...]:
+        counts = Counter(self.tap_node_ids)
+        return tuple(sorted(node_id for node_id, count in counts.items() if count > 1))
+
+    def _revisit_count(self) -> int:
+        counts = Counter(self.required_path)
+        return sum(count - 1 for count in counts.values() if count > 1)
 
     def _format_context_value(self, value: Any) -> str:
         if isinstance(value, bool):
