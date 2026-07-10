@@ -324,7 +324,6 @@ If `xcodebuild` is missing, install Xcode or run generation with `--no-swift-tes
 - Work one task at a time and keep generated production files out of tests.
 - Use scratch directories or `--dry-run` for experiments.
 - Add or update tests with every service change.
-- Keep `completion_status.md` current when finishing generator work.
 - Run `python Tools/LevelGenerator/run_all_generator_checks.py` before relying on a production batch.
 
 Good generated levels have readable routes, clear start/package/destination placement, intentional dead ends, difficulty-appropriate decision counts, and a non-placeholder solution sidecar. Confusing levels usually have crossing-heavy routes, clustered important nodes, or tap timing that only works by accident; reject those during review even when validation passes.
