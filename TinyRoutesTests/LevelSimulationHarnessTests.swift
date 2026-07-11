@@ -270,19 +270,24 @@ final class LevelSimulationHarnessTests: XCTestCase {
         XCTAssertGreaterThan(result.stepCount, 0)
     }
 
-    func testLateTapAfterSwitchDepartureDoesNotRotate() throws {
+    func testLateTapAfterSwitchDepartureFailsWithActionableRejection() throws {
         let level = makeLateTapRegressionLevel()
         let script = makeLateTapRegressionScript(times: [1.0, 3.40, 4.60, 5.80])
         let harness = LevelSimulationHarness()
 
-        let result = try harness.run(level: level, script: script)
-
-        XCTAssertEqual(result.outcome, .failed(reason: .deadEnd))
-        XCTAssertEqual(result.executedActions.count, 2)
-        XCTAssertTrue(result.executedActions[0].didRotate)
-        XCTAssertFalse(result.executedActions[1].didRotate)
-        XCTAssertEqual(result.executedActions[1].nodeID, "switch_b")
-        XCTAssertEqual(result.finalNodeID, "dead_end_b")
+        XCTAssertThrowsError(try harness.run(level: level, script: script)) { error in
+            guard case let LevelSimulationHarnessError.rejectedAction(levelID, action, expectedNodeID, diagnostics) = error else {
+                XCTFail("Expected rejectedAction, got \(error)")
+                return
+            }
+            XCTAssertEqual(levelID, level.id)
+            XCTAssertEqual(action.nodeID, "switch_b")
+            XCTAssertFalse(action.didRotate)
+            XCTAssertNil(expectedNodeID)
+            XCTAssertEqual(diagnostics.phase, "executing_action")
+            XCTAssertTrue(error.localizedDescription.contains("reason="))
+            XCTAssertTrue(error.localizedDescription.contains("expectedEligibleSwitch"))
+        }
     }
 
     func testEarlierTapBeforeSwitchArrivalRotatesAndCompletes() throws {

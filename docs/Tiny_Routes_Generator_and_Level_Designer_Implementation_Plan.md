@@ -582,6 +582,8 @@ struct SwitchEligibilitySnapshot: Equatable {
 
 ## Task 2.4 — Expose active-switch UI state
 
+**Status:** Completed
+
 **Files to update**
 
 - `TinyRoutes/UI/GameplayScreen.swift`
@@ -590,20 +592,22 @@ struct SwitchEligibilitySnapshot: Equatable {
 
 **Steps**
 
-- [ ] Pass eligibility state into each switch view.
-- [ ] Visually distinguish inactive, upcoming, eligible, pressed, and locked states.
-- [ ] Add an accessible label or value describing whether the switch can be changed.
-- [ ] Keep hit testing available if rejected-tap feedback is desired, but never visually imply every switch is active.
-- [ ] Add subtle feedback for tapping the wrong switch without incrementing score.
-- [ ] Avoid flashing or excessive animation.
+- [x] Pass eligibility state into each switch view.
+- [x] Visually distinguish inactive, upcoming, eligible, pressed, and locked states.
+- [x] Add an accessible label or value describing whether the switch can be changed.
+- [x] Keep hit testing available if rejected-tap feedback is desired, but never visually imply every switch is active.
+- [x] Add subtle feedback for tapping the wrong switch without incrementing score.
+- [x] Avoid flashing or excessive animation.
 
 **Acceptance tests**
 
-- [ ] Only the eligible switch uses the active visual state.
-- [ ] Accessibility text updates when eligibility changes.
-- [ ] Press animation does not play for rejected taps unless a distinct rejected animation is intentionally defined.
+- [x] Only the eligible switch uses the active visual state.
+- [x] Accessibility text updates when eligibility changes.
+- [x] Press animation does not play for rejected taps unless a distinct rejected animation is intentionally defined.
 
 ## Task 2.5 — Update the Swift solution replay harness
+
+**Status:** Completed
 
 **Files to update**
 
@@ -613,17 +617,17 @@ struct SwitchEligibilitySnapshot: Equatable {
 
 **Steps**
 
-- [ ] Record accepted and rejected scripted actions.
-- [ ] Fail a solution replay when an expected tap is rejected.
-- [ ] Include rejection reason, expected eligible switch, dot state, and time in test output.
-- [ ] Keep time stepping deterministic.
-- [ ] Add parity-fixture test coverage.
+- [x] Record accepted and rejected scripted actions.
+- [x] Fail a solution replay when an expected tap is rejected.
+- [x] Include rejection reason, expected eligible switch, dot state, and time in test output.
+- [x] Keep time stepping deterministic.
+- [x] Add parity-fixture test coverage.
 
 **Acceptance tests**
 
-- [ ] A sidecar with an early tap fails with an actionable message.
-- [ ] A correct sidecar completes.
-- [ ] Three- and four-way repeated taps replay correctly.
+- [x] A sidecar with an early tap fails with an actionable message.
+- [x] A correct sidecar completes.
+- [x] Three- and four-way repeated taps replay correctly.
 
 ### Phase 2 exit gate
 
@@ -642,6 +646,8 @@ Eliminate duplicated behavior and make the generator and editor use one tested P
 
 ## Task 3.1 — Create the shared Python package
 
+**Status:** Completed
+
 **Files to add**
 
 ```text
@@ -659,16 +665,16 @@ Tools/TinyRoutesCore/
 
 **Steps**
 
-- [ ] Make the package importable by both tools without modifying `sys.path` at runtime.
-- [ ] Add editable-development installation instructions.
-- [ ] Keep dependencies standard-library only unless a dependency is explicitly justified.
-- [ ] Add a package version.
+- [x] Make the package importable by both tools without modifying `sys.path` at runtime.
+- [x] Add editable-development installation instructions.
+- [x] Keep dependencies standard-library only unless a dependency is explicitly justified.
+- [x] Add a package version.
 
 **Acceptance tests**
 
-- [ ] Generator imports the package in tests.
-- [ ] Editor imports the package in tests.
-- [ ] Root Python tests do not depend on current working directory.
+- [x] Generator imports the package in tests.
+- [x] Editor imports the package in tests.
+- [x] Root Python tests do not depend on current working directory.
 
 ## Task 3.2 — Move common level and solution models into the core
 

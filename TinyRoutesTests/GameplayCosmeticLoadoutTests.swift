@@ -33,6 +33,10 @@ final class GameplayCosmeticLoadoutTests: XCTestCase {
             isShowingPreview: false,
             pressedSwitchNodeID: nil,
             switchPressEventToken: 0,
+            rejectedSwitchNodeID: nil,
+            switchRejectionEventToken: 0,
+            upcomingSwitchNodeID: nil,
+            eligibleSwitchNodeID: nil,
             onNodeTapped: { _ in }
         )
 

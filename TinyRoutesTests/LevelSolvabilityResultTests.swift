@@ -35,7 +35,7 @@ final class LevelSolvabilityResultTests: XCTestCase {
         let action = ExecutedLevelSolutionAction(
             requestedTime: 1.25,
             nodeID: "switch_a",
-            didRotate: true,
+            tapResult: .accepted(nodeID: "switch_a", activeEdgeID: "edge_a"),
             actualTapCountAfterAction: 2
         )
         let result = LevelSolvabilityResult(

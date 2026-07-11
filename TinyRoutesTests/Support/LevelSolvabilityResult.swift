@@ -19,6 +19,8 @@ struct LevelSolvabilityResult: Equatable {
 struct ExecutedLevelSolutionAction: Equatable {
     let requestedTime: TimeInterval
     let nodeID: String
-    let didRotate: Bool
+    let tapResult: SwitchTapResult
     let actualTapCountAfterAction: Int
+
+    var didRotate: Bool { tapResult.didRotate }
 }

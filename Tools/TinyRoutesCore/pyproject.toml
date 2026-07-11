@@ -1,0 +1,15 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "tiny-routes-core"
+version = "0.1.0"
+description = "Shared models, graph queries, simulation, and validation for Tiny Routes tools"
+requires-python = ">=3.11"
+dependencies = []
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["tiny_routes_core*"]
+

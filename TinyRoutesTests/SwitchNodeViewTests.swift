@@ -3,6 +3,16 @@ import XCTest
 @testable import TinyRoutes
 
 final class SwitchNodeViewTests: XCTestCase {
+    func testInteractionStatesHaveDistinctAccessibilityValues() {
+        let values = Set([
+            SwitchNodeInteractionState.inactive.accessibilityValue,
+            SwitchNodeInteractionState.upcoming.accessibilityValue,
+            SwitchNodeInteractionState.eligible.accessibilityValue,
+            SwitchNodeInteractionState.locked.accessibilityValue
+        ])
+        XCTAssertEqual(values.count, 4)
+        XCTAssertTrue(SwitchNodeInteractionState.eligible.accessibilityValue.contains("Available"))
+    }
     func testDirectionalArrowTransformPointsRightAtZeroRadians() {
         let transform = DirectionalArrowTransform(angle: 0)
 

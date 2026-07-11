@@ -55,6 +55,12 @@ enum LevelSimulationHarnessError: Error, LocalizedError, Equatable {
     case routeEngineExceededInternalSafetyLimit(LevelSimulationDiagnostics)
     case invalidActionTime(levelID: String, nodeID: String, timeSeconds: TimeInterval)
     case invalidActionNodeID(levelID: String, timeSeconds: TimeInterval)
+    case rejectedAction(
+        levelID: String,
+        action: ExecutedLevelSolutionAction,
+        expectedEligibleSwitchNodeID: String?,
+        diagnostics: LevelSimulationDiagnostics
+    )
 
     var errorDescription: String? {
         switch self {
@@ -70,6 +76,8 @@ enum LevelSimulationHarnessError: Error, LocalizedError, Equatable {
             return "Invalid action time for level '\(levelID)' at node '\(nodeID)': \(timeSeconds). Action times must be finite and non-negative."
         case let .invalidActionNodeID(levelID, timeSeconds):
             return "Invalid action node ID for level '\(levelID)' at \(timeSeconds)s. Tap node IDs must be non-empty."
+        case let .rejectedAction(levelID, action, expectedNodeID, diagnostics):
+            return "Solution tap rejected for level '\(levelID)' at \(action.requestedTime)s: node='\(action.nodeID)', reason=\(action.tapResult.diagnosticCode), expectedEligibleSwitch='\(expectedNodeID ?? "none")'. \(diagnostics.engineerDescription)"
         }
     }
 }
@@ -121,15 +129,29 @@ final class LevelSimulationHarness {
                 break
             }
 
-            let didRotate = engine.rotateSwitchNode(nodeID: action.tapNodeID).didRotate
+            let tapResult = engine.rotateSwitchNode(nodeID: action.tapNodeID)
             let executedAction = ExecutedLevelSolutionAction(
                 requestedTime: action.timeSeconds,
                 nodeID: action.tapNodeID,
-                didRotate: didRotate,
+                tapResult: tapResult,
                 actualTapCountAfterAction: engine.tapCount
             )
             executedActions.append(executedAction)
             runState.lastAction = executedAction
+            guard tapResult.didRotate else {
+                throw LevelSimulationHarnessError.rejectedAction(
+                    levelID: level.id,
+                    action: executedAction,
+                    expectedEligibleSwitchNodeID: engine.eligibleSwitchNodeID,
+                    diagnostics: diagnostics(
+                        levelID: level.id,
+                        engine: engine,
+                        runState: runState,
+                        phase: "executing_action",
+                        lastAction: executedAction
+                    )
+                )
+            }
         }
 
         try advance(
@@ -326,6 +348,21 @@ final class LevelSimulationHarness {
             lastAction: lastAction,
             phase: phase
         )
+    }
+}
+
+private extension SwitchTapResult {
+    var diagnosticCode: String {
+        switch self {
+        case .accepted: return "accepted"
+        case .rejectedNoLevel: return "no_level"
+        case .rejectedPaused: return "paused"
+        case .rejectedLevelFinished: return "level_finished"
+        case .rejectedNotSwitchable: return "not_switchable"
+        case .rejectedNotEligible: return "not_eligible"
+        case .rejectedCooldown: return "cooldown"
+        case .rejectedCommitted: return "committed"
+        }
     }
 }
 

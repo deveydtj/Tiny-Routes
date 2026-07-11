@@ -71,6 +71,14 @@ process without package-name collisions:
 python -m pytest Tools/TinyRoutesCore/tests Tools/LevelGenerator/tests Tools/LevelEditor/tests
 ```
 
+The generator and editor share the standard-library-only `tiny-routes-core`
+package. Install it once in editable mode for local development so imports work
+from either tool and from any working directory:
+
+```bash
+python -m pip install -e Tools/TinyRoutesCore
+```
+
 ## Git publishing
 
 Direct commits and pushes use standard `git` commands and do not require the

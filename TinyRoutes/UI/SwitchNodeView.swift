@@ -1,5 +1,21 @@
 import SwiftUI
 
+enum SwitchNodeInteractionState: String, Equatable {
+    case inactive
+    case upcoming
+    case eligible
+    case locked
+
+    var accessibilityValue: String {
+        switch self {
+        case .inactive: return "Not currently available"
+        case .upcoming: return "Upcoming; not yet available"
+        case .eligible: return "Available to change"
+        case .locked: return "Locked after route commitment"
+        }
+    }
+}
+
 struct SpriteImage: View {
     let name: String
 
@@ -39,10 +55,13 @@ struct SwitchNodeView: View {
     let ringSize: CGFloat
     let optionCount: Int
     let optionAngles: [Double]
+    let interactionState: SwitchNodeInteractionState
     let pressEventToken: Int?
+    let rejectionEventToken: Int?
 
     @State private var isPressed = false
     @State private var isPulsing = false
+    @State private var rejectionOffset: CGFloat = 0
 
     init(
         activeDirectionAngle: Double,
@@ -50,29 +69,33 @@ struct SwitchNodeView: View {
         ringSize: CGFloat,
         optionCount: Int = 2,
         optionAngles: [Double] = [],
-        pressEventToken: Int? = nil
+        interactionState: SwitchNodeInteractionState = .inactive,
+        pressEventToken: Int? = nil,
+        rejectionEventToken: Int? = nil
     ) {
         self.activeDirectionAngle = activeDirectionAngle
         self.spriteSize = spriteSize
         self.ringSize = ringSize
         self.optionCount = optionCount
         self.optionAngles = optionAngles
+        self.interactionState = interactionState
         self.pressEventToken = pressEventToken
+        self.rejectionEventToken = rejectionEventToken
     }
 
     var body: some View {
         ZStack {
             Circle()
-                .fill(TRGameplayStyle.Colors.primaryBlue.opacity(0.08))
+                .fill(stateColor.opacity(interactionState == .eligible ? 0.18 : 0.07))
                 .frame(width: TRGameplayStyle.Metrics.switchTouchHaloSize, height: TRGameplayStyle.Metrics.switchTouchHaloSize)
                 .overlay {
                     Circle()
-                        .stroke(TRGameplayStyle.Colors.primaryBlue.opacity(0.10), lineWidth: 1)
+                        .stroke(stateColor.opacity(interactionState == .eligible ? 0.65 : 0.16), lineWidth: interactionState == .eligible ? 2 : 1)
                 }
                 .accessibilityHidden(true)
 
             Circle()
-                .stroke(TRGameplayStyle.Colors.primaryBlue.opacity(isPulsing ? 0.20 : 0), lineWidth: 2)
+                .stroke(stateColor.opacity(isPulsing ? 0.32 : 0), lineWidth: 2)
                 .frame(
                     width: isPulsing ? TRGameplayStyle.Metrics.switchTouchHaloSize + 8 : ringSize + 4,
                     height: isPulsing ? TRGameplayStyle.Metrics.switchTouchHaloSize + 8 : ringSize + 4
@@ -104,17 +127,32 @@ struct SwitchNodeView: View {
             ConceptDirectionArrowGlyph(activeDirectionAngle: activeDirectionAngle)
         }
         .scaleEffect(isPressed ? 0.94 : 1)
+        .opacity(interactionState == .locked ? 0.58 : 1)
+        .offset(x: rejectionOffset)
         .frame(
             width: max(spriteSize, ringSize, TRGameplayStyle.Metrics.switchTapTargetSize),
             height: max(spriteSize, ringSize, TRGameplayStyle.Metrics.switchTapTargetSize)
         )
         .contentShape(Circle())
         .accessibilityLabel(accessibilityLabel)
+        .accessibilityValue(interactionState.accessibilityValue)
         .onChange(of: pressEventToken) { _, newValue in
             guard newValue != nil else {
                 return
             }
             playPressAnimation()
+        }
+        .onChange(of: rejectionEventToken) { _, newValue in
+            guard newValue != nil else { return }
+            playRejectedAnimation()
+        }
+    }
+
+    private var stateColor: Color {
+        switch interactionState {
+        case .eligible: return TRGameplayStyle.Colors.primaryBlue
+        case .upcoming: return TRGameplayStyle.Colors.successGreen
+        case .inactive, .locked: return TRGameplayStyle.Colors.markerStroke
         }
     }
 
@@ -144,6 +182,15 @@ struct SwitchNodeView: View {
             withAnimation(.easeOut(duration: 0.18)) {
                 isPulsing = false
             }
+        }
+    }
+
+    private func playRejectedAnimation() {
+        withAnimation(.easeInOut(duration: 0.06).repeatCount(3, autoreverses: true)) {
+            rejectionOffset = 3
+        }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.36) {
+            rejectionOffset = 0
         }
     }
 }

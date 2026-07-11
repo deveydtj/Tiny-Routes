@@ -21,6 +21,8 @@ struct GameplayScreen: View {
     @State private var tapCount: Int = 0
     @State private var lastRotatedSwitchNodeID: String?
     @State private var switchPressEventToken: Int = 0
+    @State private var lastRejectedSwitchNodeID: String?
+    @State private var switchRejectionEventToken: Int = 0
     @State private var timeRemaining: TimeInterval?
     @State private var loadErrorMessage: String?
     @State private var lastFrameDate: Date?
@@ -80,6 +82,10 @@ struct GameplayScreen: View {
                         isShowingPreview: isShowingLevelPreview,
                         pressedSwitchNodeID: lastRotatedSwitchNodeID,
                         switchPressEventToken: switchPressEventToken,
+                        rejectedSwitchNodeID: lastRejectedSwitchNodeID,
+                        switchRejectionEventToken: switchRejectionEventToken,
+                        upcomingSwitchNodeID: routeEngine.switchEligibilitySnapshot.upcomingNodeID,
+                        eligibleSwitchNodeID: routeEngine.eligibleSwitchNodeID,
                         onNodeTapped: handleNodeTapped
                     )
                     .onAppear {
@@ -218,6 +224,9 @@ struct GameplayScreen: View {
             tapCount = routeEngine.tapCount
             lastRotatedSwitchNodeID = nodeID
             switchPressEventToken += 1
+        } else {
+            lastRejectedSwitchNodeID = nodeID
+            switchRejectionEventToken += 1
         }
     }
 
@@ -270,6 +279,8 @@ struct GameplayScreen: View {
         tapCount = 0
         lastRotatedSwitchNodeID = nil
         switchPressEventToken = 0
+        lastRejectedSwitchNodeID = nil
+        switchRejectionEventToken = 0
         timeRemaining = nil
         hasDispatchedOutcome = false
         isShowingLevelPreview = false
@@ -338,6 +349,10 @@ struct RouteBoardView: View {
     let isShowingPreview: Bool
     let pressedSwitchNodeID: String?
     let switchPressEventToken: Int
+    let rejectedSwitchNodeID: String?
+    let switchRejectionEventToken: Int
+    let upcomingSwitchNodeID: String?
+    let eligibleSwitchNodeID: String?
     let onNodeTapped: (String) -> Void
 
     private let boardPadding = TRGameplayStyle.Metrics.boardPadding
@@ -495,11 +510,23 @@ struct RouteBoardView: View {
                 ringSize: switchRingSize,
                 optionCount: validOutgoingEdgeIDs.count,
                 optionAngles: optionAngles(for: node, validOutgoingEdgeIDs: validOutgoingEdgeIDs),
-                pressEventToken: pressedSwitchNodeID == node.id ? switchPressEventToken : nil
+                interactionState: interactionState(for: node),
+                pressEventToken: pressedSwitchNodeID == node.id ? switchPressEventToken : nil,
+                rejectionEventToken: rejectedSwitchNodeID == node.id ? switchRejectionEventToken : nil
             )
         } else {
             EmptyView()
         }
+    }
+
+    private func interactionState(for node: RuntimeRouteNode) -> SwitchNodeInteractionState {
+        if node.id == eligibleSwitchNodeID { return .eligible }
+        if node.id == upcomingSwitchNodeID { return .upcoming }
+        if let currentEdgeID = deliveryDot?.currentEdgeID,
+           runtimeGraph.edgesByID[currentEdgeID]?.fromNodeID == node.id {
+            return .locked
+        }
+        return .inactive
     }
 
     private func activeDirectionAngle(for node: RuntimeRouteNode) -> Double? {
