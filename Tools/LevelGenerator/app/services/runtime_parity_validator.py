@@ -8,6 +8,75 @@ from ..models.runtime_parity import RuntimeParityValidationResult
 
 
 @dataclass(frozen=True)
+class NormalizedRuntimeTrace:
+    outcome: str
+    package_order: tuple[str, ...]
+    accepted_taps: tuple[tuple[float, str, str | None], ...]
+    rejected_taps: tuple[tuple[float, str, str], ...]
+    final_switch_states: tuple[tuple[str, str], ...]
+    elapsed_time: float
+    events: tuple[tuple[float, str, str | None, str | None, str], ...] = ()
+
+
+@dataclass(frozen=True)
+class RuntimeTraceComparison:
+    matches: bool
+    message: str = ""
+    divergent_event_index: int | None = None
+
+
+class RuntimeTraceComparator:
+    """Compare language-neutral Swift/Python traces with useful first-diff context."""
+
+    def __init__(self, elapsed_tolerance: float = 1e-3) -> None:
+        self.elapsed_tolerance = elapsed_tolerance
+
+    def compare(self, swift: NormalizedRuntimeTrace, python: NormalizedRuntimeTrace) -> RuntimeTraceComparison:
+        for field_name in ("outcome", "package_order", "accepted_taps", "rejected_taps", "final_switch_states"):
+            if getattr(swift, field_name) != getattr(python, field_name):
+                index = self._first_event_difference(swift.events, python.events)
+                return RuntimeTraceComparison(False, self._message(field_name, swift, python, index), index)
+        if abs(swift.elapsed_time - python.elapsed_time) > self.elapsed_tolerance:
+            return RuntimeTraceComparison(False, f"elapsed_time differs: Swift={swift.elapsed_time:.6f}, Python={python.elapsed_time:.6f}")
+        index = self._first_event_difference(swift.events, python.events)
+        if index is not None:
+            return RuntimeTraceComparison(False, self._message("events", swift, python, index), index)
+        return RuntimeTraceComparison(True)
+
+    def _first_event_difference(self, left, right) -> int | None:
+        for index, pair in enumerate(zip(left, right)):
+            if pair[0][1:] != pair[1][1:] or abs(pair[0][0] - pair[1][0]) > self.elapsed_tolerance:
+                return index
+        return min(len(left), len(right)) if len(left) != len(right) else None
+
+    def _message(self, field_name, swift, python, index) -> str:
+        context = ""
+        if index is not None:
+            start, end = max(0, index - 1), index + 2
+            context = f"; first divergent event {index}; Swift context={swift.events[start:end]!r}; Python context={python.events[start:end]!r}"
+        return f"{field_name} differs: Swift={getattr(swift, field_name)!r}, Python={getattr(python, field_name)!r}{context}"
+
+
+def normalize_core_result(result) -> NormalizedRuntimeTrace:
+    accepted = tuple(
+        (round(float(record.action.timeSeconds), 3), record.action.tapNodeID, record.active_edge_id)
+        for record in result.taps if record.code.value == "accepted"
+    )
+    rejected = tuple(
+        (round(float(record.action.timeSeconds), 3), record.action.tapNodeID, record.code.value)
+        for record in result.taps if record.code.value != "accepted"
+    )
+    package_order = tuple(event.node_id or "" for event in result.events if event.kind == "collect_package")
+    events = tuple((round(event.time_seconds, 3), event.kind, event.node_id, event.edge_id, event.detail) for event in result.events)
+    outcome = "completed" if result.passed else "failed"
+    return NormalizedRuntimeTrace(
+        outcome, package_order, accepted, rejected,
+        tuple(sorted(result.state.switch_active_edge_ids.items())),
+        round(result.state.elapsed_time, 3), events,
+    )
+
+
+@dataclass(frozen=True)
 class SwiftValidationGateDecision:
     required: bool
     reason: str

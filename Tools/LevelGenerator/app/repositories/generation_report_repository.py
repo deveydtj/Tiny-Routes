@@ -433,7 +433,7 @@ class GenerationReportRepository:
                     if level["abstractSolution"]:
                         abstract = level["abstractSolution"]
                         lines.append(
-                            f"- Abstract solution: {abstract['minimumRequiredTaps']} required taps, "
+                            f"- Topology solution: {abstract['minimumRequiredDecisions']} required decisions, "
                             f"{abstract['alternatePathCount']} alternate paths, "
                             f"{abstract['deadEndCount']} dead ends, {abstract['loopCount']} loops."
                         )

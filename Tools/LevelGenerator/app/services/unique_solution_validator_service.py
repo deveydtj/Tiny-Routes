@@ -1386,9 +1386,9 @@ class UniqueSolutionValidatorService:
         if tap_order:
             return tuple(str(node_id) for node_id in tap_order)
         abstract = getattr(generated_level, "abstract_solution_metadata", None)
-        abstract_taps = getattr(abstract, "solution_tap_node_ids", ()) if abstract is not None else ()
-        if abstract_taps:
-            return tuple(str(node_id) for node_id in abstract_taps)
+        abstract_decisions = getattr(abstract, "decision_node_ids", ()) if abstract is not None else ()
+        if abstract_decisions:
+            return tuple(str(node_id) for node_id in abstract_decisions)
         if solution is None:
             return ()
         return tuple(action.tapNodeID for action in getattr(solution, "actions", ()) or ())

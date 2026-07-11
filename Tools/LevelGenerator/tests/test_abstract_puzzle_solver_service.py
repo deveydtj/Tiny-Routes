@@ -10,6 +10,7 @@ from app.services.abstract_puzzle_solver_service import (
     AbstractPuzzleSolverService,
 )
 from app.services.difficulty_service import DifficultyService
+from app.services.topology_solver_service import TopologySolverService
 
 
 def _preset(name: str):
@@ -41,6 +42,25 @@ def test_abstract_solver_solves_single_switch_with_wrong_branch() -> None:
     assert solved.solved_metadata.minimum_required_taps == 1
     assert solved.solved_metadata.dead_end_count == 1
     assert solved.tap_node_ids == solved.solved_metadata.solution_tap_node_ids
+
+
+def test_topology_solver_exposes_decision_terms_and_legacy_aliases() -> None:
+    solved = _solve_family("easy", "single_switch", seed=2)
+    metadata = solved.solved_metadata
+    assert metadata is not None
+    assert metadata.decision_node_ids == metadata.solution_tap_node_ids
+    assert metadata.minimum_required_decisions == metadata.minimum_required_taps
+    assert "minimumRequiredDecisions" in metadata.to_dict()
+
+
+def test_topology_search_returns_structured_limit_result() -> None:
+    preset = _preset("tutorial")
+    family = RecipeFamilyRegistry().get_family("straight_delivery")
+    recipe = family.generate_recipe("level_001", preset, RandomSource(1))
+    result = TopologySolverService().search(recipe, preset, solution_cap=0)
+    assert not result.succeeded
+    assert result.limit_reached
+    assert result.failure_reasons == ("topology_solution_cap_reached",)
 
 
 @pytest.mark.parametrize(

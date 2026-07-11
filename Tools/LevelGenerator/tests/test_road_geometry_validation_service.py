@@ -211,7 +211,7 @@ def _generated_for_geometry_fixture(
         seed=1,
     )
     generated.abstract_solution_metadata = AbstractPuzzleSolutionMetadata(
-        solution_tap_node_ids=(),
+        decision_node_ids=(),
         solution_switch_states=(),
         required_path=tuple(route),
         alternate_path_count=0,
@@ -219,7 +219,7 @@ def _generated_for_geometry_fixture(
         failure_path_count=0,
         false_route_count=0,
         loop_count=1,
-        minimum_required_taps=0,
+        minimum_required_decisions=0,
         optional_tap_count=0,
         repeated_switch_usage=True,
         package_before_destination=True,

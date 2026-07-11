@@ -808,6 +808,8 @@ Tools/TinyRoutesCore/
 
 ## Task 3.7 — Add automated Swift/Python parity comparison
 
+**Status:** Completed
+
 **Files to add or update**
 
 - `Tools/LevelGenerator/app/services/runtime_parity_validator.py`
@@ -816,14 +818,14 @@ Tools/TinyRoutesCore/
 
 **Steps**
 
-- [ ] Define a compact normalized trace shape.
-- [ ] Compare outcome, package order, accepted taps, rejected taps, final switch states, and elapsed time within tolerance.
-- [ ] Print the first divergent event with surrounding context.
+- [x] Define a compact normalized trace shape.
+- [x] Compare outcome, package order, accepted taps, rejected taps, final switch states, and elapsed time within tolerance.
+- [x] Print the first divergent event with surrounding context.
 
 **Acceptance tests**
 
-- [ ] Introducing a deliberate Python rotation-order bug makes parity comparison fail.
-- [ ] Correct implementations produce matching normalized traces.
+- [x] Introducing a deliberate Python rotation-order bug makes parity comparison fail.
+- [x] Correct implementations produce matching normalized traces.
 
 ### Phase 3 exit gate
 
@@ -841,6 +843,8 @@ Keep abstract graph search useful while preventing it from being mistaken for a 
 
 ## Task 4.1 — Rename abstract taps to switch decisions internally
 
+**Status:** Completed
+
 **Files to update**
 
 - `Tools/LevelGenerator/app/models/abstract_puzzle_solution.py`
@@ -849,17 +853,19 @@ Keep abstract graph search useful while preventing it from being mistaken for a 
 
 **Steps**
 
-- [ ] Introduce `decision_node_ids` and `minimum_required_decisions` terminology.
-- [ ] Keep deprecated aliases temporarily for compatibility.
-- [ ] Explain that topology solving selects switch states at decision encounters but does not schedule timestamps.
-- [ ] Remove report language that calls abstract decisions reaction windows.
+- [x] Introduce `decision_node_ids` and `minimum_required_decisions` terminology.
+- [x] Keep deprecated aliases temporarily for compatibility.
+- [x] Explain that topology solving selects switch states at decision encounters but does not schedule timestamps.
+- [x] Remove report language that calls abstract decisions reaction windows.
 
 **Acceptance tests**
 
-- [ ] Existing recipes still solve after field migration.
-- [ ] Reports distinguish topology decisions from runtime tap actions.
+- [x] Existing recipes still solve after field migration.
+- [x] Reports distinguish topology decisions from runtime tap actions.
 
 ## Task 4.2 — Extract `TopologySolverService`
+
+**Status:** Completed
 
 **Files to add or update**
 
@@ -877,20 +883,20 @@ Keep abstract graph search useful while preventing it from being mistaken for a 
 
 **Steps**
 
-- [ ] Preserve deterministic breadth-first or cost-ordered search.
-- [ ] Enumerate rotation counts at an encountered switch.
-- [ ] Track repeated visits and different required states by visit.
-- [ ] Record successful and failed route outcomes.
-- [ ] Return all minimum-cost solutions up to a configured cap.
-- [ ] Produce structured failure reasons.
+- [x] Preserve deterministic breadth-first or cost-ordered search.
+- [x] Enumerate rotation counts at an encountered switch.
+- [x] Track repeated visits and different required states by visit.
+- [x] Record successful and failed route outcomes.
+- [x] Return all minimum-cost solutions up to a configured cap.
+- [x] Produce structured failure reasons.
 
 **Acceptance tests**
 
-- [ ] Straight route solves with zero decisions.
-- [ ] Two-way switch solves with one decision.
-- [ ] Revisit fixture requires a changed second-visit state.
-- [ ] Destination-before-package routes are classified correctly.
-- [ ] Search limits produce explicit limit results.
+- [x] Straight route solves with zero decisions.
+- [x] Two-way switch solves with one decision.
+- [x] Revisit fixture requires a changed second-visit state.
+- [x] Destination-before-package routes are classified correctly.
+- [x] Search limits produce explicit limit results.
 
 ## Task 4.3 — Add a post-layout runtime solution search
 

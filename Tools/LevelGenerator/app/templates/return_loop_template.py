@@ -72,7 +72,7 @@ class ReturnLoopTemplate(LevelTemplate):
             notes=[f"Template variant: {variant}", f"Layout variant: {layout_variant.name}"],
         )
         generated.abstract_solution_metadata = AbstractPuzzleSolutionMetadata(
-            solution_tap_node_ids=tuple(tap_node_ids),
+            decision_node_ids=tuple(tap_node_ids),
             solution_switch_states=(),
             required_path=tuple(route),
             alternate_path_count=0,
@@ -80,7 +80,7 @@ class ReturnLoopTemplate(LevelTemplate):
             failure_path_count=0,
             false_route_count=1,
             loop_count=1,
-            minimum_required_taps=len(tap_node_ids),
+            minimum_required_decisions=len(tap_node_ids),
             optional_tap_count=0,
             repeated_switch_usage=True,
             package_before_destination=True,

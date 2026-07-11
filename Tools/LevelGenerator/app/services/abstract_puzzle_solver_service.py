@@ -24,7 +24,7 @@ class _SearchState:
     switch_indices: tuple[int, ...]
     collected_package: bool
     path: tuple[str, ...]
-    taps: tuple[str, ...]
+    decisions: tuple[str, ...]
 
 
 @dataclass(frozen=True)
@@ -43,7 +43,7 @@ class AbstractPuzzleSolverService:
             solved_metadata=metadata,
             notes=(
                 *recipe.notes,
-                f"Abstract solver taps: {metadata.minimum_required_taps}",
+                f"Topology solver decisions: {metadata.minimum_required_decisions}",
                 f"Abstract solver alternates: {metadata.alternate_path_count}",
                 f"Abstract solver dead ends: {metadata.dead_end_count}",
                 f"Abstract solver loops: {metadata.loop_count}",
@@ -87,7 +87,7 @@ class AbstractPuzzleSolverService:
             switch_indices=tuple(0 for _ in switch_ids),
             collected_package=recipe.package_node_id == "start",
             path=("start",),
-            taps=(),
+            decisions=(),
         )
         queue: deque[_SearchState] = deque([start_state])
         seen: set[tuple[str, tuple[int, ...], bool, int, tuple[str, ...]]] = set()
@@ -103,7 +103,7 @@ class AbstractPuzzleSolverService:
                 state.node_id,
                 state.switch_indices,
                 state.collected_package,
-                len(state.taps),
+                len(state.decisions),
                 state.path[-min(len(state.path), len(recipe.nodes)) :],
             )
             if seen_key in seen:
@@ -128,9 +128,9 @@ class AbstractPuzzleSolverService:
                 continue
 
             for tap_count in self._tap_options(state.node_id, outgoing, state, preset):
-                next_taps = state.taps + ((state.node_id,) * tap_count)
-                if len(next_taps) > max_taps:
-                    failures.append(_CompletedPath(state, "abstract_tap_limit"))
+                next_decisions = state.decisions + ((state.node_id,) * tap_count)
+                if len(next_decisions) > max_taps:
+                    failures.append(_CompletedPath(state, "topology_decision_limit"))
                     continue
                 switch_indices = state.switch_indices
                 active_index = 0
@@ -150,7 +150,7 @@ class AbstractPuzzleSolverService:
                         switch_indices=switch_indices,
                         collected_package=state.collected_package or next_node_id == recipe.package_node_id,
                         path=(*state.path, next_node_id),
-                        taps=next_taps,
+                        decisions=next_decisions,
                     )
                 )
 
@@ -175,10 +175,10 @@ class AbstractPuzzleSolverService:
                 "Destination is reachable before the package for this difficulty.",
             )
 
-        successes.sort(key=lambda path: (len(path.state.taps), len(path.state.path), path.state.taps, path.state.path))
+        successes.sort(key=lambda path: (len(path.state.decisions), len(path.state.path), path.state.decisions, path.state.path))
         solution = successes[0].state
-        minimum_taps = len(solution.taps)
-        minimum_successes = [path for path in successes if len(path.state.taps) == minimum_taps]
+        minimum_taps = len(solution.decisions)
+        minimum_successes = [path for path in successes if len(path.state.decisions) == minimum_taps]
         if len(minimum_successes) > 8:
             raise AbstractPuzzleSolverError(
                 "abstract_too_many_equivalent_solutions",
@@ -190,7 +190,7 @@ class AbstractPuzzleSolverService:
                 f"Abstract puzzle requires {minimum_taps} taps, above {preset.required_tap_range[1]} for {preset.name}.",
             )
 
-        repeated_switch_usage = any(count > 1 for count in Counter(solution.taps).values())
+        repeated_switch_usage = any(count > 1 for count in Counter(solution.decisions).values())
         if repeated_switch_usage and not preset.allow_repeated_switch_taps:
             raise AbstractPuzzleSolverError(
                 "abstract_repeated_switch_taps_not_allowed",
@@ -202,9 +202,9 @@ class AbstractPuzzleSolverService:
             for path in failures
             if path.reason == "abstract_dead_end" and path.state.node_id != recipe.destination_node_id
         }
-        false_route_count = len([path for path in failures if path.reason != "abstract_tap_limit"])
+        false_route_count = len([path for path in failures if path.reason != "topology_decision_limit"])
         loop_count = self._loop_count([path.state.path for path in successes + failures])
-        optional_tap_count = max((len(path.state.taps) for path in successes), default=minimum_taps) - minimum_taps
+        optional_tap_count = max((len(path.state.decisions) for path in successes), default=minimum_taps) - minimum_taps
         switch_states = self._solution_switch_states(solution, switch_ids, outgoing_by_node_id)
         if switch_ids and not dead_end_nodes and len(successes) <= 1 and minimum_taps == 0:
             raise AbstractPuzzleSolverError(
@@ -213,7 +213,7 @@ class AbstractPuzzleSolverService:
             )
 
         return AbstractPuzzleSolutionMetadata(
-            solution_tap_node_ids=solution.taps,
+            decision_node_ids=solution.decisions,
             solution_switch_states=switch_states,
             required_path=solution.path,
             alternate_path_count=max(0, len(successes) - 1),
@@ -221,7 +221,7 @@ class AbstractPuzzleSolverService:
             failure_path_count=len(failures),
             false_route_count=false_route_count,
             loop_count=loop_count,
-            minimum_required_taps=minimum_taps,
+            minimum_required_decisions=minimum_taps,
             optional_tap_count=optional_tap_count,
             repeated_switch_usage=repeated_switch_usage,
             package_before_destination=(
@@ -245,7 +245,7 @@ class AbstractPuzzleSolverService:
     ) -> range:
         if len(outgoing) <= 1:
             return range(1)
-        if not preset.allow_repeated_switch_taps and node_id in state.taps:
+        if not preset.allow_repeated_switch_taps and node_id in state.decisions:
             return range(1)
         max_taps_here = len(outgoing)
         if not preset.allow_repeated_switch_taps:

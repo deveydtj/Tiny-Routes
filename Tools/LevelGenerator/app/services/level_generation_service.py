@@ -19,7 +19,7 @@ from ..repositories.generated_level_repository import GeneratedLevelRepository
 from ..repositories.generation_report_repository import GenerationReportRepository
 from ..recipes.recipe_family_registry import RecipeFamilyRegistry
 from ..templates.template_registry import TemplateRegistry
-from .abstract_puzzle_solver_service import AbstractPuzzleSolverService
+from .topology_solver_service import TopologySolverService
 from .candidate_rejection_service import CandidateRejectionService
 from .candidate_signature_service import CandidateSignatureService
 from .candidate_uniqueness_service import CandidateUniquenessService
@@ -85,7 +85,7 @@ class LevelGenerationService:
         self.resource_sync_service = LevelResourceSyncService()
         self.recipe_to_level_builder = RecipeToLevelBuilderService()
         self.layout_variant_service = LayoutVariantService()
-        self.abstract_puzzle_solver = AbstractPuzzleSolverService()
+        self.abstract_puzzle_solver = TopologySolverService()
         self.runtime_parity_validator = RuntimeParityValidator()
 
     def generate(self, config: GenerationConfig) -> GenerationResult:

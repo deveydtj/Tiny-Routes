@@ -246,7 +246,7 @@ def _return_loop_level(destination_y: float) -> LevelDocument:
 
 def _metadata_for_required_path(required_path: tuple[str, ...]) -> AbstractPuzzleSolutionMetadata:
     return AbstractPuzzleSolutionMetadata(
-        solution_tap_node_ids=(),
+        decision_node_ids=(),
         solution_switch_states=(),
         required_path=required_path,
         alternate_path_count=0,
@@ -254,7 +254,7 @@ def _metadata_for_required_path(required_path: tuple[str, ...]) -> AbstractPuzzl
         failure_path_count=0,
         false_route_count=0,
         loop_count=1,
-        minimum_required_taps=0,
+        minimum_required_decisions=0,
         optional_tap_count=0,
         repeated_switch_usage=True,
         package_before_destination=True,
