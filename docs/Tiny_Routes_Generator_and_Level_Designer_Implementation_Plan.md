@@ -1143,6 +1143,8 @@ Move from selecting mostly complete fixed recipes toward composing small, testab
 
 ## Task 6.2 — Convert existing recipes into seed motifs
 
+**Status:** Completed
+
 **Source areas**
 
 - `Tools/LevelGenerator/app/recipes/`
@@ -1150,25 +1152,27 @@ Move from selecting mostly complete fixed recipes toward composing small, testab
 
 **Initial motifs**
 
-- [ ] Straight segment.
-- [ ] Single binary choice.
-- [ ] Dead-end decoy.
-- [ ] Longer recoverable detour.
-- [ ] Split and rejoin.
-- [ ] Package branch.
-- [ ] Return loop.
-- [ ] Revisited switch.
-- [ ] Ring route.
-- [ ] Three-way hub.
-- [ ] Four-way hub.
+- [x] Straight segment.
+- [x] Single binary choice.
+- [x] Dead-end decoy.
+- [x] Longer recoverable detour.
+- [x] Split and rejoin.
+- [x] Package branch.
+- [x] Return loop.
+- [x] Revisited switch.
+- [x] Ring route.
+- [x] Three-way hub.
+- [x] Four-way hub.
 
 **Steps**
 
-- [ ] Preserve existing recipe families through adapters.
-- [ ] Add independent tests for each motif.
-- [ ] Do not delete legacy generation mode until new fixed-seed tests are stable.
+- [x] Preserve existing recipe families through adapters.
+- [x] Add independent tests for each motif.
+- [x] Do not delete legacy generation mode until new fixed-seed tests are stable.
 
 ## Task 6.3 — Implement a motif composer
+
+**Status:** Completed
 
 **Files to add**
 
@@ -1177,19 +1181,19 @@ Move from selecting mostly complete fixed recipes toward composing small, testab
 
 **Steps**
 
-- [ ] Choose motif count and allowed motif categories from the difficulty preset.
-- [ ] Connect motif entry/exit ports deterministically from a seed.
-- [ ] Rename internal node IDs to avoid collisions.
-- [ ] Preserve ordered outgoing-road intent.
-- [ ] Reject invalid cycles or rejoins before layout.
-- [ ] Run topology solver and decision-profile checks immediately.
+- [x] Choose motif count and allowed motif categories from the difficulty preset.
+- [x] Connect motif entry/exit ports deterministically from a seed.
+- [x] Rename internal node IDs to avoid collisions.
+- [x] Preserve ordered outgoing-road intent.
+- [x] Reject invalid cycles or rejoins before layout.
+- [x] Run topology solver and decision-profile checks immediately.
 
 **Acceptance tests**
 
-- [ ] Same seed produces the same composed graph.
-- [ ] Composed IDs are unique.
-- [ ] Invalid connector combinations are rejected with specific reasons.
-- [ ] Generated graphs have valid start, package, and destination paths.
+- [x] Same seed produces the same composed graph.
+- [x] Composed IDs are unique.
+- [x] Invalid connector combinations are rejected with specific reasons.
+- [x] Generated graphs have valid start, package, and destination paths.
 
 ## Task 6.4 — Add dependency-oriented composition rules
 
