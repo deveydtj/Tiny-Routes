@@ -1236,8 +1236,8 @@ final class RouteEngineTests: XCTestCase {
         let engine = RouteEngine()
         try engine.buildGraph(from: makeLevelData())
 
-        XCTAssertTrue(engine.rotateSwitchNode(nodeID: "switch"))
-        XCTAssertTrue(engine.rotateSwitchNode(nodeID: "switch"))
+        XCTAssertTrue(engine.rotateSwitchNode(nodeID: "switch").didRotate)
+        XCTAssertTrue(engine.rotateSwitchNode(nodeID: "switch").didRotate)
 
         let rotatedGraph = try XCTUnwrap(engine.runtimeGraph)
         XCTAssertEqual(rotatedGraph.nodesByID["switch"]?.activeOutgoingEdgeID, "e_switch_destination")
@@ -1252,8 +1252,8 @@ final class RouteEngineTests: XCTestCase {
         let engine = RouteEngine()
         try engine.buildGraph(from: makeLevelData())
 
-        XCTAssertTrue(engine.rotateSwitchNode(nodeID: "switch"))
-        XCTAssertTrue(engine.rotateSwitchNode(nodeID: "switch"))
+        XCTAssertTrue(engine.rotateSwitchNode(nodeID: "switch").didRotate)
+        XCTAssertTrue(engine.rotateSwitchNode(nodeID: "switch").didRotate)
         XCTAssertEqual(engine.tapCount, 2)
 
         XCTAssertTrue(engine.restartLevel())
@@ -1264,8 +1264,8 @@ final class RouteEngineTests: XCTestCase {
         let engine = RouteEngine(dotSpeed: 1)
         try engine.buildGraph(from: makeLevelData())
         XCTAssertTrue(engine.startDotMovement())
-        XCTAssertTrue(engine.rotateSwitchNode(nodeID: "switch"))
-        XCTAssertTrue(engine.rotateSwitchNode(nodeID: "switch"))
+        XCTAssertTrue(engine.rotateSwitchNode(nodeID: "switch").didRotate)
+        XCTAssertTrue(engine.rotateSwitchNode(nodeID: "switch").didRotate)
 
         engine.updateDot(deltaTime: 3)
 
@@ -1388,17 +1388,17 @@ final class RouteEngineTests: XCTestCase {
         let engine = RouteEngine()
         try engine.buildGraph(from: makeLevelData())
 
-        XCTAssertTrue(engine.rotateSwitchNode(nodeID: "switch"))
+        XCTAssertTrue(engine.rotateSwitchNode(nodeID: "switch").didRotate)
         var graph = try XCTUnwrap(engine.runtimeGraph)
         var switchNode = try XCTUnwrap(graph.nodesByID["switch"])
         XCTAssertEqual(switchNode.activeOutgoingEdgeID, "e_switch_dead_end")
 
-        XCTAssertTrue(engine.rotateSwitchNode(nodeID: "switch"))
+        XCTAssertTrue(engine.rotateSwitchNode(nodeID: "switch").didRotate)
         graph = try XCTUnwrap(engine.runtimeGraph)
         switchNode = try XCTUnwrap(graph.nodesByID["switch"])
         XCTAssertEqual(switchNode.activeOutgoingEdgeID, "e_switch_destination")
 
-        XCTAssertTrue(engine.rotateSwitchNode(nodeID: "switch"))
+        XCTAssertTrue(engine.rotateSwitchNode(nodeID: "switch").didRotate)
         graph = try XCTUnwrap(engine.runtimeGraph)
         switchNode = try XCTUnwrap(graph.nodesByID["switch"])
         XCTAssertEqual(switchNode.activeOutgoingEdgeID, "e_switch_package")
@@ -1412,22 +1412,22 @@ final class RouteEngineTests: XCTestCase {
         var switchNode = try XCTUnwrap(graph.nodesByID["central_switch"])
         XCTAssertEqual(switchNode.activeOutgoingEdgeID, "e_central_dead_end")
 
-        XCTAssertTrue(engine.rotateSwitchNode(nodeID: "central_switch"))
+        XCTAssertTrue(engine.rotateSwitchNode(nodeID: "central_switch").didRotate)
         graph = try XCTUnwrap(engine.runtimeGraph)
         switchNode = try XCTUnwrap(graph.nodesByID["central_switch"])
         XCTAssertEqual(switchNode.activeOutgoingEdgeID, "e_central_package")
 
-        XCTAssertTrue(engine.rotateSwitchNode(nodeID: "central_switch"))
+        XCTAssertTrue(engine.rotateSwitchNode(nodeID: "central_switch").didRotate)
         graph = try XCTUnwrap(engine.runtimeGraph)
         switchNode = try XCTUnwrap(graph.nodesByID["central_switch"])
         XCTAssertEqual(switchNode.activeOutgoingEdgeID, "e_central_destination")
 
-        XCTAssertTrue(engine.rotateSwitchNode(nodeID: "central_switch"))
+        XCTAssertTrue(engine.rotateSwitchNode(nodeID: "central_switch").didRotate)
         graph = try XCTUnwrap(engine.runtimeGraph)
         switchNode = try XCTUnwrap(graph.nodesByID["central_switch"])
         XCTAssertEqual(switchNode.activeOutgoingEdgeID, "e_central_side_branch")
 
-        XCTAssertTrue(engine.rotateSwitchNode(nodeID: "central_switch"))
+        XCTAssertTrue(engine.rotateSwitchNode(nodeID: "central_switch").didRotate)
         graph = try XCTUnwrap(engine.runtimeGraph)
         switchNode = try XCTUnwrap(graph.nodesByID["central_switch"])
         XCTAssertEqual(switchNode.activeOutgoingEdgeID, "e_central_dead_end")
@@ -1442,17 +1442,56 @@ final class RouteEngineTests: XCTestCase {
         XCTAssertEqual(engine.tapCount, 0)
     }
 
+    func testRotateSwitchNodeReturnsStructuredResults() throws {
+        let engine = RouteEngine()
+        XCTAssertEqual(engine.rotateSwitchNode(nodeID: "switch"), .rejectedNoLevel)
+
+        try engine.buildGraph(from: makeLevelData())
+        XCTAssertEqual(
+            engine.rotateSwitchNode(nodeID: "switch"),
+            .accepted(nodeID: "switch", activeEdgeID: "e_switch_dead_end")
+        )
+        XCTAssertEqual(engine.rotateSwitchNode(nodeID: "start"), .rejectedNotSwitchable)
+        XCTAssertEqual(engine.tapCount, 1)
+    }
+
+    func testRotateSwitchNodeRejectsFinishedLevel() throws {
+        var level = makeLevelData()
+        level.timeLimitSeconds = 0
+        let engine = RouteEngine()
+        try engine.buildGraph(from: level)
+        XCTAssertFalse(engine.startDotMovement())
+
+        XCTAssertEqual(engine.rotateSwitchNode(nodeID: "switch"), .rejectedLevelFinished)
+        XCTAssertEqual(engine.tapCount, 0)
+    }
+
+    func testAllSwitchTapRejectionsPreserveBooleanCompatibility() {
+        let rejectionResults: [SwitchTapResult] = [
+            .rejectedNoLevel,
+            .rejectedPaused,
+            .rejectedLevelFinished,
+            .rejectedNotSwitchable,
+            .rejectedNotEligible(expectedNodeID: "expected"),
+            .rejectedCooldown,
+            .rejectedCommitted
+        ]
+
+        XCTAssertTrue(rejectionResults.allSatisfy { !$0.didRotate })
+        XCTAssertTrue(SwitchTapResult.accepted(nodeID: "switch", activeEdgeID: "edge").didRotate)
+    }
+
     func testRotateSwitchNodeIncrementsTapCountOnlyOnSuccessfulRotation() throws {
         let engine = RouteEngine()
         try engine.buildGraph(from: makeLevelData())
 
-        XCTAssertTrue(engine.rotateSwitchNode(nodeID: "switch"))
+        XCTAssertTrue(engine.rotateSwitchNode(nodeID: "switch").didRotate)
         XCTAssertEqual(engine.tapCount, 1)
 
-        XCTAssertFalse(engine.rotateSwitchNode(nodeID: "start"))
+        XCTAssertFalse(engine.rotateSwitchNode(nodeID: "start").didRotate)
         XCTAssertEqual(engine.tapCount, 1)
 
-        XCTAssertFalse(engine.rotateSwitchNode(nodeID: "unknown"))
+        XCTAssertFalse(engine.rotateSwitchNode(nodeID: "unknown").didRotate)
         XCTAssertEqual(engine.tapCount, 1)
     }
 
@@ -1460,15 +1499,15 @@ final class RouteEngineTests: XCTestCase {
         let engine = RouteEngine()
         try engine.buildGraph(from: makeLevelData())
 
-        XCTAssertFalse(engine.rotateSwitchNode(nodeID: "start"))
-        XCTAssertFalse(engine.rotateSwitchNode(nodeID: "destination"))
+        XCTAssertFalse(engine.rotateSwitchNode(nodeID: "start").didRotate)
+        XCTAssertFalse(engine.rotateSwitchNode(nodeID: "destination").didRotate)
     }
 
     func testRotateSwitchNodeReturnsFalseForUnknownNode() throws {
         let engine = RouteEngine()
         try engine.buildGraph(from: makeLevelData())
 
-        XCTAssertFalse(engine.rotateSwitchNode(nodeID: "unknown"))
+        XCTAssertFalse(engine.rotateSwitchNode(nodeID: "unknown").didRotate)
     }
 
     func testRotateSwitchNodeReturnsFalseWhenOnlyOneOutgoingEdgeIsValidAndNormalizesActiveEdge() throws {
@@ -1498,7 +1537,7 @@ final class RouteEngineTests: XCTestCase {
         var startNode = try XCTUnwrap(graph.nodesByID["start"])
         XCTAssertEqual(startNode.activeOutgoingEdgeID, "valid")
 
-        XCTAssertFalse(engine.rotateSwitchNode(nodeID: "start"))
+        XCTAssertFalse(engine.rotateSwitchNode(nodeID: "start").didRotate)
 
         graph = try XCTUnwrap(engine.runtimeGraph)
         startNode = try XCTUnwrap(graph.nodesByID["start"])
@@ -1531,7 +1570,7 @@ final class RouteEngineTests: XCTestCase {
         var startNode = try XCTUnwrap(graph.nodesByID["start"])
         XCTAssertNil(startNode.activeOutgoingEdgeID)
 
-        XCTAssertFalse(engine.rotateSwitchNode(nodeID: "start"))
+        XCTAssertFalse(engine.rotateSwitchNode(nodeID: "start").didRotate)
 
         graph = try XCTUnwrap(engine.runtimeGraph)
         startNode = try XCTUnwrap(graph.nodesByID["start"])
@@ -1761,7 +1800,7 @@ final class RouteEngineTests: XCTestCase {
 
         // Rotating the switch that launched the current edge is ignored so the arrow cannot
         // contradict the dot's committed movement.
-        XCTAssertFalse(engine.rotateSwitchNode(nodeID: "switch"))
+        XCTAssertEqual(engine.rotateSwitchNode(nodeID: "switch"), .rejectedCommitted)
 
         // Advance the dot further along the edge AFTER the rotation.
         // This step is what catches a regression where updateDot re-reads the switch direction
@@ -1784,7 +1823,7 @@ final class RouteEngineTests: XCTestCase {
 
         let dotBefore = try XCTUnwrap(engine.deliveryDot)
         XCTAssertEqual(dotBefore.currentEdgeID, "e_switch_package")
-        XCTAssertFalse(engine.rotateSwitchNode(nodeID: "switch"))
+        XCTAssertEqual(engine.rotateSwitchNode(nodeID: "switch"), .rejectedCommitted)
 
         let graph = try XCTUnwrap(engine.runtimeGraph)
         let switchNode = try XCTUnwrap(graph.nodesByID["switch"])
@@ -1830,7 +1869,7 @@ final class RouteEngineTests: XCTestCase {
         let engine = RouteEngine(dotSpeed: 1)
         try engine.buildGraph(from: makeFourWayIntersectionLevelData())
 
-        XCTAssertTrue(engine.rotateSwitchNode(nodeID: "central_switch"))
+        XCTAssertTrue(engine.rotateSwitchNode(nodeID: "central_switch").didRotate)
         XCTAssertEqual(engine.tapCount, 1)
         XCTAssertTrue(engine.startDotMovement())
 
@@ -1843,7 +1882,7 @@ final class RouteEngineTests: XCTestCase {
         engine.updateDot(deltaTime: 0.70)
         dot = try XCTUnwrap(engine.deliveryDot)
         XCTAssertNotEqual(dot.currentNodeID, "central_switch")
-        XCTAssertTrue(engine.rotateSwitchNode(nodeID: "central_switch"))
+        XCTAssertTrue(engine.rotateSwitchNode(nodeID: "central_switch").didRotate)
         XCTAssertEqual(engine.tapCount, 2)
 
         engine.updateDot(deltaTime: 2.5)

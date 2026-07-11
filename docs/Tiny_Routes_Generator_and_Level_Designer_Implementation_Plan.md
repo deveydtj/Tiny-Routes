@@ -443,6 +443,8 @@ struct LevelRules: Codable, Equatable {
 
 ## Task 1.4 — Update JSON documentation
 
+**Status:** Completed
+
 **Files to update**
 
 - `Tools/LevelEditor/docs/current_level_json_shape.md`
@@ -451,11 +453,11 @@ struct LevelRules: Codable, Equatable {
 
 **Steps**
 
-- [ ] Document schema version 2.
-- [ ] Document defaults for legacy files.
-- [ ] Include complete valid examples.
-- [ ] Explain that new generated production levels must use `liveLookahead`.
-- [ ] Explain the migration path for old files.
+- [x] Document schema version 2.
+- [x] Document defaults for legacy files.
+- [x] Include complete valid examples.
+- [x] Explain that new generated production levels must use `liveLookahead`.
+- [x] Explain the migration path for old files.
 
 ### Phase 1 exit gate
 
@@ -472,6 +474,8 @@ struct LevelRules: Codable, Equatable {
 Make the real app enforce the target live-routing model with clear, testable results.
 
 ## Task 2.1 — Add a switch-tap result type
+
+**Status:** Completed
 
 **Files to add or update**
 
@@ -491,14 +495,14 @@ Make the real app enforce the target live-routing model with clear, testable res
 
 **Steps**
 
-- [ ] Replace the ambiguous `Bool` return from `rotateSwitchNode` with a structured result.
-- [ ] Provide a compatibility computed property such as `didRotate` during caller migration.
-- [ ] Ensure only accepted results increment `tapCount`.
+- [x] Replace the ambiguous `Bool` return from `rotateSwitchNode` with a structured result.
+- [x] Provide a compatibility computed property such as `didRotate` during caller migration.
+- [x] Ensure only accepted results increment `tapCount`.
 
 **Acceptance tests**
 
-- [ ] Every rejection path has a unit test.
-- [ ] Existing callers compile through a transitional compatibility layer.
+- [x] Every rejection path has a unit test.
+- [x] Existing callers compile through a transitional compatibility layer.
 
 ## Task 2.2 — Extract route look-ahead calculation
 

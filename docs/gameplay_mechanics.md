@@ -1,5 +1,22 @@
 # Gameplay Mechanics
 
+## Level Schema and Switch Interaction Mode
+
+Schema version 2 levels contain an explicit `rules` object. New generated production content uses `liveLookahead`: only the first upcoming switch on the selected route can rotate, and only when its travel time is within `switchLookaheadSeconds`. Accepted taps observe `switchTapCooldownSeconds`. The normative eligibility and timing details are in [the switch interaction contract](gameplay/switch_interaction_contract.md).
+
+```json
+{
+  "schemaVersion": 2,
+  "rules": {
+    "switchInteractionMode": "liveLookahead",
+    "switchLookaheadSeconds": 1.35,
+    "switchTapCooldownSeconds": 0.12
+  }
+}
+```
+
+Legacy files may omit both fields. They decode with `legacyGlobal` behavior and effective numeric defaults of 1.35 and 0.12 seconds. Migration is deliberate: add the version 2 fields, replay the canonical solution with eligibility enforced, and keep the level in legacy mode until that replay succeeds. See the [complete level JSON reference](../Tools/LevelEditor/docs/current_level_json_shape.md) for a full valid example.
+
 ## Switch Nodes
 
 Tiny Routes uses the existing level JSON graph shape for switch behavior. No JSON schema migration is required for 4-way switch intersections.
@@ -15,7 +32,7 @@ A node's switch behavior is inferred from its valid outgoing directed edges:
 
 Valid outgoing edges are the edge IDs listed in `RouteNode.outgoingEdgeIDs` that also exist in the graph and start at that node. Missing edge IDs or edge IDs that belong to another source node do not count as valid switch choices.
 
-The tap cycle order is the order of `outgoingEdgeIDs`. At level start, the active outgoing edge is the first valid outgoing edge. Each successful tap rotates the active edge to the next valid edge, wrapping back to the first edge after the last one. Switch state persists for the rest of the level unless the player taps the switch again.
+The tap cycle order is the order of `outgoingEdgeIDs`. At level start, the active outgoing edge is the first valid outgoing edge. Each successful tap rotates the active edge to the next valid edge, wrapping back to the first edge after the last one. Switch state persists unless the player taps the switch again. In `liveLookahead`, such taps are accepted only during the eligibility window; `legacyGlobal` retains the former global interaction while content is migrated.
 
 Roads are directed. Adding an outgoing edge from `central_switch` to `package` does not create a return route from `package` to `central_switch`; that return path must be represented by its own directed edge.
 

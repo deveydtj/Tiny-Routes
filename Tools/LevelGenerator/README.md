@@ -2,6 +2,25 @@
 
 Procedural generation tool for creating Tiny Routes production level JSON and matching solution sidecar files. The generator writes the same shapes used by the Swift runtime and the Python Level Editor, then validates candidates before saving them.
 
+## Level Schema and Migration
+
+New generated production levels must declare schema version 2 and live look-ahead rules:
+
+```json
+{
+  "schemaVersion": 2,
+  "rules": {
+    "switchInteractionMode": "liveLookahead",
+    "switchLookaheadSeconds": 1.35,
+    "switchTapCooldownSeconds": 0.12
+  }
+}
+```
+
+These fields accompany the normal level fields; a complete example is in `../LevelEditor/docs/current_level_json_shape.md`. Files without `schemaVersion` or `rules` decode as version 1 with effective defaults of `legacyGlobal`, 1.35 seconds of look-ahead, and a 0.12-second cooldown. Invalid explicit numeric values fail validation.
+
+Migrate existing levels individually: add the version 2 fields, replay the timed solution under `liveLookahead`, and only then replace the legacy production file and sidecar. A level that cannot pass live replay remains legacy until its route or solution is revised.
+
 ## Install
 
 The generator runtime uses only the Python standard library:

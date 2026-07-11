@@ -703,7 +703,7 @@ final class LevelRepositoryTests: XCTestCase {
             switch solution.actions[actionIndex] {
             case let .tap(nodeID):
                 XCTAssertTrue(
-                    engine.rotateSwitchNode(nodeID: nodeID),
+                    engine.rotateSwitchNode(nodeID: nodeID).didRotate,
                     "Expected \(level.id) tap on \(nodeID) to rotate a switch",
                     file: file,
                     line: line
@@ -721,7 +721,7 @@ final class LevelRepositoryTests: XCTestCase {
                       case let .tap(nodeID) = solution.actions[actionIndex + 1],
                       nodeID == edge.toNodeID {
                     XCTAssertTrue(
-                        engine.rotateSwitchNode(nodeID: nodeID),
+                        engine.rotateSwitchNode(nodeID: nodeID).didRotate,
                         "Expected \(level.id) pre-arrival tap on \(nodeID) to rotate a switch",
                         file: file,
                         line: line

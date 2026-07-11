@@ -121,7 +121,7 @@ final class LevelSimulationHarness {
                 break
             }
 
-            let didRotate = engine.rotateSwitchNode(nodeID: action.tapNodeID)
+            let didRotate = engine.rotateSwitchNode(nodeID: action.tapNodeID).didRotate
             let executedAction = ExecutedLevelSolutionAction(
                 requestedTime: action.timeSeconds,
                 nodeID: action.tapNodeID,

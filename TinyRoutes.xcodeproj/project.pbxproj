@@ -81,6 +81,7 @@
 		38515030AB26F2B47263F294 /* level_007.json in Resources */ = {isa = PBXBuildFile; fileRef = 7A2B62C9B574D5F7BBAF1420 /* level_007.json */; };
 		3A6026DA9B0747F7AF393338 /* TRGameplayHUD.swift in Sources */ = {isa = PBXBuildFile; fileRef = 361B29040D703572B02D178A /* TRGameplayHUD.swift */; };
 		3BA316346FA55C1EDDC6BA18 /* RouteEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1AFDFE57C38D02CBE7CAADA9 /* RouteEngine.swift */; };
+		A11CE0010000000000000001 /* SwitchTapResult.swift in Sources */ = {isa = PBXBuildFile; fileRef = A11CE0010000000000000002 /* SwitchTapResult.swift */; };
 		3C2C3ABF0B156F608B82AF0C /* TRProgressBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B7E03EFAABA7BECAC04F0C3 /* TRProgressBar.swift */; };
 		3C735FA8625D783DA8BCC502 /* ResultScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C13BB2799AF7B8830705334 /* ResultScreen.swift */; };
 		3D192B9EAFF7B273982D7C0D /* level_066.solution.json in Resources */ = {isa = PBXBuildFile; fileRef = D7E01A619BBC3E8E1AB90D2A /* level_066.solution.json */; };
@@ -376,6 +377,7 @@
 		1A8BDD2BCD84D43209839A4B /* level_020.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = level_020.json; sourceTree = "<group>"; };
 		1A94B53B33E9EA665AA1020D /* level_055.solution.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = level_055.solution.json; sourceTree = "<group>"; };
 		1AFDFE57C38D02CBE7CAADA9 /* RouteEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RouteEngine.swift; sourceTree = "<group>"; };
+		A11CE0010000000000000002 /* SwitchTapResult.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwitchTapResult.swift; sourceTree = "<group>"; };
 		1B3768D74CB7A388C10288D0 /* ExperimentalLevelSolverTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExperimentalLevelSolverTests.swift; sourceTree = "<group>"; };
 		1B37E002D44DA1C3F01C3745 /* duplicate_outgoing_edge_ids.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = duplicate_outgoing_edge_ids.json; sourceTree = "<group>"; };
 		1CACEEDC98C14DD3B2EEA468 /* UserSettingsRepositoryTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserSettingsRepositoryTests.swift; sourceTree = "<group>"; };
@@ -920,6 +922,7 @@
 				499A3741695801E77DD300A2 /* LevelRuntimeState.swift */,
 				C944525464AD16A3C4C0A32B /* NodeSwitchController.swift */,
 				1AFDFE57C38D02CBE7CAADA9 /* RouteEngine.swift */,
+				A11CE0010000000000000002 /* SwitchTapResult.swift */,
 				1F9B94553540F5DEADB9944D /* RuntimeRouteGraph.swift */,
 			);
 			path = Gameplay;
@@ -1451,6 +1454,7 @@
 				3C735FA8625D783DA8BCC502 /* ResultScreen.swift in Sources */,
 				EDD8334841BEE446825FE614 /* RouteEdge.swift in Sources */,
 				3BA316346FA55C1EDDC6BA18 /* RouteEngine.swift in Sources */,
+				A11CE0010000000000000001 /* SwitchTapResult.swift in Sources */,
 				647FC0BF1CD92C14876B9E8D /* RouteGraph.swift in Sources */,
 				2A16A2EB2945E072AF6FA52C /* RouteNode.swift in Sources */,
 				3DF4863A4394B12A62D582F5 /* RuntimeRouteGraph.swift in Sources */,

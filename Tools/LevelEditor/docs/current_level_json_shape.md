@@ -1,6 +1,6 @@
 # Current Level JSON Shape
 
-This document describes the exact fields used by the real `level_###.json` files in `TinyRoutes/Resources/Levels/` as of the time it was written. Use this as the reference when implementing Python data models.
+This document describes the version 2 level format and the legacy production files in `TinyRoutes/Resources/Levels/`. New files should use version 2; version 1 remains readable during migration.
 
 ---
 
@@ -8,6 +8,8 @@ This document describes the exact fields used by the real `level_###.json` files
 
 | Field | Type | Required | Description |
 |---|---|---|---|
+| `schemaVersion` | integer | version 2: yes; legacy: no | Schema revision. Omitted files are treated as version 1. New files use `2`. |
+| `rules` | object | version 2: yes; legacy: no | Switch interaction rules (see below). Omitted rules use the legacy defaults. |
 | `id` | string | yes | Unique level identifier, e.g. `"level_001"` |
 | `name` | string | yes | Human-readable level title, e.g. `"First Pickup"` |
 | `graph` | object | yes | Contains the `nodes` and `edges` arrays (see below) |
@@ -17,6 +19,18 @@ This document describes the exact fields used by the real `level_###.json` files
 | `timeLimitSeconds` | integer | yes | Maximum seconds the player has to complete the level |
 | `parTaps` | integer | yes | The par (expected) number of switch taps to solve the level optimally |
 | `solution` | object | no | Embedded solution hint present in some levels (see below) |
+
+## Version 2 `rules` Object
+
+| Field | Type | Required | Description |
+|---|---|---|---|
+| `switchInteractionMode` | string | yes | `"liveLookahead"` for newly generated production levels. `"legacyGlobal"` is reserved for unmigrated content. |
+| `switchLookaheadSeconds` | number | yes | Positive, finite travel-time window in which the first upcoming switch can be tapped. |
+| `switchTapCooldownSeconds` | number | yes | Finite, nonnegative delay between accepted taps. |
+
+When `schemaVersion` or `rules` is missing, the runtime uses `legacyGlobal`, a 1.35-second look-ahead value, and a 0.12-second cooldown. The numeric values complete the effective rules object, but legacy-global interaction does not use look-ahead eligibility. Invalid explicit values are validation errors.
+
+To migrate an old file, add `"schemaVersion": 2` and an explicit `rules` object, replay its solution under live look-ahead behavior, and adjust tap timestamps or redesign the route if necessary. Keep the old file in legacy mode until that replay passes.
 
 ---
 
@@ -123,6 +137,8 @@ The following fields exist in the Swift runtime models but are computed at runti
 
 ## Example: `level_001.json`
 
+This is a complete legacy example. It intentionally omits `schemaVersion` and `rules`.
+
 ```json
 {
   "id": "level_001",
@@ -143,6 +159,41 @@ The following fields exist in the Swift runtime models but are computed at runti
   "destinationNodeID": "destination",
   "timeLimitSeconds": 30,
   "parTaps": 0
+}
+```
+
+## Complete Version 2 Example
+
+```json
+{
+  "schemaVersion": 2,
+  "rules": {
+    "switchInteractionMode": "liveLookahead",
+    "switchLookaheadSeconds": 1.35,
+    "switchTapCooldownSeconds": 0.12
+  },
+  "id": "level_101",
+  "name": "Live First Choice",
+  "graph": {
+    "nodes": [
+      { "id": "start", "x": 0.0, "y": 0.0, "outgoingEdgeIDs": ["e_start_switch"] },
+      { "id": "switch", "x": 1.0, "y": 0.0, "outgoingEdgeIDs": ["e_switch_dead", "e_switch_package"] },
+      { "id": "dead", "x": 2.0, "y": -1.0, "outgoingEdgeIDs": [] },
+      { "id": "package", "x": 2.0, "y": 1.0, "outgoingEdgeIDs": ["e_package_destination"] },
+      { "id": "destination", "x": 3.0, "y": 1.0, "outgoingEdgeIDs": [] }
+    ],
+    "edges": [
+      { "id": "e_start_switch", "fromNodeID": "start", "toNodeID": "switch" },
+      { "id": "e_switch_dead", "fromNodeID": "switch", "toNodeID": "dead" },
+      { "id": "e_switch_package", "fromNodeID": "switch", "toNodeID": "package", "roadShape": "verticalFirst" },
+      { "id": "e_package_destination", "fromNodeID": "package", "toNodeID": "destination" }
+    ]
+  },
+  "startNodeID": "start",
+  "packageNodeID": "package",
+  "destinationNodeID": "destination",
+  "timeLimitSeconds": 30,
+  "parTaps": 1
 }
 ```
 

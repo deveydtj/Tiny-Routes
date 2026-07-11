@@ -390,25 +390,38 @@ final class RouteEngine {
     /// `activeOutgoingEdgeID` without rotating.
     ///
     /// - Parameter nodeID: The tapped node id.
-    /// - Returns: `true` when a switch node rotated; `false` otherwise, including normalization-only updates.
+    /// - Returns: A structured acceptance or rejection result.
     @discardableResult
-    func rotateSwitchNode(nodeID: String) -> Bool {
+    func rotateSwitchNode(nodeID: String) -> SwitchTapResult {
         guard var runtimeGraph else {
-            return false
+            return .rejectedNoLevel
+        }
+        guard levelOutcome == nil else {
+            return .rejectedLevelFinished
         }
         if deliveryDot?.transition?.nodeID == nodeID {
-            return false
+            return .rejectedCommitted
         }
         if let currentEdgeID = deliveryDot?.currentEdgeID,
            runtimeGraph.edgesByID[currentEdgeID]?.fromNodeID == nodeID {
-            return false
+            return .rejectedCommitted
+        }
+        guard let node = runtimeGraph.nodesByID[nodeID],
+              runtimeGraph.switchKind(for: node).isSwitchable else {
+            // Preserve the controller's normalization behavior for malformed or
+            // partially valid nodes during the caller migration.
+            _ = nodeSwitchController.rotateSwitch(nodeID: nodeID, in: &runtimeGraph)
+            self.runtimeGraph = runtimeGraph
+            return .rejectedNotSwitchable
         }
         let didRotate = nodeSwitchController.rotateSwitch(nodeID: nodeID, in: &runtimeGraph)
         self.runtimeGraph = runtimeGraph
-        if didRotate {
-            tapCount += 1
+        guard didRotate,
+              let activeEdgeID = runtimeGraph.nodesByID[nodeID]?.activeOutgoingEdgeID else {
+            return .rejectedNotSwitchable
         }
-        return didRotate
+        tapCount += 1
+        return .accepted(nodeID: nodeID, activeEdgeID: activeEdgeID)
     }
 
     @discardableResult

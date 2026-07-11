@@ -212,9 +212,9 @@ struct GameplayScreen: View {
             return
         }
 
-        let didRotate = routeEngine.rotateSwitchNode(nodeID: nodeID)
+        let result = routeEngine.rotateSwitchNode(nodeID: nodeID)
         runtimeGraph = routeEngine.runtimeGraph
-        if didRotate {
+        if result.didRotate {
             tapCount = routeEngine.tapCount
             lastRotatedSwitchNodeID = nodeID
             switchPressEventToken += 1
