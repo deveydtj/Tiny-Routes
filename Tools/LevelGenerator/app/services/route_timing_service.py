@@ -6,6 +6,12 @@ from typing import Any
 
 
 class RouteTimingService:
+    """Geometric timing utilities for layout analysis and legacy templates.
+
+    Production live-lookahead action timestamps must come from
+    ``RuntimeSolutionSearchService`` because geometry alone cannot establish an
+    eligibility window or prove that a tap is accepted by the runtime.
+    """
     standard_turn_radius = 0.18
     _supported_shapes = {None, "horizontalFirst", "verticalFirst"}
     _direction_labels = {

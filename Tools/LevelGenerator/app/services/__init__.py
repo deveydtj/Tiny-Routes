@@ -11,6 +11,7 @@ from .road_geometry_validation_service import (
 )
 from .road_shape_service import RoadShapeService
 from .solution_builder_service import SolutionBuilderService
+from .runtime_solution_search_service import RuntimeSolutionSearchService
 from .switch_classification_service import (
     MAX_SUPPORTED_OUTGOING_EDGES,
     SwitchClassificationService,
@@ -49,6 +50,7 @@ __all__ = [
     "RoadGeometryValidationService",
     "RoadShapeService",
     "SolutionBuilderService",
+    "RuntimeSolutionSearchService",
     "SwitchClassificationService",
     "SwitchNodeClassification",
     "SwitchNodeKind",

@@ -900,6 +900,8 @@ Keep abstract graph search useful while preventing it from being mistaken for a 
 
 ## Task 4.3 — Add a post-layout runtime solution search
 
+**Status:** Completed
+
 **Files to add**
 
 - `Tools/LevelGenerator/app/services/runtime_solution_search_service.py`
@@ -914,21 +916,23 @@ Keep abstract graph search useful while preventing it from being mistaken for a 
 
 **Steps**
 
-- [ ] Ask the simulator for activation-window open and close times.
-- [ ] Schedule taps with a configurable safety margin.
-- [ ] Respect tap cooldown.
-- [ ] Support multiple taps within one switch window.
-- [ ] Replay the final action list in the parity simulator.
-- [ ] Return timing diagnostics for every decision.
+- [x] Ask the simulator for activation-window open and close times.
+- [x] Schedule taps with a configurable safety margin.
+- [x] Respect tap cooldown.
+- [x] Support multiple taps within one switch window.
+- [x] Replay the final action list in the parity simulator.
+- [x] Return timing diagnostics for every decision.
 
 **Acceptance tests**
 
-- [ ] A two-way switch gets one legal timestamp.
-- [ ] A four-way switch with a short window is rejected if three taps cannot fit.
-- [ ] Revisited switches get separate decision-window timestamps.
-- [ ] Every returned action is accepted during replay.
+- [x] A two-way switch gets one legal timestamp.
+- [x] A four-way switch with a short window is rejected if three taps cannot fit.
+- [x] Revisited switches get separate decision-window timestamps.
+- [x] Every returned action is accepted during replay.
 
 ## Task 4.4 — Make solution sidecars derive from verified runtime solutions
+
+**Status:** Completed
 
 **Files to update**
 
@@ -937,16 +941,16 @@ Keep abstract graph search useful while preventing it from being mistaken for a 
 
 **Steps**
 
-- [ ] Stop constructing final timestamps from approximate route timing alone.
-- [ ] Use `RuntimeSolutionSearchResult` as the required input.
-- [ ] Store window-open, chosen-tap, window-close, and safety margin in reports.
-- [ ] Fail generation when a final replay rejects any action.
+- [x] Stop constructing final timestamps from approximate route timing alone.
+- [x] Use `RuntimeSolutionSearchResult` as the required input.
+- [x] Store window-open, chosen-tap, window-close, and safety margin in reports.
+- [x] Fail generation when a final replay rejects any action.
 
 **Acceptance tests**
 
-- [ ] Sidecars are sorted by time.
-- [ ] `maxTaps` equals accepted scripted actions.
-- [ ] Final replay completes under the time limit.
+- [x] Sidecars are sorted by time.
+- [x] `maxTaps` equals accepted scripted actions.
+- [x] Final replay completes under the time limit.
 
 ### Phase 4 exit gate
 

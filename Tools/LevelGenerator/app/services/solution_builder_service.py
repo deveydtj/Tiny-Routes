@@ -5,6 +5,7 @@ from typing import Any
 
 from ..level_editor_imports import SolutionActionModel, SolutionModel
 from ..models.difficulty_preset import DifficultyPreset
+from ..models.runtime_solution_search import RuntimeSolutionSearchResult
 from .route_timing_service import RouteTimingService
 
 
@@ -35,6 +36,53 @@ class SolutionBuilderService:
                     "requiredTapOrder": [],
                 }
             },
+        )
+
+    def build_verified_runtime_solution(
+        self,
+        level_id: str,
+        runtime_result: RuntimeSolutionSearchResult,
+        description: str,
+        solution_route: list[str] | tuple[str, ...] | None = None,
+    ) -> SolutionModel:
+        if not runtime_result.passed or runtime_result.replay_result is None or not runtime_result.replay_result.passed:
+            raise ValueError(runtime_result.failure_reason or "runtime solution was not verified")
+        if len(runtime_result.replay_result.taps) != len(runtime_result.actions):
+            raise ValueError("final runtime replay did not accept every action")
+        diagnostics = [diagnostic.to_dict() for diagnostic in runtime_result.diagnostics]
+        diagnostic_by_node_time = {
+            (diagnostic.node_id, round(time, 6)): diagnostic
+            for diagnostic in runtime_result.diagnostics
+            for time in diagnostic.chosen_tap_seconds
+        }
+        actions = []
+        for action in sorted(runtime_result.actions, key=lambda item: item.time_seconds):
+            diagnostic = diagnostic_by_node_time[(action.tap_node_id, round(action.time_seconds, 6))]
+            actions.append(SolutionActionModel(
+                timeSeconds=round(action.time_seconds, 3),
+                tapNodeID=action.tap_node_id,
+                _extra={
+                    "windowOpenSeconds": round(float(diagnostic.window_open_seconds), 3),
+                    "chosenTapSeconds": round(action.time_seconds, 3),
+                    "windowCloseSeconds": round(float(diagnostic.window_close_seconds), 3),
+                    "safetyMarginSeconds": diagnostic.safety_margin_seconds,
+                    "expectedEdgeAfterTap": action.expected_edge_after_tap,
+                },
+            ))
+        return SolutionModel(
+            levelID=level_id,
+            description=description,
+            expectedOutcome="completed",
+            maxTaps=len(actions),
+            requiresWithinTimeLimit=True,
+            actions=actions,
+            isPlaceholder=None,
+            _extra={"metadata": {
+                "validationVersion": "verified_runtime_solution_v1",
+                "solutionRoute": list(solution_route or []),
+                "requiredTapOrder": [action.tapNodeID for action in actions],
+                "runtimeDecisionTiming": diagnostics,
+            }},
         )
 
     def build_tap_solution(
@@ -87,6 +135,7 @@ class SolutionBuilderService:
         route_edge_ids_by_pair: dict[tuple[str, str], str] | None = None,
         outgoing_edge_ids_by_node: dict[str, list[str]] | None = None,
     ) -> SolutionModel:
+        """Build an approximate legacy sidecar; do not use for live-lookahead output."""
         times, arrival_times_by_action = self._times_before_route_arrivals(
             tap_node_ids,
             route_node_ids,

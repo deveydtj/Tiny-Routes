@@ -8,6 +8,7 @@ from .abstract_puzzle_solution import AbstractPuzzleSolutionMetadata
 from .candidate_signature import CandidateSignature
 from .generation_quality import GenerationQualityScore
 from .runtime_parity import RuntimeParityValidationResult
+from .runtime_solution_search import RuntimeSolutionSearchResult
 from .simulation import SimulationResult
 
 
@@ -26,6 +27,7 @@ class GeneratedLevel:
     unique_solution_validation_result: Any | None = None
     layout_readability_validation_result: Any | None = None
     runtime_parity_validation_result: RuntimeParityValidationResult | None = None
+    runtime_solution_search_result: RuntimeSolutionSearchResult | None = None
     quality_score: GenerationQualityScore | None = None
     preview_path: Path | None = None
     warning_messages: list[str] = field(default_factory=list)

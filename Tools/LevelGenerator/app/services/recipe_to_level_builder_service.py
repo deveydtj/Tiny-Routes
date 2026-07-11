@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from dataclasses import replace
 
+from tiny_routes_core.models import LevelRules, SwitchInteractionMode
+
 from ..models.generated_level import GeneratedLevel
 from ..models.graph_recipe import GraphRecipe
 from ..random_source import RandomSource
@@ -11,6 +13,8 @@ from .graph_layout_service import GraphLayoutPlannerService
 from .level_naming_service import LevelNamingService
 from .road_shape_service import RoadShapeService
 from .solution_builder_service import SolutionBuilderService
+from .runtime_solution_search_service import RuntimeSolutionSearchService
+from .topology_solver_service import TopologySolverService
 
 
 class RecipeToLevelBuilderService:
@@ -18,6 +22,8 @@ class RecipeToLevelBuilderService:
         self.difficulty = DifficultyService()
         self.naming = LevelNamingService()
         self.solution_builder = SolutionBuilderService()
+        self.runtime_solution_search = RuntimeSolutionSearchService()
+        self.topology_solver = TopologySolverService()
         self.layout_planner = GraphLayoutPlannerService()
         self.road_shape_service = RoadShapeService()
 
@@ -40,6 +46,8 @@ class RecipeToLevelBuilderService:
             self.difficulty.get_preset(recipe.difficulty),
             layout_size_profile,
         )
+        if recipe.solved_metadata is None:
+            recipe = self.topology_solver.solve(recipe, preset)
         rng = RandomSource(seed)
         layout_plan = self.layout_planner.plan_layout(
             recipe,
@@ -96,36 +104,28 @@ class RecipeToLevelBuilderService:
             time_limit_seconds=time_limit,
             par_taps=len(recipe.tap_node_ids),
         )
+        level.rules = LevelRules(
+            switch_interaction_mode=SwitchInteractionMode.LIVE_LOOKAHEAD,
+            switch_lookahead_seconds=LevelRules.DEFAULT_LOOKAHEAD_SECONDS,
+            switch_tap_cooldown_seconds=LevelRules.DEFAULT_TAP_COOLDOWN_SECONDS,
+        )
+        level._rules_present = True
         description = "Follow the generated graph recipe route and rotate each switch before arrival."
-        try:
-            solution = self.solution_builder.build_route_timed_tap_solution(
-                recipe.level_id,
-                list(recipe.tap_node_ids),
-                list(recipe.required_path),
-                positions,
-                preset,
-                description,
-                lead_time_seconds=max(0.35, preset.min_tap_spacing_seconds + 0.05),
-                route_edge_shapes={
-                    (edge.fromNodeID, edge.toNodeID): edge.roadShape
-                    for edge in level.graph.edges
-                },
-                route_edge_ids_by_pair={
-                    (edge.fromNodeID, edge.toNodeID): edge.id
-                    for edge in level.graph.edges
-                },
-                outgoing_edge_ids_by_node={
-                    node.id: list(node.outgoingEdgeIDs)
-                    for node in level.graph.nodes
-                },
+        if recipe.solved_metadata is None:  # defensive: the solver contract guarantees metadata
+            raise ValueError("runtime solution search requires solved topology metadata")
+        runtime_solution = self.runtime_solution_search.search(level, recipe.solved_metadata)
+        if not runtime_solution.passed:
+            error = ValueError(
+                f"Runtime solution search failed: {runtime_solution.failure_reason or 'unknown failure'}"
             )
-        except ValueError:
-            solution = self.solution_builder.build_tap_solution(
-                recipe.level_id,
-                list(recipe.tap_node_ids),
-                preset,
-                description,
-            )
+            error.code = runtime_solution.failure_reason or "runtime_solution_search_failed"
+            raise error
+        solution = self.solution_builder.build_verified_runtime_solution(
+            recipe.level_id,
+            runtime_solution,
+            description,
+            solution_route=recipe.required_path,
+        )
         self.solution_builder.apply_generation_metadata(
             solution,
             template_name=recipe.family_name,
@@ -166,6 +166,7 @@ class RecipeToLevelBuilderService:
             selected_layout_variant=layout_plan.variant,
             selected_road_shape_strategy=road_shape_plan.strategy,
             abstract_solution_metadata=recipe.solved_metadata,
+            runtime_solution_search_result=runtime_solution,
             layout_metadata=layout_plan.metadata,
             road_shape_metadata={
                 **road_shape_plan.metadata,

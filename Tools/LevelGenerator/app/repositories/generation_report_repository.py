@@ -139,6 +139,7 @@ class GenerationReportRepository:
                     "selectedRoadShapeStrategy": level.selected_road_shape_strategy,
                     "roadShapeMetadata": level.road_shape_metadata,
                     "abstractSolution": self._abstract_solution_payload(level),
+                    "runtimeSolutionSearch": self._runtime_solution_search_payload(level),
                     "seed": level.seed,
                     "difficulty": level.difficulty,
                     "nodes": level.node_count,
@@ -1226,6 +1227,28 @@ class GenerationReportRepository:
         if metadata is None:
             return None
         return metadata.to_dict()
+
+    def _runtime_solution_search_payload(self, level) -> dict[str, Any] | None:
+        result = getattr(level, "runtime_solution_search_result", None)
+        if result is None:
+            return None
+        return {
+            "passed": result.passed,
+            "failureReason": result.failure_reason,
+            "finalReplayPassed": bool(result.replay_result and result.replay_result.passed),
+            "acceptedActionCount": (
+                len(result.replay_result.taps) if result.replay_result is not None else 0
+            ),
+            "actions": [
+                {
+                    "timeSeconds": action.time_seconds,
+                    "tapNodeID": action.tap_node_id,
+                    "expectedEdgeAfterTap": action.expected_edge_after_tap,
+                }
+                for action in result.actions
+            ],
+            "decisionTiming": [diagnostic.to_dict() for diagnostic in result.diagnostics],
+        }
 
     def _simulation_payload(self, level) -> dict[str, Any] | None:
         simulation = getattr(level, "simulation_result", None)
