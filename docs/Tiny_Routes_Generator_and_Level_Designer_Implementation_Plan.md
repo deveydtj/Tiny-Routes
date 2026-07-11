@@ -315,19 +315,21 @@ Both tools expose a top-level package named `tests`, so collecting both suites i
 
 ## Task 0.5 — Add a behavior-change checklist
 
+**Status:** Completed
+
 **File to add**
 
 - `docs/development/gameplay_behavior_change_checklist.md`
 
 **Checklist contents**
 
-- [ ] Swift unit test added.
-- [ ] Python parity test added.
-- [ ] Shared fixture added or updated.
-- [ ] Generator validator updated.
-- [ ] Editor playtest updated.
-- [ ] JSON compatibility considered.
-- [ ] Migration impact documented.
+- [x] Swift unit test added.
+- [x] Python parity test added.
+- [x] Shared fixture added or updated.
+- [x] Generator validator updated.
+- [x] Editor playtest updated.
+- [x] JSON compatibility considered.
+- [x] Migration impact documented.
 
 ### Phase 0 exit gate
 
@@ -345,6 +347,8 @@ Both tools expose a top-level package named `tests`, so collecting both suites i
 Create a precise, backward-compatible data contract before changing runtime behavior.
 
 ## Task 1.1 — Add Swift level-rule domain types
+
+**Status:** Completed
 
 **Files to add or update**
 
@@ -369,20 +373,20 @@ struct LevelRules: Codable, Equatable {
 
 **Steps**
 
-- [ ] Add `schemaVersion` support.
-- [ ] Add serialized `rules` support.
-- [ ] Implement backward-compatible decoding for missing `schemaVersion` and `rules`.
-- [ ] Add an `effectiveRules` property that always returns validated values.
-- [ ] Clamp or reject nonfinite and invalid numeric values through validation, not silent runtime behavior.
-- [ ] Keep legacy levels loadable during migration.
+- [x] Add `schemaVersion` support.
+- [x] Add serialized `rules` support.
+- [x] Implement backward-compatible decoding for missing `schemaVersion` and `rules`.
+- [x] Add an `effectiveRules` property that always returns validated values.
+- [x] Clamp or reject nonfinite and invalid numeric values through validation, not silent runtime behavior.
+- [x] Keep legacy levels loadable during migration.
 
 **Acceptance tests**
 
-- [ ] Version 1 JSON loads with effective legacy rules.
-- [ ] Version 2 JSON loads with explicit live rules.
-- [ ] Encoding and decoding version 2 preserves values.
-- [ ] Unknown future fields do not crash decoding where the current repository's decoder permits them.
-- [ ] Invalid look-ahead and cooldown values produce validation issues.
+- [x] Version 1 JSON loads with effective legacy rules.
+- [x] Version 2 JSON loads with explicit live rules.
+- [x] Encoding and decoding version 2 preserves values.
+- [x] Unknown future fields do not crash decoding where the current repository's decoder permits them.
+- [x] Invalid look-ahead and cooldown values produce validation issues.
 
 ## Task 1.2 — Add Python shared rule models
 

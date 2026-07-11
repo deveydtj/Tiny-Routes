@@ -5,12 +5,36 @@ final class LevelValidator {
     func validate(level: LevelData) -> [LevelValidationIssue] {
         var issues: [LevelValidationIssue] = []
         issues += validateIdentity(level: level)
+        issues += validateRules(level: level)
         issues += validateGraph(level: level)
         guard !hasDuplicateGraphIDs(level) else {
             return issues
         }
         issues += validateIntent(level: level)
         issues += validatePlayability(level: level)
+        return issues
+    }
+
+    private func validateRules(level: LevelData) -> [LevelValidationIssue] {
+        guard let rules = level.rules else {
+            return []
+        }
+
+        var issues: [LevelValidationIssue] = []
+        if !rules.switchLookaheadSeconds.isFinite || rules.switchLookaheadSeconds <= 0 {
+            issues.append(LevelValidationIssue(
+                severity: .error,
+                levelID: level.id,
+                message: "rules.switchLookaheadSeconds must be finite and greater than 0"
+            ))
+        }
+        if !rules.switchTapCooldownSeconds.isFinite || rules.switchTapCooldownSeconds < 0 {
+            issues.append(LevelValidationIssue(
+                severity: .error,
+                levelID: level.id,
+                message: "rules.switchTapCooldownSeconds must be finite and greater than or equal to 0"
+            ))
+        }
         return issues
     }
 

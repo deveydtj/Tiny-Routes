@@ -245,6 +245,7 @@
 		BE79281A15C128FD8EBC96F3 /* settings_gear.png in Resources */ = {isa = PBXBuildFile; fileRef = 05B32D760F6E2D8859F9F9F2 /* settings_gear.png */; };
 		BE80D7F177B0B86081FCF014 /* level_071.solution.json in Resources */ = {isa = PBXBuildFile; fileRef = E4FF66193A5AD0AA0CE3D63F /* level_071.solution.json */; };
 		BFECEBDE3767231EAEE37500 /* level_093.solution.json in Resources */ = {isa = PBXBuildFile; fileRef = 7FF182DE671A4D3F9CC16798 /* level_093.solution.json */; };
+		C085B5C854E7515D89718CCB /* LevelRules.swift in Sources */ = {isa = PBXBuildFile; fileRef = D5C1AA635E545DFA55B49CC5 /* LevelRules.swift */; };
 		C0DB0D8D7688C113C11216FF /* level_012.json in Resources */ = {isa = PBXBuildFile; fileRef = E4AD1A336F0C15647B5AFA6E /* level_012.json */; };
 		C10DC0D854640531C19E0E1A /* level_015.solution.json in Resources */ = {isa = PBXBuildFile; fileRef = 15BF7C69DA170A7F9E9F6785 /* level_015.solution.json */; };
 		C111F8E9A2C4324849D21DC7 /* TRShopPinnedBalanceBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 37998A41F8C42D44D8EE6B1C /* TRShopPinnedBalanceBar.swift */; };
@@ -592,6 +593,7 @@
 		D3775B6DDA2F25C7A97B8F0A /* DailyBonusService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DailyBonusService.swift; sourceTree = "<group>"; };
 		D38E2EDE9C52958E8C6E10C9 /* level_004.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = level_004.json; sourceTree = "<group>"; };
 		D4C9913C4A5B8AD0D63E024D /* empty_level_id.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = empty_level_id.json; sourceTree = "<group>"; };
+		D5C1AA635E545DFA55B49CC5 /* LevelRules.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LevelRules.swift; sourceTree = "<group>"; };
 		D6C131E2473C151EE49CF3BA /* level_063.solution.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = level_063.solution.json; sourceTree = "<group>"; };
 		D7E01A619BBC3E8E1AB90D2A /* level_066.solution.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = level_066.solution.json; sourceTree = "<group>"; };
 		D8005A5B530ED56637A85639 /* level_016.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = level_016.json; sourceTree = "<group>"; };
@@ -966,6 +968,7 @@
 				465CFC8159B3613A970FE259 /* CosmeticItem.swift */,
 				8DFE5D9480972F04F714A31C /* GameplayCosmeticLoadout.swift */,
 				07D7502FABFF22F936EA1666 /* LevelData.swift */,
+				D5C1AA635E545DFA55B49CC5 /* LevelRules.swift */,
 				FE2D44D3B9CB219F2E76480E /* PlayerProfile.swift */,
 				657B3F5915B3BFD8DC6E8820 /* ProfileAchievement.swift */,
 				92F93BEAB8BCF1B8EA9C4E95 /* ProfileCollectionSelection.swift */,
@@ -1433,6 +1436,7 @@
 				E7E9E38DC9513394E5F9B680 /* HomeScreen.swift in Sources */,
 				4986A68A1EF3C9798A30FF7A /* LevelData.swift in Sources */,
 				3DDE58B9701BB050797CCF70 /* LevelRepository.swift in Sources */,
+				C085B5C854E7515D89718CCB /* LevelRules.swift in Sources */,
 				84F3A1A4C912645C82AEDD2A /* LevelRuntimeState.swift in Sources */,
 				CB682E3A5073FD1E5B1A7D8E /* LevelSelectScreen.swift in Sources */,
 				A0E778D7B18192EDCE0ECDB7 /* NodeSwitchController.swift in Sources */,

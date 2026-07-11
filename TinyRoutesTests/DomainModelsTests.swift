@@ -2,6 +2,9 @@ import XCTest
 @testable import TinyRoutes
 
 final class DomainModelsTests: XCTestCase {
+    private let decoder = JSONDecoder()
+    private let encoder = JSONEncoder()
+
     func testLevelDataAndGraphCanBeInstantiated() {
         let nodes = [
             RouteNode(id: "n1", x: 0, y: 0, outgoingEdgeIDs: ["e1"]),
@@ -45,6 +48,69 @@ final class DomainModelsTests: XCTestCase {
             XCTAssertTrue(validNodeIDs.contains(edge.toNodeID))
         }
     }
+
+    func testVersionOneJSONUsesEffectiveLegacyRules() throws {
+        let level = try decoder.decode(LevelData.self, from: Data(Self.versionOneJSON.utf8))
+
+        XCTAssertNil(level.schemaVersion)
+        XCTAssertNil(level.rules)
+        XCTAssertEqual(level.effectiveRules, .legacyDefaults)
+    }
+
+    func testVersionTwoJSONLoadsExplicitLiveRulesAndUnknownFields() throws {
+        let level = try decoder.decode(LevelData.self, from: Data(Self.versionTwoJSON.utf8))
+
+        XCTAssertEqual(level.schemaVersion, 2)
+        XCTAssertEqual(level.effectiveRules.switchInteractionMode, .liveLookahead)
+        XCTAssertEqual(level.effectiveRules.switchLookaheadSeconds, 1.75)
+        XCTAssertEqual(level.effectiveRules.switchTapCooldownSeconds, 0.2)
+    }
+
+    func testVersionTwoRulesRoundTrip() throws {
+        let original = try decoder.decode(LevelData.self, from: Data(Self.versionTwoJSON.utf8))
+        let decoded = try decoder.decode(LevelData.self, from: encoder.encode(original))
+
+        XCTAssertEqual(decoded.schemaVersion, 2)
+        XCTAssertEqual(decoded.rules, original.rules)
+    }
+
+    func testInvalidRuleNumbersProduceValidationIssues() throws {
+        var level = try decoder.decode(LevelData.self, from: Data(Self.versionTwoJSON.utf8))
+        level.rules = LevelRules(
+            switchInteractionMode: .liveLookahead,
+            switchLookaheadSeconds: -.infinity,
+            switchTapCooldownSeconds: -0.1
+        )
+
+        let messages = Set(LevelValidator().validate(level: level).map(\.message))
+        XCTAssertTrue(messages.contains("rules.switchLookaheadSeconds must be finite and greater than 0"))
+        XCTAssertTrue(messages.contains("rules.switchTapCooldownSeconds must be finite and greater than or equal to 0"))
+    }
+
+    private static let versionOneJSON = """
+    {
+      "id": "legacy", "name": "Legacy",
+      "graph": {"nodes": [{"id": "n", "x": 0, "y": 0, "outgoingEdgeIDs": []}], "edges": []},
+      "startNodeID": "n", "packageNodeID": "n", "destinationNodeID": "n",
+      "timeLimitSeconds": 30, "parTaps": 0
+    }
+    """
+
+    private static let versionTwoJSON = """
+    {
+      "schemaVersion": 2,
+      "rules": {
+        "switchInteractionMode": "liveLookahead",
+        "switchLookaheadSeconds": 1.75,
+        "switchTapCooldownSeconds": 0.2
+      },
+      "id": "modern", "name": "Modern",
+      "graph": {"nodes": [{"id": "n", "x": 0, "y": 0, "outgoingEdgeIDs": []}], "edges": []},
+      "startNodeID": "n", "packageNodeID": "n", "destinationNodeID": "n",
+      "timeLimitSeconds": 30, "parTaps": 0,
+      "futureExtension": {"ignored": true}
+    }
+    """
 
     func testProfileAndCosmeticDefaults() {
         let profile = PlayerProfile.defaultValue
