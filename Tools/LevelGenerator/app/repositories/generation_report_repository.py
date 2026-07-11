@@ -140,6 +140,7 @@ class GenerationReportRepository:
                     "roadShapeMetadata": level.road_shape_metadata,
                     "abstractSolution": self._abstract_solution_payload(level),
                     "runtimeSolutionSearch": self._runtime_solution_search_payload(level),
+                    "decisionQuality": self._decision_quality_payload(level),
                     "seed": level.seed,
                     "difficulty": level.difficulty,
                     "nodes": level.node_count,
@@ -525,6 +526,41 @@ class GenerationReportRepository:
                         f"loop/revisit `{route_interest.get('loopRevisitPresent')}`; "
                         f"turns `{route_interest.get('meaningfulTurnCount')}`; "
                         f"repeated topology penalty `{route_interest.get('repeatedTopologyPenalty')}`."
+                    )
+                decision_quality = level["decisionQuality"]
+                if decision_quality:
+                    profile = decision_quality["profile"]
+                    lines.append(
+                        f"- Decision profile: `{profile['required_decision_count']}` decisions across "
+                        f"`{profile['unique_switch_count']}` switches; dependencies "
+                        f"`{profile['ordered_dependency_count']}`; independent ratio "
+                        f"`{profile['independent_decision_ratio']}`; revisits "
+                        f"`{profile['route_revisit_count']}`."
+                    )
+                    lines.append(
+                        f"- Difficulty acceptance: {'; '.join(decision_quality['acceptanceReasons']) or 'no measured reason available'}."
+                    )
+                    lines.append(
+                        f"- Strategic weaknesses: {'; '.join(decision_quality['strategicWeaknesses']) or 'none measured'}."
+                    )
+                    lines.append(
+                        f"- Legacy front-load diagnostic: `{decision_quality['legacyFrontLoadDiagnostic']['possible']}`."
+                    )
+                    for window in decision_quality["activationWindows"]:
+                        lines.append(
+                            f"- Activation window `{window['nodeID']}` visit `{window['visitIndex']}`: "
+                            f"`{window['windowOpenSeconds']}`–`{window['windowCloseSeconds']}`s; "
+                            f"taps `{window['chosenTapSeconds']}`; margin `{window['safetyMarginSeconds']}`s."
+                        )
+                    actions = decision_quality["runtimeActions"]
+                    lines.append(
+                        f"- Runtime actions: accepted `{len(actions['accepted'])}`; rejected `{len(actions['rejected'])}`."
+                    )
+                    evidence = decision_quality["mechanicEvidence"]
+                    lines.append(
+                        "- Mechanic evidence: "
+                        + ("; ".join(f"`{item['claim']}` from `{item['source']}`" for item in evidence) or "none")
+                        + "."
                     )
                 solution = level["solution"]
                 route_summary = " -> ".join(f"`{node_id}`" for node_id in solution["route"])
@@ -1008,6 +1044,73 @@ class GenerationReportRepository:
             "presetContentFit": quality.details.get("presetContentFit", {}),
             "campaignPacingDetails": quality.details.get("campaignPacing", {}),
             "details": quality.details,
+        }
+
+    def _decision_quality_payload(self, level) -> dict[str, Any] | None:
+        profile = getattr(level, "decision_profile", None)
+        if profile is None:
+            return None
+        quality = getattr(level, "quality_score", None)
+        search = getattr(level, "runtime_solution_search_result", None)
+        replay = getattr(search, "replay_result", None) if search is not None else None
+        accepted: list[dict[str, Any]] = []
+        rejected: list[dict[str, Any]] = []
+        for tap in getattr(replay, "taps", ()) or ():
+            action = tap.action
+            item = {
+                "timeSeconds": float(action.timeSeconds),
+                "tapNodeID": action.tapNodeID,
+                "result": tap.code.value,
+                "activeEdgeID": tap.active_edge_id,
+            }
+            (accepted if tap.code.value == "accepted" else rejected).append(item)
+
+        reasons = [
+            f"required decision count {profile.required_decision_count} matches the selected {level.difficulty} preset",
+        ]
+        if profile.ordered_dependency_count:
+            reasons.append(f"{profile.ordered_dependency_count} ordered decision dependencies were measured")
+        if profile.switch_state_change_on_revisit_count:
+            reasons.append(
+                f"{profile.switch_state_change_on_revisit_count} revisits require a switch-state change"
+            )
+        if profile.package_phase_decisions_before and profile.package_phase_decisions_after:
+            reasons.append("decisions occur both before and after package collection")
+
+        weaknesses: list[str] = []
+        if profile.independent_decision_ratio > 0:
+            weaknesses.append(f"independent decision ratio is {profile.independent_decision_ratio:.3f}")
+        if profile.no_op_or_equivalent_choice_count:
+            weaknesses.append(f"{profile.no_op_or_equivalent_choice_count} choices are equivalent or no-op")
+        if quality is not None:
+            weaknesses.extend(quality.top_negative_factors)
+            weaknesses.extend(quality.penalties)
+
+        evidence: list[dict[str, str]] = []
+        tags = getattr(level, "mechanic_tags", ()) or ()
+        for tag in tags:
+            source = "descriptive recipe metadata"
+            if tag in {"revisit", "return_loop", "ring"} and profile.route_revisit_count:
+                source = "decision profile route traversal"
+            elif tag in {"package_gate", "two_phase"} and (
+                profile.package_phase_decisions_before and profile.package_phase_decisions_after
+            ):
+                source = "decision profile package phases"
+            elif tag in {"state_reversal", "revisited_switch"} and profile.switch_state_change_on_revisit_count:
+                source = "decision profile switch-state changes"
+            evidence.append({"claim": tag, "source": source})
+
+        return {
+            "profile": profile.to_dict(),
+            "acceptanceReasons": reasons,
+            "strategicWeaknesses": list(dict.fromkeys(weaknesses)),
+            "activationWindows": [diagnostic.to_dict() for diagnostic in getattr(search, "diagnostics", ()) or ()],
+            "runtimeActions": {"accepted": accepted, "rejected": rejected},
+            "legacyFrontLoadDiagnostic": {
+                "possible": profile.front_loaded_legacy_solution_possible,
+                "source": "legacy-global simulator diagnostic",
+            },
+            "mechanicEvidence": evidence,
         }
 
     def _pacing_penalties(self, level) -> list[str]:

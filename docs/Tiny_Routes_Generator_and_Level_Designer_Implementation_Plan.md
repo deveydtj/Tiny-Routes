@@ -1083,6 +1083,8 @@ These are initial defaults. Tune them only after fixed-seed regression runs and 
 
 ## Task 5.5 — Add actionable quality reporting
 
+**Status:** Completed
+
 **Files to update**
 
 - `Tools/LevelGenerator/app/repositories/generation_report_repository.py`
@@ -1090,13 +1092,13 @@ These are initial defaults. Tune them only after fixed-seed regression runs and 
 
 **Report additions**
 
-- [ ] Decision profile summary.
-- [ ] Why the level is accepted for its difficulty.
-- [ ] Strategic weaknesses and penalties.
-- [ ] Every activation window.
-- [ ] Accepted and rejected runtime actions.
-- [ ] Legacy front-load diagnostic.
-- [ ] Evidence source for every mechanic claim.
+- [x] Decision profile summary.
+- [x] Why the level is accepted for its difficulty.
+- [x] Strategic weaknesses and penalties.
+- [x] Every activation window.
+- [x] Accepted and rejected runtime actions.
+- [x] Legacy front-load diagnostic.
+- [x] Evidence source for every mechanic claim.
 
 ### Phase 5 exit gate
 
@@ -1113,6 +1115,8 @@ These are initial defaults. Tune them only after fixed-seed regression runs and 
 Move from selecting mostly complete fixed recipes toward composing small, testable puzzle mechanics.
 
 ## Task 6.1 — Define a motif interface
+
+**Status:** Completed
 
 **Files to add**
 
@@ -1133,9 +1137,9 @@ Move from selecting mostly complete fixed recipes toward composing small, testab
 
 **Acceptance tests**
 
-- [ ] Motif IDs are unique.
-- [ ] A motif validates independently.
-- [ ] Connector definitions reference real nodes.
+- [x] Motif IDs are unique.
+- [x] A motif validates independently.
+- [x] Connector definitions reference real nodes.
 
 ## Task 6.2 — Convert existing recipes into seed motifs
 

@@ -205,6 +205,15 @@ def test_generation_report_repository_writes_recipe_metadata(tmp_path) -> None:
     assert "baseQualityScore" in accepted["quality"]
     assert "presetContentFit" in accepted["quality"]
     assert "campaignPacingDetails" in accepted["quality"]
+    decision_quality = accepted["decisionQuality"]
+    assert decision_quality["profile"]["required_decision_count"] >= 1
+    assert decision_quality["acceptanceReasons"]
+    assert "strategicWeaknesses" in decision_quality
+    assert decision_quality["activationWindows"]
+    assert decision_quality["runtimeActions"]["accepted"]
+    assert decision_quality["runtimeActions"]["rejected"] == []
+    assert decision_quality["legacyFrontLoadDiagnostic"]["source"]
+    assert all(item["source"] for item in decision_quality["mechanicEvidence"])
     markdown = (tmp_path / "report.md").read_text(encoding="utf-8")
     assert "Candidate selection" in markdown
     assert "Topology" in markdown
@@ -220,6 +229,10 @@ def test_generation_report_repository_writes_recipe_metadata(tmp_path) -> None:
     assert "variant `single_switch_" in markdown
     assert "primary `single_switch`" in markdown
     assert "mechanic penalty 0.0" in markdown
+    assert "Decision profile:" in markdown
+    assert "Difficulty acceptance:" in markdown
+    assert "Activation window" in markdown
+    assert "Mechanic evidence:" in markdown
 
 
 def test_generation_report_repository_writes_recipe_mechanic_metadata(tmp_path) -> None:

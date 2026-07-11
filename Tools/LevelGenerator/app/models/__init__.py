@@ -1,6 +1,7 @@
 from .candidate_signature import CandidateSignature
 from .difficulty_preset import DifficultyPreset
 from .decision_profile import DecisionProfile
+from .puzzle_motif import MotifCompatibilityConstraints, PuzzleMotif
 from .generated_level import GeneratedLevel
 from .generation_quality import GenerationQualityScore
 from .generation_batch_plan import GenerationBatchPlan, GenerationBatchPlanEntry
@@ -19,6 +20,8 @@ from .template_variant_spec import TemplateVariantSpec
 __all__ = [
     "DifficultyPreset",
     "DecisionProfile",
+    "MotifCompatibilityConstraints",
+    "PuzzleMotif",
     "CandidateSignature",
     "GeneratedLevel",
     "GenerationQualityScore",
