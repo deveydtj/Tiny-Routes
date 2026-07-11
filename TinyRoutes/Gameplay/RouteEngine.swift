@@ -50,7 +50,10 @@ enum LevelFailureReason: Equatable {
 final class RouteEngine {
     private let dotSpeed: Double
     private let nodeSwitchController = NodeSwitchController()
+    private let switchEligibilityService = SwitchEligibilityService()
     private var loadedLevelData: LevelData?
+    private var activeRules: LevelRules = .legacyDefaults
+    private var lastAcceptedSwitchTapTime: TimeInterval?
     private(set) var packageNodeID: String?
     private(set) var destinationNodeID: String?
     private var remainingTime: TimeInterval?
@@ -83,6 +86,24 @@ final class RouteEngine {
         return max(timeLimit - remainingTime, 0)
     }
 
+    var switchEligibilitySnapshot: SwitchEligibilitySnapshot {
+        guard activeRules.switchInteractionMode == .liveLookahead,
+              let runtimeGraph,
+              let deliveryDot else {
+            return .noUpcomingSwitch
+        }
+        return switchEligibilityService.snapshot(
+            graph: runtimeGraph,
+            dot: deliveryDot,
+            speed: dotSpeed,
+            hasCollectedPackage: deliveryDot.hasCollectedPackage,
+            rules: activeRules
+        )
+    }
+
+    var eligibleSwitchNodeID: String? { switchEligibilitySnapshot.eligibleNodeID }
+    var upcomingSwitchTravelTime: TimeInterval? { switchEligibilitySnapshot.travelTimeSeconds }
+
     init(dotSpeed: Double = 1) {
         self.dotSpeed = max(0, dotSpeed)
     }
@@ -101,6 +122,8 @@ final class RouteEngine {
         destinationNodeID = nil
         remainingTime = nil
         tapCount = 0
+        activeRules = levelData.effectiveRules
+        lastAcceptedSwitchTapTime = nil
         levelOutcome = nil
         didHaltAtDeadEnd = false
         didHitUpdateSafetyStepLimit = false
@@ -414,6 +437,17 @@ final class RouteEngine {
             self.runtimeGraph = runtimeGraph
             return .rejectedNotSwitchable
         }
+        if activeRules.switchInteractionMode == .liveLookahead {
+            let eligibility = switchEligibilitySnapshot
+            guard eligibility.eligibleNodeID == nodeID else {
+                return .rejectedNotEligible(expectedNodeID: eligibility.eligibleNodeID)
+            }
+            if let lastAcceptedSwitchTapTime,
+               let elapsedTime,
+               elapsedTime - lastAcceptedSwitchTapTime < max(activeRules.switchTapCooldownSeconds, 0) {
+                return .rejectedCooldown
+            }
+        }
         let didRotate = nodeSwitchController.rotateSwitch(nodeID: nodeID, in: &runtimeGraph)
         self.runtimeGraph = runtimeGraph
         guard didRotate,
@@ -421,6 +455,9 @@ final class RouteEngine {
             return .rejectedNotSwitchable
         }
         tapCount += 1
+        if activeRules.switchInteractionMode == .liveLookahead {
+            lastAcceptedSwitchTapTime = elapsedTime
+        }
         return .accepted(nodeID: nodeID, activeEdgeID: activeEdgeID)
     }
 

@@ -9,7 +9,8 @@ final class RouteEngineTests: XCTestCase {
     private func makeLevelData(
         startNodeID: String = "start",
         packageNodeID: String = "package",
-        destinationNodeID: String = "destination"
+        destinationNodeID: String = "destination",
+        rules: LevelRules? = nil
     ) -> LevelData {
         let nodes = [
             RouteNode(id: "start",       x: 0, y: 0,  outgoingEdgeIDs: ["e_start_switch"]),
@@ -26,6 +27,8 @@ final class RouteEngineTests: XCTestCase {
             RouteEdge(id: "e_switch_dead_end",     fromNodeID: "switch",  toNodeID: "dead_end")
         ]
         return LevelData(
+            schemaVersion: rules == nil ? nil : 2,
+            rules: rules,
             id: "level_001",
             name: "First Dispatch",
             graph: RouteGraph(nodes: nodes, edges: edges),
@@ -34,6 +37,14 @@ final class RouteEngineTests: XCTestCase {
             destinationNodeID: destinationNodeID,
             timeLimitSeconds: 45,
             parTaps: 6
+        )
+    }
+
+    private func liveRules(window: Double = 0.4, cooldown: Double = 0.12) -> LevelRules {
+        LevelRules(
+            switchInteractionMode: .liveLookahead,
+            switchLookaheadSeconds: window,
+            switchTapCooldownSeconds: cooldown
         )
     }
 
@@ -2011,5 +2022,78 @@ final class RouteEngineTests: XCTestCase {
         let dotAfterExtraUpdate = try XCTUnwrap(engine.deliveryDot)
         XCTAssertEqual(dotAfterExtraUpdate.currentNodeID, "destination")
         XCTAssertNil(dotAfterExtraUpdate.currentEdgeID)
+    }
+
+    // MARK: - Live look-ahead eligibility
+
+    func testLiveLookaheadRejectsEarlyTapAndAcceptsInWindowTap() throws {
+        let engine = RouteEngine(dotSpeed: 1)
+        try engine.buildGraph(from: makeLevelData(rules: liveRules()))
+
+        XCTAssertEqual(try XCTUnwrap(engine.upcomingSwitchTravelTime), 1, accuracy: 0.0001)
+        XCTAssertEqual(engine.rotateSwitchNode(nodeID: "switch"), .rejectedNotEligible(expectedNodeID: nil))
+        XCTAssertEqual(engine.tapCount, 0)
+
+        XCTAssertTrue(engine.startDotMovement())
+        engine.updateDot(deltaTime: 0.65)
+        XCTAssertEqual(engine.eligibleSwitchNodeID, "switch")
+        XCTAssertTrue(engine.rotateSwitchNode(nodeID: "switch").didRotate)
+        XCTAssertEqual(engine.tapCount, 1)
+    }
+
+    func testLiveLookaheadEnforcesCooldownAndAllowsLaterRepeatedTap() throws {
+        let engine = RouteEngine(dotSpeed: 1)
+        try engine.buildGraph(from: makeLevelData(rules: liveRules(window: 0.8, cooldown: 0.12)))
+        XCTAssertTrue(engine.startDotMovement())
+        engine.updateDot(deltaTime: 0.25)
+
+        XCTAssertTrue(engine.rotateSwitchNode(nodeID: "switch").didRotate)
+        XCTAssertEqual(engine.rotateSwitchNode(nodeID: "switch"), .rejectedCooldown)
+        XCTAssertEqual(engine.tapCount, 1)
+
+        engine.updateDot(deltaTime: 0.13)
+        XCTAssertTrue(engine.rotateSwitchNode(nodeID: "switch").didRotate)
+        XCTAssertEqual(engine.tapCount, 2)
+    }
+
+    func testLiveLookaheadRejectsWrongSwitchNode() throws {
+        var level = makeLevelData(rules: liveRules(window: 2))
+        level.graph.nodes.append(
+            RouteNode(id: "other_switch", x: 10, y: 10, outgoingEdgeIDs: ["other_a", "other_b"])
+        )
+        level.graph.nodes.append(RouteNode(id: "other_end_a", x: 11, y: 10, outgoingEdgeIDs: []))
+        level.graph.nodes.append(RouteNode(id: "other_end_b", x: 10, y: 11, outgoingEdgeIDs: []))
+        level.graph.edges.append(RouteEdge(id: "other_a", fromNodeID: "other_switch", toNodeID: "other_end_a"))
+        level.graph.edges.append(RouteEdge(id: "other_b", fromNodeID: "other_switch", toNodeID: "other_end_b"))
+
+        let engine = RouteEngine(dotSpeed: 1)
+        try engine.buildGraph(from: level)
+
+        XCTAssertEqual(engine.eligibleSwitchNodeID, "switch")
+        XCTAssertEqual(
+            engine.rotateSwitchNode(nodeID: "other_switch"),
+            .rejectedNotEligible(expectedNodeID: "switch")
+        )
+        XCTAssertEqual(engine.tapCount, 0)
+    }
+
+    func testRestartResetsLiveLookaheadCooldown() throws {
+        let engine = RouteEngine(dotSpeed: 1)
+        try engine.buildGraph(from: makeLevelData(rules: liveRules(window: 2, cooldown: 10)))
+        XCTAssertTrue(engine.rotateSwitchNode(nodeID: "switch").didRotate)
+        XCTAssertEqual(engine.rotateSwitchNode(nodeID: "switch"), .rejectedCooldown)
+
+        XCTAssertTrue(engine.restartLevel())
+        XCTAssertTrue(engine.rotateSwitchNode(nodeID: "switch").didRotate)
+        XCTAssertEqual(engine.tapCount, 1)
+    }
+
+    func testLegacyGlobalModeStillAllowsPreconfiguration() throws {
+        let engine = RouteEngine()
+        try engine.buildGraph(from: makeLevelData())
+        XCTAssertNil(engine.eligibleSwitchNodeID)
+        XCTAssertTrue(engine.rotateSwitchNode(nodeID: "switch").didRotate)
+        XCTAssertTrue(engine.rotateSwitchNode(nodeID: "switch").didRotate)
+        XCTAssertEqual(engine.tapCount, 2)
     }
 }

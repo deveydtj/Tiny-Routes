@@ -506,6 +506,8 @@ Make the real app enforce the target live-routing model with clear, testable res
 
 ## Task 2.2 — Extract route look-ahead calculation
 
+**Status:** Completed
+
 **Files to add**
 
 - `TinyRoutes/Gameplay/SwitchEligibilityService.swift`
@@ -532,23 +534,25 @@ struct SwitchEligibilitySnapshot: Equatable {
 
 **Steps**
 
-- [ ] Add a deterministic function that accepts runtime graph, dot state, speed, package state, and rules.
-- [ ] Handle a dot partway through an edge.
-- [ ] Handle a dot exactly at a node.
-- [ ] Traverse through non-switch route nodes.
-- [ ] Stop at the first switchable node.
-- [ ] Use a visited-state set and maximum step count.
-- [ ] Avoid modifying graph state during the query.
+- [x] Add a deterministic function that accepts runtime graph, dot state, speed, package state, and rules.
+- [x] Handle a dot partway through an edge.
+- [x] Handle a dot exactly at a node.
+- [x] Traverse through non-switch route nodes.
+- [x] Stop at the first switchable node.
+- [x] Use a visited-state set and maximum step count.
+- [x] Avoid modifying graph state during the query.
 
 **Acceptance tests**
 
-- [ ] Upcoming switch is found through a chain of route nodes.
-- [ ] A farther second switch is not eligible while the first upcoming switch exists.
-- [ ] A switch outside the time window is reported but not eligible.
-- [ ] A switch inside the window is eligible.
-- [ ] A cyclic route does not hang.
+- [x] Upcoming switch is found through a chain of route nodes.
+- [x] A farther second switch is not eligible while the first upcoming switch exists.
+- [x] A switch outside the time window is reported but not eligible.
+- [x] A switch inside the window is eligible.
+- [x] A cyclic route does not hang.
 
 ## Task 2.3 — Integrate eligibility into `RouteEngine`
+
+**Status:** Completed
 
 **Files to update**
 
@@ -557,24 +561,24 @@ struct SwitchEligibilitySnapshot: Equatable {
 
 **Steps**
 
-- [ ] Store or compute the current eligibility snapshot.
-- [ ] Expose `eligibleSwitchNodeID` and travel-time information as read-only state.
-- [ ] Enforce `liveLookahead` in `rotateSwitchNode`.
-- [ ] Preserve `legacyGlobal` behavior for unmigrated levels.
-- [ ] Track the last accepted tap time per active window or globally, according to the written contract.
-- [ ] Reset cooldown state when loading or restarting a level.
-- [ ] Ensure reaching and departing a switch closes the correct window.
-- [ ] Recompute eligibility after an accepted rotation because the selected route may change future look-ahead.
+- [x] Store or compute the current eligibility snapshot.
+- [x] Expose `eligibleSwitchNodeID` and travel-time information as read-only state.
+- [x] Enforce `liveLookahead` in `rotateSwitchNode`.
+- [x] Preserve `legacyGlobal` behavior for unmigrated levels.
+- [x] Track the last accepted tap time per active window or globally, according to the written contract.
+- [x] Reset cooldown state when loading or restarting a level.
+- [x] Ensure reaching and departing a switch closes the correct window.
+- [x] Recompute eligibility after an accepted rotation because the selected route may change future look-ahead.
 
 **Acceptance tests**
 
-- [ ] Early tap rejected.
-- [ ] In-window tap accepted.
-- [ ] Wrong-node tap rejected.
-- [ ] Duplicate tap inside cooldown rejected.
-- [ ] Intentional later repeated tap accepted.
-- [ ] Tap count remains accurate.
-- [ ] Legacy mode behavior remains unchanged until migration.
+- [x] Early tap rejected.
+- [x] In-window tap accepted.
+- [x] Wrong-node tap rejected.
+- [x] Duplicate tap inside cooldown rejected.
+- [x] Intentional later repeated tap accepted.
+- [x] Tap count remains accurate.
+- [x] Legacy mode behavior remains unchanged until migration.
 
 ## Task 2.4 — Expose active-switch UI state
 

@@ -81,6 +81,7 @@
 		38515030AB26F2B47263F294 /* level_007.json in Resources */ = {isa = PBXBuildFile; fileRef = 7A2B62C9B574D5F7BBAF1420 /* level_007.json */; };
 		3A6026DA9B0747F7AF393338 /* TRGameplayHUD.swift in Sources */ = {isa = PBXBuildFile; fileRef = 361B29040D703572B02D178A /* TRGameplayHUD.swift */; };
 		3BA316346FA55C1EDDC6BA18 /* RouteEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1AFDFE57C38D02CBE7CAADA9 /* RouteEngine.swift */; };
+		A11CE0020000000000000001 /* SwitchEligibilityService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A11CE0020000000000000002 /* SwitchEligibilityService.swift */; };
 		A11CE0010000000000000001 /* SwitchTapResult.swift in Sources */ = {isa = PBXBuildFile; fileRef = A11CE0010000000000000002 /* SwitchTapResult.swift */; };
 		3C2C3ABF0B156F608B82AF0C /* TRProgressBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B7E03EFAABA7BECAC04F0C3 /* TRProgressBar.swift */; };
 		3C735FA8625D783DA8BCC502 /* ResultScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C13BB2799AF7B8830705334 /* ResultScreen.swift */; };
@@ -145,6 +146,7 @@
 		6C19A92B9F105B496A8D86B0 /* TRResultSummaryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 11AB4806C5C7E3100BE7283A /* TRResultSummaryTests.swift */; };
 		6D189D03CD67DE7BF1616D8B /* TRMenuSettingsButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4D3DCC7765DE330B51F87A15 /* TRMenuSettingsButton.swift */; };
 		6EEFAA30620655D48C5F5EB3 /* RouteEngineTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8120FF4D4CC3F24DCE4CE9BB /* RouteEngineTests.swift */; };
+		A11CE0030000000000000001 /* SwitchEligibilityServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A11CE0030000000000000002 /* SwitchEligibilityServiceTests.swift */; };
 		6F14BD0C1817B3968CE095C9 /* missing_start_node.json in Resources */ = {isa = PBXBuildFile; fileRef = 08EDEDC6662C77E816DFB0CE /* missing_start_node.json */; };
 		6F9F55451A0CF391FDC63BC7 /* gold_coin.png in Resources */ = {isa = PBXBuildFile; fileRef = DFE6BF59DFA0338A86D55CE0 /* gold_coin.png */; };
 		702EC315849F1E3699744788 /* level_049.solution.json in Resources */ = {isa = PBXBuildFile; fileRef = 586D3C9978A56D8B87FCEC89 /* level_049.solution.json */; };
@@ -377,6 +379,7 @@
 		1A8BDD2BCD84D43209839A4B /* level_020.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = level_020.json; sourceTree = "<group>"; };
 		1A94B53B33E9EA665AA1020D /* level_055.solution.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = level_055.solution.json; sourceTree = "<group>"; };
 		1AFDFE57C38D02CBE7CAADA9 /* RouteEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RouteEngine.swift; sourceTree = "<group>"; };
+		A11CE0020000000000000002 /* SwitchEligibilityService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwitchEligibilityService.swift; sourceTree = "<group>"; };
 		A11CE0010000000000000002 /* SwitchTapResult.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwitchTapResult.swift; sourceTree = "<group>"; };
 		1B3768D74CB7A388C10288D0 /* ExperimentalLevelSolverTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExperimentalLevelSolverTests.swift; sourceTree = "<group>"; };
 		1B37E002D44DA1C3F01C3745 /* duplicate_outgoing_edge_ids.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = duplicate_outgoing_edge_ids.json; sourceTree = "<group>"; };
@@ -485,6 +488,7 @@
 		7FF182DE671A4D3F9CC16798 /* level_093.solution.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = level_093.solution.json; sourceTree = "<group>"; };
 		805CC5AC1460E4D01DADF479 /* PurchaseServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PurchaseServiceTests.swift; sourceTree = "<group>"; };
 		8120FF4D4CC3F24DCE4CE9BB /* RouteEngineTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RouteEngineTests.swift; sourceTree = "<group>"; };
+		A11CE0030000000000000002 /* SwitchEligibilityServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwitchEligibilityServiceTests.swift; sourceTree = "<group>"; };
 		81C9FCCFBEBD0C94705FE55A /* level_020.solution.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = level_020.solution.json; sourceTree = "<group>"; };
 		8334C3F53508B734DEC25588 /* level_026.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = level_026.json; sourceTree = "<group>"; };
 		8344121231959580FF582574 /* level_043.solution.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = level_043.solution.json; sourceTree = "<group>"; };
@@ -922,6 +926,7 @@
 				499A3741695801E77DD300A2 /* LevelRuntimeState.swift */,
 				C944525464AD16A3C4C0A32B /* NodeSwitchController.swift */,
 				1AFDFE57C38D02CBE7CAADA9 /* RouteEngine.swift */,
+				A11CE0020000000000000002 /* SwitchEligibilityService.swift */,
 				A11CE0010000000000000002 /* SwitchTapResult.swift */,
 				1F9B94553540F5DEADB9944D /* RuntimeRouteGraph.swift */,
 			);
@@ -1135,6 +1140,7 @@
 				FFFA3FD891B9AC2E831450D4 /* ProfileSummaryServiceTests.swift */,
 				805CC5AC1460E4D01DADF479 /* PurchaseServiceTests.swift */,
 				8120FF4D4CC3F24DCE4CE9BB /* RouteEngineTests.swift */,
+				A11CE0030000000000000002 /* SwitchEligibilityServiceTests.swift */,
 				12715AF576F6D636BAA3117C /* RuntimeParityFixtureTests.swift */,
 				AAE4354ADF7FBB27382D141A /* SaveDataRepositoryTests.swift */,
 				110E615D1CB962B4C43D1072 /* ScoringAndProgressServiceTests.swift */,
@@ -1454,6 +1460,7 @@
 				3C735FA8625D783DA8BCC502 /* ResultScreen.swift in Sources */,
 				EDD8334841BEE446825FE614 /* RouteEdge.swift in Sources */,
 				3BA316346FA55C1EDDC6BA18 /* RouteEngine.swift in Sources */,
+				A11CE0020000000000000001 /* SwitchEligibilityService.swift in Sources */,
 				A11CE0010000000000000001 /* SwitchTapResult.swift in Sources */,
 				647FC0BF1CD92C14876B9E8D /* RouteGraph.swift in Sources */,
 				2A16A2EB2945E072AF6FA52C /* RouteNode.swift in Sources */,
@@ -1565,6 +1572,7 @@
 				54A79673924A643EF0F84A46 /* ProfileSummaryServiceTests.swift in Sources */,
 				F40347CC47469D3834CCC9CC /* PurchaseServiceTests.swift in Sources */,
 				6EEFAA30620655D48C5F5EB3 /* RouteEngineTests.swift in Sources */,
+				A11CE0030000000000000001 /* SwitchEligibilityServiceTests.swift in Sources */,
 				5E08B8510B3C510D1A21D772 /* RuntimeParityFixtureTests.swift in Sources */,
 				2455CB9ECC694065D4C15C4C /* SaveDataRepositoryTests.swift in Sources */,
 				CFFEC17005CB4526654599D2 /* ScoringAndProgressServiceTests.swift in Sources */,
