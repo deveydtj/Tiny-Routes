@@ -762,6 +762,8 @@ Tools/TinyRoutesCore/
 
 ## Task 3.5 — Implement Python switch eligibility
 
+**Status:** Completed
+
 **Files to add**
 
 - `tiny_routes_core/simulation/switch_eligibility.py`
@@ -769,17 +771,19 @@ Tools/TinyRoutesCore/
 
 **Steps**
 
-- [ ] Port the written algorithm, not an ad hoc approximation.
-- [ ] Use the same safety-step limit semantics as Swift.
-- [ ] Use defined numeric tolerances.
-- [ ] Return structured reasons and travel-time details.
+- [x] Port the written algorithm, not an ad hoc approximation.
+- [x] Use the same safety-step limit semantics as Swift.
+- [x] Use defined numeric tolerances.
+- [x] Return structured reasons and travel-time details.
 
 **Acceptance tests**
 
-- [ ] Every Swift eligibility fixture produces the expected Python result.
-- [ ] Boundary tests cover just before, exactly at, and just after the look-ahead threshold.
+- [x] Every Swift eligibility fixture produces the expected Python result.
+- [x] Boundary tests cover just before, exactly at, and just after the look-ahead threshold.
 
 ## Task 3.6 — Implement the event-driven Python simulator
+
+**Status:** Completed
 
 **Files to add or replace**
 
@@ -788,19 +792,19 @@ Tools/TinyRoutesCore/
 
 **Steps**
 
-- [ ] Advance the dot deterministically to the next event: tap, node arrival, time limit, or requested end time.
-- [ ] Apply taps through the eligibility policy.
-- [ ] Record accepted and rejected actions.
-- [ ] Record package collection, destination arrival, dead ends, and time expiration.
-- [ ] Preserve a detailed event trace for reports and editor debugging.
-- [ ] Add a thin compatibility adapter for existing generator callers.
+- [x] Advance the dot deterministically to the next event: tap, node arrival, time limit, or requested end time.
+- [x] Apply taps through the eligibility policy.
+- [x] Record accepted and rejected actions.
+- [x] Record package collection, destination arrival, dead ends, and time expiration.
+- [x] Preserve a detailed event trace for reports and editor debugging.
+- [x] Add a thin compatibility adapter for existing generator callers.
 
 **Acceptance tests**
 
-- [ ] Shared parity fixtures pass.
-- [ ] Existing valid sidecars replay where legacy rules apply.
-- [ ] Simulation is deterministic across repeated runs.
-- [ ] A malformed cycle hits a controlled safety failure.
+- [x] Shared parity fixtures pass.
+- [x] Existing valid sidecars replay where legacy rules apply.
+- [x] Simulation is deterministic across repeated runs.
+- [x] A malformed cycle hits a controlled safety failure.
 
 ## Task 3.7 — Add automated Swift/Python parity comparison
 

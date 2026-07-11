@@ -2,6 +2,9 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+from tiny_routes_core.models import SwitchInteractionMode
+from tiny_routes_core.simulation import RuntimeSimulator
+
 from ..models.simulation import SimulationResult, SimulationStep
 from .route_timing_service import RouteTimingService
 
@@ -11,6 +14,8 @@ class PythonSolutionSimulatorService:
         self.route_timing = RouteTimingService()
 
     def simulate(self, generated_level, max_step_count: int = 1000) -> SimulationResult:
+        if generated_level.level_document.rules.switch_interaction_mode == SwitchInteractionMode.LIVE_LOOKAHEAD:
+            return self._simulate_live_lookahead(generated_level, max_step_count)
         level, nodes, edges, active_edges, state, steps, terminal = self._prepare_simulation(generated_level)
         if terminal is not None:
             return terminal
@@ -41,6 +46,37 @@ class PythonSolutionSimulatorService:
         if terminal is not None:
             return terminal
         return self._failed("time_expired", steps, state)
+
+    def _simulate_live_lookahead(self, generated_level, max_step_count: int) -> SimulationResult:
+        """Compatibility adapter over the shared parity runtime.
+
+        Generator callers keep their established result model while all version-2
+        interaction decisions are made by ``tiny_routes_core``.
+        """
+        core_result = RuntimeSimulator(maximum_step_count=max_step_count).simulate(
+            generated_level.level_document,
+            generated_level.solution.actions,
+        )
+        steps = [
+            SimulationStep(
+                time_seconds=round(event.time_seconds, 3),
+                event=event.kind,
+                node_id=event.node_id,
+                edge_id=event.edge_id,
+                detail=event.detail,
+            )
+            for event in core_result.events
+        ]
+        return SimulationResult(
+            passed=core_result.passed,
+            outcome="completed" if core_result.passed else "failed",
+            failure_reason=core_result.failure_reason,
+            elapsed_time_seconds=round(core_result.state.elapsed_time, 3),
+            tap_count=core_result.state.accepted_tap_count,
+            reached_package=core_result.state.package_collected,
+            reached_destination=core_result.passed,
+            steps=steps,
+        )
 
     def arrival_time_for_action(self, generated_level, action_index: int, max_step_count: int = 1000) -> float | None:
         sorted_actions = sorted(generated_level.solution.actions, key=lambda action: float(action.timeSeconds))
