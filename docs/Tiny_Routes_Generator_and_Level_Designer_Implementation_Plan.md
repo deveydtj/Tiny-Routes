@@ -968,6 +968,8 @@ Measure what the player actually does and reject structurally valid but strategi
 
 ## Task 5.1 — Add a decision-profile model
 
+**Status:** Completed
+
 **Files to add**
 
 - `Tools/LevelGenerator/app/models/decision_profile.py`
@@ -1001,6 +1003,8 @@ Measure what the player actually does and reject structurally valid but strategi
 
 ## Task 5.2 — Implement `DecisionProfileService`
 
+**Status:** Completed
+
 **Files to add**
 
 - `Tools/LevelGenerator/app/services/decision_profile_service.py`
@@ -1008,20 +1012,20 @@ Measure what the player actually does and reject structurally valid but strategi
 
 **Steps**
 
-- [ ] Analyze all bounded topology solutions and failures.
-- [ ] Determine whether changing one decision changes the required later decision.
-- [ ] Count decisions whose correct state is independent of all others.
-- [ ] Identify revisits requiring a different state.
-- [ ] Classify wrong-choice outcomes.
-- [ ] Attach runtime window and spacing metrics after layout.
-- [ ] Run the legacy-global simulator as a diagnostic to measure front-loadability during migration.
+- [x] Analyze all bounded topology solutions and failures.
+- [x] Determine whether changing one decision changes the required later decision.
+- [x] Count decisions whose correct state is independent of all others.
+- [x] Identify revisits requiring a different state.
+- [x] Classify wrong-choice outcomes.
+- [x] Attach runtime window and spacing metrics after layout.
+- [x] Run the legacy-global simulator as a diagnostic to measure front-loadability during migration.
 
 **Acceptance tests**
 
-- [ ] Three independent one-tap switches produce a high independent-decision ratio.
-- [ ] A revisit requiring state reversal produces a dependency and revisit count.
-- [ ] A decorative branch that rejoins immediately is classified as equivalent/no-op.
-- [ ] Failure outcome classifications are deterministic.
+- [x] Three independent one-tap switches produce a high independent-decision ratio.
+- [x] A revisit requiring state reversal produces a dependency and revisit count.
+- [x] A decorative branch that rejoins immediately is classified as equivalent/no-op.
+- [x] Failure outcome classifications are deterministic.
 
 ## Task 5.3 — Define difficulty-quality thresholds
 
