@@ -23,6 +23,53 @@ Each level is a small abstract city-map puzzle. A glowing delivery dot automatic
 
 iPhone (iOS)
 
+## Developer setup
+
+Python 3.11 or newer is recommended. Create one virtual environment at the
+repository root and install both tools' dependencies plus pytest:
+
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+python -m pip install -r Tools/LevelGenerator/requirements.txt
+python -m pip install -r Tools/LevelEditor/requirements.txt pytest
+```
+
+The Level Editor uses PySide6. On macOS, Swift checks additionally require a
+full Xcode installation with an iOS Simulator matching the selected
+destination.
+
+## Developer commands
+
+Run both Python suites from the repository root. Each suite is launched in its
+own working directory, and both run even when the first one fails:
+
+```bash
+python scripts/run_python_tests.py
+```
+
+Run the deterministic, non-writing generator smoke check:
+
+```bash
+python scripts/run_generator_smoke.py
+```
+
+Run all Python checks together, optionally including Swift tests:
+
+```bash
+python scripts/run_all_checks.py
+python scripts/run_all_checks.py --swift-tests \
+  --destination 'platform=iOS Simulator,name=iPhone 16 Pro'
+```
+
+Use `--python /path/to/python` with any script when dependencies are installed
+in a different interpreter. The two Python suites can also be collected in one
+process without package-name collisions:
+
+```bash
+python -m pytest Tools/LevelGenerator/tests Tools/LevelEditor/tests
+```
+
 ## Design Goals
 
 - Simple one-thumb gameplay
