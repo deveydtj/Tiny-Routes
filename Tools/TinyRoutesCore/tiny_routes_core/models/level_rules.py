@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from enum import Enum
 import math
 from typing import Any, Mapping
@@ -27,6 +27,8 @@ class LevelRules:
     switch_interaction_mode: SwitchInteractionMode
     switch_lookahead_seconds: Any
     switch_tap_cooldown_seconds: Any
+    _extra: dict[str, Any] = field(default_factory=dict, repr=False, compare=False)
+    _present_keys: frozenset[str] | None = field(default=None, repr=False, compare=False)
 
     DEFAULT_LOOKAHEAD_SECONDS = 1.35
     DEFAULT_TAP_COOLDOWN_SECONDS = 0.12
@@ -37,6 +39,8 @@ class LevelRules:
             switch_interaction_mode=SwitchInteractionMode.LEGACY_GLOBAL,
             switch_lookahead_seconds=cls.DEFAULT_LOOKAHEAD_SECONDS,
             switch_tap_cooldown_seconds=cls.DEFAULT_TAP_COOLDOWN_SECONDS,
+            _extra={},
+            _present_keys=frozenset(),
         )
 
     @classmethod
@@ -73,16 +77,23 @@ class LevelRules:
             switch_tap_cooldown_seconds=rules.get(
                 "switchTapCooldownSeconds", cls.DEFAULT_TAP_COOLDOWN_SECONDS
             ),
+            _extra={key: value for key, value in rules.items() if key not in {
+                "switchInteractionMode", "switchLookaheadSeconds", "switchTapCooldownSeconds"
+            }},
+            _present_keys=frozenset(rules),
         )
 
     def to_dict(self) -> dict[str, Any]:
         """Encode the version-2 ``rules`` object using the canonical JSON names."""
 
-        return {
+        canonical = {
             "switchInteractionMode": self.switch_interaction_mode.value,
             "switchLookaheadSeconds": self.switch_lookahead_seconds,
             "switchTapCooldownSeconds": self.switch_tap_cooldown_seconds,
         }
+        if self._present_keys is not None:
+            canonical = {key: value for key, value in canonical.items() if key in self._present_keys}
+        return {**self._extra, **canonical}
 
     def validation_messages(self) -> list[str]:
         messages: list[str] = []

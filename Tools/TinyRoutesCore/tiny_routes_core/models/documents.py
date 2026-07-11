@@ -1,0 +1,179 @@
+"""Lossless JSON models shared by the generator and level editor."""
+
+from __future__ import annotations
+
+from copy import deepcopy
+from dataclasses import dataclass, field
+from typing import Any, Mapping
+
+from .level_rules import LevelRules
+
+
+def _extras(data: Mapping[str, Any], known: set[str]) -> dict[str, Any]:
+    return deepcopy({key: value for key, value in data.items() if key not in known})
+
+
+@dataclass
+class RouteNode:
+    id: str
+    x: float
+    y: float
+    outgoingEdgeIDs: list[str] = field(default_factory=list)
+    _extra: dict[str, Any] = field(default_factory=dict, repr=False, compare=False)
+
+    @classmethod
+    def from_dict(cls, data: Mapping[str, Any]) -> "RouteNode":
+        return cls(str(data["id"]), float(data["x"]), float(data["y"]),
+                   list(data["outgoingEdgeIDs"]), _extras(data, {"id", "x", "y", "outgoingEdgeIDs"}))
+
+    def to_dict(self) -> dict[str, Any]:
+        return {**deepcopy(self._extra), "id": self.id, "x": self.x, "y": self.y,
+                "outgoingEdgeIDs": list(self.outgoingEdgeIDs)}
+
+    def clone(self) -> "RouteNode": return deepcopy(self)
+
+
+@dataclass
+class RouteEdge:
+    id: str
+    fromNodeID: str
+    toNodeID: str
+    roadShape: str | None = None
+    _extra: dict[str, Any] = field(default_factory=dict, repr=False, compare=False)
+
+    @classmethod
+    def from_dict(cls, data: Mapping[str, Any]) -> "RouteEdge":
+        return cls(str(data["id"]), str(data["fromNodeID"]), str(data["toNodeID"]),
+                   data.get("roadShape"), _extras(data, {"id", "fromNodeID", "toNodeID", "roadShape"}))
+
+    def to_dict(self) -> dict[str, Any]:
+        result = {**deepcopy(self._extra), "id": self.id, "fromNodeID": self.fromNodeID,
+                  "toNodeID": self.toNodeID}
+        if self.roadShape is not None: result["roadShape"] = self.roadShape
+        return result
+
+    def clone(self) -> "RouteEdge": return deepcopy(self)
+
+
+@dataclass
+class RouteGraph:
+    nodes: list[RouteNode] = field(default_factory=list)
+    edges: list[RouteEdge] = field(default_factory=list)
+    _extra: dict[str, Any] = field(default_factory=dict, repr=False, compare=False)
+
+    @classmethod
+    def from_dict(cls, data: Mapping[str, Any]) -> "RouteGraph":
+        return cls([RouteNode.from_dict(item) for item in data["nodes"]],
+                   [RouteEdge.from_dict(item) for item in data["edges"]],
+                   _extras(data, {"nodes", "edges"}))
+
+    def to_dict(self) -> dict[str, Any]:
+        return {**deepcopy(self._extra), "nodes": [n.to_dict() for n in self.nodes],
+                "edges": [e.to_dict() for e in self.edges]}
+
+    def clone(self) -> "RouteGraph": return deepcopy(self)
+
+
+@dataclass
+class EmbeddedSolution:
+    tapNodeIDs: list[str] = field(default_factory=list)
+    _extra: dict[str, Any] = field(default_factory=dict, repr=False, compare=False)
+
+    @classmethod
+    def from_dict(cls, data: Mapping[str, Any]) -> "EmbeddedSolution":
+        return cls(list(data["tapNodeIDs"]), _extras(data, {"tapNodeIDs"}))
+
+    def to_dict(self) -> dict[str, Any]: return {**deepcopy(self._extra), "tapNodeIDs": list(self.tapNodeIDs)}
+    def clone(self) -> "EmbeddedSolution": return deepcopy(self)
+
+
+@dataclass
+class LevelDocument:
+    id: str
+    name: str
+    graph: RouteGraph
+    startNodeID: str
+    packageNodeID: str
+    destinationNodeID: str
+    timeLimitSeconds: int | float
+    parTaps: int
+    solution: EmbeddedSolution | None = None
+    rules: LevelRules = field(default_factory=LevelRules.legacy_defaults)
+    _extra: dict[str, Any] = field(default_factory=dict, repr=False, compare=False)
+    _rules_present: bool = field(default=False, repr=False, compare=False)
+
+    @classmethod
+    def from_dict(cls, data: Mapping[str, Any]) -> "LevelDocument":
+        known = {"id", "name", "graph", "startNodeID", "packageNodeID", "destinationNodeID",
+                 "timeLimitSeconds", "parTaps", "solution", "rules"}
+        solution = data.get("solution")
+        return cls(str(data["id"]), str(data["name"]), RouteGraph.from_dict(data["graph"]),
+                   str(data["startNodeID"]), str(data["packageNodeID"]), str(data["destinationNodeID"]),
+                   data["timeLimitSeconds"], data["parTaps"],
+                   EmbeddedSolution.from_dict(solution) if solution is not None else None,
+                   LevelRules.from_level_dict(data), _extras(data, known), "rules" in data)
+
+    def to_dict(self) -> dict[str, Any]:
+        result = {**deepcopy(self._extra), "id": self.id, "name": self.name,
+                  "graph": self.graph.to_dict(), "startNodeID": self.startNodeID,
+                  "packageNodeID": self.packageNodeID, "destinationNodeID": self.destinationNodeID,
+                  "timeLimitSeconds": self.timeLimitSeconds, "parTaps": self.parTaps}
+        if self.solution is not None: result["solution"] = self.solution.to_dict()
+        if self._rules_present or self.rules != LevelRules.legacy_defaults(): result["rules"] = self.rules.to_dict()
+        return result
+
+    def clone(self) -> "LevelDocument": return deepcopy(self)
+
+
+@dataclass
+class SolutionAction:
+    timeSeconds: int | float
+    tapNodeID: str
+    _extra: dict[str, Any] = field(default_factory=dict, repr=False, compare=False)
+
+    @classmethod
+    def from_dict(cls, data: Mapping[str, Any]) -> "SolutionAction":
+        return cls(data["timeSeconds"], str(data["tapNodeID"]), _extras(data, {"timeSeconds", "tapNodeID"}))
+
+    def to_dict(self) -> dict[str, Any]:
+        return {**deepcopy(self._extra), "timeSeconds": self.timeSeconds, "tapNodeID": self.tapNodeID}
+    def clone(self) -> "SolutionAction": return deepcopy(self)
+
+
+@dataclass
+class Solution:
+    levelID: str
+    description: str | None
+    expectedOutcome: str
+    maxTaps: int
+    requiresWithinTimeLimit: bool
+    actions: list[SolutionAction] = field(default_factory=list)
+    isPlaceholder: bool | None = None
+    _extra: dict[str, Any] = field(default_factory=dict, repr=False, compare=False)
+
+    @classmethod
+    def from_dict(cls, data: Mapping[str, Any]) -> "Solution":
+        known = {"levelID", "description", "expectedOutcome", "maxTaps", "requiresWithinTimeLimit",
+                 "isPlaceholder", "actions"}
+        return cls(str(data["levelID"]), data.get("description"), str(data["expectedOutcome"]),
+                   data["maxTaps"], data["requiresWithinTimeLimit"],
+                   [SolutionAction.from_dict(item) for item in data["actions"]],
+                   data.get("isPlaceholder"), _extras(data, known))
+
+    def to_dict(self) -> dict[str, Any]:
+        result = {**deepcopy(self._extra), "levelID": self.levelID, "description": self.description,
+                  "expectedOutcome": self.expectedOutcome, "maxTaps": self.maxTaps,
+                  "requiresWithinTimeLimit": self.requiresWithinTimeLimit,
+                  "actions": [action.to_dict() for action in self.actions]}
+        if self.isPlaceholder is not None: result["isPlaceholder"] = self.isPlaceholder
+        return result
+
+    def clone(self) -> "Solution": return deepcopy(self)
+
+
+# Compatibility names retained while callers migrate.
+RouteNodeModel = RouteNode
+RouteEdgeModel = RouteEdge
+RouteGraphModel = RouteGraph
+SolutionActionModel = SolutionAction
+SolutionModel = Solution

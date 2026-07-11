@@ -678,6 +678,8 @@ Tools/TinyRoutesCore/
 
 ## Task 3.2 — Move common level and solution models into the core
 
+**Status:** Completed
+
 **Source files to migrate from**
 
 - `Tools/LevelEditor/app/models/level_document.py`
@@ -688,20 +690,22 @@ Tools/TinyRoutesCore/
 
 **Steps**
 
-- [ ] Create shared `LevelDocument`, `RouteGraph`, `RouteNode`, `RouteEdge`, `LevelRules`, `Solution`, and `SolutionAction` models.
-- [ ] Preserve unknown fields on load/save.
-- [ ] Add explicit clone/deep-copy helpers for editor commands.
-- [ ] Add compatibility imports in old modules so existing callers continue working.
-- [ ] Migrate one tool at a time.
-- [ ] Remove duplicate implementations only after both tools pass.
+- [x] Create shared `LevelDocument`, `RouteGraph`, `RouteNode`, `RouteEdge`, `LevelRules`, `Solution`, and `SolutionAction` models.
+- [x] Preserve unknown fields on load/save.
+- [x] Add explicit clone/deep-copy helpers for editor commands.
+- [x] Add compatibility imports in old modules so existing callers continue working.
+- [x] Migrate one tool at a time.
+- [x] Remove duplicate implementations only after both tools pass.
 
 **Acceptance tests**
 
-- [ ] Existing level files round-trip without losing unknown fields.
-- [ ] Existing solution files round-trip.
-- [ ] Generator outputs still match the Swift JSON shape.
+- [x] Existing level files round-trip without losing unknown fields.
+- [x] Existing solution files round-trip.
+- [x] Generator outputs still match the Swift JSON shape.
 
 ## Task 3.3 — Add shared graph-query utilities
+
+**Status:** Completed
 
 **Files to add**
 
@@ -711,23 +715,25 @@ Tools/TinyRoutesCore/
 
 **Utilities**
 
-- [ ] Nodes and edges by ID.
-- [ ] Ordered outgoing edges.
-- [ ] Incoming edges.
-- [ ] Switchability classification.
-- [ ] Reachability.
-- [ ] Cycle detection.
-- [ ] Rejoin detection.
-- [ ] Required-route extraction helpers.
-- [ ] Safe active-edge normalization.
+- [x] Nodes and edges by ID.
+- [x] Ordered outgoing edges.
+- [x] Incoming edges.
+- [x] Switchability classification.
+- [x] Reachability.
+- [x] Cycle detection.
+- [x] Rejoin detection.
+- [x] Required-route extraction helpers.
+- [x] Safe active-edge normalization.
 
 **Acceptance tests**
 
-- [ ] Duplicate IDs produce deterministic errors.
-- [ ] Outgoing order is preserved.
-- [ ] Cycle and rejoin results are stable regardless of dictionary iteration order.
+- [x] Duplicate IDs produce deterministic errors.
+- [x] Outgoing order is preserved.
+- [x] Cycle and rejoin results are stable regardless of dictionary iteration order.
 
 ## Task 3.4 — Implement the Python runtime state
+
+**Status:** Completed
 
 **Files to add**
 
@@ -750,9 +756,9 @@ Tools/TinyRoutesCore/
 
 **Acceptance tests**
 
-- [ ] State initialization matches Swift initial active-edge behavior.
-- [ ] Copying a state for search does not share mutable collections.
-- [ ] Invalid graphs fail with validation errors instead of key errors.
+- [x] State initialization matches Swift initial active-edge behavior.
+- [x] Copying a state for search does not share mutable collections.
+- [x] Invalid graphs fail with validation errors instead of key errors.
 
 ## Task 3.5 — Implement Python switch eligibility
 

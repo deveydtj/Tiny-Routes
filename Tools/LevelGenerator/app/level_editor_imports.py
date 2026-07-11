@@ -7,6 +7,10 @@ from types import ModuleType
 from typing import Any
 
 from .paths import find_repo_root
+from tiny_routes_core.models import (
+    LevelDocument, RouteEdgeModel, RouteGraphModel, RouteNodeModel,
+    SolutionActionModel, SolutionModel,
+)
 
 
 def _import_level_editor_symbols() -> dict[str, Any]:
@@ -34,12 +38,6 @@ def _import_level_editor_symbols() -> dict[str, Any]:
         solution_validation = importlib.import_module("app.services.solution_validation_service")
 
         symbols = {
-            "LevelDocument": getattr(models, "LevelDocument"),
-            "RouteGraphModel": getattr(level_document, "RouteGraphModel"),
-            "RouteNodeModel": getattr(models, "RouteNodeModel"),
-            "RouteEdgeModel": getattr(models, "RouteEdgeModel"),
-            "SolutionModel": getattr(models, "SolutionModel"),
-            "SolutionActionModel": getattr(models, "SolutionActionModel"),
             "LevelFileRepository": getattr(repositories, "LevelFileRepository"),
             "SolutionFileRepository": getattr(repositories, "SolutionFileRepository"),
             "LevelValidationService": getattr(level_validation, "LevelValidationService"),
@@ -59,12 +57,6 @@ def _import_level_editor_symbols() -> dict[str, Any]:
 
 _SYMBOLS = _import_level_editor_symbols()
 
-LevelDocument = _SYMBOLS["LevelDocument"]
-RouteGraphModel = _SYMBOLS["RouteGraphModel"]
-RouteNodeModel = _SYMBOLS["RouteNodeModel"]
-RouteEdgeModel = _SYMBOLS["RouteEdgeModel"]
-SolutionModel = _SYMBOLS["SolutionModel"]
-SolutionActionModel = _SYMBOLS["SolutionActionModel"]
 LevelFileRepository = _SYMBOLS["LevelFileRepository"]
 SolutionFileRepository = _SYMBOLS["SolutionFileRepository"]
 LevelValidationService = _SYMBOLS["LevelValidationService"]
@@ -73,4 +65,7 @@ ValidationMessage = _SYMBOLS["ValidationMessage"]
 ValidationResult = _SYMBOLS["ValidationResult"]
 ValidationSeverity = _SYMBOLS["ValidationSeverity"]
 
-__all__ = list(_SYMBOLS.keys())
+__all__ = [
+    "LevelDocument", "RouteGraphModel", "RouteNodeModel", "RouteEdgeModel",
+    "SolutionModel", "SolutionActionModel", *_SYMBOLS.keys(),
+]
