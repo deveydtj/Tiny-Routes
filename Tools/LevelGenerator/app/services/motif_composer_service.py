@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 
 from ..models.decision_profile import DecisionProfile
 from ..models.difficulty_preset import DifficultyPreset
@@ -31,6 +31,10 @@ class MotifComposerService:
     """Deterministically joins independently validated motif fragments."""
 
     _counts = {"tutorial": (1, 1), "easy": (1, 2), "medium": (2, 3), "hard": (2, 4), "expert": (3, 4)}
+    _advanced_difficulties = frozenset({"medium", "hard", "expert"})
+    _hard_preferred_motifs = frozenset({
+        "return_loop", "revisited_switch", "ring_route", "three_way_hub", "four_way_hub",
+    })
 
     def __init__(
         self,
@@ -52,17 +56,37 @@ class MotifComposerService:
         rng = RandomSource(seed)
         selected = self._select_motifs(preset, rng, motif_ids)
         self._validate_compatibility(selected, preset)
+        decision_motif_count = sum(self._outgoing_max(item.build()) > 1 for item in selected)
+        pre_package_decision_target = max(1, decision_motif_count // 2)
 
         nodes = [GraphRecipeNode("start", "start")]
         edges: list[GraphRecipeEdge] = []
         required_path = ["start"]
         previous = "start"
         declared_tags: list[str] = []
+        package_inserted = False
         cycle_count = 0
         allows_rejoin = False
         allows_revisit = False
 
         for index, factory in enumerate(selected):
+            # Splitting the route into pre/post-package phases gives medium+
+            # compositions a measured state dependency instead of a chain of
+            # unrelated switches. The package is inserted near the decision
+            # midpoint so both phases contain a real decision.
+            if (
+                preset.name in self._advanced_difficulties
+                and not package_inserted
+                and index > 0
+                and sum(self._outgoing_max(item.build()) > 1 for item in selected[:index])
+                    >= pre_package_decision_target
+                and self._outgoing_max(factory.build()) > 1
+            ):
+                nodes.append(GraphRecipeNode("package", "package"))
+                edges.append(GraphRecipeEdge(previous, "package"))
+                required_path.append("package")
+                previous = "package"
+                package_inserted = True
             motif = factory.build()
             prefix = f"m{index + 1}_{motif.motif_id}"
             rename = {node.id: f"{prefix}_{node.id}" for node in motif.nodes}
@@ -77,9 +101,14 @@ class MotifComposerService:
             allows_rejoin = allows_rejoin or motif.may_introduce_rejoin
             allows_revisit = allows_revisit or motif.may_introduce_revisit
 
-        nodes.extend((GraphRecipeNode("package", "package"), GraphRecipeNode("destination", "destination")))
-        edges.extend((GraphRecipeEdge(previous, "package"), GraphRecipeEdge("package", "destination")))
-        required_path.extend(("package", "destination"))
+        if not package_inserted:
+            nodes.append(GraphRecipeNode("package", "package"))
+            edges.append(GraphRecipeEdge(previous, "package"))
+            required_path.append("package")
+            previous = "package"
+        nodes.append(GraphRecipeNode("destination", "destination"))
+        edges.append(GraphRecipeEdge(previous, "destination"))
+        required_path.append("destination")
 
         outgoing_counts: dict[str, int] = {}
         for edge in edges:
@@ -130,6 +159,15 @@ class MotifComposerService:
             reason = search.failure_reasons[0] if search.failure_reasons else "no_solution"
             raise MotifCompositionError(f"topology_solver_rejected:{reason}")
         profile = self.decision_profiler.analyze(recipe, search.solutions)
+        evidence = self._detected_mechanic_evidence(recipe, profile)
+        discrepancies = self._mechanic_discrepancies(selected, evidence)
+        metadata = dict(recipe.mechanic_metadata)
+        metadata.update({
+            "detectedMechanics": sorted(evidence),
+            "mechanicDiscrepancies": list(discrepancies),
+        })
+        recipe = replace(recipe, mechanic_metadata=metadata)
+        self._validate_measured_composition(recipe, selected, preset, profile)
         return ComposedMotifGraph(recipe, tuple(item.motif_id for item in selected), search, profile)
 
     def compose_recipe(self, *args, **kwargs) -> GraphRecipe:
@@ -146,14 +184,32 @@ class MotifComposerService:
         eligible = tuple(
             factory for factory in self.registry.all()
             if preset.name in factory.build().allowed_difficulties
-            and not factory.build().may_introduce_cycle
+            and (preset.allow_return_loops or not factory.build().may_introduce_cycle)
             and self._outgoing_max(factory.build()) <= preset.max_outgoing_edges_per_switch
         )
         if not eligible:
             raise MotifCompositionError(f"no_motifs_for_difficulty:{preset.name}")
         low, high = self._counts.get(preset.name, (1, 2))
         count = rng.randint(low, high)
-        return tuple(rng.choice(eligible) for _ in range(count))
+        selected: list = []
+        if preset.name in self._advanced_difficulties:
+            by_id = {item.motif_id: item for item in eligible}
+            strategic_ids = tuple(
+                motif_id for motif_id in ("split_and_rejoin", "package_branch") if motif_id in by_id
+            )
+            if len(strategic_ids) < 2:
+                raise MotifCompositionError(f"no_dependency_motif_for_difficulty:{preset.name}")
+            if rng.randint(0, 1):
+                strategic_ids = tuple(reversed(strategic_ids))
+            selected.extend(by_id[motif_id] for motif_id in strategic_ids)
+            filler = by_id.get("straight_segment")
+            if filler is None:
+                raise MotifCompositionError(f"no_readable_filler_motif_for_difficulty:{preset.name}")
+            while len(selected) < count:
+                selected.append(filler)
+        while len(selected) < count:
+            selected.append(rng.choice(eligible))
+        return tuple(selected[:count])
 
     def _validate_compatibility(self, selected, preset) -> None:
         ids = {factory.motif_id for factory in selected}
@@ -168,6 +224,79 @@ class MotifComposerService:
                 raise MotifCompositionError(f"cycle_not_allowed:{motif.motif_id}:{preset.name}")
             if self._outgoing_max(motif) > preset.max_outgoing_edges_per_switch:
                 raise MotifCompositionError(f"switch_degree_exceeds_preset:{motif.motif_id}")
+        dead_end_count = sum(factory.build().may_introduce_dead_end for factory in selected)
+        dead_end_cap = 1 if preset.name in {"tutorial", "easy", "medium"} else 2
+        if dead_end_count > dead_end_cap:
+            raise MotifCompositionError(f"dead_end_punishment_cap_exceeded:{dead_end_count}:{dead_end_cap}")
+        for factory in selected:
+            motif = factory.build()
+            if motif.may_introduce_dead_end and not self._has_readable_decoy_path(motif):
+                raise MotifCompositionError(f"unreadable_decoy_consequence:{motif.motif_id}")
+
+    def _has_readable_decoy_path(self, motif) -> bool:
+        dead_ends = {node.id for node in motif.nodes if node.role == "dead_end"}
+        outgoing: dict[str, list[str]] = {}
+        for edge in motif.edges:
+            outgoing.setdefault(edge.from_node_id, []).append(edge.to_node_id)
+        return bool(dead_ends) and any(
+            target in dead_ends
+            for targets in outgoing.values() if len(targets) > 1
+            for target in targets
+        )
+
+    def _detected_mechanic_evidence(self, recipe, profile) -> set[str]:
+        evidence: set[str] = set()
+        if profile.ordered_dependency_count:
+            evidence.add("ordered_dependency")
+        if profile.package_phase_decisions_before and profile.package_phase_decisions_after:
+            evidence.add("package_phase_split")
+        if profile.route_revisit_count:
+            evidence.add("route_revisit")
+        if profile.switch_state_change_on_revisit_count:
+            evidence.add("multi_state_switch")
+        if profile.recoverable_mistake_count:
+            evidence.add("recoverable_route")
+        if profile.dead_end_choice_count:
+            evidence.add("dead_end_consequence")
+        if recipe.topology_rules and recipe.topology_rules.allows_rejoin:
+            evidence.add("route_rejoin")
+        if recipe.topology_rules and recipe.topology_rules.allows_cycles:
+            evidence.add("cycle_route")
+        if any(self._outgoing_count(recipe, node.id) >= 3 for node in recipe.nodes):
+            evidence.add("multi_exit_hub")
+        return evidence
+
+    def _mechanic_discrepancies(self, selected, evidence: set[str]) -> tuple[str, ...]:
+        expected_by_motif = {
+            "return_loop": "cycle_route",
+            "revisited_switch": "route_revisit",
+            "ring_route": "cycle_route",
+            "three_way_hub": "multi_exit_hub",
+            "four_way_hub": "multi_exit_hub",
+            "dead_end_decoy": "dead_end_consequence",
+            "single_binary_choice": "dead_end_consequence",
+        }
+        return tuple(
+            f"declared_effect_not_detected:{factory.motif_id}:{expected_by_motif[factory.motif_id]}"
+            for factory in selected
+            if factory.motif_id in expected_by_motif and expected_by_motif[factory.motif_id] not in evidence
+        )
+
+    def _validate_measured_composition(self, recipe, selected, preset, profile) -> None:
+        if preset.name in self._advanced_difficulties:
+            if profile.ordered_dependency_count < 1:
+                raise MotifCompositionError("required_motif_effect_lost:ordered_dependency")
+            if profile.independent_decision_ratio > preset.maximum_independent_decision_ratio:
+                raise MotifCompositionError(
+                    f"independent_decision_ratio_above_preset_maximum:{profile.independent_decision_ratio}"
+                )
+        discrepancies = recipe.mechanic_metadata.get("mechanicDiscrepancies", ())
+        required_ids = self._hard_preferred_motifs if preset.name in {"hard", "expert"} else frozenset()
+        if required_ids.intersection(factory.motif_id for factory in selected) and discrepancies:
+            raise MotifCompositionError(f"required_motif_effect_lost:{discrepancies[0]}")
+
+    def _outgoing_count(self, recipe, node_id: str) -> int:
+        return sum(edge.from_node_id == node_id for edge in recipe.edges)
 
     def _primary_path(self, motif) -> tuple[str, ...]:
         metadata = dict(motif.mechanic_metadata)

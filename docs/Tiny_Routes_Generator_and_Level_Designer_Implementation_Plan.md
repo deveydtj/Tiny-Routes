@@ -1197,27 +1197,31 @@ Move from selecting mostly complete fixed recipes toward composing small, testab
 
 ## Task 6.4 — Add dependency-oriented composition rules
 
+**Status:** Completed
+
 **Steps**
 
-- [ ] For medium and above, require at least one motif whose outcome affects a later decision.
-- [ ] For hard and expert, prefer a revisit, phase split, recovery loop, or multi-state hub.
-- [ ] Prevent composing several independent binary choices as the only mechanic.
-- [ ] Cap dead-end-only punishment so levels do not become trial-and-error chains.
-- [ ] Require a readable consequence path for decoys.
+- [x] For medium and above, require at least one motif whose outcome affects a later decision.
+- [x] For hard and expert, prefer a revisit, phase split, recovery loop, or multi-state hub.
+- [x] Prevent composing several independent binary choices as the only mechanic.
+- [x] Cap dead-end-only punishment so levels do not become trial-and-error chains.
+- [x] Require a readable consequence path for decoys.
 
 **Acceptance tests**
 
-- [ ] A medium batch cannot contain only independent switch chains.
-- [ ] Hard compositions satisfy the preset dependency threshold before layout.
+- [x] A medium batch cannot contain only independent switch chains.
+- [x] Hard compositions satisfy the preset dependency threshold before layout.
 
 ## Task 6.5 — Keep recipe metadata descriptive, not authoritative
 
+**Status:** Completed
+
 **Steps**
 
-- [ ] Generate mechanic tags from composed motifs for search/reporting.
-- [ ] Recompute actual mechanic evidence after solving.
-- [ ] Report discrepancies between declared intent and detected behavior.
-- [ ] Reject a candidate when a required motif effect was lost during composition.
+- [x] Generate mechanic tags from composed motifs for search/reporting.
+- [x] Recompute actual mechanic evidence after solving.
+- [x] Report discrepancies between declared intent and detected behavior.
+- [x] Reject a candidate when a required motif effect was lost during composition.
 
 ### Phase 6 exit gate
 
