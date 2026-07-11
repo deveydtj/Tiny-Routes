@@ -390,6 +390,8 @@ struct LevelRules: Codable, Equatable {
 
 ## Task 1.2 — Add Python shared rule models
 
+**Status:** Completed
+
 **Files to add**
 
 - `Tools/TinyRoutesCore/tiny_routes_core/__init__.py`
@@ -398,19 +400,21 @@ struct LevelRules: Codable, Equatable {
 
 **Steps**
 
-- [ ] Mirror the Swift enum values exactly.
-- [ ] Implement `from_dict` with legacy defaults.
-- [ ] Implement `to_dict` for version 2.
-- [ ] Add validation messages for invalid numbers and unknown interaction modes.
-- [ ] Keep naming conversion explicit; do not spread raw dictionary access throughout the tools.
+- [x] Mirror the Swift enum values exactly.
+- [x] Implement `from_dict` with legacy defaults.
+- [x] Implement `to_dict` for version 2.
+- [x] Add validation messages for invalid numbers and unknown interaction modes.
+- [x] Keep naming conversion explicit; do not spread raw dictionary access throughout the tools.
 
 **Acceptance tests**
 
-- [ ] Python reads every existing production level.
-- [ ] Python round-trips version 2 rules.
-- [ ] Python rejects or reports invalid modes consistently.
+- [x] Python reads every existing production level.
+- [x] Python round-trips version 2 rules.
+- [x] Python rejects or reports invalid modes consistently.
 
 ## Task 1.3 — Write the normative interaction specification
+
+**Status:** Completed
 
 **File to add**
 
@@ -418,24 +422,24 @@ struct LevelRules: Codable, Equatable {
 
 **Required sections**
 
-- [ ] Definition of a switchable node.
-- [ ] Definition of a usable outgoing road.
-- [ ] Definition of the first upcoming switch.
-- [ ] Travel-time calculation.
-- [ ] Eligibility window opening condition.
-- [ ] Eligibility window closing condition.
-- [ ] Multiple tap behavior.
-- [ ] Cooldown behavior.
-- [ ] Pause behavior.
-- [ ] Failure/completion behavior.
-- [ ] Cycle and look-ahead safety limits.
-- [ ] Legacy mode behavior.
-- [ ] Expected UI feedback.
-- [ ] Swift/Python rounding and tolerance rules.
+- [x] Definition of a switchable node.
+- [x] Definition of a usable outgoing road.
+- [x] Definition of the first upcoming switch.
+- [x] Travel-time calculation.
+- [x] Eligibility window opening condition.
+- [x] Eligibility window closing condition.
+- [x] Multiple tap behavior.
+- [x] Cooldown behavior.
+- [x] Pause behavior.
+- [x] Failure/completion behavior.
+- [x] Cycle and look-ahead safety limits.
+- [x] Legacy mode behavior.
+- [x] Expected UI feedback.
+- [x] Swift/Python rounding and tolerance rules.
 
 **Acceptance condition**
 
-- [ ] A developer can implement the algorithm from the document without guessing.
+- [x] A developer can implement the algorithm from the document without guessing.
 
 ## Task 1.4 — Update JSON documentation
 

@@ -9,7 +9,7 @@ import sys
 from pathlib import Path
 
 
-SUITES = ("Tools/LevelGenerator", "Tools/LevelEditor")
+SUITES = ("Tools/TinyRoutesCore", "Tools/LevelGenerator", "Tools/LevelEditor")
 
 
 def main(argv: list[str] | None = None) -> int:

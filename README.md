@@ -41,8 +41,9 @@ destination.
 
 ## Developer commands
 
-Run both Python suites from the repository root. Each suite is launched in its
-own working directory, and both run even when the first one fails:
+Run all Python suites from the repository root. The shared core, generator, and
+editor suites are each launched in their
+own working directory, and all run even when an earlier suite fails:
 
 ```bash
 python scripts/run_python_tests.py
@@ -63,12 +64,18 @@ python scripts/run_all_checks.py --swift-tests \
 ```
 
 Use `--python /path/to/python` with any script when dependencies are installed
-in a different interpreter. The two Python suites can also be collected in one
+in a different interpreter. The Python suites can also be collected in one
 process without package-name collisions:
 
 ```bash
-python -m pytest Tools/LevelGenerator/tests Tools/LevelEditor/tests
+python -m pytest Tools/TinyRoutesCore/tests Tools/LevelGenerator/tests Tools/LevelEditor/tests
 ```
+
+## Git publishing
+
+Direct commits and pushes use standard `git` commands and do not require the
+GitHub CLI (`gh`). Use `gh` only for GitHub-specific operations such as creating
+or managing pull requests from the command line.
 
 ## Design Goals
 
