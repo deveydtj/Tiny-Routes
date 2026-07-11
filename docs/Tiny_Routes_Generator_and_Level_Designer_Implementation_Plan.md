@@ -1029,6 +1029,8 @@ Measure what the player actually does and reject structurally valid but strategi
 
 ## Task 5.3 — Define difficulty-quality thresholds
 
+**Status:** Completed
+
 **Files to update**
 
 - `Tools/LevelGenerator/app/models/difficulty_preset.py`
@@ -1049,11 +1051,13 @@ These are initial defaults. Tune them only after fixed-seed regression runs and 
 
 **Steps**
 
-- [ ] Add threshold fields to presets instead of hardcoding difficulty names in services.
-- [ ] Add clear rejection codes for every failed threshold.
-- [ ] Allow tutorial-specific exceptions without weakening other difficulties.
+- [x] Add threshold fields to presets instead of hardcoding difficulty names in services.
+- [x] Add clear rejection codes for every failed threshold.
+- [x] Allow tutorial-specific exceptions without weakening other difficulties.
 
 ## Task 5.4 — Remove tag-based quality evidence
+
+**Status:** Completed
 
 **Files to update**
 
@@ -1063,19 +1067,19 @@ These are initial defaults. Tune them only after fixed-seed regression runs and 
 
 **Steps**
 
-- [ ] Keep mechanic tags for filtering and reporting only.
-- [ ] Award package-gate value only when analysis proves decisions occur across package phases or availability changes.
-- [ ] Award revisit value only when a route actually revisits a node.
-- [ ] Award state-reversal value only when the required state differs between visits.
-- [ ] Award false-shortcut value only when geometry and outcome analysis prove the route appears attractive and leads to a distinct consequence.
-- [ ] Reduce or remove raw bonuses for route length and geometric turn count.
-- [ ] Add penalties for independent switch chains and equivalent choices.
+- [x] Keep mechanic tags for filtering and reporting only.
+- [x] Award package-gate value only when analysis proves decisions occur across package phases or availability changes.
+- [x] Award revisit value only when a route actually revisits a node.
+- [x] Award state-reversal value only when the required state differs between visits.
+- [x] Award false-shortcut value only when geometry and outcome analysis prove the route appears attractive and leads to a distinct consequence.
+- [x] Reduce or remove raw bonuses for route length and geometric turn count.
+- [x] Add penalties for independent switch chains and equivalent choices.
 
 **Acceptance tests**
 
-- [ ] Adding a mechanic tag without graph evidence does not improve score.
-- [ ] A real measured revisit improves the appropriate metric.
-- [ ] A longer but strategically identical path does not receive a large gameplay-quality bonus.
+- [x] Adding a mechanic tag without graph evidence does not improve score.
+- [x] A real measured revisit improves the appropriate metric.
+- [x] A longer but strategically identical path does not receive a large gameplay-quality bonus.
 
 ## Task 5.5 — Add actionable quality reporting
 

@@ -8,6 +8,7 @@ from ..models.generated_level import GeneratedLevel
 from ..models.graph_recipe import GraphRecipe
 from ..random_source import RandomSource
 from .difficulty_service import DifficultyService
+from .decision_profile_service import DecisionProfileService
 from .graph_builder_service import GraphBuilderService
 from .graph_layout_service import GraphLayoutPlannerService
 from .level_naming_service import LevelNamingService
@@ -26,6 +27,7 @@ class RecipeToLevelBuilderService:
         self.topology_solver = TopologySolverService()
         self.layout_planner = GraphLayoutPlannerService()
         self.road_shape_service = RoadShapeService()
+        self.decision_profiles = DecisionProfileService()
 
     def build_level(
         self,
@@ -106,7 +108,10 @@ class RecipeToLevelBuilderService:
         )
         level.rules = LevelRules(
             switch_interaction_mode=SwitchInteractionMode.LIVE_LOOKAHEAD,
-            switch_lookahead_seconds=LevelRules.DEFAULT_LOOKAHEAD_SECONDS,
+            switch_lookahead_seconds=max(
+                LevelRules.DEFAULT_LOOKAHEAD_SECONDS,
+                preset.minimum_decision_window_seconds,
+            ),
             switch_tap_cooldown_seconds=LevelRules.DEFAULT_TAP_COOLDOWN_SECONDS,
         )
         level._rules_present = True
@@ -133,6 +138,11 @@ class RecipeToLevelBuilderService:
             recipe_family=recipe.family_name,
             recipe_variant=recipe.variant_name,
             solution_route=recipe.required_path,
+        )
+        decision_profile = self.decision_profiles.analyze(
+            recipe,
+            topology_solutions=(recipe.solved_metadata,),
+            runtime_solution=runtime_solution,
         )
         mechanic_notes = []
         if recipe.mechanic_tags:
@@ -178,6 +188,7 @@ class RecipeToLevelBuilderService:
             unlock_requirement=recipe.unlock_requirement,
             prior_mechanic_dependency=recipe.prior_mechanic_dependency,
             mechanic_metadata=recipe.mechanic_metadata,
+            decision_profile=decision_profile,
         )
 
     def _preset_for_layout_size_profile(self, preset, layout_size_profile: str):

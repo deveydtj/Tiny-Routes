@@ -30,3 +30,8 @@ class DifficultyPreset:
     coordinate_bounds: Bounds = (-1.2, 1.2, -1.3, 1.0)
     minimum_node_distance: float = 0.2
     allow_ring_routes: bool = False
+    required_decision_count_range: Range = (0, 999)
+    minimum_decision_window_seconds: float = 0.0
+    maximum_multiple_taps_in_window: int | None = None
+    minimum_strategic_property_count: int = 0
+    maximum_independent_decision_ratio: float = 1.0

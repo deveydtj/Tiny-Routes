@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import pytest
 
+from app.models.decision_profile import DecisionProfile
 from app.services.difficulty_service import DifficultyService
 from app.random_source import RandomSource
 from app.templates.straight_delivery_template import StraightDeliveryTemplate
@@ -96,3 +97,42 @@ def test_hard_level_metrics_have_meaningful_complexity() -> None:
     assert metrics.switch_count >= 3
     assert metrics.mechanical_score >= 0.5
     assert metrics.estimated_band in {"medium", "hard", "expert"}
+
+
+def test_medium_thresholds_reject_an_all_independent_decision_chain() -> None:
+    service = DifficultyService()
+    preset = service.get_preset("medium")
+    generated = MultiSwitchChainTemplate().generate("level_020", 20, preset, RandomSource(7))
+    profile = DecisionProfile(
+        required_decision_count=3,
+        unique_switch_count=3,
+        independent_decision_ratio=1.0,
+        minimum_window_seconds=1.4,
+    )
+
+    issues = service.check_candidate_matches_difficulty(
+        generated.level_document,
+        generated.solution,
+        preset,
+        allow_range_exceptions=True,
+        decision_profile=profile,
+    )
+
+    assert "insufficient_strategic_decision_evidence" in issues
+    assert "independent_decision_ratio_above_preset_maximum" in issues
+
+
+def test_tutorial_thresholds_allow_zero_decisions_without_strategic_evidence() -> None:
+    service = DifficultyService()
+    preset = service.get_preset("tutorial")
+    generated = StraightDeliveryTemplate().generate("level_001", 1, preset, RandomSource(1))
+
+    issues = service.check_candidate_matches_difficulty(
+        generated.level_document,
+        generated.solution,
+        preset,
+        decision_profile=DecisionProfile(required_decision_count=0),
+    )
+
+    assert "insufficient_strategic_decision_evidence" not in issues
+    assert not any(issue.startswith("decision_count_out_of_range") for issue in issues)

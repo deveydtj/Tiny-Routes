@@ -32,6 +32,8 @@ class DifficultyService:
                 minimum_route_interest_score=0.0,
                 max_visual_complexity=0.34,
                 max_repeated_mechanics=0,
+                required_decision_count_range=(0, 1),
+                minimum_decision_window_seconds=2.0,
             ),
             "easy": DifficultyPreset(
                 name="easy",
@@ -51,6 +53,9 @@ class DifficultyService:
                 minimum_route_interest_score=0.20,
                 max_visual_complexity=0.44,
                 max_repeated_mechanics=1,
+                required_decision_count_range=(1, 3),
+                minimum_decision_window_seconds=1.6,
+                maximum_multiple_taps_in_window=1,
             ),
             "medium": DifficultyPreset(
                 name="medium",
@@ -83,6 +88,10 @@ class DifficultyService:
                 minimum_route_interest_score=0.42,
                 max_visual_complexity=0.62,
                 max_repeated_mechanics=2,
+                required_decision_count_range=(2, 4),
+                minimum_decision_window_seconds=1.25,
+                minimum_strategic_property_count=1,
+                maximum_independent_decision_ratio=0.75,
             ),
             "hard": DifficultyPreset(
                 name="hard",
@@ -121,6 +130,10 @@ class DifficultyService:
                 max_visual_complexity=0.76,
                 max_repeated_mechanics=2,
                 allow_ring_routes=True,
+                required_decision_count_range=(3, 6),
+                minimum_decision_window_seconds=1.0,
+                minimum_strategic_property_count=2,
+                maximum_independent_decision_ratio=0.67,
             ),
             "expert": DifficultyPreset(
                 name="expert",
@@ -160,6 +173,10 @@ class DifficultyService:
                 max_visual_complexity=0.86,
                 max_repeated_mechanics=3,
                 allow_ring_routes=True,
+                required_decision_count_range=(4, 8),
+                minimum_decision_window_seconds=0.85,
+                minimum_strategic_property_count=2,
+                maximum_independent_decision_ratio=0.60,
             ),
         }
 
@@ -180,6 +197,8 @@ class DifficultyService:
         solution,
         preset: DifficultyPreset,
         allow_range_exceptions: bool = False,
+        decision_profile=None,
+        configured_lookahead_seconds: float | None = None,
     ) -> list[str]:
         messages: list[str] = []
         node_count = len(level_document.graph.nodes)
@@ -218,7 +237,62 @@ class DifficultyService:
                 messages.append(f"switch_too_many_outgoing_edges:{node.id}")
         if repeated_taps and not preset.allow_repeated_switch_taps:
             messages.append(f"repeated_switch_taps_not_allowed:{','.join(sorted(repeated_taps))}")
+        if decision_profile is not None:
+            self._check_decision_profile(
+                decision_profile,
+                preset,
+                messages,
+                configured_lookahead_seconds=configured_lookahead_seconds,
+            )
         return messages
+
+    def _check_decision_profile(
+        self,
+        profile,
+        preset: DifficultyPreset,
+        messages: list[str],
+        *,
+        configured_lookahead_seconds: float | None,
+    ) -> None:
+        self._check_range(
+            "decision_count",
+            profile.required_decision_count,
+            preset.required_decision_count_range,
+            messages,
+        )
+        if (
+            profile.minimum_window_seconds is not None
+            and profile.minimum_window_seconds < preset.minimum_decision_window_seconds
+            and (
+                configured_lookahead_seconds is None
+                or configured_lookahead_seconds < preset.minimum_decision_window_seconds
+            )
+        ):
+            messages.append("decision_window_below_preset_minimum")
+        if (
+            preset.maximum_multiple_taps_in_window is not None
+            and profile.multiple_taps_in_window_count > preset.maximum_multiple_taps_in_window
+        ):
+            messages.append("too_many_multiple_tap_windows")
+
+        phase_change = int(
+            profile.package_phase_decisions_before > 0
+            and profile.package_phase_decisions_after > 0
+        )
+        strategic_property_count = (
+            profile.ordered_dependency_count
+            + profile.switch_state_change_on_revisit_count
+            + profile.recoverable_mistake_count
+            + profile.route_revisit_count
+            + phase_change
+        )
+        if strategic_property_count < preset.minimum_strategic_property_count:
+            messages.append("insufficient_strategic_decision_evidence")
+        if (
+            profile.required_decision_count > 1
+            and profile.independent_decision_ratio > preset.maximum_independent_decision_ratio
+        ):
+            messages.append("independent_decision_ratio_above_preset_maximum")
 
     def metrics_for_generated_level(self, generated_level) -> DifficultyMetrics:
         return self.metrics_for_level(

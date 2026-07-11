@@ -280,6 +280,10 @@ Supported difficulty presets:
 
 Quality scoring runs after strict validation. Validation decides whether a candidate is legal; scoring decides whether a legal candidate is worth selecting. A score can reject a weak candidate, but it cannot make an invalid candidate acceptable.
 
+Decision-quality validation uses measured profiles rather than difficulty-name conditionals. The preset targets are tutorial 0-1 decisions with a 2.0-second configured look-ahead, easy 1-3 decisions with 1.6 seconds and at most one multi-tap window, medium 2-4 decisions with 1.25 seconds and at least one strategic property, hard 3-6 decisions with 1.0 second and at least two strategic properties, and expert 4-8 decisions with 0.85 seconds and at least two strategic properties. Dependencies, package-phase changes, recoverable choices, and meaningful revisits count as strategic evidence; independent decision chains are capped for medium and above.
+
+Mechanic tags remain useful for filtering, reporting, and campaign diversity, but never create route-interest evidence by themselves. Revisit, state-reversal, package-gate, and false-shortcut bonuses require matching graph, runtime, outcome, or geometry measurements. Equivalent choices and highly independent switch chains receive explicit penalties, while raw route length contributes only a small score adjustment.
+
 `PuzzleQualityScorer` reports a deterministic `0...100` `totalScore` plus five category scores:
 
 - `logicScore`: unique-solution confidence, package order, shortcut absence, runtime confidence, and safe branch/rejoin/revisit behavior.

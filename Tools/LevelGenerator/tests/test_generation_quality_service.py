@@ -3,6 +3,7 @@ from __future__ import annotations
 from app.random_source import RandomSource
 from app.level_editor_imports import LevelDocument, RouteEdgeModel, RouteGraphModel, RouteNodeModel, SolutionModel
 from app.models.generated_level import GeneratedLevel
+from app.models.decision_profile import DecisionProfile
 from app.recipes.recipe_family_registry import RecipeFamilyRegistry
 from app.services.abstract_puzzle_solver_service import AbstractPuzzleSolverService
 from app.services.candidate_signature_service import CandidateSignatureService
@@ -124,6 +125,41 @@ def test_generation_quality_visual_clarity_warnings_lower_readability_score() ->
     assert score.estimated_difficulty_band is not None
     assert score.readability < 1
     assert "long_parallel_road_segments_visually_merge" in score.penalties
+
+
+def test_mechanic_tag_without_graph_evidence_does_not_improve_quality() -> None:
+    preset = DifficultyService().get_preset("easy")
+    generated = SingleSwitchTemplate().generate("level_012", 12, preset, RandomSource(2))
+    generated.candidate_signature = CandidateSignatureService().signature_for(generated)
+    quality = GenerationQualityService()
+    baseline = quality.score(generated, preset)
+
+    generated.mechanic_tags = (*generated.mechanic_tags, "package_gate", "revisit", "fake_shortcut")
+    tagged = quality.score(generated, preset)
+
+    assert tagged.route_interest == baseline.route_interest
+    assert tagged.details["routeInterest"] == baseline.details["routeInterest"]
+
+
+def test_measured_revisit_and_state_reversal_improve_route_interest() -> None:
+    preset = DifficultyService().get_preset("medium")
+    generated = _recipe_candidate("return_loop_intro", "level_022", 22, preset, seed=6)
+    quality = GenerationQualityService()
+    without_evidence = quality.score(generated, preset)
+
+    generated.decision_profile = DecisionProfile(
+        required_decision_count=max(3, generated.required_tap_count),
+        unique_switch_count=max(1, generated.switch_count),
+        route_revisit_count=1,
+        switch_state_change_on_revisit_count=1,
+        ordered_dependency_count=1,
+        independent_decision_ratio=0.25,
+        minimum_window_seconds=1.1,
+    )
+    with_evidence = quality.score(generated, preset)
+
+    assert with_evidence.route_interest > without_evidence.route_interest
+    assert with_evidence.details["routeInterest"]["stateReversalPresent"] is True
 
 
 def _parallel_warning_generated_level() -> GeneratedLevel:

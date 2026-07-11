@@ -6,6 +6,7 @@ from typing import Any
 
 from .abstract_puzzle_solution import AbstractPuzzleSolutionMetadata
 from .candidate_signature import CandidateSignature
+from .decision_profile import DecisionProfile
 from .generation_quality import GenerationQualityScore
 from .runtime_parity import RuntimeParityValidationResult
 from .runtime_solution_search import RuntimeSolutionSearchResult
@@ -45,6 +46,7 @@ class GeneratedLevel:
     unlock_requirement: str | None = None
     prior_mechanic_dependency: str | None = None
     mechanic_metadata: dict[str, Any] = field(default_factory=dict)
+    decision_profile: DecisionProfile | None = None
 
     @property
     def level_id(self) -> str:

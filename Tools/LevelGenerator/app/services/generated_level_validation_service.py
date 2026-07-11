@@ -206,7 +206,13 @@ class GeneratedLevelValidationService:
                 )
 
             if enforce_difficulty:
-                for issue in self.difficulty_service.check_candidate_matches_difficulty(level, solution, preset):
+                for issue in self.difficulty_service.check_candidate_matches_difficulty(
+                    level,
+                    solution,
+                    preset,
+                    decision_profile=getattr(generated_level, "decision_profile", None),
+                    configured_lookahead_seconds=level.rules.switch_lookahead_seconds,
+                ):
                     code, *detail = issue.split(":")
                     messages.append(
                         GeneratorValidationMessage(

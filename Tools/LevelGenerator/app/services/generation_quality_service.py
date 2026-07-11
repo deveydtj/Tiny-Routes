@@ -87,7 +87,13 @@ class PuzzleQualityScorer:
             penalties.append("similar_to_existing_candidate")
 
         difficulty_metrics = self.difficulty.metrics_for_generated_level(generated_level)
-        difficulty_issues = self.difficulty.check_candidate_matches_difficulty(level, solution, preset)
+        difficulty_issues = self.difficulty.check_candidate_matches_difficulty(
+            level,
+            solution,
+            preset,
+            decision_profile=getattr(generated_level, "decision_profile", None),
+            configured_lookahead_seconds=level.rules.switch_lookahead_seconds,
+        )
         band_distance = abs(
             self.difficulty.band_index(difficulty_metrics.estimated_band)
             - self.difficulty.band_index(preset.name)
@@ -467,7 +473,7 @@ class PuzzleQualityScorer:
             negative_factors.append((float(value) * 100.0, f"route weakness: {key}"))
 
         if tags & strong_tags:
-            positive_factors.append((9.0, "meaningful route decision tags present"))
+            positive_factors.append((9.0, "measured route-decision evidence present"))
         elif preset.name in {"medium", "hard", "expert"}:
             score = min(score, 62.0)
             negative_factors.append((14.0, "few meaningful route decisions for target difficulty"))
@@ -692,22 +698,21 @@ class PuzzleQualityScorer:
         layout_size_profile: str,
     ) -> dict:
         if layout_size_profile != "large_portrait":
-            complex_tags = {
-                "long_route",
-                "loop",
-                "revisit",
-                "ring",
-                "split_path",
-                "rejoin",
-                "two_phase",
-                "four_way",
-            }
-            mechanic_tags = set(getattr(generated_level, "mechanic_tags", ()) or ())
+            profile = getattr(generated_level, "decision_profile", None)
+            measured_complexity = bool(
+                profile is not None
+                and (
+                    profile.route_revisit_count
+                    or profile.ordered_dependency_count
+                    or profile.switch_state_change_on_revisit_count
+                    or profile.multiple_taps_in_window_count
+                )
+            )
             would_benefit = (
                 preset.name in {"hard", "expert"}
                 and (
                     route_length >= preset.route_length_range[1]
-                    or bool(mechanic_tags & complex_tags)
+                    or measured_complexity
                 )
             )
             return {
@@ -843,8 +848,7 @@ class PuzzleQualityScorer:
 
         positions = {node.id: (float(node.x), float(node.y)) for node in level.graph.nodes}
         route_index = {node_id: index for index, node_id in enumerate(route)}
-        metadata = getattr(generated_level, "abstract_solution_metadata", None)
-        mechanic_tags = set(getattr(generated_level, "mechanic_tags", ()) or ())
+        profile = getattr(generated_level, "decision_profile", None)
         topology_class = getattr(generated_level, "topology_class", "") or ""
         route_node_counts = Counter(route)
 
@@ -871,6 +875,10 @@ class PuzzleQualityScorer:
                 route_index,
                 route_index.get(from_node_id, 0),
             )
+            and self._shortest_distance(to_node_id, level.destinationNodeID, outgoing) is not None
+            and (
+                self._shortest_distance(to_node_id, level.destinationNodeID, outgoing) or 99
+            ) < max(len(route) - route_index.get(from_node_id, 0) - 1, 1)
         )
         visually_tempting_wrong_branch_count = sum(
             1
@@ -880,51 +888,51 @@ class PuzzleQualityScorer:
                 self._shortest_distance(to_node_id, level.destinationNodeID, outgoing) or 99
             ) < max(len(route) - route_index.get(from_node_id, 0) - 1, 1)
         )
-        package_index = route_index.get(level.packageNodeID)
         package_gate_tension = bool(
-            package_index is not None
-            and any(
-                route_index.get(from_node_id, 0) < package_index
-                and (
-                    route_index.get(to_node_id, -1) > package_index
-                    or self._can_reach_without(to_node_id, level.destinationNodeID, level.packageNodeID, outgoing)
-                )
-                for from_node_id, to_node_id in off_route_branches
-            )
+            profile is not None
+            and profile.package_phase_decisions_before > 0
+            and profile.package_phase_decisions_after > 0
         )
         loop_or_revisit = (
             any(count > 1 for count in route_node_counts.values())
-            or bool(metadata is not None and metadata.loop_count > 0)
-            or self._has_cycle(outgoing)
+            or bool(profile is not None and profile.route_revisit_count > 0)
         )
+        state_reversal = bool(
+            profile is not None and profile.switch_state_change_on_revisit_count > 0
+        )
+        distinct_failure_consequence = bool(profile is not None and profile.failure_route_count > 0)
+        fake_shortcut_count = fake_shortcut_count if distinct_failure_consequence else 0
         meaningful_turns = self._meaningful_turn_count(route, positions)
         filler_node_count = self._filler_node_count(route, outgoing, incoming, level.packageNodeID, level.destinationNodeID)
         max_outgoing = max((len(targets) for targets in outgoing.values()), default=0)
 
         tags: list[str] = []
         bonuses: dict[str, float] = {}
-        if fake_shortcut_count or "fake_shortcut" in mechanic_tags:
+        if fake_shortcut_count:
             tags.append("fake_shortcut")
             bonuses["fakeShortcut"] = 0.18
-        if split_rejoin_count or "split_path" in mechanic_tags or "rejoin" in mechanic_tags:
+        if split_rejoin_count:
             tags.append("split_rejoin")
             bonuses["branchRejoin"] = 0.15
-        if "long_route" in mechanic_tags or "detour" in mechanic_tags:
+        if visually_tempting_wrong_branch_count and distinct_failure_consequence:
             tags.append("correct_detour")
-            bonuses["correctDetour"] = 0.13
-        if package_gate_tension or "package_gate" in mechanic_tags:
+            bonuses["correctDetour"] = 0.10
+        if package_gate_tension:
             tags.append("package_gate_tension")
             bonuses["packageGateTension"] = 0.12
         if visually_tempting_wrong_branch_count:
             tags.append("tempting_wrong_branch")
             bonuses["temptingWrongBranch"] = 0.11
-        if loop_or_revisit or any(tag in mechanic_tags for tag in {"loop", "revisit", "repeated_tap"}):
+        if loop_or_revisit:
             tags.append("loop_or_revisit")
             bonuses["loopOrRevisit"] = 0.14
-        if max_outgoing >= 3 or "hub" in mechanic_tags:
+        if state_reversal:
+            tags.append("state_reversal")
+            bonuses["stateReversal"] = 0.16
+        if max_outgoing >= 3:
             tags.append("multi_exit_hub")
             bonuses["multiExitHub"] = 0.12
-        if "two_phase" in mechanic_tags:
+        if package_gate_tension and profile is not None and profile.ordered_dependency_count > 0:
             tags.append("two_phase")
             bonuses["twoPhaseRoute"] = 0.10
         if meaningful_turns >= 2:
@@ -952,13 +960,26 @@ class PuzzleQualityScorer:
         if generated_level.switch_count >= 3 and len(tags) <= 1:
             penalties.append("difficulty_from_switch_count_only")
             penalty_values["switchCountOnlyDifficulty"] = 0.16
+        if profile is not None and profile.required_decision_count > 1:
+            if profile.independent_decision_ratio >= 0.75:
+                penalties.append("independent_switch_chain")
+                penalty_values["independentSwitchChain"] = min(
+                    0.24,
+                    0.12 + (profile.independent_decision_ratio - 0.75) * 0.48,
+                )
+            if profile.no_op_or_equivalent_choice_count:
+                penalties.append("equivalent_switch_choices")
+                penalty_values["equivalentChoices"] = min(
+                    0.24,
+                    profile.no_op_or_equivalent_choice_count * 0.10,
+                )
         nearby_topology_penalty = float((diversity or {}).get("nearbyTopologyClassPenalty", 0.0))
         if nearby_topology_penalty > 0:
             penalty_values["nearbyTopologyRepetition"] = min(0.16, nearby_topology_penalty * 0.6)
 
         score = 0.24
         score += min(generated_level.required_tap_count, 4) * 0.035
-        score += min(max(len(route) - 4, 0), 6) * 0.025
+        score += min(max(len(route) - 4, 0), 6) * 0.008
         score += sum(bonuses.values())
         score -= sum(penalty_values.values())
         score = round(self._clamp(score), 4)
@@ -968,10 +989,11 @@ class PuzzleQualityScorer:
             "bonuses": {key: round(value, 4) for key, value in bonuses.items()},
             "penalties": tuple(dict.fromkeys(penalties)),
             "penaltyValues": {key: round(value, 4) for key, value in penalty_values.items()},
-            "fakeShortcutPresent": bool(fake_shortcut_count or "fake_shortcut" in mechanic_tags),
-            "branchRejoinPresent": bool(split_rejoin_count or "split_path" in mechanic_tags or "rejoin" in mechanic_tags),
-            "packageGateTensionPresent": bool(package_gate_tension or "package_gate" in mechanic_tags),
-            "loopRevisitPresent": bool(loop_or_revisit or any(tag in mechanic_tags for tag in {"loop", "revisit", "repeated_tap"})),
+            "fakeShortcutPresent": bool(fake_shortcut_count),
+            "branchRejoinPresent": bool(split_rejoin_count),
+            "packageGateTensionPresent": package_gate_tension,
+            "loopRevisitPresent": loop_or_revisit,
+            "stateReversalPresent": state_reversal,
             "meaningfulTurnCount": meaningful_turns,
             "fillerNodeCount": filler_node_count,
             "offRouteBranchCount": len(off_route_branches),
@@ -998,9 +1020,6 @@ class PuzzleQualityScorer:
         route_index: dict[str, int],
         from_index: int,
     ) -> bool:
-        lowered = node_id.lower()
-        if "shortcut" in lowered or "bypass" in lowered or "direct" in lowered:
-            return True
         if self._can_reach_without(node_id, destination_node_id, package_node_id, outgoing):
             return True
         if node_id in route_index and route_index[node_id] > from_index + 1:
