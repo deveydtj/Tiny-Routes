@@ -1,0 +1,9 @@
+{
+  "fixtureID": "dead_end_failure",
+  "description": "The selected route terminates at a dead end.",
+  "elapsedTimeSteps": [
+    0.1,
+    0.25
+  ],
+  "actions": []
+}

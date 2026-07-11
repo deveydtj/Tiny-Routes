@@ -1,0 +1,9 @@
+{
+  "fixtureID": "destination_before_package",
+  "description": "Reaching destination without the package fails.",
+  "elapsedTimeSteps": [
+    0.1,
+    0.25
+  ],
+  "actions": []
+}

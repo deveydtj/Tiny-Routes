@@ -1,0 +1,10 @@
+{
+  "fixtureID": "three_way_two_rotations",
+  "description": "A three-way switch accepts two rotations in one activation window.",
+  "expectedOutcome": "completed",
+  "failureReason": null,
+  "acceptedTapCount": 2,
+  "reachedPackage": true,
+  "reachedDestination": true,
+  "safetyStepLimit": null
+}

@@ -1,0 +1,10 @@
+{
+  "fixtureID": "two_way_inside_window",
+  "description": "A tap inside the two-way switch activation window is accepted.",
+  "expectedOutcome": "completed",
+  "failureReason": null,
+  "acceptedTapCount": 1,
+  "reachedPackage": true,
+  "reachedDestination": true,
+  "safetyStepLimit": null
+}

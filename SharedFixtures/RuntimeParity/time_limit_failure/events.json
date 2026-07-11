@@ -1,0 +1,9 @@
+{
+  "fixtureID": "time_limit_failure",
+  "description": "Movement that does not finish before the limit fails.",
+  "elapsedTimeSteps": [
+    0.1,
+    0.25
+  ],
+  "actions": []
+}

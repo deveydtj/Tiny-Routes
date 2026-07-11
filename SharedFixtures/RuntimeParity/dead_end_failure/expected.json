@@ -1,0 +1,10 @@
+{
+  "fixtureID": "dead_end_failure",
+  "description": "The selected route terminates at a dead end.",
+  "expectedOutcome": "failed",
+  "failureReason": "dead_end",
+  "acceptedTapCount": 0,
+  "reachedPackage": false,
+  "reachedDestination": false,
+  "safetyStepLimit": null
+}

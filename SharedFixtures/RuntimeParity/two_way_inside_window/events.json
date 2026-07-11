@@ -1,0 +1,14 @@
+{
+  "fixtureID": "two_way_inside_window",
+  "description": "A tap inside the two-way switch activation window is accepted.",
+  "elapsedTimeSteps": [
+    0.1,
+    0.25
+  ],
+  "actions": [
+    {
+      "timeSeconds": 1.2,
+      "tapNodeID": "switch"
+    }
+  ]
+}

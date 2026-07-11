@@ -1,0 +1,10 @@
+{
+  "fixtureID": "tap_after_commitment",
+  "description": "A tap after committing to an outgoing edge is rejected.",
+  "expectedOutcome": "failed",
+  "failureReason": "tap_after_route_commitment",
+  "acceptedTapCount": 0,
+  "reachedPackage": false,
+  "reachedDestination": false,
+  "safetyStepLimit": null
+}

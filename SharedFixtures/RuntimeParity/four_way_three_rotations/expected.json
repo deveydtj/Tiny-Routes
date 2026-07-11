@@ -1,0 +1,10 @@
+{
+  "fixtureID": "four_way_three_rotations",
+  "description": "A four-way switch accepts three rotations in one activation window.",
+  "expectedOutcome": "completed",
+  "failureReason": null,
+  "acceptedTapCount": 3,
+  "reachedPackage": true,
+  "reachedDestination": true,
+  "safetyStepLimit": null
+}

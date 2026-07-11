@@ -1,0 +1,10 @@
+{
+  "fixtureID": "time_limit_failure",
+  "description": "Movement that does not finish before the limit fails.",
+  "expectedOutcome": "failed",
+  "failureReason": "time_expired",
+  "acceptedTapCount": 0,
+  "reachedPackage": false,
+  "reachedDestination": false,
+  "safetyStepLimit": null
+}

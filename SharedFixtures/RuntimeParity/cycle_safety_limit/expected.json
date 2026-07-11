@@ -1,0 +1,10 @@
+{
+  "fixtureID": "cycle_safety_limit",
+  "description": "A malformed route cycle terminates at the configured safety limit.",
+  "expectedOutcome": "failed",
+  "failureReason": "max_step_count_exceeded",
+  "acceptedTapCount": 0,
+  "reachedPackage": false,
+  "reachedDestination": false,
+  "safetyStepLimit": 32
+}

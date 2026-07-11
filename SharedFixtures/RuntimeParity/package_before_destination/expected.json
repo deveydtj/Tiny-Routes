@@ -1,0 +1,10 @@
+{
+  "fixtureID": "package_before_destination",
+  "description": "The package is collected before destination completion.",
+  "expectedOutcome": "completed",
+  "failureReason": null,
+  "acceptedTapCount": 0,
+  "reachedPackage": true,
+  "reachedDestination": true,
+  "safetyStepLimit": null
+}

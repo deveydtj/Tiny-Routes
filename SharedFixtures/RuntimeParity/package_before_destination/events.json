@@ -1,0 +1,9 @@
+{
+  "fixtureID": "package_before_destination",
+  "description": "The package is collected before destination completion.",
+  "elapsedTimeSteps": [
+    0.1,
+    0.25
+  ],
+  "actions": []
+}

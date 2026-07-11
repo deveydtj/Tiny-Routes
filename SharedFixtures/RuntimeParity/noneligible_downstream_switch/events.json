@@ -1,0 +1,14 @@
+{
+  "fixtureID": "noneligible_downstream_switch",
+  "description": "A tap on a downstream switch while another switch is first is rejected.",
+  "elapsedTimeSteps": [
+    0.1,
+    0.25
+  ],
+  "actions": [
+    {
+      "timeSeconds": 0.8,
+      "tapNodeID": "downstream_switch"
+    }
+  ]
+}

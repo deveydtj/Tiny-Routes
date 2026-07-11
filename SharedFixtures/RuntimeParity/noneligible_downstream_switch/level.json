@@ -1,0 +1,109 @@
+{
+  "schemaVersion": 2,
+  "id": "parity_noneligible_downstream_switch",
+  "name": "noneligible downstream switch",
+  "graph": {
+    "nodes": [
+      {
+        "id": "start",
+        "x": 0,
+        "y": 0,
+        "outgoingEdgeIDs": [
+          "e_start"
+        ]
+      },
+      {
+        "id": "switch",
+        "x": 1,
+        "y": 0,
+        "outgoingEdgeIDs": [
+          "e_switch_0",
+          "e_switch_1"
+        ]
+      },
+      {
+        "id": "package",
+        "x": 2,
+        "y": 0,
+        "outgoingEdgeIDs": [
+          "e_package_destination"
+        ]
+      },
+      {
+        "id": "destination",
+        "x": 3,
+        "y": 0,
+        "outgoingEdgeIDs": []
+      },
+      {
+        "id": "branch_0",
+        "x": 2,
+        "y": 1,
+        "outgoingEdgeIDs": []
+      },
+      {
+        "id": "downstream_switch",
+        "x": 2,
+        "y": -1,
+        "outgoingEdgeIDs": [
+          "e_d0",
+          "e_d1"
+        ]
+      },
+      {
+        "id": "downstream_dead",
+        "x": 3,
+        "y": -1,
+        "outgoingEdgeIDs": []
+      }
+    ],
+    "edges": [
+      {
+        "id": "e_start",
+        "fromNodeID": "start",
+        "toNodeID": "switch",
+        "roadShape": "straight"
+      },
+      {
+        "id": "e_switch_0",
+        "fromNodeID": "switch",
+        "toNodeID": "branch_0",
+        "roadShape": "straight"
+      },
+      {
+        "id": "e_switch_1",
+        "fromNodeID": "switch",
+        "toNodeID": "package",
+        "roadShape": "straight"
+      },
+      {
+        "id": "e_package_destination",
+        "fromNodeID": "package",
+        "toNodeID": "destination",
+        "roadShape": "straight"
+      },
+      {
+        "id": "e_d0",
+        "fromNodeID": "downstream_switch",
+        "toNodeID": "package",
+        "roadShape": "straight"
+      },
+      {
+        "id": "e_d1",
+        "fromNodeID": "downstream_switch",
+        "toNodeID": "downstream_dead",
+        "roadShape": "straight"
+      }
+    ]
+  },
+  "startNodeID": "start",
+  "packageNodeID": "package",
+  "destinationNodeID": "destination",
+  "timeLimitSeconds": 12,
+  "parTaps": 1,
+  "rules": {
+    "switchInteractionMode": "liveLookahead",
+    "switchLookaheadSeconds": 1.35,
+    "switchTapCooldownSeconds": 0.12
+  }
+}

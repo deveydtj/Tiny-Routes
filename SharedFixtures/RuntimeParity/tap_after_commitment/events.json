@@ -1,0 +1,14 @@
+{
+  "fixtureID": "tap_after_commitment",
+  "description": "A tap after committing to an outgoing edge is rejected.",
+  "elapsedTimeSteps": [
+    0.1,
+    0.25
+  ],
+  "actions": [
+    {
+      "timeSeconds": 2.1,
+      "tapNodeID": "switch"
+    }
+  ]
+}

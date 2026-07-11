@@ -1,0 +1,10 @@
+{
+  "fixtureID": "destination_before_package",
+  "description": "Reaching destination without the package fails.",
+  "expectedOutcome": "failed",
+  "failureReason": "reached_destination_without_package",
+  "acceptedTapCount": 0,
+  "reachedPackage": false,
+  "reachedDestination": false,
+  "safetyStepLimit": null
+}

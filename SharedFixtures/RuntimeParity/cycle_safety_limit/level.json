@@ -1,0 +1,75 @@
+{
+  "schemaVersion": 2,
+  "id": "parity_cycle_safety_limit",
+  "name": "cycle safety limit",
+  "graph": {
+    "nodes": [
+      {
+        "id": "start",
+        "x": 0,
+        "y": 0,
+        "outgoingEdgeIDs": [
+          "e1"
+        ]
+      },
+      {
+        "id": "loop_a",
+        "x": 1,
+        "y": 0,
+        "outgoingEdgeIDs": [
+          "e2"
+        ]
+      },
+      {
+        "id": "loop_b",
+        "x": 1,
+        "y": 1,
+        "outgoingEdgeIDs": [
+          "e3"
+        ]
+      },
+      {
+        "id": "package",
+        "x": 2,
+        "y": 0,
+        "outgoingEdgeIDs": []
+      },
+      {
+        "id": "destination",
+        "x": 2,
+        "y": 1,
+        "outgoingEdgeIDs": []
+      }
+    ],
+    "edges": [
+      {
+        "id": "e1",
+        "fromNodeID": "start",
+        "toNodeID": "loop_a",
+        "roadShape": "straight"
+      },
+      {
+        "id": "e2",
+        "fromNodeID": "loop_a",
+        "toNodeID": "loop_b",
+        "roadShape": "straight"
+      },
+      {
+        "id": "e3",
+        "fromNodeID": "loop_b",
+        "toNodeID": "loop_a",
+        "roadShape": "straight"
+      }
+    ]
+  },
+  "startNodeID": "start",
+  "packageNodeID": "package",
+  "destinationNodeID": "destination",
+  "timeLimitSeconds": 100,
+  "parTaps": 0,
+  "rules": {
+    "switchInteractionMode": "liveLookahead",
+    "switchLookaheadSeconds": 1.35,
+    "switchTapCooldownSeconds": 0.12
+  }
+}

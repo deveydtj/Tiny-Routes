@@ -1,0 +1,97 @@
+{
+  "schemaVersion": 1,
+  "description": "Shared runtime parity fixtures executed by Swift and Python test targets.",
+  "fixtures": [
+    {
+      "id": "straight_no_switch",
+      "description": "Straight route with no switch.",
+      "level": "straight_no_switch/level.json",
+      "events": "straight_no_switch/events.json",
+      "expected": "straight_no_switch/expected.json"
+    },
+    {
+      "id": "two_way_too_early",
+      "description": "A tap before the two-way switch activation window is rejected.",
+      "level": "two_way_too_early/level.json",
+      "events": "two_way_too_early/events.json",
+      "expected": "two_way_too_early/expected.json"
+    },
+    {
+      "id": "two_way_inside_window",
+      "description": "A tap inside the two-way switch activation window is accepted.",
+      "level": "two_way_inside_window/level.json",
+      "events": "two_way_inside_window/events.json",
+      "expected": "two_way_inside_window/expected.json"
+    },
+    {
+      "id": "noneligible_downstream_switch",
+      "description": "A tap on a downstream switch while another switch is first is rejected.",
+      "level": "noneligible_downstream_switch/level.json",
+      "events": "noneligible_downstream_switch/events.json",
+      "expected": "noneligible_downstream_switch/expected.json"
+    },
+    {
+      "id": "tap_after_commitment",
+      "description": "A tap after committing to an outgoing edge is rejected.",
+      "level": "tap_after_commitment/level.json",
+      "events": "tap_after_commitment/events.json",
+      "expected": "tap_after_commitment/expected.json"
+    },
+    {
+      "id": "three_way_two_rotations",
+      "description": "A three-way switch accepts two rotations in one activation window.",
+      "level": "three_way_two_rotations/level.json",
+      "events": "three_way_two_rotations/events.json",
+      "expected": "three_way_two_rotations/expected.json"
+    },
+    {
+      "id": "four_way_three_rotations",
+      "description": "A four-way switch accepts three rotations in one activation window.",
+      "level": "four_way_three_rotations/level.json",
+      "events": "four_way_three_rotations/events.json",
+      "expected": "four_way_three_rotations/expected.json"
+    },
+    {
+      "id": "revisit_different_state",
+      "description": "A revisited switch requires a different state on its second visit.",
+      "level": "revisit_different_state/level.json",
+      "events": "revisit_different_state/events.json",
+      "expected": "revisit_different_state/expected.json"
+    },
+    {
+      "id": "package_before_destination",
+      "description": "The package is collected before destination completion.",
+      "level": "package_before_destination/level.json",
+      "events": "package_before_destination/events.json",
+      "expected": "package_before_destination/expected.json"
+    },
+    {
+      "id": "destination_before_package",
+      "description": "Reaching destination without the package fails.",
+      "level": "destination_before_package/level.json",
+      "events": "destination_before_package/events.json",
+      "expected": "destination_before_package/expected.json"
+    },
+    {
+      "id": "dead_end_failure",
+      "description": "The selected route terminates at a dead end.",
+      "level": "dead_end_failure/level.json",
+      "events": "dead_end_failure/events.json",
+      "expected": "dead_end_failure/expected.json"
+    },
+    {
+      "id": "time_limit_failure",
+      "description": "Movement that does not finish before the limit fails.",
+      "level": "time_limit_failure/level.json",
+      "events": "time_limit_failure/events.json",
+      "expected": "time_limit_failure/expected.json"
+    },
+    {
+      "id": "cycle_safety_limit",
+      "description": "A malformed route cycle terminates at the configured safety limit.",
+      "level": "cycle_safety_limit/level.json",
+      "events": "cycle_safety_limit/events.json",
+      "expected": "cycle_safety_limit/expected.json"
+    }
+  ]
+}

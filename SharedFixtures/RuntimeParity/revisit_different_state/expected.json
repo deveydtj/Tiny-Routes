@@ -1,0 +1,10 @@
+{
+  "fixtureID": "revisit_different_state",
+  "description": "A revisited switch requires a different state on its second visit.",
+  "expectedOutcome": "completed",
+  "failureReason": null,
+  "acceptedTapCount": 1,
+  "reachedPackage": true,
+  "reachedDestination": true,
+  "safetyStepLimit": null
+}

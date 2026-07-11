@@ -1,0 +1,10 @@
+{
+  "fixtureID": "noneligible_downstream_switch",
+  "description": "A tap on a downstream switch while another switch is first is rejected.",
+  "expectedOutcome": "failed",
+  "failureReason": "tap_noneligible_switch",
+  "acceptedTapCount": 0,
+  "reachedPackage": false,
+  "reachedDestination": false,
+  "safetyStepLimit": null
+}

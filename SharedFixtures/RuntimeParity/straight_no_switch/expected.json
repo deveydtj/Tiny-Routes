@@ -1,0 +1,10 @@
+{
+  "fixtureID": "straight_no_switch",
+  "description": "Straight route with no switch.",
+  "expectedOutcome": "completed",
+  "failureReason": null,
+  "acceptedTapCount": 0,
+  "reachedPackage": true,
+  "reachedDestination": true,
+  "safetyStepLimit": null
+}

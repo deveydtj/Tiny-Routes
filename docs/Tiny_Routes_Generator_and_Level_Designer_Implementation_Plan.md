@@ -256,6 +256,8 @@ Both tools expose a top-level package named `tests`, so collecting both suites i
 
 ## Task 0.3 — Record the current level-corpus baseline
 
+**Status:** Completed
+
 **Files to add**
 
 - `Tools/LevelGenerator/analyze_level_corpus.py`
@@ -264,21 +266,23 @@ Both tools expose a top-level package named `tests`, so collecting both suites i
 
 **Steps**
 
-- [ ] Load every production `level_###.json` and matching solution sidecar.
-- [ ] Replay the original solution.
-- [ ] Replay the same tap sequence with all taps at `0.0`.
-- [ ] Replay with taps compressed into the first `0.15` seconds.
-- [ ] Record switch counts, outgoing-degree distribution, repeated switch taps, route length, and result.
-- [ ] Record levels that reach destination before package under any tested state.
-- [ ] Write machine-readable JSON and human-readable Markdown.
+- [x] Load every production `level_###.json` and matching solution sidecar.
+- [x] Replay the original solution.
+- [x] Replay the same tap sequence with all taps at `0.0`.
+- [x] Replay with taps compressed into the first `0.15` seconds.
+- [x] Record switch counts, outgoing-degree distribution, repeated switch taps, route length, and result.
+- [x] Record levels that reach destination before package under any tested state.
+- [x] Write machine-readable JSON and human-readable Markdown.
 
 **Acceptance tests**
 
-- [ ] The analyzer fails cleanly when a sidecar is missing.
-- [ ] The analyzer produces deterministic output.
-- [ ] The report identifies front-loadable levels without modifying files.
+- [x] The analyzer fails cleanly when a sidecar is missing.
+- [x] The analyzer produces deterministic output.
+- [x] The report identifies front-loadable levels without modifying files.
 
 ## Task 0.4 — Create golden parity fixtures
+
+**Status:** Completed
 
 **Files to add**
 
@@ -289,25 +293,25 @@ Both tools expose a top-level package named `tests`, so collecting both suites i
 
 **Required fixtures**
 
-- [ ] Straight route with no switch.
-- [ ] Two-way switch tapped too early.
-- [ ] Two-way switch tapped inside the window.
-- [ ] Tap on a noneligible downstream switch.
-- [ ] Tap after the dot commits to the outgoing edge.
-- [ ] Three-way switch requiring two rotations.
-- [ ] Four-way switch requiring three rotations.
-- [ ] Revisit requiring a different state on the second visit.
-- [ ] Package-before-destination success.
-- [ ] Destination-before-package failure.
-- [ ] Dead-end failure.
-- [ ] Time-limit failure.
-- [ ] Cycle safety-limit behavior.
+- [x] Straight route with no switch.
+- [x] Two-way switch tapped too early.
+- [x] Two-way switch tapped inside the window.
+- [x] Tap on a noneligible downstream switch.
+- [x] Tap after the dot commits to the outgoing edge.
+- [x] Three-way switch requiring two rotations.
+- [x] Four-way switch requiring three rotations.
+- [x] Revisit requiring a different state on the second visit.
+- [x] Package-before-destination success.
+- [x] Destination-before-package failure.
+- [x] Dead-end failure.
+- [x] Time-limit failure.
+- [x] Cycle safety-limit behavior.
 
 **Acceptance tests**
 
-- [ ] Fixtures are valid JSON.
-- [ ] Each fixture contains an explanation of the expected result.
-- [ ] Both Swift and Python test targets can locate the same fixture directory or a synchronized copied resource set.
+- [x] Fixtures are valid JSON.
+- [x] Each fixture contains an explanation of the expected result.
+- [x] Both Swift and Python test targets can locate the same fixture directory or a synchronized copied resource set.
 
 ## Task 0.5 — Add a behavior-change checklist
 

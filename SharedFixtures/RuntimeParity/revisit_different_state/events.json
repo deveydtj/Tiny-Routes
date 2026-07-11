@@ -1,0 +1,14 @@
+{
+  "fixtureID": "revisit_different_state",
+  "description": "A revisited switch requires a different state on its second visit.",
+  "elapsedTimeSteps": [
+    0.1,
+    0.25
+  ],
+  "actions": [
+    {
+      "timeSeconds": 4.2,
+      "tapNodeID": "switch"
+    }
+  ]
+}

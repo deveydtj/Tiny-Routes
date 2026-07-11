@@ -1,0 +1,10 @@
+{
+  "fixtureID": "two_way_too_early",
+  "description": "A tap before the two-way switch activation window is rejected.",
+  "expectedOutcome": "failed",
+  "failureReason": "tap_before_activation_window",
+  "acceptedTapCount": 0,
+  "reachedPackage": false,
+  "reachedDestination": false,
+  "safetyStepLimit": null
+}

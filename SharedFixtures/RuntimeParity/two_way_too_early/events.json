@@ -1,0 +1,14 @@
+{
+  "fixtureID": "two_way_too_early",
+  "description": "A tap before the two-way switch activation window is rejected.",
+  "elapsedTimeSteps": [
+    0.1,
+    0.25
+  ],
+  "actions": [
+    {
+      "timeSeconds": 0.1,
+      "tapNodeID": "switch"
+    }
+  ]
+}

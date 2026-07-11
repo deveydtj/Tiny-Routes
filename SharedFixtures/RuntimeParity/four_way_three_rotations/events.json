@@ -1,0 +1,22 @@
+{
+  "fixtureID": "four_way_three_rotations",
+  "description": "A four-way switch accepts three rotations in one activation window.",
+  "elapsedTimeSteps": [
+    0.1,
+    0.25
+  ],
+  "actions": [
+    {
+      "timeSeconds": 1.1,
+      "tapNodeID": "switch"
+    },
+    {
+      "timeSeconds": 1.3,
+      "tapNodeID": "switch"
+    },
+    {
+      "timeSeconds": 1.5,
+      "tapNodeID": "switch"
+    }
+  ]
+}

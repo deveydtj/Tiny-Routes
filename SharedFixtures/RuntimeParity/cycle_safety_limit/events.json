@@ -1,0 +1,9 @@
+{
+  "fixtureID": "cycle_safety_limit",
+  "description": "A malformed route cycle terminates at the configured safety limit.",
+  "elapsedTimeSteps": [
+    0.1,
+    0.25
+  ],
+  "actions": []
+}

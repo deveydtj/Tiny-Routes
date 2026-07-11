@@ -1,0 +1,9 @@
+{
+  "fixtureID": "straight_no_switch",
+  "description": "Straight route with no switch.",
+  "elapsedTimeSteps": [
+    0.1,
+    0.25
+  ],
+  "actions": []
+}

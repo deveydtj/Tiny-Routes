@@ -1,0 +1,55 @@
+{
+  "schemaVersion": 2,
+  "id": "parity_time_limit_failure",
+  "name": "time limit failure",
+  "graph": {
+    "nodes": [
+      {
+        "id": "start",
+        "x": 0,
+        "y": 0,
+        "outgoingEdgeIDs": [
+          "e1"
+        ]
+      },
+      {
+        "id": "package",
+        "x": 10,
+        "y": 0,
+        "outgoingEdgeIDs": [
+          "e2"
+        ]
+      },
+      {
+        "id": "destination",
+        "x": 20,
+        "y": 0,
+        "outgoingEdgeIDs": []
+      }
+    ],
+    "edges": [
+      {
+        "id": "e1",
+        "fromNodeID": "start",
+        "toNodeID": "package",
+        "roadShape": "straight"
+      },
+      {
+        "id": "e2",
+        "fromNodeID": "package",
+        "toNodeID": "destination",
+        "roadShape": "straight"
+      }
+    ]
+  },
+  "startNodeID": "start",
+  "packageNodeID": "package",
+  "destinationNodeID": "destination",
+  "timeLimitSeconds": 1,
+  "parTaps": 0,
+  "rules": {
+    "switchInteractionMode": "liveLookahead",
+    "switchLookaheadSeconds": 1.35,
+    "switchTapCooldownSeconds": 0.12
+  }
+}
