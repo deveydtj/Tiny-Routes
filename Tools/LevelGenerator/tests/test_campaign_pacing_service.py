@@ -104,3 +104,51 @@ def test_campaign_pacing_penalizes_repeated_special_mechanics_and_large_profile(
     assert "campaign_repeated_large_portrait_profile" in result.penalties
     assert "campaign_repeated_switch_count_pattern" in result.penalties
     assert result.details["sameMapSizeProfileInRecentWindow"] == 1
+
+
+def test_campaign_pacing_introduces_one_early_mechanic_at_a_time() -> None:
+    previous = _signature(mechanic_tags=("package",), primary_mechanic_tag="package")
+    candidate = _signature(
+        level_id="level_002",
+        mechanic_tags=("package", "switch", "revisit"),
+        primary_mechanic_tag="switch",
+    )
+
+    result = CampaignPacingService().score(
+        candidate, [previous], estimated_band="tutorial", target_band="tutorial"
+    )
+
+    assert "campaign_multiple_mechanics_introduced" in result.penalties
+    assert result.details["newMechanics"] == ("revisit", "switch")
+
+
+def test_campaign_pacing_requires_recovery_after_punitive_level() -> None:
+    punitive = _signature(
+        failure_outcome_distribution=(("success", 1), ("dead_end", 4)),
+    )
+    candidate = replace(punitive, level_id="level_032", topology_hash="topology-b")
+
+    result = CampaignPacingService().score(
+        candidate, [punitive], estimated_band="hard", target_band="hard"
+    )
+
+    assert "campaign_missing_recovery_level" in result.penalties
+    assert result.details["previousPunitiveScore"] == 0.8
+
+
+def test_campaign_pacing_grows_dependency_before_tightening_timing() -> None:
+    previous = _signature(
+        solution_decision_timing_pattern=(1.0, 4.0),
+        decision_dependency_pattern=(2, 2, 0.5),
+    )
+    candidate = replace(
+        previous,
+        level_id="level_020",
+        solution_decision_timing_pattern=(1.0, 1.2),
+    )
+
+    result = CampaignPacingService().score(
+        candidate, [previous], estimated_band="medium", target_band="medium"
+    )
+
+    assert "campaign_timing_before_dependency_progression" in result.penalties

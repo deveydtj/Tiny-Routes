@@ -67,6 +67,28 @@ class CampaignPacingService:
         if candidate.required_tap_count == previous.required_tap_count and candidate.switch_count == previous.switch_count:
             score -= 0.08
             penalties.append("campaign_repeated_switch_count_pattern")
+        if self._decision_type(candidate) == self._decision_type(previous):
+            score -= 0.08
+            penalties.append("campaign_repeated_decision_type")
+
+        new_mechanics = self._new_mechanics(candidate, previous_signatures)
+        if target_band in {"tutorial", "easy"} and len(new_mechanics) > 1:
+            score -= min(0.30, 0.12 * (len(new_mechanics) - 1))
+            penalties.append("campaign_multiple_mechanics_introduced")
+
+        dependency_delta = self._dependency_complexity(candidate) - self._dependency_complexity(previous)
+        timing_delta = self._timing_pressure(candidate) - self._timing_pressure(previous)
+        if timing_delta > 0.18 and dependency_delta <= 0:
+            score -= 0.16
+            penalties.append("campaign_timing_before_dependency_progression")
+
+        previous_punitive = self._punitive_score(previous)
+        candidate_punitive = self._punitive_score(candidate)
+        if previous_punitive >= 0.65 and candidate_punitive >= 0.65:
+            score -= 0.20
+            penalties.append("campaign_missing_recovery_level")
+        elif previous_punitive >= 0.65 and candidate_punitive <= 0.35:
+            score = min(1.0, score + 0.08)
         nearby_mechanic_tag_overlap = self._nearby_mechanic_tag_overlap(candidate, previous_signatures)
         if nearby_mechanic_tag_overlap >= 0.5:
             score -= 0.08
@@ -117,6 +139,12 @@ class CampaignPacingService:
                 "repeatedSpecialMechanics": repeated_special_mechanics,
                 "sameMapSizeProfileInRecentWindow": recent_same_map_size,
                 "mapSizeProfile": candidate.layout_size_profile,
+                "decisionType": self._decision_type(candidate),
+                "newMechanics": new_mechanics,
+                "dependencyComplexityDelta": round(dependency_delta, 4),
+                "timingPressureDelta": round(timing_delta, 4),
+                "previousPunitiveScore": round(previous_punitive, 4),
+                "candidatePunitiveScore": round(candidate_punitive, 4),
                 "estimatedBand": estimated_band,
                 "targetBand": target_band,
             },
@@ -160,3 +188,43 @@ class CampaignPacingService:
     def _band_index(self, band: str) -> int:
         bands = ("tutorial", "easy", "medium", "hard", "expert")
         return bands.index(band) if band in bands else -1
+
+    def _new_mechanics(
+        self, candidate: CandidateSignature, previous_signatures: list[CandidateSignature]
+    ) -> tuple[str, ...]:
+        previously_seen = {
+            tag for signature in previous_signatures for tag in signature.mechanic_tags
+        }
+        return tuple(sorted(set(candidate.mechanic_tags) - previously_seen))
+
+    def _decision_type(self, signature: CandidateSignature) -> tuple[object, ...]:
+        return (
+            signature.required_tap_count,
+            signature.switch_count,
+            signature.switch_degree_sequence,
+            signature.decision_dependency_pattern[:2],
+            signature.revisit_state_reversal_pattern,
+        )
+
+    def _dependency_complexity(self, signature: CandidateSignature) -> float:
+        dependencies, depth, density = signature.decision_dependency_pattern
+        revisit_count, reversal_count, repeated_taps = signature.revisit_state_reversal_pattern
+        return dependencies + depth + density + revisit_count + reversal_count + repeated_taps
+
+    def _timing_pressure(self, signature: CandidateSignature) -> float:
+        timings = signature.solution_decision_timing_pattern
+        if len(timings) < 2:
+            return 0.0
+        gaps = [later - earlier for earlier, later in zip(timings, timings[1:]) if later > earlier]
+        return 0.0 if not gaps else 1.0 / max(0.01, min(gaps))
+
+    def _punitive_score(self, signature: CandidateSignature) -> float:
+        outcomes = dict(signature.failure_outcome_distribution)
+        total = sum(outcomes.values())
+        if total <= 0:
+            return 0.0
+        punitive = sum(
+            count for outcome, count in outcomes.items()
+            if outcome not in {"success", "recoverable", "safe_dead_end"}
+        )
+        return punitive / total

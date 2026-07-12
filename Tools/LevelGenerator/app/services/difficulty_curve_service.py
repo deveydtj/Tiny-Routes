@@ -5,6 +5,8 @@ from ..models.generation_batch_plan import GenerationBatchPlan, GenerationBatchP
 
 
 class DifficultyCurveService:
+    """Defines mechanic unlocks before timing pressure increases."""
+
     def build_plan(self, start_level_number: int, count: int, difficulty: str) -> GenerationBatchPlan:
         entries = []
         for offset in range(count):
@@ -39,13 +41,15 @@ class DifficultyCurveService:
         if difficulty == "tutorial":
             if level_number <= 1:
                 return {"straight_delivery_intro": 7, "straight_delivery": 2}
+            if level_number == 2:
+                return {
+                    "package_before_destination_intro": 7,
+                    "straight_delivery_intro": 2,
+                }
             return {
-                "straight_delivery_intro": 4,
-                "package_before_destination_intro": 4,
-                "single_switch_intro": 3,
+                "single_switch_intro": 7,
+                "package_before_destination_intro": 2,
                 "single_switch_wrong_dead_end": 2,
-                "straight_delivery": 2,
-                "single_switch": 1,
             }
         if difficulty == "easy":
             if level_number <= 5:
@@ -90,7 +94,7 @@ class DifficultyCurveService:
                     "multi_switch_revisit": 2,
                     "multi_switch_chain": 1,
                 }
-            return {
+            weights = {
                 "ring_route_gate": 4,
                 "package_inside_loop": 3,
                 "multi_switch_revisit": 3,
@@ -98,6 +102,11 @@ class DifficultyCurveService:
                 "two_phase_route": 2,
                 "ring_route": 1,
             }
+            # Level 36 is deliberately less punitive after the first late-hard
+            # run, giving players space to consolidate the new state patterns.
+            if level_number % 6 == 0:
+                weights.update({"two_phase_route": 6, "ring_route_gate": 2})
+            return weights
         if difficulty == "expert":
             if level_number <= 45:
                 return {
@@ -106,7 +115,7 @@ class DifficultyCurveService:
                     "controlled_repeated_taps": 3,
                     "four_way_intersection": 1,
                 }
-            return {
+            weights = {
                 "four_way_package_gate": 4,
                 "four_way_ring": 4,
                 "multi_four_way_route": 3,
@@ -114,4 +123,9 @@ class DifficultyCurveService:
                 "late_route_reversal": 3,
                 "four_way_intersection": 1,
             }
+            # Regular recovery beats retain state complexity while easing the
+            # densest repeated-tap/four-way combinations.
+            if level_number % 5 == 0:
+                weights.update({"four_way_package_gate": 6, "multi_four_way_route": 1})
+            return weights
         return {}

@@ -1488,6 +1488,8 @@ Maximize a weighted combination of:
 
 ## Task 8.4 — Update campaign pacing
 
+**Status:** Completed
+
 **Files to update**
 
 - `campaign_pacing_service.py`
@@ -1495,11 +1497,11 @@ Maximize a weighted combination of:
 
 **Steps**
 
-- [ ] Introduce one mechanic at a time in tutorials/easy levels.
-- [ ] Space repeated mechanic patterns apart.
-- [ ] Increase dependency and state complexity before tightening timing.
-- [ ] Avoid consecutive levels with the same number and type of decisions.
-- [ ] Include recovery-oriented levels between highly punitive levels.
+- [x] Introduce one mechanic at a time in tutorials/easy levels.
+- [x] Space repeated mechanic patterns apart.
+- [x] Increase dependency and state complexity before tightening timing.
+- [x] Avoid consecutive levels with the same number and type of decisions.
+- [x] Include recovery-oriented levels between highly punitive levels.
 
 ### Phase 8 exit gate
 
@@ -1516,6 +1518,8 @@ Maximize a weighted combination of:
 Reduce regression risk by dividing oversized services into clear stages after behavior is stabilized.
 
 ## Task 9.1 — Reduce `level_generation_service.py`
+
+**Status:** Completed
 
 **Current size:** approximately 2,186 lines.
 
@@ -1539,8 +1543,8 @@ Reduce regression risk by dividing oversized services into clear stages after be
 
 **Acceptance tests**
 
-- [ ] Public CLI behavior remains compatible.
-- [ ] Existing generation-service tests are split by stage.
+- [x] Public CLI behavior remains compatible.
+- [x] Existing generation-service tests are split by stage.
 
 ## Task 9.2 — Split unique-solution validation
 

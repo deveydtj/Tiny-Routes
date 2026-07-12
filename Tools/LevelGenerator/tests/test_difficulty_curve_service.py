@@ -44,3 +44,14 @@ def test_difficulty_curve_feature_unlock_gates() -> None:
         service.template_weights_for_level(31, "hard")["ring_route_gate"]
         > service.template_weights_for_level(28, "hard").get("ring_route_gate", 0)
     )
+    assert set(service.template_weights_for_level(2, "tutorial")) == {
+        "package_before_destination_intro",
+        "straight_delivery_intro",
+    }
+
+
+def test_difficulty_curve_includes_recovery_beats() -> None:
+    service = DifficultyCurveService()
+
+    assert service.template_weights_for_level(36, "hard")["two_phase_route"] == 6
+    assert service.template_weights_for_level(50, "expert")["four_way_package_gate"] == 6
