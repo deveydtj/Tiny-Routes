@@ -1589,12 +1589,14 @@ Reduce regression risk by dividing oversized services into clear stages after be
 
 ## Task 9.4 — Replace unstructured dictionaries in stage boundaries
 
+**Status:** Completed
+
 **Steps**
 
-- [ ] Add dataclasses for each stage result.
-- [ ] Include `passed`, `stage`, `code`, `details`, and relevant metrics.
-- [ ] Keep JSON-report conversion in report-specific code.
-- [ ] Add type hints to all public service methods.
+- [x] Add dataclasses for each stage result.
+- [x] Include `passed`, `stage`, `code`, `details`, and relevant metrics.
+- [x] Keep JSON-report conversion in report-specific code.
+- [x] Add type hints to all public service methods.
 
 ### Phase 9 exit gate
 
@@ -1612,6 +1614,8 @@ Create a stable interaction architecture before adding visible UX improvements.
 
 ## Task 10.1 — Add editor tool modes
 
+**Status:** Completed
+
 **Files to add or update**
 
 - `Tools/LevelEditor/app/models/editor_tool.py`
@@ -1628,17 +1632,17 @@ Create a stable interaction architecture before adding visible UX improvements.
 
 **Steps**
 
-- [ ] Store the active mode in one controller-owned location.
-- [ ] Add mutually exclusive toolbar buttons with icons and text/tooltips.
-- [ ] Change cursor and status message by mode.
-- [ ] Make Escape return to Select or cancel the current operation.
-- [ ] Disable editing gestures during Playtest.
+- [x] Store the active mode in one controller-owned location.
+- [x] Add mutually exclusive toolbar buttons with icons and text/tooltips.
+- [x] Change cursor and status message by mode.
+- [x] Make Escape return to Select or cancel the current operation.
+- [x] Disable editing gestures during Playtest.
 
 **Acceptance tests**
 
-- [ ] Exactly one primary mode is active.
-- [ ] Keyboard shortcuts switch modes.
-- [ ] Mode changes clear temporary previews safely.
+- [x] Exactly one primary mode is active.
+- [x] Keyboard shortcuts switch modes.
+- [x] Mode changes clear temporary previews safely.
 
 ## Task 10.2 — Add a document controller
 

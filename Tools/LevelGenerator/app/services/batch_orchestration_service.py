@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from dataclasses import replace
+
 from ..generation_config import GenerationConfig
 from ..level_numbering import format_level_id
 from ..models.generation_result import GenerationResult
@@ -263,15 +265,22 @@ class BatchOrchestrationService:
                         batch_candidate_pools[level_id],
                         batch_near_misses[level_id],
                     )
-                    summary["portfolioObjectiveScore"] = selection.objective_score
-                    summary["portfolioObjectiveComponents"] = {
+                    report_fields = dict(summary.report_fields)
+                    report_fields["portfolioObjectiveScore"] = selection.objective_score
+                    report_fields["portfolioObjectiveComponents"] = {
                         key: round(value, 4) for key, value in selection.components.items()
                     }
-                    summary["selectionRationale"] = (
+                    report_fields["selectionRationale"] = (
                         selection.rationale
                         + f" It ranked above {len(batch_candidate_pools[level_id]) - 1} alternatives."
                     )
-                    result.candidate_selection_summaries.append(summary)
+                    result.candidate_selection_summaries.append(
+                        replace(
+                            summary,
+                            details=report_fields["selectionRationale"],
+                            report_fields=report_fields,
+                        )
+                    )
 
         result.add_rejections(dict(rejection_service.reason_counts))
 

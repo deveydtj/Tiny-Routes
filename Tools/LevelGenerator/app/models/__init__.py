@@ -19,6 +19,7 @@ from .runtime_solution_search import (
 from .simulation import SimulationResult, SimulationStep
 from .template_spec import TemplateSpec
 from .template_variant_spec import TemplateVariantSpec
+from .stage_result import CandidateStageResult, StageResult
 
 __all__ = [
     "DifficultyPreset",
@@ -57,4 +58,6 @@ __all__ = [
     "SwiftTestSummary",
     "TemplateSpec",
     "TemplateVariantSpec",
+    "CandidateStageResult",
+    "StageResult",
 ]

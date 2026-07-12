@@ -5,6 +5,7 @@ from pathlib import Path
 from typing import Any
 
 from .generated_level import GeneratedLevel
+from .stage_result import CandidateStageResult, StageResult
 
 
 @dataclass
@@ -23,8 +24,8 @@ class SwiftTestSummary:
 @dataclass
 class GenerationResult:
     accepted: list[GeneratedLevel] = field(default_factory=list)
-    candidate_selection_summaries: list[dict[str, Any]] = field(default_factory=list)
-    rejected_candidate_summaries: list[dict[str, Any]] = field(default_factory=list)
+    candidate_selection_summaries: list[StageResult] = field(default_factory=list)
+    rejected_candidate_summaries: list[CandidateStageResult] = field(default_factory=list)
     candidate_generation_count: int = 0
     candidate_validation_count: int = 0
     candidate_generation_counts_by_difficulty: dict[str, int] = field(default_factory=dict)

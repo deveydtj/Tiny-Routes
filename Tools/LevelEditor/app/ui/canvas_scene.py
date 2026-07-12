@@ -10,7 +10,7 @@ from PySide6.QtWidgets import (
 )
 from shiboken6 import isValid
 
-from app.models import LevelDocument, RouteNodeModel
+from app.models import EditorTool, LevelDocument, RouteNodeModel
 from app.services.switch_classification_service import SwitchClassificationService, SwitchNodeKind
 
 from .canvas_colors import canvas_grid_color
@@ -50,8 +50,29 @@ class LevelCanvasScene(QGraphicsScene):
         self._pending_road_shape = "horizontalFirst"
         self._preview_path_item: QGraphicsPathItem | None = None
         self._preview_label_item: QGraphicsSimpleTextItem | None = None
+        self._editor_tool = EditorTool.SELECT
         self._show_placeholder()
         self.selectionChanged.connect(self._on_selection_changed)
+
+    @property
+    def editor_tool(self) -> EditorTool:
+        return self._editor_tool
+
+    def set_editor_tool(self, tool: EditorTool) -> None:
+        if tool is self._editor_tool:
+            return
+        self.cancel_current_operation()
+        self._editor_tool = tool
+        editing_enabled = tool is not EditorTool.PLAYTEST
+        for node_item in self._node_items_by_id.values():
+            node_item.setFlag(node_item.GraphicsItemFlag.ItemIsMovable, editing_enabled)
+            node_item.setFlag(node_item.GraphicsItemFlag.ItemIsSelectable, editing_enabled)
+        if not editing_enabled:
+            self.clearSelection()
+
+    def cancel_current_operation(self) -> None:
+        self._clear_connection_source()
+        self._reset_preview_state()
 
     def display_level(self, document: LevelDocument) -> None:
         self._reset_preview_state()
@@ -71,6 +92,9 @@ class LevelCanvasScene(QGraphicsScene):
             model_y = float(node.y) if isinstance(node.y, (int, float)) else 0.0
             node_item = NodeItem(node_id=node.id, node_type=node_type, model_x=model_x, model_y=model_y)
             node_item.setPos(self._resolve_scene_position(node, index))
+            editing_enabled = self._editor_tool is not EditorTool.PLAYTEST
+            node_item.setFlag(node_item.GraphicsItemFlag.ItemIsMovable, editing_enabled)
+            node_item.setFlag(node_item.GraphicsItemFlag.ItemIsSelectable, editing_enabled)
             self.addItem(node_item)
             self._node_items_by_id[node.id] = node_item
 
@@ -143,7 +167,14 @@ class LevelCanvasScene(QGraphicsScene):
         self.node_item_moved.emit(item.node_id, item.model_x, item.model_y)
 
     def mousePressEvent(self, event: QGraphicsSceneMouseEvent) -> None:
-        if event.button() == Qt.MouseButton.RightButton:
+        if self._editor_tool is EditorTool.PLAYTEST:
+            event.accept()
+            return
+        connection_click = (
+            self._editor_tool is EditorTool.CONNECT
+            and event.button() == Qt.MouseButton.LeftButton
+        ) or event.button() == Qt.MouseButton.RightButton
+        if connection_click:
             node_item = self._resolve_node_item_at_position(event.scenePos())
             if node_item is not None:
                 self._handle_connection_click(node_item)
@@ -161,7 +192,11 @@ class LevelCanvasScene(QGraphicsScene):
         super().mouseMoveEvent(event)
 
     def keyPressEvent(self, event: QKeyEvent) -> None:
-        if event.key() in {Qt.Key.Key_Delete, Qt.Key.Key_Backspace} and self._delete_selected_items():
+        if (
+            self._editor_tool is not EditorTool.PLAYTEST
+            and event.key() in {Qt.Key.Key_Delete, Qt.Key.Key_Backspace}
+            and self._delete_selected_items()
+        ):
             event.accept()
             return
         if self._connection_source_node_id is not None and event.key() == Qt.Key.Key_Tab:
@@ -169,7 +204,7 @@ class LevelCanvasScene(QGraphicsScene):
             event.accept()
             return
         if self._connection_source_node_id is not None and event.key() == Qt.Key.Key_Escape:
-            self._clear_connection_source()
+            self.cancel_current_operation()
             self.placement_message_changed.emit("Road placement canceled.")
             event.accept()
             return

@@ -2,6 +2,8 @@ from PySide6.QtCore import Qt
 from PySide6.QtGui import QKeyEvent, QPainter, QWheelEvent
 from PySide6.QtWidgets import QGraphicsItem, QGraphicsView
 
+from app.models import EditorTool
+
 from .canvas_scene import LevelCanvasScene
 
 
@@ -20,6 +22,18 @@ class LevelCanvasView(QGraphicsView):
 
     def reset_zoom(self) -> None:
         self.resetTransform()
+
+    def set_editor_tool(self, tool: EditorTool) -> None:
+        scene = self.scene()
+        if isinstance(scene, LevelCanvasScene):
+            scene.set_editor_tool(tool)
+        cursor = {
+            EditorTool.SELECT: Qt.CursorShape.ArrowCursor,
+            EditorTool.PLACE_NODE: Qt.CursorShape.CrossCursor,
+            EditorTool.CONNECT: Qt.CursorShape.CrossCursor,
+            EditorTool.PLAYTEST: Qt.CursorShape.PointingHandCursor,
+        }[tool]
+        self.viewport().setCursor(cursor)
 
     def fit_level_to_view(self) -> None:
         scene = self.scene()

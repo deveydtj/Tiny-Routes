@@ -211,8 +211,12 @@ class GenerationReportRepository:
                 }
                 for level in result.accepted
             ],
-            "candidateSelection": list(getattr(result, "candidate_selection_summaries", [])),
-            "rejectedCandidateSummaries": list(getattr(result, "rejected_candidate_summaries", [])),
+            "candidateSelection": self._report_items(
+                getattr(result, "candidate_selection_summaries", [])
+            ),
+            "rejectedCandidateSummaries": self._report_items(
+                getattr(result, "rejected_candidate_summaries", [])
+            ),
             "topRejectedNearMisses": self._top_rejected_near_misses(result),
             "acceptedDifficultyDistribution": self._distribution(
                 (level.difficulty for level in result.accepted)
@@ -276,6 +280,20 @@ class GenerationReportRepository:
                 "with `xcodegen generate` before Swift tests unless `--no-xcodegen` is used."
             ),
         }
+
+    @staticmethod
+    def _report_items(items) -> list[dict[str, Any]]:
+        """Convert typed stage results only at the reporting boundary."""
+        def normalize(value):
+            if hasattr(value, "to_report_dict"):
+                return normalize(value.to_report_dict())
+            if isinstance(value, dict):
+                return {key: normalize(item) for key, item in value.items()}
+            if isinstance(value, (list, tuple)):
+                return [normalize(item) for item in value]
+            return value
+
+        return [normalize(item) for item in items]
 
     def _markdown(self, config, result) -> str:
         payload = self._payload(config, result)
@@ -923,7 +941,7 @@ class GenerationReportRepository:
 
     def _top_rejected_near_misses(self, result) -> list[dict[str, Any]]:
         rejected = list(getattr(result, "rejected_candidate_summaries", []) or [])
-        return sorted(
+        selected = sorted(
             rejected,
             key=lambda item: (item.get("quality") or {}).get(
                 "totalScore",
@@ -931,6 +949,7 @@ class GenerationReportRepository:
             ),
             reverse=True,
         )[:10]
+        return self._report_items(selected)
 
     def _actual_cycle_count(self, level) -> int:
         adjacency: dict[str, list[str]] = {}

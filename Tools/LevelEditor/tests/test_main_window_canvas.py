@@ -20,7 +20,7 @@ if str(LEVEL_EDITOR_ROOT) not in sys.path:
 
 import app.main_window as main_window_module
 from app.main_window import LevelEditorMainWindow
-from app.models import LevelDocument, RouteEdgeModel, RouteGraphModel, RouteNodeModel, SolutionActionModel, SolutionModel
+from app.models import EditorTool, LevelDocument, RouteEdgeModel, RouteGraphModel, RouteNodeModel, SolutionActionModel, SolutionModel
 from app.services import (
     LevelIdentityService,
     TestRunnerResult,
@@ -218,6 +218,38 @@ def test_main_window_has_main_toolbar(qapplication: QApplication) -> None:
     try:
         toolbar = window.findChild(QToolBar, "mainToolbar")
         assert toolbar is window._main_toolbar
+    finally:
+        window.close()
+
+
+def test_editor_tools_are_mutually_exclusive_and_switch_modes(qapplication: QApplication) -> None:
+    window = LevelEditorMainWindow()
+    try:
+        assert window.active_tool is EditorTool.SELECT
+        assert sum(action.isChecked() for action in window._tool_actions.values()) == 1
+
+        window._tool_actions[EditorTool.CONNECT].trigger()
+
+        assert window.active_tool is EditorTool.CONNECT
+        assert window._canvas_view.scene().editor_tool is EditorTool.CONNECT
+        assert sum(action.isChecked() for action in window._tool_actions.values()) == 1
+    finally:
+        window.close()
+
+
+def test_escape_returns_to_select_and_playtest_disables_editing(qapplication: QApplication) -> None:
+    window = LevelEditorMainWindow()
+    try:
+        window._set_active_tool(EditorTool.PLAYTEST)
+        assert window._piece_palette.isEnabled() is False
+        assert window._properties_panel.isEnabled() is False
+
+        event = QKeyEvent(QKeyEvent.Type.KeyPress, Qt.Key.Key_Escape, Qt.KeyboardModifier.NoModifier)
+        window.keyPressEvent(event)
+
+        assert window.active_tool is EditorTool.SELECT
+        assert window._piece_palette.isEnabled() is True
+        assert window._properties_panel.isEnabled() is True
     finally:
         window.close()
 

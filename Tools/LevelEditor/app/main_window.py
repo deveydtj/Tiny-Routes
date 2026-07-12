@@ -2,7 +2,7 @@ import math
 from pathlib import Path
 
 from PySide6.QtCore import Qt
-from PySide6.QtGui import QAction, QCloseEvent, QKeySequence
+from PySide6.QtGui import QAction, QActionGroup, QCloseEvent, QIcon, QKeyEvent, QKeySequence
 from PySide6.QtWidgets import (
     QDialog,
     QDockWidget,
@@ -13,7 +13,7 @@ from PySide6.QtWidgets import (
 )
 
 from app.config import find_repo_root, get_default_levels_directory
-from app.models import LevelDocument, RouteEdgeModel, RouteNodeModel, SolutionModel
+from app.models import EditorTool, LevelDocument, RouteEdgeModel, RouteNodeModel, SolutionModel
 from app.repositories import (
     LevelFileRepository,
     LevelFileRepositoryError,
@@ -53,6 +53,7 @@ class LevelEditorMainWindow(QMainWindow):
         self._current_solution: SolutionModel | None = None
         self._current_file_path: Path | None = None
         self._is_dirty = False
+        self._active_tool = EditorTool.SELECT
         self._repository = LevelFileRepository()
         self._solution_repository = SolutionFileRepository()
         self._identity_service = LevelIdentityService()
@@ -122,7 +123,13 @@ class LevelEditorMainWindow(QMainWindow):
 
         self._build_menu_bar()
         self._build_main_toolbar()
+        self._build_tools_toolbar()
+        self._set_active_tool(EditorTool.SELECT)
         self._update_window_title()
+
+    @property
+    def active_tool(self) -> EditorTool:
+        return self._active_tool
 
     def _build_menu_bar(self) -> None:
         menu_bar = self.menuBar()
@@ -223,6 +230,55 @@ class LevelEditorMainWindow(QMainWindow):
         self._run_tests_action.triggered.connect(self._run_level_tests)
         self._run_tests_action.setEnabled(False)
         self._main_toolbar.addAction(self._run_tests_action)
+
+    def _build_tools_toolbar(self) -> None:
+        self._tools_toolbar = QToolBar("Editor Tools", self)
+        self._tools_toolbar.setObjectName("editorToolsToolbar")
+        self.addToolBar(self._tools_toolbar)
+        self._tool_action_group = QActionGroup(self)
+        self._tool_action_group.setExclusive(True)
+        self._tool_actions: dict[EditorTool, QAction] = {}
+
+        shortcuts = {
+            EditorTool.SELECT: "V",
+            EditorTool.PLACE_NODE: "N",
+            EditorTool.CONNECT: "C",
+            EditorTool.PLAYTEST: "P",
+        }
+        icon_names = {
+            EditorTool.SELECT: "input-mouse",
+            EditorTool.PLACE_NODE: "list-add",
+            EditorTool.CONNECT: "insert-link",
+            EditorTool.PLAYTEST: "media-playback-start",
+        }
+        for tool in EditorTool:
+            action = QAction(QIcon.fromTheme(icon_names[tool]), tool.label, self)
+            action.setCheckable(True)
+            action.setShortcut(QKeySequence(shortcuts[tool]))
+            action.setToolTip(f"{tool.label} ({shortcuts[tool]}) — {tool.status_message}")
+            action.triggered.connect(lambda checked=False, selected=tool: self._set_active_tool(selected))
+            self._tool_action_group.addAction(action)
+            self._tools_toolbar.addAction(action)
+            self._tool_actions[tool] = action
+
+    def _set_active_tool(self, tool: EditorTool) -> None:
+        self._active_tool = tool
+        self._tool_actions[tool].setChecked(True)
+        self._canvas_view.set_editor_tool(tool)
+        editing_enabled = tool is not EditorTool.PLAYTEST
+        self._piece_palette.setEnabled(editing_enabled)
+        self._properties_panel.setEnabled(editing_enabled)
+        self.statusBar().showMessage(tool.status_message)
+
+    def keyPressEvent(self, event: QKeyEvent) -> None:
+        if event.key() == Qt.Key.Key_Escape:
+            if self._active_tool is EditorTool.SELECT:
+                self._canvas_view.scene().cancel_current_operation()
+            else:
+                self._set_active_tool(EditorTool.SELECT)
+            event.accept()
+            return
+        super().keyPressEvent(event)
 
     def _open_level(self) -> None:
         if not self._prompt_to_save_unsaved_changes():

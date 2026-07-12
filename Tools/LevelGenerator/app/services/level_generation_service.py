@@ -12,6 +12,7 @@ from ..level_numbering import format_level_id
 from ..map_import.map_seed_to_template_adapter import MapSeedToTemplateAdapter
 from ..map_import.osm_seed_importer import MapSeedGraph
 from ..models.generation_result import GenerationResult
+from ..models.stage_result import CandidateStageResult, StageResult
 from ..paths import find_repo_root, get_default_reports_directory
 from ..random_source import RandomSource
 from ..repositories.existing_level_repository import ExistingLevelRepository
@@ -1311,7 +1312,9 @@ class LevelGenerationService:
             return not (has_strong_interest and route_interest >= minimum_route_interest)
         return False
 
-    def _candidate_selection_summary(self, level_id: str, accepted_candidate, candidate_pool, near_miss_candidates):
+    def _candidate_selection_summary(
+        self, level_id: str, accepted_candidate, candidate_pool, near_miss_candidates
+    ) -> StageResult:
         scored_candidates = [candidate for candidate in candidate_pool if candidate.quality_score is not None]
         sorted_candidates = sorted(scored_candidates, key=self._candidate_selection_key, reverse=True)
         runner_ups = [
@@ -1345,7 +1348,7 @@ class LevelGenerationService:
         )
         accepted_score = accepted_candidate.quality_score.total_score if accepted_candidate.quality_score is not None else 0.0
         next_summary = top_rejected[0] if top_rejected else None
-        return {
+        report_fields = {
             "levelID": level_id,
             "candidateCount": len(scores),
             "acceptedCandidate": accepted_summary,
@@ -1358,8 +1361,21 @@ class LevelGenerationService:
             "topRejectedNearMisses": top_rejected,
             "selectionRationale": self._selection_rationale(accepted_summary, accepted_score, next_summary),
         }
+        return StageResult(
+            passed=True,
+            stage="candidate_selection",
+            code="candidate_selected",
+            details=report_fields["selectionRationale"],
+            metrics={"candidateCount": len(scores), **report_fields["scoreStats"]},
+            report_fields=report_fields,
+        )
 
-    def _selection_rationale(self, accepted_summary: dict, accepted_score: float, next_summary: dict | None) -> str:
+    def _selection_rationale(
+        self,
+        accepted_summary: CandidateStageResult,
+        accepted_score: float,
+        next_summary: CandidateStageResult | None,
+    ) -> str:
         if next_summary is None:
             return "Only one scored candidate passed validation and quality thresholds."
         next_quality = next_summary.get("quality", {})
@@ -1392,7 +1408,7 @@ class LevelGenerationService:
         status: str,
         reason: str | None = None,
         detail: str | None = None,
-    ) -> dict:
+    ) -> CandidateStageResult:
         quality = candidate.quality_score
         runtime_parity = self._runtime_parity_summary(candidate)
         status_metadata = self._candidate_status_metadata(candidate, status, reason, detail)
@@ -1401,7 +1417,7 @@ class LevelGenerationService:
         layout_readability_report = self._layout_readability_summary(candidate)
         road_shape_report = self._road_shape_summary(candidate)
         quality_breakdown = self._quality_breakdown(quality)
-        return {
+        report_fields = {
             **status_metadata,
             "levelID": candidate.level_id,
             "seed": candidate.seed,
@@ -1474,6 +1490,22 @@ class LevelGenerationService:
                 else None
             ),
         }
+        return CandidateStageResult(
+            passed=status in {"accepted", "not_selected"},
+            stage=status_metadata["validationStage"],
+            code=status_metadata["rejectionCode"] or "accepted",
+            details=detail,
+            metrics={
+                "totalQualityScore": quality_breakdown.get("totalQualityScore"),
+                "requiredPathLength": self._required_path_length(candidate),
+            },
+            report_fields=report_fields,
+            candidate_id=status_metadata["candidateID"],
+            level_id=candidate.level_id,
+            seed=candidate.seed,
+            difficulty=candidate.difficulty,
+            status=status,
+        )
 
     def _candidate_status_metadata(
         self,
@@ -1523,8 +1555,7 @@ class LevelGenerationService:
         detail: str,
     ) -> None:
         stage = CandidateRejectionService.validation_stage_for_code(reason)
-        result.rejected_candidate_summaries.append(
-            {
+        report_fields = {
                 "candidateID": f"{level_id}:{seed}",
                 "levelID": level_id,
                 "seed": seed,
@@ -1539,6 +1570,19 @@ class LevelGenerationService:
                 "rejectionCode": reason,
                 "rejectionDetails": detail,
             }
+        result.rejected_candidate_summaries.append(
+            CandidateStageResult(
+                passed=False,
+                stage=stage,
+                code=reason,
+                details=detail,
+                report_fields=report_fields,
+                candidate_id=f"{level_id}:{seed}",
+                level_id=level_id,
+                seed=seed,
+                difficulty=difficulty,
+                status="rejected",
+            )
         )
 
     def _topology_report(self, candidate) -> dict:
