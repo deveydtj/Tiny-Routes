@@ -1444,14 +1444,18 @@ Stop selecting each level greedily without considering the composition of the fu
 
 ## Task 8.2 — Build a valid candidate pool per requested batch
 
+**Status:** Completed
+
 **Steps**
 
-- [ ] Generate more valid candidates than requested levels.
-- [ ] Store complete quality and signature data.
-- [ ] Do not immediately reject a valid candidate only because an earlier candidate was selected.
-- [ ] Keep bounded memory and deterministic ordering.
+- [x] Generate more valid candidates than requested levels.
+- [x] Store complete quality and signature data.
+- [x] Do not immediately reject a valid candidate only because an earlier candidate was selected.
+- [x] Keep bounded memory and deterministic ordering.
 
 ## Task 8.3 — Add portfolio selection
+
+**Status:** Completed
 
 **Files to add**
 
@@ -1472,15 +1476,15 @@ Maximize a weighted combination of:
 
 **Steps**
 
-- [ ] Start with a deterministic greedy diversity algorithm.
-- [ ] Add hard constraints for requested difficulty and level count.
-- [ ] Report why each selected candidate was chosen over alternatives.
+- [x] Start with a deterministic greedy diversity algorithm.
+- [x] Add hard constraints for requested difficulty and level count.
+- [x] Report why each selected candidate was chosen over alternatives.
 
 **Acceptance tests**
 
-- [ ] Selected batch contains the requested count.
-- [ ] Selection is deterministic.
-- [ ] Duplicate or near-duplicate decision signatures are minimized.
+- [x] Selected batch contains the requested count.
+- [x] Selection is deterministic.
+- [x] Duplicate or near-duplicate decision signatures are minimized.
 
 ## Task 8.4 — Update campaign pacing
 

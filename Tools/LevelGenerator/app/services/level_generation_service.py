@@ -22,6 +22,7 @@ from ..templates.template_registry import TemplateRegistry
 from .topology_solver_service import TopologySolverService
 from .candidate_rejection_service import CandidateRejectionService
 from .candidate_signature_service import CandidateSignatureService
+from .candidate_portfolio_selection_service import CandidatePortfolioSelectionService
 from .candidate_uniqueness_service import CandidateUniquenessService
 from .difficulty_curve_service import DifficultyCurveService
 from .difficulty_service import DifficultyService
@@ -81,6 +82,7 @@ class LevelGenerationService:
         self.signature_service = CandidateSignatureService()
         self.existing_level_repository = ExistingLevelRepository(self.signature_service)
         self.uniqueness_service = CandidateUniquenessService()
+        self.portfolio_selection_service = CandidatePortfolioSelectionService(self.uniqueness_service)
         self.quality_service = GenerationQualityService()
         self.map_seed_adapter = MapSeedToTemplateAdapter()
         self.resource_sync_service = LevelResourceSyncService()
@@ -120,7 +122,8 @@ class LevelGenerationService:
 
         rejection_service = CandidateRejectionService()
         base_rng = RandomSource(config.base_seed)
-        accepted_signatures = []
+        batch_candidate_pools = {}
+        batch_near_misses = {}
         target_level_ids = {
             format_level_id(config.start_level_number + offset)
             for offset in range(config.count)
@@ -137,9 +140,7 @@ class LevelGenerationService:
             level_number = plan_entry.level_number
             level_id = plan_entry.level_id
             preset = self.difficulty_service.get_preset(plan_entry.difficulty)
-            accepted_candidate = None
             candidate_pool = []
-            candidate_pool_signatures = []
             near_miss_candidates = []
 
             effective_max_attempts = self._effective_max_attempts(config, preset)
@@ -215,43 +216,6 @@ class LevelGenerationService:
                             continue
 
                         candidate_signature = self.signature_service.signature_for(candidate)
-                        batch_signatures = self._batch_similarity_signatures(
-                            config,
-                            accepted_signatures,
-                            candidate_pool_signatures,
-                        )
-                        duplicate_result = self.uniqueness_service.check_duplicate(
-                            candidate_signature,
-                            batch_signatures,
-                            threshold=self._batch_duplicate_threshold(
-                                config,
-                                accepted_count=len(result.accepted),
-                                attempt=attempt,
-                                effective_max_attempts=effective_max_attempts,
-                            ),
-                        )
-                        if duplicate_result.is_duplicate:
-                            message = rejection_service.record_custom_rejection(
-                                candidate,
-                                "candidate_too_similar_to_batch",
-                                duplicate_result.message,
-                                config.debug_failures_dir,
-                            )
-                            self._record_rejected_candidate_summary(
-                                result,
-                                candidate,
-                                "candidate_too_similar_to_batch",
-                                duplicate_result.message,
-                            )
-                            self._record_rejection_by_difficulty(
-                                result,
-                                candidate.difficulty,
-                                "candidate_too_similar_to_batch",
-                            )
-                            self._record_filter_rejection(result)
-                            self._append_rejection_message(result, message)
-                            continue
-
                         if config.compare_against_existing:
                             existing_duplicate_result = self.uniqueness_service.check_duplicate(
                                 candidate_signature,
@@ -285,11 +249,9 @@ class LevelGenerationService:
                             candidate,
                             validation_preset,
                             [
-                                *self._quality_comparison_signatures(config, accepted_signatures),
-                                *candidate_pool_signatures,
                                 *(existing_signatures if config.compare_against_existing else []),
                             ],
-                            accepted_signatures,
+                            [],
                         )
                         quality_rejection = self._quality_rejection(
                             candidate,
@@ -315,7 +277,6 @@ class LevelGenerationService:
                         candidate_pool.append(candidate)
                         result.valid_candidates_after_layout += 1
                         result.repairs_for_valid_candidates += self._successful_layout_repairs(candidate)
-                        candidate_pool_signatures.append(candidate_signature)
                         if self._candidate_pool_ready(candidate_pool, config, preset):
                             break
                         continue
@@ -338,20 +299,45 @@ class LevelGenerationService:
                 if self._candidate_pool_ready(candidate_pool, config, preset):
                     break
 
-            if candidate_pool:
-                accepted_candidate = max(candidate_pool, key=self._candidate_selection_key)
-                accepted_signatures.append(accepted_candidate.candidate_signature)
-                result.candidate_selection_summaries.append(
-                    self._candidate_selection_summary(level_id, accepted_candidate, candidate_pool, near_miss_candidates)
-                )
-
-            if accepted_candidate is None:
+            if not candidate_pool:
                 result.passed = False
                 result.messages.append(
                     f"Could not generate valid {level_id} after {effective_max_attempts} attempts."
                 )
                 break
-            result.accepted.append(accepted_candidate)
+            batch_candidate_pools[level_id] = tuple(candidate_pool)
+            batch_near_misses[level_id] = tuple(near_miss_candidates)
+
+        if result.passed:
+            requested_levels = [(entry.level_id, entry.difficulty) for entry in batch_plan.entries]
+            try:
+                portfolio = self.portfolio_selection_service.select(
+                    batch_candidate_pools,
+                    requested_levels,
+                    existing_signatures=existing_signatures if config.compare_against_existing else (),
+                )
+            except ValueError as exc:
+                result.passed = False
+                result.messages.append(str(exc))
+            else:
+                result.accepted = portfolio.candidates
+                for selection in portfolio.selections:
+                    level_id = selection.candidate.level_id
+                    summary = self._candidate_selection_summary(
+                        level_id,
+                        selection.candidate,
+                        batch_candidate_pools[level_id],
+                        batch_near_misses[level_id],
+                    )
+                    summary["portfolioObjectiveScore"] = selection.objective_score
+                    summary["portfolioObjectiveComponents"] = {
+                        key: round(value, 4) for key, value in selection.components.items()
+                    }
+                    summary["selectionRationale"] = (
+                        selection.rationale
+                        + f" It ranked above {len(batch_candidate_pools[level_id]) - 1} alternatives."
+                    )
+                    result.candidate_selection_summaries.append(summary)
 
         result.add_rejections(dict(rejection_service.reason_counts))
 
