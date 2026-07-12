@@ -3,8 +3,11 @@ from __future__ import annotations
 import json
 from types import SimpleNamespace
 
+import pytest
+
 from app.generation_config import GenerationConfig
 from app.models.generation_quality import GenerationQualityScore
+from app.models.decision_profile import DecisionProfile
 from app.map_import.osm_seed_importer import MapSeedEdge, MapSeedGraph, MapSeedNode
 from app.random_source import RandomSource
 from app.recipes.recipe_family_registry import RecipeFamilyRegistry
@@ -12,6 +15,7 @@ from app.repositories.generated_level_repository import GeneratedLevelRepository
 from app.services.abstract_puzzle_solver_service import AbstractPuzzleSolverService
 from app.services.generated_level_validation_service import GeneratorValidationMessage, GeneratorValidationResult
 from app.services.level_generation_service import LevelGenerationService
+from app.services.candidate_rejection_service import CandidateRejectionService
 from app.services.recipe_to_level_builder_service import RecipeToLevelBuilderService
 from app.templates.single_switch_template import SingleSwitchTemplate
 
@@ -46,6 +50,28 @@ def test_generation_service_generates_one_level_and_solution(tmp_path) -> None:
     assert (tmp_path / "solutions" / "level_012.solution.json").exists()
     assert (tmp_path / "report.md").exists()
     assert (tmp_path / "report.json").exists()
+
+
+def test_strategic_quality_is_rejected_before_layout_and_reports_stage(monkeypatch) -> None:
+    service = LevelGenerationService()
+    monkeypatch.setattr(
+        service.decision_profile_service,
+        "analyze",
+        lambda *args, **kwargs: DecisionProfile(required_decision_count=2, independent_decision_ratio=1.0),
+    )
+    preset = SimpleNamespace(
+        minimum_strategic_property_count=1,
+        maximum_independent_decision_ratio=0.5,
+        required_decision_count_range=(1, 4),
+    )
+
+    with pytest.raises(ValueError) as raised:
+        service._reject_strategically_weak_recipe(SimpleNamespace(solved_metadata=None), preset)
+    error = raised.value
+    assert error.code == "strategic_quality_rejected_before_layout"
+    assert "before layout" in str(error).lower()
+
+    assert CandidateRejectionService.validation_stage_for_code(error.code) == "quality_scoring"
 
 
 def test_generation_service_dry_run_writes_no_levels(tmp_path) -> None:

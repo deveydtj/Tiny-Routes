@@ -91,7 +91,7 @@ class CandidateRejectionService:
     @classmethod
     def validation_stage_for_code(cls, code: str | None) -> str:
         code = str(code or "unknown")
-        if code.startswith("quality_") or code in {
+        if code.startswith("quality_") or code.startswith("strategic_quality_") or code in {
             "large_portrait_without_puzzle_need",
             "boring_topology_for_difficulty",
         } or code.startswith("route_interest_below_"):

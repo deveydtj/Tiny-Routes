@@ -41,6 +41,10 @@ class RepairOperationKind(str, Enum):
     MOVE_LANE = "move_lane"
     INSERT_BEND = "insert_bend"
     EXPAND_LAYER = "expand_layer"
+    SWAP_SIBLING_LANES = "swap_sibling_lanes"
+    MIRROR_BRANCH = "mirror_branch"
+    MOVE_REJOIN = "move_rejoin"
+    INSERT_INTERSECTION_NODE = "insert_intersection_node"
 
 
 @dataclass(frozen=True)

@@ -6,11 +6,17 @@ from tiny_routes_core.models import LevelRules, SwitchInteractionMode
 
 from ..models.generated_level import GeneratedLevel
 from ..models.graph_recipe import GraphRecipe
+from ..models.layout_constraints import ConstraintViolation
+from ..models.layout_graph import LayoutGraph
+from ..models.layout_result import LayoutResult
 from ..random_source import RandomSource
 from .difficulty_service import DifficultyService
 from .decision_profile_service import DecisionProfileService
 from .graph_builder_service import GraphBuilderService
 from .graph_layout_service import GraphLayoutPlannerService
+from .graph_layout_service import GraphLayoutService
+from .layout_repair_service import LayoutRepairService
+from .layout_readability_validator import LayoutReadabilityValidator
 from .level_naming_service import LevelNamingService
 from .road_shape_service import RoadShapeService
 from .solution_builder_service import SolutionBuilderService
@@ -28,6 +34,8 @@ class RecipeToLevelBuilderService:
         self.layout_planner = GraphLayoutPlannerService()
         self.road_shape_service = RoadShapeService()
         self.decision_profiles = DecisionProfileService()
+        self.layout_repair = LayoutRepairService()
+        self.layout_readability = LayoutReadabilityValidator()
 
     def build_level(
         self,
@@ -65,6 +73,49 @@ class RecipeToLevelBuilderService:
             (edge.from_node_id, edge.to_node_id)
             for edge in recipe.edges
         ]
+        layout_graph = LayoutGraph.from_recipe(recipe)
+        edge_id_by_pair = {
+            (edge.from_node_id, edge.to_node_id): edge.edge_id for edge in layout_graph.edges
+        }
+        initial_shapes = {
+            edge_id_by_pair[edge]: self.road_shape_service.pick_for_positions(
+                *positions[edge[0]], *positions[edge[1]]
+            )
+            for edge in recipe_edges
+        }
+        geometry = GraphLayoutService(
+            minimum_node_distance=preset.minimum_node_distance,
+        )
+
+        def evaluate(candidate_positions, _candidate_shapes):
+            violations = [
+                ConstraintViolation(
+                    "node_spacing_failure",
+                    f"Nodes {first} and {second} overlap.",
+                    node_id=second,
+                )
+                for first, second in geometry.overlapping_pairs(candidate_positions)
+            ]
+            violations.extend(
+                ConstraintViolation(
+                    "implicit_intersection_without_node",
+                    "Roads cross without an explicit node.",
+                    edge_id=first or second,
+                )
+                for first, second in geometry.edge_crossings(
+                    candidate_positions,
+                    [
+                        (edge.from_node_id, edge.to_node_id, edge.edge_id)
+                        for edge in layout_graph.edges
+                    ],
+                )
+            )
+            return violations
+
+        repaired = self.layout_repair.repair(
+            LayoutResult(positions=positions), layout_graph, initial_shapes, evaluate
+        )
+        positions = repaired.positions
         road_shape_plan = self.road_shape_service.plan_for_graph(
             positions,
             recipe_edges,
@@ -115,6 +166,18 @@ class RecipeToLevelBuilderService:
             switch_tap_cooldown_seconds=LevelRules.DEFAULT_TAP_COOLDOWN_SECONDS,
         )
         level._rules_present = True
+        readability = self.layout_readability.report_for_level(
+            level,
+            preset=preset,
+            layout_metadata=layout_plan.metadata,
+        )
+        if readability.has_errors:
+            first = readability.errors[0]
+            error = ValueError(
+                f"Layout readability rejected before runtime timing: {first.message}"
+            )
+            error.code = first.code
+            raise error
         description = "Follow the generated graph recipe route and rotate each switch before arrival."
         if recipe.solved_metadata is None:  # defensive: the solver contract guarantees metadata
             raise ValueError("runtime solution search requires solved topology metadata")
@@ -177,7 +240,22 @@ class RecipeToLevelBuilderService:
             selected_road_shape_strategy=road_shape_plan.strategy,
             abstract_solution_metadata=recipe.solved_metadata,
             runtime_solution_search_result=runtime_solution,
-            layout_metadata=layout_plan.metadata,
+            layout_metadata={
+                **layout_plan.metadata,
+                "layoutRepairAttemptCount": len(repaired.attempted_repair_operations),
+                "layoutRepairSuccessCount": len(repaired.repair_operations),
+                "layoutRepairs": [
+                    {
+                        "kind": operation.kind.value,
+                        "targetID": operation.target_id,
+                        "deltaColumn": operation.delta_column,
+                        "deltaRow": operation.delta_row,
+                        "reason": operation.reason,
+                    }
+                    for operation in repaired.repair_operations
+                ],
+                "remainingRepairViolations": [violation.code for violation in repaired.violations],
+            },
             road_shape_metadata={
                 **road_shape_plan.metadata,
                 "revisitedRouteShapeOverrides": revisited_route_shape_overrides,

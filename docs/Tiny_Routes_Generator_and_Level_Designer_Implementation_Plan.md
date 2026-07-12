@@ -1324,6 +1324,8 @@ Reduce geometry rejection churn by satisfying portrait, spacing, and connection 
 
 ## Task 7.5 — Add local layout repair
 
+**Status:** Completed
+
 **Files to add**
 
 - `Tools/LevelGenerator/app/services/layout_repair_service.py`
@@ -1331,28 +1333,30 @@ Reduce geometry rejection churn by satisfying portrait, spacing, and connection 
 
 **Repair operations**
 
-- [ ] Move a node one grid cell.
-- [ ] Swap sibling branch lanes.
-- [ ] Change one road bend order.
-- [ ] Expand vertical spacing.
-- [ ] Mirror a local branch.
-- [ ] Move a rejoin point.
-- [ ] Insert an explicit intersection node where allowed.
+- [x] Move a node one grid cell.
+- [x] Swap sibling branch lanes.
+- [x] Change one road bend order.
+- [x] Expand vertical spacing.
+- [x] Mirror a local branch.
+- [x] Move a rejoin point.
+- [x] Insert an explicit intersection node where allowed.
 
 **Steps**
 
-- [ ] Rank violations by severity.
-- [ ] Try bounded deterministic repairs.
-- [ ] Revalidate after each repair.
-- [ ] Stop after a configured limit and report attempted repairs.
+- [x] Rank violations by severity.
+- [x] Try bounded deterministic repairs.
+- [x] Revalidate after each repair.
+- [x] Stop after a configured limit and report attempted repairs.
 
 **Acceptance tests**
 
-- [ ] A known overlapping fixture is repaired.
-- [ ] Repair does not change graph connectivity.
-- [ ] Same seed and input produce the same repair sequence.
+- [x] A known overlapping fixture is repaired.
+- [x] Repair does not change graph connectivity.
+- [x] Same seed and input produce the same repair sequence.
 
 ## Task 7.6 — Reorder generation stages
+
+**Status:** Completed
 
 **File to refactor**
 
@@ -1375,8 +1379,8 @@ Reduce geometry rejection churn by satisfying portrait, spacing, and connection 
 
 **Acceptance tests**
 
-- [ ] Strategically weak candidates never enter layout generation.
-- [ ] Reports identify the exact stage of rejection.
+- [x] Strategically weak candidates never enter layout generation.
+- [x] Reports identify the exact stage of rejection.
 
 ## Task 7.7 — Add layout-efficiency regression metrics
 

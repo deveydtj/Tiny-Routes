@@ -34,6 +34,7 @@ class LayoutResult:
     candidate_bend_points: tuple[CandidateBendPoint, ...] = ()
     violations: tuple[ConstraintViolation, ...] = ()
     repair_operations: tuple[RepairOperation, ...] = ()
+    attempted_repair_operations: tuple[RepairOperation, ...] = ()
 
 
 @dataclass(frozen=True)

@@ -25,6 +25,7 @@ from .candidate_signature_service import CandidateSignatureService
 from .candidate_uniqueness_service import CandidateUniquenessService
 from .difficulty_curve_service import DifficultyCurveService
 from .difficulty_service import DifficultyService
+from .decision_profile_service import DecisionProfileService
 from .generated_level_validation_service import GeneratedLevelValidationService
 from .generation_quality_service import GenerationQualityService
 from .level_resource_sync_service import LevelResourceSyncService
@@ -87,6 +88,7 @@ class LevelGenerationService:
         self.layout_variant_service = LayoutVariantService()
         self.abstract_puzzle_solver = TopologySolverService()
         self.runtime_parity_validator = RuntimeParityValidator()
+        self.decision_profile_service = DecisionProfileService()
 
     def generate(self, config: GenerationConfig) -> GenerationResult:
         result = GenerationResult()
@@ -549,6 +551,7 @@ class LevelGenerationService:
             if recipe_issues:
                 raise ValueError(f"Invalid solved recipe candidate: {', '.join(recipe_issues)}")
             recipe = self.abstract_puzzle_solver.solve(recipe, preset)
+            self._reject_strategically_weak_recipe(recipe, preset)
 
             layout_size_profiles = self._layout_size_profiles_for_recipe(config, preset, recipe, recipe_rng)
             for layout_index, layout_name in enumerate(layout_names):
@@ -601,6 +604,39 @@ class LevelGenerationService:
                             candidate.requires_swift_validation = family.requires_swift_validation
                             candidates.append(candidate)
         return sorted(candidates, key=self._raw_candidate_validation_order)
+
+    def _reject_strategically_weak_recipe(self, recipe, preset) -> None:
+        """Gate strategic gameplay before any layout or timing work is attempted."""
+        profile = self.decision_profile_service.analyze(
+            recipe,
+            topology_solutions=(recipe.solved_metadata,) if recipe.solved_metadata else (),
+        )
+        phase_change = int(
+            profile.package_phase_decisions_before > 0
+            and profile.package_phase_decisions_after > 0
+        )
+        strategic_count = (
+            profile.ordered_dependency_count
+            + profile.switch_state_change_on_revisit_count
+            + profile.recoverable_mistake_count
+            + profile.route_revisit_count
+            + phase_change
+        )
+        reasons = []
+        if strategic_count < preset.minimum_strategic_property_count:
+            reasons.append("insufficient_strategic_decision_evidence")
+        if (
+            profile.required_decision_count > 1
+            and profile.independent_decision_ratio > preset.maximum_independent_decision_ratio
+        ):
+            reasons.append("independent_decision_ratio_above_preset_maximum")
+        low, high = preset.required_decision_count_range
+        if not low <= profile.required_decision_count <= high:
+            reasons.append("decision_count_outside_preset_range")
+        if reasons:
+            error = ValueError("Strategic quality rejected before layout: " + ", ".join(reasons))
+            error.code = "strategic_quality_rejected_before_layout"
+            raise error
 
     def _raw_candidate_validation_order(self, candidate) -> tuple[int, int, int, int, int, int]:
         metadata = getattr(candidate, "layout_metadata", None) or {}
