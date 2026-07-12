@@ -154,6 +154,20 @@ class LevelEditorMainWindow(QMainWindow):
         self._properties_panel.setEnabled(editing_enabled)
         self.statusBar().showMessage(tool.status_message)
 
+    def _set_grid_snapping_enabled(self, enabled: bool) -> None:
+        self._canvas_view.scene().set_grid_snapping(enabled, self._grid_size_spinbox.value())
+
+    def _set_grid_size(self, spacing: float) -> None:
+        self._canvas_view.scene().set_grid_snapping(
+            self._snap_toggle_action.isChecked(), spacing
+        )
+
+    def _snap_selected_to_grid(self) -> None:
+        moved = self._canvas_view.scene().snap_selected_to_grid()
+        self.statusBar().showMessage(
+            f"Snapped {moved} selected node{'s' if moved != 1 else ''} to the grid."
+        )
+
     def keyPressEvent(self, event: QKeyEvent) -> None:
         if event.key() == Qt.Key.Key_Escape:
             if self._active_tool is EditorTool.SELECT:

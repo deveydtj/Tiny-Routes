@@ -233,6 +233,96 @@ def test_canvas_node_placement_previews_snaps_and_cancels(qapplication: QApplica
     assert scene.place_node_at(QPointF()) is False
 
 
+def test_palette_drop_and_click_placement_emit_equivalent_state(qapplication: QApplication) -> None:
+    scene = LevelCanvasScene()
+    scene.display_level(
+        LevelDocument(
+            id="draft",
+            name="Draft",
+            graph=RouteGraphModel(),
+            startNodeID="start",
+            packageNodeID="package",
+            destinationNodeID="destination",
+            timeLimitSeconds=30,
+            parTaps=0,
+        )
+    )
+    placements: list[tuple[str, float, float]] = []
+    scene.node_placement_requested.connect(
+        lambda role, x, y: placements.append((role, x, y))
+    )
+    scene.set_grid_snapping(True, 0.25)
+
+    assert scene.drop_node_at("switch", QPointF(199.0, -101.0)) is True
+    scene.begin_node_placement("switch")
+    assert scene.place_node_at(QPointF(199.0, -101.0)) is True
+
+    assert placements == [("switch", 1.0, 0.5), ("switch", 1.0, 0.5)]
+
+
+def test_drop_preview_marks_overlapping_placement_invalid(qapplication: QApplication) -> None:
+    scene = LevelCanvasScene()
+    document = LevelDocument(
+        id="draft",
+        name="Draft",
+        graph=RouteGraphModel(nodes=[RouteNodeModel(id="route", x=1.0, y=0.5)]),
+        startNodeID="start",
+        packageNodeID="package",
+        destinationNodeID="destination",
+        timeLimitSeconds=30,
+        parTaps=0,
+    )
+    scene.display_level(document)
+
+    position = scene.model_to_scene_coordinates(1.0, 0.5)
+    scene.update_drop_preview("route", position)
+
+    assert scene.drop_position_is_valid(position) is False
+    assert scene._placement_preview is not None
+    assert scene._placement_preview._placement_valid is False
+
+
+def test_snap_selected_uses_model_grid_and_snap_off_preserves_free_coordinates(
+    qapplication: QApplication,
+) -> None:
+    scene = LevelCanvasScene()
+    document = LevelDocument(
+        id="draft",
+        name="Draft",
+        graph=RouteGraphModel(nodes=[RouteNodeModel(id="route", x=0.63, y=0.87)]),
+        startNodeID="start",
+        packageNodeID="package",
+        destinationNodeID="destination",
+        timeLimitSeconds=30,
+        parTaps=0,
+    )
+    scene.display_level(document)
+    item = scene._node_items_by_id["route"]
+    item.setSelected(True)
+    scene.set_grid_snapping(False, 0.25)
+    assert scene._snap_model_coordinates(0.63, 0.87) == (0.63, 0.87)
+
+    moved: list[tuple[str, float, float]] = []
+    scene.node_item_moved.connect(lambda node_id, x, y: moved.append((node_id, x, y)))
+    assert scene.snap_selected_to_grid() == 1
+
+    assert moved[-1] == ("route", 0.75, 0.75)
+    assert scene.scene_to_model_coordinates(item.pos()) == pytest.approx((0.75, 0.75))
+
+
+def test_grid_controls_have_safe_range_and_update_scene(qapplication: QApplication) -> None:
+    window = LevelEditorMainWindow()
+    try:
+        assert window._grid_size_spinbox.minimum() == pytest.approx(0.05)
+        assert window._grid_size_spinbox.maximum() == pytest.approx(2.0)
+        window._grid_size_spinbox.setValue(0.4)
+        window._snap_toggle_action.setChecked(True)
+        assert window._canvas_view.scene().grid_spacing == pytest.approx(0.4)
+        assert window._canvas_view.scene().grid_snapping_enabled is True
+    finally:
+        window.close()
+
+
 def test_main_window_has_main_toolbar(qapplication: QApplication) -> None:
     window = LevelEditorMainWindow()
     try:

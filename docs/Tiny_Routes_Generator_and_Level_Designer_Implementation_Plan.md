@@ -1765,18 +1765,22 @@ Replace hidden workflows with direct manipulation and visible previews.
 
 ## Task 11.2 — Add drag-and-drop palette placement
 
+**Status:** Completed
+
 **Steps**
 
-- [ ] Make palette items draggable with node-role MIME data.
-- [ ] Accept drops on the canvas.
-- [ ] Display a valid/invalid placement preview.
-- [ ] Route drops through the same add-node command as click placement.
+- [x] Make palette items draggable with node-role MIME data.
+- [x] Accept drops on the canvas.
+- [x] Display a valid/invalid placement preview.
+- [x] Route drops through the same add-node command as click placement.
 
 **Acceptance tests**
 
-- [ ] Drag-and-drop and click placement produce equivalent document state.
+- [x] Drag-and-drop and click placement produce equivalent document state.
 
 ## Task 11.3 — Add grid and snapping controls
+
+**Status:** Completed
 
 **Files to update**
 
@@ -1786,17 +1790,17 @@ Replace hidden workflows with direct manipulation and visible previews.
 
 **Steps**
 
-- [ ] Add a snap toggle.
-- [ ] Add configurable grid size with a safe range.
-- [ ] Snap node creation and drag completion, not every paint operation.
-- [ ] Show alignment guides to nearby node centers.
-- [ ] Add “Snap Selected to Grid.”
+- [x] Add a snap toggle.
+- [x] Add configurable grid size with a safe range.
+- [x] Snap node creation and drag completion, not every paint operation.
+- [x] Show alignment guides to nearby node centers.
+- [x] Add “Snap Selected to Grid.”
 
 **Acceptance tests**
 
-- [ ] Snap-on movement ends at exact grid coordinates.
-- [ ] Snap-off preserves free coordinates.
-- [ ] Zoom does not change model-space snap size.
+- [x] Snap-on movement ends at exact grid coordinates.
+- [x] Snap-off preserves free coordinates.
+- [x] Zoom does not change model-space snap size.
 
 ## Task 11.4 — Add visible connection handles
 

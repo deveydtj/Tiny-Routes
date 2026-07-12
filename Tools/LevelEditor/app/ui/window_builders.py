@@ -1,7 +1,7 @@
 """Declarative menu and toolbar construction for the editor window."""
 
 from PySide6.QtGui import QAction, QActionGroup, QIcon, QKeySequence
-from PySide6.QtWidgets import QMainWindow, QToolBar
+from PySide6.QtWidgets import QDoubleSpinBox, QMainWindow, QToolBar
 
 from app.models import EditorTool
 
@@ -26,6 +26,9 @@ def build_menu_bar(window: QMainWindow) -> None:
     window._redo_action = window._document_controller.undo_stack.createRedoAction(window, "Redo")
     window._redo_action.setShortcut(QKeySequence.StandardKey.Redo)
     window._edit_menu.addAction(window._redo_action)
+    window._edit_menu.addSeparator()
+    window._snap_selected_action = window._edit_menu.addAction("Snap Selected to Grid")
+    window._snap_selected_action.triggered.connect(window._snap_selected_to_grid)
 
     window._view_menu = menu_bar.addMenu("View")
     window._view_menu.addAction("Fit View").triggered.connect(window._canvas_view.fit_level_to_view)
@@ -103,3 +106,19 @@ def build_tools_toolbar(window: QMainWindow) -> None:
         window._tool_action_group.addAction(action)
         window._tools_toolbar.addAction(action)
         window._tool_actions[tool] = action
+
+    window._tools_toolbar.addSeparator()
+    window._snap_toggle_action = QAction("Snap", window)
+    window._snap_toggle_action.setCheckable(True)
+    window._snap_toggle_action.setToolTip("Snap node placement and completed moves to the grid")
+    window._snap_toggle_action.toggled.connect(window._set_grid_snapping_enabled)
+    window._tools_toolbar.addAction(window._snap_toggle_action)
+    window._grid_size_spinbox = QDoubleSpinBox(window)
+    window._grid_size_spinbox.setRange(0.05, 2.0)
+    window._grid_size_spinbox.setSingleStep(0.05)
+    window._grid_size_spinbox.setDecimals(2)
+    window._grid_size_spinbox.setValue(0.25)
+    window._grid_size_spinbox.setPrefix("Grid ")
+    window._grid_size_spinbox.setToolTip("Grid size in level coordinates")
+    window._grid_size_spinbox.valueChanged.connect(window._set_grid_size)
+    window._tools_toolbar.addWidget(window._grid_size_spinbox)

@@ -1,10 +1,11 @@
 from PySide6.QtCore import Qt
-from PySide6.QtGui import QKeyEvent, QPainter, QWheelEvent
+from PySide6.QtGui import QDragEnterEvent, QDragLeaveEvent, QDragMoveEvent, QDropEvent, QKeyEvent, QPainter, QWheelEvent
 from PySide6.QtWidgets import QGraphicsItem, QGraphicsView
 
 from app.models import EditorTool
 
 from .canvas_scene import LevelCanvasScene
+from .piece_palette import NODE_ROLE_MIME_TYPE
 
 
 class LevelCanvasView(QGraphicsView):
@@ -19,6 +20,8 @@ class LevelCanvasView(QGraphicsView):
         self.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
         self.setMouseTracking(True)
         self.viewport().setMouseTracking(True)
+        self.setAcceptDrops(True)
+        self.viewport().setAcceptDrops(True)
         self.setTransformationAnchor(QGraphicsView.ViewportAnchor.AnchorUnderMouse)
         self.centerOn(0, 0)
 
@@ -82,3 +85,41 @@ class LevelCanvasView(QGraphicsView):
             return
 
         super().wheelEvent(event)
+
+    def dragEnterEvent(self, event: QDragEnterEvent) -> None:
+        if event.mimeData().hasFormat(NODE_ROLE_MIME_TYPE):
+            event.acceptProposedAction()
+            return
+        super().dragEnterEvent(event)
+
+    def dragMoveEvent(self, event: QDragMoveEvent) -> None:
+        if event.mimeData().hasFormat(NODE_ROLE_MIME_TYPE):
+            scene = self.scene()
+            role = bytes(event.mimeData().data(NODE_ROLE_MIME_TYPE)).decode("utf-8")
+            position = self.mapToScene(event.position().toPoint())
+            if isinstance(scene, LevelCanvasScene):
+                scene.update_drop_preview(role, position)
+                if scene.drop_position_is_valid(position):
+                    event.acceptProposedAction()
+                else:
+                    event.ignore()
+            return
+        super().dragMoveEvent(event)
+
+    def dragLeaveEvent(self, event: QDragLeaveEvent) -> None:
+        scene = self.scene()
+        if isinstance(scene, LevelCanvasScene):
+            scene.clear_drop_preview()
+        super().dragLeaveEvent(event)
+
+    def dropEvent(self, event: QDropEvent) -> None:
+        if event.mimeData().hasFormat(NODE_ROLE_MIME_TYPE):
+            scene = self.scene()
+            role = bytes(event.mimeData().data(NODE_ROLE_MIME_TYPE)).decode("utf-8")
+            position = self.mapToScene(event.position().toPoint())
+            if isinstance(scene, LevelCanvasScene) and scene.drop_node_at(role, position):
+                event.acceptProposedAction()
+            else:
+                event.ignore()
+            return
+        super().dropEvent(event)

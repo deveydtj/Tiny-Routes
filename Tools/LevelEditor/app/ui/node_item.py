@@ -26,6 +26,7 @@ class NodeItem(QGraphicsItemGroup):
     NODE_DIAMETER = 64.0
     PENDING_BORDER_COLOR = "#d81b60"
     PENDING_BORDER_WIDTH = 4
+    INVALID_BORDER_COLOR = "#c62828"
 
     def __init__(self, node_id: str, node_type: str, model_x: float = 0.0, model_y: float = 0.0) -> None:
         super().__init__()
@@ -35,6 +36,7 @@ class NodeItem(QGraphicsItemGroup):
         self.model_y = model_y
         self._style = NODE_TYPE_STYLES[self.node_type]
         self._is_connection_source = False
+        self._placement_valid: bool | None = None
         self.setFlag(QGraphicsItem.GraphicsItemFlag.ItemIsSelectable, True)
         self.setFlag(QGraphicsItem.GraphicsItemFlag.ItemIsMovable, True)
         self.setFlag(QGraphicsItem.GraphicsItemFlag.ItemSendsGeometryChanges, True)
@@ -63,6 +65,10 @@ class NodeItem(QGraphicsItemGroup):
         self._is_connection_source = is_source
         self._update_border()
 
+    def set_placement_valid(self, is_valid: bool | None) -> None:
+        self._placement_valid = is_valid
+        self._update_border()
+
     def itemChange(self, change: QGraphicsItem.GraphicsItemChange, value: object) -> object:
         result = super().itemChange(change, value)
         if change == QGraphicsItem.GraphicsItemChange.ItemPositionHasChanged:
@@ -72,6 +78,9 @@ class NodeItem(QGraphicsItemGroup):
         return result
 
     def _update_border(self) -> None:
-        border_color = self.PENDING_BORDER_COLOR if self._is_connection_source else self._style.border_color
-        border_width = self.PENDING_BORDER_WIDTH if self._is_connection_source else 2
+        if self._placement_valid is False:
+            border_color = self.INVALID_BORDER_COLOR
+        else:
+            border_color = self.PENDING_BORDER_COLOR if self._is_connection_source else self._style.border_color
+        border_width = self.PENDING_BORDER_WIDTH if self._is_connection_source or self._placement_valid is not None else 2
         self._circle.setPen(QPen(QColor(border_color), border_width))

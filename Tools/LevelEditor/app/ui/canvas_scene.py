@@ -5,6 +5,7 @@ from PySide6.QtGui import QColor, QKeyEvent, QPainter, QPainterPath, QPen
 from PySide6.QtWidgets import (
     QApplication,
     QGraphicsPathItem,
+    QGraphicsLineItem,
     QGraphicsScene,
     QGraphicsSceneMouseEvent,
     QGraphicsSimpleTextItem,
@@ -59,6 +60,8 @@ class LevelCanvasScene(QGraphicsScene):
         self._grid_snapping_enabled = False
         self._grid_spacing = 0.25
         self._drag_start_positions: dict[str, tuple[float, float]] = {}
+        self._alignment_guides: list[QGraphicsLineItem] = []
+        self._is_finishing_drag = False
         self._delete_items_handler = None
         self._show_placeholder()
         self.selectionChanged.connect(self._on_selection_changed)
@@ -88,8 +91,17 @@ class LevelCanvasScene(QGraphicsScene):
 
     def set_grid_snapping(self, enabled: bool, spacing: float | None = None) -> None:
         self._grid_snapping_enabled = enabled
-        if spacing is not None and spacing > 0:
-            self._grid_spacing = spacing
+        if spacing is not None:
+            self._grid_spacing = min(2.0, max(0.05, spacing))
+        self.update()
+
+    @property
+    def grid_spacing(self) -> float:
+        return self._grid_spacing
+
+    @property
+    def grid_snapping_enabled(self) -> bool:
+        return self._grid_snapping_enabled
 
     def cancel_current_operation(self) -> None:
         self._clear_connection_source()
@@ -188,10 +200,12 @@ class LevelCanvasScene(QGraphicsScene):
         for edge_item in self._edges_by_node_id.get(item.node_id, []):
             edge_item.refresh_position(allow_degenerate=True)
         self._redraw_transition_arcs()
+        if QApplication.mouseButtons() != Qt.MouseButton.NoButton:
+            self._show_alignment_guides(item)
 
         if item.isSelected():
             self.node_item_selected.emit(item.node_id, item.node_type, item.model_x, item.model_y)
-        if QApplication.mouseButtons() == Qt.MouseButton.NoButton:
+        if QApplication.mouseButtons() == Qt.MouseButton.NoButton and not self._is_finishing_drag:
             self.node_item_moved.emit(item.node_id, item.model_x, item.model_y)
 
     def set_delete_items_handler(self, handler) -> None:
@@ -231,12 +245,18 @@ class LevelCanvasScene(QGraphicsScene):
         super().mousePressEvent(event)
 
     def mouseReleaseEvent(self, event: QGraphicsSceneMouseEvent) -> None:
+        self._is_finishing_drag = True
         super().mouseReleaseEvent(event)
         for node_id, old_position in list(self._drag_start_positions.items()):
             item = self._node_items_by_id.get(node_id)
+            if item is not None:
+                x, y = self._snap_model_coordinates(item.model_x, item.model_y)
+                item.setPos(self.model_to_scene_coordinates(x, y))
             if item is not None and (item.model_x, item.model_y) != old_position:
                 self.node_item_moved.emit(node_id, item.model_x, item.model_y)
         self._drag_start_positions.clear()
+        self._is_finishing_drag = False
+        self._clear_alignment_guides()
 
     def mouseMoveEvent(self, event: QGraphicsSceneMouseEvent) -> None:
         if self._editor_tool is EditorTool.PLACE_NODE and self._placement_node_type:
@@ -277,6 +297,57 @@ class LevelCanvasScene(QGraphicsScene):
         model_x, model_y = self._snap_model_coordinates(model_x, model_y)
         self.node_placement_requested.emit(self._placement_node_type, model_x, model_y)
         return True
+
+    def update_drop_preview(self, node_type: str, scene_position: QPointF) -> None:
+        self._placement_node_type = node_type
+        self._update_placement_preview(scene_position)
+
+    def clear_drop_preview(self) -> None:
+        self._clear_placement_preview()
+        if self._editor_tool is not EditorTool.PLACE_NODE:
+            self._placement_node_type = None
+
+    def drop_position_is_valid(self, scene_position: QPointF) -> bool:
+        if self._document is None or self._editor_tool is EditorTool.PLAYTEST:
+            return False
+        model_x, model_y = self.scene_to_model_coordinates(scene_position)
+        model_x, model_y = self._snap_model_coordinates(model_x, model_y)
+        candidate = self.model_to_scene_coordinates(model_x, model_y)
+        return all(
+            math.hypot(candidate.x() - item.pos().x(), candidate.y() - item.pos().y())
+            >= NodeItem.NODE_DIAMETER
+            for item in self._node_items_by_id.values()
+        )
+
+    def drop_node_at(self, node_type: str, scene_position: QPointF) -> bool:
+        valid = self.drop_position_is_valid(scene_position)
+        self.clear_drop_preview()
+        if not valid:
+            self.placement_message_changed.emit("Node cannot be placed on top of another node.")
+            return False
+        model_x, model_y = self.scene_to_model_coordinates(scene_position)
+        model_x, model_y = self._snap_model_coordinates(model_x, model_y)
+        self.node_placement_requested.emit(node_type, model_x, model_y)
+        return True
+
+    def snap_selected_to_grid(self) -> int:
+        moved = 0
+        self._is_finishing_drag = True
+        try:
+            for item in list(self.selectedItems()):
+                if not isinstance(item, NodeItem):
+                    continue
+                spacing = self._grid_spacing
+                x = round(item.model_x / spacing) * spacing
+                y = round(item.model_y / spacing) * spacing
+                if math.isclose(x, item.model_x) and math.isclose(y, item.model_y):
+                    continue
+                item.setPos(self.model_to_scene_coordinates(x, y))
+                self.node_item_moved.emit(item.node_id, x, y)
+                moved += 1
+        finally:
+            self._is_finishing_drag = False
+        return moved
 
     # ------------------------------------------------------------------
     # Selection handling
@@ -333,11 +404,38 @@ class LevelCanvasScene(QGraphicsScene):
             self._placement_preview.model_x = model_x
             self._placement_preview.model_y = model_y
             self._placement_preview.setPos(preview_position)
+        self._placement_preview.set_placement_valid(self.drop_position_is_valid(scene_position))
 
     def _clear_placement_preview(self) -> None:
         if self._is_live_graphics_item(self._placement_preview):
             self.removeItem(self._placement_preview)
         self._placement_preview = None
+
+    def _show_alignment_guides(self, item: NodeItem) -> None:
+        self._clear_alignment_guides()
+        threshold = 0.08 * self.COORDINATE_SCALE
+        pen = QPen(QColor("#00a6a6"), 1, Qt.PenStyle.DashLine)
+        for other in self._node_items_by_id.values():
+            if other is item:
+                continue
+            if abs(other.pos().x() - item.pos().x()) <= threshold:
+                guide = QGraphicsLineItem(item.pos().x(), -2000, item.pos().x(), 2000)
+                guide.setPen(pen)
+                guide.setZValue(900)
+                self.addItem(guide)
+                self._alignment_guides.append(guide)
+            if abs(other.pos().y() - item.pos().y()) <= threshold:
+                guide = QGraphicsLineItem(-2000, item.pos().y(), 2000, item.pos().y())
+                guide.setPen(pen)
+                guide.setZValue(900)
+                self.addItem(guide)
+                self._alignment_guides.append(guide)
+
+    def _clear_alignment_guides(self) -> None:
+        for guide in self._alignment_guides:
+            if self._is_live_graphics_item(guide):
+                self.removeItem(guide)
+        self._alignment_guides = []
 
     def _delete_selected_items(self) -> bool:
         if self._document is None:
@@ -749,20 +847,20 @@ class LevelCanvasScene(QGraphicsScene):
     def drawBackground(self, painter: QPainter, rect: QRectF) -> None:
         super().drawBackground(painter, rect)
 
-        grid_size = 50
+        grid_size = self._grid_spacing * self.COORDINATE_SCALE
         painter.setPen(QPen(canvas_grid_color()))
 
-        left = int(rect.left()) - (int(rect.left()) % grid_size)
-        top = int(rect.top()) - (int(rect.top()) % grid_size)
+        left = math.floor(rect.left() / grid_size) * grid_size
+        top = math.floor(rect.top() / grid_size) * grid_size
 
         x = left
-        while x < int(rect.right()):
-            painter.drawLine(x, int(rect.top()), x, int(rect.bottom()))
+        while x < rect.right():
+            painter.drawLine(QPointF(x, rect.top()), QPointF(x, rect.bottom()))
             x += grid_size
 
         y = top
-        while y < int(rect.bottom()):
-            painter.drawLine(int(rect.left()), y, int(rect.right()), y)
+        while y < rect.bottom():
+            painter.drawLine(QPointF(rect.left(), y), QPointF(rect.right(), y))
             y += grid_size
 
 
