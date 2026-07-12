@@ -11,7 +11,7 @@ from .road_geometry_validation_service import (
     RoadGeometryReport,
     RoadGeometryValidationService,
 )
-from .road_shape_service import RoadShapeService
+from .road_shape_service import CandidateRoadGeometryPlan, RoadShapeService
 from .solution_builder_service import SolutionBuilderService
 from .runtime_solution_search_service import RuntimeSolutionSearchService
 from .switch_classification_service import (
@@ -21,6 +21,11 @@ from .switch_classification_service import (
     SwitchNodeKind,
 )
 from .switch_visual_clarity_service import SwitchVisualClarityService
+from .switch_port_assignment_service import (
+    SwitchPortAssignment,
+    SwitchPortAssignmentResult,
+    SwitchPortAssignmentService,
+)
 from .swift_test_service import SwiftTestService
 from .unique_solution_validator_service import (
     UniqueSolutionPathSummary,
@@ -39,6 +44,7 @@ from .visual_clarity_validation_service import (
 __all__ = [
     "BoundingBox",
     "CandidateRejectionService",
+    "CandidateRoadGeometryPlan",
     "DifficultyService",
     "DecisionProfileService",
     "GeneratedLevelValidationService",
@@ -58,6 +64,9 @@ __all__ = [
     "SwitchClassificationService",
     "SwitchNodeClassification",
     "SwitchNodeKind",
+    "SwitchPortAssignment",
+    "SwitchPortAssignmentResult",
+    "SwitchPortAssignmentService",
     "SwitchVisualClarityService",
     "SwiftTestService",
     "UniqueSolutionPathSummary",

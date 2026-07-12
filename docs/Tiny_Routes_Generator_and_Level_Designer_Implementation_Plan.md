@@ -1285,24 +1285,28 @@ Reduce geometry rejection churn by satisfying portrait, spacing, and connection 
 
 ## Task 7.3 — Add switch-port assignment
 
+**Status:** Completed
+
 **Files to add**
 
 - `Tools/LevelGenerator/app/services/switch_port_assignment_service.py`
 
 **Steps**
 
-- [ ] Assign a cardinal or diagonal visual direction to each outgoing edge.
-- [ ] Ensure first road segments separate by the minimum angle and distance.
-- [ ] Preserve outgoing-edge order in a predictable clockwise representation.
-- [ ] Reserve the most readable port for the initial route where appropriate.
+- [x] Assign a cardinal or diagonal visual direction to each outgoing edge.
+- [x] Ensure first road segments separate by the minimum angle and distance.
+- [x] Preserve outgoing-edge order in a predictable clockwise representation.
+- [x] Reserve the most readable port for the initial route where appropriate.
 
 **Acceptance tests**
 
-- [ ] Two outgoing roads do not overlap at the switch.
-- [ ] Four-way switches use four distinct directions.
-- [ ] Outgoing order remains stable after layout.
+- [x] Two outgoing roads do not overlap at the switch.
+- [x] Four-way switches use four distinct directions.
+- [x] Outgoing order remains stable after layout.
 
 ## Task 7.4 — Build candidate road geometry during placement
+
+**Status:** Completed
 
 **Files to update or split**
 
@@ -1312,11 +1316,11 @@ Reduce geometry rejection churn by satisfying portrait, spacing, and connection 
 
 **Steps**
 
-- [ ] Select horizontal-first or vertical-first bends based on reserved lanes.
-- [ ] Detect intersections incrementally.
-- [ ] Prefer adding a graph node at intentional intersections instead of allowing implicit crossings.
-- [ ] Reserve clearance from nonadjacent nodes and roads.
-- [ ] Keep route arrows and switch indicators clear.
+- [x] Select horizontal-first or vertical-first bends based on reserved lanes.
+- [x] Detect intersections incrementally.
+- [x] Prefer adding a graph node at intentional intersections instead of allowing implicit crossings.
+- [x] Reserve clearance from nonadjacent nodes and roads.
+- [x] Keep route arrows and switch indicators clear.
 
 ## Task 7.5 — Add local layout repair
 

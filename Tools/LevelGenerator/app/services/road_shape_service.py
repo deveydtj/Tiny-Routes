@@ -30,6 +30,15 @@ class RoadShapePlan:
     metadata: dict[str, Any] = field(default_factory=dict)
 
 
+@dataclass(frozen=True)
+class CandidateRoadGeometryPlan:
+    edge_shapes: dict[tuple[str, str], str]
+    accepted_edge_order: tuple[tuple[str, str], ...]
+    violations: tuple[str, ...]
+    intentional_intersections: tuple[tuple[float, float], ...]
+    reserved_corridors: tuple[tuple[tuple[float, float], tuple[float, float]], ...]
+
+
 class RoadShapeService:
     ALLOWED_VALUES = {"horizontalFirst", "verticalFirst"}
     _shape_order = ("horizontalFirst", "verticalFirst")
@@ -98,6 +107,82 @@ class RoadShapeService:
             for assignment in candidate_assignments
         ]
         return max(scored_plans, key=lambda plan: (plan.score, -len(plan.issues)))
+
+    def build_candidate_geometry(
+        self,
+        positions: dict[str, tuple[float, float]],
+        edges: list[tuple[str, str]],
+        *,
+        reserved_lanes: dict[tuple[str, str], str] | None = None,
+        important_node_ids: tuple[str, ...] = (),
+        minimum_clearance: float = 0.18,
+    ) -> CandidateRoadGeometryPlan:
+        """Choose each bend incrementally while reserving accepted road corridors."""
+        shapes: dict[tuple[str, str], str] = {}
+        reserved: list[tuple[tuple[float, float], tuple[float, float]]] = []
+        reserved_edges: list[tuple[str, str]] = []
+        violations: list[str] = []
+        intentional: list[tuple[float, float]] = []
+        nodes_at = {point: node_id for node_id, point in positions.items()}
+
+        for edge in edges:
+            if edge[0] not in positions or edge[1] not in positions:
+                raise ValueError(f"Unknown node for candidate road geometry: {edge[0]}->{edge[1]}")
+            preferred = (reserved_lanes or {}).get(edge)
+            options = [preferred] if preferred in self.ALLOWED_VALUES else []
+            options.extend(shape for shape in self._shape_order if shape not in options)
+            ranked = []
+            for option in options:
+                segments = self._segments_for_edge(positions[edge[0]], positions[edge[1]], option)
+                conflicts, intersections, node_conflicts = self._incremental_conflicts(
+                    edge, segments, reserved_edges, reserved, positions, important_node_ids, minimum_clearance
+                )
+                ranked.append((conflicts + node_conflicts, len(intersections), option, segments, intersections, node_conflicts))
+            _, _, selected, segments, intersections, node_conflicts = min(
+                ranked, key=lambda item: (item[0], item[1], options.index(item[2]))
+            )
+            shapes[edge] = selected
+            for point in intersections:
+                if point in nodes_at:
+                    intentional.append(point)
+                else:
+                    violations.append(f"implicit_intersection_requires_node:{edge[0]}:{edge[1]}")
+            if node_conflicts:
+                violations.append(f"road_clearance_from_node:{edge[0]}:{edge[1]}")
+            reserved.extend(segments)
+            reserved_edges.extend([edge] * len(segments))
+
+        return CandidateRoadGeometryPlan(
+            edge_shapes=shapes,
+            accepted_edge_order=tuple(edges),
+            violations=tuple(dict.fromkeys(violations)),
+            intentional_intersections=tuple(dict.fromkeys(intentional)),
+            reserved_corridors=tuple(reserved),
+        )
+
+    def _incremental_conflicts(
+        self, edge, segments, reserved_edges, reserved, positions, important_node_ids, minimum_clearance
+    ) -> tuple[int, list[tuple[float, float]], int]:
+        conflicts = 0
+        intersections: list[tuple[float, float]] = []
+        node_conflicts = 0
+        for segment in segments:
+            for other_edge, other in zip(reserved_edges, reserved):
+                if set(edge) & set(other_edge):
+                    continue
+                point = self._segment_intersection_point(segment, other)
+                if point is not None:
+                    intersections.append(point)
+                    conflicts += 1
+                elif self._segments_distance(segment, other) < minimum_clearance:
+                    conflicts += 1
+            for node_id, point in positions.items():
+                if node_id in edge:
+                    continue
+                clearance = self._important_node_clearance if node_id in important_node_ids else minimum_clearance
+                if self._point_to_segment_distance(point, segment) < clearance:
+                    node_conflicts += 1
+        return conflicts, intersections, node_conflicts
 
     def plan_for_assignment(
         self,
@@ -845,6 +930,20 @@ class RoadShapeService:
     ) -> float:
         nearest = self._nearest_point_on_segment(point, segment)
         return math.hypot(point[0] - nearest[0], point[1] - nearest[1])
+
+    def _segments_distance(
+        self,
+        first: tuple[tuple[float, float], tuple[float, float]],
+        second: tuple[tuple[float, float], tuple[float, float]],
+    ) -> float:
+        if self._segments_overlap(first, second):
+            return 0.0
+        return min(
+            self._point_to_segment_distance(first[0], second),
+            self._point_to_segment_distance(first[1], second),
+            self._point_to_segment_distance(second[0], first),
+            self._point_to_segment_distance(second[1], first),
+        )
 
     def _segment_clearance_away_from_node(
         self,

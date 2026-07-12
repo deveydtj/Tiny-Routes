@@ -21,6 +21,37 @@ def test_road_shape_service_rejects_invalid_override() -> None:
         RoadShapeService().pick_for_positions(0, 0, 2, 1, override="diagonal")
 
 
+def test_candidate_geometry_uses_reserved_lane_bend_when_clear() -> None:
+    plan = RoadShapeService().build_candidate_geometry(
+        {"a": (0, 0), "b": (1, 1)},
+        [("a", "b")],
+        reserved_lanes={("a", "b"): "verticalFirst"},
+    )
+
+    assert plan.edge_shapes[("a", "b")] == "verticalFirst"
+    assert len(plan.reserved_corridors) == 2
+
+
+def test_candidate_geometry_avoids_incremental_implicit_crossing() -> None:
+    plan = RoadShapeService().build_candidate_geometry(
+        {"a": (0, 0), "b": (2, 0), "c": (1, -1), "d": (3, 1)},
+        [("a", "b"), ("c", "d")],
+    )
+
+    assert plan.edge_shapes[("c", "d")] == "horizontalFirst"
+    assert not any(issue.startswith("implicit_intersection_requires_node") for issue in plan.violations)
+
+
+def test_candidate_geometry_marks_intersection_with_graph_node_as_intentional() -> None:
+    plan = RoadShapeService().build_candidate_geometry(
+        {"a": (0, 0), "b": (2, 0), "c": (1, -1), "d": (1, 1), "junction": (1, 0)},
+        [("a", "b"), ("c", "d")],
+        minimum_clearance=0.0,
+    )
+
+    assert plan.intentional_intersections == ((1.0, 0.0),)
+
+
 def test_road_shape_planner_can_separate_two_switch_exits() -> None:
     service = RoadShapeService()
 
