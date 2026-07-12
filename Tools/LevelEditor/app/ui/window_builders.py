@@ -122,3 +122,21 @@ def build_tools_toolbar(window: QMainWindow) -> None:
     window._grid_size_spinbox.setToolTip("Grid size in level coordinates")
     window._grid_size_spinbox.valueChanged.connect(window._set_grid_size)
     window._tools_toolbar.addWidget(window._grid_size_spinbox)
+    window._tools_toolbar.addSeparator()
+    window._road_shape_action_group = QActionGroup(window)
+    window._road_shape_action_group.setExclusive(True)
+    window._road_shape_actions = {}
+    for label, road_shape in (
+        ("Horizontal First", "horizontalFirst"),
+        ("Vertical First", "verticalFirst"),
+    ):
+        action = QAction(label, window)
+        action.setCheckable(True)
+        action.setToolTip(f"Use {label.lower()} bends while connecting nodes")
+        action.triggered.connect(
+            lambda checked=False, selected=road_shape: window._set_pending_road_shape(selected)
+        )
+        window._road_shape_action_group.addAction(action)
+        window._tools_toolbar.addAction(action)
+        window._road_shape_actions[road_shape] = action
+    window._road_shape_actions["horizontalFirst"].setChecked(True)

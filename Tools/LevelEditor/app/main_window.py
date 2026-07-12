@@ -129,6 +129,7 @@ class LevelEditorMainWindow(QMainWindow):
         self._build_menu_bar()
         self._build_main_toolbar()
         self._build_tools_toolbar()
+        scene.road_shape_changed.connect(self._sync_road_shape_actions)
         self._set_active_tool(EditorTool.SELECT)
         self._update_window_title()
 
@@ -152,6 +153,8 @@ class LevelEditorMainWindow(QMainWindow):
         editing_enabled = tool is not EditorTool.PLAYTEST
         self._piece_palette.setEnabled(editing_enabled)
         self._properties_panel.setEnabled(editing_enabled)
+        for action in getattr(self, "_road_shape_actions", {}).values():
+            action.setEnabled(tool is EditorTool.CONNECT)
         self.statusBar().showMessage(tool.status_message)
 
     def _set_grid_snapping_enabled(self, enabled: bool) -> None:
@@ -161,6 +164,17 @@ class LevelEditorMainWindow(QMainWindow):
         self._canvas_view.scene().set_grid_snapping(
             self._snap_toggle_action.isChecked(), spacing
         )
+
+    def _set_pending_road_shape(self, road_shape: str) -> None:
+        self._canvas_view.scene().set_pending_road_shape(road_shape)
+        self.statusBar().showMessage(
+            f"Road bends set to {'Vertical First' if road_shape == 'verticalFirst' else 'Horizontal First'}."
+        )
+
+    def _sync_road_shape_actions(self, road_shape: str) -> None:
+        action = self._road_shape_actions.get(road_shape)
+        if action is not None:
+            action.setChecked(True)
 
     def _snap_selected_to_grid(self) -> None:
         moved = self._canvas_view.scene().snap_selected_to_grid()

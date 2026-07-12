@@ -1,10 +1,11 @@
 import math
 
 from PySide6.QtCore import QPointF, QRectF, Qt, Signal
-from PySide6.QtGui import QColor, QKeyEvent, QPainter, QPainterPath, QPen
+from PySide6.QtGui import QColor, QKeyEvent, QPainter, QPainterPath, QPen, QPolygonF
 from PySide6.QtWidgets import (
     QApplication,
     QGraphicsPathItem,
+    QGraphicsPolygonItem,
     QGraphicsLineItem,
     QGraphicsScene,
     QGraphicsSceneMouseEvent,
@@ -42,6 +43,8 @@ class LevelCanvasScene(QGraphicsScene):
     placement_message_changed = Signal(str)
     # Args: node role, model x, model y. The controller performs the mutation.
     node_placement_requested = Signal(str, float, float)
+    # Emitted when the persistent or temporary preview bend changes.
+    road_shape_changed = Signal(str)
 
     def __init__(self) -> None:
         super().__init__()
@@ -54,6 +57,9 @@ class LevelCanvasScene(QGraphicsScene):
         self._pending_road_shape = "horizontalFirst"
         self._preview_path_item: QGraphicsPathItem | None = None
         self._preview_label_item: QGraphicsSimpleTextItem | None = None
+        self._preview_arrow_item: QGraphicsPolygonItem | None = None
+        self._connection_drag_active = False
+        self._temporary_shape_swapped = False
         self._editor_tool = EditorTool.SELECT
         self._placement_node_type: str | None = None
         self._placement_preview: NodeItem | None = None
@@ -79,6 +85,7 @@ class LevelCanvasScene(QGraphicsScene):
         for node_item in self._node_items_by_id.values():
             node_item.setFlag(node_item.GraphicsItemFlag.ItemIsMovable, editing_enabled)
             node_item.setFlag(node_item.GraphicsItemFlag.ItemIsSelectable, editing_enabled)
+            node_item.set_connection_handles_enabled(tool is EditorTool.CONNECT)
         if not editing_enabled:
             self.clearSelection()
 
@@ -131,6 +138,7 @@ class LevelCanvasScene(QGraphicsScene):
             editing_enabled = self._editor_tool is not EditorTool.PLAYTEST
             node_item.setFlag(node_item.GraphicsItemFlag.ItemIsMovable, editing_enabled)
             node_item.setFlag(node_item.GraphicsItemFlag.ItemIsSelectable, editing_enabled)
+            node_item.set_connection_handles_enabled(self._editor_tool is EditorTool.CONNECT)
             self.addItem(node_item)
             self._node_items_by_id[node.id] = node_item
 
@@ -288,6 +296,52 @@ class LevelCanvasScene(QGraphicsScene):
             event.accept()
             return
         super().keyPressEvent(event)
+
+    @property
+    def pending_road_shape(self) -> str:
+        return self._pending_road_shape
+
+    def set_pending_road_shape(self, road_shape: str) -> None:
+        if road_shape not in {"horizontalFirst", "verticalFirst"}:
+            raise ValueError(f"Unsupported road shape: {road_shape}")
+        self._pending_road_shape = road_shape
+        self._update_preview_label()
+        self.road_shape_changed.emit(road_shape)
+
+    def begin_connection_drag(self, node_id: str, scene_position: QPointF) -> None:
+        if self._editor_tool is not EditorTool.CONNECT or node_id not in self._node_items_by_id:
+            return
+        self._set_connection_source(node_id)
+        self._connection_drag_active = True
+        self._update_connection_preview(scene_position)
+
+    def update_connection_drag(
+        self, scene_position: QPointF, modifiers: Qt.KeyboardModifier = Qt.KeyboardModifier.NoModifier
+    ) -> None:
+        self._apply_temporary_shape_modifier(modifiers)
+        self._update_connection_preview(scene_position)
+        self._highlight_connection_target(scene_position)
+
+    def finish_connection_drag(
+        self, scene_position: QPointF, modifiers: Qt.KeyboardModifier = Qt.KeyboardModifier.NoModifier
+    ) -> None:
+        if not self._connection_drag_active:
+            return
+        self.update_connection_drag(scene_position, modifiers)
+        target = self._resolve_node_item_at_position(scene_position)
+        source_id = self._connection_source_node_id
+        self._connection_drag_active = False
+        self._clear_target_highlights()
+        self._restore_temporary_shape()
+        if target is None:
+            self._clear_connection_source()
+            self.placement_message_changed.emit("Road placement canceled.")
+            return
+        if target.node_id == source_id:
+            self._clear_connection_source()
+            self.placement_message_changed.emit("Road not added. Self-loops are not supported.")
+            return
+        self._handle_connection_click(target)
 
     def place_node_at(self, scene_position: QPointF) -> bool:
         """Request an undoable placement at a scene position; placement remains active."""
@@ -547,6 +601,9 @@ class LevelCanvasScene(QGraphicsScene):
             if source_item is not None:
                 source_item.set_connection_source(False)
         self._connection_source_node_id = None
+        self._connection_drag_active = False
+        self._clear_target_highlights()
+        self._restore_temporary_shape()
         self._remove_preview_items()
 
     def _edge_exists(self, from_node_id: str, to_node_id: str) -> bool:
@@ -562,9 +619,35 @@ class LevelCanvasScene(QGraphicsScene):
             "verticalFirst" if self._pending_road_shape == "horizontalFirst" else "horizontalFirst"
         )
         self._update_preview_label()
+        self.road_shape_changed.emit(self._pending_road_shape)
         self.placement_message_changed.emit(
             f"Road preview set to {self._describe_road_shape(self._pending_road_shape)}."
         )
+
+    def _apply_temporary_shape_modifier(self, modifiers: Qt.KeyboardModifier) -> None:
+        should_swap = bool(modifiers & Qt.KeyboardModifier.ShiftModifier)
+        if should_swap == self._temporary_shape_swapped:
+            return
+        self._toggle_pending_road_shape()
+        self._temporary_shape_swapped = should_swap
+
+    def _restore_temporary_shape(self) -> None:
+        if self._temporary_shape_swapped:
+            self._toggle_pending_road_shape()
+            self._temporary_shape_swapped = False
+
+    def _highlight_connection_target(self, scene_position: QPointF) -> None:
+        target = self._resolve_node_item_at_position(scene_position)
+        source_id = self._connection_source_node_id
+        for node_id, item in self._node_items_by_id.items():
+            state = None
+            if item is target:
+                state = node_id != source_id and not self._edge_exists(source_id or "", node_id)
+            item.set_connection_target_valid(state)
+
+    def _clear_target_highlights(self) -> None:
+        for item in self._node_items_by_id.values():
+            item.set_connection_target_valid(None)
 
     def _ensure_preview_items(self) -> None:
         if not self._is_live_graphics_item(self._preview_path_item):
@@ -579,6 +662,12 @@ class LevelCanvasScene(QGraphicsScene):
             preview_pen.setStyle(Qt.PenStyle.DashLine)
             self._preview_path_item.setPen(preview_pen)
             self.addItem(self._preview_path_item)
+        if self._preview_arrow_item is None:
+            self._preview_arrow_item = QGraphicsPolygonItem()
+            self._preview_arrow_item.setBrush(QColor("#d81b60"))
+            self._preview_arrow_item.setPen(QPen(QColor("#d81b60"), 1))
+            self._preview_arrow_item.setZValue(0)
+            self.addItem(self._preview_arrow_item)
         if self._preview_label_item is None:
             self._preview_label_item = self.addSimpleText("")
             self._preview_label_item.setBrush(QColor("#d81b60"))
@@ -588,12 +677,16 @@ class LevelCanvasScene(QGraphicsScene):
         if self._is_live_graphics_item(self._preview_path_item):
             self.removeItem(self._preview_path_item)
         self._preview_path_item = None
+        if self._is_live_graphics_item(self._preview_arrow_item):
+            self.removeItem(self._preview_arrow_item)
+        self._preview_arrow_item = None
         if self._is_live_graphics_item(self._preview_label_item):
             self.removeItem(self._preview_label_item)
         self._preview_label_item = None
 
     def _reset_preview_state(self) -> None:
         self._preview_path_item = None
+        self._preview_arrow_item = None
         self._preview_label_item = None
 
     @staticmethod
@@ -616,6 +709,8 @@ class LevelCanvasScene(QGraphicsScene):
             if self._preview_path_item is not None:
                 self._preview_path_item.setPath(QPainterPath())
                 self._preview_path_item.setVisible(False)
+            if self._preview_arrow_item is not None:
+                self._preview_arrow_item.setVisible(False)
             if self._preview_label_item is not None:
                 self._preview_label_item.setPos(source_item.pos().x() + 10, source_item.pos().y() - 28)
             self._update_preview_label()
@@ -630,6 +725,9 @@ class LevelCanvasScene(QGraphicsScene):
         if self._preview_path_item is not None:
             self._preview_path_item.setPath(preview_edge._path_item.path())
             self._preview_path_item.setVisible(True)
+        if self._preview_arrow_item is not None:
+            self._preview_arrow_item.setPolygon(QPolygonF(preview_edge._arrow_item.polygon()))
+            self._preview_arrow_item.setVisible(True)
 
         if self._preview_label_item is not None:
             self._preview_label_item.setPos(

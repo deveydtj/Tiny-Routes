@@ -1804,6 +1804,8 @@ Replace hidden workflows with direct manipulation and visible previews.
 
 ## Task 11.4 — Add visible connection handles
 
+**Status:** Completed
+
 **Files to update**
 
 - `node_item.py`
@@ -1812,27 +1814,29 @@ Replace hidden workflows with direct manipulation and visible previews.
 
 **Steps**
 
-- [ ] Show connection handles in Connect mode or on selected nodes.
-- [ ] Begin a road drag from a handle.
-- [ ] Show a live arrowed road preview.
-- [ ] Highlight valid destination nodes.
-- [ ] Reject self-loops and duplicate directed edges unless explicitly supported.
-- [ ] Create the road on drop through an undoable command.
+- [x] Show connection handles in Connect mode or on selected nodes.
+- [x] Begin a road drag from a handle.
+- [x] Show a live arrowed road preview.
+- [x] Highlight valid destination nodes.
+- [x] Reject self-loops and duplicate directed edges unless explicitly supported.
+- [x] Create the road on drop through an undoable command.
 
 **Acceptance tests**
 
-- [ ] Dragging source to destination creates one directed edge.
-- [ ] Canceling leaves the document unchanged.
-- [ ] Duplicate-edge rejection is clear.
+- [x] Dragging source to destination creates one directed edge.
+- [x] Canceling leaves the document unchanged.
+- [x] Duplicate-edge rejection is clear.
 
 ## Task 11.5 — Make road-shape choice visible
 
+**Status:** Completed
+
 **Steps**
 
-- [ ] Add horizontal-first and vertical-first options to the Connect toolbar.
-- [ ] Keep Tab as a shortcut.
-- [ ] Show the current bend choice in the preview.
-- [ ] Allow holding a modifier to temporarily swap the bend choice.
+- [x] Add horizontal-first and vertical-first options to the Connect toolbar.
+- [x] Keep Tab as a shortcut.
+- [x] Show the current bend choice in the preview.
+- [x] Allow holding a modifier to temporarily swap the bend choice.
 
 ## Task 11.6 — Add optional bidirectional-road creation
 

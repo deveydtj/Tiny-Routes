@@ -29,6 +29,7 @@ from app.services import (
     ValidationSeverity,
 )
 from app.ui import (
+    ConnectionHandleItem,
     EdgeItem,
     LevelCanvasScene,
     LevelCanvasView,
@@ -2879,3 +2880,73 @@ def test_connection_preview_hides_when_cursor_is_on_source_node(qapplication: QA
     assert scene._preview_path_item is not None
     assert scene._preview_path_item.path().isEmpty()
     assert scene._preview_path_item.isVisible() is False
+
+
+def test_connect_mode_shows_visible_connection_handles(qapplication: QApplication) -> None:
+    scene = LevelCanvasScene()
+    scene.display_level(_make_two_node_one_edge_document())
+
+    handles = [item for item in scene.items() if isinstance(item, ConnectionHandleItem)]
+    assert handles
+    assert all(not handle.isVisible() for handle in handles)
+
+    scene.set_editor_tool(EditorTool.CONNECT)
+
+    assert all(handle.isVisible() for handle in handles)
+
+
+def test_connection_drag_emits_one_directed_edge_and_cancel_emits_none(
+    qapplication: QApplication,
+) -> None:
+    document = _make_two_node_one_edge_document()
+    document.graph.edges = []
+    document.graph.nodes[0].outgoingEdgeIDs = []
+    scene = LevelCanvasScene()
+    scene.display_level(document)
+    scene.set_editor_tool(EditorTool.CONNECT)
+    created: list[tuple[str, str, str, str]] = []
+    scene.edge_creation_requested.connect(lambda *args: created.append(args))
+    nodes = {item.node_id: item for item in scene.items() if isinstance(item, NodeItem)}
+
+    scene.begin_connection_drag("start", nodes["start"].pos())
+    scene.finish_connection_drag(QPointF(900, 900))
+    assert created == []
+
+    scene.begin_connection_drag("start", nodes["start"].pos())
+    scene.update_connection_drag(nodes["destination"].pos())
+    assert scene._preview_arrow_item is not None
+    assert scene._preview_arrow_item.isVisible()
+    assert nodes["destination"]._connection_target_valid is True
+    scene.finish_connection_drag(nodes["destination"].pos())
+
+    assert len(created) == 1
+    assert created[0][1:] == ("start", "destination", "horizontalFirst")
+
+
+def test_road_shape_toolbar_and_shift_modifier_swap_preview_temporarily(
+    qapplication: QApplication,
+) -> None:
+    window = LevelEditorMainWindow()
+    try:
+        scene = window._canvas_view.scene()
+        scene.display_level(_make_two_node_one_edge_document())
+        window._set_active_tool(EditorTool.CONNECT)
+        nodes = {item.node_id: item for item in scene.items() if isinstance(item, NodeItem)}
+
+        window._road_shape_actions["verticalFirst"].trigger()
+        assert scene.pending_road_shape == "verticalFirst"
+        assert window._road_shape_actions["verticalFirst"].isChecked()
+
+        scene.begin_connection_drag("start", nodes["start"].pos())
+        scene.update_connection_drag(
+            nodes["destination"].pos(), Qt.KeyboardModifier.ShiftModifier
+        )
+        assert scene.pending_road_shape == "horizontalFirst"
+        assert window._road_shape_actions["horizontalFirst"].isChecked()
+        scene.finish_connection_drag(
+            nodes["destination"].pos(), Qt.KeyboardModifier.ShiftModifier
+        )
+        assert scene.pending_road_shape == "verticalFirst"
+        assert window._road_shape_actions["verticalFirst"].isChecked()
+    finally:
+        window.close()
