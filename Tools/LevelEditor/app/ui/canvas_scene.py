@@ -3,6 +3,7 @@ import math
 from PySide6.QtCore import QPointF, QRectF, Qt, Signal
 from PySide6.QtGui import QColor, QKeyEvent, QPainter, QPainterPath, QPen
 from PySide6.QtWidgets import (
+    QApplication,
     QGraphicsPathItem,
     QGraphicsScene,
     QGraphicsSceneMouseEvent,
@@ -34,8 +35,8 @@ class LevelCanvasScene(QGraphicsScene):
     node_item_moved = Signal(str, float, float)
     # Emitted when the user creates a new edge. Args: edge_id, from_node_id, to_node_id, road_shape
     edge_creation_requested = Signal(str, str, str, str)
-    # Emitted after selected nodes and/or edges are deleted from the document.
-    level_items_deleted = Signal()
+    # Mutation requests are handled by DocumentController.
+    delete_items_requested = Signal(object, object)
     # Emitted to explain placement state and failures.
     placement_message_changed = Signal(str)
 
@@ -51,6 +52,8 @@ class LevelCanvasScene(QGraphicsScene):
         self._preview_path_item: QGraphicsPathItem | None = None
         self._preview_label_item: QGraphicsSimpleTextItem | None = None
         self._editor_tool = EditorTool.SELECT
+        self._drag_start_positions: dict[str, tuple[float, float]] = {}
+        self._delete_items_handler = None
         self._show_placeholder()
         self.selectionChanged.connect(self._on_selection_changed)
 
@@ -164,7 +167,11 @@ class LevelCanvasScene(QGraphicsScene):
 
         if item.isSelected():
             self.node_item_selected.emit(item.node_id, item.node_type, item.model_x, item.model_y)
-        self.node_item_moved.emit(item.node_id, item.model_x, item.model_y)
+        if QApplication.mouseButtons() == Qt.MouseButton.NoButton:
+            self.node_item_moved.emit(item.node_id, item.model_x, item.model_y)
+
+    def set_delete_items_handler(self, handler) -> None:
+        self._delete_items_handler = handler
 
     def mousePressEvent(self, event: QGraphicsSceneMouseEvent) -> None:
         if self._editor_tool is EditorTool.PLAYTEST:
@@ -184,7 +191,18 @@ class LevelCanvasScene(QGraphicsScene):
             self.placement_message_changed.emit("Road placement canceled.")
             event.accept()
             return
+        node_item = self._resolve_node_item_at_position(event.scenePos())
+        if node_item is not None and event.button() == Qt.MouseButton.LeftButton:
+            self._drag_start_positions[node_item.node_id] = (node_item.model_x, node_item.model_y)
         super().mousePressEvent(event)
+
+    def mouseReleaseEvent(self, event: QGraphicsSceneMouseEvent) -> None:
+        super().mouseReleaseEvent(event)
+        for node_id, old_position in list(self._drag_start_positions.items()):
+            item = self._node_items_by_id.get(node_id)
+            if item is not None and (item.model_x, item.model_y) != old_position:
+                self.node_item_moved.emit(node_id, item.model_x, item.model_y)
+        self._drag_start_positions.clear()
 
     def mouseMoveEvent(self, event: QGraphicsSceneMouseEvent) -> None:
         if self._connection_source_node_id is not None:
@@ -261,23 +279,23 @@ class LevelCanvasScene(QGraphicsScene):
             if edge.fromNodeID in selected_node_ids or edge.toNodeID in selected_node_ids
         }
 
-        self._document.graph.nodes = [
-            node for node in self._document.graph.nodes if node.id not in selected_node_ids
-        ]
-        self._document.graph.edges = [
-            edge for edge in self._document.graph.edges if edge.id not in edge_ids_to_delete
-        ]
-
-        for node in self._document.graph.nodes:
-            node.outgoingEdgeIDs = [
-                edge_id for edge_id in node.outgoingEdgeIDs if edge_id not in edge_ids_to_delete
-            ]
-
         if self._connection_source_node_id in selected_node_ids:
             self._connection_source_node_id = None
-
-        self.display_level(self._document)
-        self.level_items_deleted.emit()
+        if self._delete_items_handler is not None:
+            self._delete_items_handler(selected_node_ids, selected_edge_ids)
+        else:
+            self._document.graph.nodes = [
+                node for node in self._document.graph.nodes if node.id not in selected_node_ids
+            ]
+            self._document.graph.edges = [
+                edge for edge in self._document.graph.edges if edge.id not in edge_ids_to_delete
+            ]
+            for node in self._document.graph.nodes:
+                node.outgoingEdgeIDs = [
+                    edge_id for edge_id in node.outgoingEdgeIDs if edge_id not in edge_ids_to_delete
+                ]
+            self.display_level(self._document)
+        self.delete_items_requested.emit(selected_node_ids, selected_edge_ids)
         return True
 
     def _resolve_node_item_at_position(self, scene_position: QPointF) -> NodeItem | None:

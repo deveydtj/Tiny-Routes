@@ -13,6 +13,7 @@ from PySide6.QtWidgets import (
 )
 
 from app.config import find_repo_root, get_default_levels_directory
+from app.controllers import DocumentController
 from app.models import EditorTool, LevelDocument, RouteEdgeModel, RouteNodeModel, SolutionModel
 from app.repositories import (
     LevelFileRepository,
@@ -66,6 +67,9 @@ class LevelEditorMainWindow(QMainWindow):
         self._properties_panel = PropertiesPanel()
         self._solution_panel = SolutionPanel()
         self._validation_panel = ValidationPanel()
+        self._document_controller = DocumentController(self)
+        self._document_controller.document_changed.connect(self._on_controller_document_changed)
+        self._document_controller.dirty_changed.connect(self._set_dirty)
 
         self.setCentralWidget(self._canvas_view)
 
@@ -109,7 +113,7 @@ class LevelEditorMainWindow(QMainWindow):
         scene.selection_cleared.connect(self._properties_panel.clear)
         scene.node_item_moved.connect(self._on_node_item_moved)
         scene.edge_creation_requested.connect(self._on_edge_creation_requested)
-        scene.level_items_deleted.connect(self._on_level_items_deleted)
+        scene.set_delete_items_handler(self._delete_items_with_controller)
         scene.placement_message_changed.connect(self.statusBar().showMessage)
         self._validation_panel.validate_requested.connect(self._validate_current_level)
         self._validation_panel.validation_message_activated.connect(
@@ -150,6 +154,14 @@ class LevelEditorMainWindow(QMainWindow):
         save_as_action = self._file_menu.addAction("Save Level As...")
         save_as_action.setShortcut(QKeySequence.StandardKey.SaveAs)
         save_as_action.triggered.connect(self._save_level_as)
+
+        self._edit_menu = menu_bar.addMenu("Edit")
+        self._undo_action = self._document_controller.undo_stack.createUndoAction(self, "Undo")
+        self._undo_action.setShortcut(QKeySequence.StandardKey.Undo)
+        self._edit_menu.addAction(self._undo_action)
+        self._redo_action = self._document_controller.undo_stack.createRedoAction(self, "Redo")
+        self._redo_action.setShortcut(QKeySequence.StandardKey.Redo)
+        self._edit_menu.addAction(self._redo_action)
 
         self._view_menu = menu_bar.addMenu("View")
 
@@ -302,31 +314,28 @@ class LevelEditorMainWindow(QMainWindow):
             QMessageBox.critical(self, "Failed to Open Level", exc.message)
             return
 
-        self._current_document = document
         self._current_file_path = Path(file_path)
-        self._current_solution = self._load_solution_for_level(self._current_file_path, document)
-        self._canvas_view.scene().display_level(document)
+        solution = self._load_solution_for_level(self._current_file_path, document)
+        self._document_controller.open(document, solution, saved=True)
         self._properties_panel.clear()
         self._solution_panel.set_level(self._current_document)
         self._solution_panel.set_solution(self._current_solution)
         self._validation_panel.clear()
         self._update_run_tests_action_states()
-        self._set_dirty(False)
 
     def _new_level(self) -> None:
         if not self._prompt_to_save_unsaved_changes():
             return
 
-        self._current_document = create_default_level_document()
+        document = create_default_level_document()
         self._current_file_path = None
-        self._current_solution = self._build_default_solution(self._current_document)
-        self._canvas_view.scene().display_level(self._current_document)
+        solution = self._build_default_solution(document)
+        self._document_controller.open(document, solution, saved=False)
         self._properties_panel.clear()
         self._solution_panel.set_level(self._current_document)
         self._solution_panel.set_solution(self._current_solution)
         self._validation_panel.clear()
         self._update_run_tests_action_states()
-        self._set_dirty(True)
 
     def _save_level(self) -> bool:
         if self._current_document is None:
@@ -352,6 +361,7 @@ class LevelEditorMainWindow(QMainWindow):
                 QMessageBox.critical(self, "Failed to Save Solution", exc.message)
                 return False
 
+        self._document_controller.mark_saved()
         self._set_dirty(False)
         return True
 
@@ -400,10 +410,11 @@ class LevelEditorMainWindow(QMainWindow):
                 if not self._confirm_production_overwrite(target_path, target_solution_path):
                     return False
 
-            self._identity_service.apply_identity(
-                self._current_document,
-                self._current_solution,
-                identity,
+            self._ensure_controller_state()
+            self._document_controller.edit_metadata(
+                lambda document, solution: self._identity_service.apply_identity(
+                    document, solution, identity
+                )
             )
             self._current_file_path = target_path
             return self._save_level()
@@ -565,19 +576,15 @@ class LevelEditorMainWindow(QMainWindow):
     def _apply_metadata_result(self, result: LevelMetadataResult) -> None:
         if self._current_document is None:
             return
+        self._ensure_controller_state()
 
-        self._identity_service.apply_identity(
-            self._current_document,
-            self._current_solution,
-            result.identity,
-        )
-        self._current_document.name = result.level_name or result.identity.level_name
-        self._current_document.timeLimitSeconds = result.timeLimitSeconds
-        self._current_document.parTaps = result.parTaps
-        self._solution_panel.set_level(self._current_document)
-        self._solution_panel.set_solution(self._current_solution)
-        self._validation_panel.clear()
-        self._set_dirty(True)
+        def mutation(document, solution):
+            self._identity_service.apply_identity(document, solution, result.identity)
+            document.name = result.level_name or result.identity.level_name
+            document.timeLimitSeconds = result.timeLimitSeconds
+            document.parTaps = result.parTaps
+
+        self._document_controller.edit_metadata(mutation)
 
     def _suggested_level_number_for_current_document(self) -> int:
         if self._current_document is not None:
@@ -812,9 +819,7 @@ class LevelEditorMainWindow(QMainWindow):
         # maxTaps tracks the scripted tap count.
         updated_solution.levelID = self._current_document.id
         updated_solution.maxTaps = len(updated_solution.actions)
-        self._current_solution = updated_solution
-        self._validation_panel.clear()
-        self._set_dirty(True)
+        self._document_controller.edit_solution(updated_solution)
 
     def _on_node_item_selected(self, node_id: str, node_type: str, model_x: float, model_y: float) -> None:
         if self._current_document is None:
@@ -846,11 +851,8 @@ class LevelEditorMainWindow(QMainWindow):
                 continue
             if node.x == model_x and node.y == model_y:
                 return
-            node.x = model_x
-            node.y = model_y
-            self._solution_panel.set_level(self._current_document)
-            self._validation_panel.clear()
-            self._set_dirty(True)
+            self._ensure_controller_state()
+            self._document_controller.move_node(node_id, model_x, model_y)
             return
 
     def _on_outgoing_edge_order_changed(self, node_id: str, ordered_edge_ids: list[str]) -> None:
@@ -867,15 +869,9 @@ class LevelEditorMainWindow(QMainWindow):
         if sorted(ordered_edge_ids) != sorted(current_valid_edge_ids):
             return
 
-        remaining_edge_ids = [
-            edge_id for edge_id in node.outgoingEdgeIDs if edge_id not in current_valid_edge_ids
-        ]
-        node.outgoingEdgeIDs = list(ordered_edge_ids) + remaining_edge_ids
-        self._canvas_view.scene().display_level(self._current_document)
+        self._ensure_controller_state()
+        self._document_controller.reorder_edges(node_id, ordered_edge_ids, current_valid_edge_ids)
         self._canvas_view.scene().select_node_by_id(node_id)
-        self._solution_panel.set_level(self._current_document)
-        self._validation_panel.clear()
-        self._set_dirty(True)
 
     def _add_node_from_palette(self, node_type: str) -> None:
         if self._current_document is None:
@@ -893,15 +889,8 @@ class LevelEditorMainWindow(QMainWindow):
             outgoingEdgeIDs=[],
         )
 
-        self._current_document.graph.nodes.append(new_node)
-        if node_type == "start":
-            self._current_document.startNodeID = node_id
-        elif node_type == "package":
-            self._current_document.packageNodeID = node_id
-        elif node_type == "destination":
-            self._current_document.destinationNodeID = node_id
-
-        self._canvas_view.scene().display_level(self._current_document)
+        self._ensure_controller_state()
+        self._document_controller.add_node(new_node, node_type)
         self._properties_panel.clear()
         self._validation_panel.clear()
         self._set_dirty(True)
@@ -926,8 +915,8 @@ class LevelEditorMainWindow(QMainWindow):
         if source_node is None:
             return
 
-        source_node.outgoingEdgeIDs.append(edge_id)
-        self._current_document.graph.edges.append(
+        self._ensure_controller_state()
+        self._document_controller.add_edge(
             RouteEdgeModel(
                 id=edge_id,
                 fromNodeID=from_node_id,
@@ -936,10 +925,6 @@ class LevelEditorMainWindow(QMainWindow):
             )
         )
 
-        self._canvas_view.scene().display_level(self._current_document)
-        self._solution_panel.set_level(self._current_document)
-        self._validation_panel.clear()
-        self._set_dirty(True)
 
     def _outgoing_edge_order_rows(self, node) -> list[dict[str, object]]:
         if self._current_document is None:
@@ -998,6 +983,32 @@ class LevelEditorMainWindow(QMainWindow):
         self._validation_panel.clear()
         self._solution_panel.set_level(self._current_document)
         self._set_dirty(True)
+
+    def _on_controller_document_changed(self, document, solution) -> None:
+        self._current_document = document
+        self._current_solution = solution
+        self._set_dirty(True)
+        self._canvas_view.scene().display_level(document)
+        self._properties_panel.clear()
+        self._solution_panel.set_level(document)
+        self._solution_panel.set_solution(solution)
+        self._validation_panel.clear()
+        self._update_run_tests_action_states()
+        self._update_window_title()
+
+    def _ensure_controller_state(self) -> None:
+        if self._current_document is None:
+            return
+        if self._document_controller.document is not self._current_document:
+            self._document_controller.open(
+                self._current_document,
+                self._current_solution,
+                saved=not self._is_dirty,
+            )
+
+    def _delete_items_with_controller(self, node_ids: set[str], edge_ids: set[str]) -> None:
+        self._ensure_controller_state()
+        self._document_controller.delete_items(node_ids, edge_ids)
 
     def _generate_unique_default_node_id(self, node_type: str) -> str:
         if self._current_document is None:

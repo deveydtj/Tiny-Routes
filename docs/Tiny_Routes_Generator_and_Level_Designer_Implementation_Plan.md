@@ -1646,6 +1646,8 @@ Create a stable interaction architecture before adding visible UX improvements.
 
 ## Task 10.2 — Add a document controller
 
+**Status:** Completed
+
 **Files to add**
 
 - `Tools/LevelEditor/app/controllers/document_controller.py`
@@ -1662,11 +1664,13 @@ Create a stable interaction architecture before adding visible UX improvements.
 
 **Steps**
 
-- [ ] Move graph mutation out of `canvas_scene.py`.
-- [ ] Move save-related document changes out of ad hoc UI callbacks.
-- [ ] Keep the scene focused on rendering and interaction events.
+- [x] Move graph mutation out of `canvas_scene.py`.
+- [x] Move save-related document changes out of ad hoc UI callbacks.
+- [x] Keep the scene focused on rendering and interaction events.
 
 ## Task 10.3 — Add undo/redo with `QUndoStack`
+
+**Status:** Completed
 
 **Files to add**
 
@@ -1686,18 +1690,18 @@ Tools/LevelEditor/app/commands/
 
 **Steps**
 
-- [ ] Add Edit > Undo and Edit > Redo actions.
-- [ ] Add standard shortcuts.
-- [ ] Ensure drag movement creates one command, not one command per mouse event.
-- [ ] Make node deletion restore connected edges and outgoing order on undo.
-- [ ] Clear the stack when opening a new file.
-- [ ] Mark the saved stack index and derive dirty state from it.
+- [x] Add Edit > Undo and Edit > Redo actions.
+- [x] Add standard shortcuts.
+- [x] Ensure drag movement creates one command, not one command per mouse event.
+- [x] Make node deletion restore connected edges and outgoing order on undo.
+- [x] Clear the stack when opening a new file.
+- [x] Mark the saved stack index and derive dirty state from it.
 
 **Acceptance tests**
 
-- [ ] Every supported edit can be undone and redone.
-- [ ] Undoing node deletion restores exact edge IDs and order.
-- [ ] Dirty state clears after undoing back to the saved state.
+- [x] Every supported edit can be undone and redone.
+- [x] Undoing node deletion restores exact edge IDs and order.
+- [x] Dirty state clears after undoing back to the saved state.
 
 ## Task 10.4 — Break up `main_window.py`
 
