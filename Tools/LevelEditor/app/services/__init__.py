@@ -1,4 +1,5 @@
 from .level_identity_service import LevelIdentity, LevelIdentityService
+from .reference_rename_service import ReferenceRenameService
 from .level_validation_service import (
     LevelValidationService,
     ValidationMessage,
@@ -20,6 +21,7 @@ __all__ = [
     "LevelIdentityService",
     "LevelValidationService",
     "MAX_SUPPORTED_OUTGOING_EDGES",
+    "ReferenceRenameService",
     "SolutionValidationService",
     "SwitchClassificationService",
     "SwitchNodeClassification",

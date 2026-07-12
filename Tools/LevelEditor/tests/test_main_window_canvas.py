@@ -2904,7 +2904,7 @@ def test_connection_drag_emits_one_directed_edge_and_cancel_emits_none(
     scene = LevelCanvasScene()
     scene.display_level(document)
     scene.set_editor_tool(EditorTool.CONNECT)
-    created: list[tuple[str, str, str, str]] = []
+    created: list[tuple[str, str, str, str, bool]] = []
     scene.edge_creation_requested.connect(lambda *args: created.append(args))
     nodes = {item.node_id: item for item in scene.items() if isinstance(item, NodeItem)}
 
@@ -2920,7 +2920,42 @@ def test_connection_drag_emits_one_directed_edge_and_cancel_emits_none(
     scene.finish_connection_drag(nodes["destination"].pos())
 
     assert len(created) == 1
-    assert created[0][1:] == ("start", "destination", "horizontalFirst")
+    assert created[0][1:] == ("start", "destination", "horizontalFirst", False)
+
+
+def test_two_way_toolbar_creates_two_edges_as_one_undoable_command(
+    qapplication: QApplication,
+) -> None:
+    window = LevelEditorMainWindow()
+    try:
+        document = _make_two_node_one_edge_document()
+        document.graph.edges = []
+        document.graph.nodes[0].outgoingEdgeIDs = []
+        window._current_document = document
+        window._current_solution = None
+        window._document_controller.open(document, None, saved=True)
+        window._canvas_view.scene().display_level(document)
+        window._set_active_tool(EditorTool.CONNECT)
+
+        assert window._bidirectional_road_action.isChecked() is False
+        window._bidirectional_road_action.setChecked(True)
+        window._on_edge_creation_requested(
+            "edge", "start", "destination", "horizontalFirst", True
+        )
+
+        assert [(edge.id, edge.fromNodeID, edge.toNodeID) for edge in document.graph.edges] == [
+            ("edge", "start", "destination"),
+            ("edge_1", "destination", "start"),
+        ]
+        assert document.graph.nodes[0].outgoingEdgeIDs == ["edge"]
+        assert document.graph.nodes[1].outgoingEdgeIDs == ["edge_1"]
+
+        window._document_controller.undo_stack.undo()
+        assert document.graph.edges == []
+        window._document_controller.undo_stack.redo()
+        assert len(document.graph.edges) == 2
+    finally:
+        window.close()
 
 
 def test_road_shape_toolbar_and_shift_modifier_swap_preview_temporarily(

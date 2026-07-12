@@ -1840,12 +1840,14 @@ Replace hidden workflows with direct manipulation and visible previews.
 
 ## Task 11.6 — Add optional bidirectional-road creation
 
+**Status:** Completed
+
 **Steps**
 
-- [ ] Add a modifier or toolbar option to create both directed edges.
-- [ ] Generate unique IDs for both edges.
-- [ ] Add both operations as one undoable command.
-- [ ] Do not make bidirectional roads the default.
+- [x] Add a modifier or toolbar option to create both directed edges.
+- [x] Generate unique IDs for both edges.
+- [x] Add both operations as one undoable command.
+- [x] Do not make bidirectional roads the default.
 
 ### Phase 11 exit gate
 
@@ -1863,6 +1865,8 @@ Replace hidden workflows with direct manipulation and visible previews.
 Allow designers to correct level data without deleting and recreating objects.
 
 ## Task 12.1 — Add safe ID rename services
+
+**Status:** Completed
 
 **Files to add**
 
@@ -1887,9 +1891,9 @@ Allow designers to correct level data without deleting and recreating objects.
 
 **Acceptance tests**
 
-- [ ] Rename preserves referential integrity.
-- [ ] Duplicate target IDs are rejected before mutation.
-- [ ] Undo restores every reference.
+- [x] Rename preserves referential integrity.
+- [x] Duplicate target IDs are rejected before mutation.
+- [x] Undo restores every reference.
 
 ## Task 12.2 — Add editable node properties
 

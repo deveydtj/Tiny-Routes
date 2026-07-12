@@ -5,9 +5,10 @@ from .edit_metadata_command import EditMetadataCommand
 from .edit_solution_command import EditSolutionCommand
 from .move_node_command import MoveNodeCommand
 from .reorder_edges_command import ReorderEdgesCommand
+from .rename_references_command import RenameReferencesCommand
 
 __all__ = [
     "AddEdgeCommand", "AddNodeCommand", "DeleteItemsCommand",
     "EditMetadataCommand", "EditSolutionCommand", "MoveNodeCommand",
-    "ReorderEdgesCommand",
+    "ReorderEdgesCommand", "RenameReferencesCommand",
 ]

@@ -155,6 +155,7 @@ class LevelEditorMainWindow(QMainWindow):
         self._properties_panel.setEnabled(editing_enabled)
         for action in getattr(self, "_road_shape_actions", {}).values():
             action.setEnabled(tool is EditorTool.CONNECT)
+        self._bidirectional_road_action.setEnabled(tool is EditorTool.CONNECT)
         self.statusBar().showMessage(tool.status_message)
 
     def _set_grid_snapping_enabled(self, enabled: bool) -> None:
@@ -175,6 +176,12 @@ class LevelEditorMainWindow(QMainWindow):
         action = self._road_shape_actions.get(road_shape)
         if action is not None:
             action.setChecked(True)
+
+    def _set_bidirectional_roads_enabled(self, enabled: bool) -> None:
+        self._canvas_view.scene().set_bidirectional_roads_enabled(enabled)
+        self.statusBar().showMessage(
+            "Two-way road creation enabled." if enabled else "Directed road creation enabled."
+        )
 
     def _snap_selected_to_grid(self) -> None:
         moved = self._canvas_view.scene().snap_selected_to_grid()
@@ -805,6 +812,7 @@ class LevelEditorMainWindow(QMainWindow):
         from_node_id: str,
         to_node_id: str,
         road_shape: str,
+        bidirectional: bool = False,
     ) -> None:
         if self._current_document is None:
             return
@@ -820,14 +828,31 @@ class LevelEditorMainWindow(QMainWindow):
             return
 
         self._ensure_controller_state()
-        self._document_controller.add_edge(
-            RouteEdgeModel(
+        edges = [RouteEdgeModel(
                 id=edge_id,
                 fromNodeID=from_node_id,
                 toNodeID=to_node_id,
                 roadShape=road_shape,
-            )
-        )
+            )]
+        if bidirectional:
+            existing_ids = {edge.id for edge in self._current_document.graph.edges} | {edge_id}
+            reverse_edge_id = self._unique_edge_id(existing_ids)
+            edges.append(RouteEdgeModel(
+                id=reverse_edge_id,
+                fromNodeID=to_node_id,
+                toNodeID=from_node_id,
+                roadShape=road_shape,
+            ))
+        self._document_controller.add_edges(edges)
+
+    @staticmethod
+    def _unique_edge_id(existing_ids: set[str]) -> str:
+        if "edge" not in existing_ids:
+            return "edge"
+        suffix = 1
+        while f"edge_{suffix}" in existing_ids:
+            suffix += 1
+        return f"edge_{suffix}"
 
 
     def _outgoing_edge_order_rows(self, node) -> list[dict[str, object]]:

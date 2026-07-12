@@ -140,3 +140,13 @@ def build_tools_toolbar(window: QMainWindow) -> None:
         window._tools_toolbar.addAction(action)
         window._road_shape_actions[road_shape] = action
     window._road_shape_actions["horizontalFirst"].setChecked(True)
+    window._bidirectional_road_action = QAction("Two-Way", window)
+    window._bidirectional_road_action.setCheckable(True)
+    window._bidirectional_road_action.setChecked(False)
+    window._bidirectional_road_action.setToolTip(
+        "Create both directed roads as one undoable edit (off by default)"
+    )
+    window._bidirectional_road_action.toggled.connect(
+        window._set_bidirectional_roads_enabled
+    )
+    window._tools_toolbar.addAction(window._bidirectional_road_action)

@@ -35,8 +35,8 @@ class LevelCanvasScene(QGraphicsScene):
     selection_cleared = Signal()
     # Emitted when a node is repositioned. Args: node_id, model_x, model_y
     node_item_moved = Signal(str, float, float)
-    # Emitted when the user creates a new edge. Args: edge_id, from_node_id, to_node_id, road_shape
-    edge_creation_requested = Signal(str, str, str, str)
+    # Args: edge_id, from_node_id, to_node_id, road_shape, bidirectional.
+    edge_creation_requested = Signal(str, str, str, str, bool)
     # Mutation requests are handled by DocumentController.
     delete_items_requested = Signal(object, object)
     # Emitted to explain placement state and failures.
@@ -55,6 +55,7 @@ class LevelCanvasScene(QGraphicsScene):
         self._transition_arc_items: list[TransitionArcItem] = []
         self._connection_source_node_id: str | None = None
         self._pending_road_shape = "horizontalFirst"
+        self._bidirectional_roads_enabled = False
         self._preview_path_item: QGraphicsPathItem | None = None
         self._preview_label_item: QGraphicsSimpleTextItem | None = None
         self._preview_arrow_item: QGraphicsPolygonItem | None = None
@@ -307,6 +308,10 @@ class LevelCanvasScene(QGraphicsScene):
         self._pending_road_shape = road_shape
         self._update_preview_label()
         self.road_shape_changed.emit(road_shape)
+
+    def set_bidirectional_roads_enabled(self, enabled: bool) -> None:
+        self._bidirectional_roads_enabled = enabled
+        self._update_preview_label()
 
     def begin_connection_drag(self, node_id: str, scene_position: QPointF) -> None:
         if self._editor_tool is not EditorTool.CONNECT or node_id not in self._node_items_by_id:
@@ -564,6 +569,13 @@ class LevelCanvasScene(QGraphicsScene):
             )
             return
 
+        if self._bidirectional_roads_enabled and self._edge_exists(to_node_id, from_node_id):
+            item.setSelected(True)
+            self.placement_message_changed.emit(
+                f"Roads not added. {to_node_id} already connects to {from_node_id}."
+            )
+            return
+
         self._clear_connection_source()
         item.setSelected(True)
         edge_id = self._generate_unique_edge_id()
@@ -572,10 +584,11 @@ class LevelCanvasScene(QGraphicsScene):
             from_node_id,
             to_node_id,
             self._pending_road_shape,
+            self._bidirectional_roads_enabled,
         )
         self.placement_message_changed.emit(
-            "Road added with "
-            f"{self._describe_road_shape(self._pending_road_shape).lower()}."
+            ("Two-way roads added with " if self._bidirectional_roads_enabled else "Road added with ")
+            + f"{self._describe_road_shape(self._pending_road_shape).lower()}."
         )
 
     def _set_connection_source(self, node_id: str) -> None:
@@ -741,6 +754,7 @@ class LevelCanvasScene(QGraphicsScene):
             return
         self._preview_label_item.setText(
             f"Road Preview: {self._describe_road_shape(self._pending_road_shape)}"
+            + (" (Two-Way)" if self._bidirectional_roads_enabled else "")
         )
 
     @staticmethod
@@ -749,10 +763,11 @@ class LevelCanvasScene(QGraphicsScene):
             return "Vertical First"
         return "Horizontal First"
 
-    def _generate_unique_edge_id(self) -> str:
+    def _generate_unique_edge_id(self, reserved_ids: set[str] | None = None) -> str:
         existing_edge_ids = set()
         if self._document is not None:
             existing_edge_ids = {edge.id for edge in self._document.graph.edges}
+        existing_edge_ids.update(reserved_ids or set())
 
         base_id = "edge"
         if base_id not in existing_edge_ids:

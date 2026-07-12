@@ -13,8 +13,10 @@ from app.commands import (
     EditSolutionCommand,
     MoveNodeCommand,
     ReorderEdgesCommand,
+    RenameReferencesCommand,
 )
 from app.models import LevelDocument, RouteEdgeModel, RouteNodeModel, SolutionModel
+from app.services.reference_rename_service import ReferenceRenameService
 
 
 class DocumentController(QObject):
@@ -34,6 +36,7 @@ class DocumentController(QObject):
         self._validation_timer.setInterval(250)
         self._validation_timer.timeout.connect(self.validation_requested)
         self.undo_stack.cleanChanged.connect(self._on_clean_changed)
+        self._reference_rename_service = ReferenceRenameService()
 
     @property
     def is_dirty(self) -> bool:
@@ -81,11 +84,16 @@ class DocumentController(QObject):
         self._mutate(DeleteItemsCommand, "Delete items", mutation)
 
     def add_edge(self, edge: RouteEdgeModel) -> None:
+        self.add_edges([edge])
+
+    def add_edges(self, edges: list[RouteEdgeModel]) -> None:
         def mutation(document, solution):
-            source = next(node for node in document.graph.nodes if node.id == edge.fromNodeID)
-            source.outgoingEdgeIDs.append(edge.id)
-            document.graph.edges.append(deepcopy(edge))
-        self._mutate(AddEdgeCommand, f"Add {edge.id}", mutation)
+            for edge in edges:
+                source = next(node for node in document.graph.nodes if node.id == edge.fromNodeID)
+                source.outgoingEdgeIDs.append(edge.id)
+                document.graph.edges.append(deepcopy(edge))
+        text = f"Add {edges[0].id}" if len(edges) == 1 else "Add two-way road"
+        self._mutate(AddEdgeCommand, text, mutation)
 
     def reorder_edges(self, node_id: str, ordered_ids: list[str], valid_ids: list[str]) -> None:
         def mutation(document, solution):
@@ -93,6 +101,24 @@ class DocumentController(QObject):
             remaining = [edge_id for edge_id in node.outgoingEdgeIDs if edge_id not in valid_ids]
             node.outgoingEdgeIDs = list(ordered_ids) + remaining
         self._mutate(ReorderEdgesCommand, f"Reorder roads from {node_id}", mutation)
+
+    def rename_node(self, old_id: str, new_id: str) -> None:
+        self._mutate(
+            RenameReferencesCommand,
+            f"Rename node {old_id} to {new_id}",
+            lambda document, solution: self._reference_rename_service.rename_node(
+                document, solution, old_id, new_id
+            ),
+        )
+
+    def rename_edge(self, old_id: str, new_id: str) -> None:
+        self._mutate(
+            RenameReferencesCommand,
+            f"Rename road {old_id} to {new_id}",
+            lambda document, solution: self._reference_rename_service.rename_edge(
+                document, solution, old_id, new_id
+            ),
+        )
 
     def edit_metadata(self, mutation) -> None:
         self._mutate(EditMetadataCommand, "Edit level metadata", mutation)
