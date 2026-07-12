@@ -8,7 +8,7 @@ import pytest
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
 try:
-    from PySide6.QtCore import Qt
+    from PySide6.QtCore import QPointF, Qt
     from PySide6.QtGui import QColor, QKeyEvent, QPalette
     from PySide6.QtWidgets import QApplication, QDialog, QFileDialog, QMessageBox, QPushButton, QToolBar, QWidget
 except ImportError as exc:
@@ -211,6 +211,26 @@ def test_piece_palette_double_click_switch_emits_switch(qapplication: QApplicati
         assert emitted_node_types == ["switch"]
     finally:
         palette.close()
+
+
+def test_canvas_node_placement_previews_snaps_and_cancels(qapplication: QApplication) -> None:
+    scene = LevelCanvasScene()
+    placements: list[tuple[str, float, float]] = []
+    scene.node_placement_requested.connect(
+        lambda role, x, y: placements.append((role, x, y))
+    )
+    scene.set_grid_snapping(True, 0.25)
+    scene.begin_node_placement("package")
+
+    scene._update_placement_preview(QPointF(199.0, -101.0))
+    assert scene._placement_preview is not None
+    assert scene.place_node_at(QPointF(199.0, -101.0)) is True
+    assert placements == [("package", 1.0, 0.5)]
+
+    escape = QKeyEvent(QKeyEvent.Type.KeyPress, Qt.Key.Key_Escape, Qt.KeyboardModifier.NoModifier)
+    scene.keyPressEvent(escape)
+    assert scene._placement_preview is None
+    assert scene.place_node_at(QPointF()) is False
 
 
 def test_main_window_has_main_toolbar(qapplication: QApplication) -> None:
@@ -1805,7 +1825,7 @@ def test_new_level_creates_minimal_document_and_updates_canvas(
         window.close()
 
 
-def test_palette_double_click_adds_unique_node_to_canvas_center_and_marks_dirty(
+def test_palette_selection_places_repeated_unique_nodes_at_clicked_coordinates_and_undoes(
     qapplication: QApplication,
 ) -> None:
     window = LevelEditorMainWindow()
@@ -1820,12 +1840,11 @@ def test_palette_double_click_adds_unique_node_to_canvas_center_and_marks_dirty(
             if window._piece_palette._list_widget.item(index).text() == "Route Node"
         )
 
-        center_scene_point = window._canvas_view.mapToScene(window._canvas_view.viewport().rect().center())
-        expected_model_x = center_scene_point.x() / window._canvas_view.scene().COORDINATE_SCALE
-        expected_model_y = -center_scene_point.y() / window._canvas_view.scene().COORDINATE_SCALE
-
-        window._piece_palette._list_widget.itemDoubleClicked.emit(route_item)
-        window._piece_palette._list_widget.itemDoubleClicked.emit(route_item)
+        window._piece_palette._list_widget.itemClicked.emit(route_item)
+        assert window.active_tool is EditorTool.PLACE_NODE
+        scene = window._canvas_view.scene()
+        scene.place_node_at(scene.model_to_scene_coordinates(1.25, -0.5))
+        scene.place_node_at(scene.model_to_scene_coordinates(2.0, 0.75))
         qapplication.processEvents()
 
         assert window._current_document is not None
@@ -1834,8 +1853,8 @@ def test_palette_double_click_adds_unique_node_to_canvas_center_and_marks_dirty(
         assert "node_1" in node_ids
 
         created_node = next(node for node in window._current_document.graph.nodes if node.id == "node")
-        assert created_node.x == pytest.approx(expected_model_x)
-        assert created_node.y == pytest.approx(expected_model_y)
+        assert created_node.x == pytest.approx(1.25)
+        assert created_node.y == pytest.approx(-0.5)
 
         canvas_node_ids = {
             item.node_id
@@ -1845,11 +1864,13 @@ def test_palette_double_click_adds_unique_node_to_canvas_center_and_marks_dirty(
         assert "node" in canvas_node_ids
         assert "node_1" in canvas_node_ids
         assert window._is_dirty is True
+        window._document_controller.undo_stack.undo()
+        assert "node_1" not in {node.id for node in window._current_document.graph.nodes}
     finally:
         window.close()
 
 
-def test_palette_double_click_adds_switch_node_with_switch_style(
+def test_palette_selection_places_switch_node_with_switch_style(
     qapplication: QApplication,
 ) -> None:
     window = LevelEditorMainWindow()
@@ -1862,7 +1883,8 @@ def test_palette_double_click_adds_switch_node_with_switch_style(
             if window._piece_palette._list_widget.item(index).text() == "Switch"
         )
 
-        window._piece_palette._list_widget.itemDoubleClicked.emit(switch_item)
+        window._piece_palette._list_widget.itemClicked.emit(switch_item)
+        window._canvas_view.scene().place_node_at(QPointF(180.0, 90.0))
         qapplication.processEvents()
 
         assert window._current_document is not None
@@ -1887,7 +1909,7 @@ def test_palette_double_click_adds_switch_node_with_switch_style(
         ("Destination", "destinationNodeID"),
     ],
 )
-def test_palette_double_click_updates_special_node_ids(
+def test_palette_placement_updates_special_node_ids(
     qapplication: QApplication,
     palette_label: str,
     document_id_field: str,
@@ -1905,7 +1927,8 @@ def test_palette_double_click_updates_special_node_ids(
             if window._piece_palette._list_widget.item(index).text() == palette_label
         )
 
-        window._piece_palette._list_widget.itemDoubleClicked.emit(target_item)
+        window._piece_palette._list_widget.itemClicked.emit(target_item)
+        window._canvas_view.scene().place_node_at(QPointF(180.0, 90.0))
         qapplication.processEvents()
 
         assert window._current_document is not None

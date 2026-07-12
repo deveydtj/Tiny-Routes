@@ -24,10 +24,11 @@ class PiecePalette(QWidget):
             item.setData(Qt.ItemDataRole.UserRole, node_type)
             self._list_widget.addItem(item)
 
-        self._list_widget.itemDoubleClicked.connect(self._on_item_double_clicked)
+        self._list_widget.itemClicked.connect(self._activate_item)
+        self._list_widget.itemDoubleClicked.connect(self._activate_item)
         layout.addWidget(self._list_widget)
 
-    def _on_item_double_clicked(self, item: QListWidgetItem) -> None:
+    def _activate_item(self, item: QListWidgetItem) -> None:
         node_type = item.data(Qt.ItemDataRole.UserRole)
         if isinstance(node_type, str) and node_type:
             self.node_type_activated.emit(node_type)

@@ -17,6 +17,8 @@ class LevelCanvasView(QGraphicsView):
             QPainter.RenderHint.Antialiasing | QPainter.RenderHint.TextAntialiasing,
         )
         self.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
+        self.setMouseTracking(True)
+        self.viewport().setMouseTracking(True)
         self.setTransformationAnchor(QGraphicsView.ViewportAnchor.AnchorUnderMouse)
         self.centerOn(0, 0)
 

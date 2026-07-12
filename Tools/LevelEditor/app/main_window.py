@@ -2,14 +2,13 @@ import math
 from pathlib import Path
 
 from PySide6.QtCore import Qt
-from PySide6.QtGui import QAction, QActionGroup, QCloseEvent, QIcon, QKeyEvent, QKeySequence
+from PySide6.QtGui import QCloseEvent, QKeyEvent
 from PySide6.QtWidgets import (
     QDialog,
     QDockWidget,
     QFileDialog,
     QMainWindow,
     QMessageBox,
-    QToolBar,
 )
 
 from app.config import find_repo_root, get_default_levels_directory
@@ -43,6 +42,7 @@ from app.ui import (
     SolutionPanel,
     ValidationPanel,
 )
+from app.ui.window_builders import build_main_toolbar, build_menu_bar, build_tools_toolbar
 
 
 class LevelEditorMainWindow(QMainWindow):
@@ -113,6 +113,7 @@ class LevelEditorMainWindow(QMainWindow):
         scene.selection_cleared.connect(self._properties_panel.clear)
         scene.node_item_moved.connect(self._on_node_item_moved)
         scene.edge_creation_requested.connect(self._on_edge_creation_requested)
+        scene.node_placement_requested.connect(self._place_node_at)
         scene.set_delete_items_handler(self._delete_items_with_controller)
         scene.placement_message_changed.connect(self.statusBar().showMessage)
         self._validation_panel.validate_requested.connect(self._validate_current_level)
@@ -136,142 +137,13 @@ class LevelEditorMainWindow(QMainWindow):
         return self._active_tool
 
     def _build_menu_bar(self) -> None:
-        menu_bar = self.menuBar()
-        self._file_menu = menu_bar.addMenu("File")
-
-        new_action = self._file_menu.addAction("New Level")
-        new_action.setShortcut(QKeySequence.StandardKey.New)
-        new_action.triggered.connect(self._new_level)
-
-        open_action = self._file_menu.addAction("Open Level...")
-        open_action.setShortcut(QKeySequence.StandardKey.Open)
-        open_action.triggered.connect(self._open_level)
-
-        save_action = self._file_menu.addAction("Save Level")
-        save_action.setShortcut(QKeySequence.StandardKey.Save)
-        save_action.triggered.connect(self._save_level)
-
-        save_as_action = self._file_menu.addAction("Save Level As...")
-        save_as_action.setShortcut(QKeySequence.StandardKey.SaveAs)
-        save_as_action.triggered.connect(self._save_level_as)
-
-        self._edit_menu = menu_bar.addMenu("Edit")
-        self._undo_action = self._document_controller.undo_stack.createUndoAction(self, "Undo")
-        self._undo_action.setShortcut(QKeySequence.StandardKey.Undo)
-        self._edit_menu.addAction(self._undo_action)
-        self._redo_action = self._document_controller.undo_stack.createRedoAction(self, "Redo")
-        self._redo_action.setShortcut(QKeySequence.StandardKey.Redo)
-        self._edit_menu.addAction(self._redo_action)
-
-        self._view_menu = menu_bar.addMenu("View")
-
-        fit_view_action = self._view_menu.addAction("Fit View")
-        fit_view_action.triggered.connect(self._canvas_view.fit_level_to_view)
-
-        reset_zoom_action = self._view_menu.addAction("Reset Zoom")
-        reset_zoom_action.triggered.connect(self._canvas_view.reset_zoom)
-
-        self._tools_menu = menu_bar.addMenu("Tools")
-
-        self._edit_metadata_action = self._tools_menu.addAction("Edit Level Metadata...")
-        self._edit_metadata_action.triggered.connect(self._edit_level_metadata)
-        self._edit_metadata_action.setEnabled(False)
-
-        self._promote_draft_action = self._tools_menu.addAction(
-            "Promote Draft to Production Level..."
-        )
-        self._promote_draft_action.triggered.connect(self._promote_draft_to_production_level)
-        self._promote_draft_action.setEnabled(False)
-
-        self._repair_metadata_action = self._tools_menu.addAction(
-            "Repair Current Level Metadata..."
-        )
-        self._repair_metadata_action.triggered.connect(self._repair_current_level_metadata)
-        self._repair_metadata_action.setEnabled(False)
-
-        self._tools_menu.addSeparator()
-
-        validate_action = self._tools_menu.addAction("Validate")
-        validate_action.setToolTip("Validate Level + Solution References")
-        validate_action.triggered.connect(self._validate_current_level)
-
-        self._run_tests_menu_action = self._tools_menu.addAction("Run Tests")
-        self._run_tests_menu_action.setToolTip("Run Swift Solvability Tests")
-        self._run_tests_menu_action.triggered.connect(self._run_level_tests)
-        self._run_tests_menu_action.setEnabled(False)
+        build_menu_bar(self)
 
     def _build_main_toolbar(self) -> None:
-        self._main_toolbar = QToolBar("Main Toolbar", self)
-        self._main_toolbar.setObjectName("mainToolbar")
-        self.addToolBar(self._main_toolbar)
-
-        new_action = QAction("New", self)
-        new_action.setShortcut(QKeySequence.StandardKey.New)
-        new_action.triggered.connect(self._new_level)
-        self._main_toolbar.addAction(new_action)
-
-        open_action = QAction("Open", self)
-        open_action.setShortcut(QKeySequence.StandardKey.Open)
-        open_action.triggered.connect(self._open_level)
-        self._main_toolbar.addAction(open_action)
-
-        save_action = QAction("Save", self)
-        save_action.setShortcut(QKeySequence.StandardKey.Save)
-        save_action.triggered.connect(self._save_level)
-        self._main_toolbar.addAction(save_action)
-
-        self._main_toolbar.addSeparator()
-
-        validate_action = QAction("Validate", self)
-        validate_action.setToolTip("Validate Level + Solution References")
-        validate_action.triggered.connect(self._validate_current_level)
-        self._main_toolbar.addAction(validate_action)
-
-        fit_view_action = QAction("Fit View", self)
-        fit_view_action.triggered.connect(self._canvas_view.fit_level_to_view)
-        self._main_toolbar.addAction(fit_view_action)
-
-        reset_zoom_action = QAction("Reset Zoom", self)
-        reset_zoom_action.triggered.connect(self._canvas_view.reset_zoom)
-        self._main_toolbar.addAction(reset_zoom_action)
-
-        self._main_toolbar.addSeparator()
-
-        self._run_tests_action = QAction("Run Tests", self)
-        self._run_tests_action.setToolTip("Run Swift Solvability Tests")
-        self._run_tests_action.triggered.connect(self._run_level_tests)
-        self._run_tests_action.setEnabled(False)
-        self._main_toolbar.addAction(self._run_tests_action)
+        build_main_toolbar(self)
 
     def _build_tools_toolbar(self) -> None:
-        self._tools_toolbar = QToolBar("Editor Tools", self)
-        self._tools_toolbar.setObjectName("editorToolsToolbar")
-        self.addToolBar(self._tools_toolbar)
-        self._tool_action_group = QActionGroup(self)
-        self._tool_action_group.setExclusive(True)
-        self._tool_actions: dict[EditorTool, QAction] = {}
-
-        shortcuts = {
-            EditorTool.SELECT: "V",
-            EditorTool.PLACE_NODE: "N",
-            EditorTool.CONNECT: "C",
-            EditorTool.PLAYTEST: "P",
-        }
-        icon_names = {
-            EditorTool.SELECT: "input-mouse",
-            EditorTool.PLACE_NODE: "list-add",
-            EditorTool.CONNECT: "insert-link",
-            EditorTool.PLAYTEST: "media-playback-start",
-        }
-        for tool in EditorTool:
-            action = QAction(QIcon.fromTheme(icon_names[tool]), tool.label, self)
-            action.setCheckable(True)
-            action.setShortcut(QKeySequence(shortcuts[tool]))
-            action.setToolTip(f"{tool.label} ({shortcuts[tool]}) — {tool.status_message}")
-            action.triggered.connect(lambda checked=False, selected=tool: self._set_active_tool(selected))
-            self._tool_action_group.addAction(action)
-            self._tools_toolbar.addAction(action)
-            self._tool_actions[tool] = action
+        build_tools_toolbar(self)
 
     def _set_active_tool(self, tool: EditorTool) -> None:
         self._active_tool = tool
@@ -875,13 +747,17 @@ class LevelEditorMainWindow(QMainWindow):
 
     def _add_node_from_palette(self, node_type: str) -> None:
         if self._current_document is None:
+            self.statusBar().showMessage("Create or open a level before placing nodes.")
+            return
+
+        self._set_active_tool(EditorTool.PLACE_NODE)
+        self._canvas_view.scene().begin_node_placement(node_type)
+
+    def _place_node_at(self, node_type: str, model_x: float, model_y: float) -> None:
+        if self._current_document is None:
             return
 
         node_id = self._generate_unique_default_node_id(node_type)
-        center_scene_position = self._canvas_view.mapToScene(
-            self._canvas_view.viewport().rect().center()
-        )
-        model_x, model_y = self._canvas_view.scene().scene_to_model_coordinates(center_scene_position)
         new_node = RouteNodeModel(
             id=node_id,
             x=model_x,

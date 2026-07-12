@@ -39,6 +39,8 @@ class LevelCanvasScene(QGraphicsScene):
     delete_items_requested = Signal(object, object)
     # Emitted to explain placement state and failures.
     placement_message_changed = Signal(str)
+    # Args: node role, model x, model y. The controller performs the mutation.
+    node_placement_requested = Signal(str, float, float)
 
     def __init__(self) -> None:
         super().__init__()
@@ -52,6 +54,10 @@ class LevelCanvasScene(QGraphicsScene):
         self._preview_path_item: QGraphicsPathItem | None = None
         self._preview_label_item: QGraphicsSimpleTextItem | None = None
         self._editor_tool = EditorTool.SELECT
+        self._placement_node_type: str | None = None
+        self._placement_preview: NodeItem | None = None
+        self._grid_snapping_enabled = False
+        self._grid_spacing = 0.25
         self._drag_start_positions: dict[str, tuple[float, float]] = {}
         self._delete_items_handler = None
         self._show_placeholder()
@@ -73,12 +79,27 @@ class LevelCanvasScene(QGraphicsScene):
         if not editing_enabled:
             self.clearSelection()
 
+    def begin_node_placement(self, node_type: str) -> None:
+        self.set_editor_tool(EditorTool.PLACE_NODE)
+        self._placement_node_type = node_type
+        self.placement_message_changed.emit(
+            f"Click to place {node_type.replace('_', ' ')} nodes; right-click or Escape cancels."
+        )
+
+    def set_grid_snapping(self, enabled: bool, spacing: float | None = None) -> None:
+        self._grid_snapping_enabled = enabled
+        if spacing is not None and spacing > 0:
+            self._grid_spacing = spacing
+
     def cancel_current_operation(self) -> None:
         self._clear_connection_source()
         self._reset_preview_state()
+        self._clear_placement_preview()
+        self._placement_node_type = None
 
     def display_level(self, document: LevelDocument) -> None:
         self._reset_preview_state()
+        self._clear_placement_preview()
         self.clear()
         self._document = document
         self._node_items_by_id = {}
@@ -125,6 +146,9 @@ class LevelCanvasScene(QGraphicsScene):
             scene_position.x() / self.COORDINATE_SCALE,
             -scene_position.y() / self.COORDINATE_SCALE,
         )
+
+    def model_to_scene_coordinates(self, model_x: float, model_y: float) -> QPointF:
+        return QPointF(model_x * self.COORDINATE_SCALE, -model_y * self.COORDINATE_SCALE)
 
     def level_items_bounding_rect(self) -> QRectF | None:
         level_items = [
@@ -177,6 +201,16 @@ class LevelCanvasScene(QGraphicsScene):
         if self._editor_tool is EditorTool.PLAYTEST:
             event.accept()
             return
+        if self._editor_tool is EditorTool.PLACE_NODE:
+            if event.button() == Qt.MouseButton.RightButton:
+                self.cancel_current_operation()
+                self.placement_message_changed.emit("Node placement canceled.")
+                event.accept()
+                return
+            if event.button() == Qt.MouseButton.LeftButton and self._placement_node_type:
+                self.place_node_at(event.scenePos())
+                event.accept()
+                return
         connection_click = (
             self._editor_tool is EditorTool.CONNECT
             and event.button() == Qt.MouseButton.LeftButton
@@ -205,11 +239,18 @@ class LevelCanvasScene(QGraphicsScene):
         self._drag_start_positions.clear()
 
     def mouseMoveEvent(self, event: QGraphicsSceneMouseEvent) -> None:
+        if self._editor_tool is EditorTool.PLACE_NODE and self._placement_node_type:
+            self._update_placement_preview(event.scenePos())
         if self._connection_source_node_id is not None:
             self._update_connection_preview(event.scenePos())
         super().mouseMoveEvent(event)
 
     def keyPressEvent(self, event: QKeyEvent) -> None:
+        if self._editor_tool is EditorTool.PLACE_NODE and event.key() == Qt.Key.Key_Escape:
+            self.cancel_current_operation()
+            self.placement_message_changed.emit("Node placement canceled.")
+            event.accept()
+            return
         if (
             self._editor_tool is not EditorTool.PLAYTEST
             and event.key() in {Qt.Key.Key_Delete, Qt.Key.Key_Backspace}
@@ -227,6 +268,15 @@ class LevelCanvasScene(QGraphicsScene):
             event.accept()
             return
         super().keyPressEvent(event)
+
+    def place_node_at(self, scene_position: QPointF) -> bool:
+        """Request an undoable placement at a scene position; placement remains active."""
+        if self._editor_tool is not EditorTool.PLACE_NODE or not self._placement_node_type:
+            return False
+        model_x, model_y = self.scene_to_model_coordinates(scene_position)
+        model_x, model_y = self._snap_model_coordinates(model_x, model_y)
+        self.node_placement_requested.emit(self._placement_node_type, model_x, model_y)
+        return True
 
     # ------------------------------------------------------------------
     # Selection handling
@@ -258,6 +308,36 @@ class LevelCanvasScene(QGraphicsScene):
         placeholder = self.addSimpleText(message)
         placeholder.setBrush(QColor("#666666"))
         placeholder.setPos(-80, -10)
+
+    def _snap_model_coordinates(self, x: float, y: float) -> tuple[float, float]:
+        if not self._grid_snapping_enabled:
+            return x, y
+        spacing = self._grid_spacing
+        return round(x / spacing) * spacing, round(y / spacing) * spacing
+
+    def _update_placement_preview(self, scene_position: QPointF) -> None:
+        if self._placement_node_type is None:
+            return
+        model_x, model_y = self.scene_to_model_coordinates(scene_position)
+        model_x, model_y = self._snap_model_coordinates(model_x, model_y)
+        preview_position = QPointF(model_x * self.COORDINATE_SCALE, -model_y * self.COORDINATE_SCALE)
+        if self._placement_preview is None:
+            preview = NodeItem("", self._placement_node_type, model_x, model_y)
+            preview.setPos(preview_position)
+            preview.setOpacity(0.55)
+            preview.setEnabled(False)
+            preview.setZValue(1000)
+            self.addItem(preview)
+            self._placement_preview = preview
+        else:
+            self._placement_preview.model_x = model_x
+            self._placement_preview.model_y = model_y
+            self._placement_preview.setPos(preview_position)
+
+    def _clear_placement_preview(self) -> None:
+        if self._is_live_graphics_item(self._placement_preview):
+            self.removeItem(self._placement_preview)
+        self._placement_preview = None
 
     def _delete_selected_items(self) -> bool:
         if self._document is None:

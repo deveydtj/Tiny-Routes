@@ -1705,6 +1705,8 @@ Tools/LevelEditor/app/commands/
 
 ## Task 10.4 — Break up `main_window.py`
 
+**Status:** Completed
+
 **Current size:** approximately 1,113 lines.
 
 **Suggested extractions**
@@ -1718,8 +1720,8 @@ Tools/LevelEditor/app/commands/
 
 **Acceptance tests**
 
-- [ ] Existing open/save/validate workflows still pass.
-- [ ] Main window primarily wires components and signals.
+- [x] Existing open/save/validate workflows still pass.
+- [x] Main window primarily wires components and signals.
 
 ### Phase 10 exit gate
 
@@ -1738,6 +1740,8 @@ Replace hidden workflows with direct manipulation and visible previews.
 
 ## Task 11.1 — Implement click-to-place nodes
 
+**Status:** Completed
+
 **Files to update**
 
 - `piece_palette.py`
@@ -1746,18 +1750,18 @@ Replace hidden workflows with direct manipulation and visible previews.
 
 **Steps**
 
-- [ ] Selecting a palette item activates Place Node mode with that node role.
-- [ ] Moving over the canvas shows a ghost node at the candidate position.
-- [ ] Clicking places the node at that position.
-- [ ] Placement uses grid snapping when enabled.
-- [ ] Right-click or Escape cancels placement.
-- [ ] Optional repeated placement stays active until canceled.
+- [x] Selecting a palette item activates Place Node mode with that node role.
+- [x] Moving over the canvas shows a ghost node at the candidate position.
+- [x] Clicking places the node at that position.
+- [x] Placement uses grid snapping when enabled.
+- [x] Right-click or Escape cancels placement.
+- [x] Optional repeated placement stays active until canceled.
 
 **Acceptance tests**
 
-- [ ] Node appears at the clicked model coordinate.
-- [ ] Repeated additions do not stack at viewport center.
-- [ ] Undo removes the placed node.
+- [x] Node appears at the clicked model coordinate.
+- [x] Repeated additions do not stack at viewport center.
+- [x] Undo removes the placed node.
 
 ## Task 11.2 — Add drag-and-drop palette placement
 
