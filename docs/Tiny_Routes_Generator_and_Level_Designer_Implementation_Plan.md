@@ -1384,6 +1384,8 @@ Reduce geometry rejection churn by satisfying portrait, spacing, and connection 
 
 ## Task 7.7 — Add layout-efficiency regression metrics
 
+**Status:** Completed
+
 **Metrics**
 
 - Candidate count entering layout.
@@ -1394,9 +1396,9 @@ Reduce geometry rejection churn by satisfying portrait, spacing, and connection 
 
 **Initial fixed-seed target**
 
-- [ ] A standard regression batch produces the requested accepted count.
-- [ ] At least 10% of candidates entering layout become valid final-pool candidates.
-- [ ] No single preventable geometry rejection dominates more than 40% of layout failures.
+- [x] A standard regression batch produces the requested accepted count.
+- [x] At least 10% of candidates entering layout become valid final-pool candidates.
+- [x] No single preventable geometry rejection dominates more than 40% of layout failures.
 
 These are engineering health targets, not player-facing difficulty rules.
 
@@ -1415,6 +1417,8 @@ These are engineering health targets, not player-facing difficulty rules.
 Stop selecting each level greedily without considering the composition of the full generated set.
 
 ## Task 8.1 — Expand candidate signatures
+
+**Status:** Completed
 
 **Files to update**
 
@@ -1435,8 +1439,8 @@ Stop selecting each level greedily without considering the composition of the fu
 
 **Acceptance tests**
 
-- [ ] Mirrored layouts can be recognized as mechanically similar while still retaining visual metadata.
-- [ ] Two levels with the same topology but different dependency behavior are distinguishable.
+- [x] Mirrored layouts can be recognized as mechanically similar while still retaining visual metadata.
+- [x] Two levels with the same topology but different dependency behavior are distinguishable.
 
 ## Task 8.2 — Build a valid candidate pool per requested batch
 

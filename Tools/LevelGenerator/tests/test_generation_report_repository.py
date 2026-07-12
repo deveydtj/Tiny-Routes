@@ -78,6 +78,9 @@ def test_generation_report_repository_writes_candidate_signatures(tmp_path) -> N
     payload = json.loads(config.json_report_path.read_text(encoding="utf-8"))
     signature = payload["acceptedLevels"][0]["signature"]
     assert signature["topologyHashShort"] == generated.candidate_signature.topology_hash[:8]
+    assert "decisionDependencyPattern" in signature
+    assert "mirroredLayoutSilhouette" in signature
+    assert "roadDirectionHistogram" in signature
     assert "Signatures" in config.report_path.read_text(encoding="utf-8")
     assert payload["acceptedLevels"][0]["switchPreview"]
     assert payload["acceptedLevels"][0]["switchPreview"][0]["visualDirectionBuckets"]
@@ -143,6 +146,13 @@ def test_generation_report_repository_writes_recipe_metadata(tmp_path) -> None:
 
     payload = json.loads((tmp_path / "report.json").read_text(encoding="utf-8"))
     accepted = payload["acceptedLevels"][0]
+
+    layout_efficiency = payload["dryRunSummary"]["layoutEfficiency"]
+    assert layout_efficiency["candidatesEnteringLayout"] >= 1
+    assert layout_efficiency["validCandidateCountAfterLayout"] >= 1
+    assert layout_efficiency["validCandidateRateAfterLayout"] >= 0.1
+    assert "geometryRejectionCountsByCode" in layout_efficiency
+    assert "averageRepairsPerAcceptedCandidate" in layout_efficiency
 
     assert result.passed is True
     assert accepted["recipeFamily"] == "single_switch"

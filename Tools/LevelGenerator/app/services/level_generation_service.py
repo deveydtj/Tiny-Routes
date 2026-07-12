@@ -179,6 +179,8 @@ class LevelGenerationService:
                     if map_seed_graph is not None:
                         candidate = self.map_seed_adapter.apply_to_generated_level(map_seed_graph, candidate, candidate_rng)
 
+                    self._record_layout_entry(result, candidate)
+
                     level_path = self.generated_level_repository.level_path(level_id, config.levels_output_dir)
                     solution_path = self.generated_level_repository.solution_path(level_id, config.solutions_output_dir)
                     validation_preset = self._preset_for_candidate_layout(candidate, preset)
@@ -311,6 +313,8 @@ class LevelGenerationService:
                             self._append_rejection_message(result, message)
                             continue
                         candidate_pool.append(candidate)
+                        result.valid_candidates_after_layout += 1
+                        result.repairs_for_valid_candidates += self._successful_layout_repairs(candidate)
                         candidate_pool_signatures.append(candidate_signature)
                         if self._candidate_pool_ready(candidate_pool, config, preset):
                             break
@@ -1028,10 +1032,27 @@ class LevelGenerationService:
         by_reason[reason_key] = by_reason.get(reason_key, 0) + 1
         stage = CandidateRejectionService.validation_stage_for_code(reason_key)
         result.rejection_stage_counts[stage] = result.rejection_stage_counts.get(stage, 0) + 1
+        if stage in {"layout_readability_validation", "road_shape_validation"}:
+            result.geometry_rejection_counts_by_code[reason_key] = (
+                result.geometry_rejection_counts_by_code.get(reason_key, 0) + 1
+            )
         if reason_key == "candidate_too_similar_to_batch":
             result.similarity_rejection_counts_by_difficulty[difficulty_key] = (
                 result.similarity_rejection_counts_by_difficulty.get(difficulty_key, 0) + 1
             )
+
+    def _record_layout_entry(self, result: GenerationResult, candidate) -> None:
+        # Legacy templates predate constructive layout metadata; only count candidates
+        # that actually passed through the layout/repair stage.
+        if getattr(candidate, "layout_metadata", None) is None:
+            return
+        result.candidates_entering_layout += 1
+        metadata = candidate.layout_metadata or {}
+        if int(metadata.get("layoutRepairSuccessCount", 0)) > 0 and not metadata.get("remainingRepairViolations"):
+            result.candidates_repaired_successfully += 1
+
+    def _successful_layout_repairs(self, candidate) -> int:
+        return int((getattr(candidate, "layout_metadata", None) or {}).get("layoutRepairSuccessCount", 0))
 
     def _record_filter_rejection(self, result: GenerationResult) -> None:
         result.filter_rejection_count += 1

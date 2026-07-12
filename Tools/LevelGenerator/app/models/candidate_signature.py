@@ -32,3 +32,12 @@ class CandidateSignature:
     nearby_mechanic_tag_penalty: float | None = None
     nearby_topology_class_penalty: float | None = None
     diversity_score: float | None = None
+    decision_dependency_pattern: tuple[int, int, float] = (0, 0, 0.0)
+    switch_degree_sequence: tuple[int, ...] = ()
+    revisit_state_reversal_pattern: tuple[int, int, int] = (0, 0, 0)
+    failure_outcome_distribution: tuple[tuple[str, int], ...] = ()
+    package_phase_pattern: tuple[int, int] = (0, 0)
+    layout_silhouette: tuple[tuple[float, float], ...] = ()
+    mirrored_layout_silhouette: tuple[tuple[float, float], ...] = ()
+    road_direction_histogram: tuple[tuple[str, int], ...] = ()
+    solution_decision_timing_pattern: tuple[float, ...] = ()

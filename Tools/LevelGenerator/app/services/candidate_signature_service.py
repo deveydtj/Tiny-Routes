@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+from collections import Counter
 from typing import Any
 
 from ..models.candidate_signature import CandidateSignature
@@ -48,6 +49,11 @@ class CandidateSignatureService:
             "tapNodeIDs": tap_node_ids,
             "centralSwitchRevisitCount": central_switch_revisit_count,
         }
+        profile = getattr(generated_level, "decision_profile", None)
+        switch_degree_sequence = tuple(sorted((count for count in outgoing_edge_counts if count > 1), reverse=True))
+        failure_distribution = self._failure_distribution(profile)
+        silhouette, mirrored_silhouette = self._layout_silhouettes(normalized_positions)
+        action_times = tuple(float(action.timeSeconds) for action in sorted(solution.actions, key=lambda action: action.timeSeconds))
         return CandidateSignature(
             level_id=generated_level.level_id,
             template_name=generated_level.template_name,
@@ -70,7 +76,73 @@ class CandidateSignatureService:
             required_path_length=self._required_path_length(generated_level),
             layout_orientation=self._layout_orientation(generated_level),
             layout_size_profile=self._layout_size_profile(generated_level),
+            decision_dependency_pattern=(
+                int(getattr(profile, "required_decision_count", len(solution.actions))),
+                int(getattr(profile, "ordered_dependency_count", 0)),
+                float(getattr(profile, "independent_decision_ratio", 0.0)),
+            ),
+            switch_degree_sequence=switch_degree_sequence,
+            revisit_state_reversal_pattern=(
+                int(getattr(profile, "route_revisit_count", 0)),
+                int(getattr(profile, "repeated_switch_decision_count", central_switch_revisit_count)),
+                int(getattr(profile, "switch_state_change_on_revisit_count", 0)),
+            ),
+            failure_outcome_distribution=failure_distribution,
+            package_phase_pattern=(
+                int(getattr(profile, "package_phase_decisions_before", 0)),
+                int(getattr(profile, "package_phase_decisions_after", 0)),
+            ),
+            layout_silhouette=silhouette,
+            mirrored_layout_silhouette=mirrored_silhouette,
+            road_direction_histogram=self._road_direction_histogram(level),
+            solution_decision_timing_pattern=self._timing_pattern(action_times),
         )
+
+    def _failure_distribution(self, profile) -> tuple[tuple[str, int], ...]:
+        if profile is None:
+            return ()
+        counts = Counter(getattr(profile, "failure_outcome_types", ()) or ())
+        dead_ends = int(getattr(profile, "dead_end_choice_count", 0))
+        early_destination = int(getattr(profile, "destination_before_package_choice_count", 0))
+        if dead_ends:
+            counts["dead_end"] = dead_ends
+        if early_destination:
+            counts["destination_before_package"] = early_destination
+        known = sum(counts.values())
+        remainder = max(0, int(getattr(profile, "failure_route_count", known)) - known)
+        if remainder:
+            counts["other"] += remainder
+        return tuple(sorted(counts.items()))
+
+    def _layout_silhouettes(self, positions):
+        visual = tuple(sorted((x, y) for _, x, y in positions))
+        mirrored = tuple(sorted((round(1.0 - x, 4), y) for x, y in visual))
+        return visual, min(visual, mirrored)
+
+    def _road_direction_histogram(self, level_document) -> tuple[tuple[str, int], ...]:
+        positions = {node.id: (float(node.x), float(node.y)) for node in level_document.graph.nodes}
+        counts: Counter[str] = Counter()
+        for edge in level_document.graph.edges:
+            if edge.fromNodeID not in positions or edge.toNodeID not in positions:
+                continue
+            x1, y1 = positions[edge.fromNodeID]
+            x2, y2 = positions[edge.toNodeID]
+            dx, dy = x2 - x1, y2 - y1
+            if abs(dx) >= abs(dy):
+                counts["right" if dx >= 0 else "left"] += 1
+            else:
+                counts["down" if dy >= 0 else "up"] += 1
+        return tuple(sorted(counts.items()))
+
+    def _timing_pattern(self, times: tuple[float, ...]) -> tuple[float, ...]:
+        if not times:
+            return ()
+        origin = times[0]
+        relative = tuple(time - origin for time in times)
+        scale = relative[-1]
+        if scale <= 0:
+            return tuple(0.0 for _ in relative)
+        return tuple(round(value / scale, 4) for value in relative)
 
     def _normalized_edges(self, level_document) -> tuple[tuple[str, str], ...]:
         return tuple(

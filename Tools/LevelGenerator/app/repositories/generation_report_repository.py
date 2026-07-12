@@ -756,6 +756,15 @@ class GenerationReportRepository:
             "solutionHash": signature.solution_hash,
             "solutionHashShort": signature.solution_hash[:8],
             "normalizedPositions": list(signature.normalized_positions),
+            "decisionDependencyPattern": list(signature.decision_dependency_pattern),
+            "switchDegreeSequence": list(signature.switch_degree_sequence),
+            "revisitStateReversalPattern": list(signature.revisit_state_reversal_pattern),
+            "failureOutcomeDistribution": [list(item) for item in signature.failure_outcome_distribution],
+            "packagePhasePattern": list(signature.package_phase_pattern),
+            "layoutSilhouette": [list(item) for item in signature.layout_silhouette],
+            "mirroredLayoutSilhouette": [list(item) for item in signature.mirrored_layout_silhouette],
+            "roadDirectionHistogram": [list(item) for item in signature.road_direction_histogram],
+            "solutionDecisionTimingPattern": list(signature.solution_decision_timing_pattern),
         }
 
     def _candidate_status_payload(
@@ -1126,6 +1135,15 @@ class GenerationReportRepository:
         accepted_count = len(getattr(result, "accepted", []))
         rejected_count = int(getattr(result, "rejected_candidate_count", 0))
         attempted_count = int(getattr(result, "candidate_validation_count", 0)) or accepted_count + rejected_count
+        entering_layout = int(getattr(result, "candidates_entering_layout", 0))
+        valid_after_layout = int(getattr(result, "valid_candidates_after_layout", 0))
+        repairs_for_valid = int(getattr(result, "repairs_for_valid_candidates", 0))
+        geometry_rejections = dict(sorted(getattr(result, "geometry_rejection_counts_by_code", {}).items()))
+        geometry_failure_count = sum(geometry_rejections.values())
+        dominant_geometry_share = (
+            round(max(geometry_rejections.values()) / geometry_failure_count, 4)
+            if geometry_failure_count else None
+        )
         return {
             "safeScratchRun": bool(config.dry_run),
             "acceptedCount": accepted_count,
@@ -1168,6 +1186,15 @@ class GenerationReportRepository:
             "similarityRejectionCountsByDifficulty": dict(
                 sorted(getattr(result, "similarity_rejection_counts_by_difficulty", {}).items())
             ),
+            "layoutEfficiency": {
+                "candidatesEnteringLayout": entering_layout,
+                "candidatesRepairedSuccessfully": int(getattr(result, "candidates_repaired_successfully", 0)),
+                "geometryRejectionCountsByCode": geometry_rejections,
+                "validCandidateCountAfterLayout": valid_after_layout,
+                "validCandidateRateAfterLayout": round(valid_after_layout / entering_layout, 4) if entering_layout else None,
+                "averageRepairsPerAcceptedCandidate": round(repairs_for_valid / valid_after_layout, 4) if valid_after_layout else None,
+                "dominantGeometryRejectionShare": dominant_geometry_share,
+            },
         }
 
     def _accepted_streaks(self, values) -> dict[str, Any]:

@@ -37,6 +37,11 @@ class GenerationResult:
     rejection_stage_counts: dict[str, int] = field(default_factory=dict)
     rejection_reason_counts_by_difficulty: dict[str, dict[str, int]] = field(default_factory=dict)
     similarity_rejection_counts_by_difficulty: dict[str, int] = field(default_factory=dict)
+    candidates_entering_layout: int = 0
+    candidates_repaired_successfully: int = 0
+    geometry_rejection_counts_by_code: dict[str, int] = field(default_factory=dict)
+    valid_candidates_after_layout: int = 0
+    repairs_for_valid_candidates: int = 0
     diversity_adjustment_decisions: list[dict[str, Any]] = field(default_factory=list)
     written_level_paths: list[Path] = field(default_factory=list)
     written_solution_paths: list[Path] = field(default_factory=list)

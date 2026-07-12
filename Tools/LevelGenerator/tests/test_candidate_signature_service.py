@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from copy import deepcopy
+from dataclasses import replace
 
 from app.random_source import RandomSource
 from app.recipes.recipe_family_registry import RecipeFamilyRegistry
@@ -96,3 +97,37 @@ def test_same_topology_with_different_layout_keeps_topology_class_auditable() ->
     assert "single_switch" in normal_signature.mechanic_tags
     assert normal_signature.topology_hash == tall_signature.topology_hash
     assert normal_signature.layout_hash != tall_signature.layout_hash
+
+
+def test_mirrored_layout_retains_visual_shape_and_shared_canonical_silhouette() -> None:
+    preset = DifficultyService().get_preset("easy")
+    generated = SingleSwitchTemplate().generate("level_012", 12, preset, RandomSource(10))
+    mirrored = deepcopy(generated)
+    for node in mirrored.level_document.graph.nodes:
+        node.x = 1.0 - node.x
+
+    original_signature = CandidateSignatureService().signature_for(generated)
+    mirrored_signature = CandidateSignatureService().signature_for(mirrored)
+
+    assert original_signature.layout_silhouette != mirrored_signature.layout_silhouette
+    assert original_signature.mirrored_layout_silhouette == mirrored_signature.mirrored_layout_silhouette
+    assert original_signature.topology_hash == mirrored_signature.topology_hash
+
+
+def test_same_topology_with_different_dependency_behavior_is_distinguishable() -> None:
+    preset = DifficultyService().get_preset("easy")
+    family = RecipeFamilyRegistry().get_family("single_switch")
+    recipe = family.generate_recipe("level_012", preset, RandomSource(10))
+    generated = RecipeToLevelBuilderService().build_level(recipe, 12, seed=10)
+    changed = deepcopy(generated)
+    changed.decision_profile = replace(
+        generated.decision_profile,
+        ordered_dependency_count=generated.decision_profile.ordered_dependency_count + 1,
+    )
+    service = CandidateSignatureService()
+
+    original_signature = service.signature_for(generated)
+    changed_signature = service.signature_for(changed)
+
+    assert original_signature.topology_hash == changed_signature.topology_hash
+    assert original_signature.decision_dependency_pattern != changed_signature.decision_dependency_pattern
