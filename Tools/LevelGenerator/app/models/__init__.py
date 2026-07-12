@@ -7,6 +7,9 @@ from .generation_quality import GenerationQualityScore
 from .generation_batch_plan import GenerationBatchPlan, GenerationBatchPlanEntry
 from .generation_result import GenerationResult, SwiftTestSummary
 from .graph_recipe import GraphRecipe, GraphRecipeEdge, GraphRecipeNode
+from .layout_constraints import ConstraintViolation, LayoutConstraints, RepairOperation, ReservedIconClearance
+from .layout_graph import GridCell, Lane, LayoutGraph, NodeFootprint, SwitchPortDirection
+from .layout_result import LayerAssignment, LayoutLayerResult, LayoutResult
 from .recipe_variant_spec import RecipeVariantSpec
 from .recipe_topology_rules import RecipeTopologyRules
 from .runtime_parity import RuntimeParityValidationResult
@@ -31,6 +34,18 @@ __all__ = [
     "GraphRecipe",
     "GraphRecipeEdge",
     "GraphRecipeNode",
+    "ConstraintViolation",
+    "GridCell",
+    "Lane",
+    "LayerAssignment",
+    "LayoutConstraints",
+    "LayoutGraph",
+    "LayoutLayerResult",
+    "LayoutResult",
+    "NodeFootprint",
+    "RepairOperation",
+    "ReservedIconClearance",
+    "SwitchPortDirection",
     "RecipeTopologyRules",
     "RecipeVariantSpec",
     "RuntimeParityValidationResult",

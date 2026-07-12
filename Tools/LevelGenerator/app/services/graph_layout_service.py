@@ -3,40 +3,15 @@ from __future__ import annotations
 import math
 import hashlib
 import json
-from dataclasses import dataclass
 from typing import Iterable
 
 from ..models.difficulty_preset import DifficultyPreset
 from ..models.graph_recipe import GraphRecipe
+from ..models.layout_constraints import BoundingBox, ConstraintViolation
+from ..models.layout_result import LayoutPlanResult
 from ..random_source import RandomSource
 
-
-@dataclass(frozen=True)
-class BoundingBox:
-    min_x: float = -1.2
-    max_x: float = 1.2
-    min_y: float = -1.3
-    max_y: float = 1.0
-
-
-@dataclass(frozen=True)
-class LayoutValidationIssue:
-    code: str
-    message: str
-    node_id: str | None = None
-
-
-@dataclass(frozen=True)
-class LayoutPlanResult:
-    strategy: str
-    variant: str
-    positions: dict[str, tuple[float, float]]
-    validation_issues: tuple[LayoutValidationIssue, ...]
-    metadata: dict[str, object]
-
-    @property
-    def is_valid(self) -> bool:
-        return not self.validation_issues
+LayoutValidationIssue = ConstraintViolation
 
 
 class GraphLayoutService:

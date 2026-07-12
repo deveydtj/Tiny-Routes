@@ -1239,6 +1239,8 @@ Reduce geometry rejection churn by satisfying portrait, spacing, and connection 
 
 ## Task 7.1 — Extract layout data structures
 
+**Status:** Completed
+
 **Files to add**
 
 - `Tools/LevelGenerator/app/models/layout_graph.py`
@@ -1259,6 +1261,8 @@ Reduce geometry rejection churn by satisfying portrait, spacing, and connection 
 
 ## Task 7.2 — Add topological layer assignment
 
+**Status:** Completed
+
 **Files to add or update**
 
 - `Tools/LevelGenerator/app/services/layout_layer_service.py`
@@ -1266,18 +1270,18 @@ Reduce geometry rejection churn by satisfying portrait, spacing, and connection 
 
 **Steps**
 
-- [ ] Place start in lower portrait layers.
-- [ ] Place destination in upper portrait layers.
-- [ ] Assign primary route progression vertically.
-- [ ] Place branches in adjacent horizontal lanes.
-- [ ] Handle cycles and revisits with explicit return lanes.
-- [ ] Reserve expanded space around three- and four-way switches.
+- [x] Place start in lower portrait layers.
+- [x] Place destination in upper portrait layers.
+- [x] Assign primary route progression vertically.
+- [x] Place branches in adjacent horizontal lanes.
+- [x] Handle cycles and revisits with explicit return lanes.
+- [x] Reserve expanded space around three- and four-way switches.
 
 **Acceptance tests**
 
-- [ ] Simple paths are monotonic in primary vertical progression.
-- [ ] Split/rejoin motifs receive separate lanes.
-- [ ] Return loops receive a nonoverlapping return lane.
+- [x] Simple paths are monotonic in primary vertical progression.
+- [x] Split/rejoin motifs receive separate lanes.
+- [x] Return loops receive a nonoverlapping return lane.
 
 ## Task 7.3 — Add switch-port assignment
 
