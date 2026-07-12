@@ -4,6 +4,9 @@ from collections import Counter, deque
 from dataclasses import dataclass, field
 from typing import Any
 
+from .solution_state_search import SolutionStateSearch, SolutionStateSearchResult
+from .unique_solution_report_builder import UniqueSolutionReportBuilder
+
 
 @dataclass(frozen=True)
 class UniqueSolutionValidationIssue:
@@ -112,6 +115,14 @@ class UniqueSolutionValidatorService:
     """Counts bounded structural solutions for generated levels."""
 
     path_summary_limit = 24
+
+    def __init__(
+        self,
+        state_search: SolutionStateSearch | None = None,
+        report_builder: UniqueSolutionReportBuilder | None = None,
+    ) -> None:
+        self._state_search = state_search or SolutionStateSearch(self.path_summary_limit)
+        self._report_builder = report_builder or UniqueSolutionReportBuilder()
 
     def validate_unique_solution(self, generated_level) -> UniqueSolutionValidationResult:
         topology_rules = self._topology_rules(generated_level)
@@ -283,6 +294,20 @@ class UniqueSolutionValidatorService:
         )
 
     def _enumerate_solutions(
+        self,
+        generated_level,
+        initial_state: UniqueSolutionSearchState,
+        config: UniqueSolutionValidationConfig,
+    ) -> SolutionStateSearchResult:
+        return self._state_search.search(
+            generated_level,
+            initial_state,
+            config,
+            state_factory=UniqueSolutionSearchState,
+            path_summary_factory=self._path_summary,
+        )
+
+    def _enumerate_solutions_legacy(
         self,
         generated_level,
         initial_state: UniqueSolutionSearchState,
@@ -1295,41 +1320,7 @@ class UniqueSolutionValidatorService:
         return tuple(sorted(counts.items()))
 
     def _issues_for_result(self, result: "_EnumerationResult") -> tuple[UniqueSolutionValidationIssue, ...]:
-        if result.solution_count > 1:
-            return (
-                UniqueSolutionValidationIssue(
-                    severity="error",
-                    code="unique_solution_multiple_solutions",
-                    message=(
-                        "Unique solution search found more than one valid package-before-destination solution "
-                        f"(solutions={result.solution_count}, exploredStates={result.explored_states})."
-                    ),
-                ),
-            )
-        if not result.is_exhaustive:
-            return (
-                UniqueSolutionValidationIssue(
-                    severity="error",
-                    code="unique_solution_search_limit_reached",
-                    message=(
-                        "Unique solution search hit a traversal limit before proving uniqueness "
-                        f"(solutions={result.solution_count}, exploredStates={result.explored_states}, "
-                        f"maxDepthReached={result.max_depth_reached}, termination={result.termination_reason})."
-                    ),
-                ),
-            )
-        if result.solution_count == 0:
-            return (
-                UniqueSolutionValidationIssue(
-                    severity="error",
-                    code="unique_solution_not_found",
-                    message=(
-                        "Unique solution search found no valid package-before-destination solution "
-                        f"(exploredStates={result.explored_states})."
-                    ),
-                ),
-            )
-        return ()
+        return self._report_builder.build_issues(result, UniqueSolutionValidationIssue)
 
     def _path_summary(
         self,

@@ -1548,6 +1548,8 @@ Reduce regression risk by dividing oversized services into clear stages after be
 
 ## Task 9.2 — Split unique-solution validation
 
+**Status:** Completed
+
 **Current size:** approximately 1,591 lines.
 
 **Suggested components**
@@ -1559,11 +1561,13 @@ Reduce regression risk by dividing oversized services into clear stages after be
 
 **Steps**
 
-- [ ] Separate search from report formatting.
-- [ ] Make search limits explicit configuration.
-- [ ] Use decision-profile terminology.
+- [x] Separate search from report formatting.
+- [x] Make search limits explicit configuration.
+- [x] Use decision-profile terminology.
 
 ## Task 9.3 — Split layout services
+
+**Status:** Completed
 
 **Current large files**
 
