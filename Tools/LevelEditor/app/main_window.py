@@ -37,6 +37,7 @@ from app.ui import (
     LevelCanvasView,
     LevelMetadataDialog,
     LevelMetadataResult,
+    LevelRulesDialog,
     PiecePalette,
     PropertiesPanel,
     SolutionPanel,
@@ -402,6 +403,17 @@ class LevelEditorMainWindow(QMainWindow):
             return
 
         self._apply_metadata_result(result)
+
+    def _edit_level_rules(self) -> None:
+        if self._current_document is None:
+            return
+        schema_version = self._current_document._extra.get("schemaVersion", 1)
+        dialog = LevelRulesDialog(self._current_document.rules, schema_version, self)
+        if dialog.exec() != QDialog.DialogCode.Accepted:
+            return
+        result = dialog.result_value()
+        self._ensure_controller_state()
+        self._document_controller.edit_rules(result.rules, result.schema_version)
 
     def _promote_draft_to_production_level(self) -> None:
         if self._current_document is None:
@@ -1089,6 +1101,7 @@ class LevelEditorMainWindow(QMainWindow):
             "_edit_metadata_action",
             "_promote_draft_action",
             "_repair_metadata_action",
+            "_edit_rules_action",
         ):
             action = getattr(self, action_name, None)
             if action is not None:

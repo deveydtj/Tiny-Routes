@@ -31,7 +31,8 @@ class NodeItem(QGraphicsItemGroup):
     INVALID_BORDER_COLOR = "#c62828"
     VALID_TARGET_BORDER_COLOR = "#00897b"
 
-    def __init__(self, node_id: str, node_type: str, model_x: float = 0.0, model_y: float = 0.0) -> None:
+    def __init__(self, node_id: str, node_type: str, model_x: float = 0.0, model_y: float = 0.0,
+                 *, has_warning: bool = False) -> None:
         super().__init__()
         self.node_id = node_id
         self.node_type = node_type if node_type in NODE_TYPE_STYLES else "route"
@@ -55,9 +56,26 @@ class NodeItem(QGraphicsItemGroup):
         self.addToGroup(circle)
 
         label = QGraphicsSimpleTextItem(self.node_id)
+        label.setFlag(QGraphicsItem.GraphicsItemFlag.ItemIgnoresTransformations, True)
         label_rect = label.boundingRect()
         label.setPos(-label_rect.width() / 2, -label_rect.height() / 2)
         self.addToGroup(label)
+
+        role_icons = {"start": "▶", "package": "▣", "destination": "⚑", "switch": "↻", "four_way_switch": "↻"}
+        if self.node_type in role_icons:
+            role_badge = QGraphicsSimpleTextItem(role_icons[self.node_type])
+            role_badge.setFlag(QGraphicsItem.GraphicsItemFlag.ItemIgnoresTransformations, True)
+            role_badge.setToolTip(self.node_type.replace("_", " ").title())
+            role_badge.setPos(-radius + 3, -radius - 18)
+            self.addToGroup(role_badge)
+
+        if has_warning:
+            warning = QGraphicsSimpleTextItem("⚠")
+            warning.setFlag(QGraphicsItem.GraphicsItemFlag.ItemIgnoresTransformations, True)
+            warning.setBrush(QColor(self.INVALID_BORDER_COLOR))
+            warning.setToolTip("This node has a validation warning or error")
+            warning.setPos(radius - 8, -radius - 18)
+            self.addToGroup(warning)
 
         self.connection_handle = ConnectionHandleItem(self.node_id, self)
         self.connection_handle.setPos(radius, 0)
@@ -65,6 +83,7 @@ class NodeItem(QGraphicsItemGroup):
 
         if self.node_type == "four_way_switch":
             badge = QGraphicsSimpleTextItem("4")
+            badge.setFlag(QGraphicsItem.GraphicsItemFlag.ItemIgnoresTransformations, True)
             badge.setBrush(QColor("#7c2d12"))
             badge_rect = badge.boundingRect()
             badge.setPos(radius - badge_rect.width() - 8, -radius + 5)

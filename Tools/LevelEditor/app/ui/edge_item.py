@@ -1,8 +1,8 @@
 import math
 
 from PySide6.QtCore import QPointF
-from PySide6.QtGui import QPainterPath, QPen, QPolygonF
-from PySide6.QtWidgets import QGraphicsItem, QGraphicsItemGroup, QGraphicsPathItem, QGraphicsPolygonItem
+from PySide6.QtGui import QColor, QPainterPath, QPen, QPolygonF
+from PySide6.QtWidgets import QGraphicsItem, QGraphicsItemGroup, QGraphicsPathItem, QGraphicsPolygonItem, QGraphicsSimpleTextItem
 
 from .canvas_colors import road_color
 from .node_item import NodeItem
@@ -19,6 +19,9 @@ class EdgeItem(QGraphicsItemGroup):
         from_node: NodeItem,
         to_node: NodeItem,
         road_shape: str | None = None,
+        option_number: int | None = None,
+        is_initial: bool = False,
+        has_warning: bool = False,
     ) -> None:
         super().__init__()
         self.edge_id = edge_id
@@ -30,13 +33,21 @@ class EdgeItem(QGraphicsItemGroup):
         self.setZValue(-1)
         self.setFlag(QGraphicsItem.GraphicsItemFlag.ItemIsSelectable, True)
         self._path_item = QGraphicsPathItem()
-        self._path_item.setPen(QPen(road_color(), 2))
+        self._path_item.setPen(QPen(QColor("#16a34a") if is_initial else road_color(), 5 if is_initial else 2))
         self.addToGroup(self._path_item)
         self._arrow_item = QGraphicsPolygonItem()
         road = road_color()
         self._arrow_item.setBrush(road)
         self._arrow_item.setPen(QPen(road, 1))
         self.addToGroup(self._arrow_item)
+        annotation = f"{option_number}" if option_number is not None else ""
+        if has_warning:
+            annotation = f"{annotation} ⚠".strip()
+        self._annotation_item = QGraphicsSimpleTextItem(annotation)
+        self._annotation_item.setFlag(QGraphicsItem.GraphicsItemFlag.ItemIgnoresTransformations, True)
+        self._annotation_item.setBrush(QColor("#c62828") if has_warning else QColor("#374151"))
+        self._annotation_item.setToolTip("Initial active road" if is_initial else "Switch option")
+        self.addToGroup(self._annotation_item)
         self.refresh_position()
 
     def refresh_position(self, allow_degenerate: bool = False) -> None:
@@ -62,6 +73,8 @@ class EdgeItem(QGraphicsItemGroup):
         for point in points[1:]:
             path.lineTo(point)
         self._path_item.setPath(path)
+        midpoint = path.pointAtPercent(0.48)
+        self._annotation_item.setPos(midpoint.x() + 5, midpoint.y() - 18)
 
         arrow_segment = self._resolve_arrow_segment(points)
         if arrow_segment is None:

@@ -37,6 +37,8 @@ def build_menu_bar(window: QMainWindow) -> None:
     window._tools_menu = menu_bar.addMenu("Tools")
     window._edit_metadata_action = window._tools_menu.addAction("Edit Level Metadata...")
     window._edit_metadata_action.triggered.connect(window._edit_level_metadata)
+    window._edit_rules_action = window._tools_menu.addAction("Edit Level Rules...")
+    window._edit_rules_action.triggered.connect(window._edit_level_rules)
     window._promote_draft_action = window._tools_menu.addAction("Promote Draft to Production Level...")
     window._promote_draft_action.triggered.connect(window._promote_draft_to_production_level)
     window._repair_metadata_action = window._tools_menu.addAction("Repair Current Level Metadata...")
@@ -45,6 +47,7 @@ def build_menu_bar(window: QMainWindow) -> None:
         window._edit_metadata_action,
         window._promote_draft_action,
         window._repair_metadata_action,
+        window._edit_rules_action,
     ):
         action.setEnabled(False)
     window._tools_menu.addSeparator()

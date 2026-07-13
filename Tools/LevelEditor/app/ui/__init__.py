@@ -3,6 +3,7 @@ from .canvas_view import LevelCanvasView
 from .connection_handle_item import ConnectionHandleItem
 from .edge_item import EdgeItem
 from .level_metadata_dialog import LevelMetadataDialog, LevelMetadataResult
+from .level_rules_dialog import LevelRulesDialog, LevelRulesResult
 from .node_item import NodeItem
 from .piece_palette import PiecePalette
 from .properties_panel import PropertiesPanel
@@ -17,6 +18,8 @@ __all__ = [
     "LevelCanvasView",
     "LevelMetadataDialog",
     "LevelMetadataResult",
+    "LevelRulesDialog",
+    "LevelRulesResult",
     "NodeItem",
     "PiecePalette",
     "PropertiesPanel",

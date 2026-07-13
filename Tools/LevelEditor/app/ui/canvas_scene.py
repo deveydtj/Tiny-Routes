@@ -15,6 +15,7 @@ from shiboken6 import isValid
 
 from app.models import EditorTool, LevelDocument, RouteNodeModel
 from app.services.switch_classification_service import SwitchClassificationService, SwitchNodeKind
+from app.services.level_validation_service import validate
 
 from .canvas_colors import canvas_grid_color
 from .edge_item import EdgeItem
@@ -130,11 +131,27 @@ class LevelCanvasScene(QGraphicsScene):
             self._show_placeholder("No nodes in this level")
             return
 
+        validation = validate(document)
+        warning_node_ids = {m.related_node_id for m in validation.messages if m.related_node_id}
+        warning_edge_ids = {m.related_edge_id for m in validation.messages if m.related_edge_id}
+        edge_by_id = {edge.id: edge for edge in document.graph.edges}
+        option_by_edge_id: dict[str, int] = {}
+        initial_edge_ids: set[str] = set()
+        classifier = SwitchClassificationService()
+        for node in document.graph.nodes:
+            classification = classifier.classify_node(node, edge_by_id)
+            if classification.is_switchable:
+                for option, edge_id in enumerate(classification.valid_outgoing_edge_ids, 1):
+                    option_by_edge_id[edge_id] = option
+                if classification.valid_outgoing_edge_ids:
+                    initial_edge_ids.add(classification.valid_outgoing_edge_ids[0])
+
         for index, node in enumerate(document.graph.nodes):
             node_type = self._resolve_node_type(document, node)
             model_x = float(node.x) if isinstance(node.x, (int, float)) else 0.0
             model_y = float(node.y) if isinstance(node.y, (int, float)) else 0.0
-            node_item = NodeItem(node_id=node.id, node_type=node_type, model_x=model_x, model_y=model_y)
+            node_item = NodeItem(node_id=node.id, node_type=node_type, model_x=model_x, model_y=model_y,
+                                 has_warning=node.id in warning_node_ids)
             node_item.setPos(self._resolve_scene_position(node, index))
             editing_enabled = self._editor_tool is not EditorTool.PLAYTEST
             node_item.setFlag(node_item.GraphicsItemFlag.ItemIsMovable, editing_enabled)
@@ -154,6 +171,9 @@ class LevelCanvasScene(QGraphicsScene):
                     from_node=from_node,
                     to_node=to_node,
                     road_shape=edge.roadShape,
+                    option_number=option_by_edge_id.get(edge.id),
+                    is_initial=edge.id in initial_edge_ids,
+                    has_warning=edge.id in warning_edge_ids,
                 )
             except ValueError:
                 continue

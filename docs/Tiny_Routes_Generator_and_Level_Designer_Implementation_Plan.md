@@ -1954,6 +1954,8 @@ Allow designers to correct level data without deleting and recreating objects.
 
 ## Task 12.4 — Add editable level rules
 
+**Status:** Completed
+
 **Fields**
 
 - Schema version display.
@@ -1963,26 +1965,28 @@ Allow designers to correct level data without deleting and recreating objects.
 
 **Steps**
 
-- [ ] Put advanced rule fields in a Level Rules dialog or inspector section.
-- [ ] Default new levels to `liveLookahead`.
-- [ ] Show a migration warning for legacy mode.
-- [ ] Validate ranges inline.
+- [x] Put advanced rule fields in a Level Rules dialog or inspector section.
+- [x] Default new levels to `liveLookahead`.
+- [x] Show a migration warning for legacy mode.
+- [x] Validate ranges inline.
 
 ## Task 12.5 — Improve canvas annotations
 
+**Status:** Completed
+
 **Steps**
 
-- [ ] Show switch option numbers near outgoing roads.
-- [ ] Highlight the initial active road.
-- [ ] Show node role icons independent of ID naming.
-- [ ] Show warning badges for invalid nodes/edges.
-- [ ] Keep labels readable at common zoom levels.
+- [x] Show switch option numbers near outgoing roads.
+- [x] Highlight the initial active road.
+- [x] Show node role icons independent of ID naming.
+- [x] Show warning badges for invalid nodes/edges.
+- [x] Keep labels readable at common zoom levels.
 
 ### Phase 12 exit gate
 
 - [ ] Node and edge properties are editable.
 - [ ] Renames preserve all references.
-- [ ] Switch order and initial route are obvious on the canvas.
+- [x] Switch order and initial route are obvious on the canvas.
 
 ---
 

@@ -13,6 +13,7 @@ from app.commands import (
     EditMetadataCommand,
     EditNodeCommand,
     EditSolutionCommand,
+    EditRulesCommand,
     MoveNodeCommand,
     ReorderEdgesCommand,
     RenameReferencesCommand,
@@ -190,6 +191,13 @@ class DocumentController(QObject):
 
     def edit_metadata(self, mutation) -> None:
         self._mutate(EditMetadataCommand, "Edit level metadata", mutation)
+
+    def edit_rules(self, rules, schema_version: int = 2) -> None:
+        def mutation(document, solution):
+            document.rules = deepcopy(rules)
+            document._rules_present = True
+            document._extra["schemaVersion"] = schema_version
+        self._mutate(EditRulesCommand, "Edit level rules", mutation)
 
     def edit_solution(self, solution: SolutionModel) -> None:
         self._mutate(EditSolutionCommand, "Edit solution", lambda document, current: solution)

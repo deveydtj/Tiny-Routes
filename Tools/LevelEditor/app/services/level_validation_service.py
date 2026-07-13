@@ -52,6 +52,8 @@ class LevelValidationService:
 
 
 def create_default_level_document() -> LevelDocument:
+    from tiny_routes_core.models import LevelRules, SwitchInteractionMode
+
     return LevelDocument(
         id="new_level",
         name="New Level",
@@ -71,6 +73,13 @@ def create_default_level_document() -> LevelDocument:
         destinationNodeID="start",
         timeLimitSeconds=30,
         parTaps=0,
+        rules=LevelRules(
+            SwitchInteractionMode.LIVE_LOOKAHEAD,
+            LevelRules.DEFAULT_LOOKAHEAD_SECONDS,
+            LevelRules.DEFAULT_TAP_COOLDOWN_SECONDS,
+        ),
+        _extra={"schemaVersion": 2},
+        _rules_present=True,
     )
 
 
@@ -193,6 +202,20 @@ def validate(
     """
     messages: list[ValidationMessage] = []
     _add_metadata_validation_messages(messages, level, file_path)
+
+    for code in level.rules.validation_messages():
+        label = "Look-ahead seconds" if "lookahead" in code else "Tap cooldown seconds"
+        messages.append(ValidationMessage(
+            severity=ValidationSeverity.ERROR,
+            code=code,
+            message=f"{label} must be a finite, non-negative number.",
+        ))
+    if level.rules.switch_interaction_mode.value == "legacyGlobal":
+        messages.append(ValidationMessage(
+            severity=ValidationSeverity.WARNING,
+            code="legacy_switch_interaction_mode",
+            message="Legacy global switch interaction should be migrated to live look-ahead.",
+        ))
 
     # --- Level ID ---
     if not level.id or not level.id.strip():
