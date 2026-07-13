@@ -49,6 +49,8 @@ class LevelCanvasScene(QGraphicsScene):
     node_placement_requested = Signal(str, float, float)
     # Emitted when the persistent or temporary preview bend changes.
     road_shape_changed = Signal(str)
+    # Emitted for left-clicked nodes while the simulator owns the canvas.
+    playtest_tap_requested = Signal(str)
 
     def __init__(self) -> None:
         super().__init__()
@@ -345,6 +347,10 @@ class LevelCanvasScene(QGraphicsScene):
 
     def mousePressEvent(self, event: QGraphicsSceneMouseEvent) -> None:
         if self._editor_tool is EditorTool.PLAYTEST:
+            if event.button() == Qt.MouseButton.LeftButton:
+                node_item = self._resolve_node_item_at_position(event.scenePos())
+                if node_item is not None:
+                    self.playtest_tap_requested.emit(node_item.node_id)
             event.accept()
             return
         if self._editor_tool is EditorTool.PLACE_NODE:

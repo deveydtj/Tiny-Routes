@@ -2039,29 +2039,33 @@ Let designers create and verify solutions by playing the level instead of manual
 
 ## Task 13.3 — Route canvas clicks to simulator taps
 
+**Status:** Completed
+
 **Steps**
 
-- [ ] In Playtest mode, clicking a switch sends a tap action to the simulator.
-- [ ] Record whether the tap was accepted.
-- [ ] Show a short rejected reason in the status area.
-- [ ] Do not record rejected taps as solution actions.
+- [x] In Playtest mode, clicking a switch sends a tap action to the simulator.
+- [x] Record whether the tap was accepted.
+- [x] Show a short rejected reason in the status area.
+- [x] Do not record rejected taps as solution actions.
 
 ## Task 13.4 — Record a solution from playtest
 
+**Status:** Completed
+
 **Steps**
 
-- [ ] Record accepted tap timestamp and node ID.
-- [ ] On successful completion, enable “Use Run as Solution.”
-- [ ] Build `maxTaps` from accepted actions.
-- [ ] Set expected outcome and time-limit requirement correctly.
-- [ ] Replace placeholder solution through an undoable solution command.
-- [ ] Validate the recorded solution immediately.
+- [x] Record accepted tap timestamp and node ID.
+- [x] On successful completion, enable “Use Run as Solution.”
+- [x] Build `maxTaps` from accepted actions.
+- [x] Set expected outcome and time-limit requirement correctly.
+- [x] Replace placeholder solution through an undoable solution command.
+- [x] Validate the recorded solution immediately.
 
 **Acceptance tests**
 
-- [ ] A successful run produces a replayable sidecar.
-- [ ] A failed run cannot replace the canonical solution without an explicit advanced override.
-- [ ] Replaying the recorded solution completes identically.
+- [x] A successful run produces a replayable sidecar.
+- [x] A failed run cannot replace the canonical solution without an explicit advanced override.
+- [x] Replaying the recorded solution completes identically.
 
 ## Task 13.5 — Improve the solution panel
 

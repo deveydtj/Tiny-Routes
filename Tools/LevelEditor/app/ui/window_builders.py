@@ -120,6 +120,10 @@ def build_tools_toolbar(window: QMainWindow) -> None:
     window._playtest_stop_action = QAction("Stop", window)
     window._playtest_stop_action.triggered.connect(window._stop_playtest)
     window._tools_toolbar.addAction(window._playtest_stop_action)
+    window._use_playtest_solution_action = QAction("Use Run as Solution", window)
+    window._use_playtest_solution_action.triggered.connect(window._use_playtest_run_as_solution)
+    window._tools_toolbar.addAction(window._use_playtest_solution_action)
+    window._use_playtest_solution_action.setEnabled(False)
     for action in (window._playtest_pause_action, window._playtest_reset_action, window._playtest_stop_action):
         action.setEnabled(False)
     window._tools_toolbar.addSeparator()

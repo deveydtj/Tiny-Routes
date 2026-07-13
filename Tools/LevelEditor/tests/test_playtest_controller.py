@@ -62,3 +62,27 @@ def test_canvas_renders_and_clears_playtest_overlays(qapplication, level) -> Non
 
     controller.stop()
     assert scene._playtest_dot_item is None
+
+
+def test_completed_playtest_builds_replayable_solution(qapplication, level) -> None:
+    controller = PlaytestController()
+    controller.start(level)
+    controller.pause()
+    controller.advance_by(10.0)
+
+    solution = controller.recorded_solution()
+
+    assert solution is not None
+    assert solution.levelID == level.id
+    assert solution.expectedOutcome == "completed"
+    assert solution.requiresWithinTimeLimit is True
+    assert solution.maxTaps == len(solution.actions) == 0
+    assert solution.isPlaceholder is False
+
+
+def test_incomplete_playtest_cannot_replace_solution(qapplication, level) -> None:
+    controller = PlaytestController()
+    controller.start(level)
+    controller.pause()
+
+    assert controller.recorded_solution() is None

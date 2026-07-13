@@ -44,6 +44,7 @@ from app.ui import (
     ValidationPanel,
 )
 from app.ui.window_builders import build_main_toolbar, build_menu_bar, build_tools_toolbar
+from tiny_routes_core.simulation import LevelOutcome, TapResultCode
 
 
 class LevelEditorMainWindow(QMainWindow):
@@ -73,6 +74,7 @@ class LevelEditorMainWindow(QMainWindow):
         self._playtest_controller.state_changed.connect(
             self._canvas_view.scene().update_playtest_overlay
         )
+        self._playtest_controller.state_changed.connect(self._on_playtest_state_changed)
         self._document_controller.document_changed.connect(self._on_controller_document_changed)
         self._document_controller.dirty_changed.connect(self._set_dirty)
 
@@ -121,6 +123,7 @@ class LevelEditorMainWindow(QMainWindow):
         scene.node_placement_requested.connect(self._place_node_at)
         scene.set_delete_items_handler(self._delete_items_with_controller)
         scene.placement_message_changed.connect(self.statusBar().showMessage)
+        scene.playtest_tap_requested.connect(self._on_playtest_tap_requested)
         self._validation_panel.validate_requested.connect(self._validate_current_level)
         self._validation_panel.validation_message_activated.connect(
             self._focus_validation_message
@@ -191,6 +194,35 @@ class LevelEditorMainWindow(QMainWindow):
     def _stop_playtest(self) -> None:
         self._set_active_tool(EditorTool.SELECT)
 
+    def _on_playtest_tap_requested(self, node_id: str) -> None:
+        record = self._playtest_controller.tap(node_id)
+        if record is None:
+            self.statusBar().showMessage("Playtest taps are unavailable while paused.", 2500)
+        elif record.code == TapResultCode.ACCEPTED:
+            self.statusBar().showMessage(f"Tap accepted at '{node_id}'.", 1500)
+        else:
+            reason = record.code.value.removeprefix("tap_").replace("_", " ")
+            self.statusBar().showMessage(f"Tap rejected: {reason}.", 3000)
+
+    def _on_playtest_state_changed(self, state) -> None:
+        if hasattr(self, "_use_playtest_solution_action"):
+            self._use_playtest_solution_action.setEnabled(
+                state.running and state.outcome == LevelOutcome.COMPLETED
+            )
+        self._sync_playtest_actions()
+
+    def _use_playtest_run_as_solution(self) -> None:
+        solution = self._playtest_controller.recorded_solution()
+        if solution is None:
+            self.statusBar().showMessage(
+                "Only a successfully completed, replayable run can replace the solution.", 4000
+            )
+            return
+        self._ensure_controller_state()
+        self._document_controller.edit_solution(solution)
+        self._validate_current_level()
+        self.statusBar().showMessage("Recorded run is now the validated solution.", 3000)
+
     def _sync_playtest_actions(self) -> None:
         if not hasattr(self, "_playtest_pause_action"):
             return
@@ -198,6 +230,9 @@ class LevelEditorMainWindow(QMainWindow):
         self._playtest_pause_action.setEnabled(running)
         self._playtest_reset_action.setEnabled(running)
         self._playtest_stop_action.setEnabled(running)
+        self._use_playtest_solution_action.setEnabled(
+            running and self._playtest_controller.state.outcome == LevelOutcome.COMPLETED
+        )
         self._playtest_pause_action.setText(
             "Resume" if self._playtest_controller.state.paused else "Pause"
         )

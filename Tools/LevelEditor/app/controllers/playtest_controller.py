@@ -5,6 +5,7 @@ from copy import deepcopy
 from PySide6.QtCore import QObject, QElapsedTimer, QTimer, Signal
 
 from tiny_routes_core.models import LevelDocument
+from tiny_routes_core.models import SolutionModel
 from tiny_routes_core.simulation import (
     LevelOutcome,
     RuntimeSimulationResult,
@@ -101,6 +102,34 @@ class PlaytestController(QObject):
             self._rejected_taps.append(record)
         self._publish(running=True, paused=False)
         return record
+
+    def recorded_solution(self) -> SolutionModel | None:
+        """Return a canonical solution only when the completed run replays cleanly."""
+        if (
+            self._level is None
+            or self._result is None
+            or self._result.state.outcome != LevelOutcome.COMPLETED
+        ):
+            return None
+        actions = [
+            deepcopy(record.action)
+            for record in self._result.taps
+            if record.code == TapResultCode.ACCEPTED
+        ]
+        replay = self._simulator.simulate(self._level, actions)
+        if replay.state.outcome != LevelOutcome.COMPLETED or any(
+            record.code != TapResultCode.ACCEPTED for record in replay.taps
+        ):
+            return None
+        return SolutionModel(
+            levelID=self._level.id,
+            description="Recorded in Level Editor playtest",
+            expectedOutcome="completed",
+            maxTaps=len(actions),
+            requiresWithinTimeLimit=True,
+            actions=actions,
+            isPlaceholder=False,
+        )
 
     def advance_by(self, seconds: float) -> None:
         """Deterministic advancement hook used by tests and future timeline controls."""
