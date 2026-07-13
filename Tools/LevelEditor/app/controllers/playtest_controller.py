@@ -36,6 +36,7 @@ class PlaytestController(QObject):
         self._timer.setInterval(16)
         self._timer.timeout.connect(self._on_tick)
         self._state = PlaytestState()
+        self._replay_actions = ()
 
     @property
     def state(self) -> PlaytestState:
@@ -49,6 +50,7 @@ class PlaytestController(QObject):
         self._level = deepcopy(document)
         self._result = self._simulator.begin(self._level)
         self._rejected_taps = []
+        self._replay_actions = ()
         self._clock_base_seconds = 0.0
         self._clock.start()
         self._timer.start()
@@ -74,7 +76,7 @@ class PlaytestController(QObject):
         if self._level is None:
             return
         was_paused = self._state.paused
-        self._result = self._simulator.begin(self._level)
+        self._result = self._simulator.simulate(self._level, (), end_time=0.0) if self._replay_actions else self._simulator.begin(self._level)
         self._rejected_taps = []
         self._clock_base_seconds = 0.0
         self._clock.restart()
@@ -89,6 +91,7 @@ class PlaytestController(QObject):
         self._level = None
         self._result = None
         self._rejected_taps = []
+        self._replay_actions = ()
         self._state = PlaytestState()
         self.state_changed.emit(self._state)
         self.stopped.emit()
@@ -140,6 +143,38 @@ class PlaytestController(QObject):
         self._clock.restart()
         self._publish(running=True, paused=self._state.paused)
 
+    def load_replay(self, document: LevelDocument, solution: SolutionModel) -> None:
+        """Load an immutable solution script and pause at its deterministic initial state."""
+        self._timer.stop()
+        self._level = deepcopy(document)
+        self._replay_actions = tuple(deepcopy(solution.actions))
+        self._result = self._simulator.simulate(self._level, (), end_time=0.0)
+        self._rejected_taps = []
+        self._clock_base_seconds = 0.0
+        self._publish(running=True, paused=True)
+
+    def scrub_to(self, seconds: float) -> None:
+        if self._level is None or self._result is None:
+            return
+        target = min(max(float(seconds), 0.0), float(self._level.timeLimitSeconds))
+        self._timer.stop()
+        actions = tuple(action for action in self._replay_actions if float(action.timeSeconds) <= target + 1e-9)
+        self._result = self._simulator.simulate(self._level, actions, end_time=target)
+        self._clock_base_seconds = self._result.state.elapsed_time
+        self._publish(running=True, paused=True)
+
+    def step_event(self, direction: int = 1) -> None:
+        if self._level is None:
+            return
+        full = self._simulator.simulate(self._level, self._replay_actions)
+        times = sorted({0.0, *(event.time_seconds for event in full.events)})
+        current = self._state.elapsed_time
+        if direction >= 0:
+            target = next((value for value in times if value > current + 1e-9), times[-1])
+        else:
+            target = next((value for value in reversed(times) if value < current - 1e-9), 0.0)
+        self.scrub_to(target)
+
     def _on_tick(self) -> None:
         self._advance_to_clock()
         self._publish(running=True, paused=False)
@@ -148,7 +183,11 @@ class PlaytestController(QObject):
         if self._level is None or self._result is None or self._state.paused:
             return
         target = self._clock_base_seconds + self._clock.elapsed() / 1000.0
-        self._simulator.advance(self._level, self._result, target)
+        if self._replay_actions:
+            actions = tuple(action for action in self._replay_actions if float(action.timeSeconds) <= target + 1e-9)
+            self._result = self._simulator.simulate(self._level, actions, end_time=target)
+        else:
+            self._simulator.advance(self._level, self._result, target)
         if self._result.state.outcome != LevelOutcome.IN_PROGRESS:
             self._timer.stop()
 
@@ -170,5 +209,7 @@ class PlaytestController(QObject):
             eligible_switch_id=eligible,
             accepted_taps=accepted,
             rejected_taps=tuple(self._rejected_taps),
+            switch_active_edge_ids=tuple(sorted(runtime.switch_active_edge_ids.items())),
+            event_times=tuple(sorted({event.time_seconds for event in self._result.events})),
         )
         self.state_changed.emit(self._state)

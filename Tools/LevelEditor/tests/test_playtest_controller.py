@@ -10,7 +10,8 @@ from PySide6.QtWidgets import QApplication
 
 from app.controllers import PlaytestController
 from app.models import EditorTool
-from app.repositories import LevelFileRepository
+from app.repositories import LevelFileRepository, SolutionFileRepository
+from app.services import RuntimeSolutionService
 from app.ui import LevelCanvasScene
 
 
@@ -86,3 +87,32 @@ def test_incomplete_playtest_cannot_replace_solution(qapplication, level) -> Non
     controller.pause()
 
     assert controller.recorded_solution() is None
+
+
+def test_timeline_scrubbing_is_deterministic_and_preserves_solution(qapplication, level) -> None:
+    solution_path = Path(__file__).parent / "fixtures" / "valid_solution.json"
+    solution = SolutionFileRepository().load_solution(solution_path)
+    original_actions = [(action.timeSeconds, action.tapNodeID) for action in solution.actions]
+    controller = PlaytestController()
+    controller.load_replay(level, solution)
+
+    controller.scrub_to(0.35)
+    first = controller.state
+    controller.scrub_to(0.8)
+    controller.scrub_to(0.35)
+    second = controller.state
+
+    assert first.current_node_id == second.current_node_id
+    assert first.current_edge_id == second.current_edge_id
+    assert first.edge_progress == pytest.approx(second.edge_progress)
+    assert first.switch_active_edge_ids == second.switch_active_edge_ids
+    assert [(action.timeSeconds, action.tapNodeID) for action in solution.actions] == original_actions
+
+
+def test_runtime_solution_service_returns_only_verified_solution(level) -> None:
+    service = RuntimeSolutionService()
+
+    solution = service.find_verified(level)
+
+    assert solution is not None
+    assert service.replay(level, solution).passed is True

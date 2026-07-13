@@ -26,6 +26,7 @@ from app.services import (
     LevelIdentityService,
     LevelValidationService,
     SolutionValidationService,
+    RuntimeSolutionService,
     SwitchClassificationService,
     TestRunnerService,
     ValidationMessage,
@@ -62,6 +63,7 @@ class LevelEditorMainWindow(QMainWindow):
         self._identity_service = LevelIdentityService()
         self._validation_service = LevelValidationService()
         self._solution_validation_service = SolutionValidationService()
+        self._runtime_solution_service = RuntimeSolutionService()
         self._switch_classification_service = SwitchClassificationService()
         self._test_runner_service = TestRunnerService(self._resolve_repo_root())
         self._canvas_view = LevelCanvasView()
@@ -139,6 +141,13 @@ class LevelEditorMainWindow(QMainWindow):
         self._properties_panel.edge_id_changed.connect(self._on_edge_id_changed)
         self._properties_panel.edge_properties_changed.connect(self._on_edge_properties_changed)
         self._solution_panel.solution_changed.connect(self._on_solution_changed)
+        self._solution_panel.replay_requested.connect(self._replay_solution)
+        self._solution_panel.find_verified_requested.connect(self._find_verified_solution)
+        self._solution_panel.analyze_margins_requested.connect(self._analyze_solution_margins)
+        self._solution_panel.timeline_time_requested.connect(self._playtest_controller.scrub_to)
+        self._solution_panel.timeline_step_requested.connect(self._playtest_controller.step_event)
+        self._solution_panel.timeline_reset_requested.connect(lambda: self._playtest_controller.scrub_to(0.0))
+        self._solution_panel.timeline_play_pause_requested.connect(self._pause_or_resume_playtest)
 
         self._build_menu_bar()
         self._build_main_toolbar()
@@ -205,11 +214,47 @@ class LevelEditorMainWindow(QMainWindow):
             self.statusBar().showMessage(f"Tap rejected: {reason}.", 3000)
 
     def _on_playtest_state_changed(self, state) -> None:
+        self._solution_panel.set_playhead(state.elapsed_time)
         if hasattr(self, "_use_playtest_solution_action"):
             self._use_playtest_solution_action.setEnabled(
                 state.running and state.outcome == LevelOutcome.COMPLETED
             )
         self._sync_playtest_actions()
+
+    def _replay_solution(self) -> None:
+        if self._current_document is None or self._current_solution is None:
+            return
+        self._set_active_tool(EditorTool.PLAYTEST)
+        self._playtest_controller.load_replay(self._current_document, self._current_solution)
+        self.statusBar().showMessage("Solution loaded on the deterministic timeline.", 2500)
+
+    def _find_verified_solution(self) -> None:
+        if self._current_document is None:
+            return
+        solution = self._runtime_solution_service.find_verified(self._current_document)
+        if solution is None:
+            self.statusBar().showMessage("No verified runtime solution was found within the search limit.", 4000)
+            return
+        self._ensure_controller_state()
+        self._document_controller.edit_solution(solution)
+        self._solution_panel.set_action_timings(
+            self._runtime_solution_service.analyze(self._current_document, solution)
+        )
+        self._validate_current_level()
+        self.statusBar().showMessage("Found and installed a verified runtime solution.", 3000)
+
+    def _analyze_solution_margins(self) -> None:
+        if self._current_document is None or self._current_solution is None:
+            return
+        timings = self._runtime_solution_service.analyze(self._current_document, self._current_solution)
+        self._solution_panel.set_action_timings(timings)
+        margins = [min(item.early_margin_seconds, item.late_margin_seconds)
+                   for item in timings
+                   if item.early_margin_seconds is not None and item.late_margin_seconds is not None]
+        message = "No eligible timing windows found."
+        if margins:
+            message = f"Tightest early/late safety margin: {min(margins):.2f}s."
+        self.statusBar().showMessage(message, 4000)
 
     def _use_playtest_run_as_solution(self) -> None:
         solution = self._playtest_controller.recorded_solution()

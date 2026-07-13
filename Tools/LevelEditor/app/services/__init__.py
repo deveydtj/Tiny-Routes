@@ -15,13 +15,16 @@ from .switch_classification_service import (
     SwitchNodeKind,
 )
 from .test_runner_service import TestRunnerResult, TestRunnerService
+from .runtime_solution_service import ActionTiming, RuntimeSolutionService
 
 __all__ = [
+    "ActionTiming",
     "LevelIdentity",
     "LevelIdentityService",
     "LevelValidationService",
     "MAX_SUPPORTED_OUTGOING_EDGES",
     "ReferenceRenameService",
+    "RuntimeSolutionService",
     "SolutionValidationService",
     "SwitchClassificationService",
     "SwitchNodeClassification",

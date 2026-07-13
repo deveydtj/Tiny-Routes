@@ -2069,39 +2069,43 @@ Let designers create and verify solutions by playing the level instead of manual
 
 ## Task 13.5 — Improve the solution panel
 
+**Status:** Completed
+
 **Files to update**
 
 - `solution_panel.py`
 
 **Steps**
 
-- [ ] Make recorded playtest the primary workflow.
-- [ ] Replace raw tap-node text entry with a switch dropdown.
-- [ ] Keep timestamp editing as an advanced option.
-- [ ] Show accepted-window bounds beside each action.
-- [ ] Add “Replay Solution.”
-- [ ] Add “Find Verified Solution” using the runtime solution search.
-- [ ] Add “Analyze Early/Late Margin.”
+- [x] Make recorded playtest the primary workflow.
+- [x] Replace raw tap-node text entry with a switch dropdown.
+- [x] Keep timestamp editing as an advanced option.
+- [x] Show accepted-window bounds beside each action.
+- [x] Add “Replay Solution.”
+- [x] Add “Find Verified Solution” using the runtime solution search.
+- [x] Add “Analyze Early/Late Margin.”
 
 ## Task 13.6 — Add timeline replay and scrubbing
 
+**Status:** Completed
+
 **Steps**
 
-- [ ] Store or recompute simulator snapshots at deterministic intervals/events.
-- [ ] Add play, pause, step-event, and reset controls.
-- [ ] Allow timeline scrubbing by replaying from initial state to the selected time.
-- [ ] Show switch states at the selected time.
+- [x] Store or recompute simulator snapshots at deterministic intervals/events.
+- [x] Add play, pause, step-event, and reset controls.
+- [x] Allow timeline scrubbing by replaying from initial state to the selected time.
+- [x] Show switch states at the selected time.
 
 **Acceptance tests**
 
-- [ ] Scrubbing to the same time produces the same state.
-- [ ] Timeline does not modify the solution unless an explicit edit is made.
+- [x] Scrubbing to the same time produces the same state.
+- [x] Timeline does not modify the solution unless an explicit edit is made.
 
 ### Phase 13 exit gate
 
-- [ ] Levels can be played in the editor.
-- [ ] Successful runs become verified solutions.
-- [ ] Designers no longer need to manually type normal solution scripts.
+- [x] Levels can be played in the editor.
+- [x] Successful runs become verified solutions.
+- [x] Designers no longer need to manually type normal solution scripts.
 
 ---
 

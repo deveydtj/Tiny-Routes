@@ -18,4 +18,5 @@ class PlaytestState:
     eligible_switch_id: str | None = None
     accepted_taps: tuple[TapRecord, ...] = ()
     rejected_taps: tuple[TapRecord, ...] = ()
-
+    switch_active_edge_ids: tuple[tuple[str, str], ...] = ()
+    event_times: tuple[float, ...] = ()
