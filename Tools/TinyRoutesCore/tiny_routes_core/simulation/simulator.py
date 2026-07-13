@@ -91,6 +91,45 @@ class RuntimeSimulator:
             result.events.append(SimulationEvent(state.elapsed_time, "time_expired"))
         return result
 
+    def begin(self, level: LevelDocument) -> RuntimeSimulationResult:
+        """Create an incremental simulation session for interactive clients."""
+        return RuntimeSimulationResult(RuntimeState.initialize(level))
+
+    def advance(
+        self,
+        level: LevelDocument,
+        result: RuntimeSimulationResult,
+        target_time: float,
+    ) -> None:
+        """Advance an incremental session to an absolute elapsed time."""
+        if target_time + NUMERIC_TOLERANCE < result.state.elapsed_time:
+            raise ValueError("target_time cannot move an incremental simulation backwards")
+        self._advance_to(level, result, min(float(target_time), float(level.timeLimitSeconds)))
+        if (result.failure_reason is None
+                and result.state.outcome == LevelOutcome.IN_PROGRESS
+                and target_time >= float(level.timeLimitSeconds) - NUMERIC_TOLERANCE):
+            result.state.outcome = LevelOutcome.FAILED_TIME_LIMIT
+            result.failure_reason = "time_expired"
+            result.events.append(SimulationEvent(result.state.elapsed_time, "time_expired"))
+
+    def tap(
+        self,
+        result: RuntimeSimulationResult,
+        node_id: str,
+    ) -> TapRecord:
+        """Apply and record a tap at the current time in an incremental session."""
+        action = SolutionAction(timeSeconds=result.state.elapsed_time, tapNodeID=node_id)
+        record = self._apply_tap(result, action)
+        result.taps.append(record)
+        result.events.append(SimulationEvent(
+            result.state.elapsed_time,
+            "tap_accepted" if record.code == TapResultCode.ACCEPTED else "tap_rejected",
+            node_id,
+            record.active_edge_id,
+            record.code.value,
+        ))
+        return record
+
     def _advance_to(self, level: LevelDocument, result: RuntimeSimulationResult, target_time: float) -> None:
         state = result.state
         limit = self.maximum_step_count if self.maximum_step_count is not None else max(len(state.runtime_graph.index.edges_by_id), 1) * 4

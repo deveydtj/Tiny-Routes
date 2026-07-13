@@ -111,6 +111,18 @@ def build_tools_toolbar(window: QMainWindow) -> None:
         window._tool_actions[tool] = action
 
     window._tools_toolbar.addSeparator()
+    window._playtest_pause_action = QAction("Pause", window)
+    window._playtest_pause_action.triggered.connect(window._pause_or_resume_playtest)
+    window._tools_toolbar.addAction(window._playtest_pause_action)
+    window._playtest_reset_action = QAction("Reset", window)
+    window._playtest_reset_action.triggered.connect(window._reset_playtest)
+    window._tools_toolbar.addAction(window._playtest_reset_action)
+    window._playtest_stop_action = QAction("Stop", window)
+    window._playtest_stop_action.triggered.connect(window._stop_playtest)
+    window._tools_toolbar.addAction(window._playtest_stop_action)
+    for action in (window._playtest_pause_action, window._playtest_reset_action, window._playtest_stop_action):
+        action.setEnabled(False)
+    window._tools_toolbar.addSeparator()
     window._snap_toggle_action = QAction("Snap", window)
     window._snap_toggle_action.setCheckable(True)
     window._snap_toggle_action.setToolTip("Snap node placement and completed moves to the grid")

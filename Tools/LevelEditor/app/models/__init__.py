@@ -3,6 +3,7 @@ from .route_node_model import RouteNodeModel
 from .level_document import EmbeddedSolution, RouteGraphModel, LevelDocument
 from .solution_model import SolutionActionModel, SolutionModel
 from .editor_tool import EditorTool
+from .playtest_state import PlaytestState
 
 __all__ = [
     "RouteEdgeModel",
@@ -13,4 +14,5 @@ __all__ = [
     "SolutionActionModel",
     "SolutionModel",
     "EditorTool",
+    "PlaytestState",
 ]

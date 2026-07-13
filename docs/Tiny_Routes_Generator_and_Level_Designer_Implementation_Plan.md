@@ -1998,6 +1998,8 @@ Let designers create and verify solutions by playing the level instead of manual
 
 ## Task 13.1 — Add an editor playtest controller
 
+**Status:** Completed
+
 **Files to add**
 
 - `Tools/LevelEditor/app/controllers/playtest_controller.py`
@@ -2014,11 +2016,13 @@ Let designers create and verify solutions by playing the level instead of manual
 
 **Acceptance tests**
 
-- [ ] Starting playtest does not mutate the authored document.
-- [ ] Reset restores initial switch states.
-- [ ] Stopping returns to edit mode safely.
+- [x] Starting playtest does not mutate the authored document.
+- [x] Reset restores initial switch states.
+- [x] Stopping returns to edit mode safely.
 
 ## Task 13.2 — Render the simulated dot and active switch
+
+**Status:** Completed
 
 **Files to add or update**
 
@@ -2027,11 +2031,11 @@ Let designers create and verify solutions by playing the level instead of manual
 
 **Steps**
 
-- [ ] Draw a distinct playtest dot.
-- [ ] Interpolate along the same road geometry represented by the model.
-- [ ] Highlight the active switch using the same conceptual states as the Swift UI.
-- [ ] Show package collected and outcome overlays.
-- [ ] Keep authored nodes and roads noneditable during playtest.
+- [x] Draw a distinct playtest dot.
+- [x] Interpolate along the same road geometry represented by the model.
+- [x] Highlight the active switch using the same conceptual states as the Swift UI.
+- [x] Show package collected and outcome overlays.
+- [x] Keep authored nodes and roads noneditable during playtest.
 
 ## Task 13.3 — Route canvas clicks to simulator taps
 

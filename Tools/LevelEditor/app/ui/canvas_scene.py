@@ -6,6 +6,7 @@ from PySide6.QtWidgets import (
     QApplication,
     QGraphicsPathItem,
     QGraphicsPolygonItem,
+    QGraphicsEllipseItem,
     QGraphicsLineItem,
     QGraphicsScene,
     QGraphicsSceneMouseEvent,
@@ -14,6 +15,8 @@ from PySide6.QtWidgets import (
 from shiboken6 import isValid
 
 from app.models import EditorTool, LevelDocument, RouteNodeModel
+from app.models.playtest_state import PlaytestState
+from tiny_routes_core.simulation import LevelOutcome
 from app.services.switch_classification_service import SwitchClassificationService, SwitchNodeKind
 from app.services.level_validation_service import validate
 
@@ -71,6 +74,9 @@ class LevelCanvasScene(QGraphicsScene):
         self._alignment_guides: list[QGraphicsLineItem] = []
         self._is_finishing_drag = False
         self._delete_items_handler = None
+        self._playtest_dot_item: QGraphicsEllipseItem | None = None
+        self._active_switch_item: QGraphicsEllipseItem | None = None
+        self._playtest_status_item: QGraphicsSimpleTextItem | None = None
         self._show_placeholder()
         self.selectionChanged.connect(self._on_selection_changed)
 
@@ -88,6 +94,9 @@ class LevelCanvasScene(QGraphicsScene):
             node_item.setFlag(node_item.GraphicsItemFlag.ItemIsMovable, editing_enabled)
             node_item.setFlag(node_item.GraphicsItemFlag.ItemIsSelectable, editing_enabled)
             node_item.set_connection_handles_enabled(tool is EditorTool.CONNECT)
+        for item in self.items():
+            if isinstance(item, EdgeItem):
+                item.setFlag(item.GraphicsItemFlag.ItemIsSelectable, editing_enabled)
         if not editing_enabled:
             self.clearSelection()
 
@@ -126,6 +135,9 @@ class LevelCanvasScene(QGraphicsScene):
         self._node_items_by_id = {}
         self._edges_by_node_id = {}
         self._transition_arc_items = []
+        self._playtest_dot_item = None
+        self._active_switch_item = None
+        self._playtest_status_item = None
         self._clear_connection_source()
         if not document.graph.nodes:
             self._show_placeholder("No nodes in this level")
@@ -178,9 +190,100 @@ class LevelCanvasScene(QGraphicsScene):
             except ValueError:
                 continue
             self.addItem(edge_item)
+            edge_item.setFlag(
+                edge_item.GraphicsItemFlag.ItemIsSelectable,
+                self._editor_tool is not EditorTool.PLAYTEST,
+            )
             self._edges_by_node_id.setdefault(from_node.node_id, []).append(edge_item)
             self._edges_by_node_id.setdefault(to_node.node_id, []).append(edge_item)
         self._redraw_transition_arcs()
+
+    def update_playtest_overlay(self, state: PlaytestState) -> None:
+        """Render transient runtime state without altering authored graphics."""
+        if not state.running or self._document is None:
+            self.clear_playtest_overlay()
+            return
+        self._ensure_playtest_overlay_items()
+        position = self._playtest_scene_position(state)
+        if self._playtest_dot_item is not None and position is not None:
+            self._playtest_dot_item.setPos(position)
+            self._playtest_dot_item.setVisible(True)
+        elif self._playtest_dot_item is not None:
+            self._playtest_dot_item.setVisible(False)
+
+        if self._active_switch_item is not None:
+            active = self._node_items_by_id.get(state.eligible_switch_id or "")
+            self._active_switch_item.setVisible(active is not None)
+            if active is not None:
+                self._active_switch_item.setPos(active.pos())
+
+        if self._playtest_status_item is not None:
+            if state.outcome == LevelOutcome.COMPLETED:
+                status = "✓ Route complete"
+            elif state.outcome != LevelOutcome.IN_PROGRESS:
+                status = f"✕ {state.outcome.value.replace('_', ' ')}"
+            elif state.package_collected:
+                status = "▣ Package collected"
+            else:
+                status = "Find the package"
+            self._playtest_status_item.setText(f"{state.elapsed_time:0.2f}s  {status}")
+
+    def clear_playtest_overlay(self) -> None:
+        for item in (self._playtest_dot_item, self._active_switch_item, self._playtest_status_item):
+            if self._is_live_graphics_item(item):
+                self.removeItem(item)
+        self._playtest_dot_item = None
+        self._active_switch_item = None
+        self._playtest_status_item = None
+
+    def _ensure_playtest_overlay_items(self) -> None:
+        if not self._is_live_graphics_item(self._playtest_dot_item):
+            dot = QGraphicsEllipseItem(QRectF(-10, -10, 20, 20))
+            dot.setBrush(QColor("#2563eb"))
+            dot.setPen(QPen(QColor("#ffffff"), 3))
+            dot.setZValue(1200)
+            self.addItem(dot)
+            self._playtest_dot_item = dot
+        if not self._is_live_graphics_item(self._active_switch_item):
+            ring = QGraphicsEllipseItem(QRectF(-42, -42, 84, 84))
+            ring.setBrush(Qt.BrushStyle.NoBrush)
+            ring.setPen(QPen(QColor("#f59e0b"), 5, Qt.PenStyle.DashLine))
+            ring.setZValue(1100)
+            self.addItem(ring)
+            self._active_switch_item = ring
+        if not self._is_live_graphics_item(self._playtest_status_item):
+            label = self.addSimpleText("")
+            label.setBrush(QColor("#111827"))
+            label.setFlag(label.GraphicsItemFlag.ItemIgnoresTransformations, True)
+            label.setPos(self.sceneRect().left() + 20, self.sceneRect().top() + 20)
+            label.setZValue(1200)
+            self._playtest_status_item = label
+
+    def _playtest_scene_position(self, state: PlaytestState) -> QPointF | None:
+        if state.current_edge_id is None:
+            node = self._node_items_by_id.get(state.current_node_id or "")
+            return node.pos() if node is not None else None
+        edge = next((item for item in self._document.graph.edges if item.id == state.current_edge_id), None)
+        if edge is None:
+            return None
+        start = self._node_items_by_id.get(edge.fromNodeID)
+        end = self._node_items_by_id.get(edge.toNodeID)
+        if start is None or end is None:
+            return None
+        bend = (QPointF(start.pos().x(), end.pos().y()) if edge.roadShape == "verticalFirst"
+                else QPointF(end.pos().x(), start.pos().y()))
+        points = [start.pos(), bend, end.pos()]
+        lengths = [math.hypot(points[i + 1].x() - points[i].x(), points[i + 1].y() - points[i].y()) for i in range(2)]
+        target = min(max(state.edge_progress, 0.0), 1.0) * sum(lengths)
+        for index, length in enumerate(lengths):
+            if target <= length or index == len(lengths) - 1:
+                ratio = 0.0 if length == 0 else min(target / length, 1.0)
+                return QPointF(
+                    points[index].x() + (points[index + 1].x() - points[index].x()) * ratio,
+                    points[index].y() + (points[index + 1].y() - points[index].y()) * ratio,
+                )
+            target -= length
+        return end.pos()
 
     def scene_to_model_coordinates(self, scene_position: QPointF) -> tuple[float, float]:
         return (

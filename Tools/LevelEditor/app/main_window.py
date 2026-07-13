@@ -12,7 +12,7 @@ from PySide6.QtWidgets import (
 )
 
 from app.config import find_repo_root, get_default_levels_directory
-from app.controllers import DocumentController
+from app.controllers import DocumentController, PlaytestController
 from app.models import EditorTool, LevelDocument, RouteEdgeModel, RouteNodeModel, SolutionModel
 from app.repositories import (
     LevelFileRepository,
@@ -69,6 +69,10 @@ class LevelEditorMainWindow(QMainWindow):
         self._solution_panel = SolutionPanel()
         self._validation_panel = ValidationPanel()
         self._document_controller = DocumentController(self)
+        self._playtest_controller = PlaytestController(self)
+        self._playtest_controller.state_changed.connect(
+            self._canvas_view.scene().update_playtest_overlay
+        )
         self._document_controller.document_changed.connect(self._on_controller_document_changed)
         self._document_controller.dirty_changed.connect(self._set_dirty)
 
@@ -154,6 +158,13 @@ class LevelEditorMainWindow(QMainWindow):
         build_tools_toolbar(self)
 
     def _set_active_tool(self, tool: EditorTool) -> None:
+        if tool is EditorTool.PLAYTEST:
+            if self._current_document is None:
+                self.statusBar().showMessage("Open or create a level before playtesting.")
+            elif not self._playtest_controller.state.running:
+                self._playtest_controller.start(self._current_document)
+        elif self._playtest_controller.state.running:
+            self._playtest_controller.stop()
         self._active_tool = tool
         self._tool_actions[tool].setChecked(True)
         self._canvas_view.set_editor_tool(tool)
@@ -164,6 +175,32 @@ class LevelEditorMainWindow(QMainWindow):
             action.setEnabled(tool is EditorTool.CONNECT)
         self._bidirectional_road_action.setEnabled(tool is EditorTool.CONNECT)
         self.statusBar().showMessage(tool.status_message)
+        self._sync_playtest_actions()
+
+    def _pause_or_resume_playtest(self) -> None:
+        if self._playtest_controller.state.paused:
+            self._playtest_controller.resume()
+        else:
+            self._playtest_controller.pause()
+        self._sync_playtest_actions()
+
+    def _reset_playtest(self) -> None:
+        self._playtest_controller.reset()
+        self._sync_playtest_actions()
+
+    def _stop_playtest(self) -> None:
+        self._set_active_tool(EditorTool.SELECT)
+
+    def _sync_playtest_actions(self) -> None:
+        if not hasattr(self, "_playtest_pause_action"):
+            return
+        running = self._playtest_controller.state.running
+        self._playtest_pause_action.setEnabled(running)
+        self._playtest_reset_action.setEnabled(running)
+        self._playtest_stop_action.setEnabled(running)
+        self._playtest_pause_action.setText(
+            "Resume" if self._playtest_controller.state.paused else "Pause"
+        )
 
     def _set_grid_snapping_enabled(self, enabled: bool) -> None:
         self._canvas_view.scene().set_grid_snapping(enabled, self._grid_size_spinbox.value())
