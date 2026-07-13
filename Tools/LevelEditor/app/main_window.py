@@ -12,7 +12,7 @@ from PySide6.QtWidgets import (
 )
 
 from app.config import find_repo_root, get_default_levels_directory
-from app.controllers import DocumentController, PlaytestController
+from app.controllers import DocumentController, PlaytestController, ValidationController
 from app.models import EditorTool, LevelDocument, RouteEdgeModel, RouteNodeModel, SolutionModel
 from app.repositories import (
     LevelFileRepository,
@@ -72,6 +72,11 @@ class LevelEditorMainWindow(QMainWindow):
         self._solution_panel = SolutionPanel()
         self._validation_panel = ValidationPanel()
         self._document_controller = DocumentController(self)
+        self._validation_controller = ValidationController(
+            self,
+            level_service=self._validation_service,
+            solution_service=self._solution_validation_service,
+        )
         self._playtest_controller = PlaytestController(self)
         self._playtest_controller.state_changed.connect(
             self._canvas_view.scene().update_playtest_overlay
@@ -79,6 +84,7 @@ class LevelEditorMainWindow(QMainWindow):
         self._playtest_controller.state_changed.connect(self._on_playtest_state_changed)
         self._document_controller.document_changed.connect(self._on_controller_document_changed)
         self._document_controller.dirty_changed.connect(self._set_dirty)
+        self._validation_controller.result_ready.connect(self._show_validation_result)
 
         self.setCentralWidget(self._canvas_view)
 
@@ -467,16 +473,14 @@ class LevelEditorMainWindow(QMainWindow):
             self._validation_panel.clear()
             return
 
-        level_result = self._validation_service.validate(
-            self._current_document,
-            self._current_file_path,
-        )
-        solution_result = self._solution_validation_service.validate(
+        self._validation_controller.validate_now(
             self._current_document,
             self._current_solution,
             self._current_file_path,
         )
-        messages = [*level_result.messages, *solution_result.messages]
+
+    def _show_validation_result(self, result: ValidationResult) -> None:
+        messages = list(result.messages)
         consistency_message = self._build_production_metadata_consistency_message(messages)
         if consistency_message is not None:
             messages.append(consistency_message)
@@ -484,6 +488,7 @@ class LevelEditorMainWindow(QMainWindow):
             messages=messages
         )
         self._validation_panel.show_result(combined_result)
+        self._canvas_view.scene().apply_validation_result(combined_result)
 
     def _run_level_tests(self) -> None:
         if self._current_document is None:
@@ -1122,6 +1127,9 @@ class LevelEditorMainWindow(QMainWindow):
         self._solution_panel.set_level(document)
         self._solution_panel.set_solution(solution)
         self._validation_panel.clear()
+        self._canvas_view.scene().clear_validation_overlays()
+        if document is not None:
+            self._validation_controller.schedule(document, solution, self._current_file_path)
         self._update_run_tests_action_states()
         self._update_window_title()
 

@@ -43,6 +43,7 @@ class NodeItem(QGraphicsItemGroup):
         self._placement_valid: bool | None = None
         self._connection_target_valid: bool | None = None
         self._handles_enabled = False
+        self._has_validation_issue = has_warning
         self.setFlag(QGraphicsItem.GraphicsItemFlag.ItemIsSelectable, True)
         self.setFlag(QGraphicsItem.GraphicsItemFlag.ItemIsMovable, True)
         self.setFlag(QGraphicsItem.GraphicsItemFlag.ItemSendsGeometryChanges, True)
@@ -69,13 +70,13 @@ class NodeItem(QGraphicsItemGroup):
             role_badge.setPos(-radius + 3, -radius - 18)
             self.addToGroup(role_badge)
 
-        if has_warning:
-            warning = QGraphicsSimpleTextItem("⚠")
-            warning.setFlag(QGraphicsItem.GraphicsItemFlag.ItemIgnoresTransformations, True)
-            warning.setBrush(QColor(self.INVALID_BORDER_COLOR))
-            warning.setToolTip("This node has a validation warning or error")
-            warning.setPos(radius - 8, -radius - 18)
-            self.addToGroup(warning)
+        self._warning_item = QGraphicsSimpleTextItem("⚠")
+        self._warning_item.setFlag(QGraphicsItem.GraphicsItemFlag.ItemIgnoresTransformations, True)
+        self._warning_item.setBrush(QColor(self.INVALID_BORDER_COLOR))
+        self._warning_item.setToolTip("This node has a validation warning or error")
+        self._warning_item.setPos(radius - 8, -radius - 18)
+        self._warning_item.setVisible(has_warning)
+        self.addToGroup(self._warning_item)
 
         self.connection_handle = ConnectionHandleItem(self.node_id, self)
         self.connection_handle.setPos(radius, 0)
@@ -105,6 +106,11 @@ class NodeItem(QGraphicsItemGroup):
         self._connection_target_valid = is_valid
         self._update_border()
 
+    def set_validation_issue(self, has_issue: bool) -> None:
+        self._has_validation_issue = has_issue
+        self._warning_item.setVisible(has_issue)
+        self._update_border()
+
     def _update_handle_visibility(self) -> None:
         self.connection_handle.setVisible(self._handles_enabled or self.isSelected())
 
@@ -123,6 +129,8 @@ class NodeItem(QGraphicsItemGroup):
             border_color = self.VALID_TARGET_BORDER_COLOR
         elif self._connection_target_valid is False or self._placement_valid is False:
             border_color = self.INVALID_BORDER_COLOR
+        elif self._has_validation_issue:
+            border_color = self.INVALID_BORDER_COLOR
         else:
             border_color = self.PENDING_BORDER_COLOR if self._is_connection_source else self._style.border_color
         emphasized = (
@@ -130,5 +138,5 @@ class NodeItem(QGraphicsItemGroup):
             or self._placement_valid is not None
             or self._connection_target_valid is not None
         )
-        border_width = self.PENDING_BORDER_WIDTH if emphasized else 2
+        border_width = self.PENDING_BORDER_WIDTH if emphasized or self._has_validation_issue else 2
         self._circle.setPen(QPen(QColor(border_color), border_width))

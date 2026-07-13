@@ -30,6 +30,8 @@ class EdgeItem(QGraphicsItemGroup):
         self.from_node_id = from_node.node_id
         self.to_node_id = to_node.node_id
         self.road_shape = road_shape or "horizontalFirst"
+        self._is_initial = is_initial
+        self._has_validation_issue = has_warning
         self.setZValue(-1)
         self.setFlag(QGraphicsItem.GraphicsItemFlag.ItemIsSelectable, True)
         self._path_item = QGraphicsPathItem()
@@ -49,6 +51,16 @@ class EdgeItem(QGraphicsItemGroup):
         self._annotation_item.setToolTip("Initial active road" if is_initial else "Switch option")
         self.addToGroup(self._annotation_item)
         self.refresh_position()
+
+    def set_validation_issue(self, has_issue: bool) -> None:
+        self._has_validation_issue = has_issue
+        self._path_item.setPen(QPen(
+            QColor("#c62828") if has_issue else (QColor("#16a34a") if self._is_initial else road_color()),
+            5 if self._is_initial else (4 if has_issue else 2),
+        ))
+        annotation = self._annotation_item.text().replace(" ⚠", "").replace("⚠", "").strip()
+        self._annotation_item.setText(f"{annotation} ⚠".strip() if has_issue else annotation)
+        self._annotation_item.setBrush(QColor("#c62828") if has_issue else QColor("#374151"))
 
     def refresh_position(self, allow_degenerate: bool = False) -> None:
         from_pos = self._from_node.pos()

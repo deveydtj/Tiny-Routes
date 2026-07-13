@@ -14,6 +14,7 @@ from app.services.level_validation_service import (
     ValidationSeverity,
     create_default_level_document,
     validate,
+    validate_layout,
 )
 from app.services.switch_classification_service import (
     SwitchClassificationService,
@@ -54,6 +55,19 @@ def test_validation_message_defaults_related_ids_to_none():
 
     assert message.related_node_id is None
     assert message.related_edge_id is None
+    assert message.related_area is None
+
+
+def test_validation_marks_node_overlap_with_canvas_area():
+    level = _load_fixture("valid_level.json")
+    level.graph.nodes[1].x = level.graph.nodes[0].x
+    level.graph.nodes[1].y = level.graph.nodes[0].y
+
+    messages = [message for message in validate_layout(level).messages if message.code == "overlapping_nodes"]
+
+    assert len(messages) == 1
+    assert messages[0].related_node_id == level.graph.nodes[0].id
+    assert messages[0].related_area is not None
 
 
 def test_validation_result_has_errors_and_has_warnings():

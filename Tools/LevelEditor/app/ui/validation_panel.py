@@ -41,6 +41,7 @@ class ValidationPanel(QWidget):
         outer.addLayout(header_row)
 
         self._summary_label = QLabel("Errors: 0  Warnings: 0  Info: 0")
+        self._summary_label.setToolTip("Informational items include non-blocking design suggestions.")
         outer.addWidget(self._summary_label)
 
         separator = QFrame()

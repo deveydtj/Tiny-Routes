@@ -6,6 +6,7 @@ from .level_validation_service import (
     ValidationResult,
     ValidationSeverity,
     create_default_level_document,
+    validate_layout,
 )
 from .solution_validation_service import SolutionValidationService
 from .switch_classification_service import (
@@ -35,4 +36,5 @@ __all__ = [
     "ValidationMessage",
     "ValidationResult",
     "create_default_level_document",
+    "validate_layout",
 ]

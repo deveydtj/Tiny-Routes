@@ -7,6 +7,7 @@ from PySide6.QtWidgets import (
     QGraphicsPathItem,
     QGraphicsPolygonItem,
     QGraphicsEllipseItem,
+    QGraphicsRectItem,
     QGraphicsLineItem,
     QGraphicsScene,
     QGraphicsSceneMouseEvent,
@@ -18,7 +19,7 @@ from app.models import EditorTool, LevelDocument, RouteNodeModel
 from app.models.playtest_state import PlaytestState
 from tiny_routes_core.simulation import LevelOutcome
 from app.services.switch_classification_service import SwitchClassificationService, SwitchNodeKind
-from app.services.level_validation_service import validate
+from app.services.level_validation_service import ValidationResult
 
 from .canvas_colors import canvas_grid_color
 from .edge_item import EdgeItem
@@ -58,6 +59,8 @@ class LevelCanvasScene(QGraphicsScene):
         self._document: LevelDocument | None = None
         self._node_items_by_id: dict[str, NodeItem] = {}
         self._edges_by_node_id: dict[str, list[EdgeItem]] = {}
+        self._edge_items_by_id: dict[str, EdgeItem] = {}
+        self._validation_area_items: list[QGraphicsRectItem] = []
         self._transition_arc_items: list[TransitionArcItem] = []
         self._connection_source_node_id: str | None = None
         self._pending_road_shape = "horizontalFirst"
@@ -136,6 +139,8 @@ class LevelCanvasScene(QGraphicsScene):
         self._document = document
         self._node_items_by_id = {}
         self._edges_by_node_id = {}
+        self._edge_items_by_id = {}
+        self._validation_area_items = []
         self._transition_arc_items = []
         self._playtest_dot_item = None
         self._active_switch_item = None
@@ -145,9 +150,6 @@ class LevelCanvasScene(QGraphicsScene):
             self._show_placeholder("No nodes in this level")
             return
 
-        validation = validate(document)
-        warning_node_ids = {m.related_node_id for m in validation.messages if m.related_node_id}
-        warning_edge_ids = {m.related_edge_id for m in validation.messages if m.related_edge_id}
         edge_by_id = {edge.id: edge for edge in document.graph.edges}
         option_by_edge_id: dict[str, int] = {}
         initial_edge_ids: set[str] = set()
@@ -165,7 +167,7 @@ class LevelCanvasScene(QGraphicsScene):
             model_x = float(node.x) if isinstance(node.x, (int, float)) else 0.0
             model_y = float(node.y) if isinstance(node.y, (int, float)) else 0.0
             node_item = NodeItem(node_id=node.id, node_type=node_type, model_x=model_x, model_y=model_y,
-                                 has_warning=node.id in warning_node_ids)
+                                 has_warning=False)
             node_item.setPos(self._resolve_scene_position(node, index))
             editing_enabled = self._editor_tool is not EditorTool.PLAYTEST
             node_item.setFlag(node_item.GraphicsItemFlag.ItemIsMovable, editing_enabled)
@@ -187,7 +189,7 @@ class LevelCanvasScene(QGraphicsScene):
                     road_shape=edge.roadShape,
                     option_number=option_by_edge_id.get(edge.id),
                     is_initial=edge.id in initial_edge_ids,
-                    has_warning=edge.id in warning_edge_ids,
+                    has_warning=False,
                 )
             except ValueError:
                 continue
@@ -198,7 +200,38 @@ class LevelCanvasScene(QGraphicsScene):
             )
             self._edges_by_node_id.setdefault(from_node.node_id, []).append(edge_item)
             self._edges_by_node_id.setdefault(to_node.node_id, []).append(edge_item)
+            self._edge_items_by_id[edge.id] = edge_item
         self._redraw_transition_arcs()
+
+    def apply_validation_result(self, result: ValidationResult) -> None:
+        """Replace all validation styling so resolved issues disappear immediately."""
+        node_ids = {message.related_node_id for message in result.messages if message.related_node_id}
+        edge_ids = {message.related_edge_id for message in result.messages if message.related_edge_id}
+        for node_id, item in self._node_items_by_id.items():
+            item.set_validation_issue(node_id in node_ids)
+        for edge_id, item in self._edge_items_by_id.items():
+            item.set_validation_issue(edge_id in edge_ids)
+        for item in self._validation_area_items:
+            if isValid(item):
+                self.removeItem(item)
+        self._validation_area_items = []
+        for message in result.messages:
+            if message.related_area is None:
+                continue
+            x, y, width, height = message.related_area
+            top_left = self.model_to_scene_coordinates(x, y + height)
+            area = QGraphicsRectItem(QRectF(
+                top_left.x(), top_left.y(), width * self.COORDINATE_SCALE, height * self.COORDINATE_SCALE
+            ))
+            area.setPen(QPen(QColor("#dc2626"), 3, Qt.PenStyle.DashLine))
+            area.setBrush(QColor(239, 68, 68, 42))
+            area.setZValue(20)
+            area.setToolTip(message.message)
+            self.addItem(area)
+            self._validation_area_items.append(area)
+
+    def clear_validation_overlays(self) -> None:
+        self.apply_validation_result(ValidationResult())
 
     def update_playtest_overlay(self, state: PlaytestState) -> None:
         """Render transient runtime state without altering authored graphics."""

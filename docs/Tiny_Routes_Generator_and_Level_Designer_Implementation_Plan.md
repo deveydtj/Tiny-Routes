@@ -2117,6 +2117,8 @@ Surface errors and weak puzzle design during editing instead of after save or ge
 
 ## Task 14.1 — Debounce automatic validation
 
+**Status:** Completed
+
 **Files to update**
 
 - `level_validation_service.py`
@@ -2125,19 +2127,21 @@ Surface errors and weak puzzle design during editing instead of after save or ge
 
 **Steps**
 
-- [ ] Run lightweight validation after a short idle debounce.
-- [ ] Cancel stale pending validation when a new edit occurs.
-- [ ] Keep expensive Swift tests manual.
-- [ ] Separate errors, warnings, and design suggestions.
+- [x] Run lightweight validation after a short idle debounce.
+- [x] Cancel stale pending validation when a new edit occurs.
+- [x] Keep expensive Swift tests manual.
+- [x] Separate errors, warnings, and design suggestions.
 
 ## Task 14.2 — Add validation overlays
 
+**Status:** Completed
+
 **Steps**
 
-- [ ] Mark invalid nodes and edges on the canvas.
-- [ ] Clicking a validation item selects and centers the affected object.
-- [ ] Show overlap and implicit-intersection areas visually.
-- [ ] Clear overlays when the issue is resolved.
+- [x] Mark invalid nodes and edges on the canvas.
+- [x] Clicking a validation item selects and centers the affected object.
+- [x] Show overlap and implicit-intersection areas visually.
+- [x] Clear overlays when the issue is resolved.
 
 ## Task 14.3 — Add a Puzzle Analysis panel
 

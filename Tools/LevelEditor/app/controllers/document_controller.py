@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from copy import deepcopy
 
-from PySide6.QtCore import QObject, QTimer, Signal
+from PySide6.QtCore import QObject, Signal
 from PySide6.QtGui import QUndoStack
 
 from app.commands import (
@@ -27,17 +27,12 @@ class DocumentController(QObject):
 
     document_changed = Signal(object, object)
     dirty_changed = Signal(bool)
-    validation_requested = Signal()
 
     def __init__(self, parent: QObject | None = None) -> None:
         super().__init__(parent)
         self.document: LevelDocument | None = None
         self.solution: SolutionModel | None = None
         self.undo_stack = QUndoStack(self)
-        self._validation_timer = QTimer(self)
-        self._validation_timer.setSingleShot(True)
-        self._validation_timer.setInterval(250)
-        self._validation_timer.timeout.connect(self.validation_requested)
         self.undo_stack.cleanChanged.connect(self._on_clean_changed)
         self._reference_rename_service = ReferenceRenameService()
 
@@ -243,7 +238,6 @@ class DocumentController(QObject):
 
     def _emit_change(self) -> None:
         self.document_changed.emit(self.document, self.solution)
-        self._validation_timer.start()
 
     def _on_clean_changed(self, clean: bool) -> None:
         self.dirty_changed.emit(not clean)

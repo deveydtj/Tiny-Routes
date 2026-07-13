@@ -27,6 +27,8 @@ class ValidationMessage:
     message: str
     related_node_id: str | None = None
     related_edge_id: str | None = None
+    # Model-coordinate rectangle (x, y, width, height) highlighted by the canvas.
+    related_area: tuple[float, float, float, float] | None = None
 
 
 @dataclass
@@ -542,6 +544,75 @@ def validate(
             )
 
     return ValidationResult(messages=messages)
+
+
+def validate_layout(level: "LevelDocument") -> ValidationResult:
+    """Return inexpensive, deterministic layout diagnostics for live overlays."""
+    messages: list[ValidationMessage] = []
+    nodes = level.graph.nodes
+    minimum_spacing = 0.36
+    for index, first in enumerate(nodes):
+        for second in nodes[index + 1:]:
+            if math.hypot(float(first.x) - float(second.x), float(first.y) - float(second.y)) < minimum_spacing:
+                center_x = (float(first.x) + float(second.x)) / 2
+                center_y = (float(first.y) + float(second.y)) / 2
+                messages.append(ValidationMessage(
+                    severity=ValidationSeverity.WARNING,
+                    code="overlapping_nodes",
+                    message=f"Nodes '{first.id}' and '{second.id}' overlap.",
+                    related_node_id=first.id,
+                    related_area=(center_x - 0.22, center_y - 0.22, 0.44, 0.44),
+                ))
+
+    node_by_id = {node.id: node for node in nodes}
+    segments_by_edge: dict[str, list[tuple[tuple[float, float], tuple[float, float]]]] = {}
+    edge_by_id = {edge.id: edge for edge in level.graph.edges}
+    for edge in level.graph.edges:
+        source, target = node_by_id.get(edge.fromNodeID), node_by_id.get(edge.toNodeID)
+        if source is None or target is None:
+            continue
+        start, end = (float(source.x), float(source.y)), (float(target.x), float(target.y))
+        bend = (start[0], end[1]) if edge.roadShape == "verticalFirst" else (end[0], start[1])
+        points = [start, bend, end]
+        segments_by_edge[edge.id] = [
+            (a, b) for a, b in zip(points, points[1:]) if a != b
+        ]
+
+    edge_ids = list(segments_by_edge)
+    for index, first_id in enumerate(edge_ids):
+        first_edge = edge_by_id[first_id]
+        for second_id in edge_ids[index + 1:]:
+            second_edge = edge_by_id[second_id]
+            if {first_edge.fromNodeID, first_edge.toNodeID} & {second_edge.fromNodeID, second_edge.toNodeID}:
+                continue
+            crossing = _first_orthogonal_crossing(segments_by_edge[first_id], segments_by_edge[second_id])
+            if crossing is None:
+                continue
+            x, y = crossing
+            messages.append(ValidationMessage(
+                severity=ValidationSeverity.WARNING,
+                code="implicit_road_intersection",
+                message=f"Roads '{first_id}' and '{second_id}' cross without a node.",
+                related_edge_id=first_id,
+                related_area=(x - 0.10, y - 0.10, 0.20, 0.20),
+            ))
+    return ValidationResult(messages=messages)
+
+
+def _first_orthogonal_crossing(first_segments, second_segments) -> tuple[float, float] | None:
+    for first_start, first_end in first_segments:
+        for second_start, second_end in second_segments:
+            first_vertical = math.isclose(first_start[0], first_end[0])
+            second_vertical = math.isclose(second_start[0], second_end[0])
+            if first_vertical == second_vertical:
+                continue
+            vertical = (first_start, first_end) if first_vertical else (second_start, second_end)
+            horizontal = (second_start, second_end) if first_vertical else (first_start, first_end)
+            x, y = vertical[0][0], horizontal[0][1]
+            if (min(horizontal[0][0], horizontal[1][0]) < x < max(horizontal[0][0], horizontal[1][0])
+                    and min(vertical[0][1], vertical[1][1]) < y < max(vertical[0][1], vertical[1][1])):
+                return x, y
+    return None
 
 
 def _four_way_readability_messages(
