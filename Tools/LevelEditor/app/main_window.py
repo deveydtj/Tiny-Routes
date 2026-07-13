@@ -109,7 +109,7 @@ class LevelEditorMainWindow(QMainWindow):
         # Wire canvas scene selection signals to the properties panel
         scene = self._canvas_view.scene()
         scene.node_item_selected.connect(self._on_node_item_selected)
-        scene.edge_item_selected.connect(self._properties_panel.show_edge)
+        scene.edge_item_selected.connect(self._on_edge_item_selected)
         scene.selection_cleared.connect(self._properties_panel.clear)
         scene.node_item_moved.connect(self._on_node_item_moved)
         scene.edge_creation_requested.connect(self._on_edge_creation_requested)
@@ -124,6 +124,12 @@ class LevelEditorMainWindow(QMainWindow):
         self._properties_panel.outgoing_edge_order_changed.connect(
             self._on_outgoing_edge_order_changed
         )
+        self._properties_panel.node_id_changed.connect(self._on_node_id_changed)
+        self._properties_panel.node_role_changed.connect(self._on_node_role_changed)
+        self._properties_panel.node_position_changed.connect(self._on_node_position_changed)
+        self._properties_panel.initial_route_changed.connect(self._on_initial_route_changed)
+        self._properties_panel.edge_id_changed.connect(self._on_edge_id_changed)
+        self._properties_panel.edge_properties_changed.connect(self._on_edge_properties_changed)
         self._solution_panel.solution_changed.connect(self._on_solution_changed)
 
         self._build_menu_bar()
@@ -747,6 +753,70 @@ class LevelEditorMainWindow(QMainWindow):
             model_y,
             switch_classification=classification.display_name,
             outgoing_edge_order=self._outgoing_edge_order_rows(node),
+            available_node_ids=[item.id for item in self._current_document.graph.nodes],
+        )
+
+    def _on_edge_item_selected(self, edge_id: str, from_node_id: str, to_node_id: str, road_shape: str) -> None:
+        node_ids = [] if self._current_document is None else [
+            node.id for node in self._current_document.graph.nodes
+        ]
+        self._properties_panel.show_edge(
+            edge_id, from_node_id, to_node_id, road_shape, available_node_ids=node_ids
+        )
+
+    def _run_property_edit(self, mutation, *, select_node: str | None = None, select_edge: str | None = None) -> None:
+        try:
+            self._ensure_controller_state()
+            mutation()
+        except ValueError as exc:
+            QMessageBox.warning(self, "Invalid Property", str(exc))
+            if select_node:
+                self._canvas_view.scene().select_node_by_id(select_node)
+            elif select_edge:
+                self._canvas_view.scene().select_edge_by_id(select_edge)
+            return
+        if select_node:
+            self._canvas_view.scene().select_node_by_id(select_node)
+        elif select_edge:
+            self._canvas_view.scene().select_edge_by_id(select_edge)
+
+    def _on_node_id_changed(self, old_id: str, new_id: str) -> None:
+        if new_id == old_id:
+            return
+        self._run_property_edit(
+            lambda: self._document_controller.rename_node(old_id, new_id), select_node=new_id
+        )
+
+    def _on_node_role_changed(self, node_id: str, role: str) -> None:
+        self._run_property_edit(
+            lambda: self._document_controller.set_node_role(node_id, role), select_node=node_id
+        )
+
+    def _on_node_position_changed(self, node_id: str, x: float, y: float) -> None:
+        self._run_property_edit(
+            lambda: self._document_controller.edit_node_position(node_id, x, y), select_node=node_id
+        )
+
+    def _on_initial_route_changed(self, node_id: str, edge_id: str) -> None:
+        node = next((item for item in self._current_document.graph.nodes if item.id == node_id), None) if self._current_document else None
+        if node is None or edge_id not in node.outgoingEdgeIDs:
+            return
+        ordered = [edge_id, *[item for item in node.outgoingEdgeIDs if item != edge_id]]
+        self._on_outgoing_edge_order_changed(node_id, ordered)
+
+    def _on_edge_id_changed(self, old_id: str, new_id: str) -> None:
+        if new_id == old_id:
+            return
+        self._run_property_edit(
+            lambda: self._document_controller.rename_edge(old_id, new_id), select_edge=new_id
+        )
+
+    def _on_edge_properties_changed(self, edge_id: str, from_node_id: str, to_node_id: str, road_shape: str) -> None:
+        self._run_property_edit(
+            lambda: self._document_controller.edit_edge(
+                edge_id, from_node_id, to_node_id, road_shape
+            ),
+            select_edge=edge_id,
         )
 
     def _on_node_item_moved(self, node_id: str, model_x: float, model_y: float) -> None:
@@ -875,6 +945,7 @@ class LevelEditorMainWindow(QMainWindow):
                     "edge_id": edge_id,
                     "target_node_id": edge.toNodeID,
                     "direction_label": direction_label,
+                    "road_shape": edge.roadShape,
                     "clockwise_sort_key": clockwise_sort_key,
                     "is_default": index == 0,
                 }

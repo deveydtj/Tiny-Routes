@@ -64,3 +64,57 @@ def test_open_clears_undo_history() -> None:
 
     controller.open(_document(), None, saved=True)
     assert controller.undo_stack.canUndo() is False
+
+
+def test_edit_node_position_and_role_are_undoable() -> None:
+    controller = DocumentController()
+    document = _document()
+    controller.open(document, None, saved=True)
+
+    controller.edit_node_position("middle", 4.5, -2.0)
+    controller.set_node_role("middle", "destination")
+
+    assert (document.graph.nodes[1].x, document.graph.nodes[1].y) == (4.5, -2.0)
+    assert document.destinationNodeID == "middle"
+    assert document.packageNodeID == "finish"
+    controller.undo_stack.undo()
+    assert document.destinationNodeID == "finish"
+    controller.undo_stack.undo()
+    assert (document.graph.nodes[1].x, document.graph.nodes[1].y) == (1, 0)
+
+
+def test_edit_edge_endpoint_shape_and_undo_preserve_outgoing_references() -> None:
+    controller = DocumentController()
+    document = _document()
+    controller.open(document, None, saved=True)
+
+    controller.edit_edge("first", "middle", "finish", "verticalFirst")
+
+    first = document.graph.edges[0]
+    assert (first.fromNodeID, first.toNodeID, first.roadShape) == (
+        "middle", "finish", "verticalFirst"
+    )
+    assert document.graph.nodes[0].outgoingEdgeIDs == ["second"]
+    assert document.graph.nodes[1].outgoingEdgeIDs == ["first"]
+
+    controller.undo_stack.undo()
+    assert document.graph.nodes[0].outgoingEdgeIDs == ["first", "second"]
+    assert document.graph.nodes[1].outgoingEdgeIDs == []
+    assert document.graph.edges[0].roadShape is None
+
+
+def test_edit_edge_rejects_duplicate_directed_edge_without_mutation() -> None:
+    controller = DocumentController()
+    document = _document()
+    controller.open(document, None, saved=True)
+
+    try:
+        controller.edit_edge("first", "start", "finish", "horizontalFirst")
+    except ValueError as exc:
+        assert "already exists" in str(exc)
+    else:
+        raise AssertionError("Expected duplicate directed edge to be rejected")
+
+    assert document.graph.edges[0].toNodeID == "middle"
+    assert document.graph.nodes[0].outgoingEdgeIDs == ["first", "second"]
+    assert controller.undo_stack.canUndo() is False

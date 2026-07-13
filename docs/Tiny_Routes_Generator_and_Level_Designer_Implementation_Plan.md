@@ -1897,6 +1897,8 @@ Allow designers to correct level data without deleting and recreating objects.
 
 ## Task 12.2 — Add editable node properties
 
+**Status:** Completed
+
 **Files to update**
 
 - `properties_panel.py`
@@ -1913,19 +1915,21 @@ Allow designers to correct level data without deleting and recreating objects.
 
 **Steps**
 
-- [ ] Replace read-only labels with validated controls.
-- [ ] Make role changes update level metadata IDs safely.
-- [ ] Show outgoing option number, target node, direction, and road shape.
-- [ ] Add “Set as initial route.”
-- [ ] Show a warning when outgoing order and initial route would change gameplay.
+- [x] Replace read-only labels with validated controls.
+- [x] Make role changes update level metadata IDs safely.
+- [x] Show outgoing option number, target node, direction, and road shape.
+- [x] Add “Set as initial route.”
+- [x] Show a warning when outgoing order and initial route would change gameplay.
 
 **Acceptance tests**
 
-- [ ] Editing coordinates moves the canvas node.
-- [ ] Changing role updates level metadata.
-- [ ] Initial active road is visually reflected.
+- [x] Editing coordinates moves the canvas node.
+- [x] Changing role updates level metadata.
+- [x] Initial active road is visually reflected.
 
 ## Task 12.3 — Add editable edge properties
+
+**Status:** Completed
 
 **Fields**
 
@@ -1937,16 +1941,16 @@ Allow designers to correct level data without deleting and recreating objects.
 
 **Steps**
 
-- [ ] Use node dropdowns rather than raw free text.
-- [ ] Prevent duplicate directed edges.
-- [ ] Redraw immediately after changes.
-- [ ] Preserve outgoing order or ask where the changed edge should be placed.
+- [x] Use node dropdowns rather than raw free text.
+- [x] Prevent duplicate directed edges.
+- [x] Redraw immediately after changes.
+- [x] Preserve outgoing order or ask where the changed edge should be placed.
 
 **Acceptance tests**
 
-- [ ] Road bend changes without delete/recreate.
-- [ ] Endpoint edits update the correct outgoing lists.
-- [ ] Undo restores original geometry and references.
+- [x] Road bend changes without delete/recreate.
+- [x] Endpoint edits update the correct outgoing lists.
+- [x] Undo restores original geometry and references.
 
 ## Task 12.4 — Add editable level rules
 

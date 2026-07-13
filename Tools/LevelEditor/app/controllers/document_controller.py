@@ -9,7 +9,9 @@ from app.commands import (
     AddEdgeCommand,
     AddNodeCommand,
     DeleteItemsCommand,
+    EditEdgeCommand,
     EditMetadataCommand,
+    EditNodeCommand,
     EditSolutionCommand,
     MoveNodeCommand,
     ReorderEdgesCommand,
@@ -119,6 +121,72 @@ class DocumentController(QObject):
                 document, solution, old_id, new_id
             ),
         )
+
+    def edit_node_position(self, node_id: str, x: float, y: float) -> None:
+        def mutation(document, solution):
+            node = next((item for item in document.graph.nodes if item.id == node_id), None)
+            if node is None:
+                raise ValueError(f"Unknown node ID: {node_id}")
+            node.x, node.y = float(x), float(y)
+        self._mutate(EditNodeCommand, f"Edit {node_id} position", mutation)
+
+    def set_node_role(self, node_id: str, role: str) -> None:
+        role_fields = {
+            "start": "startNodeID",
+            "package": "packageNodeID",
+            "destination": "destinationNodeID",
+        }
+        if role not in {"route", *role_fields}:
+            raise ValueError(f"Unknown node role: {role}")
+
+        def mutation(document, solution):
+            if not any(node.id == node_id for node in document.graph.nodes):
+                raise ValueError(f"Unknown node ID: {node_id}")
+            if role == "route":
+                if any(getattr(document, field) == node_id for field in role_fields.values()):
+                    raise ValueError(
+                        "Assign this role to another node instead; levels must keep start, package, and destination nodes"
+                    )
+            else:
+                target_field = role_fields[role]
+                previous_target_id = getattr(document, target_field)
+                for field in role_fields.values():
+                    if field != target_field and getattr(document, field) == node_id:
+                        setattr(document, field, previous_target_id)
+                setattr(document, target_field, node_id)
+        self._mutate(EditNodeCommand, f"Set {node_id} role to {role}", mutation)
+
+    def edit_edge(self, edge_id: str, from_node_id: str, to_node_id: str, road_shape: str) -> None:
+        if road_shape not in {"horizontalFirst", "verticalFirst"}:
+            raise ValueError(f"Unknown road shape: {road_shape}")
+
+        def mutation(document, solution):
+            edge = next((item for item in document.graph.edges if item.id == edge_id), None)
+            if edge is None:
+                raise ValueError(f"Unknown edge ID: {edge_id}")
+            node_by_id = {node.id: node for node in document.graph.nodes}
+            if from_node_id not in node_by_id or to_node_id not in node_by_id:
+                raise ValueError("Road endpoints must reference existing nodes")
+            if any(
+                item.id != edge_id
+                and item.fromNodeID == from_node_id
+                and item.toNodeID == to_node_id
+                for item in document.graph.edges
+            ):
+                raise ValueError(f"A road from {from_node_id} to {to_node_id} already exists")
+
+            old_source = node_by_id.get(edge.fromNodeID)
+            insertion_index = len(node_by_id[from_node_id].outgoingEdgeIDs)
+            if old_source is not None and edge_id in old_source.outgoingEdgeIDs:
+                insertion_index = old_source.outgoingEdgeIDs.index(edge_id)
+                old_source.outgoingEdgeIDs.remove(edge_id)
+            new_source = node_by_id[from_node_id]
+            insertion_index = min(insertion_index, len(new_source.outgoingEdgeIDs))
+            new_source.outgoingEdgeIDs.insert(insertion_index, edge_id)
+            edge.fromNodeID = from_node_id
+            edge.toNodeID = to_node_id
+            edge.roadShape = road_shape
+        self._mutate(EditEdgeCommand, f"Edit road {edge_id}", mutation)
 
     def edit_metadata(self, mutation) -> None:
         self._mutate(EditMetadataCommand, "Edit level metadata", mutation)
