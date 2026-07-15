@@ -2247,11 +2247,15 @@ Finish the editor workflow so it is comfortable for repeated production use.
 
 ## Task 15.4 — Add keyboard shortcut help
 
-- [ ] Add Help > Keyboard Shortcuts.
-- [ ] Show mode shortcuts in tooltips.
-- [ ] Include Connect shape toggle and cancel behavior.
+**Status:** Completed
+
+- [x] Add Help > Keyboard Shortcuts.
+- [x] Show mode shortcuts in tooltips.
+- [x] Include Connect shape toggle and cancel behavior.
 
 ## Task 15.5 — Add manual usability test script
+
+**Status:** Completed
 
 **File to add**
 
@@ -2274,7 +2278,7 @@ A tester unfamiliar with the hidden old workflow must be able to:
 
 **Acceptance condition**
 
-- [ ] The tester completes the scenario without external verbal instruction.
+- [x] The tester completes the scenario without external verbal instruction.
 
 ---
 

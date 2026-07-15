@@ -6,6 +6,7 @@ This is an internal GUI tool for creating and editing Tiny Routes level files.
 
 - [Current Level JSON Shape](docs/current_level_json_shape.md) — Describes the exact fields used by the real `level_###.json` files. Read this before implementing Python data models.
 - [Solution JSON Shape](docs/solution_json_shape.md) — Documents the sidecar solution scripts used by the Swift test harness and Level Editor.
+- [Manual Usability Test](docs/manual_usability_test.md) — A no-coaching, end-to-end novice workflow for authoring, playtesting, saving, reopening, and Swift-verifying a live-routing level.
 
 ## Validation
 

@@ -4,6 +4,7 @@ from PySide6.QtGui import QAction, QActionGroup, QIcon, QKeySequence
 from PySide6.QtWidgets import QDoubleSpinBox, QMainWindow, QToolBar
 
 from app.models import EditorTool
+from app.ui.keyboard_shortcuts_dialog import MODE_SHORTCUTS
 
 
 def build_menu_bar(window: QMainWindow) -> None:
@@ -99,6 +100,14 @@ def build_menu_bar(window: QMainWindow) -> None:
     window._run_tests_menu_action.triggered.connect(window._run_level_tests)
     window._run_tests_menu_action.setEnabled(False)
 
+    window._help_menu = menu_bar.addMenu("Help")
+    window._keyboard_shortcuts_action = window._help_menu.addAction(
+        "Keyboard Shortcuts..."
+    )
+    window._keyboard_shortcuts_action.triggered.connect(
+        window._show_keyboard_shortcuts
+    )
+
 
 def build_main_toolbar(window: QMainWindow) -> None:
     window._main_toolbar = QToolBar("Main Toolbar", window)
@@ -139,13 +148,14 @@ def build_tools_toolbar(window: QMainWindow) -> None:
     window._tool_action_group = QActionGroup(window)
     window._tool_action_group.setExclusive(True)
     window._tool_actions = {}
-    shortcuts = {EditorTool.SELECT: "V", EditorTool.PLACE_NODE: "N", EditorTool.CONNECT: "C", EditorTool.PLAYTEST: "P"}
     icons = {EditorTool.SELECT: "input-mouse", EditorTool.PLACE_NODE: "list-add", EditorTool.CONNECT: "insert-link", EditorTool.PLAYTEST: "media-playback-start"}
     for tool in EditorTool:
         action = QAction(QIcon.fromTheme(icons[tool]), tool.label, window)
         action.setCheckable(True)
-        action.setShortcut(QKeySequence(shortcuts[tool]))
-        action.setToolTip(f"{tool.label} ({shortcuts[tool]}) — {tool.status_message}")
+        action.setShortcut(QKeySequence(MODE_SHORTCUTS[tool]))
+        action.setToolTip(
+            f"{tool.label} ({MODE_SHORTCUTS[tool]}) — {tool.status_message}"
+        )
         action.triggered.connect(lambda checked=False, selected=tool: window._set_active_tool(selected))
         window._tool_action_group.addAction(action)
         window._tools_toolbar.addAction(action)

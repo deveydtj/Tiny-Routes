@@ -51,6 +51,7 @@ from app.services import (
 )
 from app.ui import (
     LevelCanvasView,
+    KeyboardShortcutsDialog,
     LevelMetadataDialog,
     LevelMetadataResult,
     LevelRulesDialog,
@@ -235,6 +236,9 @@ class LevelEditorMainWindow(QMainWindow):
 
     def _build_tools_toolbar(self) -> None:
         build_tools_toolbar(self)
+
+    def _show_keyboard_shortcuts(self) -> None:
+        KeyboardShortcutsDialog(self).exec()
 
     def _set_active_tool(self, tool: EditorTool) -> None:
         if tool is EditorTool.PLAYTEST:
