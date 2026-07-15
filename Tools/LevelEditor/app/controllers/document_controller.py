@@ -69,6 +69,18 @@ class DocumentController(QObject):
                 node.x, node.y = x, y
         self._mutate(MoveNodeCommand, f"Move {node_id}", mutation)
 
+    def move_nodes(
+        self,
+        positions: dict[str, tuple[float, float]],
+        *,
+        command_text: str,
+    ) -> None:
+        def mutation(document, solution):
+            for node in document.graph.nodes:
+                if node.id in positions:
+                    node.x, node.y = positions[node.id]
+        self._mutate(MoveNodeCommand, command_text, mutation)
+
     def delete_items(self, node_ids: set[str], edge_ids: set[str]) -> None:
         def mutation(document, solution):
             removed_edges = edge_ids | {

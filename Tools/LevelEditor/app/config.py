@@ -28,3 +28,9 @@ def get_default_docs_directory() -> Path:
     """Return the default Tiny Routes docs directory path."""
 
     return find_repo_root() / "docs"
+
+
+def get_default_drafts_directory() -> Path:
+    """Return the non-production workspace used for candidate review drafts."""
+
+    return find_repo_root() / "docs" / "generated_levels" / "editor_drafts"

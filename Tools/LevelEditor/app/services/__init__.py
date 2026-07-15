@@ -17,14 +17,34 @@ from .switch_classification_service import (
 )
 from .test_runner_service import TestRunnerResult, TestRunnerService
 from .runtime_solution_service import ActionTiming, RuntimeSolutionService
+from .puzzle_analysis_service import (
+    PuzzleAnalysis,
+    PuzzleAnalysisService,
+    PuzzleRecommendation,
+)
+from .automated_checks_service import (
+    AutomatedCheckResult,
+    AutomatedCheckStatus,
+    AutomatedChecksReport,
+    AutomatedChecksService,
+)
+from .node_arrangement_service import NodeArrangementService
 
 __all__ = [
     "ActionTiming",
+    "AutomatedCheckResult",
+    "AutomatedCheckStatus",
+    "AutomatedChecksReport",
+    "AutomatedChecksService",
     "LevelIdentity",
     "LevelIdentityService",
     "LevelValidationService",
     "MAX_SUPPORTED_OUTGOING_EDGES",
+    "NodeArrangementService",
     "ReferenceRenameService",
+    "PuzzleAnalysis",
+    "PuzzleAnalysisService",
+    "PuzzleRecommendation",
     "RuntimeSolutionService",
     "SolutionValidationService",
     "SwitchClassificationService",

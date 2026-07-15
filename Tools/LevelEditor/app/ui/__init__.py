@@ -7,6 +7,7 @@ from .level_rules_dialog import LevelRulesDialog, LevelRulesResult
 from .node_item import NodeItem
 from .piece_palette import PiecePalette
 from .properties_panel import PropertiesPanel
+from .puzzle_analysis_panel import PuzzleAnalysisPanel
 from .solution_panel import SolutionPanel
 from .transition_arc_item import TransitionArcItem
 from .validation_panel import ValidationPanel
@@ -23,6 +24,7 @@ __all__ = [
     "NodeItem",
     "PiecePalette",
     "PropertiesPanel",
+    "PuzzleAnalysisPanel",
     "SolutionPanel",
     "TransitionArcItem",
     "ValidationPanel",

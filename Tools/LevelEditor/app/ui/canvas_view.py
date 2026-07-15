@@ -24,6 +24,7 @@ class LevelCanvasView(QGraphicsView):
         self.viewport().setAcceptDrops(True)
         self.setTransformationAnchor(QGraphicsView.ViewportAnchor.AnchorUnderMouse)
         self.centerOn(0, 0)
+        self.setDragMode(QGraphicsView.DragMode.RubberBandDrag)
 
     def reset_zoom(self) -> None:
         self.resetTransform()
@@ -39,6 +40,11 @@ class LevelCanvasView(QGraphicsView):
             EditorTool.PLAYTEST: Qt.CursorShape.PointingHandCursor,
         }[tool]
         self.viewport().setCursor(cursor)
+        self.setDragMode(
+            QGraphicsView.DragMode.RubberBandDrag
+            if tool is EditorTool.SELECT
+            else QGraphicsView.DragMode.NoDrag
+        )
 
     def fit_level_to_view(self) -> None:
         scene = self.scene()

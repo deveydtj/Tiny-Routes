@@ -18,6 +18,7 @@ def build_menu_bar(window: QMainWindow) -> None:
         action = window._file_menu.addAction(text)
         action.setShortcut(shortcut)
         action.triggered.connect(callback)
+    window._file_menu.addAction("Save Draft...", window._save_draft)
 
     window._edit_menu = menu_bar.addMenu("Edit")
     window._undo_action = window._document_controller.undo_stack.createUndoAction(window, "Undo")
@@ -29,6 +30,33 @@ def build_menu_bar(window: QMainWindow) -> None:
     window._edit_menu.addSeparator()
     window._snap_selected_action = window._edit_menu.addAction("Snap Selected to Grid")
     window._snap_selected_action.triggered.connect(window._snap_selected_to_grid)
+    window._edit_menu.addSeparator()
+    align_menu = window._edit_menu.addMenu("Align Selected")
+    for label, operation in (
+        ("Left", "left"),
+        ("Right", "right"),
+        ("Top", "top"),
+        ("Bottom", "bottom"),
+        ("Horizontal Centers", "horizontal_centers"),
+        ("Vertical Centers", "vertical_centers"),
+    ):
+        align_menu.addAction(
+            label,
+            lambda checked=False, selected=operation: window._arrange_selected_nodes(
+                selected
+            ),
+        )
+    distribute_menu = window._edit_menu.addMenu("Distribute Selected")
+    for label, operation in (
+        ("Horizontally", "horizontal"),
+        ("Vertically", "vertical"),
+    ):
+        distribute_menu.addAction(
+            label,
+            lambda checked=False, selected=operation: window._arrange_selected_nodes(
+                selected
+            ),
+        )
 
     window._view_menu = menu_bar.addMenu("View")
     window._view_menu.addAction("Fit View").triggered.connect(window._canvas_view.fit_level_to_view)
@@ -54,6 +82,15 @@ def build_menu_bar(window: QMainWindow) -> None:
     validate_action = window._tools_menu.addAction("Validate")
     validate_action.setToolTip("Validate Level + Solution References")
     validate_action.triggered.connect(window._validate_current_level)
+    window._analyze_puzzle_action = window._tools_menu.addAction("Analyze Puzzle")
+    window._analyze_puzzle_action.triggered.connect(window._analyze_puzzle)
+    window._analyze_puzzle_action.setEnabled(False)
+    window._run_all_checks_action = window._tools_menu.addAction("Run All Checks")
+    window._run_all_checks_action.setToolTip(
+        "Run structure, solution, front-load, quality, and Swift parity checks"
+    )
+    window._run_all_checks_action.triggered.connect(window._run_all_automated_checks)
+    window._run_all_checks_action.setEnabled(False)
     window._run_tests_menu_action = window._tools_menu.addAction("Run Tests")
     window._run_tests_menu_action.setToolTip("Run Swift Solvability Tests")
     window._run_tests_menu_action.triggered.connect(window._run_level_tests)

@@ -41,6 +41,12 @@ def try_get_default_debug_failures_directory() -> str:
     return _try_default_path(lambda: get_default_reports_directory() / "debug_failures")
 
 
+def try_get_default_editor_drafts_directory() -> str:
+    return _try_default_path(
+        lambda: get_default_reports_directory() / "editor_drafts"
+    )
+
+
 def _try_default_path(factory) -> str:
     try:
         return str(factory())

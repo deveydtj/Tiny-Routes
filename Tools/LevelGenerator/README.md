@@ -332,7 +332,8 @@ If `xcodebuild` is missing, install Xcode or run generation with `--no-swift-tes
 - Dry-run generation works.
 - Write generation works.
 - Reports open correctly.
-- Open generated level in the Level Editor.
+- Select a candidate and use **Open in Level Editor** to create an ignored draft
+  bundle containing its level, solution, and quality metadata.
 - Confirm nodes are visually readable.
 - Confirm route lines do not overlap badly.
 - Confirm package and destination are obvious.

@@ -2145,6 +2145,8 @@ Surface errors and weak puzzle design during editing instead of after save or ge
 
 ## Task 14.3 — Add a Puzzle Analysis panel
 
+**Status:** Completed
+
 **Files to add**
 
 - `Tools/LevelEditor/app/ui/puzzle_analysis_panel.py`
@@ -2166,37 +2168,41 @@ Surface errors and weak puzzle design during editing instead of after save or ge
 
 **Steps**
 
-- [ ] Run topology analysis on graph changes.
-- [ ] Run runtime timing analysis when layout/rules/solution change.
-- [ ] Explain recommendations in plain language.
-- [ ] Link recommendations to affected nodes.
+- [x] Run topology analysis on graph changes.
+- [x] Run runtime timing analysis when layout/rules/solution change.
+- [x] Explain recommendations in plain language.
+- [x] Link recommendations to affected nodes.
 
 ## Task 14.4 — Add one-click automated checks
 
+**Status:** Completed
+
 **Actions**
 
-- [ ] Validate structure.
-- [ ] Find verified solution.
-- [ ] Replay saved solution.
-- [ ] Test all taps at `0.0` in legacy diagnostic mode.
-- [ ] Analyze decision quality.
-- [ ] Run Swift parity tests.
+- [x] Validate structure.
+- [x] Find verified solution.
+- [x] Replay saved solution.
+- [x] Test all taps at `0.0` in legacy diagnostic mode.
+- [x] Analyze decision quality.
+- [x] Run Swift parity tests.
 
 ## Task 14.5 — Integrate generated candidates with the editor
 
+**Status:** Completed
+
 **Steps**
 
-- [ ] Add “Open in Level Editor” to the generator GUI or report workflow.
-- [ ] Open candidate level and solution together.
-- [ ] Import candidate quality data when available.
-- [ ] Allow saving to a draft directory before promotion.
-- [ ] Keep production overwrite confirmation.
+- [x] Add “Open in Level Editor” to the generator GUI or report workflow.
+- [x] Open candidate level and solution together.
+- [x] Import candidate quality data when available.
+- [x] Allow saving to a draft directory before promotion.
+- [x] Keep production overwrite confirmation.
 
 ### Phase 14 exit gate
 
-- [ ] Validation is visible while designing.
-- [ ] Puzzle-quality analysis is available in the editor.
-- [ ] Generated candidates can be inspected and corrected without manual file hunting.
+- [x] Validation is visible while designing.
+- [x] Puzzle-quality analysis is available in the editor.
+- [x] Generated candidates can be inspected and corrected without manual file hunting.
 
 ---
 
@@ -2208,13 +2214,15 @@ Finish the editor workflow so it is comfortable for repeated production use.
 
 ## Task 15.1 — Add selection and alignment tools
 
-- [ ] Multi-select with Shift.
-- [ ] Marquee selection.
-- [ ] Align left/right/top/bottom.
-- [ ] Align centers.
-- [ ] Distribute horizontally/vertically.
-- [ ] Nudge by keyboard.
-- [ ] Larger nudge with modifier.
+**Status:** Completed
+
+- [x] Multi-select with Shift.
+- [x] Marquee selection.
+- [x] Align left/right/top/bottom.
+- [x] Align centers.
+- [x] Distribute horizontally/vertically.
+- [x] Nudge by keyboard.
+- [x] Larger nudge with modifier.
 
 ## Task 15.2 — Add viewport controls
 

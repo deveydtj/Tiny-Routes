@@ -13,6 +13,10 @@ from ..services.level_validation_runner_service import (
     normalize_level_id,
 )
 from ..services.level_resource_sync_service import LevelResourceSyncService, parse_level_selectors
+from ..services.candidate_editor_handoff_service import (
+    CandidateEditorHandoff,
+    CandidateEditorHandoffService,
+)
 from .gui_state import GuiGenerationState, parse_positive_int, to_generation_config
 
 
@@ -26,6 +30,9 @@ class GuiController:
         self.validation_service = validation_service or LevelValidationRunnerService()
         self.resource_sync_service = LevelResourceSyncService()
         self.generated_level_repository = GeneratedLevelRepository()
+        self.editor_handoff_service = CandidateEditorHandoffService(
+            self.generated_level_repository
+        )
 
     def generate_from_state(self, state: GuiGenerationState) -> GenerationResult:
         config = to_generation_config(state)
@@ -97,6 +104,15 @@ class GuiController:
             written.append(self.generated_level_repository.write_level(candidate.level_document, level_path, overwrite=overwrite))
             written.append(self.generated_level_repository.write_solution(candidate.solution, solution_path, overwrite=overwrite))
         return written
+
+    def prepare_candidate_for_editor(
+        self, candidate, *, draft_directory: str
+    ) -> CandidateEditorHandoff:
+        if not draft_directory.strip():
+            raise ValueError("Editor draft directory is required.")
+        return self.editor_handoff_service.write(
+            candidate, Path(draft_directory).expanduser()
+        )
 
 
 def parse_level_ids(value: str) -> list[str]:

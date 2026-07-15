@@ -89,6 +89,15 @@ def test_find_solution_path_keeps_legacy_filename_behavior() -> None:
     assert solution_path.name == "level_21.solution.json"
 
 
+def test_find_solution_path_prefers_sibling_draft_sidecar(tmp_path: Path) -> None:
+    repository = SolutionFileRepository()
+    level_path = tmp_path / "candidate.json"
+    sibling = tmp_path / "candidate.solution.json"
+    sibling.write_text("{}", encoding="utf-8")
+
+    assert repository.find_solution_path(level_path) == sibling
+
+
 def test_load_solution_raises_structured_error_for_missing_file(tmp_path: Path) -> None:
     repository = SolutionFileRepository()
     missing_path = tmp_path / "does_not_exist.solution.json"

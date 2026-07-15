@@ -52,6 +52,8 @@ class LevelCanvasScene(QGraphicsScene):
     road_shape_changed = Signal(str)
     # Emitted for left-clicked nodes while the simulator owns the canvas.
     playtest_tap_requested = Signal(str)
+    # Model-coordinate delta requested by arrow-key nudging.
+    nudge_selected_requested = Signal(float, float)
 
     def __init__(self) -> None:
         super().__init__()
@@ -359,6 +361,20 @@ class LevelCanvasScene(QGraphicsScene):
                 return True
         return False
 
+    def select_nodes_by_ids(self, node_ids: set[str]) -> None:
+        self.clearSelection()
+        for node_id in node_ids:
+            item = self._node_items_by_id.get(node_id)
+            if item is not None:
+                item.setSelected(True)
+
+    def selected_node_positions(self) -> dict[str, tuple[float, float]]:
+        return {
+            item.node_id: (item.model_x, item.model_y)
+            for item in self.selectedItems()
+            if isinstance(item, NodeItem)
+        }
+
     def handle_node_item_moved(self, item: NodeItem) -> None:
         model_x, model_y = self.scene_to_model_coordinates(item.pos())
         item.model_x = model_x
@@ -411,6 +427,16 @@ class LevelCanvasScene(QGraphicsScene):
             event.accept()
             return
         node_item = self._resolve_node_item_at_position(event.scenePos())
+        if (
+            self._editor_tool is EditorTool.SELECT
+            and event.button() == Qt.MouseButton.LeftButton
+            and event.modifiers() & Qt.KeyboardModifier.ShiftModifier
+        ):
+            selectable = self._resolve_selectable_item_at_position(event.scenePos())
+            if selectable is not None:
+                selectable.setSelected(not selectable.isSelected())
+                event.accept()
+                return
         if node_item is not None and event.button() == Qt.MouseButton.LeftButton:
             self._drag_start_positions[node_item.node_id] = (node_item.model_x, node_item.model_y)
         super().mousePressEvent(event)
@@ -440,6 +466,28 @@ class LevelCanvasScene(QGraphicsScene):
         if self._editor_tool is EditorTool.PLACE_NODE and event.key() == Qt.Key.Key_Escape:
             self.cancel_current_operation()
             self.placement_message_changed.emit("Node placement canceled.")
+            event.accept()
+            return
+        nudge_directions = {
+            Qt.Key.Key_Left: (-1.0, 0.0),
+            Qt.Key.Key_Right: (1.0, 0.0),
+            Qt.Key.Key_Up: (0.0, 1.0),
+            Qt.Key.Key_Down: (0.0, -1.0),
+        }
+        if (
+            self._editor_tool is EditorTool.SELECT
+            and event.key() in nudge_directions
+            and self.selected_node_positions()
+        ):
+            step = (
+                0.25
+                if event.modifiers() & Qt.KeyboardModifier.ShiftModifier
+                else 0.05
+            )
+            x_direction, y_direction = nudge_directions[event.key()]
+            self.nudge_selected_requested.emit(
+                x_direction * step, y_direction * step
+            )
             event.accept()
             return
         if (
@@ -702,6 +750,17 @@ class LevelCanvasScene(QGraphicsScene):
             current_item = item
             while current_item is not None:
                 if isinstance(current_item, NodeItem):
+                    return current_item
+                current_item = current_item.parentItem()
+        return None
+
+    def _resolve_selectable_item_at_position(
+        self, scene_position: QPointF
+    ) -> NodeItem | EdgeItem | None:
+        for item in self.items(scene_position):
+            current_item = item
+            while current_item is not None:
+                if isinstance(current_item, (NodeItem, EdgeItem)):
                     return current_item
                 current_item = current_item.parentItem()
         return None

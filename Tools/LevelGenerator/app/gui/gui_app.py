@@ -4,6 +4,7 @@ import threading
 import tkinter as tk
 import traceback
 import subprocess
+import sys
 from pathlib import Path
 from tkinter import messagebox, scrolledtext, ttk
 
@@ -26,6 +27,7 @@ from .gui_controller import GuiController, format_generation_result, format_vali
 from .gui_paths import (
     open_path,
     try_get_default_debug_failures_directory,
+    try_get_default_editor_drafts_directory,
     try_get_default_json_report_path,
     try_get_default_levels_directory,
     try_get_default_markdown_report_path,
@@ -104,6 +106,7 @@ class LevelGeneratorGui:
         self.json_report_path_var = tk.StringVar(value=try_get_default_json_report_path())
         self.map_seed_path_var = tk.StringVar(value="")
         self.debug_failures_var = tk.StringVar(value=try_get_default_debug_failures_directory())
+        self.editor_drafts_var = tk.StringVar(value=try_get_default_editor_drafts_directory())
 
         self.validation_level_ids_var = tk.StringVar(value="")
         self.validation_difficulty_var = tk.StringVar(value="")
@@ -256,7 +259,7 @@ class LevelGeneratorGui:
 
         self.cancel_button = ttk.Button(frame, text="Cancel", command=self._on_cancel)
         self.cancel_button.grid(row=3, column=0, sticky="ew", padx=(0, 4), pady=3)
-        ttk.Button(frame, text="Level Editor", command=self._on_open_level_editor).grid(
+        ttk.Button(frame, text="Open in Level Editor", command=self._on_open_level_editor).grid(
             row=3,
             column=1,
             sticky="ew",
@@ -275,6 +278,7 @@ class LevelGeneratorGui:
         add_path_picker(frame, "JSON report path", self.json_report_path_var, 3, pick_directory=False, file_extension=".json")
         add_path_picker(frame, "Map seed path", self.map_seed_path_var, 4, pick_directory=False, file_extension=".json")
         add_path_picker(frame, "Debug failures directory", self.debug_failures_var, 5, pick_directory=True)
+        add_path_picker(frame, "Editor drafts directory", self.editor_drafts_var, 6, pick_directory=True)
 
     def _build_validation_section(self, parent: ttk.Frame) -> None:
         frame = ttk.LabelFrame(parent, text="Validate Existing Levels", padding=8)
@@ -380,6 +384,7 @@ class LevelGeneratorGui:
             self.json_report_path_var,
             self.map_seed_path_var,
             self.debug_failures_var,
+            self.editor_drafts_var,
         ]
         for variable in variables:
             variable.trace_add("write", lambda *_args: self._update_command_preview())
@@ -550,8 +555,23 @@ class LevelGeneratorGui:
         self.append_log("Cancel requested. The current worker result will be ignored when it finishes.")
 
     def _on_open_level_editor(self) -> None:
+        candidate = self._selected_candidate()
         try:
-            subprocess.Popen(["python", "Tools/LevelEditor/run_level_editor.py"], cwd=Path(__file__).resolve().parents[4])
+            command = [sys.executable, "Tools/LevelEditor/run_level_editor.py"]
+            if candidate is not None:
+                handoff = self.controller.prepare_candidate_for_editor(
+                    candidate,
+                    draft_directory=self.editor_drafts_var.get(),
+                )
+                command.extend([
+                    "--level", str(handoff.level_path),
+                    "--solution", str(handoff.solution_path),
+                    "--quality", str(handoff.quality_path),
+                ])
+                self.append_log(
+                    f"Opened {candidate.level_id} and its solution as an editor draft."
+                )
+            subprocess.Popen(command, cwd=Path(__file__).resolve().parents[4])
         except Exception as exc:
             messagebox.showerror("Could not open Level Editor", str(exc))
 
@@ -709,6 +729,7 @@ class LevelGeneratorGui:
         self.json_report_path_var.set(try_get_default_json_report_path())
         self.map_seed_path_var.set("")
         self.debug_failures_var.set(try_get_default_debug_failures_directory())
+        self.editor_drafts_var.set(try_get_default_editor_drafts_directory())
         self.validation_level_ids_var.set("")
         self.validation_difficulty_var.set("")
         self.validation_swift_tests_var.set(False)

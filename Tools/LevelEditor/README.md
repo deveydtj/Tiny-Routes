@@ -14,6 +14,26 @@ The Level Editor has two validation paths:
 - **Validate** is fast and Python-only. It checks the level JSON structure, graph references, route-order reachability, solution metadata, solution action timing, and whether every solution `tapNodeID` exists in the level graph.
 - **Run Tests** runs the Swift solvability test harness through `xcodebuild`. This is the source of truth for gameplay completion because it uses the real Tiny Routes runtime and test infrastructure.
 
+The dockable **Puzzle Analysis** panel updates after document edits and reports
+measured decision count, route dependencies, failure outcomes, activation
+windows, decision spacing, estimated difficulty, and the legacy front-load
+diagnostic. Double-click a recommendation to select its affected node. **Run
+All Checks** performs structural validation, verified-solution search, saved
+solution replay, front-load diagnosis, decision-quality analysis, and the Swift
+parity test gate in one action.
+
+Generated candidates can be opened directly from the generator's **Open in
+Level Editor** action. The generator writes an ignored editor-draft bundle so
+the level, solution sidecar, and quality report open together. Imported score
+factors appear at the top of Puzzle Analysis. Use **File > Save Draft** while
+iterating, then **Tools > Promote Draft to Production Level**; production level
+and solution overwrites still require confirmation.
+
+In Select mode, Shift-click adds or removes items from the selection and a
+background drag creates a marquee selection. The Edit menu aligns and
+distributes selected nodes. Arrow keys nudge selected nodes by 0.05 level units;
+Shift+Arrow uses a 0.25-unit nudge. Each arrangement is one undoable edit.
+
 Python validation does not duplicate the Swift gameplay engine. It catches data integrity problems early, then Swift tests verify that the scripted solution truly completes the level.
 
 Common solution validation failures:

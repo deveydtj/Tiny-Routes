@@ -1,4 +1,5 @@
 import math
+import json
 from pathlib import Path
 
 from PySide6.QtCore import Qt
@@ -11,8 +12,17 @@ from PySide6.QtWidgets import (
     QMessageBox,
 )
 
-from app.config import find_repo_root, get_default_levels_directory
-from app.controllers import DocumentController, PlaytestController, ValidationController
+from app.config import (
+    find_repo_root,
+    get_default_drafts_directory,
+    get_default_levels_directory,
+)
+from app.controllers import (
+    DocumentController,
+    PlaytestController,
+    PuzzleAnalysisController,
+    ValidationController,
+)
 from app.models import EditorTool, LevelDocument, RouteEdgeModel, RouteNodeModel, SolutionModel
 from app.repositories import (
     LevelFileRepository,
@@ -22,11 +32,14 @@ from app.repositories import (
     SolutionFileRepositoryError,
 )
 from app.services import (
+    AutomatedChecksService,
     LevelIdentity,
     LevelIdentityService,
     LevelValidationService,
+    NodeArrangementService,
     SolutionValidationService,
     RuntimeSolutionService,
+    PuzzleAnalysisService,
     SwitchClassificationService,
     TestRunnerService,
     ValidationMessage,
@@ -41,6 +54,7 @@ from app.ui import (
     LevelRulesDialog,
     PiecePalette,
     PropertiesPanel,
+    PuzzleAnalysisPanel,
     SolutionPanel,
     ValidationPanel,
 )
@@ -57,6 +71,7 @@ class LevelEditorMainWindow(QMainWindow):
         self._current_solution: SolutionModel | None = None
         self._current_file_path: Path | None = None
         self._is_dirty = False
+        self._current_candidate_quality: dict | None = None
         self._active_tool = EditorTool.SELECT
         self._repository = LevelFileRepository()
         self._solution_repository = SolutionFileRepository()
@@ -64,18 +79,34 @@ class LevelEditorMainWindow(QMainWindow):
         self._validation_service = LevelValidationService()
         self._solution_validation_service = SolutionValidationService()
         self._runtime_solution_service = RuntimeSolutionService()
+        self._puzzle_analysis_service = PuzzleAnalysisService(
+            self._runtime_solution_service
+        )
         self._switch_classification_service = SwitchClassificationService()
+        self._node_arrangement_service = NodeArrangementService()
         self._test_runner_service = TestRunnerService(self._resolve_repo_root())
+        self._automated_checks_service = AutomatedChecksService(
+            self._resolve_repo_root(),
+            level_validation=self._validation_service,
+            runtime=self._runtime_solution_service,
+            analysis=self._puzzle_analysis_service,
+            swift_tests=self._test_runner_service,
+        )
         self._canvas_view = LevelCanvasView()
         self._piece_palette = PiecePalette()
         self._properties_panel = PropertiesPanel()
         self._solution_panel = SolutionPanel()
         self._validation_panel = ValidationPanel()
+        self._puzzle_analysis_panel = PuzzleAnalysisPanel()
         self._document_controller = DocumentController(self)
         self._validation_controller = ValidationController(
             self,
             level_service=self._validation_service,
             solution_service=self._solution_validation_service,
+        )
+        self._puzzle_analysis_controller = PuzzleAnalysisController(
+            self,
+            service=self._puzzle_analysis_service,
         )
         self._playtest_controller = PlaytestController(self)
         self._playtest_controller.state_changed.connect(
@@ -85,6 +116,9 @@ class LevelEditorMainWindow(QMainWindow):
         self._document_controller.document_changed.connect(self._on_controller_document_changed)
         self._document_controller.dirty_changed.connect(self._set_dirty)
         self._validation_controller.result_ready.connect(self._show_validation_result)
+        self._puzzle_analysis_controller.result_ready.connect(
+            self._puzzle_analysis_panel.show_analysis
+        )
 
         self.setCentralWidget(self._canvas_view)
 
@@ -113,6 +147,16 @@ class LevelEditorMainWindow(QMainWindow):
         )
         self.addDockWidget(Qt.DockWidgetArea.BottomDockWidgetArea, self._solution_dock)
 
+        self._puzzle_analysis_dock = QDockWidget("Puzzle Analysis", self)
+        self._puzzle_analysis_dock.setWidget(self._puzzle_analysis_panel)
+        self._puzzle_analysis_dock.setFeatures(
+            QDockWidget.DockWidgetFeature.DockWidgetMovable
+            | QDockWidget.DockWidgetFeature.DockWidgetFloatable,
+        )
+        self.addDockWidget(
+            Qt.DockWidgetArea.RightDockWidgetArea, self._puzzle_analysis_dock
+        )
+
         self._palette_dock = QDockWidget("Palette", self)
         self._palette_dock.setWidget(self._piece_palette)
         self._palette_dock.setFeatures(
@@ -132,8 +176,16 @@ class LevelEditorMainWindow(QMainWindow):
         scene.set_delete_items_handler(self._delete_items_with_controller)
         scene.placement_message_changed.connect(self.statusBar().showMessage)
         scene.playtest_tap_requested.connect(self._on_playtest_tap_requested)
+        scene.nudge_selected_requested.connect(self._nudge_selected_nodes)
         self._validation_panel.validate_requested.connect(self._validate_current_level)
         self._validation_panel.validation_message_activated.connect(
+            self._focus_validation_message
+        )
+        self._puzzle_analysis_panel.analyze_requested.connect(self._analyze_puzzle)
+        self._puzzle_analysis_panel.run_all_checks_requested.connect(
+            self._run_all_automated_checks
+        )
+        self._puzzle_analysis_panel.recommendation_activated.connect(
             self._focus_validation_message
         )
         self._piece_palette.node_type_activated.connect(self._add_node_from_palette)
@@ -262,6 +314,40 @@ class LevelEditorMainWindow(QMainWindow):
             message = f"Tightest early/late safety margin: {min(margins):.2f}s."
         self.statusBar().showMessage(message, 4000)
 
+    def _analyze_puzzle(self) -> None:
+        if self._current_document is None:
+            self._puzzle_analysis_panel.clear()
+            return
+        self._puzzle_analysis_controller.analyze_now(
+            self._current_document, self._current_solution
+        )
+        self.statusBar().showMessage("Puzzle analysis updated.", 2500)
+
+    def _run_all_automated_checks(self) -> None:
+        if self._current_document is None:
+            self._puzzle_analysis_panel.clear()
+            return
+        self._puzzle_analysis_panel.set_checks_running(True)
+        self.statusBar().showMessage(
+            "Running structural, runtime, quality, and Swift parity checks…"
+        )
+        try:
+            report = self._automated_checks_service.run(
+                self._current_document,
+                self._current_solution,
+                self._current_file_path,
+            )
+        finally:
+            self._puzzle_analysis_panel.set_checks_running(False)
+        self._puzzle_analysis_panel.show_checks(report)
+        passed_count = sum(
+            check.status.value == "passed" for check in report.checks
+        )
+        self.statusBar().showMessage(
+            f"Automated checks finished: {passed_count}/{len(report.checks)} passed.",
+            5000,
+        )
+
     def _use_playtest_run_as_solution(self) -> None:
         solution = self._playtest_controller.recorded_solution()
         if solution is None:
@@ -319,6 +405,39 @@ class LevelEditorMainWindow(QMainWindow):
             f"Snapped {moved} selected node{'s' if moved != 1 else ''} to the grid."
         )
 
+    def _arrange_selected_nodes(self, operation: str) -> None:
+        scene = self._canvas_view.scene()
+        positions = scene.selected_node_positions()
+        minimum = 3 if operation in {"horizontal", "vertical"} else 2
+        if len(positions) < minimum:
+            self.statusBar().showMessage(
+                f"Select at least {minimum} nodes for this arrangement.", 2500
+            )
+            return
+        arranged = self._node_arrangement_service.arrange(positions, operation)
+        self._ensure_controller_state()
+        self._document_controller.move_nodes(
+            arranged,
+            command_text=operation.replace("_", " ").title(),
+        )
+        scene.select_nodes_by_ids(set(arranged))
+        self.statusBar().showMessage(
+            f"Arranged {len(arranged)} selected nodes.", 2000
+        )
+
+    def _nudge_selected_nodes(self, dx: float, dy: float) -> None:
+        scene = self._canvas_view.scene()
+        positions = scene.selected_node_positions()
+        if not positions:
+            return
+        nudged = self._node_arrangement_service.nudge(positions, dx, dy)
+        self._ensure_controller_state()
+        self._document_controller.move_nodes(
+            nudged,
+            command_text="Nudge selected nodes",
+        )
+        scene.select_nodes_by_ids(set(nudged))
+
     def keyPressEvent(self, event: QKeyEvent) -> None:
         if event.key() == Qt.Key.Key_Escape:
             if self._active_tool is EditorTool.SELECT:
@@ -345,20 +464,75 @@ class LevelEditorMainWindow(QMainWindow):
         if not file_path:
             return
 
-        try:
-            document = self._repository.load_level(Path(file_path))
-        except LevelFileRepositoryError as exc:
-            QMessageBox.critical(self, "Failed to Open Level", exc.message)
+        if not self._load_level_bundle(Path(file_path)):
             return
-
-        self._current_file_path = Path(file_path)
-        solution = self._load_solution_for_level(self._current_file_path, document)
-        self._document_controller.open(document, solution, saved=True)
         self._properties_panel.clear()
         self._solution_panel.set_level(self._current_document)
         self._solution_panel.set_solution(self._current_solution)
         self._validation_panel.clear()
         self._update_run_tests_action_states()
+
+    def open_level_bundle(
+        self,
+        level_path: Path,
+        *,
+        solution_path: Path | None = None,
+        quality_path: Path | None = None,
+    ) -> bool:
+        """Open a level, its solution, and optional generator analysis together."""
+
+        if not self._prompt_to_save_unsaved_changes():
+            return False
+        return self._load_level_bundle(
+            Path(level_path),
+            solution_path=solution_path,
+            quality_path=quality_path,
+        )
+
+    def _load_level_bundle(
+        self,
+        level_path: Path,
+        *,
+        solution_path: Path | None = None,
+        quality_path: Path | None = None,
+    ) -> bool:
+        try:
+            document = self._repository.load_level(level_path)
+        except LevelFileRepositoryError as exc:
+            QMessageBox.critical(self, "Failed to Open Level", exc.message)
+            return False
+
+        if solution_path is None:
+            solution = self._load_solution_for_level(level_path, document)
+        else:
+            try:
+                solution = self._solution_repository.load_solution(solution_path)
+            except SolutionFileRepositoryError as exc:
+                QMessageBox.warning(self, "Failed to Load Solution", exc.message)
+                solution = self._build_default_solution(document, is_placeholder=True)
+
+        quality = None
+        if quality_path is not None:
+            try:
+                payload = json.loads(Path(quality_path).read_text(encoding="utf-8"))
+                if not isinstance(payload, dict):
+                    raise ValueError("Expected a JSON object.")
+                if payload.get("levelID") not in (None, document.id):
+                    raise ValueError("Quality data belongs to a different level.")
+                quality = payload
+            except (OSError, json.JSONDecodeError, ValueError) as exc:
+                QMessageBox.warning(
+                    self,
+                    "Failed to Load Candidate Quality",
+                    f"Could not import {quality_path}: {exc}",
+                )
+
+        self._current_file_path = level_path
+        self._current_candidate_quality = quality
+        self._document_controller.open(document, solution, saved=True)
+        if quality is not None:
+            self._puzzle_analysis_panel.show_imported_quality(quality)
+        return True
 
     def _new_level(self) -> None:
         if not self._prompt_to_save_unsaved_changes():
@@ -366,6 +540,7 @@ class LevelEditorMainWindow(QMainWindow):
 
         document = create_default_level_document()
         self._current_file_path = None
+        self._current_candidate_quality = None
         solution = self._build_default_solution(document)
         self._document_controller.open(document, solution, saved=False)
         self._properties_panel.clear()
@@ -396,6 +571,29 @@ class LevelEditorMainWindow(QMainWindow):
                 self._solution_repository.save_solution(solution_path, self._current_solution)
             except SolutionFileRepositoryError as exc:
                 QMessageBox.critical(self, "Failed to Save Solution", exc.message)
+                return False
+
+        if (
+            self._current_candidate_quality is not None
+            and not self._is_path_in_default_levels_dir(self._current_file_path)
+        ):
+            quality_path = self._current_file_path.with_name(
+                f"{self._current_file_path.stem}.quality.json"
+            )
+            try:
+                quality_path.write_text(
+                    json.dumps(
+                        self._current_candidate_quality,
+                        ensure_ascii=False,
+                        indent=2,
+                    )
+                    + "\n",
+                    encoding="utf-8",
+                )
+            except OSError as exc:
+                QMessageBox.critical(
+                    self, "Failed to Save Candidate Quality", str(exc)
+                )
                 return False
 
         self._document_controller.mark_saved()
@@ -467,6 +665,39 @@ class LevelEditorMainWindow(QMainWindow):
 
         self._current_file_path = selected_path
         return self._save_level()
+
+    def _save_draft(self) -> bool:
+        if self._current_document is None:
+            return False
+        draft_dir = get_default_drafts_directory()
+        draft_dir.mkdir(parents=True, exist_ok=True)
+        file_path, _ = QFileDialog.getSaveFileName(
+            self,
+            "Save Level Draft",
+            str(draft_dir / f"{self._current_document.id}.json"),
+            "Level JSON Files (*.json);;All Files (*)",
+        )
+        if not file_path:
+            return False
+        selected_path = Path(file_path)
+        if self._is_path_in_default_levels_dir(selected_path):
+            QMessageBox.warning(
+                self,
+                "Use Production Promotion",
+                (
+                    "Drafts cannot be saved directly into the production Levels "
+                    "directory. Save here first, then use Promote Draft to "
+                    "Production Level so overwrite checks are applied."
+                ),
+            )
+            return False
+        previous_path = self._current_file_path
+        self._current_file_path = selected_path
+        self._current_file_path.parent.mkdir(parents=True, exist_ok=True)
+        if self._save_level():
+            return True
+        self._current_file_path = previous_path
+        return False
 
     def _validate_current_level(self) -> None:
         if self._current_document is None:
@@ -692,7 +923,9 @@ class LevelEditorMainWindow(QMainWindow):
                 self._current_document.id
             )
 
-        return self._solution_repository.find_solution_path(self._current_file_path)
+        return self._current_file_path.with_name(
+            f"{self._current_file_path.stem}.solution.json"
+        )
 
     def _confirm_production_overwrite(
         self,
@@ -1127,9 +1360,20 @@ class LevelEditorMainWindow(QMainWindow):
         self._solution_panel.set_level(document)
         self._solution_panel.set_solution(solution)
         self._validation_panel.clear()
+        self._puzzle_analysis_panel.clear()
+        if self._current_candidate_quality is not None:
+            self._puzzle_analysis_panel.show_imported_quality(
+                self._current_candidate_quality
+            )
         self._canvas_view.scene().clear_validation_overlays()
         if document is not None:
             self._validation_controller.schedule(document, solution, self._current_file_path)
+            # A document change can affect graph topology, geometry-derived
+            # timing, rules, or the saved solution, so refresh both analysis
+            # layers after the shared debounce.
+            self._puzzle_analysis_controller.schedule(document, solution)
+        else:
+            self._puzzle_analysis_controller.cancel()
         self._update_run_tests_action_states()
         self._update_window_title()
 
@@ -1218,6 +1462,11 @@ class LevelEditorMainWindow(QMainWindow):
     def _update_run_tests_action_states(self) -> None:
         is_enabled = self._current_document is not None
         for action_name in ("_run_tests_menu_action", "_run_tests_action"):
+            action = getattr(self, action_name, None)
+            if action is not None:
+                action.setEnabled(is_enabled)
+
+        for action_name in ("_analyze_puzzle_action", "_run_all_checks_action"):
             action = getattr(self, action_name, None)
             if action is not None:
                 action.setEnabled(is_enabled)
@@ -1315,4 +1564,6 @@ class LevelEditorMainWindow(QMainWindow):
         if not self._prompt_to_save_unsaved_changes():
             event.ignore()
             return
+        self._validation_controller.cancel()
+        self._puzzle_analysis_controller.cancel()
         event.accept()

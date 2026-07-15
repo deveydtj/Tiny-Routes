@@ -83,6 +83,9 @@ class SolutionFileRepository:
     def find_solution_path(self, level_path: Path | str) -> Path:
         level_file_path = Path(level_path)
         filename = f"{level_file_path.stem}.solution.json"
+        sibling = level_file_path.with_name(filename)
+        if sibling.exists():
+            return sibling
         return find_repo_root() / "TinyRoutesTests" / "Resources" / "LevelSolutions" / filename
 
     def solution_path_for_level_id(self, level_id: str) -> Path:
