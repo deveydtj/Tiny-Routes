@@ -1,43 +1,105 @@
 {
+  "schemaVersion": 2,
+  "rules": {
+    "switchInteractionMode": "liveLookahead",
+    "switchLookaheadSeconds": 2.0,
+    "switchTapCooldownSeconds": 0.12
+  },
   "id": "level_003",
   "name": "Level 003",
   "graph": {
     "nodes": [
       {
         "id": "start",
-        "x": 0.0,
-        "y": 0.85,
-        "outgoingEdgeIDs": [
-          "e_start_package"
-        ]
+        "x": -1.0,
+        "y": 0.9,
+        "outgoingEdgeIDs": ["e_start_pickup_switch"]
+      },
+      {
+        "id": "pickup_switch",
+        "x": 0.9,
+        "y": 0.4,
+        "outgoingEdgeIDs": ["e_pickup_switch_dead_end", "e_pickup_switch_package"]
+      },
+      {
+        "id": "pickup_dead_end",
+        "x": 0.8,
+        "y": 0.05,
+        "outgoingEdgeIDs": []
       },
       {
         "id": "package",
-        "x": 0.4,
-        "y": -0.1,
-        "outgoingEdgeIDs": [
-          "e_package_destination"
-        ]
+        "x": -0.1,
+        "y": 0.05,
+        "outgoingEdgeIDs": ["e_package_delivery_approach"]
+      },
+      {
+        "id": "delivery_approach",
+        "x": -0.75,
+        "y": -0.35,
+        "outgoingEdgeIDs": ["e_delivery_approach_switch"]
+      },
+      {
+        "id": "delivery_switch",
+        "x": 0.7,
+        "y": -0.55,
+        "outgoingEdgeIDs": ["e_delivery_switch_dead_end", "e_delivery_switch_destination"]
+      },
+      {
+        "id": "delivery_dead_end",
+        "x": 0.75,
+        "y": -1.05,
+        "outgoingEdgeIDs": []
       },
       {
         "id": "destination",
-        "x": -0.3,
-        "y": -1.0,
+        "x": -0.45,
+        "y": -1.1,
         "outgoingEdgeIDs": []
       }
     ],
     "edges": [
       {
-        "id": "e_start_package",
+        "id": "e_start_pickup_switch",
         "fromNodeID": "start",
+        "toNodeID": "pickup_switch",
+        "roadShape": "horizontalFirst"
+      },
+      {
+        "id": "e_pickup_switch_dead_end",
+        "fromNodeID": "pickup_switch",
+        "toNodeID": "pickup_dead_end",
+        "roadShape": "verticalFirst"
+      },
+      {
+        "id": "e_pickup_switch_package",
+        "fromNodeID": "pickup_switch",
         "toNodeID": "package",
         "roadShape": "horizontalFirst"
       },
       {
-        "id": "e_package_destination",
+        "id": "e_package_delivery_approach",
         "fromNodeID": "package",
-        "toNodeID": "destination",
+        "toNodeID": "delivery_approach",
+        "roadShape": "horizontalFirst"
+      },
+      {
+        "id": "e_delivery_approach_switch",
+        "fromNodeID": "delivery_approach",
+        "toNodeID": "delivery_switch",
+        "roadShape": "horizontalFirst"
+      },
+      {
+        "id": "e_delivery_switch_dead_end",
+        "fromNodeID": "delivery_switch",
+        "toNodeID": "delivery_dead_end",
         "roadShape": "verticalFirst"
+      },
+      {
+        "id": "e_delivery_switch_destination",
+        "fromNodeID": "delivery_switch",
+        "toNodeID": "destination",
+        "roadShape": "horizontalFirst"
       }
     ]
   },
@@ -45,5 +107,6 @@
   "packageNodeID": "package",
   "destinationNodeID": "destination",
   "timeLimitSeconds": 30,
-  "parTaps": 0
+  "parTaps": 2,
+  "tutorialMessage": "Tap each highlighted switch: once before pickup, then once more on the way to the flag."
 }

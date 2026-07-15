@@ -139,6 +139,32 @@ struct TRGameplayObjectiveCard: View {
     }
 }
 
+struct TRGameplayTutorialCard: View {
+    let message: String
+
+    var body: some View {
+        HStack(spacing: 10) {
+            Image(systemName: "hand.tap.fill")
+                .font(.system(size: 16, weight: .bold))
+                .foregroundStyle(TRGameplayStyle.Colors.primaryBlue)
+
+            Text(message)
+                .font(.system(size: 14, weight: .semibold, design: .rounded))
+                .foregroundStyle(TRGameplayStyle.Colors.titleNavy)
+                .multilineTextAlignment(.leading)
+                .frame(maxWidth: .infinity, alignment: .leading)
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 10)
+        .background {
+            TRGlassCardBackground(cornerRadius: 16)
+        }
+        .padding(.horizontal, 8)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("Tutorial: \(message)")
+    }
+}
+
 struct TRGameplayTimerCard: View {
     let timeRemaining: TimeInterval?
 

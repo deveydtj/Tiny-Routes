@@ -1,0 +1,1517 @@
+{
+  "levels": [
+    {
+      "levelID": "level_001",
+      "name": "Level 001",
+      "difficultyEstimate": "tutorial",
+      "nodes": 5,
+      "edges": 4,
+      "switches": 0,
+      "tapCount": 0,
+      "deadEndCount": 0,
+      "template": "existing",
+      "topologyHash": "1a988a48a4777098ee69748f5e23999ad87784954999a9b788f73ed13f1ab4fb",
+      "layoutHash": "752cf6280443287252c153f1b576c29fa3e2c72a1adcfb486369cc0576073b2d",
+      "solutionHash": "4ea3c0ebc6255c80341d0e8ae61b12077ff5424ab11920e2f2d9efdb83540fc1",
+      "normalizedPositions": [
+        [
+          "destination",
+          0.0,
+          0.0
+        ],
+        [
+          "exit_lane",
+          0.4286,
+          0.2432
+        ],
+        [
+          "package",
+          1.0,
+          0.4865
+        ],
+        [
+          "pickup_lane",
+          0.4286,
+          0.7568
+        ],
+        [
+          "start",
+          0.4286,
+          1.0
+        ]
+      ]
+    },
+    {
+      "levelID": "level_002",
+      "name": "Level 002",
+      "difficultyEstimate": "easy",
+      "nodes": 5,
+      "edges": 4,
+      "switches": 1,
+      "tapCount": 1,
+      "deadEndCount": 1,
+      "template": "existing",
+      "topologyHash": "9e8f40a41c70997ffc7a49b0204390047b57a3540af1c664e25176529768359d",
+      "layoutHash": "2bdda296d9e1d0f55f4067e5f6bed6e08e77a6f36237102bc3cd6974cd2c0cf4",
+      "solutionHash": "fc75f4b5f3bb9135472a90fab328c4c998f47be70f7daecefd5cb995e2771102",
+      "normalizedPositions": [
+        [
+          "choice",
+          1.0,
+          0.7368
+        ],
+        [
+          "dead_end_a",
+          0.875,
+          0.4211
+        ],
+        [
+          "destination",
+          0.275,
+          0.0
+        ],
+        [
+          "package",
+          0.525,
+          0.3947
+        ],
+        [
+          "start",
+          0.0,
+          1.0
+        ]
+      ]
+    },
+    {
+      "levelID": "level_003",
+      "name": "Level 003",
+      "difficultyEstimate": "easy",
+      "nodes": 8,
+      "edges": 7,
+      "switches": 2,
+      "tapCount": 2,
+      "deadEndCount": 2,
+      "template": "existing",
+      "topologyHash": "21a24a8ea3756d791a1234576a789fd0a2b5d983eb1db4f779d241d184f83015",
+      "layoutHash": "0986b6a15c32c8ff515801b4b50224293f5dca2b041d42a2fbf5e6369c32d452",
+      "solutionHash": "3055dfa9683814155f6e20ba7497c25a0220096236ca978a004ea1a86474fb15",
+      "normalizedPositions": [
+        [
+          "delivery_approach",
+          0.1316,
+          0.375
+        ],
+        [
+          "delivery_dead_end",
+          0.9211,
+          0.025
+        ],
+        [
+          "delivery_switch",
+          0.8947,
+          0.275
+        ],
+        [
+          "destination",
+          0.2895,
+          0.0
+        ],
+        [
+          "package",
+          0.4737,
+          0.575
+        ],
+        [
+          "pickup_dead_end",
+          0.9474,
+          0.575
+        ],
+        [
+          "pickup_switch",
+          1.0,
+          0.75
+        ],
+        [
+          "start",
+          0.0,
+          1.0
+        ]
+      ]
+    },
+    {
+      "levelID": "level_004",
+      "name": "Level 004",
+      "difficultyEstimate": "easy",
+      "nodes": 5,
+      "edges": 4,
+      "switches": 1,
+      "tapCount": 1,
+      "deadEndCount": 1,
+      "template": "existing",
+      "topologyHash": "43bcc0ec9572910b4bf21d11603837fc9228240a06bddeb3da0c10f686bbbb3c",
+      "layoutHash": "91cf31d9df673fcd778c6349e5d19a6c8b4c7c2e3ce5766d70019794bf7570b5",
+      "solutionHash": "fc75f4b5f3bb9135472a90fab328c4c998f47be70f7daecefd5cb995e2771102",
+      "normalizedPositions": [
+        [
+          "choice",
+          0.4545,
+          0.6757
+        ],
+        [
+          "destination",
+          0.0,
+          0.0
+        ],
+        [
+          "package",
+          0.6364,
+          0.3243
+        ],
+        [
+          "start",
+          0.2727,
+          1.0
+        ],
+        [
+          "wrong_dead_end",
+          1.0,
+          0.6757
+        ]
+      ]
+    },
+    {
+      "levelID": "level_005",
+      "name": "Level 005",
+      "difficultyEstimate": "tutorial",
+      "nodes": 3,
+      "edges": 2,
+      "switches": 0,
+      "tapCount": 0,
+      "deadEndCount": 0,
+      "template": "existing",
+      "topologyHash": "2a12d2df6ba25592e0ebc8d5e851ce5ea1e796a73bdf9b4808882e30313503d0",
+      "layoutHash": "c763c6293abe23b77fff4f67e03fd5cfee6214e9f305326538942b5d5e564aa5",
+      "solutionHash": "4ea3c0ebc6255c80341d0e8ae61b12077ff5424ab11920e2f2d9efdb83540fc1",
+      "normalizedPositions": [
+        [
+          "destination",
+          1.0,
+          0.0
+        ],
+        [
+          "package",
+          0.0,
+          0.4865
+        ],
+        [
+          "start",
+          0.5714,
+          1.0
+        ]
+      ]
+    },
+    {
+      "levelID": "level_006",
+      "name": "Level 006",
+      "difficultyEstimate": "easy",
+      "nodes": 5,
+      "edges": 4,
+      "switches": 1,
+      "tapCount": 1,
+      "deadEndCount": 1,
+      "template": "existing",
+      "topologyHash": "e3cd100d0b08a8ac566c2cf5bfe421b3ff7c45dc51859a05311e21be7be4c1e2",
+      "layoutHash": "dd8b966565fcc75497809cf5fe739c5f0fec48e8ece036eb455e5854cf777d5d",
+      "solutionHash": "16d6ec44dc4516b7752f007ee49a806cc732159e445b6dc186b4d8788329fcbb",
+      "normalizedPositions": [
+        [
+          "dead_end_a",
+          0.0,
+          0.6486
+        ],
+        [
+          "destination",
+          1.0,
+          0.0
+        ],
+        [
+          "gate",
+          0.8235,
+          0.6757
+        ],
+        [
+          "package",
+          0.1765,
+          0.3243
+        ],
+        [
+          "start",
+          0.5882,
+          1.0
+        ]
+      ]
+    },
+    {
+      "levelID": "level_007",
+      "name": "Level 007",
+      "difficultyEstimate": "easy",
+      "nodes": 6,
+      "edges": 5,
+      "switches": 1,
+      "tapCount": 1,
+      "deadEndCount": 1,
+      "template": "existing",
+      "topologyHash": "d2ffab496759e5d73456e6ad553c2aec6824bd5ad50caab66ae1aa453210a2e3",
+      "layoutHash": "9577b351dee86ac18f17743b33d319ae2dcc2a017770996ed255119ae152d9a0",
+      "solutionHash": "16d6ec44dc4516b7752f007ee49a806cc732159e445b6dc186b4d8788329fcbb",
+      "normalizedPositions": [
+        [
+          "dead_end_a",
+          1.0,
+          0.7568
+        ],
+        [
+          "destination",
+          0.0,
+          0.0
+        ],
+        [
+          "detour",
+          0.2727,
+          0.4865
+        ],
+        [
+          "gate",
+          0.4545,
+          0.7568
+        ],
+        [
+          "package",
+          0.6364,
+          0.2432
+        ],
+        [
+          "start",
+          0.2727,
+          1.0
+        ]
+      ]
+    },
+    {
+      "levelID": "level_008",
+      "name": "Level 008",
+      "difficultyEstimate": "easy",
+      "nodes": 7,
+      "edges": 6,
+      "switches": 2,
+      "tapCount": 2,
+      "deadEndCount": 2,
+      "template": "existing",
+      "topologyHash": "40609fccd9d8537746ff98f7a05b828c1fd6f776967b25069024d6424a0630c4",
+      "layoutHash": "61836c7ea28621883ef153577033e15c2b3599e0f4db44c525796a1516c0805e",
+      "solutionHash": "8bfd535e4dc9f378d58a8affb23f9c338ee219942a471ab746b6e915f6227f71",
+      "normalizedPositions": [
+        [
+          "destination",
+          1.0,
+          0.0
+        ],
+        [
+          "lower_bypass",
+          0.0,
+          0.7297
+        ],
+        [
+          "lower_dead_end",
+          0.0,
+          0.2162
+        ],
+        [
+          "lower_entry_switch",
+          0.8235,
+          0.7568
+        ],
+        [
+          "lower_finish_switch",
+          0.8235,
+          0.2432
+        ],
+        [
+          "package",
+          0.1765,
+          0.4865
+        ],
+        [
+          "start",
+          0.5882,
+          1.0
+        ]
+      ]
+    },
+    {
+      "levelID": "level_009",
+      "name": "Level 009",
+      "difficultyEstimate": "easy",
+      "nodes": 6,
+      "edges": 5,
+      "switches": 1,
+      "tapCount": 1,
+      "deadEndCount": 1,
+      "template": "existing",
+      "topologyHash": "04e44d8c1d0e0ab52bf6c26473d94664c9b1f8183da470f5ec386643cd7cdf69",
+      "layoutHash": "165947eb886c282e10a0d275c56643c42bbf501d08e9beeb4c8896586dfebe8e",
+      "solutionHash": "fc75f4b5f3bb9135472a90fab328c4c998f47be70f7daecefd5cb995e2771102",
+      "normalizedPositions": [
+        [
+          "choice",
+          0.8235,
+          0.7568
+        ],
+        [
+          "destination",
+          1.0,
+          0.0
+        ],
+        [
+          "detour",
+          0.5882,
+          0.4865
+        ],
+        [
+          "package",
+          0.1765,
+          0.2432
+        ],
+        [
+          "shortcut_dead_end",
+          0.0,
+          0.7297
+        ],
+        [
+          "start",
+          0.5882,
+          1.0
+        ]
+      ]
+    },
+    {
+      "levelID": "level_010",
+      "name": "Level 010",
+      "difficultyEstimate": "easy",
+      "nodes": 7,
+      "edges": 6,
+      "switches": 2,
+      "tapCount": 2,
+      "deadEndCount": 2,
+      "template": "existing",
+      "topologyHash": "b6fc1fcdbd9da4a7750c00f836aac344da2132c79c064b7f15e17f9431af4058",
+      "layoutHash": "dccccea323e119ab0b562d24c810a845c39634a76c4384e5f0637502bca8dfbe",
+      "solutionHash": "02f4e4f548c80925c30fb725b14829efab140d39ffeae4303cb128f8fefce5f8",
+      "normalizedPositions": [
+        [
+          "destination",
+          1.0,
+          0.0
+        ],
+        [
+          "package",
+          0.1765,
+          0.4865
+        ],
+        [
+          "short_bypass",
+          0.0,
+          0.7297
+        ],
+        [
+          "short_dead_end",
+          0.0,
+          0.2162
+        ],
+        [
+          "short_entry_switch",
+          0.8235,
+          0.7568
+        ],
+        [
+          "short_finish_switch",
+          0.8235,
+          0.2432
+        ],
+        [
+          "start",
+          0.5882,
+          1.0
+        ]
+      ]
+    },
+    {
+      "levelID": "level_011",
+      "name": "Level 011",
+      "difficultyEstimate": "easy",
+      "nodes": 9,
+      "edges": 9,
+      "switches": 2,
+      "tapCount": 2,
+      "deadEndCount": 2,
+      "template": "existing",
+      "topologyHash": "02fd7ebc0543b4047cfa1e5c58ce58e492ae3b93ae6a27b7bac14469e6b79a7b",
+      "layoutHash": "d1f82e7277910cdc1a3cd8c8bbe17fe7a0c46ec83a8da1a50a39bd939641edf0",
+      "solutionHash": "84ab43780c1d575aec01a81dadf435f98da8d20cd89850c636f909394e42b0e8",
+      "normalizedPositions": [
+        [
+          "dead_end_a",
+          0.0,
+          0.7692
+        ],
+        [
+          "dead_end_b",
+          0.2857,
+          0.2051
+        ],
+        [
+          "destination",
+          0.7857,
+          0.0
+        ],
+        [
+          "hub",
+          0.4286,
+          0.7692
+        ],
+        [
+          "package",
+          1.0,
+          0.5641
+        ],
+        [
+          "package_branch",
+          1.0,
+          0.7692
+        ],
+        [
+          "rejoin",
+          0.4286,
+          0.4103
+        ],
+        [
+          "start",
+          0.4286,
+          1.0
+        ],
+        [
+          "switch_b",
+          0.7857,
+          0.2051
+        ]
+      ]
+    },
+    {
+      "levelID": "level_012",
+      "name": "Level 012",
+      "difficultyEstimate": "easy",
+      "nodes": 9,
+      "edges": 9,
+      "switches": 2,
+      "tapCount": 2,
+      "deadEndCount": 1,
+      "template": "existing",
+      "topologyHash": "eb2c3b9e834b87b051780ee0e0c5a14775b96deefad61e734cfa2cdefcbedfb5",
+      "layoutHash": "5b41d9fb6d5d615d8324fdcdd868fc53820ecca93d45e7514404b271938245dd",
+      "solutionHash": "e45124c204979bd0a33c56cc0a193617dc0461f268589b30a918a535a575c7f4",
+      "normalizedPositions": [
+        [
+          "dead_end_b",
+          0.0,
+          0.25
+        ],
+        [
+          "destination",
+          1.0,
+          0.0
+        ],
+        [
+          "detour_a",
+          0.8438,
+          0.8
+        ],
+        [
+          "direct_bypass",
+          0.0,
+          0.6
+        ],
+        [
+          "package",
+          0.9063,
+          0.55
+        ],
+        [
+          "rejoin",
+          0.4375,
+          0.45
+        ],
+        [
+          "start",
+          0.4375,
+          1.0
+        ],
+        [
+          "switch_exit",
+          0.4375,
+          0.25
+        ],
+        [
+          "switch_gate",
+          0.4375,
+          0.8
+        ]
+      ]
+    },
+    {
+      "levelID": "level_013",
+      "name": "Level 013",
+      "difficultyEstimate": "easy",
+      "nodes": 9,
+      "edges": 9,
+      "switches": 2,
+      "tapCount": 2,
+      "deadEndCount": 1,
+      "template": "existing",
+      "topologyHash": "404d3c3faacba42bfa62f40b845f3662d73cac62d43684e5e03defd72c8d0a94",
+      "layoutHash": "ca8555daad415ac130cb53b4d59fcaa199f35bfa89f19ff8c37b4868e033235b",
+      "solutionHash": "22e42c179808931fa9fc276f0338c8e1c297c586c862fac5d9dc5a280aef57e7",
+      "normalizedPositions": [
+        [
+          "dead_end_b",
+          0.2143,
+          0.1316
+        ],
+        [
+          "destination",
+          1.0,
+          0.0
+        ],
+        [
+          "lower_shortcut",
+          0.0,
+          0.6842
+        ],
+        [
+          "package",
+          1.0,
+          0.5
+        ],
+        [
+          "rejoin",
+          0.6071,
+          0.3158
+        ],
+        [
+          "start",
+          0.6071,
+          1.0
+        ],
+        [
+          "switch_a",
+          0.7857,
+          0.8421
+        ],
+        [
+          "switch_b",
+          0.7857,
+          0.1579
+        ],
+        [
+          "upper_branch",
+          0.7857,
+          0.6842
+        ]
+      ]
+    },
+    {
+      "levelID": "level_014",
+      "name": "Level 014",
+      "difficultyEstimate": "medium",
+      "nodes": 9,
+      "edges": 8,
+      "switches": 3,
+      "tapCount": 3,
+      "deadEndCount": 3,
+      "template": "existing",
+      "topologyHash": "ee49bc2dace77483a60152341a4afdb188d2d0eb7feb7a0e67f69a59869b6903",
+      "layoutHash": "ac1bf9dcffcb89ff29f33dadd6118e5ab0b52f36483a59b37fe514a17009cd4f",
+      "solutionHash": "1312b44fb160cc308b57fbcbc2d9fdda760e0cf1981b34a633e40ccecd421821",
+      "normalizedPositions": [
+        [
+          "destination",
+          0.85,
+          0.0
+        ],
+        [
+          "double_bypass",
+          0.0,
+          0.7838
+        ],
+        [
+          "double_dead_end_a",
+          0.0,
+          0.3784
+        ],
+        [
+          "double_dead_end_b",
+          1.0,
+          0.1622
+        ],
+        [
+          "double_entry_switch",
+          0.7,
+          0.8108
+        ],
+        [
+          "double_finish_switch",
+          0.3,
+          0.1892
+        ],
+        [
+          "double_mid_switch",
+          0.7,
+          0.4054
+        ],
+        [
+          "package",
+          0.15,
+          0.5946
+        ],
+        [
+          "start",
+          0.5,
+          1.0
+        ]
+      ]
+    },
+    {
+      "levelID": "level_015",
+      "name": "Level 015",
+      "difficultyEstimate": "medium",
+      "nodes": 7,
+      "edges": 7,
+      "switches": 2,
+      "tapCount": 3,
+      "deadEndCount": 1,
+      "template": "existing",
+      "topologyHash": "b0ddc5b0f99bbdd72e70ef828564d9b64b57e4735662f695361a3ee632a6b3d0",
+      "layoutHash": "03448d0b62e9d4998dddb1692448006c88ba84f0e57cd774919c6deb9b8f750e",
+      "solutionHash": "c09ff2660f6f956e9e4be8bd851f45d38a8ef0aceb29bb7412ee6b5604d9d049",
+      "normalizedPositions": [
+        [
+          "destination",
+          0.1579,
+          0.0
+        ],
+        [
+          "package",
+          0.2895,
+          0.8506
+        ],
+        [
+          "start",
+          0.0,
+          1.0
+        ],
+        [
+          "upper_alpha_switch",
+          0.1579,
+          0.6667
+        ],
+        [
+          "upper_beta_switch",
+          0.8421,
+          0.8506
+        ],
+        [
+          "upper_dead_end",
+          1.0,
+          0.7816
+        ],
+        [
+          "upper_return",
+          1.0,
+          0.6667
+        ]
+      ]
+    },
+    {
+      "levelID": "level_016",
+      "name": "Level 016",
+      "difficultyEstimate": "easy",
+      "nodes": 9,
+      "edges": 8,
+      "switches": 2,
+      "tapCount": 2,
+      "deadEndCount": 2,
+      "template": "existing",
+      "topologyHash": "c115d191f8b1c43ec3c41412ef1f19468c9573e316770613309ae8706e32de70",
+      "layoutHash": "1c23971f490747f0d40ae4ff7a77beca9e2dbdf950e2b978491bf633eb221e84",
+      "solutionHash": "547b0f2b790e4ca8f563651ded750e3701f8828e38c72416af2c405332c4605d",
+      "normalizedPositions": [
+        [
+          "choice",
+          0.8235,
+          0.8378
+        ],
+        [
+          "dead_end_b",
+          0.0,
+          0.1351
+        ],
+        [
+          "destination",
+          1.0,
+          0.0
+        ],
+        [
+          "detour_a",
+          0.5882,
+          0.6757
+        ],
+        [
+          "detour_b",
+          0.5882,
+          0.3243
+        ],
+        [
+          "package",
+          0.1765,
+          0.4865
+        ],
+        [
+          "shortcut_dead_end",
+          0.0,
+          0.8108
+        ],
+        [
+          "start",
+          0.5882,
+          1.0
+        ],
+        [
+          "switch_b",
+          0.8235,
+          0.1622
+        ]
+      ]
+    },
+    {
+      "levelID": "level_017",
+      "name": "Level 017",
+      "difficultyEstimate": "medium",
+      "nodes": 7,
+      "edges": 7,
+      "switches": 2,
+      "tapCount": 3,
+      "deadEndCount": 1,
+      "template": "existing",
+      "topologyHash": "18a000471440dcf722ba9a4e38eeec9ebee8aa7d663f135a465417af93ebf773",
+      "layoutHash": "bafc0220e58c54c613b0a6efa91b784b373b7bddf7bf1c6345a79198b5f019a3",
+      "solutionHash": "c6e81a710b6268d3ff8ab8e86ed766dee3543ccd405c54ac78b5710e7d500514",
+      "normalizedPositions": [
+        [
+          "alpha_switch",
+          0.1579,
+          0.6667
+        ],
+        [
+          "beta_switch",
+          0.8421,
+          0.8506
+        ],
+        [
+          "dead_end_a",
+          1.0,
+          0.7816
+        ],
+        [
+          "destination",
+          0.1579,
+          0.0
+        ],
+        [
+          "package",
+          0.2895,
+          0.8506
+        ],
+        [
+          "return_a",
+          1.0,
+          0.6667
+        ],
+        [
+          "start",
+          0.0,
+          1.0
+        ]
+      ]
+    },
+    {
+      "levelID": "level_018",
+      "name": "Level 018",
+      "difficultyEstimate": "easy",
+      "nodes": 7,
+      "edges": 6,
+      "switches": 2,
+      "tapCount": 2,
+      "deadEndCount": 2,
+      "template": "existing",
+      "topologyHash": "c3c5c0eec9f5cfb9961998b7e61c17774b42e677c63f30aaa2137e45e2582cd7",
+      "layoutHash": "29f3976cf5a0862f0acfc9f29ad4a9b55e7a13f7951218a3e0ff1bc1fae913f5",
+      "solutionHash": "569856479e9c9c4aebeeb09b946399a845125400bbcd1424aebebd80de3bfb2a",
+      "normalizedPositions": [
+        [
+          "destination",
+          1.0,
+          0.0
+        ],
+        [
+          "left_bypass",
+          0.0,
+          0.7297
+        ],
+        [
+          "left_dead_end",
+          0.0,
+          0.2162
+        ],
+        [
+          "left_entry_switch",
+          0.8235,
+          0.7568
+        ],
+        [
+          "left_finish_switch",
+          0.8235,
+          0.2432
+        ],
+        [
+          "package",
+          0.1765,
+          0.4865
+        ],
+        [
+          "start",
+          0.5882,
+          1.0
+        ]
+      ]
+    },
+    {
+      "levelID": "level_019",
+      "name": "Level 019",
+      "difficultyEstimate": "medium",
+      "nodes": 7,
+      "edges": 7,
+      "switches": 2,
+      "tapCount": 3,
+      "deadEndCount": 1,
+      "template": "existing",
+      "topologyHash": "f152647c43002e9d64a1df87475606529913df69c1c598ad698b47fc56192236",
+      "layoutHash": "349c30c304b8748c5da4d96f55c3ed5c6e3ec84731754a375320cef65f9702a4",
+      "solutionHash": "50bb2282fa01bd42101fd591c0fa0e6a3cc8a5e449cb902e6a70711e19545031",
+      "normalizedPositions": [
+        [
+          "destination",
+          0.1579,
+          0.0
+        ],
+        [
+          "lower_alpha_switch",
+          0.1579,
+          0.6667
+        ],
+        [
+          "lower_beta_switch",
+          0.8421,
+          0.8506
+        ],
+        [
+          "lower_dead_end",
+          1.0,
+          0.7816
+        ],
+        [
+          "lower_return",
+          1.0,
+          0.6667
+        ],
+        [
+          "package",
+          0.2895,
+          0.8506
+        ],
+        [
+          "start",
+          0.0,
+          1.0
+        ]
+      ]
+    },
+    {
+      "levelID": "level_020",
+      "name": "Level 020",
+      "difficultyEstimate": "easy",
+      "nodes": 7,
+      "edges": 6,
+      "switches": 2,
+      "tapCount": 2,
+      "deadEndCount": 2,
+      "template": "existing",
+      "topologyHash": "fa3d3c7b7a5c1450a21c6c2e882608104130e8844b6e1a0678df732329f1fc88",
+      "layoutHash": "e2c44aa2fa6f6829d7356cc8679edc706a78cb0bb6f811f59ffb345c0ab897c6",
+      "solutionHash": "02457ebc16badb9e6fb0df52f6c4207f545c96d46d546c234a8f9b6e457c74e3",
+      "normalizedPositions": [
+        [
+          "approach_switch",
+          0.8235,
+          0.7568
+        ],
+        [
+          "bypass",
+          0.0,
+          0.7297
+        ],
+        [
+          "dead_end_a",
+          0.0,
+          0.2162
+        ],
+        [
+          "destination",
+          1.0,
+          0.0
+        ],
+        [
+          "finish_switch",
+          0.8235,
+          0.2432
+        ],
+        [
+          "package",
+          0.1765,
+          0.4865
+        ],
+        [
+          "start",
+          0.5882,
+          1.0
+        ]
+      ]
+    },
+    {
+      "levelID": "level_021",
+      "name": "Level 021",
+      "difficultyEstimate": "medium",
+      "nodes": 12,
+      "edges": 12,
+      "switches": 3,
+      "tapCount": 3,
+      "deadEndCount": 2,
+      "template": "existing",
+      "topologyHash": "363dcbebe1a38086d6af0009f3ba64d4d1fc73d510853f5d175a8fb003a147ff",
+      "layoutHash": "0ad618f316f77ee63b718c6797d59d371a8f73dd99324759c4ae8ae077afb33a",
+      "solutionHash": "8962f818da8efdcac0c0270e69ed0787cca7bd773655d035ad66b0d9c6fe2673",
+      "normalizedPositions": [
+        [
+          "dead_end_b",
+          1.0,
+          0.7581
+        ],
+        [
+          "dead_end_c",
+          0.0,
+          0.2419
+        ],
+        [
+          "destination",
+          0.8667,
+          0.0
+        ],
+        [
+          "detour_a",
+          0.7333,
+          0.8065
+        ],
+        [
+          "direct_bypass",
+          0.0,
+          0.5968
+        ],
+        [
+          "exit_gate_lane",
+          0.6667,
+          0.1452
+        ],
+        [
+          "package",
+          0.9333,
+          0.5484
+        ],
+        [
+          "rejoin",
+          0.4,
+          0.4516
+        ],
+        [
+          "start",
+          0.4,
+          1.0
+        ],
+        [
+          "switch_exit",
+          0.4,
+          0.2419
+        ],
+        [
+          "switch_gate",
+          0.4,
+          0.8065
+        ],
+        [
+          "switch_package",
+          0.7333,
+          0.629
+        ]
+      ]
+    },
+    {
+      "levelID": "level_022",
+      "name": "Level 022",
+      "difficultyEstimate": "medium",
+      "nodes": 12,
+      "edges": 12,
+      "switches": 3,
+      "tapCount": 3,
+      "deadEndCount": 2,
+      "template": "existing",
+      "topologyHash": "a7a27ce947cd21d5104996136f229a71e2a7f9dda58bba672b5e0f2723abd7f0",
+      "layoutHash": "72fddbf1312b5a5a0152863db4a0dcbbd46b4791c39421ac532817f932790d0a",
+      "solutionHash": "12c1018d4e4fe6986450211f5d5399e7b6ff76f8a6c888b430dc50bc7cbc117d",
+      "normalizedPositions": [
+        [
+          "dead_end_b",
+          0.0857,
+          0.025
+        ],
+        [
+          "dead_end_c",
+          0.4857,
+          0.1
+        ],
+        [
+          "destination",
+          1.0,
+          0.0
+        ],
+        [
+          "early_exit",
+          0.0,
+          0.775
+        ],
+        [
+          "exit_choice",
+          0.4,
+          0.35
+        ],
+        [
+          "exit_lane",
+          0.7429,
+          0.25
+        ],
+        [
+          "package",
+          0.8,
+          0.575
+        ],
+        [
+          "package_lane",
+          0.8,
+          0.775
+        ],
+        [
+          "phase_bridge",
+          0.6,
+          0.475
+        ],
+        [
+          "phase_one_switch",
+          0.4,
+          0.775
+        ],
+        [
+          "start",
+          0.4,
+          1.0
+        ],
+        [
+          "switch_final",
+          0.7429,
+          0.1
+        ]
+      ]
+    },
+    {
+      "levelID": "level_023",
+      "name": "Level 023",
+      "difficultyEstimate": "medium",
+      "nodes": 12,
+      "edges": 12,
+      "switches": 3,
+      "tapCount": 3,
+      "deadEndCount": 3,
+      "template": "existing",
+      "topologyHash": "f4e1bc6c3e03e2613c287e0e66b8bb953a1d55621eb3bdec0172ea157b7c6f08",
+      "layoutHash": "1a9b28f22a37e73cd04d33ec67787f061818b4d76bb5d5a8298904c8cc2ebcad",
+      "solutionHash": "b7150b308311c79b777e6cc0269645dc0ef6f92df66f1cc63bdbf222a0da8766",
+      "normalizedPositions": [
+        [
+          "dead_end_a",
+          0.0,
+          0.7692
+        ],
+        [
+          "dead_end_b",
+          0.2353,
+          0.2051
+        ],
+        [
+          "dead_end_c",
+          1.0,
+          0.3333
+        ],
+        [
+          "destination",
+          1.0,
+          0.0
+        ],
+        [
+          "hub",
+          0.3529,
+          0.7692
+        ],
+        [
+          "package",
+          0.8235,
+          0.5641
+        ],
+        [
+          "package_branch",
+          0.8235,
+          0.7692
+        ],
+        [
+          "rejoin",
+          0.3529,
+          0.4103
+        ],
+        [
+          "route_mid",
+          0.8235,
+          0.2051
+        ],
+        [
+          "start",
+          0.3529,
+          1.0
+        ],
+        [
+          "switch_b",
+          0.6471,
+          0.2051
+        ],
+        [
+          "switch_c",
+          1.0,
+          0.2051
+        ]
+      ]
+    },
+    {
+      "levelID": "level_024",
+      "name": "Level 024",
+      "difficultyEstimate": "medium",
+      "nodes": 9,
+      "edges": 11,
+      "switches": 3,
+      "tapCount": 3,
+      "deadEndCount": 2,
+      "template": "existing",
+      "topologyHash": "a9d95cd32629d87de8f2e8e6648100a926c1b7e8f5e0844e8262d46645a4d51b",
+      "layoutHash": "1062f4c13a6fe53a145c2393579d19ccf2bb16c1add6ac5fe8ea31ad7384e185",
+      "solutionHash": "6047f9460b65f071e2c34cab53d9e53258ace312b371c940d314d12723eab99d",
+      "normalizedPositions": [
+        [
+          "dead_end_a",
+          1.0,
+          0.3333
+        ],
+        [
+          "dead_end_b",
+          0.0,
+          0.1389
+        ],
+        [
+          "destination",
+          0.2188,
+          0.0
+        ],
+        [
+          "gate",
+          0.3438,
+          0.1389
+        ],
+        [
+          "hub",
+          0.6562,
+          0.8611
+        ],
+        [
+          "package",
+          0.8125,
+          0.5
+        ],
+        [
+          "ring_a",
+          0.4688,
+          0.6667
+        ],
+        [
+          "ring_b",
+          0.6562,
+          0.1389
+        ],
+        [
+          "start",
+          0.1875,
+          1.0
+        ]
+      ]
+    },
+    {
+      "levelID": "level_025",
+      "name": "Level 025",
+      "difficultyEstimate": "medium",
+      "nodes": 12,
+      "edges": 11,
+      "switches": 3,
+      "tapCount": 3,
+      "deadEndCount": 3,
+      "template": "existing",
+      "topologyHash": "7c2947357f3e096e4ec785a5123dcdf8e10eb8e85ae41669990743220a28e898",
+      "layoutHash": "63c3ea844e3dbb64174ff4d7160f776462940e0c59dbfd51d3f051a8cc26dd9c",
+      "solutionHash": "a6ef2f9f5057d5720c7ceab1f31a1514b2354e4c828167526590c382772ad501",
+      "normalizedPositions": [
+        [
+          "choice",
+          0.4783,
+          0.8596
+        ],
+        [
+          "dead_end_b",
+          1.0,
+          0.6491
+        ],
+        [
+          "dead_end_c",
+          0.0,
+          0.1053
+        ],
+        [
+          "destination",
+          0.6087,
+          0.0
+        ],
+        [
+          "detour_a",
+          0.3478,
+          0.7544
+        ],
+        [
+          "detour_b",
+          0.3478,
+          0.386
+        ],
+        [
+          "package",
+          0.087,
+          0.4912
+        ],
+        [
+          "rejoin",
+          0.3478,
+          0.2456
+        ],
+        [
+          "shortcut_dead_end",
+          0.0,
+          0.8421
+        ],
+        [
+          "start",
+          0.3478,
+          1.0
+        ],
+        [
+          "switch_b",
+          0.4783,
+          0.614
+        ],
+        [
+          "switch_c",
+          0.4783,
+          0.1404
+        ]
+      ]
+    },
+    {
+      "levelID": "level_026",
+      "name": "Level 026",
+      "difficultyEstimate": "medium",
+      "nodes": 11,
+      "edges": 10,
+      "switches": 3,
+      "tapCount": 3,
+      "deadEndCount": 3,
+      "template": "existing",
+      "topologyHash": "e240dafe57e594f7e7a53c86ca751f01011b992fcb0c138c30d0382839df654a",
+      "layoutHash": "6008d97e01e6573ea4638a59505ef01fb5843b684a89d488b66c4e017ee1d7e4",
+      "solutionHash": "56d7db03f7eb0b78f7a6ce365a840d26181a6dd0d4cacdaa2c92c6e244e7c16f",
+      "normalizedPositions": [
+        [
+          "branch_a",
+          0.6429,
+          0.7027
+        ],
+        [
+          "dead_end_a",
+          0.2857,
+          0.8378
+        ],
+        [
+          "dead_end_b",
+          1.0,
+          0.4054
+        ],
+        [
+          "dead_end_c",
+          0.0,
+          0.1622
+        ],
+        [
+          "destination",
+          0.8929,
+          0.0
+        ],
+        [
+          "package",
+          0.3929,
+          0.2973
+        ],
+        [
+          "rejoin",
+          0.6429,
+          0.5676
+        ],
+        [
+          "start",
+          0.6429,
+          1.0
+        ],
+        [
+          "switch_a",
+          0.7857,
+          0.8649
+        ],
+        [
+          "switch_b",
+          0.5,
+          0.4324
+        ],
+        [
+          "switch_c",
+          0.5,
+          0.1351
+        ]
+      ]
+    },
+    {
+      "levelID": "level_027",
+      "name": "Level 027",
+      "difficultyEstimate": "medium",
+      "nodes": 11,
+      "edges": 11,
+      "switches": 3,
+      "tapCount": 3,
+      "deadEndCount": 2,
+      "template": "existing",
+      "topologyHash": "7162a7ad77a87cc8a7fd9d49cca95d73adb888d7fcda7d88dad283d450d9a9c9",
+      "layoutHash": "baf4d140363494d7371c153523911d27d72813ea7e65d3b2e6325f59ce4016fe",
+      "solutionHash": "56d7db03f7eb0b78f7a6ce365a840d26181a6dd0d4cacdaa2c92c6e244e7c16f",
+      "normalizedPositions": [
+        [
+          "dead_end_b",
+          1.0,
+          0.561
+        ],
+        [
+          "dead_end_c",
+          0.2222,
+          0.0976
+        ],
+        [
+          "destination",
+          0.7778,
+          0.0
+        ],
+        [
+          "lower_shortcut",
+          0.0,
+          0.7073
+        ],
+        [
+          "package",
+          0.7778,
+          0.4146
+        ],
+        [
+          "rejoin",
+          0.4722,
+          0.2683
+        ],
+        [
+          "start",
+          0.4722,
+          1.0
+        ],
+        [
+          "switch_a",
+          0.6111,
+          0.8537
+        ],
+        [
+          "switch_b",
+          0.7778,
+          0.561
+        ],
+        [
+          "switch_c",
+          0.6111,
+          0.122
+        ],
+        [
+          "upper_branch",
+          0.6111,
+          0.7073
+        ]
+      ]
+    }
+  ],
+  "warnings": []
+}

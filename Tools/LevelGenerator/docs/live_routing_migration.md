@@ -31,3 +31,12 @@ and recommendation. The command never changes a level or solution sidecar.
 Category precedence is deterministic: invalid/trivial content is manual,
 window-only failures are timing/layout, fully passing content is automatic,
 and remaining replaceable quality mismatches are regeneration.
+
+## Applying reviewed replacements
+
+Put replacement levels and their matching solution sidecars in separate staging
+directories, then run `apply_production_migration.py`. The command keeps the
+existing `level_###` ID set and campaign order, requires explicit review for
+display-name changes, verifies every sidecar's `levelID`, rebuilds the manifest
+from the fully staged corpus, and commits all outputs as one recoverable
+transaction. Do not copy migrated production JSON into place by hand.

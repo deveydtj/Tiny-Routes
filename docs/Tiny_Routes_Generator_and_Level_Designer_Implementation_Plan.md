@@ -2329,23 +2329,39 @@ Move the shipped corpus to the corrected interaction model without breaking IDs,
 
 ## Task 16.3 — Preserve stable production identity
 
+**Status:** Completed
+
 **Rules**
 
-- [ ] Keep `level_###` IDs stable.
-- [ ] Keep progression order stable unless a separate progression migration is intentionally implemented.
-- [ ] Regenerate names only when desired and reviewed.
-- [ ] Update matching solution sidecars atomically.
-- [ ] Rebuild manifest after all writes.
+- [x] Keep `level_###` IDs stable.
+- [x] Keep progression order stable unless a separate progression migration is intentionally implemented.
+- [x] Regenerate names only when desired and reviewed.
+- [x] Update matching solution sidecars atomically.
+- [x] Rebuild manifest after all writes.
+
+**Completion notes**
+
+- [x] Added a guarded production-migration command that rejects new IDs, campaign reordering, mismatched sidecars, and unreviewed display-name changes.
+- [x] Staged the complete corpus and manifest before committing level/sidecar/manifest outputs as one rollback-capable transaction.
+- [x] Rebuilt a warning-free 27-level production manifest after the tutorial writes.
 
 ## Task 16.4 — Migrate tutorial levels deliberately
 
+**Status:** Completed
+
 **Steps**
 
-- [ ] First tutorial introduces automatic movement without a switch.
-- [ ] Next tutorial shows one highlighted active switch.
-- [ ] Next tutorial introduces two rotations or a later second decision.
-- [ ] Do not introduce tight timing before visual language is established.
-- [ ] Add instructional text or visual affordances if the app currently lacks them.
+- [x] First tutorial introduces automatic movement without a switch.
+- [x] Next tutorial shows one highlighted active switch.
+- [x] Next tutorial introduces two rotations or a later second decision.
+- [x] Do not introduce tight timing before visual language is established.
+- [x] Add instructional text or visual affordances if the app currently lacks them.
+
+**Completion notes**
+
+- [x] Migrated levels 1–3 to explicit version 2 live-lookahead rules while preserving IDs, names, and campaign positions.
+- [x] Added a no-switch route, a single highlighted-switch lesson, and a two-stage pickup/delivery switch lesson with two-second decision windows.
+- [x] Added accessible in-game tutorial messages and verified both Python and Swift replays; moving required tutorial taps to time zero is rejected.
 
 ## Task 16.5 — Redesign or regenerate trivial independent chains
 

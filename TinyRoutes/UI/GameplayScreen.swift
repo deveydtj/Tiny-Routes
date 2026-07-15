@@ -24,6 +24,7 @@ struct GameplayScreen: View {
     @State private var lastRejectedSwitchNodeID: String?
     @State private var switchRejectionEventToken: Int = 0
     @State private var timeRemaining: TimeInterval?
+    @State private var tutorialMessage: String?
     @State private var loadErrorMessage: String?
     @State private var lastFrameDate: Date?
     @State private var hasDispatchedOutcome: Bool = false
@@ -61,6 +62,10 @@ struct GameplayScreen: View {
                 tapCount: tapCount
             )
             .padding(.top, 4)
+
+            if let tutorialMessage {
+                TRGameplayTutorialCard(message: tutorialMessage)
+            }
 
             Group {
                 if let loadErrorMessage {
@@ -155,6 +160,10 @@ struct GameplayScreen: View {
             hasCollectedPackage = routeEngine.deliveryDot?.hasCollectedPackage ?? false
             timeRemaining = routeEngine.timeRemaining
             tapCount = routeEngine.tapCount
+            tutorialMessage = levelData.tutorialMessage?.trimmingCharacters(in: .whitespacesAndNewlines)
+            if tutorialMessage?.isEmpty == true {
+                tutorialMessage = nil
+            }
             isShowingLevelPreview = shouldPreviewLevel(runtimeGraph: routeEngine.runtimeGraph)
 
             if !didStartMovement {
@@ -282,6 +291,7 @@ struct GameplayScreen: View {
         lastRejectedSwitchNodeID = nil
         switchRejectionEventToken = 0
         timeRemaining = nil
+        tutorialMessage = nil
         hasDispatchedOutcome = false
         isShowingLevelPreview = false
     }

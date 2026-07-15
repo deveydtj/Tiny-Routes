@@ -1,14 +1,14 @@
 {
   "analysis": {
     "currentSolutionPassCount": 27,
-    "decisionQualityPassCount": 18,
+    "decisionQualityPassCount": 19,
     "levelCount": 27,
     "liveSolutionCount": 27,
     "recommendationCounts": {
-      "automatic_conversion": 18,
+      "automatic_conversion": 19,
       "manual_redesign": 2,
       "regeneration": 0,
-      "timing_layout_adjustment": 7
+      "timing_layout_adjustment": 6
     }
   },
   "levels": [
@@ -17,16 +17,20 @@
       "campaignPosition": 1,
       "currentSchemaAndRules": {
         "effectiveRules": {
-          "switchInteractionMode": "legacyGlobal",
-          "switchLookaheadSeconds": 1.35,
+          "switchInteractionMode": "liveLookahead",
+          "switchLookaheadSeconds": 2.0,
           "switchTapCooldownSeconds": 0.12
         },
-        "rulesPresent": false,
-        "schemaVersion": 1,
-        "serializedRules": null
+        "rulesPresent": true,
+        "schemaVersion": 2,
+        "serializedRules": {
+          "switchInteractionMode": "liveLookahead",
+          "switchLookaheadSeconds": 2.0,
+          "switchTapCooldownSeconds": 0.12
+        }
       },
       "currentSolutionResult": {
-        "elapsedTimeSeconds": 2.654,
+        "elapsedTimeSeconds": 2.95,
         "failureReason": null,
         "outcome": "completed",
         "passed": true,
@@ -66,7 +70,7 @@
       },
       "levelID": "level_001",
       "liveRoutingSolution": {
-        "configuredLookaheadSeconds": 1.35,
+        "configuredLookaheadSeconds": 2.0,
         "currentSettingsSearch": {
           "actions": [],
           "diagnostics": [],
@@ -106,16 +110,20 @@
       "campaignPosition": 2,
       "currentSchemaAndRules": {
         "effectiveRules": {
-          "switchInteractionMode": "legacyGlobal",
-          "switchLookaheadSeconds": 1.35,
+          "switchInteractionMode": "liveLookahead",
+          "switchLookaheadSeconds": 2.0,
           "switchTapCooldownSeconds": 0.12
         },
-        "rulesPresent": false,
-        "schemaVersion": 1,
-        "serializedRules": null
+        "rulesPresent": true,
+        "schemaVersion": 2,
+        "serializedRules": {
+          "switchInteractionMode": "liveLookahead",
+          "switchLookaheadSeconds": 2.0,
+          "switchTapCooldownSeconds": 0.12
+        }
       },
       "currentSolutionResult": {
-        "elapsedTimeSeconds": 2.787,
+        "elapsedTimeSeconds": 5.35,
         "failureReason": null,
         "outcome": "completed",
         "passed": true,
@@ -125,13 +133,11 @@
       },
       "decisionQuality": {
         "campaignDifficulty": "tutorial",
-        "issues": [
-          "decision_window_below_preset_minimum"
-        ],
-        "passed": false,
+        "issues": [],
+        "passed": true,
         "profile": {
           "average_decision_spacing_seconds": null,
-          "average_window_seconds": 0.8,
+          "average_window_seconds": 2.0,
           "dead_end_choice_count": 1,
           "destination_before_package_choice_count": 0,
           "equivalent_minimum_solution_count": 1,
@@ -139,10 +145,10 @@
             "dead_end"
           ],
           "failure_route_count": 1,
-          "front_loaded_legacy_solution_possible": true,
+          "front_loaded_legacy_solution_possible": false,
           "independent_decision_ratio": 1.0,
           "minimum_decision_spacing_seconds": null,
-          "minimum_window_seconds": 0.8,
+          "minimum_window_seconds": 2.0,
           "multiple_taps_in_window_count": 0,
           "no_op_or_equivalent_choice_count": 0,
           "ordered_dependency_count": 0,
@@ -159,27 +165,27 @@
       },
       "levelID": "level_002",
       "liveRoutingSolution": {
-        "configuredLookaheadSeconds": 1.35,
+        "configuredLookaheadSeconds": 2.0,
         "currentSettingsSearch": {
           "actions": [
             {
               "expectedEdgeAfterTap": "e_choice_package",
               "tapNodeID": "choice",
-              "timeSeconds": 0.12
+              "timeSeconds": 0.62
             }
           ],
           "diagnostics": [
             {
               "chosenTapSeconds": [
-                0.12
+                0.62
               ],
               "failureReason": null,
               "nodeID": "choice",
               "rotationCount": 1,
               "safetyMarginSeconds": 0.12,
               "visitIndex": 1,
-              "windowCloseSeconds": 0.8,
-              "windowOpenSeconds": 0.0
+              "windowCloseSeconds": 2.5,
+              "windowOpenSeconds": 0.5
             }
           ],
           "failureReason": null,
@@ -207,109 +213,10 @@
               "rotationCount": 1,
               "safetyMarginSeconds": 0.12,
               "visitIndex": 1,
-              "windowCloseSeconds": 0.8,
+              "windowCloseSeconds": 2.5,
               "windowOpenSeconds": 0.0
             }
           ],
-          "failureReason": null,
-          "passed": true
-        }
-      },
-      "recommendation": {
-        "category": "timing_layout_adjustment",
-        "definition": "Topology works, but road lengths or live-routing window settings need adjustment.",
-        "reasonCodes": [
-          "decision_window_below_preset_minimum"
-        ],
-        "title": "Timing/Layout Adjustment"
-      },
-      "repeatedDecisionBehavior": {
-        "decisionNodeCounts": {
-          "choice": 1
-        },
-        "hasRepeatedDecisions": false,
-        "repeatedDecisionCount": 0,
-        "routeRevisitCount": 0,
-        "stateChangesOnRevisitCount": 0
-      },
-      "requiredWindowSizes": [
-        {
-          "availableWindowSeconds": 0.8,
-          "nodeID": "choice",
-          "requiredWindowSeconds": 0.24,
-          "rotationCount": 1,
-          "visitIndex": 1
-        }
-      ]
-    },
-    {
-      "campaignDifficulty": "tutorial",
-      "campaignPosition": 3,
-      "currentSchemaAndRules": {
-        "effectiveRules": {
-          "switchInteractionMode": "legacyGlobal",
-          "switchLookaheadSeconds": 1.35,
-          "switchTapCooldownSeconds": 0.12
-        },
-        "rulesPresent": false,
-        "schemaVersion": 1,
-        "serializedRules": null
-      },
-      "currentSolutionResult": {
-        "elapsedTimeSeconds": 2.795,
-        "failureReason": null,
-        "outcome": "completed",
-        "passed": true,
-        "reachedDestination": true,
-        "reachedPackage": true,
-        "tapCount": 0
-      },
-      "decisionQuality": {
-        "campaignDifficulty": "tutorial",
-        "issues": [],
-        "passed": true,
-        "profile": {
-          "average_decision_spacing_seconds": null,
-          "average_window_seconds": null,
-          "dead_end_choice_count": 0,
-          "destination_before_package_choice_count": 0,
-          "equivalent_minimum_solution_count": 1,
-          "failure_outcome_types": [],
-          "failure_route_count": 0,
-          "front_loaded_legacy_solution_possible": true,
-          "independent_decision_ratio": 0.0,
-          "minimum_decision_spacing_seconds": null,
-          "minimum_window_seconds": null,
-          "multiple_taps_in_window_count": 0,
-          "no_op_or_equivalent_choice_count": 0,
-          "ordered_dependency_count": 0,
-          "package_phase_decisions_after": 0,
-          "package_phase_decisions_before": 0,
-          "recoverable_mistake_count": 0,
-          "repeated_switch_decision_count": 0,
-          "required_decision_count": 0,
-          "route_revisit_count": 0,
-          "successful_alternate_route_count": 0,
-          "switch_state_change_on_revisit_count": 0,
-          "unique_switch_count": 0
-        }
-      },
-      "levelID": "level_003",
-      "liveRoutingSolution": {
-        "configuredLookaheadSeconds": 1.35,
-        "currentSettingsSearch": {
-          "actions": [],
-          "diagnostics": [],
-          "failureReason": null,
-          "passed": true
-        },
-        "exists": true,
-        "existsWithCurrentSettings": true,
-        "existsWithExpandedLookahead": true,
-        "expandedLookaheadTestedSeconds": 30.0,
-        "expandedSettingsSearch": {
-          "actions": [],
-          "diagnostics": [],
           "failureReason": null,
           "passed": true
         }
@@ -323,13 +230,208 @@
         "title": "Automatic Conversion"
       },
       "repeatedDecisionBehavior": {
-        "decisionNodeCounts": {},
+        "decisionNodeCounts": {
+          "choice": 1
+        },
         "hasRepeatedDecisions": false,
         "repeatedDecisionCount": 0,
         "routeRevisitCount": 0,
         "stateChangesOnRevisitCount": 0
       },
-      "requiredWindowSizes": []
+      "requiredWindowSizes": [
+        {
+          "availableWindowSeconds": 2.0,
+          "nodeID": "choice",
+          "requiredWindowSeconds": 0.24,
+          "rotationCount": 1,
+          "visitIndex": 1
+        }
+      ]
+    },
+    {
+      "campaignDifficulty": "tutorial",
+      "campaignPosition": 3,
+      "currentSchemaAndRules": {
+        "effectiveRules": {
+          "switchInteractionMode": "liveLookahead",
+          "switchLookaheadSeconds": 2.0,
+          "switchTapCooldownSeconds": 0.12
+        },
+        "rulesPresent": true,
+        "schemaVersion": 2,
+        "serializedRules": {
+          "switchInteractionMode": "liveLookahead",
+          "switchLookaheadSeconds": 2.0,
+          "switchTapCooldownSeconds": 0.12
+        }
+      },
+      "currentSolutionResult": {
+        "elapsedTimeSeconds": 8.15,
+        "failureReason": null,
+        "outcome": "completed",
+        "passed": true,
+        "reachedDestination": true,
+        "reachedPackage": true,
+        "tapCount": 2
+      },
+      "decisionQuality": {
+        "campaignDifficulty": "tutorial",
+        "issues": [],
+        "passed": true,
+        "profile": {
+          "average_decision_spacing_seconds": 4.05,
+          "average_window_seconds": 2.0,
+          "dead_end_choice_count": 2,
+          "destination_before_package_choice_count": 0,
+          "equivalent_minimum_solution_count": 1,
+          "failure_outcome_types": [
+            "dead_end"
+          ],
+          "failure_route_count": 2,
+          "front_loaded_legacy_solution_possible": false,
+          "independent_decision_ratio": 0.5,
+          "minimum_decision_spacing_seconds": 4.05,
+          "minimum_window_seconds": 2.0,
+          "multiple_taps_in_window_count": 0,
+          "no_op_or_equivalent_choice_count": 0,
+          "ordered_dependency_count": 1,
+          "package_phase_decisions_after": 1,
+          "package_phase_decisions_before": 1,
+          "recoverable_mistake_count": 0,
+          "repeated_switch_decision_count": 0,
+          "required_decision_count": 2,
+          "route_revisit_count": 0,
+          "successful_alternate_route_count": 0,
+          "switch_state_change_on_revisit_count": 0,
+          "unique_switch_count": 2
+        }
+      },
+      "levelID": "level_003",
+      "liveRoutingSolution": {
+        "configuredLookaheadSeconds": 2.0,
+        "currentSettingsSearch": {
+          "actions": [
+            {
+              "expectedEdgeAfterTap": "e_pickup_switch_package",
+              "tapNodeID": "pickup_switch",
+              "timeSeconds": 0.52
+            },
+            {
+              "expectedEdgeAfterTap": "e_delivery_switch_destination",
+              "tapNodeID": "delivery_switch",
+              "timeSeconds": 4.57
+            }
+          ],
+          "diagnostics": [
+            {
+              "chosenTapSeconds": [
+                0.5199999999999999
+              ],
+              "failureReason": null,
+              "nodeID": "pickup_switch",
+              "rotationCount": 1,
+              "safetyMarginSeconds": 0.12,
+              "visitIndex": 1,
+              "windowCloseSeconds": 2.4,
+              "windowOpenSeconds": 0.3999999999999999
+            },
+            {
+              "chosenTapSeconds": [
+                4.57
+              ],
+              "failureReason": null,
+              "nodeID": "delivery_switch",
+              "rotationCount": 1,
+              "safetyMarginSeconds": 0.12,
+              "visitIndex": 1,
+              "windowCloseSeconds": 6.45,
+              "windowOpenSeconds": 4.45
+            }
+          ],
+          "failureReason": null,
+          "passed": true
+        },
+        "exists": true,
+        "existsWithCurrentSettings": true,
+        "existsWithExpandedLookahead": true,
+        "expandedLookaheadTestedSeconds": 30.0,
+        "expandedSettingsSearch": {
+          "actions": [
+            {
+              "expectedEdgeAfterTap": "e_pickup_switch_package",
+              "tapNodeID": "pickup_switch",
+              "timeSeconds": 0.12
+            },
+            {
+              "expectedEdgeAfterTap": "e_delivery_switch_destination",
+              "tapNodeID": "delivery_switch",
+              "timeSeconds": 2.54
+            }
+          ],
+          "diagnostics": [
+            {
+              "chosenTapSeconds": [
+                0.12
+              ],
+              "failureReason": null,
+              "nodeID": "pickup_switch",
+              "rotationCount": 1,
+              "safetyMarginSeconds": 0.12,
+              "visitIndex": 1,
+              "windowCloseSeconds": 2.4,
+              "windowOpenSeconds": 0.0
+            },
+            {
+              "chosenTapSeconds": [
+                2.54
+              ],
+              "failureReason": null,
+              "nodeID": "delivery_switch",
+              "rotationCount": 1,
+              "safetyMarginSeconds": 0.12,
+              "visitIndex": 1,
+              "windowCloseSeconds": 6.449999999999999,
+              "windowOpenSeconds": 2.42
+            }
+          ],
+          "failureReason": null,
+          "passed": true
+        }
+      },
+      "recommendation": {
+        "category": "automatic_conversion",
+        "definition": "Existing topology works under live routing and meets campaign decision-quality rules.",
+        "reasonCodes": [
+          "live_solution_and_quality_pass"
+        ],
+        "title": "Automatic Conversion"
+      },
+      "repeatedDecisionBehavior": {
+        "decisionNodeCounts": {
+          "delivery_switch": 1,
+          "pickup_switch": 1
+        },
+        "hasRepeatedDecisions": false,
+        "repeatedDecisionCount": 0,
+        "routeRevisitCount": 0,
+        "stateChangesOnRevisitCount": 0
+      },
+      "requiredWindowSizes": [
+        {
+          "availableWindowSeconds": 2.0,
+          "nodeID": "pickup_switch",
+          "requiredWindowSeconds": 0.24,
+          "rotationCount": 1,
+          "visitIndex": 1
+        },
+        {
+          "availableWindowSeconds": 2.0,
+          "nodeID": "delivery_switch",
+          "requiredWindowSeconds": 0.24,
+          "rotationCount": 1,
+          "visitIndex": 1
+        }
+      ]
     },
     {
       "campaignDifficulty": "easy",

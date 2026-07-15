@@ -136,3 +136,11 @@ def test_tutorial_thresholds_allow_zero_decisions_without_strategic_evidence() -
 
     assert "insufficient_strategic_decision_evidence" not in issues
     assert not any(issue.startswith("decision_count_out_of_range") for issue in issues)
+
+
+def test_tutorial_thresholds_allow_a_later_second_teaching_decision() -> None:
+    preset = DifficultyService().get_preset("tutorial")
+
+    assert preset.switch_count_range == (0, 2)
+    assert preset.required_tap_range == (0, 2)
+    assert preset.required_decision_count_range == (0, 2)

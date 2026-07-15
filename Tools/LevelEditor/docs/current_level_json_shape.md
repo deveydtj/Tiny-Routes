@@ -18,6 +18,7 @@ This document describes the version 2 level format and the legacy production fil
 | `destinationNodeID` | string | yes | `id` of the node the dot must reach after picking up the package |
 | `timeLimitSeconds` | integer | yes | Maximum seconds the player has to complete the level |
 | `parTaps` | integer | yes | The par (expected) number of switch taps to solve the level optimally |
+| `tutorialMessage` | string | no | Short gameplay instruction displayed above the board. Use only while introducing a mechanic. |
 | `solution` | object | no | Embedded solution hint present in some levels (see below) |
 
 ## Version 2 `rules` Object
@@ -86,7 +87,7 @@ Present in some level files as an embedded hint. Not decoded by the main Swift `
 |---|---|---|---|
 | `tapNodeIDs` | array of strings | yes (when present) | Ordered list of node IDs to tap to complete the level |
 
-Example from `level_002.json`:
+Example:
 
 ```json
 "solution": {
@@ -94,7 +95,7 @@ Example from `level_002.json`:
 }
 ```
 
-This field is only present in `level_002.json` among the current ten levels.
+Canonical production solutions use sidecar files; embedded solutions are retained only for backward compatibility.
 
 ---
 

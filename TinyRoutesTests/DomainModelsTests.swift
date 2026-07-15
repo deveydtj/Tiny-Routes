@@ -64,6 +64,7 @@ final class DomainModelsTests: XCTestCase {
         XCTAssertEqual(level.effectiveRules.switchInteractionMode, .liveLookahead)
         XCTAssertEqual(level.effectiveRules.switchLookaheadSeconds, 1.75)
         XCTAssertEqual(level.effectiveRules.switchTapCooldownSeconds, 0.2)
+        XCTAssertEqual(level.tutorialMessage, "Tap the highlighted switch.")
     }
 
     func testVersionTwoRulesRoundTrip() throws {
@@ -108,6 +109,7 @@ final class DomainModelsTests: XCTestCase {
       "graph": {"nodes": [{"id": "n", "x": 0, "y": 0, "outgoingEdgeIDs": []}], "edges": []},
       "startNodeID": "n", "packageNodeID": "n", "destinationNodeID": "n",
       "timeLimitSeconds": 30, "parTaps": 0,
+      "tutorialMessage": "Tap the highlighted switch.",
       "futureExtension": {"ignored": true}
     }
     """

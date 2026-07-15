@@ -12,6 +12,7 @@ struct LevelData: Identifiable, Codable {
     var destinationNodeID: String
     var timeLimitSeconds: Int
     var parTaps: Int
+    var tutorialMessage: String?
 
     /// Rules used by runtime callers. Missing rules retain legacy behavior while
     /// the production level corpus is migrated to schema version 2.
@@ -29,7 +30,8 @@ struct LevelData: Identifiable, Codable {
         packageNodeID: String,
         destinationNodeID: String,
         timeLimitSeconds: Int,
-        parTaps: Int
+        parTaps: Int,
+        tutorialMessage: String? = nil
     ) {
         self.schemaVersion = schemaVersion
         self.rules = rules
@@ -41,5 +43,6 @@ struct LevelData: Identifiable, Codable {
         self.destinationNodeID = destinationNodeID
         self.timeLimitSeconds = timeLimitSeconds
         self.parTaps = parTaps
+        self.tutorialMessage = tutorialMessage
     }
 }

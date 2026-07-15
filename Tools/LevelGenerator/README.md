@@ -108,6 +108,20 @@ Rebuild the production manifest:
 python Tools/LevelGenerator/rebuild_manifest.py
 ```
 
+Apply reviewed migration replacements without changing campaign IDs or order:
+
+```bash
+python Tools/LevelGenerator/apply_production_migration.py \
+  --replacement-levels path/to/Levels \
+  --replacement-solutions path/to/LevelSolutions
+```
+
+The migration command requires a matching sidecar for every replacement,
+rejects new or renamed IDs, and rejects display-name changes unless each one is
+listed with `--review-name-change`. It stages the full corpus, rebuilds and
+checks the production manifest, then atomically replaces the reviewed level,
+sidecar, and manifest files with rollback on write failure.
+
 Run the local generator check suite:
 
 ```bash

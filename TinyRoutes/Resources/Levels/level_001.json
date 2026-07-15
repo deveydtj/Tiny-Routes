@@ -1,4 +1,10 @@
 {
+  "schemaVersion": 2,
+  "rules": {
+    "switchInteractionMode": "liveLookahead",
+    "switchLookaheadSeconds": 2.0,
+    "switchTapCooldownSeconds": 0.12
+  },
   "id": "level_001",
   "name": "Level 001",
   "graph": {
@@ -73,5 +79,6 @@
   "packageNodeID": "package",
   "destinationNodeID": "destination",
   "timeLimitSeconds": 30,
-  "parTaps": 0
+  "parTaps": 0,
+  "tutorialMessage": "The courier moves automatically. Pick up the package, then reach the flag."
 }

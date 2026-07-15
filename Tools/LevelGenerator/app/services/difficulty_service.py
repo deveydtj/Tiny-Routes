@@ -16,11 +16,11 @@ class DifficultyService:
         self._presets = {
             "tutorial": DifficultyPreset(
                 name="tutorial",
-                node_count_range=(3, 5),
-                switch_count_range=(0, 1),
-                required_tap_range=(0, 1),
-                route_length_range=(2, 4),
-                dead_end_count_range=(0, 1),
+                node_count_range=(3, 8),
+                switch_count_range=(0, 2),
+                required_tap_range=(0, 2),
+                route_length_range=(2, 5),
+                dead_end_count_range=(0, 2),
                 max_outgoing_edges_per_switch=2,
                 allow_return_loops=False,
                 allow_repeated_switch_taps=False,
@@ -32,7 +32,7 @@ class DifficultyService:
                 minimum_route_interest_score=0.0,
                 max_visual_complexity=0.34,
                 max_repeated_mechanics=0,
-                required_decision_count_range=(0, 1),
+                required_decision_count_range=(0, 2),
                 minimum_decision_window_seconds=2.0,
             ),
             "easy": DifficultyPreset(

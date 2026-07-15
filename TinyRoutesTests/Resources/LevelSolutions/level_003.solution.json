@@ -1,21 +1,44 @@
 {
   "levelID": "level_003",
-  "description": "Follow the generated graph recipe route and rotate each switch before arrival.",
+  "description": "Route through one highlighted switch before pickup and a second switch afterward.",
   "expectedOutcome": "completed",
-  "maxTaps": 0,
+  "maxTaps": 2,
   "requiresWithinTimeLimit": true,
-  "actions": [],
+  "actions": [
+    {
+      "timeSeconds": 0.5,
+      "tapNodeID": "pickup_switch",
+      "reason": "Rotate the first highlighted switch toward the package.",
+      "expectedEdgeAfterTap": "e_pickup_switch_package",
+      "expectedRouteNodeAfterTap": "package",
+      "reactionWindowSeconds": 1.85,
+      "switchStateBeforeTap": "e_pickup_switch_dead_end",
+      "switchStateAfterTap": "e_pickup_switch_package"
+    },
+    {
+      "timeSeconds": 5.2,
+      "tapNodeID": "delivery_switch",
+      "reason": "Rotate the later highlighted switch toward the destination.",
+      "expectedEdgeAfterTap": "e_delivery_switch_destination",
+      "expectedRouteNodeAfterTap": "destination",
+      "reactionWindowSeconds": 2.0,
+      "switchStateBeforeTap": "e_delivery_switch_dead_end",
+      "switchStateAfterTap": "e_delivery_switch_destination"
+    }
+  ],
   "metadata": {
     "validationVersion": "solution_sidecar_v1",
     "solutionRoute": [
       "start",
+      "pickup_switch",
       "package",
+      "delivery_approach",
+      "delivery_switch",
       "destination"
     ],
-    "requiredTapOrder": [],
-    "template": "straight_delivery_intro",
-    "generatedSeed": 4047298845,
-    "recipeFamily": "straight_delivery_intro",
-    "recipeVariant": "straight_delivery_intro_primary"
+    "requiredTapOrder": ["pickup_switch", "delivery_switch"],
+    "template": "two_stage_switch_tutorial",
+    "recipeFamily": "two_stage_switch_tutorial",
+    "recipeVariant": "pickup_then_delivery"
   }
 }

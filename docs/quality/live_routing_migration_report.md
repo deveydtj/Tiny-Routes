@@ -6,12 +6,12 @@ The analyzer is read-only; recommendations do not modify production content.
 - Levels analyzed: 27
 - Current solutions passing: 27
 - Topologies with a live-routing solution: 27
-- Levels meeting campaign decision quality: 18
+- Levels meeting campaign decision quality: 19
 
 ## Migration categories
 
-- **Automatic Conversion (18):** Existing topology works under live routing and meets campaign decision-quality rules.
-- **Timing/Layout Adjustment (7):** Topology works, but road lengths or live-routing window settings need adjustment.
+- **Automatic Conversion (19):** Existing topology works under live routing and meets campaign decision-quality rules.
+- **Timing/Layout Adjustment (6):** Topology works, but road lengths or live-routing window settings need adjustment.
 - **Manual Redesign (2):** Topology is too trivial or cannot provide a legal live-routing decision schedule.
 - **Regeneration (0):** The level can be replaced while retaining its stable level ID and campaign position.
 
@@ -20,8 +20,8 @@ The analyzer is read-only; recommendations do not modify production content.
 | Level | Difficulty | Current | Live current | Live adjusted | Decision quality | Required window | Recommendation | Reasons |
 | --- | --- | --- | --- | --- | --- | ---: | --- | --- |
 | level_001 | tutorial | pass | yes | yes | pass | 0.000 | Automatic Conversion | live_solution_and_quality_pass |
-| level_002 | tutorial | pass | yes | yes | fail | 0.240 | Timing/Layout Adjustment | decision_window_below_preset_minimum |
-| level_003 | tutorial | pass | yes | yes | pass | 0.000 | Automatic Conversion | live_solution_and_quality_pass |
+| level_002 | tutorial | pass | yes | yes | pass | 0.240 | Automatic Conversion | live_solution_and_quality_pass |
+| level_003 | tutorial | pass | yes | yes | pass | 0.240 | Automatic Conversion | live_solution_and_quality_pass |
 | level_004 | easy | pass | yes | yes | fail | 0.240 | Timing/Layout Adjustment | decision_window_below_preset_minimum |
 | level_005 | easy | pass | yes | yes | fail | 0.000 | Manual Redesign | decision_count_outside_difficulty_range |
 | level_006 | easy | pass | yes | yes | fail | 0.240 | Timing/Layout Adjustment | decision_window_below_preset_minimum |

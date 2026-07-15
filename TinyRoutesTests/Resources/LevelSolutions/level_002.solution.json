@@ -1,35 +1,27 @@
 {
   "levelID": "level_002",
-  "description": "Follow the generated graph recipe route and rotate each switch before arrival.",
+  "description": "Tap the highlighted switch once during its generous tutorial window.",
   "expectedOutcome": "completed",
   "maxTaps": 1,
   "requiresWithinTimeLimit": true,
   "actions": [
     {
-      "timeSeconds": 0.31,
+      "timeSeconds": 0.6,
       "tapNodeID": "choice",
-      "reason": "Rotate switch 'choice' toward 'package' before arrival.",
+      "reason": "Rotate the highlighted switch toward the package.",
       "expectedEdgeAfterTap": "e_choice_package",
       "expectedRouteNodeAfterTap": "package",
-      "reactionWindowSeconds": 0.45,
+      "reactionWindowSeconds": 2.0,
       "switchStateBeforeTap": "e_choice_dead_end_a",
       "switchStateAfterTap": "e_choice_package"
     }
   ],
   "metadata": {
     "validationVersion": "solution_sidecar_v1",
-    "solutionRoute": [
-      "start",
-      "choice",
-      "package",
-      "destination"
-    ],
-    "requiredTapOrder": [
-      "choice"
-    ],
-    "template": "single_switch",
-    "generatedSeed": 2962776876,
-    "recipeFamily": "single_switch",
-    "recipeVariant": "single_switch_classic"
+    "solutionRoute": ["start", "choice", "package", "destination"],
+    "requiredTapOrder": ["choice"],
+    "template": "single_switch_tutorial",
+    "recipeFamily": "single_switch_tutorial",
+    "recipeVariant": "highlighted_live_switch"
   }
 }
