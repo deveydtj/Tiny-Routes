@@ -2226,20 +2226,24 @@ Finish the editor workflow so it is comfortable for repeated production use.
 
 ## Task 15.2 — Add viewport controls
 
-- [ ] Fit level to view.
-- [ ] Zoom to selection.
-- [ ] Reset zoom.
-- [ ] Pan with middle mouse or space-drag.
-- [ ] Preserve viewport across non-layout property edits.
+**Status:** Completed
+
+- [x] Fit level to view.
+- [x] Zoom to selection.
+- [x] Reset zoom.
+- [x] Pan with middle mouse or space-drag.
+- [x] Preserve viewport across non-layout property edits.
 
 ## Task 15.3 — Add autosave recovery
 
+**Status:** Completed
+
 **Steps**
 
-- [ ] Periodically write a recovery file for dirty documents.
-- [ ] Never overwrite the source file automatically.
-- [ ] Offer recovery after an unclean shutdown.
-- [ ] Delete recovery data after a successful save/close.
+- [x] Periodically write a recovery file for dirty documents.
+- [x] Never overwrite the source file automatically.
+- [x] Offer recovery after an unclean shutdown.
+- [x] Delete recovery data after a successful save/close.
 
 ## Task 15.4 — Add keyboard shortcut help
 

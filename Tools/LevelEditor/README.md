@@ -34,6 +34,17 @@ background drag creates a marquee selection. The Edit menu aligns and
 distributes selected nodes. Arrow keys nudge selected nodes by 0.05 level units;
 Shift+Arrow uses a 0.25-unit nudge. Each arrangement is one undoable edit.
 
+Use **View > Fit View**, **Zoom to Selection**, or **Reset Zoom** to frame the
+canvas. Pan at any time with the middle mouse button, or hold Space and drag
+with the left mouse button. Property-only edits preserve the current zoom and
+canvas center.
+
+While a document is dirty, the editor periodically writes an atomic recovery
+bundle to the operating system's application-data directory; it never writes
+over the source level automatically. After an unclean shutdown, the next editor
+launch offers to recover or discard that bundle. Saving, discarding the dirty
+document, or closing cleanly removes the recovery data.
+
 Python validation does not duplicate the Swift gameplay engine. It catches data integrity problems early, then Swift tests verify that the scripted solution truly completes the level.
 
 Common solution validation failures:

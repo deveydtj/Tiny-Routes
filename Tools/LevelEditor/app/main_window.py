@@ -2,7 +2,7 @@ import math
 import json
 from pathlib import Path
 
-from PySide6.QtCore import Qt
+from PySide6.QtCore import QTimer, Qt
 from PySide6.QtGui import QCloseEvent, QKeyEvent
 from PySide6.QtWidgets import (
     QDialog,
@@ -33,6 +33,8 @@ from app.repositories import (
 )
 from app.services import (
     AutomatedChecksService,
+    AutosaveRecoveryError,
+    AutosaveRecoveryService,
     LevelIdentity,
     LevelIdentityService,
     LevelValidationService,
@@ -63,6 +65,8 @@ from tiny_routes_core.simulation import LevelOutcome, TapResultCode
 
 
 class LevelEditorMainWindow(QMainWindow):
+    AUTOSAVE_INTERVAL_MS = 30_000
+
     def __init__(self) -> None:
         super().__init__()
         self.resize(1024, 768)
@@ -84,6 +88,7 @@ class LevelEditorMainWindow(QMainWindow):
         )
         self._switch_classification_service = SwitchClassificationService()
         self._node_arrangement_service = NodeArrangementService()
+        self._autosave_recovery_service = AutosaveRecoveryService()
         self._test_runner_service = TestRunnerService(self._resolve_repo_root())
         self._automated_checks_service = AutomatedChecksService(
             self._resolve_repo_root(),
@@ -119,6 +124,10 @@ class LevelEditorMainWindow(QMainWindow):
         self._puzzle_analysis_controller.result_ready.connect(
             self._puzzle_analysis_panel.show_analysis
         )
+        self._autosave_timer = QTimer(self)
+        self._autosave_timer.setInterval(self.AUTOSAVE_INTERVAL_MS)
+        self._autosave_timer.timeout.connect(self._write_autosave_recovery)
+        self._autosave_timer.start()
 
         self.setCentralWidget(self._canvas_view)
 
@@ -597,8 +606,85 @@ class LevelEditorMainWindow(QMainWindow):
                 return False
 
         self._document_controller.mark_saved()
+        self._clear_autosave_recovery()
         self._set_dirty(False)
         return True
+
+    def _write_autosave_recovery(self) -> None:
+        if not self._is_dirty or self._current_document is None:
+            return
+        try:
+            self._autosave_recovery_service.write(
+                self._current_document,
+                self._current_solution,
+                source_path=self._current_file_path,
+                candidate_quality=self._current_candidate_quality,
+            )
+        except AutosaveRecoveryError as exc:
+            self.statusBar().showMessage(str(exc), 10_000)
+
+    def _clear_autosave_recovery(self) -> None:
+        try:
+            self._autosave_recovery_service.delete()
+        except AutosaveRecoveryError as exc:
+            self.statusBar().showMessage(str(exc), 10_000)
+
+    def offer_recovery_if_available(self) -> bool:
+        """Offer to restore a bundle left behind by an unclean shutdown."""
+        if not self._autosave_recovery_service.exists():
+            return False
+        try:
+            recovery = self._autosave_recovery_service.load()
+        except AutosaveRecoveryError as exc:
+            QMessageBox.warning(self, "Recovery Unavailable", str(exc))
+            return False
+
+        choice = self._ask_recovery_action(recovery.saved_at_utc)
+        if choice == "discard":
+            self._clear_autosave_recovery()
+            return False
+        if choice != "recover":
+            return False
+
+        self._current_file_path = recovery.source_path
+        self._current_candidate_quality = recovery.candidate_quality
+        self._document_controller.open(
+            recovery.document,
+            recovery.solution,
+            saved=False,
+        )
+        if recovery.candidate_quality is not None:
+            self._puzzle_analysis_panel.show_imported_quality(
+                recovery.candidate_quality
+            )
+        self.statusBar().showMessage(
+            "Recovered autosaved changes. Save the level to keep them.",
+            10_000,
+        )
+        return True
+
+    def _ask_recovery_action(self, saved_at_utc: str) -> str:
+        message_box = QMessageBox(self)
+        message_box.setWindowTitle("Recover Unsaved Level")
+        message_box.setIcon(QMessageBox.Icon.Question)
+        message_box.setText("Unsaved level changes were found from an unclean shutdown.")
+        message_box.setInformativeText(
+            f"Recovery snapshot: {saved_at_utc}\n\nRecover these changes?"
+        )
+        recover_button = message_box.addButton(
+            "Recover", QMessageBox.ButtonRole.AcceptRole
+        )
+        discard_button = message_box.addButton(
+            "Discard", QMessageBox.ButtonRole.DestructiveRole
+        )
+        message_box.addButton(QMessageBox.StandardButton.Cancel)
+        message_box.setDefaultButton(recover_button)
+        message_box.exec()
+        if message_box.clickedButton() is recover_button:
+            return "recover"
+        if message_box.clickedButton() is discard_button:
+            return "discard"
+        return "cancel"
 
     def _save_level_as(self) -> bool:
         if self._current_document is None:
@@ -1352,10 +1438,16 @@ class LevelEditorMainWindow(QMainWindow):
         self._set_dirty(True)
 
     def _on_controller_document_changed(self, document, solution) -> None:
+        preserve_viewport = self._current_document is document
+        viewport_state = (
+            self._canvas_view.capture_viewport() if preserve_viewport else None
+        )
         self._current_document = document
         self._current_solution = solution
         self._set_dirty(True)
         self._canvas_view.scene().display_level(document)
+        if viewport_state is not None:
+            self._canvas_view.restore_viewport(viewport_state)
         self._properties_panel.clear()
         self._solution_panel.set_level(document)
         self._solution_panel.set_solution(solution)
@@ -1558,6 +1650,7 @@ class LevelEditorMainWindow(QMainWindow):
             return False
         if selection == QMessageBox.StandardButton.Save:
             return self._save_level()
+        self._clear_autosave_recovery()
         return True
 
     def closeEvent(self, event: QCloseEvent) -> None:  # noqa: N802
@@ -1566,4 +1659,6 @@ class LevelEditorMainWindow(QMainWindow):
             return
         self._validation_controller.cancel()
         self._puzzle_analysis_controller.cancel()
+        self._autosave_timer.stop()
+        self._clear_autosave_recovery()
         event.accept()

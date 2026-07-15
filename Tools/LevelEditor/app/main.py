@@ -20,12 +20,13 @@ def main(argv: list[str] | None = None) -> int:
     app = QApplication.instance() or QApplication([sys.argv[0]])
 
     main_window = LevelEditorMainWindow()
-    if arguments.level is not None:
+    main_window.show()
+    recovered = main_window.offer_recovery_if_available()
+    if arguments.level is not None and not recovered:
         main_window.open_level_bundle(
             arguments.level,
             solution_path=arguments.solution,
             quality_path=arguments.quality,
         )
-    main_window.show()
 
     return app.exec()

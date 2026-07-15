@@ -29,6 +29,11 @@ from .automated_checks_service import (
     AutomatedChecksService,
 )
 from .node_arrangement_service import NodeArrangementService
+from .autosave_recovery_service import (
+    AutosaveRecovery,
+    AutosaveRecoveryError,
+    AutosaveRecoveryService,
+)
 
 __all__ = [
     "ActionTiming",
@@ -36,6 +41,9 @@ __all__ = [
     "AutomatedCheckStatus",
     "AutomatedChecksReport",
     "AutomatedChecksService",
+    "AutosaveRecovery",
+    "AutosaveRecoveryError",
+    "AutosaveRecoveryService",
     "LevelIdentity",
     "LevelIdentityService",
     "LevelValidationService",

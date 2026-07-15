@@ -60,6 +60,9 @@ def build_menu_bar(window: QMainWindow) -> None:
 
     window._view_menu = menu_bar.addMenu("View")
     window._view_menu.addAction("Fit View").triggered.connect(window._canvas_view.fit_level_to_view)
+    window._view_menu.addAction("Zoom to Selection").triggered.connect(
+        window._canvas_view.zoom_to_selection
+    )
     window._view_menu.addAction("Reset Zoom").triggered.connect(window._canvas_view.reset_zoom)
 
     window._tools_menu = menu_bar.addMenu("Tools")
@@ -115,6 +118,7 @@ def build_main_toolbar(window: QMainWindow) -> None:
     for text, callback in (
         ("Validate", window._validate_current_level),
         ("Fit View", window._canvas_view.fit_level_to_view),
+        ("Zoom to Selection", window._canvas_view.zoom_to_selection),
         ("Reset Zoom", window._canvas_view.reset_zoom),
     ):
         action = QAction(text, window)

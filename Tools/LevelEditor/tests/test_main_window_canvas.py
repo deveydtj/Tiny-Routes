@@ -8,8 +8,9 @@ import pytest
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
 try:
-    from PySide6.QtCore import QPointF, Qt
+    from PySide6.QtCore import QPoint, QPointF, Qt
     from PySide6.QtGui import QColor, QKeyEvent, QPalette
+    from PySide6.QtTest import QTest
     from PySide6.QtWidgets import QApplication, QDialog, QFileDialog, QMessageBox, QPushButton, QToolBar, QWidget
 except ImportError as exc:
     pytest.skip(f"PySide6 unavailable in this environment: {exc}", allow_module_level=True)
@@ -379,6 +380,7 @@ def test_main_toolbar_contains_common_actions(qapplication: QApplication) -> Non
             "Save",
             "Validate",
             "Fit View",
+            "Zoom to Selection",
             "Reset Zoom",
             "Run Tests",
         ]
@@ -426,6 +428,100 @@ def test_canvas_view_fit_level_to_view_handles_empty_scene(qapplication: QApplic
         assert view.transform().m22() == pytest.approx(1.0)
     finally:
         view.close()
+
+
+def test_canvas_view_zoom_to_selection_frames_all_selected_items(
+    qapplication: QApplication,
+) -> None:
+    view = LevelCanvasView()
+    document = LevelDocument(
+        id="zoom_selection",
+        name="Zoom Selection",
+        graph=RouteGraphModel(
+            nodes=[
+                RouteNodeModel(id="left", x=-4.0, y=0.0),
+                RouteNodeModel(id="right", x=4.0, y=0.0),
+            ]
+        ),
+        startNodeID="left",
+        packageNodeID="left",
+        destinationNodeID="right",
+        timeLimitSeconds=20,
+        parTaps=0,
+    )
+    try:
+        view.resize(800, 600)
+        view.show()
+        view.scene().display_level(document)
+        view.scene()._node_items_by_id["right"].setSelected(True)
+        qapplication.processEvents()
+
+        view.fit_level_to_view()
+        whole_level_scale = view.transform().m11()
+        view.zoom_to_selection()
+
+        assert view.transform().m11() > whole_level_scale
+        viewport_center = view.mapToScene(view.viewport().rect().center())
+        selected_center = view.scene()._node_items_by_id["right"].sceneBoundingRect().center()
+        assert viewport_center.x() == pytest.approx(selected_center.x(), abs=2.0)
+        assert viewport_center.y() == pytest.approx(selected_center.y(), abs=2.0)
+    finally:
+        view.close()
+
+
+def test_canvas_view_middle_mouse_drag_pans(qapplication: QApplication) -> None:
+    view = LevelCanvasView()
+    try:
+        view.resize(500, 400)
+        view.show()
+        qapplication.processEvents()
+        original_center = view.mapToScene(view.viewport().rect().center())
+        start = view.viewport().rect().center()
+
+        QTest.mousePress(view.viewport(), Qt.MouseButton.MiddleButton, pos=start)
+        QTest.mouseMove(view.viewport(), start + QPoint(80, 40))
+        QTest.mouseRelease(
+            view.viewport(),
+            Qt.MouseButton.MiddleButton,
+            pos=start + QPoint(80, 40),
+        )
+
+        new_center = view.mapToScene(view.viewport().rect().center())
+        assert new_center.x() < original_center.x()
+        assert new_center.y() < original_center.y()
+    finally:
+        view.close()
+
+
+def test_non_layout_property_edit_preserves_viewport(
+    qapplication: QApplication,
+) -> None:
+    window = LevelEditorMainWindow()
+    document = _make_two_node_one_edge_document()
+    try:
+        window.resize(900, 700)
+        window.show()
+        window._document_controller.open(document, None, saved=True)
+        window._canvas_view.scale(1.8, 1.8)
+        window._canvas_view.centerOn(QPointF(275.0, -190.0))
+        qapplication.processEvents()
+        transform_before, center_before = window._canvas_view.capture_viewport()
+
+        window._document_controller.edit_metadata(
+            lambda edited_document, solution: setattr(
+                edited_document, "name", "Renamed without moving nodes"
+            )
+        )
+        qapplication.processEvents()
+        transform_after, center_after = window._canvas_view.capture_viewport()
+
+        assert transform_after.m11() == pytest.approx(transform_before.m11())
+        assert transform_after.m22() == pytest.approx(transform_before.m22())
+        assert center_after.x() == pytest.approx(center_before.x(), abs=2.0)
+        assert center_after.y() == pytest.approx(center_before.y(), abs=2.0)
+    finally:
+        window._set_dirty(False)
+        window.close()
 
 
 def test_open_level_still_loads_document_with_canvas_central_widget(
