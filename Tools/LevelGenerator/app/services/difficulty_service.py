@@ -238,12 +238,37 @@ class DifficultyService:
         if repeated_taps and not preset.allow_repeated_switch_taps:
             messages.append(f"repeated_switch_taps_not_allowed:{','.join(sorted(repeated_taps))}")
         if decision_profile is not None:
-            self._check_decision_profile(
-                decision_profile,
-                preset,
-                messages,
-                configured_lookahead_seconds=configured_lookahead_seconds,
+            messages.extend(
+                self.check_decision_profile_matches_difficulty(
+                    decision_profile,
+                    preset,
+                    configured_lookahead_seconds=configured_lookahead_seconds,
+                )
             )
+        return messages
+
+    def check_decision_profile_matches_difficulty(
+        self,
+        profile,
+        preset: DifficultyPreset,
+        *,
+        configured_lookahead_seconds: float | None = None,
+    ) -> list[str]:
+        """Return only measured decision-quality issues for a difficulty preset.
+
+        Corpus migration needs to distinguish a topology/decision problem from
+        unrelated node-count and layout-range mismatches. Keeping this as a
+        public boundary also prevents reporting tools from duplicating the
+        preset threshold logic.
+        """
+
+        messages: list[str] = []
+        self._check_decision_profile(
+            profile,
+            preset,
+            messages,
+            configured_lookahead_seconds=configured_lookahead_seconds,
+        )
         return messages
 
     def _check_decision_profile(

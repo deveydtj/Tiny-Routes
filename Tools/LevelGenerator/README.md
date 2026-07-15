@@ -21,6 +21,16 @@ These fields accompany the normal level fields; a complete example is in `../Lev
 
 Migrate existing levels individually: add the version 2 fields, replay the timed solution under `liveLookahead`, and only then replace the legacy production file and sidecar. A level that cannot pass live replay remains legacy until its route or solution is revised.
 
+Audit the complete corpus before migration with the read-only analyzer:
+
+```bash
+python Tools/LevelGenerator/migrate_levels_to_live_routing.py
+```
+
+The generated report assigns each level to automatic conversion,
+timing/layout adjustment, manual redesign, or regeneration. The category rules
+and report fields are documented in `docs/live_routing_migration.md`.
+
 ## Install
 
 The generator runtime uses only the Python standard library:

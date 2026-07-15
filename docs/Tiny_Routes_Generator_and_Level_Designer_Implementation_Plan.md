@@ -2290,6 +2290,8 @@ Move the shipped corpus to the corrected interaction model without breaking IDs,
 
 ## Task 16.1 — Add a migration analyzer
 
+**Status:** Completed
+
 **File to add**
 
 - `Tools/LevelGenerator/migrate_levels_to_live_routing.py`
@@ -2304,12 +2306,26 @@ Move the shipped corpus to the corrected interaction model without breaking IDs,
 - Decision-quality result for its campaign difficulty.
 - Recommendation: automatic conversion, regenerate, or manual redesign.
 
+**Completion notes**
+
+- [x] Added a deterministic, read-only CLI that writes JSON and Markdown reports.
+- [x] Reported current rules/replay, live solution searches, required windows, repeated decisions, decision quality, and a recommendation for every level.
+- [x] Added deterministic production-corpus and failure-path tests.
+
 ## Task 16.2 — Define migration categories
+
+**Status:** Completed
 
 - **Automatic conversion:** Existing topology works under live routing and meets quality rules.
 - **Timing/layout adjustment:** Topology works, but road lengths or window settings need adjustment.
 - **Manual redesign:** Topology is too trivial or cannot create legal windows.
 - **Regeneration:** Level can be safely replaced while retaining stable level ID and campaign position.
+
+**Completion notes**
+
+- [x] Defined stable serialized category names and descriptions.
+- [x] Documented deterministic category precedence and operator guidance.
+- [x] Added focused tests covering every category.
 
 ## Task 16.3 — Preserve stable production identity
 
