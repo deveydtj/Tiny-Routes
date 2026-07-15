@@ -1,45 +1,11 @@
 {
-  "levelID": "level_024",
-  "description": "Follow the generated graph recipe route and rotate each switch before arrival.",
-  "expectedOutcome": "completed",
-  "maxTaps": 3,
-  "requiresWithinTimeLimit": true,
-  "actions": [
-    {
-      "timeSeconds": 0.5,
-      "tapNodeID": "hub",
-      "reason": "Rotate switch 'hub' toward 'package' before arrival.",
-      "expectedEdgeAfterTap": "e_hub_package",
-      "expectedRouteNodeAfterTap": "package",
-      "reactionWindowSeconds": 0.45,
-      "switchStateBeforeTap": "e_hub_ring_a",
-      "switchStateAfterTap": "e_hub_package"
-    },
-    {
-      "timeSeconds": 2.19,
-      "tapNodeID": "ring_b",
-      "reason": "Rotate switch 'ring_b' toward 'gate' before arrival.",
-      "expectedEdgeAfterTap": "e_ring_b_gate",
-      "expectedRouteNodeAfterTap": "gate",
-      "reactionWindowSeconds": 0.45,
-      "switchStateBeforeTap": "e_ring_b_ring_a",
-      "switchStateAfterTap": "e_ring_b_gate"
-    },
-    {
-      "timeSeconds": 2.69,
-      "tapNodeID": "gate",
-      "reason": "Rotate switch 'gate' toward 'destination' before arrival.",
-      "expectedEdgeAfterTap": "e_gate_destination",
-      "expectedRouteNodeAfterTap": "destination",
-      "reactionWindowSeconds": 0.45,
-      "switchStateBeforeTap": "e_gate_dead_end_b",
-      "switchStateAfterTap": "e_gate_destination"
-    }
-  ],
   "metadata": {
-    "validationVersion": "solution_sidecar_v1",
+    "validationVersion": "verified_runtime_solution_v1",
     "solutionRoute": [
       "start",
+      "hub",
+      "ring_a",
+      "ring_b",
       "hub",
       "package",
       "ring_b",
@@ -47,13 +13,86 @@
       "destination"
     ],
     "requiredTapOrder": [
-      "hub",
       "ring_b",
-      "gate"
+      "hub",
+      "ring_b"
+    ],
+    "runtimeDecisionTiming": [
+      {
+        "nodeID": "ring_b",
+        "visitIndex": 1,
+        "rotationCount": 1,
+        "windowOpenSeconds": 1.6999999999999997,
+        "windowCloseSeconds": 3.05,
+        "chosenTapSeconds": [
+          1.8199999999999998
+        ],
+        "safetyMarginSeconds": 0.12,
+        "failureReason": null
+      },
+      {
+        "nodeID": "hub",
+        "visitIndex": 1,
+        "rotationCount": 1,
+        "windowOpenSeconds": 3.07,
+        "windowCloseSeconds": 4.35,
+        "chosenTapSeconds": [
+          3.19
+        ],
+        "safetyMarginSeconds": 0.12,
+        "failureReason": null
+      },
+      {
+        "nodeID": "ring_b",
+        "visitIndex": 2,
+        "rotationCount": 1,
+        "windowOpenSeconds": 5.1,
+        "windowCloseSeconds": 6.449999999999999,
+        "chosenTapSeconds": [
+          5.22
+        ],
+        "safetyMarginSeconds": 0.12,
+        "failureReason": null
+      }
     ],
     "template": "ring_route",
     "generatedSeed": 3220785920,
     "recipeFamily": "ring_route",
-    "recipeVariant": "ring_route_package_inside"
-  }
+    "recipeVariant": "production_redesign_revisit_phase",
+    "migrationReview": "phase16_live_routing"
+  },
+  "levelID": "level_024",
+  "description": "Use the ring to revisit the hub, collect the package, then change the repeated ring switch to reach the exit gate.",
+  "expectedOutcome": "completed",
+  "maxTaps": 3,
+  "requiresWithinTimeLimit": true,
+  "actions": [
+    {
+      "windowOpenSeconds": 1.7,
+      "chosenTapSeconds": 1.82,
+      "windowCloseSeconds": 3.05,
+      "safetyMarginSeconds": 0.12,
+      "expectedEdgeAfterTap": "e_ring_b_hub",
+      "timeSeconds": 1.82,
+      "tapNodeID": "ring_b"
+    },
+    {
+      "windowOpenSeconds": 3.07,
+      "chosenTapSeconds": 3.19,
+      "windowCloseSeconds": 4.35,
+      "safetyMarginSeconds": 0.12,
+      "expectedEdgeAfterTap": "e_hub_package",
+      "timeSeconds": 3.19,
+      "tapNodeID": "hub"
+    },
+    {
+      "windowOpenSeconds": 5.1,
+      "chosenTapSeconds": 5.22,
+      "windowCloseSeconds": 6.45,
+      "safetyMarginSeconds": 0.12,
+      "expectedEdgeAfterTap": "e_ring_b_gate",
+      "timeSeconds": 5.22,
+      "tapNodeID": "ring_b"
+    }
+  ]
 }

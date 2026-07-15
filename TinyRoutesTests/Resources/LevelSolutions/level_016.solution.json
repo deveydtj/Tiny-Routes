@@ -1,33 +1,6 @@
 {
-  "levelID": "level_016",
-  "description": "Follow the generated graph recipe route and rotate each switch before arrival.",
-  "expectedOutcome": "completed",
-  "maxTaps": 2,
-  "requiresWithinTimeLimit": true,
-  "actions": [
-    {
-      "timeSeconds": 0.1,
-      "tapNodeID": "choice",
-      "reason": "Rotate switch 'choice' toward 'detour_a' before arrival.",
-      "expectedEdgeAfterTap": "e_choice_detour_a",
-      "expectedRouteNodeAfterTap": "detour_a",
-      "reactionWindowSeconds": 0.36,
-      "switchStateBeforeTap": "e_choice_shortcut_dead_end",
-      "switchStateAfterTap": "e_choice_detour_a"
-    },
-    {
-      "timeSeconds": 2.13,
-      "tapNodeID": "switch_b",
-      "reason": "Rotate switch 'switch_b' toward 'destination' before arrival.",
-      "expectedEdgeAfterTap": "e_switch_b_destination",
-      "expectedRouteNodeAfterTap": "destination",
-      "reactionWindowSeconds": 0.45,
-      "switchStateBeforeTap": "e_switch_b_dead_end_b",
-      "switchStateAfterTap": "e_switch_b_destination"
-    }
-  ],
   "metadata": {
-    "validationVersion": "solution_sidecar_v1",
+    "validationVersion": "verified_runtime_solution_v1",
     "solutionRoute": [
       "start",
       "choice",
@@ -41,9 +14,61 @@
       "choice",
       "switch_b"
     ],
+    "runtimeDecisionTiming": [
+      {
+        "nodeID": "choice",
+        "visitIndex": 1,
+        "rotationCount": 1,
+        "windowOpenSeconds": 0.0,
+        "windowCloseSeconds": 0.49999999999999994,
+        "chosenTapSeconds": [
+          0.12
+        ],
+        "safetyMarginSeconds": 0.12,
+        "failureReason": null
+      },
+      {
+        "nodeID": "switch_b",
+        "visitIndex": 1,
+        "rotationCount": 1,
+        "windowOpenSeconds": 1.4999999999999996,
+        "windowCloseSeconds": 2.8499999999999996,
+        "chosenTapSeconds": [
+          1.6199999999999997
+        ],
+        "safetyMarginSeconds": 0.12,
+        "failureReason": null
+      }
+    ],
     "template": "fake_shortcut",
     "generatedSeed": 4009176791,
     "recipeFamily": "fake_shortcut",
-    "recipeVariant": "fake_shortcut_primary"
-  }
+    "recipeVariant": "fake_shortcut_primary",
+    "migrationReview": "phase16_live_routing"
+  },
+  "levelID": "level_016",
+  "description": "Follow the generated graph recipe route and rotate each switch before arrival.",
+  "expectedOutcome": "completed",
+  "maxTaps": 2,
+  "requiresWithinTimeLimit": true,
+  "actions": [
+    {
+      "windowOpenSeconds": 0.0,
+      "chosenTapSeconds": 0.12,
+      "windowCloseSeconds": 0.5,
+      "safetyMarginSeconds": 0.12,
+      "expectedEdgeAfterTap": "e_choice_detour_a",
+      "timeSeconds": 0.12,
+      "tapNodeID": "choice"
+    },
+    {
+      "windowOpenSeconds": 1.5,
+      "chosenTapSeconds": 1.62,
+      "windowCloseSeconds": 2.85,
+      "safetyMarginSeconds": 0.12,
+      "expectedEdgeAfterTap": "e_switch_b_destination",
+      "timeSeconds": 1.62,
+      "tapNodeID": "switch_b"
+    }
+  ]
 }

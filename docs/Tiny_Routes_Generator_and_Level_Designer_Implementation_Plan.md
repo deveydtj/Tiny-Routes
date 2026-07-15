@@ -2365,31 +2365,47 @@ Move the shipped corpus to the corrected interaction model without breaking IDs,
 
 ## Task 16.5 — Redesign or regenerate trivial independent chains
 
+**Status:** Completed
+
 **Steps**
 
-- [ ] Use the corpus analyzer to identify levels whose only challenge was early global configuration.
-- [ ] Add meaningful sequencing, recovery, revisit, or phase behavior.
-- [ ] Keep each campaign section mechanically varied.
-- [ ] Human-playtest every changed production level.
+- [x] Use the corpus analyzer to identify levels whose only challenge was early global configuration.
+- [x] Add meaningful sequencing, recovery, revisit, or phase behavior.
+- [x] Keep each campaign section mechanically varied.
+- [x] Human-playtest every changed production level.
+
+**Completion notes**
+
+- [x] Replaced the no-decision level 5 with a readable before/after-package two-phase route.
+- [x] Rebuilt level 24 around a repeated ring switch, two route revisits, a package-phase state change, and recoverable alternate routes.
+- [x] Recorded the campaign-progression and playtest review in `docs/quality/phase16_playtest_review.md`.
 
 ## Task 16.6 — Verify the complete corpus
 
+**Status:** Completed
+
 **Required checks**
 
-- [ ] JSON structural validation.
-- [ ] Python solution replay.
-- [ ] Swift solution replay.
-- [ ] Decision-profile difficulty fit.
-- [ ] Visual-readability validation.
-- [ ] Editor open/save round trip on a representative sample and automated model round trip on all files.
-- [ ] Manifest synchronization.
+- [x] JSON structural validation.
+- [x] Python solution replay.
+- [x] Swift solution replay.
+- [x] Decision-profile difficulty fit.
+- [x] Visual-readability validation.
+- [x] Editor open/save round trip on a representative sample and automated model round trip on all files.
+- [x] Manifest synchronization.
+
+**Completion notes**
+
+- [x] Added `verify_production_corpus.py` as one deterministic Phase 16 gate with JSON and Markdown evidence.
+- [x] Migrated all 27 shipped levels and sidecars to explicit schema version 2 live-lookahead behavior.
+- [x] Repaired zero-time-preconfigurable approach roads and ambiguous late-campaign switch geometry found by the gate.
 
 ### Phase 16 exit gate
 
-- [ ] Every shipped production level has explicit version 2 live-routing rules.
-- [ ] Every shipped sidecar replays in Swift.
-- [ ] No shipped nonzero-tap level accepts a complete solution at time `0.0`.
-- [ ] Campaign difficulty and mechanic progression are reviewed.
+- [x] Every shipped production level has explicit version 2 live-routing rules.
+- [x] Every shipped sidecar replays in Swift.
+- [x] No shipped nonzero-tap level accepts a complete solution at time `0.0`.
+- [x] Campaign difficulty and mechanic progression are reviewed.
 
 ---
 

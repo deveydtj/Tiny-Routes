@@ -1,4 +1,5 @@
 {
+  "schemaVersion": 2,
   "id": "level_025",
   "name": "Level 025",
   "graph": {
@@ -106,13 +107,13 @@
         "id": "e_choice_shortcut_dead_end",
         "fromNodeID": "choice",
         "toNodeID": "shortcut_dead_end",
-        "roadShape": "verticalFirst"
+        "roadShape": "horizontalFirst"
       },
       {
         "id": "e_choice_detour_a",
         "fromNodeID": "choice",
         "toNodeID": "detour_a",
-        "roadShape": "horizontalFirst"
+        "roadShape": "verticalFirst"
       },
       {
         "id": "e_detour_a_switch_b",
@@ -160,7 +161,7 @@
         "id": "e_switch_c_destination",
         "fromNodeID": "switch_c",
         "toNodeID": "destination",
-        "roadShape": "horizontalFirst"
+        "roadShape": "verticalFirst"
       }
     ]
   },
@@ -168,5 +169,10 @@
   "packageNodeID": "package",
   "destinationNodeID": "destination",
   "timeLimitSeconds": 30,
-  "parTaps": 3
+  "parTaps": 3,
+  "rules": {
+    "switchInteractionMode": "liveLookahead",
+    "switchLookaheadSeconds": 1.35,
+    "switchTapCooldownSeconds": 0.12
+  }
 }

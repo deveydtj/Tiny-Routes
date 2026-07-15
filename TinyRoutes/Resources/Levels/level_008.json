@@ -1,4 +1,5 @@
 {
+  "schemaVersion": 2,
   "id": "level_008",
   "name": "Level 008",
   "graph": {
@@ -99,5 +100,10 @@
   "packageNodeID": "package",
   "destinationNodeID": "destination",
   "timeLimitSeconds": 30,
-  "parTaps": 2
+  "parTaps": 2,
+  "rules": {
+    "switchInteractionMode": "liveLookahead",
+    "switchLookaheadSeconds": 1.6,
+    "switchTapCooldownSeconds": 0.12
+  }
 }

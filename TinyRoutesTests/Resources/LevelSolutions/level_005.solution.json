@@ -1,21 +1,72 @@
 {
-  "levelID": "level_005",
-  "description": "Follow the generated graph recipe route and rotate each switch before arrival.",
-  "expectedOutcome": "completed",
-  "maxTaps": 0,
-  "requiresWithinTimeLimit": true,
-  "actions": [],
   "metadata": {
-    "validationVersion": "solution_sidecar_v1",
+    "validationVersion": "verified_runtime_solution_v1",
     "solutionRoute": [
       "start",
+      "pickup_switch",
       "package",
+      "delivery_switch",
       "destination"
     ],
-    "requiredTapOrder": [],
-    "template": "straight_delivery",
-    "generatedSeed": 2218123499,
-    "recipeFamily": "straight_delivery",
-    "recipeVariant": "straight_delivery_0_intermediate"
-  }
+    "requiredTapOrder": [
+      "pickup_switch",
+      "delivery_switch"
+    ],
+    "runtimeDecisionTiming": [
+      {
+        "nodeID": "pickup_switch",
+        "visitIndex": 1,
+        "rotationCount": 1,
+        "windowOpenSeconds": 0.0,
+        "windowCloseSeconds": 0.4,
+        "chosenTapSeconds": [
+          0.12
+        ],
+        "safetyMarginSeconds": 0.12,
+        "failureReason": null
+      },
+      {
+        "nodeID": "delivery_switch",
+        "visitIndex": 1,
+        "rotationCount": 1,
+        "windowOpenSeconds": 0.75,
+        "windowCloseSeconds": 2.35,
+        "chosenTapSeconds": [
+          0.87
+        ],
+        "safetyMarginSeconds": 0.12,
+        "failureReason": null
+      }
+    ],
+    "template": "two_phase_route",
+    "generatedSeed": 1605,
+    "recipeFamily": "two_phase_route",
+    "recipeVariant": "production_redesign_phase_intro",
+    "migrationReview": "phase16_live_routing"
+  },
+  "levelID": "level_005",
+  "description": "Route through the pickup switch, then react after collecting the package to open the delivery switch.",
+  "expectedOutcome": "completed",
+  "maxTaps": 2,
+  "requiresWithinTimeLimit": true,
+  "actions": [
+    {
+      "windowOpenSeconds": 0.0,
+      "chosenTapSeconds": 0.12,
+      "windowCloseSeconds": 0.4,
+      "safetyMarginSeconds": 0.12,
+      "expectedEdgeAfterTap": "e_pickup_switch_package",
+      "timeSeconds": 0.12,
+      "tapNodeID": "pickup_switch"
+    },
+    {
+      "windowOpenSeconds": 0.75,
+      "chosenTapSeconds": 0.87,
+      "windowCloseSeconds": 2.35,
+      "safetyMarginSeconds": 0.12,
+      "expectedEdgeAfterTap": "e_delivery_switch_destination",
+      "timeSeconds": 0.87,
+      "tapNodeID": "delivery_switch"
+    }
+  ]
 }

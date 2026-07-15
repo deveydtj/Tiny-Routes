@@ -1,43 +1,6 @@
 {
-  "levelID": "level_015",
-  "description": "Follow the generated graph recipe route and rotate each switch before arrival.",
-  "expectedOutcome": "completed",
-  "maxTaps": 3,
-  "requiresWithinTimeLimit": true,
-  "actions": [
-    {
-      "timeSeconds": 1.24,
-      "tapNodeID": "upper_alpha_switch",
-      "reason": "Rotate switch 'upper_alpha_switch' toward 'package' before arrival.",
-      "expectedEdgeAfterTap": "e_upper_alpha_switch_package",
-      "expectedRouteNodeAfterTap": "package",
-      "reactionWindowSeconds": 0.45,
-      "switchStateBeforeTap": "e_upper_alpha_switch_destination",
-      "switchStateAfterTap": "e_upper_alpha_switch_package"
-    },
-    {
-      "timeSeconds": 3.28,
-      "tapNodeID": "upper_beta_switch",
-      "reason": "Rotate switch 'upper_beta_switch' toward 'upper_return' before arrival.",
-      "expectedEdgeAfterTap": "e_upper_beta_switch_upper_return",
-      "expectedRouteNodeAfterTap": "upper_return",
-      "reactionWindowSeconds": 0.45,
-      "switchStateBeforeTap": "e_upper_beta_switch_upper_dead_end",
-      "switchStateAfterTap": "e_upper_beta_switch_upper_return"
-    },
-    {
-      "timeSeconds": 5.92,
-      "tapNodeID": "upper_alpha_switch",
-      "reason": "Rotate switch 'upper_alpha_switch' toward 'destination' before arrival.",
-      "expectedEdgeAfterTap": "e_upper_alpha_switch_destination",
-      "expectedRouteNodeAfterTap": "destination",
-      "reactionWindowSeconds": 0.45,
-      "switchStateBeforeTap": "e_upper_alpha_switch_package",
-      "switchStateAfterTap": "e_upper_alpha_switch_destination"
-    }
-  ],
   "metadata": {
-    "validationVersion": "solution_sidecar_v1",
+    "validationVersion": "verified_runtime_solution_v1",
     "solutionRoute": [
       "start",
       "upper_alpha_switch",
@@ -52,9 +15,82 @@
       "upper_beta_switch",
       "upper_alpha_switch"
     ],
+    "runtimeDecisionTiming": [
+      {
+        "nodeID": "upper_alpha_switch",
+        "visitIndex": 1,
+        "rotationCount": 1,
+        "windowOpenSeconds": 0.3999999999999999,
+        "windowCloseSeconds": 1.75,
+        "chosenTapSeconds": [
+          0.5199999999999999
+        ],
+        "safetyMarginSeconds": 0.12,
+        "failureReason": null
+      },
+      {
+        "nodeID": "upper_beta_switch",
+        "visitIndex": 1,
+        "rotationCount": 1,
+        "windowOpenSeconds": 2.5,
+        "windowCloseSeconds": 3.85,
+        "chosenTapSeconds": [
+          2.62
+        ],
+        "safetyMarginSeconds": 0.12,
+        "failureReason": null
+      },
+      {
+        "nodeID": "upper_alpha_switch",
+        "visitIndex": 2,
+        "rotationCount": 1,
+        "windowOpenSeconds": 5.199999999999999,
+        "windowCloseSeconds": 6.549999999999999,
+        "chosenTapSeconds": [
+          5.319999999999999
+        ],
+        "safetyMarginSeconds": 0.12,
+        "failureReason": null
+      }
+    ],
     "template": "return_loop",
     "generatedSeed": 2796391071,
     "recipeFamily": "return_loop",
-    "recipeVariant": "return_loop_upper"
-  }
+    "recipeVariant": "return_loop_upper",
+    "migrationReview": "phase16_live_routing"
+  },
+  "levelID": "level_015",
+  "description": "Follow the generated graph recipe route and rotate each switch before arrival.",
+  "expectedOutcome": "completed",
+  "maxTaps": 3,
+  "requiresWithinTimeLimit": true,
+  "actions": [
+    {
+      "windowOpenSeconds": 0.4,
+      "chosenTapSeconds": 0.52,
+      "windowCloseSeconds": 1.75,
+      "safetyMarginSeconds": 0.12,
+      "expectedEdgeAfterTap": "e_upper_alpha_switch_package",
+      "timeSeconds": 0.52,
+      "tapNodeID": "upper_alpha_switch"
+    },
+    {
+      "windowOpenSeconds": 2.5,
+      "chosenTapSeconds": 2.62,
+      "windowCloseSeconds": 3.85,
+      "safetyMarginSeconds": 0.12,
+      "expectedEdgeAfterTap": "e_upper_beta_switch_upper_return",
+      "timeSeconds": 2.62,
+      "tapNodeID": "upper_beta_switch"
+    },
+    {
+      "windowOpenSeconds": 5.2,
+      "chosenTapSeconds": 5.32,
+      "windowCloseSeconds": 6.55,
+      "safetyMarginSeconds": 0.12,
+      "expectedEdgeAfterTap": "e_upper_alpha_switch_destination",
+      "timeSeconds": 5.32,
+      "tapNodeID": "upper_alpha_switch"
+    }
+  ]
 }

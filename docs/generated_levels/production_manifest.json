@@ -149,63 +149,83 @@
       "deadEndCount": 1,
       "template": "existing",
       "topologyHash": "43bcc0ec9572910b4bf21d11603837fc9228240a06bddeb3da0c10f686bbbb3c",
-      "layoutHash": "91cf31d9df673fcd778c6349e5d19a6c8b4c7c2e3ce5766d70019794bf7570b5",
+      "layoutHash": "1dffd85b342a484110acc11940717dfa2bf0ac8773d4674a337f53af4cb3ef1a",
       "solutionHash": "fc75f4b5f3bb9135472a90fab328c4c998f47be70f7daecefd5cb995e2771102",
       "normalizedPositions": [
         [
           "choice",
-          0.4545,
-          0.6757
+          0.6471,
+          0.641
         ],
         [
           "destination",
-          0.0,
+          0.3529,
           0.0
         ],
         [
           "package",
-          0.6364,
-          0.3243
+          0.7647,
+          0.3077
         ],
         [
           "start",
-          0.2727,
+          0.0,
           1.0
         ],
         [
           "wrong_dead_end",
           1.0,
-          0.6757
+          0.641
         ]
       ]
     },
     {
       "levelID": "level_005",
       "name": "Level 005",
-      "difficultyEstimate": "tutorial",
-      "nodes": 3,
-      "edges": 2,
-      "switches": 0,
-      "tapCount": 0,
-      "deadEndCount": 0,
+      "difficultyEstimate": "easy",
+      "nodes": 7,
+      "edges": 6,
+      "switches": 2,
+      "tapCount": 2,
+      "deadEndCount": 2,
       "template": "existing",
-      "topologyHash": "2a12d2df6ba25592e0ebc8d5e851ce5ea1e796a73bdf9b4808882e30313503d0",
-      "layoutHash": "c763c6293abe23b77fff4f67e03fd5cfee6214e9f305326538942b5d5e564aa5",
-      "solutionHash": "4ea3c0ebc6255c80341d0e8ae61b12077ff5424ab11920e2f2d9efdb83540fc1",
+      "topologyHash": "fba035424369606d961b6d6783593f06a9710262c0cd0278d060b04e31489bd0",
+      "layoutHash": "52555336592891d9251944c9277515f8ed016d35a42f27812a1cbeff15fa5f22",
+      "solutionHash": "3055dfa9683814155f6e20ba7497c25a0220096236ca978a004ea1a86474fb15",
       "normalizedPositions": [
         [
-          "destination",
+          "dead_end_a",
+          0.0,
+          0.7778
+        ],
+        [
+          "dead_end_b",
           1.0,
+          0.3056
+        ],
+        [
+          "delivery_switch",
+          0.5,
+          0.3056
+        ],
+        [
+          "destination",
+          0.5,
           0.0
         ],
         [
           "package",
-          0.0,
-          0.4865
+          0.9231,
+          0.5556
+        ],
+        [
+          "pickup_switch",
+          0.5,
+          0.7778
         ],
         [
           "start",
-          0.5714,
+          0.5,
           1.0
         ]
       ]
@@ -221,13 +241,13 @@
       "deadEndCount": 1,
       "template": "existing",
       "topologyHash": "e3cd100d0b08a8ac566c2cf5bfe421b3ff7c45dc51859a05311e21be7be4c1e2",
-      "layoutHash": "dd8b966565fcc75497809cf5fe739c5f0fec48e8ece036eb455e5854cf777d5d",
+      "layoutHash": "8423de01cd927b30f9705f58cf4c9c5fb3b3cabcdba941b3a8578918a89cd730",
       "solutionHash": "16d6ec44dc4516b7752f007ee49a806cc732159e445b6dc186b4d8788329fcbb",
       "normalizedPositions": [
         [
           "dead_end_a",
-          0.0,
-          0.6486
+          0.32,
+          0.6154
         ],
         [
           "destination",
@@ -236,17 +256,17 @@
         ],
         [
           "gate",
-          0.8235,
-          0.6757
+          0.88,
+          0.641
         ],
         [
           "package",
-          0.1765,
-          0.3243
+          0.44,
+          0.3077
         ],
         [
           "start",
-          0.5882,
+          0.0,
           1.0
         ]
       ]
@@ -262,37 +282,37 @@
       "deadEndCount": 1,
       "template": "existing",
       "topologyHash": "d2ffab496759e5d73456e6ad553c2aec6824bd5ad50caab66ae1aa453210a2e3",
-      "layoutHash": "9577b351dee86ac18f17743b33d319ae2dcc2a017770996ed255119ae152d9a0",
+      "layoutHash": "e78ebeba84c1ced50c93cb3bcb2472ceee5e9e7b18753085ea1c3d93699af999",
       "solutionHash": "16d6ec44dc4516b7752f007ee49a806cc732159e445b6dc186b4d8788329fcbb",
       "normalizedPositions": [
         [
           "dead_end_a",
           1.0,
-          0.7568
+          0.7179
         ],
         [
           "destination",
-          0.0,
+          0.3529,
           0.0
         ],
         [
           "detour",
-          0.2727,
-          0.4865
+          0.5294,
+          0.4615
         ],
         [
           "gate",
-          0.4545,
-          0.7568
+          0.6471,
+          0.7179
         ],
         [
           "package",
-          0.6364,
-          0.2432
+          0.7647,
+          0.2308
         ],
         [
           "start",
-          0.2727,
+          0.0,
           1.0
         ]
       ]
@@ -359,13 +379,13 @@
       "deadEndCount": 1,
       "template": "existing",
       "topologyHash": "04e44d8c1d0e0ab52bf6c26473d94664c9b1f8183da470f5ec386643cd7cdf69",
-      "layoutHash": "165947eb886c282e10a0d275c56643c42bbf501d08e9beeb4c8896586dfebe8e",
+      "layoutHash": "1c64b5f9f0307e39a0cfb5a53149f63273b392b973e98878d54c526da4ceacfe",
       "solutionHash": "fc75f4b5f3bb9135472a90fab328c4c998f47be70f7daecefd5cb995e2771102",
       "normalizedPositions": [
         [
           "choice",
-          0.8235,
-          0.7568
+          0.88,
+          0.7179
         ],
         [
           "destination",
@@ -374,22 +394,22 @@
         ],
         [
           "detour",
-          0.5882,
-          0.4865
+          0.72,
+          0.4615
         ],
         [
           "package",
-          0.1765,
-          0.2432
+          0.44,
+          0.2308
         ],
         [
           "shortcut_dead_end",
-          0.0,
-          0.7297
+          0.32,
+          0.6923
         ],
         [
           "start",
-          0.5882,
+          0.0,
           1.0
         ]
       ]
@@ -1237,59 +1257,54 @@
       "levelID": "level_024",
       "name": "Level 024",
       "difficultyEstimate": "medium",
-      "nodes": 9,
-      "edges": 11,
-      "switches": 3,
+      "nodes": 8,
+      "edges": 9,
+      "switches": 2,
       "tapCount": 3,
-      "deadEndCount": 2,
+      "deadEndCount": 1,
       "template": "existing",
-      "topologyHash": "a9d95cd32629d87de8f2e8e6648100a926c1b7e8f5e0844e8262d46645a4d51b",
-      "layoutHash": "1062f4c13a6fe53a145c2393579d19ccf2bb16c1add6ac5fe8ea31ad7384e185",
-      "solutionHash": "6047f9460b65f071e2c34cab53d9e53258ace312b371c940d314d12723eab99d",
+      "topologyHash": "99713a0e99ca8ae77570d6fdbb105c719ffdfe51447d8ca1173934eb7b0c5f31",
+      "layoutHash": "53ea86aeb3b7cf58c152d0243868ff8c10ea0710c07d656afa502b2020ef28e4",
+      "solutionHash": "536385f10248efef6f1e6a982cb461676cfdd0f0bf10d9512092dcf03286eb98",
       "normalizedPositions": [
         [
           "dead_end_a",
           1.0,
-          0.3333
-        ],
-        [
-          "dead_end_b",
-          0.0,
-          0.1389
+          0.4103
         ],
         [
           "destination",
-          0.2188,
+          0.9333,
           0.0
         ],
         [
           "gate",
-          0.3438,
-          0.1389
+          0.6,
+          0.1538
         ],
         [
           "hub",
-          0.6562,
-          0.8611
+          0.2667,
+          0.8205
         ],
         [
           "package",
-          0.8125,
-          0.5
+          0.0,
+          0.5385
         ],
         [
           "ring_a",
-          0.4688,
-          0.6667
+          0.9333,
+          0.641
         ],
         [
           "ring_b",
-          0.6562,
-          0.1389
+          0.6,
+          0.4103
         ],
         [
           "start",
-          0.1875,
+          0.0,
           1.0
         ]
       ]
@@ -1381,63 +1396,63 @@
       "deadEndCount": 3,
       "template": "existing",
       "topologyHash": "e240dafe57e594f7e7a53c86ca751f01011b992fcb0c138c30d0382839df654a",
-      "layoutHash": "6008d97e01e6573ea4638a59505ef01fb5843b684a89d488b66c4e017ee1d7e4",
+      "layoutHash": "b17fced4e775393d075aa593b080e7911f0ea96f34ef1668dcce728249bc23e8",
       "solutionHash": "56d7db03f7eb0b78f7a6ce365a840d26181a6dd0d4cacdaa2c92c6e244e7c16f",
       "normalizedPositions": [
         [
           "branch_a",
-          0.6429,
-          0.7027
+          0.5294,
+          0.5909
         ],
         [
           "dead_end_a",
-          0.2857,
-          0.8378
+          1.0,
+          1.0
         ],
         [
           "dead_end_b",
-          1.0,
-          0.4054
+          0.8235,
+          0.3409
         ],
         [
           "dead_end_c",
           0.0,
-          0.1622
+          0.1364
         ],
         [
           "destination",
-          0.8929,
+          0.7353,
           0.0
         ],
         [
           "package",
-          0.3929,
-          0.2973
+          0.7647,
+          0.2045
         ],
         [
           "rejoin",
-          0.6429,
-          0.5676
+          0.6471,
+          0.4545
         ],
         [
           "start",
-          0.6429,
-          1.0
+          0.3529,
+          0.8409
         ],
         [
           "switch_a",
-          0.7857,
-          0.8649
+          0.6471,
+          0.7273
         ],
         [
           "switch_b",
-          0.5,
-          0.4324
+          0.4118,
+          0.3636
         ],
         [
           "switch_c",
-          0.5,
-          0.1351
+          0.4118,
+          0.1136
         ]
       ]
     },

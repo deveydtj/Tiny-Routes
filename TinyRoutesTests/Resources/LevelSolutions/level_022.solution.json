@@ -1,43 +1,6 @@
 {
-  "levelID": "level_022",
-  "description": "Follow the generated graph recipe route and rotate each switch before arrival.",
-  "expectedOutcome": "completed",
-  "maxTaps": 3,
-  "requiresWithinTimeLimit": true,
-  "actions": [
-    {
-      "timeSeconds": 0.1,
-      "tapNodeID": "phase_one_switch",
-      "reason": "Rotate switch 'phase_one_switch' toward 'package_lane' before arrival.",
-      "expectedEdgeAfterTap": "e_phase_one_switch_package_lane",
-      "expectedRouteNodeAfterTap": "package_lane",
-      "reactionWindowSeconds": 0.35,
-      "switchStateBeforeTap": "e_phase_one_switch_early_exit",
-      "switchStateAfterTap": "e_phase_one_switch_package_lane"
-    },
-    {
-      "timeSeconds": 2.15,
-      "tapNodeID": "exit_choice",
-      "reason": "Rotate switch 'exit_choice' toward 'exit_lane' before arrival.",
-      "expectedEdgeAfterTap": "e_exit_choice_exit_lane",
-      "expectedRouteNodeAfterTap": "exit_lane",
-      "reactionWindowSeconds": 0.45,
-      "switchStateBeforeTap": "e_exit_choice_dead_end_b",
-      "switchStateAfterTap": "e_exit_choice_exit_lane"
-    },
-    {
-      "timeSeconds": 3.21,
-      "tapNodeID": "switch_final",
-      "reason": "Rotate switch 'switch_final' toward 'destination' before arrival.",
-      "expectedEdgeAfterTap": "e_switch_final_destination",
-      "expectedRouteNodeAfterTap": "destination",
-      "reactionWindowSeconds": 0.45,
-      "switchStateBeforeTap": "e_switch_final_dead_end_c",
-      "switchStateAfterTap": "e_switch_final_destination"
-    }
-  ],
   "metadata": {
-    "validationVersion": "solution_sidecar_v1",
+    "validationVersion": "verified_runtime_solution_v1",
     "solutionRoute": [
       "start",
       "phase_one_switch",
@@ -54,9 +17,82 @@
       "exit_choice",
       "switch_final"
     ],
+    "runtimeDecisionTiming": [
+      {
+        "nodeID": "phase_one_switch",
+        "visitIndex": 1,
+        "rotationCount": 1,
+        "windowOpenSeconds": 0.0,
+        "windowCloseSeconds": 0.45,
+        "chosenTapSeconds": [
+          0.12
+        ],
+        "safetyMarginSeconds": 0.12,
+        "failureReason": null
+      },
+      {
+        "nodeID": "exit_choice",
+        "visitIndex": 1,
+        "rotationCount": 1,
+        "windowOpenSeconds": 1.35,
+        "windowCloseSeconds": 2.7,
+        "chosenTapSeconds": [
+          1.4700000000000002
+        ],
+        "safetyMarginSeconds": 0.12,
+        "failureReason": null
+      },
+      {
+        "nodeID": "switch_final",
+        "visitIndex": 1,
+        "rotationCount": 1,
+        "windowOpenSeconds": 2.72,
+        "windowCloseSeconds": 3.8,
+        "chosenTapSeconds": [
+          2.8400000000000003
+        ],
+        "safetyMarginSeconds": 0.12,
+        "failureReason": null
+      }
+    ],
     "template": "two_phase_route",
     "generatedSeed": 1346241903,
     "recipeFamily": "two_phase_route",
-    "recipeVariant": "two_phase_route_primary"
-  }
+    "recipeVariant": "two_phase_route_primary",
+    "migrationReview": "phase16_live_routing"
+  },
+  "levelID": "level_022",
+  "description": "Follow the generated graph recipe route and rotate each switch before arrival.",
+  "expectedOutcome": "completed",
+  "maxTaps": 3,
+  "requiresWithinTimeLimit": true,
+  "actions": [
+    {
+      "windowOpenSeconds": 0.0,
+      "chosenTapSeconds": 0.12,
+      "windowCloseSeconds": 0.45,
+      "safetyMarginSeconds": 0.12,
+      "expectedEdgeAfterTap": "e_phase_one_switch_package_lane",
+      "timeSeconds": 0.12,
+      "tapNodeID": "phase_one_switch"
+    },
+    {
+      "windowOpenSeconds": 1.35,
+      "chosenTapSeconds": 1.47,
+      "windowCloseSeconds": 2.7,
+      "safetyMarginSeconds": 0.12,
+      "expectedEdgeAfterTap": "e_exit_choice_exit_lane",
+      "timeSeconds": 1.47,
+      "tapNodeID": "exit_choice"
+    },
+    {
+      "windowOpenSeconds": 2.72,
+      "chosenTapSeconds": 2.84,
+      "windowCloseSeconds": 3.8,
+      "safetyMarginSeconds": 0.12,
+      "expectedEdgeAfterTap": "e_switch_final_destination",
+      "timeSeconds": 2.84,
+      "tapNodeID": "switch_final"
+    }
+  ]
 }

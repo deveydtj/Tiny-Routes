@@ -1,43 +1,6 @@
 {
-  "levelID": "level_014",
-  "description": "Follow the generated graph recipe route and rotate each switch before arrival.",
-  "expectedOutcome": "completed",
-  "maxTaps": 3,
-  "requiresWithinTimeLimit": true,
-  "actions": [
-    {
-      "timeSeconds": 0.1,
-      "tapNodeID": "double_entry_switch",
-      "reason": "Rotate switch 'double_entry_switch' toward 'package' before arrival.",
-      "expectedEdgeAfterTap": "e_double_entry_switch_package",
-      "expectedRouteNodeAfterTap": "package",
-      "reactionWindowSeconds": 0.41,
-      "switchStateBeforeTap": "e_double_entry_switch_double_bypass",
-      "switchStateAfterTap": "e_double_entry_switch_package"
-    },
-    {
-      "timeSeconds": 1.75,
-      "tapNodeID": "double_mid_switch",
-      "reason": "Rotate switch 'double_mid_switch' toward 'double_finish_switch' before arrival.",
-      "expectedEdgeAfterTap": "e_double_mid_switch_double_finish_switch",
-      "expectedRouteNodeAfterTap": "double_finish_switch",
-      "reactionWindowSeconds": 0.45,
-      "switchStateBeforeTap": "e_double_mid_switch_double_dead_end_a",
-      "switchStateAfterTap": "e_double_mid_switch_double_finish_switch"
-    },
-    {
-      "timeSeconds": 2.48,
-      "tapNodeID": "double_finish_switch",
-      "reason": "Rotate switch 'double_finish_switch' toward 'destination' before arrival.",
-      "expectedEdgeAfterTap": "e_double_finish_switch_destination",
-      "expectedRouteNodeAfterTap": "destination",
-      "reactionWindowSeconds": 0.45,
-      "switchStateBeforeTap": "e_double_finish_switch_double_dead_end_b",
-      "switchStateAfterTap": "e_double_finish_switch_destination"
-    }
-  ],
   "metadata": {
-    "validationVersion": "solution_sidecar_v1",
+    "validationVersion": "verified_runtime_solution_v1",
     "solutionRoute": [
       "start",
       "double_entry_switch",
@@ -51,9 +14,82 @@
       "double_mid_switch",
       "double_finish_switch"
     ],
+    "runtimeDecisionTiming": [
+      {
+        "nodeID": "double_entry_switch",
+        "visitIndex": 1,
+        "rotationCount": 1,
+        "windowOpenSeconds": 0.0,
+        "windowCloseSeconds": 0.55,
+        "chosenTapSeconds": [
+          0.12
+        ],
+        "safetyMarginSeconds": 0.12,
+        "failureReason": null
+      },
+      {
+        "nodeID": "double_mid_switch",
+        "visitIndex": 1,
+        "rotationCount": 1,
+        "windowOpenSeconds": 1.0500000000000003,
+        "windowCloseSeconds": 2.4000000000000004,
+        "chosenTapSeconds": [
+          1.1700000000000004
+        ],
+        "safetyMarginSeconds": 0.12,
+        "failureReason": null
+      },
+      {
+        "nodeID": "double_finish_switch",
+        "visitIndex": 1,
+        "rotationCount": 1,
+        "windowOpenSeconds": 2.4200000000000004,
+        "windowCloseSeconds": 3.2,
+        "chosenTapSeconds": [
+          2.5400000000000005
+        ],
+        "safetyMarginSeconds": 0.12,
+        "failureReason": null
+      }
+    ],
     "template": "package_gate",
     "generatedSeed": 209111152,
     "recipeFamily": "package_gate",
-    "recipeVariant": "package_gate_double_choice"
-  }
+    "recipeVariant": "package_gate_double_choice",
+    "migrationReview": "phase16_live_routing"
+  },
+  "levelID": "level_014",
+  "description": "Follow the generated graph recipe route and rotate each switch before arrival.",
+  "expectedOutcome": "completed",
+  "maxTaps": 3,
+  "requiresWithinTimeLimit": true,
+  "actions": [
+    {
+      "windowOpenSeconds": 0.0,
+      "chosenTapSeconds": 0.12,
+      "windowCloseSeconds": 0.55,
+      "safetyMarginSeconds": 0.12,
+      "expectedEdgeAfterTap": "e_double_entry_switch_package",
+      "timeSeconds": 0.12,
+      "tapNodeID": "double_entry_switch"
+    },
+    {
+      "windowOpenSeconds": 1.05,
+      "chosenTapSeconds": 1.17,
+      "windowCloseSeconds": 2.4,
+      "safetyMarginSeconds": 0.12,
+      "expectedEdgeAfterTap": "e_double_mid_switch_double_finish_switch",
+      "timeSeconds": 1.17,
+      "tapNodeID": "double_mid_switch"
+    },
+    {
+      "windowOpenSeconds": 2.42,
+      "chosenTapSeconds": 2.54,
+      "windowCloseSeconds": 3.2,
+      "safetyMarginSeconds": 0.12,
+      "expectedEdgeAfterTap": "e_double_finish_switch_destination",
+      "timeSeconds": 2.54,
+      "tapNodeID": "double_finish_switch"
+    }
+  ]
 }

@@ -1,23 +1,6 @@
 {
-  "levelID": "level_009",
-  "description": "Follow the generated graph recipe route and rotate each switch before arrival.",
-  "expectedOutcome": "completed",
-  "maxTaps": 1,
-  "requiresWithinTimeLimit": true,
-  "actions": [
-    {
-      "timeSeconds": 0.16,
-      "tapNodeID": "choice",
-      "reason": "Rotate switch 'choice' toward 'detour' before arrival.",
-      "expectedEdgeAfterTap": "e_choice_detour",
-      "expectedRouteNodeAfterTap": "detour",
-      "reactionWindowSeconds": 0.45,
-      "switchStateBeforeTap": "e_choice_shortcut_dead_end",
-      "switchStateAfterTap": "e_choice_detour"
-    }
-  ],
   "metadata": {
-    "validationVersion": "solution_sidecar_v1",
+    "validationVersion": "verified_runtime_solution_v1",
     "solutionRoute": [
       "start",
       "choice",
@@ -28,9 +11,40 @@
     "requiredTapOrder": [
       "choice"
     ],
+    "runtimeDecisionTiming": [
+      {
+        "nodeID": "choice",
+        "visitIndex": 1,
+        "rotationCount": 1,
+        "windowOpenSeconds": 0.04999999999999982,
+        "windowCloseSeconds": 1.65,
+        "chosenTapSeconds": [
+          0.16999999999999982
+        ],
+        "safetyMarginSeconds": 0.12,
+        "failureReason": null
+      }
+    ],
     "template": "fake_shortcut",
     "generatedSeed": 1908962269,
     "recipeFamily": "fake_shortcut",
-    "recipeVariant": "fake_shortcut_alternate"
-  }
+    "recipeVariant": "fake_shortcut_alternate",
+    "migrationReview": "phase16_live_routing"
+  },
+  "levelID": "level_009",
+  "description": "Follow the generated graph recipe route and rotate each switch before arrival.",
+  "expectedOutcome": "completed",
+  "maxTaps": 1,
+  "requiresWithinTimeLimit": true,
+  "actions": [
+    {
+      "windowOpenSeconds": 0.05,
+      "chosenTapSeconds": 0.17,
+      "windowCloseSeconds": 1.65,
+      "safetyMarginSeconds": 0.12,
+      "expectedEdgeAfterTap": "e_choice_detour",
+      "timeSeconds": 0.17,
+      "tapNodeID": "choice"
+    }
+  ]
 }

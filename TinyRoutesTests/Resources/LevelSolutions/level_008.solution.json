@@ -1,33 +1,6 @@
 {
-  "levelID": "level_008",
-  "description": "Follow the generated graph recipe route and rotate each switch before arrival.",
-  "expectedOutcome": "completed",
-  "maxTaps": 2,
-  "requiresWithinTimeLimit": true,
-  "actions": [
-    {
-      "timeSeconds": 0.16,
-      "tapNodeID": "lower_entry_switch",
-      "reason": "Rotate switch 'lower_entry_switch' toward 'package' before arrival.",
-      "expectedEdgeAfterTap": "e_lower_entry_switch_package",
-      "expectedRouteNodeAfterTap": "package",
-      "reactionWindowSeconds": 0.45,
-      "switchStateBeforeTap": "e_lower_entry_switch_lower_bypass",
-      "switchStateAfterTap": "e_lower_entry_switch_package"
-    },
-    {
-      "timeSeconds": 2.05,
-      "tapNodeID": "lower_finish_switch",
-      "reason": "Rotate switch 'lower_finish_switch' toward 'destination' before arrival.",
-      "expectedEdgeAfterTap": "e_lower_finish_switch_destination",
-      "expectedRouteNodeAfterTap": "destination",
-      "reactionWindowSeconds": 0.45,
-      "switchStateBeforeTap": "e_lower_finish_switch_lower_dead_end",
-      "switchStateAfterTap": "e_lower_finish_switch_destination"
-    }
-  ],
   "metadata": {
-    "validationVersion": "solution_sidecar_v1",
+    "validationVersion": "verified_runtime_solution_v1",
     "solutionRoute": [
       "start",
       "lower_entry_switch",
@@ -39,9 +12,61 @@
       "lower_entry_switch",
       "lower_finish_switch"
     ],
+    "runtimeDecisionTiming": [
+      {
+        "nodeID": "lower_entry_switch",
+        "visitIndex": 1,
+        "rotationCount": 1,
+        "windowOpenSeconds": 0.0,
+        "windowCloseSeconds": 0.6499999999999999,
+        "chosenTapSeconds": [
+          0.12
+        ],
+        "safetyMarginSeconds": 0.12,
+        "failureReason": null
+      },
+      {
+        "nodeID": "lower_finish_switch",
+        "visitIndex": 1,
+        "rotationCount": 1,
+        "windowOpenSeconds": 1.0999999999999996,
+        "windowCloseSeconds": 2.6999999999999997,
+        "chosenTapSeconds": [
+          1.2199999999999998
+        ],
+        "safetyMarginSeconds": 0.12,
+        "failureReason": null
+      }
+    ],
     "template": "package_gate",
     "generatedSeed": 824440300,
     "recipeFamily": "package_gate",
-    "recipeVariant": "package_gate_lower_package"
-  }
+    "recipeVariant": "package_gate_lower_package",
+    "migrationReview": "phase16_live_routing"
+  },
+  "levelID": "level_008",
+  "description": "Follow the generated graph recipe route and rotate each switch before arrival.",
+  "expectedOutcome": "completed",
+  "maxTaps": 2,
+  "requiresWithinTimeLimit": true,
+  "actions": [
+    {
+      "windowOpenSeconds": 0.0,
+      "chosenTapSeconds": 0.12,
+      "windowCloseSeconds": 0.65,
+      "safetyMarginSeconds": 0.12,
+      "expectedEdgeAfterTap": "e_lower_entry_switch_package",
+      "timeSeconds": 0.12,
+      "tapNodeID": "lower_entry_switch"
+    },
+    {
+      "windowOpenSeconds": 1.1,
+      "chosenTapSeconds": 1.22,
+      "windowCloseSeconds": 2.7,
+      "safetyMarginSeconds": 0.12,
+      "expectedEdgeAfterTap": "e_lower_finish_switch_destination",
+      "timeSeconds": 1.22,
+      "tapNodeID": "lower_finish_switch"
+    }
+  ]
 }

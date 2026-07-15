@@ -122,6 +122,17 @@ listed with `--review-name-change`. It stages the full corpus, rebuilds and
 checks the production manifest, then atomically replaces the reviewed level,
 sidecar, and manifest files with rollback on write failure.
 
+Verify the complete shipped corpus, including schema/rules, structure, Python
+replay, zero-time preconfiguration rejection, decision-profile fit, visual
+readability, editor round trips, manifest synchronization, and Swift replay:
+
+```bash
+python Tools/LevelGenerator/verify_production_corpus.py
+```
+
+Swift replay is required by default. Use `--no-swift-tests` only for a quick
+local Python/content pass; the report records that Swift was skipped.
+
 Run the local generator check suite:
 
 ```bash

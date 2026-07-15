@@ -1,43 +1,6 @@
 {
-  "levelID": "level_026",
-  "description": "Follow the generated graph recipe route and rotate each switch before arrival.",
-  "expectedOutcome": "completed",
-  "maxTaps": 3,
-  "requiresWithinTimeLimit": true,
-  "actions": [
-    {
-      "timeSeconds": 0.1,
-      "tapNodeID": "switch_a",
-      "reason": "Rotate switch 'switch_a' toward 'branch_a' before arrival.",
-      "expectedEdgeAfterTap": "e_switch_a_branch_a",
-      "expectedRouteNodeAfterTap": "branch_a",
-      "reactionWindowSeconds": 0.31,
-      "switchStateBeforeTap": "e_switch_a_dead_end_a",
-      "switchStateAfterTap": "e_switch_a_branch_a"
-    },
-    {
-      "timeSeconds": 1.07,
-      "tapNodeID": "switch_b",
-      "reason": "Rotate switch 'switch_b' toward 'package' before arrival.",
-      "expectedEdgeAfterTap": "e_switch_b_package",
-      "expectedRouteNodeAfterTap": "package",
-      "reactionWindowSeconds": 0.45,
-      "switchStateBeforeTap": "e_switch_b_dead_end_b",
-      "switchStateAfterTap": "e_switch_b_package"
-    },
-    {
-      "timeSeconds": 1.86,
-      "tapNodeID": "switch_c",
-      "reason": "Rotate switch 'switch_c' toward 'destination' before arrival.",
-      "expectedEdgeAfterTap": "e_switch_c_destination",
-      "expectedRouteNodeAfterTap": "destination",
-      "reactionWindowSeconds": 0.45,
-      "switchStateBeforeTap": "e_switch_c_dead_end_c",
-      "switchStateAfterTap": "e_switch_c_destination"
-    }
-  ],
   "metadata": {
-    "validationVersion": "solution_sidecar_v1",
+    "validationVersion": "verified_runtime_solution_v1",
     "solutionRoute": [
       "start",
       "switch_a",
@@ -53,9 +16,82 @@
       "switch_b",
       "switch_c"
     ],
+    "runtimeDecisionTiming": [
+      {
+        "nodeID": "switch_a",
+        "visitIndex": 1,
+        "rotationCount": 1,
+        "windowOpenSeconds": 0.0,
+        "windowCloseSeconds": 0.75,
+        "chosenTapSeconds": [
+          0.12
+        ],
+        "safetyMarginSeconds": 0.12,
+        "failureReason": null
+      },
+      {
+        "nodeID": "switch_b",
+        "visitIndex": 1,
+        "rotationCount": 1,
+        "windowOpenSeconds": 1.0,
+        "windowCloseSeconds": 2.35,
+        "chosenTapSeconds": [
+          1.12
+        ],
+        "safetyMarginSeconds": 0.12,
+        "failureReason": null
+      },
+      {
+        "nodeID": "switch_c",
+        "visitIndex": 1,
+        "rotationCount": 1,
+        "windowOpenSeconds": 2.7500000000000004,
+        "windowCloseSeconds": 4.1000000000000005,
+        "chosenTapSeconds": [
+          2.8700000000000006
+        ],
+        "safetyMarginSeconds": 0.12,
+        "failureReason": null
+      }
+    ],
     "template": "branch_then_rejoin_with_wrong_order",
     "generatedSeed": 1683862404,
     "recipeFamily": "branch_then_rejoin_with_wrong_order",
-    "recipeVariant": "branch_then_rejoin_with_wrong_order_alternate"
-  }
+    "recipeVariant": "branch_then_rejoin_with_wrong_order_alternate",
+    "migrationReview": "phase16_live_routing"
+  },
+  "levelID": "level_026",
+  "description": "Follow the generated graph recipe route and rotate each switch before arrival.",
+  "expectedOutcome": "completed",
+  "maxTaps": 3,
+  "requiresWithinTimeLimit": true,
+  "actions": [
+    {
+      "windowOpenSeconds": 0.0,
+      "chosenTapSeconds": 0.12,
+      "windowCloseSeconds": 0.75,
+      "safetyMarginSeconds": 0.12,
+      "expectedEdgeAfterTap": "e_switch_a_branch_a",
+      "timeSeconds": 0.12,
+      "tapNodeID": "switch_a"
+    },
+    {
+      "windowOpenSeconds": 1.0,
+      "chosenTapSeconds": 1.12,
+      "windowCloseSeconds": 2.35,
+      "safetyMarginSeconds": 0.12,
+      "expectedEdgeAfterTap": "e_switch_b_package",
+      "timeSeconds": 1.12,
+      "tapNodeID": "switch_b"
+    },
+    {
+      "windowOpenSeconds": 2.75,
+      "chosenTapSeconds": 2.87,
+      "windowCloseSeconds": 4.1,
+      "safetyMarginSeconds": 0.12,
+      "expectedEdgeAfterTap": "e_switch_c_destination",
+      "timeSeconds": 2.87,
+      "tapNodeID": "switch_c"
+    }
+  ]
 }

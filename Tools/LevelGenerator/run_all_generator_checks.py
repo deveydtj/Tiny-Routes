@@ -53,16 +53,10 @@ def main(argv: list[str] | None = None) -> int:
             ]
         )
     if not args.skip_production_validation:
-        level_ids = sorted(
-            path.stem
-            for path in (repo_root / "TinyRoutes" / "Resources" / "Levels").glob("level_*.json")
-        )
         commands.append(
             [
                 args.python,
-                "Tools/LevelGenerator/validate_generated_levels.py",
-                "--levels",
-                *level_ids,
+                "Tools/LevelGenerator/verify_production_corpus.py",
                 "--swift-tests" if args.swift_tests else "--no-swift-tests",
             ]
         )

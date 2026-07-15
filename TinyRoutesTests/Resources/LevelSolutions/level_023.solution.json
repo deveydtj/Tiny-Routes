@@ -1,43 +1,6 @@
 {
-  "levelID": "level_023",
-  "description": "Follow the generated graph recipe route and rotate each switch before arrival.",
-  "expectedOutcome": "completed",
-  "maxTaps": 3,
-  "requiresWithinTimeLimit": true,
-  "actions": [
-    {
-      "timeSeconds": 0.1,
-      "tapNodeID": "hub",
-      "reason": "Rotate switch 'hub' toward 'package_branch' before arrival.",
-      "expectedEdgeAfterTap": "e_hub_package_branch",
-      "expectedRouteNodeAfterTap": "package_branch",
-      "reactionWindowSeconds": 0.35,
-      "switchStateBeforeTap": "e_hub_dead_end_a",
-      "switchStateAfterTap": "e_hub_package_branch"
-    },
-    {
-      "timeSeconds": 3.06,
-      "tapNodeID": "switch_b",
-      "reason": "Rotate switch 'switch_b' toward 'route_mid' before arrival.",
-      "expectedEdgeAfterTap": "e_switch_b_route_mid",
-      "expectedRouteNodeAfterTap": "route_mid",
-      "reactionWindowSeconds": 0.45,
-      "switchStateBeforeTap": "e_switch_b_dead_end_b",
-      "switchStateAfterTap": "e_switch_b_route_mid"
-    },
-    {
-      "timeSeconds": 3.66,
-      "tapNodeID": "switch_c",
-      "reason": "Rotate switch 'switch_c' toward 'destination' before arrival.",
-      "expectedEdgeAfterTap": "e_switch_c_destination",
-      "expectedRouteNodeAfterTap": "destination",
-      "reactionWindowSeconds": 0.45,
-      "switchStateBeforeTap": "e_switch_c_dead_end_c",
-      "switchStateAfterTap": "e_switch_c_destination"
-    }
-  ],
   "metadata": {
-    "validationVersion": "solution_sidecar_v1",
+    "validationVersion": "verified_runtime_solution_v1",
     "solutionRoute": [
       "start",
       "hub",
@@ -54,9 +17,82 @@
       "switch_b",
       "switch_c"
     ],
+    "runtimeDecisionTiming": [
+      {
+        "nodeID": "hub",
+        "visitIndex": 1,
+        "rotationCount": 1,
+        "windowOpenSeconds": 0.0,
+        "windowCloseSeconds": 0.45,
+        "chosenTapSeconds": [
+          0.12
+        ],
+        "safetyMarginSeconds": 0.12,
+        "failureReason": null
+      },
+      {
+        "nodeID": "switch_b",
+        "visitIndex": 1,
+        "rotationCount": 1,
+        "windowOpenSeconds": 2.3,
+        "windowCloseSeconds": 3.65,
+        "chosenTapSeconds": [
+          2.42
+        ],
+        "safetyMarginSeconds": 0.12,
+        "failureReason": null
+      },
+      {
+        "nodeID": "switch_c",
+        "visitIndex": 1,
+        "rotationCount": 1,
+        "windowOpenSeconds": 3.67,
+        "windowCloseSeconds": 4.25,
+        "chosenTapSeconds": [
+          3.79
+        ],
+        "safetyMarginSeconds": 0.12,
+        "failureReason": null
+      }
+    ],
     "template": "hub_choice",
     "generatedSeed": 2725263793,
     "recipeFamily": "hub_choice",
-    "recipeVariant": "hub_choice_primary"
-  }
+    "recipeVariant": "hub_choice_primary",
+    "migrationReview": "phase16_live_routing"
+  },
+  "levelID": "level_023",
+  "description": "Follow the generated graph recipe route and rotate each switch before arrival.",
+  "expectedOutcome": "completed",
+  "maxTaps": 3,
+  "requiresWithinTimeLimit": true,
+  "actions": [
+    {
+      "windowOpenSeconds": 0.0,
+      "chosenTapSeconds": 0.12,
+      "windowCloseSeconds": 0.45,
+      "safetyMarginSeconds": 0.12,
+      "expectedEdgeAfterTap": "e_hub_package_branch",
+      "timeSeconds": 0.12,
+      "tapNodeID": "hub"
+    },
+    {
+      "windowOpenSeconds": 2.3,
+      "chosenTapSeconds": 2.42,
+      "windowCloseSeconds": 3.65,
+      "safetyMarginSeconds": 0.12,
+      "expectedEdgeAfterTap": "e_switch_b_route_mid",
+      "timeSeconds": 2.42,
+      "tapNodeID": "switch_b"
+    },
+    {
+      "windowOpenSeconds": 3.67,
+      "chosenTapSeconds": 3.79,
+      "windowCloseSeconds": 4.25,
+      "safetyMarginSeconds": 0.12,
+      "expectedEdgeAfterTap": "e_switch_c_destination",
+      "timeSeconds": 3.79,
+      "tapNodeID": "switch_c"
+    }
+  ]
 }

@@ -1,23 +1,6 @@
 {
-  "levelID": "level_007",
-  "description": "Follow the generated graph recipe route and rotate each switch before arrival.",
-  "expectedOutcome": "completed",
-  "maxTaps": 1,
-  "requiresWithinTimeLimit": true,
-  "actions": [
-    {
-      "timeSeconds": 0.16,
-      "tapNodeID": "gate",
-      "reason": "Rotate switch 'gate' toward 'detour' before arrival.",
-      "expectedEdgeAfterTap": "e_gate_detour",
-      "expectedRouteNodeAfterTap": "detour",
-      "reactionWindowSeconds": 0.45,
-      "switchStateBeforeTap": "e_gate_dead_end_a",
-      "switchStateAfterTap": "e_gate_detour"
-    }
-  ],
   "metadata": {
-    "validationVersion": "solution_sidecar_v1",
+    "validationVersion": "verified_runtime_solution_v1",
     "solutionRoute": [
       "start",
       "gate",
@@ -28,9 +11,40 @@
     "requiredTapOrder": [
       "gate"
     ],
+    "runtimeDecisionTiming": [
+      {
+        "nodeID": "gate",
+        "visitIndex": 1,
+        "rotationCount": 1,
+        "windowOpenSeconds": 0.04999999999999982,
+        "windowCloseSeconds": 1.65,
+        "chosenTapSeconds": [
+          0.16999999999999982
+        ],
+        "safetyMarginSeconds": 0.12,
+        "failureReason": null
+      }
+    ],
     "template": "short_detour_gate",
     "generatedSeed": 4034885627,
     "recipeFamily": "short_detour_gate",
-    "recipeVariant": "short_detour_gate_alternate"
-  }
+    "recipeVariant": "short_detour_gate_alternate",
+    "migrationReview": "phase16_live_routing"
+  },
+  "levelID": "level_007",
+  "description": "Follow the generated graph recipe route and rotate each switch before arrival.",
+  "expectedOutcome": "completed",
+  "maxTaps": 1,
+  "requiresWithinTimeLimit": true,
+  "actions": [
+    {
+      "windowOpenSeconds": 0.05,
+      "chosenTapSeconds": 0.17,
+      "windowCloseSeconds": 1.65,
+      "safetyMarginSeconds": 0.12,
+      "expectedEdgeAfterTap": "e_gate_detour",
+      "timeSeconds": 0.17,
+      "tapNodeID": "gate"
+    }
+  ]
 }

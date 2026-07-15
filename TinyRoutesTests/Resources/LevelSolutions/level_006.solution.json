@@ -1,23 +1,6 @@
 {
-  "levelID": "level_006",
-  "description": "Follow the generated graph recipe route and rotate each switch before arrival.",
-  "expectedOutcome": "completed",
-  "maxTaps": 1,
-  "requiresWithinTimeLimit": true,
-  "actions": [
-    {
-      "timeSeconds": 0.31,
-      "tapNodeID": "gate",
-      "reason": "Rotate switch 'gate' toward 'package' before arrival.",
-      "expectedEdgeAfterTap": "e_gate_package",
-      "expectedRouteNodeAfterTap": "package",
-      "reactionWindowSeconds": 0.45,
-      "switchStateBeforeTap": "e_gate_dead_end_a",
-      "switchStateAfterTap": "e_gate_package"
-    }
-  ],
   "metadata": {
-    "validationVersion": "solution_sidecar_v1",
+    "validationVersion": "verified_runtime_solution_v1",
     "solutionRoute": [
       "start",
       "gate",
@@ -27,9 +10,40 @@
     "requiredTapOrder": [
       "gate"
     ],
+    "runtimeDecisionTiming": [
+      {
+        "nodeID": "gate",
+        "visitIndex": 1,
+        "rotationCount": 1,
+        "windowOpenSeconds": 0.19999999999999973,
+        "windowCloseSeconds": 1.7999999999999998,
+        "chosenTapSeconds": [
+          0.31999999999999973
+        ],
+        "safetyMarginSeconds": 0.12,
+        "failureReason": null
+      }
+    ],
     "template": "package_gate_simple",
     "generatedSeed": 2950363658,
     "recipeFamily": "package_gate_simple",
-    "recipeVariant": "package_gate_simple_alternate"
-  }
+    "recipeVariant": "package_gate_simple_alternate",
+    "migrationReview": "phase16_live_routing"
+  },
+  "levelID": "level_006",
+  "description": "Follow the generated graph recipe route and rotate each switch before arrival.",
+  "expectedOutcome": "completed",
+  "maxTaps": 1,
+  "requiresWithinTimeLimit": true,
+  "actions": [
+    {
+      "windowOpenSeconds": 0.2,
+      "chosenTapSeconds": 0.32,
+      "windowCloseSeconds": 1.8,
+      "safetyMarginSeconds": 0.12,
+      "expectedEdgeAfterTap": "e_gate_package",
+      "timeSeconds": 0.32,
+      "tapNodeID": "gate"
+    }
+  ]
 }

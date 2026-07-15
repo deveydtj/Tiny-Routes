@@ -1,33 +1,6 @@
 {
-  "levelID": "level_018",
-  "description": "Follow the generated graph recipe route and rotate each switch before arrival.",
-  "expectedOutcome": "completed",
-  "maxTaps": 2,
-  "requiresWithinTimeLimit": true,
-  "actions": [
-    {
-      "timeSeconds": 0.16,
-      "tapNodeID": "left_entry_switch",
-      "reason": "Rotate switch 'left_entry_switch' toward 'package' before arrival.",
-      "expectedEdgeAfterTap": "e_left_entry_switch_package",
-      "expectedRouteNodeAfterTap": "package",
-      "reactionWindowSeconds": 0.45,
-      "switchStateBeforeTap": "e_left_entry_switch_left_bypass",
-      "switchStateAfterTap": "e_left_entry_switch_package"
-    },
-    {
-      "timeSeconds": 2.05,
-      "tapNodeID": "left_finish_switch",
-      "reason": "Rotate switch 'left_finish_switch' toward 'destination' before arrival.",
-      "expectedEdgeAfterTap": "e_left_finish_switch_destination",
-      "expectedRouteNodeAfterTap": "destination",
-      "reactionWindowSeconds": 0.45,
-      "switchStateBeforeTap": "e_left_finish_switch_left_dead_end",
-      "switchStateAfterTap": "e_left_finish_switch_destination"
-    }
-  ],
   "metadata": {
-    "validationVersion": "solution_sidecar_v1",
+    "validationVersion": "verified_runtime_solution_v1",
     "solutionRoute": [
       "start",
       "left_entry_switch",
@@ -39,9 +12,61 @@
       "left_entry_switch",
       "left_finish_switch"
     ],
+    "runtimeDecisionTiming": [
+      {
+        "nodeID": "left_entry_switch",
+        "visitIndex": 1,
+        "rotationCount": 1,
+        "windowOpenSeconds": 0.0,
+        "windowCloseSeconds": 0.6499999999999999,
+        "chosenTapSeconds": [
+          0.12
+        ],
+        "safetyMarginSeconds": 0.12,
+        "failureReason": null
+      },
+      {
+        "nodeID": "left_finish_switch",
+        "visitIndex": 1,
+        "rotationCount": 1,
+        "windowOpenSeconds": 1.35,
+        "windowCloseSeconds": 2.7,
+        "chosenTapSeconds": [
+          1.4700000000000002
+        ],
+        "safetyMarginSeconds": 0.12,
+        "failureReason": null
+      }
+    ],
     "template": "package_gate",
     "generatedSeed": 2177753354,
     "recipeFamily": "package_gate",
-    "recipeVariant": "package_gate_left_entry"
-  }
+    "recipeVariant": "package_gate_left_entry",
+    "migrationReview": "phase16_live_routing"
+  },
+  "levelID": "level_018",
+  "description": "Follow the generated graph recipe route and rotate each switch before arrival.",
+  "expectedOutcome": "completed",
+  "maxTaps": 2,
+  "requiresWithinTimeLimit": true,
+  "actions": [
+    {
+      "windowOpenSeconds": 0.0,
+      "chosenTapSeconds": 0.12,
+      "windowCloseSeconds": 0.65,
+      "safetyMarginSeconds": 0.12,
+      "expectedEdgeAfterTap": "e_left_entry_switch_package",
+      "timeSeconds": 0.12,
+      "tapNodeID": "left_entry_switch"
+    },
+    {
+      "windowOpenSeconds": 1.35,
+      "chosenTapSeconds": 1.47,
+      "windowCloseSeconds": 2.7,
+      "safetyMarginSeconds": 0.12,
+      "expectedEdgeAfterTap": "e_left_finish_switch_destination",
+      "timeSeconds": 1.47,
+      "tapNodeID": "left_finish_switch"
+    }
+  ]
 }
