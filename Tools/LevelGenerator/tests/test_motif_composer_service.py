@@ -5,6 +5,39 @@ from app.services.difficulty_service import DifficultyService
 from app.services.motif_composer_service import MotifComposerService, MotifCompositionError
 
 
+@pytest.mark.parametrize(
+    ("motif_id", "expected_metric"),
+    (
+        ("road_opens_after_package", "roads_opened_after_package_count"),
+        ("shortcut_closes_after_package", "roads_closed_after_package_count"),
+        ("return_route_changes_after_package", "state_dependent_route_change_count"),
+        ("package_state_revisited_switch", "switch_state_change_on_revisit_count"),
+    ),
+)
+def test_package_state_motifs_have_measured_effects(motif_id, expected_metric) -> None:
+    preset = DifficultyService().get_preset("hard")
+    result = MotifComposerService().compose("level-stateful", preset, 41, (motif_id,))
+
+    profile = result.decision_profile
+    assert profile.package_phase_transition_count == 1
+    assert profile.state_dependent_route_change_count >= 1
+    assert getattr(profile, expected_metric) >= 1
+    assert profile.impossible_availability_condition_count == 0
+    assert profile.irrelevant_availability_condition_count == 0
+    assert "package_state_transition" in result.recipe.mechanic_metadata["detectedMechanics"]
+
+
+def test_composition_rejects_multiple_embedded_package_motifs() -> None:
+    preset = DifficultyService().get_preset("hard")
+    with pytest.raises(MotifCompositionError, match="multiple_embedded_package_motifs"):
+        MotifComposerService().compose(
+            "level-stateful",
+            preset,
+            41,
+            ("road_opens_after_package", "shortcut_closes_after_package"),
+        )
+
+
 def test_same_seed_produces_same_composed_graph() -> None:
     preset = DifficultyService().get_preset("easy")
     service = MotifComposerService()

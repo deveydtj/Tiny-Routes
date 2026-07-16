@@ -63,6 +63,18 @@ class CandidateEditorHandoffService:
                 "equivalentSuccessfulSolutionCount": (
                     decision_profile.equivalent_minimum_solution_count
                 ),
+                "packagePhaseTransitionCount": decision_profile.package_phase_transition_count,
+                "stateDependentRouteChangeCount": (
+                    decision_profile.state_dependent_route_change_count
+                ),
+                "roadsOpenedAfterPackageCount": decision_profile.roads_opened_after_package_count,
+                "roadsClosedAfterPackageCount": decision_profile.roads_closed_after_package_count,
+                "impossibleAvailabilityConditionCount": (
+                    decision_profile.impossible_availability_condition_count
+                ),
+                "irrelevantAvailabilityConditionCount": (
+                    decision_profile.irrelevant_availability_condition_count
+                ),
             },
             "notes": list(getattr(candidate, "generation_notes", ()) or ()),
             "warnings": list(getattr(candidate, "warning_messages", ()) or ()),

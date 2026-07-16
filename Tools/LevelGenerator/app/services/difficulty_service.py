@@ -304,17 +304,20 @@ class DifficultyService:
             profile.package_phase_decisions_before > 0
             and profile.package_phase_decisions_after > 0
         )
+        state_dependent_route_change = int(profile.state_dependent_route_change_count > 0)
         strategic_property_count = (
             profile.ordered_dependency_count
             + profile.switch_state_change_on_revisit_count
             + profile.recoverable_mistake_count
             + profile.route_revisit_count
             + phase_change
+            + state_dependent_route_change
         )
         if strategic_property_count < preset.minimum_strategic_property_count:
             messages.append("insufficient_strategic_decision_evidence")
         if (
             profile.required_decision_count > 1
+            and profile.state_dependent_route_change_count == 0
             and profile.independent_decision_ratio > preset.maximum_independent_decision_ratio
         ):
             messages.append("independent_decision_ratio_above_preset_maximum")

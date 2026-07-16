@@ -144,6 +144,33 @@ class GeneratedLevelValidationService:
             node.id: self.switch_classification_service.classify_node(node, edge_by_id)
             for node in level.graph.nodes
         }
+        decision_profile = getattr(generated_level, "decision_profile", None)
+
+        if decision_profile is not None:
+            if decision_profile.impossible_availability_condition_count:
+                messages.append(
+                    GeneratorValidationMessage(
+                        severity="error",
+                        code="impossible_road_availability_condition",
+                        message=(
+                            "Conditional roads include "
+                            f"{decision_profile.impossible_availability_condition_count} condition(s) "
+                            "whose required package phase cannot reach the road source."
+                        ),
+                    )
+                )
+            if decision_profile.irrelevant_availability_condition_count:
+                messages.append(
+                    GeneratorValidationMessage(
+                        severity="error",
+                        code="irrelevant_road_availability_condition",
+                        message=(
+                            "Conditional roads include "
+                            f"{decision_profile.irrelevant_availability_condition_count} condition(s) "
+                            "that do not change any reachable before/after-package route state."
+                        ),
+                    )
+                )
 
         for edge in level.graph.edges:
             if edge.availability not in {"always", "beforePackage", "afterPackage"}:
@@ -219,7 +246,7 @@ class GeneratedLevelValidationService:
                     level,
                     solution,
                     preset,
-                    decision_profile=getattr(generated_level, "decision_profile", None),
+                    decision_profile=decision_profile,
                     configured_lookahead_seconds=level.rules.switch_lookahead_seconds,
                 ):
                     code, *detail = issue.split(":")

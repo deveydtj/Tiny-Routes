@@ -1104,12 +1104,24 @@ class GenerationReportRepository:
             )
         if profile.package_phase_decisions_before and profile.package_phase_decisions_after:
             reasons.append("decisions occur both before and after package collection")
+        if profile.state_dependent_route_change_count:
+            reasons.append(
+                f"{profile.state_dependent_route_change_count} package-state route changes were measured"
+            )
 
         weaknesses: list[str] = []
         if profile.independent_decision_ratio > 0:
             weaknesses.append(f"independent decision ratio is {profile.independent_decision_ratio:.3f}")
         if profile.no_op_or_equivalent_choice_count:
             weaknesses.append(f"{profile.no_op_or_equivalent_choice_count} choices are equivalent or no-op")
+        if profile.impossible_availability_condition_count:
+            weaknesses.append(
+                f"{profile.impossible_availability_condition_count} road availability conditions are impossible"
+            )
+        if profile.irrelevant_availability_condition_count:
+            weaknesses.append(
+                f"{profile.irrelevant_availability_condition_count} road availability conditions are irrelevant"
+            )
         if quality is not None:
             weaknesses.extend(quality.top_negative_factors)
             weaknesses.extend(quality.penalties)
@@ -1121,9 +1133,10 @@ class GenerationReportRepository:
             if tag in {"revisit", "return_loop", "ring"} and profile.route_revisit_count:
                 source = "decision profile route traversal"
             elif tag in {"package_gate", "two_phase"} and (
-                profile.package_phase_decisions_before and profile.package_phase_decisions_after
+                profile.package_phase_transition_count
+                and profile.state_dependent_route_change_count
             ):
-                source = "decision profile package phases"
+                source = "decision profile package-state route changes"
             elif tag in {"state_reversal", "revisited_switch"} and profile.switch_state_change_on_revisit_count:
                 source = "decision profile switch-state changes"
             evidence.append({"claim": tag, "source": source})

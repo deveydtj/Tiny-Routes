@@ -56,6 +56,13 @@ class MotifComposerService:
         rng = RandomSource(seed)
         selected = self._select_motifs(preset, rng, motif_ids)
         self._validate_compatibility(selected, preset)
+        embedded_package_motifs = tuple(
+            factory for factory in selected
+            if dict(factory.build().mechanic_metadata).get("embeddedPackageNode")
+        )
+        if len(embedded_package_motifs) > 1:
+            raise MotifCompositionError("multiple_embedded_package_motifs")
+        has_embedded_package = bool(embedded_package_motifs)
         decision_motif_count = sum(self._outgoing_max(item.build()) > 1 for item in selected)
         pre_package_decision_target = max(1, decision_motif_count // 2)
 
@@ -76,6 +83,7 @@ class MotifComposerService:
             # midpoint so both phases contain a real decision.
             if (
                 preset.name in self._advanced_difficulties
+                and not has_embedded_package
                 and not package_inserted
                 and index > 0
                 and sum(self._outgoing_max(item.build()) > 1 for item in selected[:index])
@@ -89,8 +97,22 @@ class MotifComposerService:
                 package_inserted = True
             motif = factory.build()
             prefix = f"m{index + 1}_{motif.motif_id}"
-            rename = {node.id: f"{prefix}_{node.id}" for node in motif.nodes}
-            nodes.extend(GraphRecipeNode(rename[node.id], node.role) for node in motif.nodes)
+            embedded_package_node = dict(motif.mechanic_metadata).get("embeddedPackageNode")
+            rename = {
+                node.id: "package" if node.id == embedded_package_node else f"{prefix}_{node.id}"
+                for node in motif.nodes
+            }
+            if embedded_package_node:
+                if package_inserted:
+                    raise MotifCompositionError("embedded_package_after_package_insertion")
+                package_inserted = True
+            nodes.extend(
+                GraphRecipeNode(rename[node.id], node.role)
+                for node in motif.nodes
+                if rename[node.id] != "package"
+            )
+            if embedded_package_node:
+                nodes.append(GraphRecipeNode("package", "package"))
             edges.append(GraphRecipeEdge(previous, rename[motif.entry_connector]))
             edges.extend(
                 GraphRecipeEdge(
@@ -126,7 +148,7 @@ class MotifComposerService:
             allows_return_path=cycle_count > 0,
             allows_ring=any(item.motif_id == "ring_route" for item in selected),
             allowed_cycle_count=cycle_count,
-            requires_package_gate=False,
+            requires_package_gate=any(edge.availability != "always" for edge in edges),
             requires_unique_solution=False,
             requires_swift_runtime_validation=False,
         )
@@ -135,6 +157,8 @@ class MotifComposerService:
             topology_class = "ring_route"
         elif cycle_count:
             topology_class = "return_loop"
+        elif any(edge.availability != "always" for edge in edges):
+            topology_class = "two_phase"
         recipe = GraphRecipe(
             level_id=level_id,
             difficulty=preset.name,
@@ -255,6 +279,13 @@ class MotifComposerService:
             evidence.add("ordered_dependency")
         if profile.package_phase_decisions_before and profile.package_phase_decisions_after:
             evidence.add("package_phase_split")
+        if profile.package_phase_transition_count and profile.state_dependent_route_change_count:
+            evidence.add("package_state_transition")
+            evidence.add("state_dependent_route_change")
+        if profile.roads_opened_after_package_count:
+            evidence.add("road_opens_after_package")
+        if profile.roads_closed_after_package_count:
+            evidence.add("road_closes_after_package")
         if profile.route_revisit_count:
             evidence.add("route_revisit")
         if profile.switch_state_change_on_revisit_count:
@@ -280,6 +311,10 @@ class MotifComposerService:
             "four_way_hub": "multi_exit_hub",
             "dead_end_decoy": "dead_end_consequence",
             "single_binary_choice": "dead_end_consequence",
+            "road_opens_after_package": "road_opens_after_package",
+            "shortcut_closes_after_package": "road_closes_after_package",
+            "return_route_changes_after_package": "state_dependent_route_change",
+            "package_state_revisited_switch": "multi_state_switch",
         }
         return tuple(
             f"declared_effect_not_detected:{factory.motif_id}:{expected_by_motif[factory.motif_id]}"
@@ -289,9 +324,15 @@ class MotifComposerService:
 
     def _validate_measured_composition(self, recipe, selected, preset, profile) -> None:
         if preset.name in self._advanced_difficulties:
-            if profile.ordered_dependency_count < 1:
-                raise MotifCompositionError("required_motif_effect_lost:ordered_dependency")
-            if profile.independent_decision_ratio > preset.maximum_independent_decision_ratio:
+            if (
+                profile.ordered_dependency_count < 1
+                and profile.state_dependent_route_change_count < 1
+            ):
+                raise MotifCompositionError("required_motif_effect_lost:ordered_or_state_dependency")
+            if (
+                profile.state_dependent_route_change_count < 1
+                and profile.independent_decision_ratio > preset.maximum_independent_decision_ratio
+            ):
                 raise MotifCompositionError(
                     f"independent_decision_ratio_above_preset_maximum:{profile.independent_decision_ratio}"
                 )

@@ -24,6 +24,12 @@ class DecisionProfile:
     route_revisit_count: int = 0
     package_phase_decisions_before: int = 0
     package_phase_decisions_after: int = 0
+    package_phase_transition_count: int = 0
+    state_dependent_route_change_count: int = 0
+    roads_opened_after_package_count: int = 0
+    roads_closed_after_package_count: int = 0
+    impossible_availability_condition_count: int = 0
+    irrelevant_availability_condition_count: int = 0
     minimum_window_seconds: float | None = None
     average_window_seconds: float | None = None
     minimum_decision_spacing_seconds: float | None = None

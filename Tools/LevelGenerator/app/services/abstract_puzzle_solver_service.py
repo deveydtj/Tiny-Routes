@@ -239,7 +239,14 @@ class AbstractPuzzleSolverService:
         loop_count = self._loop_count([path.state.path for path in successes + failures])
         optional_tap_count = max((len(path.state.decisions) for path in successes), default=minimum_taps) - minimum_taps
         switch_states = self._solution_switch_states(solution, switch_ids, outgoing_by_node_id)
-        if switch_ids and not dead_end_nodes and len(successes) <= 1 and minimum_taps == 0:
+        has_state_dependent_roads = any(edge.availability != "always" for edge in recipe.edges)
+        if (
+            switch_ids
+            and not has_state_dependent_roads
+            and not dead_end_nodes
+            and len(successes) <= 1
+            and minimum_taps == 0
+        ):
             raise AbstractPuzzleSolverError(
                 "abstract_no_meaningful_choice",
                 "Abstract puzzle contains switch nodes but no meaningful switch decision.",

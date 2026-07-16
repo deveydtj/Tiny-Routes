@@ -57,4 +57,10 @@ class PuzzleMotif:
             issues.append("motif_intended_decision_effect_empty")
         if not self.allowed_difficulties:
             issues.append("motif_allowed_difficulties_empty")
+        embedded_package_node = dict(self.mechanic_metadata).get("embeddedPackageNode")
+        if embedded_package_node is not None:
+            if embedded_package_node not in known:
+                issues.append(f"motif_embedded_package_unknown:{embedded_package_node}")
+            elif next(node for node in self.nodes if node.id == embedded_package_node).role != "package":
+                issues.append(f"motif_embedded_package_role_invalid:{embedded_package_node}")
         return tuple(issues)

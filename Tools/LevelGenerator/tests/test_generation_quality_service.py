@@ -162,6 +162,32 @@ def test_measured_revisit_and_state_reversal_improve_route_interest() -> None:
     assert with_evidence.details["routeInterest"]["stateReversalPresent"] is True
 
 
+def test_package_gate_quality_requires_measured_state_dependent_route_change() -> None:
+    preset = DifficultyService().get_preset("medium")
+    generated = _recipe_candidate("return_loop_intro", "level_023", 23, preset, seed=6)
+    quality = GenerationQualityService()
+
+    generated.decision_profile = DecisionProfile(
+        package_phase_decisions_before=1,
+        package_phase_decisions_after=1,
+        ordered_dependency_count=1,
+    )
+    labeled_only = quality.score(generated, preset)
+
+    generated.decision_profile = DecisionProfile(
+        package_phase_decisions_before=1,
+        package_phase_decisions_after=1,
+        package_phase_transition_count=1,
+        state_dependent_route_change_count=1,
+        ordered_dependency_count=1,
+    )
+    measured = quality.score(generated, preset)
+
+    assert labeled_only.details["routeInterest"]["packageGateTensionPresent"] is False
+    assert measured.details["routeInterest"]["packageGateTensionPresent"] is True
+    assert measured.route_interest > labeled_only.route_interest
+
+
 def _parallel_warning_generated_level() -> GeneratedLevel:
     level = LevelDocument(
         id="level_visual_warning",

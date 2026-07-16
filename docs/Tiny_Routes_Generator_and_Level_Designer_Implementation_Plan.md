@@ -2511,21 +2511,37 @@ The recommended first stateful mechanic is **edge availability by package state*
 
 ## Task 17.5 — Add package-state motifs
 
-- [ ] Road opens after package.
-- [ ] Shortcut closes after package.
-- [ ] Return route changes after package.
-- [ ] Package collection changes the correct state of a revisited switch.
+**Status:** Completed
+
+- [x] Road opens after package.
+- [x] Shortcut closes after package.
+- [x] Return route changes after package.
+- [x] Package collection changes the correct state of a revisited switch.
+
+**Completion notes**
+
+- [x] Added four independently validated seed motifs with embedded package placement and authored conditional roads.
+- [x] Updated motif composition to support one embedded package motif, preserve package identity, and reject ambiguous multi-package compositions.
+- [x] Added deterministic topology and measured-effect coverage for every package-state motif.
 
 ## Task 17.6 — Update decision analysis
 
-- [ ] Count true before/after-package phase transitions.
-- [ ] Require measured state-dependent route changes before awarding package-gate quality.
-- [ ] Detect impossible or irrelevant availability conditions.
+**Status:** Completed
+
+- [x] Count true before/after-package phase transitions.
+- [x] Require measured state-dependent route changes before awarding package-gate quality.
+- [x] Detect impossible or irrelevant availability conditions.
+
+**Completion notes**
+
+- [x] Decision profiles now enumerate only phase-usable roads and report transitions, changed routers, opened/closed roads, and invalid availability counts.
+- [x] Quality scoring, difficulty evidence, validation, reports, and editor handoff data now use measured package-state effects.
+- [x] Impossible and irrelevant availability conditions produce explicit validation errors and quality penalties.
 
 ### Phase 17 exit gate
 
-- [ ] Conditional roads work identically in Swift, generator, simulator, and editor.
-- [ ] Package-gate levels represent actual state changes, not only labels.
+- [x] Conditional roads work identically in Swift, generator, simulator, and editor.
+- [x] Package-gate levels represent actual state changes, not only labels.
 
 ---
 

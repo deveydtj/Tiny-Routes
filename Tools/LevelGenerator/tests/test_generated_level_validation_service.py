@@ -10,6 +10,7 @@ from app.level_editor_imports import (
     SolutionModel,
 )
 from app.models.generated_level import GeneratedLevel
+from app.models.decision_profile import DecisionProfile
 from app.services.difficulty_service import DifficultyService
 from app.services.generated_level_validation_service import GeneratedLevelValidationService
 from app.templates.single_switch_template import SingleSwitchTemplate
@@ -38,6 +39,22 @@ def test_generated_level_validation_rejects_invalid_road_availability() -> None:
     )
 
     assert "invalid_road_availability" in result.error_codes
+
+
+def test_generated_level_validation_rejects_useless_availability_conditions() -> None:
+    preset = DifficultyService().get_preset("easy")
+    generated = SingleSwitchTemplate().generate("level_012", 12, preset, RandomSource(8))
+    generated.decision_profile = DecisionProfile(
+        impossible_availability_condition_count=1,
+        irrelevant_availability_condition_count=1,
+    )
+
+    result = GeneratedLevelValidationService().validate(
+        generated, preset=preset, overwrite=True
+    )
+
+    assert "impossible_road_availability_condition" in result.error_codes
+    assert "irrelevant_road_availability_condition" in result.error_codes
 
 
 def test_generated_level_validation_rejects_placeholder_solution() -> None:

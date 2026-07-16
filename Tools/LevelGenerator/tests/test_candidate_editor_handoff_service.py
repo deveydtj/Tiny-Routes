@@ -5,6 +5,7 @@ from types import SimpleNamespace
 
 from app.gui.gui_controller import GuiController
 from app.models.generated_level import GeneratedLevel
+from app.models.decision_profile import DecisionProfile
 from app.models.generation_quality import GenerationQualityScore
 
 
@@ -28,6 +29,11 @@ def test_prepare_candidate_for_editor_writes_level_solution_and_quality(tmp_path
         template_name="single_switch",
         difficulty="medium",
         seed=42,
+        decision_profile=DecisionProfile(
+            package_phase_transition_count=1,
+            state_dependent_route_change_count=1,
+            roads_opened_after_package_count=1,
+        ),
         quality_score=GenerationQualityScore(
             total_score=82.5,
             category_scores={"logicScore": 0.9},
@@ -52,6 +58,9 @@ def test_prepare_candidate_for_editor_writes_level_solution_and_quality(tmp_path
     assert quality["levelID"] == "level_012"
     assert quality["quality"]["totalScore"] == 82.5
     assert quality["quality"]["topPositiveFactors"] == ["dependent choices"]
+    assert quality["decisionQuality"]["packagePhaseTransitionCount"] == 1
+    assert quality["decisionQuality"]["stateDependentRouteChangeCount"] == 1
+    assert quality["decisionQuality"]["roadsOpenedAfterPackageCount"] == 1
 
 
 def test_prepare_candidate_for_editor_requires_draft_directory() -> None:

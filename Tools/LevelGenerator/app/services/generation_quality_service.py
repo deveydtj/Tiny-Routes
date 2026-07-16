@@ -890,8 +890,8 @@ class PuzzleQualityScorer:
         )
         package_gate_tension = bool(
             profile is not None
-            and profile.package_phase_decisions_before > 0
-            and profile.package_phase_decisions_after > 0
+            and profile.package_phase_transition_count > 0
+            and profile.state_dependent_route_change_count > 0
         )
         loop_or_revisit = (
             any(count > 1 for count in route_node_counts.values())
@@ -932,7 +932,13 @@ class PuzzleQualityScorer:
         if max_outgoing >= 3:
             tags.append("multi_exit_hub")
             bonuses["multiExitHub"] = 0.12
-        if package_gate_tension and profile is not None and profile.ordered_dependency_count > 0:
+        if (
+            package_gate_tension
+            and profile is not None
+            and profile.package_phase_decisions_before > 0
+            and profile.package_phase_decisions_after > 0
+            and profile.ordered_dependency_count > 0
+        ):
             tags.append("two_phase")
             bonuses["twoPhaseRoute"] = 0.10
         if meaningful_turns >= 2:
@@ -961,7 +967,10 @@ class PuzzleQualityScorer:
             penalties.append("difficulty_from_switch_count_only")
             penalty_values["switchCountOnlyDifficulty"] = 0.16
         if profile is not None and profile.required_decision_count > 1:
-            if profile.independent_decision_ratio >= 0.75:
+            if (
+                profile.state_dependent_route_change_count == 0
+                and profile.independent_decision_ratio >= 0.75
+            ):
                 penalties.append("independent_switch_chain")
                 penalty_values["independentSwitchChain"] = min(
                     0.24,
@@ -973,6 +982,18 @@ class PuzzleQualityScorer:
                     0.24,
                     profile.no_op_or_equivalent_choice_count * 0.10,
                 )
+        if profile is not None and profile.impossible_availability_condition_count:
+            penalties.append("impossible_road_availability")
+            penalty_values["impossibleRoadAvailability"] = min(
+                0.32,
+                profile.impossible_availability_condition_count * 0.16,
+            )
+        if profile is not None and profile.irrelevant_availability_condition_count:
+            penalties.append("irrelevant_road_availability")
+            penalty_values["irrelevantRoadAvailability"] = min(
+                0.24,
+                profile.irrelevant_availability_condition_count * 0.12,
+            )
         nearby_topology_penalty = float((diversity or {}).get("nearbyTopologyClassPenalty", 0.0))
         if nearby_topology_penalty > 0:
             penalty_values["nearbyTopologyRepetition"] = min(0.16, nearby_topology_penalty * 0.6)

@@ -55,7 +55,7 @@ class RecipeSeedMotifAdapter(BaseMotif):
 def _motif(
     motif_id: str,
     nodes: tuple[tuple[str, str], ...],
-    edges: tuple[tuple[str, str], ...],
+    edges: tuple[tuple[str, str] | tuple[str, str, str], ...],
     primary_path: tuple[str, ...],
     effect: str,
     *,
@@ -64,13 +64,20 @@ def _motif(
     rejoin: bool = False,
     revisit: bool = False,
     dead_end: bool = False,
+    embedded_package: bool = False,
 ) -> SeedMotif:
+    metadata = [("primaryPath", ",".join(primary_path)), ("category", motif_id)]
+    if embedded_package:
+        metadata.append(("embeddedPackageNode", "package"))
     return SeedMotif(PuzzleMotif(
         motif_id=motif_id,
         entry_connector=primary_path[0],
         exit_connectors=(primary_path[-1],),
         nodes=tuple(GraphRecipeNode(node_id, role) for node_id, role in nodes),
-        edges=tuple(GraphRecipeEdge(source, target) for source, target in edges),
+        edges=tuple(
+            GraphRecipeEdge(edge[0], edge[1], edge[2] if len(edge) == 3 else "always")
+            for edge in edges
+        ),
         intended_decision_effect=effect,
         allowed_difficulties=difficulties,
         may_introduce_cycle=cycle,
@@ -78,7 +85,7 @@ def _motif(
         may_introduce_revisit=revisit,
         may_introduce_dead_end=dead_end,
         compatibility=MotifCompatibilityConstraints(),
-        mechanic_metadata=(("primaryPath", ",".join(primary_path)), ("category", motif_id)),
+        mechanic_metadata=tuple(metadata),
     ))
 
 
@@ -116,6 +123,78 @@ def seed_motif_factories() -> tuple[BaseMotif, ...]:
         _motif("four_way_hub", (("entry", "switch"), ("exit", "route"), ("spur_a", "dead_end"), ("spur_b", "dead_end"), ("spur_c", "dead_end")),
                (("entry", "spur_a"), ("entry", "spur_b"), ("entry", "exit"), ("entry", "spur_c")),
                ("entry", "exit"), "A four-way ordered switch.", difficulties=("expert",), dead_end=True),
+        _motif(
+            "road_opens_after_package",
+            (("entry", "switch"), ("outbound", "route"), ("package", "package"), ("exit", "route")),
+            (
+                ("entry", "outbound"),
+                ("entry", "exit", "afterPackage"),
+                ("outbound", "package"),
+                ("package", "entry"),
+            ),
+            ("entry", "outbound", "package", "entry", "exit"),
+            "Collecting the package opens a new exit at a router visited in both phases.",
+            difficulties=advanced,
+            cycle=True,
+            revisit=True,
+            embedded_package=True,
+        ),
+        _motif(
+            "shortcut_closes_after_package",
+            (("entry", "switch"), ("shortcut", "route"), ("package", "package"), ("exit", "route")),
+            (
+                ("entry", "exit"),
+                ("entry", "shortcut", "beforePackage"),
+                ("shortcut", "package"),
+                ("package", "entry"),
+            ),
+            ("entry", "shortcut", "package", "entry", "exit"),
+            "The package shortcut closes on the return visit, leaving the destination road.",
+            difficulties=advanced,
+            cycle=True,
+            revisit=True,
+            embedded_package=True,
+        ),
+        _motif(
+            "return_route_changes_after_package",
+            (("entry", "route"), ("outbound", "route"), ("package", "package"), ("exit", "route")),
+            (
+                ("entry", "outbound", "beforePackage"),
+                ("entry", "exit", "afterPackage"),
+                ("outbound", "package"),
+                ("package", "entry"),
+            ),
+            ("entry", "outbound", "package", "entry", "exit"),
+            "The same router automatically selects a different return road after collection.",
+            difficulties=advanced,
+            cycle=True,
+            revisit=True,
+            embedded_package=True,
+        ),
+        _motif(
+            "package_state_revisited_switch",
+            (
+                ("entry", "switch"),
+                ("decoy", "dead_end"),
+                ("outbound", "route"),
+                ("package", "package"),
+                ("exit", "route"),
+            ),
+            (
+                ("entry", "decoy"),
+                ("entry", "outbound", "beforePackage"),
+                ("entry", "exit", "afterPackage"),
+                ("outbound", "package"),
+                ("package", "entry"),
+            ),
+            ("entry", "outbound", "package", "entry", "exit"),
+            "A revisited switch requires a different correct authored road in each package phase.",
+            difficulties=hard,
+            cycle=True,
+            revisit=True,
+            dead_end=True,
+            embedded_package=True,
+        ),
     )
 
 

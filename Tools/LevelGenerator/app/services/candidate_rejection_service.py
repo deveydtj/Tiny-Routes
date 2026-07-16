@@ -56,6 +56,8 @@ class CandidateRejectionService:
         "destination_reachable_before_package",
         "package_bypass_detected",
         "package_state_ambiguous",
+        "impossible_road_availability_condition",
+        "irrelevant_road_availability_condition",
     }
     UNIQUE_SOLUTION_REJECTION_CODES = {
         "multiple_solutions_found",

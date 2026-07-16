@@ -119,3 +119,58 @@ def test_failure_outcome_classifications_are_sorted_and_deterministic():
     assert first.failure_outcome_types == second.failure_outcome_types
     assert first.dead_end_choice_count == 1
     assert first.destination_before_package_choice_count == 1
+
+
+def test_package_state_route_change_counts_opened_and_closed_roads():
+    recipe = GraphRecipe(
+        level_id="stateful_profile",
+        difficulty="medium",
+        nodes=tuple(
+            GraphRecipeNode(node)
+            for node in ("start", "gate", "outbound", "package", "destination")
+        ),
+        edges=(
+            GraphRecipeEdge("start", "gate"),
+            GraphRecipeEdge("gate", "outbound", "beforePackage"),
+            GraphRecipeEdge("gate", "destination", "afterPackage"),
+            GraphRecipeEdge("outbound", "package"),
+            GraphRecipeEdge("package", "gate"),
+        ),
+        required_path=("start", "gate", "outbound", "package", "gate", "destination"),
+        tap_node_ids=(),
+    )
+
+    profile = DecisionProfileService().analyze(recipe, (_metadata(recipe.required_path),))
+
+    assert profile.package_phase_transition_count == 1
+    assert profile.state_dependent_route_change_count == 1
+    assert profile.roads_opened_after_package_count == 1
+    assert profile.roads_closed_after_package_count == 1
+    assert profile.impossible_availability_condition_count == 0
+    assert profile.irrelevant_availability_condition_count == 0
+
+
+def test_impossible_and_irrelevant_availability_conditions_are_detected():
+    recipe = GraphRecipe(
+        level_id="invalid_stateful_profile",
+        difficulty="medium",
+        nodes=tuple(
+            GraphRecipeNode(node)
+            for node in ("start", "pre", "package", "post", "dead", "destination")
+        ),
+        edges=(
+            GraphRecipeEdge("start", "pre"),
+            GraphRecipeEdge("pre", "package"),
+            GraphRecipeEdge("pre", "dead", "afterPackage"),
+            GraphRecipeEdge("package", "post"),
+            GraphRecipeEdge("post", "destination", "afterPackage"),
+        ),
+        required_path=("start", "pre", "package", "post", "destination"),
+        tap_node_ids=(),
+    )
+
+    profile = DecisionProfileService().analyze(recipe, (_metadata(recipe.required_path),))
+
+    assert profile.impossible_availability_condition_count == 1
+    assert profile.irrelevant_availability_condition_count == 1
+    assert profile.state_dependent_route_change_count == 0
