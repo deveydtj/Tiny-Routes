@@ -22,7 +22,11 @@ class RuntimeState:
 
     @classmethod
     def initialize(cls, level: LevelDocument) -> "RuntimeState":
-        runtime_graph = RuntimeGraph.build(level.graph)
+        package_collected = level.startNodeID == level.packageNodeID
+        runtime_graph = RuntimeGraph.build(
+            level.graph,
+            package_collected=package_collected,
+        )
         errors = []
         for label, node_id in (("start", level.startNodeID), ("package", level.packageNodeID),
                                ("destination", level.destinationNodeID)):
@@ -30,7 +34,7 @@ class RuntimeState:
         if errors: raise GraphValidationError(errors)
         current_edge = runtime_graph.active_edge_ids.get(level.startNodeID)
         return cls(level.rules, runtime_graph, level.startNodeID, current_edge, 0.0,
-                   level.startNodeID == level.packageNodeID, 0.0, float(level.timeLimitSeconds),
+                   package_collected, 0.0, float(level.timeLimitSeconds),
                    0, LevelOutcome.IN_PROGRESS, 0.0, [level.startNodeID])
 
     @property

@@ -242,6 +242,8 @@ class LevelCanvasScene(QGraphicsScene):
             self.clear_playtest_overlay()
             return
         self._ensure_playtest_overlay_items()
+        for edge_item in self._edge_items_by_id.values():
+            edge_item.set_playtest_package_state(state.package_collected)
         position = self._playtest_scene_position(state)
         if self._playtest_dot_item is not None and position is not None:
             self._playtest_dot_item.setPos(position)
@@ -267,6 +269,8 @@ class LevelCanvasScene(QGraphicsScene):
             self._playtest_status_item.setText(f"{state.elapsed_time:0.2f}s  {status}")
 
     def clear_playtest_overlay(self) -> None:
+        for edge_item in self._edge_items_by_id.values():
+            edge_item.set_playtest_package_state(None)
         for item in (self._playtest_dot_item, self._active_switch_item, self._playtest_status_item):
             if self._is_live_graphics_item(item):
                 self.removeItem(item)

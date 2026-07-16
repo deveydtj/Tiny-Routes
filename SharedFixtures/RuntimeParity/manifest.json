@@ -92,6 +92,20 @@
       "level": "cycle_safety_limit/level.json",
       "events": "cycle_safety_limit/events.json",
       "expected": "cycle_safety_limit/expected.json"
+    },
+    {
+      "id": "package_gate_normalization",
+      "description": "Package collection closes the initial road and deterministically opens the after-package road.",
+      "level": "package_gate_normalization/level.json",
+      "events": "package_gate_normalization/events.json",
+      "expected": "package_gate_normalization/expected.json"
+    },
+    {
+      "id": "package_gate_revisit_rotation",
+      "description": "A revisited switch rotates through different usable roads before and after package collection.",
+      "level": "package_gate_revisit_rotation/level.json",
+      "events": "package_gate_revisit_rotation/events.json",
+      "expected": "package_gate_revisit_rotation/expected.json"
     }
   ]
 }

@@ -1,0 +1,31 @@
+{
+  "schemaVersion": 2,
+  "rules": {
+    "switchInteractionMode": "liveLookahead",
+    "switchLookaheadSeconds": 1.35,
+    "switchTapCooldownSeconds": 0.12
+  },
+  "id": "package_gate_revisit_rotation",
+  "name": "Package Gate Revisit Rotation",
+  "graph": {
+    "nodes": [
+      {"id": "start", "x": 0.0, "y": 0.0, "outgoingEdgeIDs": ["e_start_switch"]},
+      {"id": "switch", "x": 1.0, "y": 0.0, "outgoingEdgeIDs": ["e_switch_dead", "e_switch_package", "e_switch_destination"]},
+      {"id": "dead", "x": 1.0, "y": 1.0, "outgoingEdgeIDs": []},
+      {"id": "package", "x": 2.0, "y": 0.0, "outgoingEdgeIDs": ["e_package_switch"]},
+      {"id": "destination", "x": 1.0, "y": -1.0, "outgoingEdgeIDs": []}
+    ],
+    "edges": [
+      {"id": "e_start_switch", "fromNodeID": "start", "toNodeID": "switch", "roadShape": "horizontalFirst"},
+      {"id": "e_switch_dead", "fromNodeID": "switch", "toNodeID": "dead", "roadShape": "verticalFirst", "availability": "beforePackage"},
+      {"id": "e_switch_package", "fromNodeID": "switch", "toNodeID": "package", "roadShape": "horizontalFirst"},
+      {"id": "e_switch_destination", "fromNodeID": "switch", "toNodeID": "destination", "roadShape": "verticalFirst", "availability": "afterPackage"},
+      {"id": "e_package_switch", "fromNodeID": "package", "toNodeID": "switch", "roadShape": "horizontalFirst"}
+    ]
+  },
+  "startNodeID": "start",
+  "packageNodeID": "package",
+  "destinationNodeID": "destination",
+  "timeLimitSeconds": 12,
+  "parTaps": 2
+}

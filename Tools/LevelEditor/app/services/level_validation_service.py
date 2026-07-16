@@ -89,12 +89,17 @@ def _collect_reachable_node_ids(
     level: "LevelDocument",
     node_ids: set[str],
     start_node_id: str,
+    package_collected: bool | None = None,
 ) -> set[str]:
     if start_node_id not in node_ids:
         return set()
 
     adjacency: dict[str, set[str]] = {}
     for edge in level.graph.edges:
+        if package_collected is not None:
+            phase = "afterPackage" if package_collected else "beforePackage"
+            if edge.availability not in {"always", phase}:
+                continue
         if edge.fromNodeID in node_ids and edge.toNodeID in node_ids:
             adjacency.setdefault(edge.fromNodeID, set()).add(edge.toNodeID)
 
@@ -487,6 +492,34 @@ def validate(
                 )
             )
 
+        valid_outgoing_edges = [
+            edge_by_id[edge_id]
+            for edge_id in classification.valid_outgoing_edge_ids
+        ]
+        if valid_outgoing_edges:
+            for package_collected, phase_label, code_suffix in (
+                (False, "before package collection", "before_package"),
+                (True, "after package collection", "after_package"),
+            ):
+                phase_availability = (
+                    "afterPackage" if package_collected else "beforePackage"
+                )
+                if not any(
+                    edge.availability in {"always", phase_availability}
+                    for edge in valid_outgoing_edges
+                ):
+                    messages.append(
+                        ValidationMessage(
+                            severity=ValidationSeverity.ERROR,
+                            code=f"conditional_road_dead_end_{code_suffix}",
+                            message=(
+                                f"Node '{node.id}' has outgoing roads, but none are "
+                                f"available {phase_label}."
+                            ),
+                            related_node_id=node.id,
+                        )
+                    )
+
     # --- Reachability from start node ---
     reachable_node_ids = _collect_reachable_node_ids(level, node_ids, level.startNodeID)
     if reachable_node_ids:
@@ -550,6 +583,47 @@ def validate(
                     code="destination_unreachable_from_package_node",
                     message=(
                         f"Destination node '{level.destinationNodeID}' is not reachable from package node '{level.packageNodeID}'."
+                    ),
+                    related_node_id=level.destinationNodeID,
+                )
+            )
+
+    # --- Package-state reachability ---
+    if level.startNodeID in node_ids and level.packageNodeID in node_ids:
+        before_package_reachable = _collect_reachable_node_ids(
+            level,
+            node_ids,
+            level.startNodeID,
+            package_collected=False,
+        )
+        if level.packageNodeID not in before_package_reachable:
+            messages.append(
+                ValidationMessage(
+                    severity=ValidationSeverity.ERROR,
+                    code="package_unreachable_before_collection",
+                    message=(
+                        f"Package node '{level.packageNodeID}' cannot be reached using "
+                        "roads available before package collection."
+                    ),
+                    related_node_id=level.packageNodeID,
+                )
+            )
+
+    if level.packageNodeID in node_ids and level.destinationNodeID in node_ids:
+        after_package_reachable = _collect_reachable_node_ids(
+            level,
+            node_ids,
+            level.packageNodeID,
+            package_collected=True,
+        )
+        if level.destinationNodeID not in after_package_reachable:
+            messages.append(
+                ValidationMessage(
+                    severity=ValidationSeverity.ERROR,
+                    code="destination_unreachable_after_collection",
+                    message=(
+                        f"Destination node '{level.destinationNodeID}' cannot be reached "
+                        "using roads available after package collection."
                     ),
                     related_node_id=level.destinationNodeID,
                 )

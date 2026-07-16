@@ -1,7 +1,8 @@
 import pytest
 
 from tiny_routes_core.graph import (GraphIndex, GraphValidationError, cycle_node_ids,
-                                    normalize_active_edges, reachable_node_ids, rejoin_node_ids)
+                                    normalize_active_edges, reachable_node_ids, rejoin_node_ids,
+                                    usable_outgoing_edges)
 from tiny_routes_core.models import (LevelDocument, RouteEdge, RouteGraph, RouteNode,
                                      Solution)
 from tiny_routes_core.simulation import RuntimeState
@@ -67,3 +68,31 @@ def test_runtime_reports_invalid_special_nodes_as_validation_errors():
     raw = level_dict(); raw["startNodeID"] = "missing"
     with pytest.raises(GraphValidationError) as caught: RuntimeState.initialize(LevelDocument.from_dict(raw))
     assert caught.value.codes == ("missing_start_node:missing",)
+
+
+def test_package_state_queries_preserve_authored_order_and_normalize_active_edge():
+    raw = level_dict()
+    raw["graph"]["edges"][1]["availability"] = "beforePackage"
+    raw["graph"]["edges"][2]["availability"] = "afterPackage"
+    index = GraphIndex.build(LevelDocument.from_dict(raw).graph)
+
+    assert [edge.id for edge in usable_outgoing_edges(index, "switch", False)] == ["b"]
+    assert [edge.id for edge in usable_outgoing_edges(index, "switch", True)] == ["c"]
+    assert normalize_active_edges(
+        index,
+        {"switch": "b"},
+        package_collected=True,
+    )["switch"] == "c"
+    assert reachable_node_ids(index, "switch", package_collected=False) == (
+        "switch", "package", "destination",
+    )
+
+
+def test_runtime_rejects_conditional_nonterminal_dead_end_in_either_phase():
+    raw = level_dict()
+    raw["graph"]["edges"][0]["availability"] = "afterPackage"
+
+    with pytest.raises(GraphValidationError) as caught:
+        RuntimeState.initialize(LevelDocument.from_dict(raw))
+
+    assert "conditional_road_dead_end:start:before_package" in caught.value.codes

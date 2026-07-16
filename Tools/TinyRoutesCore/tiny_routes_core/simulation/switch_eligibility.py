@@ -74,7 +74,10 @@ def switch_eligibility(
         node = index.nodes_by_id.get(next_node_id)
         if node is None:
             return SwitchEligibilitySnapshot(None, None, None, SwitchEligibilityReason.NO_UPCOMING_SWITCH, steps)
-        outgoing = index.outgoing_by_node_id[node.id]
+        outgoing = state.runtime_graph.usable_outgoing(
+            node.id,
+            state.package_collected,
+        )
         if len(outgoing) >= 2:
             travel_time = distance / speed
             window = max(float(state.rules.switch_lookahead_seconds), 0.0)

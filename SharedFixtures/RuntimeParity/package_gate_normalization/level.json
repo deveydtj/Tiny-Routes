@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 2,
+  "rules": {
+    "switchInteractionMode": "liveLookahead",
+    "switchLookaheadSeconds": 1.35,
+    "switchTapCooldownSeconds": 0.12
+  },
+  "id": "package_gate_normalization",
+  "name": "Package Gate Normalization",
+  "graph": {
+    "nodes": [
+      {"id": "start", "x": 0.0, "y": 0.0, "outgoingEdgeIDs": ["e_start_package"]},
+      {"id": "package", "x": 0.6, "y": 0.0, "outgoingEdgeIDs": ["e_package_before", "e_package_after"]},
+      {"id": "holding", "x": 0.6, "y": 0.6, "outgoingEdgeIDs": []},
+      {"id": "destination", "x": 1.2, "y": 0.0, "outgoingEdgeIDs": []}
+    ],
+    "edges": [
+      {"id": "e_start_package", "fromNodeID": "start", "toNodeID": "package", "roadShape": "horizontalFirst"},
+      {"id": "e_package_before", "fromNodeID": "package", "toNodeID": "holding", "roadShape": "verticalFirst", "availability": "beforePackage"},
+      {"id": "e_package_after", "fromNodeID": "package", "toNodeID": "destination", "roadShape": "horizontalFirst", "availability": "afterPackage"}
+    ]
+  },
+  "startNodeID": "start",
+  "packageNodeID": "package",
+  "destinationNodeID": "destination",
+  "timeLimitSeconds": 10,
+  "parTaps": 0
+}

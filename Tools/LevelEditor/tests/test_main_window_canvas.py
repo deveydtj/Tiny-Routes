@@ -31,6 +31,7 @@ if str(LEVEL_EDITOR_ROOT) not in sys.path:
 import app.main_window as main_window_module
 from app.main_window import LevelEditorMainWindow
 from app.models import EditorTool, LevelDocument, RouteEdgeModel, RouteGraphModel, RouteNodeModel, SolutionActionModel, SolutionModel
+from app.models.playtest_state import PlaytestState
 from app.services import (
     LevelIdentityService,
     TestRunnerResult,
@@ -1930,11 +1931,56 @@ def test_edge_properties_panel_edits_package_availability(
     combo = panel.findChild(QComboBox, "edgeAvailabilityCombo")
     assert combo is not None
     assert combo.currentData() == "afterPackage"
+    assert "road opens" in combo.toolTip()
 
     combo.setCurrentIndex(combo.findData("beforePackage"))
     qapplication.processEvents()
 
     assert received[-1][-1] == "beforePackage"
+
+
+def test_playtest_visually_marks_roads_unavailable_for_package_phase(
+    qapplication: QApplication,
+) -> None:
+    document = LevelDocument(
+        id="gate_preview",
+        name="Gate Preview",
+        graph=RouteGraphModel(
+            nodes=[
+                RouteNodeModel("start", 0.0, 0.0, ["after"]),
+                RouteNodeModel("destination", 1.0, 0.0, []),
+            ],
+            edges=[
+                RouteEdgeModel(
+                    "after",
+                    "start",
+                    "destination",
+                    "horizontalFirst",
+                    "afterPackage",
+                )
+            ],
+        ),
+        startNodeID="start",
+        packageNodeID="start",
+        destinationNodeID="destination",
+        timeLimitSeconds=10,
+        parTaps=0,
+    )
+    scene = LevelCanvasScene()
+    scene.display_level(document)
+    edge = scene._edge_items_by_id["after"]
+
+    scene.update_playtest_overlay(PlaytestState(running=True, package_collected=False))
+    assert edge.is_playtest_unavailable is True
+    assert edge._path_item.pen().style() == Qt.PenStyle.DashLine
+    assert "Unavailable before" in edge.toolTip()
+
+    scene.update_playtest_overlay(PlaytestState(running=True, package_collected=True))
+    assert edge.is_playtest_unavailable is False
+    assert edge._path_item.pen().style() == Qt.PenStyle.SolidLine
+
+    scene.clear_playtest_overlay()
+    assert edge.is_playtest_unavailable is False
 
 
 def test_clearing_selection_resets_properties_panel(qapplication: QApplication) -> None:

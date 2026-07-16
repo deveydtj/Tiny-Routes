@@ -1,0 +1,15 @@
+{
+  "fixtureID": "package_gate_revisit_rotation",
+  "description": "Both phase-specific switch rotations are accepted and the after-package road reaches the destination.",
+  "expectedOutcome": "completed",
+  "failureReason": null,
+  "acceptedTapCount": 2,
+  "reachedPackage": true,
+  "reachedDestination": true,
+  "safetyStepLimit": null,
+  "finalActiveEdgeIDs": {
+    "package": "e_package_switch",
+    "start": "e_start_switch",
+    "switch": "e_switch_destination"
+  }
+}

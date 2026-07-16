@@ -3,6 +3,7 @@ from __future__ import annotations
 import pytest
 
 from app.models.graph_recipe import GraphRecipe, GraphRecipeEdge, GraphRecipeNode
+from app.models.recipe_topology_rules import RecipeTopologyRules
 from app.random_source import RandomSource
 from app.recipes import RecipeFamilyRegistry
 from app.services.abstract_puzzle_solver_service import (
@@ -124,3 +125,55 @@ def test_abstract_solver_rejects_destination_before_package_when_not_tutorialize
         AbstractPuzzleSolverService().solve(recipe, _preset("easy"))
 
     assert error.value.code == "abstract_destination_before_package"
+
+
+def test_topology_solver_filters_and_normalizes_edges_across_package_state() -> None:
+    rules = RecipeTopologyRules(
+        allows_cycles=False,
+        allows_rejoin=False,
+        allows_revisit=False,
+        allows_return_path=False,
+        allows_ring=False,
+        allowed_cycle_count=0,
+        requires_package_gate=True,
+        requires_unique_solution=False,
+        requires_swift_runtime_validation=True,
+    )
+    recipe = GraphRecipe(
+        level_id="package_state_solver",
+        difficulty="medium",
+        nodes=tuple(
+            GraphRecipeNode(node_id, role)
+            for node_id, role in (
+                ("start", "start"),
+                ("switch", "route"),
+                ("dead_before", "route"),
+                ("package", "package"),
+                ("post_gate", "route"),
+                ("trap_before", "route"),
+                ("destination", "destination"),
+            )
+        ),
+        edges=(
+            GraphRecipeEdge("start", "switch"),
+            GraphRecipeEdge("switch", "dead_before", "beforePackage"),
+            GraphRecipeEdge("switch", "package"),
+            GraphRecipeEdge("package", "post_gate"),
+            GraphRecipeEdge("post_gate", "trap_before", "beforePackage"),
+            GraphRecipeEdge("post_gate", "destination", "afterPackage"),
+        ),
+        required_path=("start", "switch", "package", "post_gate", "destination"),
+        tap_node_ids=("switch",),
+        topology_rules=rules,
+        mechanic_tags=("package_gate",),
+        primary_mechanic_tag="package_gate",
+        topology_class="package_gate",
+        mechanic_metadata={"topologyRules": rules.to_metadata()},
+    )
+
+    solved = AbstractPuzzleSolverService().solve(recipe, _preset("medium"))
+
+    assert solved.tap_node_ids == ("switch",)
+    assert solved.required_path == (
+        "start", "switch", "package", "post_gate", "destination",
+    )

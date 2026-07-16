@@ -141,6 +141,7 @@ class RuntimeSimulator:
                 result.events.append(SimulationEvent(state.elapsed_time, "safety_limit", detail=str(limit)))
                 return
             if state.current_edge_id is None:
+                state.runtime_graph.normalize_for_package_state(state.package_collected)
                 edge_id = state.runtime_graph.active_edge_ids.get(state.current_node_id)
                 if edge_id is None:
                     state.outcome = LevelOutcome.FAILED_DEAD_END
@@ -177,6 +178,7 @@ class RuntimeSimulator:
             result.events.append(SimulationEvent(state.elapsed_time, "arrive_node", state.current_node_id, arrived_edge_id))
             if state.current_node_id == level.packageNodeID and not state.package_collected:
                 state.package_collected = True
+                state.runtime_graph.normalize_for_package_state(True)
                 result.events.append(SimulationEvent(state.elapsed_time, "collect_package", state.current_node_id))
             if state.current_node_id == level.destinationNodeID:
                 if state.package_collected:
@@ -201,7 +203,11 @@ class RuntimeSimulator:
             return TapRecord(action, TapResultCode.LEVEL_FINISHED)
         if state.current_edge_id is not None and index.edges_by_id[state.current_edge_id].fromNodeID == node_id:
             return TapRecord(action, TapResultCode.AFTER_ROUTE_COMMITMENT)
-        outgoing = index.outgoing_by_node_id.get(node_id, ())
+        outgoing = (
+            state.runtime_graph.usable_outgoing(node_id, state.package_collected)
+            if node_id in index.nodes_by_id
+            else ()
+        )
         if len(outgoing) < 2:
             return TapRecord(action, TapResultCode.NOT_SWITCHABLE)
         if state.rules.switch_interaction_mode == SwitchInteractionMode.LIVE_LOOKAHEAD:

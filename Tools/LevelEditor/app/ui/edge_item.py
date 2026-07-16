@@ -1,6 +1,6 @@
 import math
 
-from PySide6.QtCore import QPointF
+from PySide6.QtCore import QPointF, Qt
 from PySide6.QtGui import QColor, QPainterPath, QPen, QPolygonF
 from PySide6.QtWidgets import QGraphicsItem, QGraphicsItemGroup, QGraphicsPathItem, QGraphicsPolygonItem, QGraphicsSimpleTextItem
 
@@ -34,6 +34,7 @@ class EdgeItem(QGraphicsItemGroup):
         self.availability = availability
         self._is_initial = is_initial
         self._has_validation_issue = has_warning
+        self._playtest_unavailable = False
         self.setZValue(-1)
         self.setFlag(QGraphicsItem.GraphicsItemFlag.ItemIsSelectable, True)
         self._path_item = QGraphicsPathItem()
@@ -45,24 +46,72 @@ class EdgeItem(QGraphicsItemGroup):
         self._arrow_item.setPen(QPen(road, 1))
         self.addToGroup(self._arrow_item)
         annotation = f"{option_number}" if option_number is not None else ""
+        availability_badge = {
+            "beforePackage": "pre",
+            "afterPackage": "post",
+        }.get(availability)
+        if availability_badge:
+            annotation = f"{annotation} [{availability_badge}]".strip()
         if has_warning:
             annotation = f"{annotation} ⚠".strip()
         self._annotation_item = QGraphicsSimpleTextItem(annotation)
         self._annotation_item.setFlag(QGraphicsItem.GraphicsItemFlag.ItemIgnoresTransformations, True)
         self._annotation_item.setBrush(QColor("#c62828") if has_warning else QColor("#374151"))
-        self._annotation_item.setToolTip("Initial active road" if is_initial else "Switch option")
+        self._annotation_item.setToolTip(self._availability_tooltip())
+        self.setToolTip(self._availability_tooltip())
         self.addToGroup(self._annotation_item)
         self.refresh_position()
 
     def set_validation_issue(self, has_issue: bool) -> None:
         self._has_validation_issue = has_issue
-        self._path_item.setPen(QPen(
-            QColor("#c62828") if has_issue else (QColor("#16a34a") if self._is_initial else road_color()),
-            5 if self._is_initial else (4 if has_issue else 2),
-        ))
+        self._apply_style()
         annotation = self._annotation_item.text().replace(" ⚠", "").replace("⚠", "").strip()
         self._annotation_item.setText(f"{annotation} ⚠".strip() if has_issue else annotation)
         self._annotation_item.setBrush(QColor("#c62828") if has_issue else QColor("#374151"))
+
+    def set_playtest_package_state(self, package_collected: bool | None) -> None:
+        """Dim and dash roads that cannot be used in the current playtest phase."""
+        self._playtest_unavailable = package_collected is not None and not (
+            self.availability == "always"
+            or self.availability
+            == ("afterPackage" if package_collected else "beforePackage")
+        )
+        self._apply_style()
+        phase = "after" if package_collected else "before"
+        if self._playtest_unavailable:
+            self.setToolTip(
+                f"Unavailable {phase} package collection. {self._availability_tooltip()}"
+            )
+        else:
+            self.setToolTip(self._availability_tooltip())
+
+    @property
+    def is_playtest_unavailable(self) -> bool:
+        return self._playtest_unavailable
+
+    def _apply_style(self) -> None:
+        if self._has_validation_issue:
+            color = QColor("#c62828")
+            width = 5 if self._is_initial else 4
+            style = Qt.PenStyle.SolidLine
+        elif self._playtest_unavailable:
+            color = QColor("#9ca3af")
+            width = 3
+            style = Qt.PenStyle.DashLine
+        else:
+            color = QColor("#16a34a") if self._is_initial else road_color()
+            width = 5 if self._is_initial else 2
+            style = Qt.PenStyle.SolidLine
+        self._path_item.setPen(QPen(color, width, style))
+        self._arrow_item.setBrush(color)
+        self._arrow_item.setPen(QPen(color, 1))
+        self._arrow_item.setOpacity(0.45 if self._playtest_unavailable else 1.0)
+
+    def _availability_tooltip(self) -> str:
+        return {
+            "beforePackage": "This road is usable only before the package is collected.",
+            "afterPackage": "This road is usable only after the package is collected.",
+        }.get(self.availability, "This road is always usable.")
 
     def refresh_position(self, allow_degenerate: bool = False) -> None:
         from_pos = self._from_node.pos()

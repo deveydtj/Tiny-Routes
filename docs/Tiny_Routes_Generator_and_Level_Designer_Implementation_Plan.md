@@ -2479,18 +2479,35 @@ The recommended first stateful mechanic is **edge availability by package state*
 
 ## Task 17.3 — Add exact Python parity behavior
 
-- [ ] Update graph queries.
-- [ ] Update simulator.
-- [ ] Update topology solver state transitions.
-- [ ] Add shared fixtures.
-- [ ] Compare Swift/Python traces.
+**Status:** Completed
+
+- [x] Update graph queries.
+- [x] Update simulator.
+- [x] Update topology solver state transitions.
+- [x] Add shared fixtures.
+- [x] Compare Swift/Python traces.
+
+**Completion notes**
+
+- [x] Shared graph queries, switch eligibility, taps, departures, and active-edge normalization now filter roads in authored order for the current package phase.
+- [x] Python runtime initialization and package collection reject conditional dead ends and normalize the same edge IDs as Swift, including package-at-start levels.
+- [x] Topology search preserves authored switch state while rotating only through usable roads and renormalizes every switch at the package phase transition.
+- [x] Added package-gate normalization and revisited-switch fixtures that assert the same accepted taps and final active-edge trace in Python and Swift.
 
 ## Task 17.4 — Add editor controls and visualization
 
-- [ ] Edge availability dropdown.
-- [ ] Distinct preview for currently unavailable roads during playtest.
-- [ ] Validation for impossible package gates.
-- [ ] Tooltip explaining the condition.
+**Status:** Completed
+
+- [x] Edge availability dropdown.
+- [x] Distinct preview for currently unavailable roads during playtest.
+- [x] Validation for impossible package gates.
+- [x] Tooltip explaining the condition.
+
+**Completion notes**
+
+- [x] The edge inspector exposes all three availability values with an explanation of when each road opens or closes.
+- [x] Conditional roads carry pre/post badges, and unavailable playtest roads use a dimmed dashed preview that updates immediately when the package is collected.
+- [x] Live validation reports conditional dead ends plus package-before and destination-after phase reachability failures.
 
 ## Task 17.5 — Add package-state motifs
 

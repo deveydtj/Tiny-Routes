@@ -1,0 +1,6 @@
+{
+  "fixtureID": "package_gate_normalization",
+  "description": "No tap is needed; package collection normalizes the package node to its newly available road.",
+  "elapsedTimeSteps": [0.5, 1.0, 2.0],
+  "actions": []
+}

@@ -215,6 +215,50 @@ def test_validate_valid_fixture_produces_no_errors():
     assert not result.has_errors, [m.message for m in result.messages if m.severity == ValidationSeverity.ERROR]
 
 
+def test_validate_rejects_impossible_package_gate_phases():
+    level = _load_fixture("valid_level.json")
+    level.graph.edges[0].availability = "afterPackage"
+    level.graph.edges[1].availability = "beforePackage"
+
+    codes = _codes(validate(level))
+
+    assert "conditional_road_dead_end_before_package" in codes
+    assert "conditional_road_dead_end_after_package" in codes
+    assert "package_unreachable_before_collection" in codes
+    assert "destination_unreachable_after_collection" in codes
+
+
+def test_validate_accepts_paired_before_and_after_package_roads():
+    level = LevelDocument.from_dict({
+        "id": "package_gate",
+        "name": "Package Gate",
+        "graph": {
+            "nodes": [
+                {"id": "start", "x": 0, "y": 0, "outgoingEdgeIDs": ["start_package"]},
+                {"id": "package", "x": 1, "y": 0, "outgoingEdgeIDs": ["before", "after"]},
+                {"id": "holding", "x": 1, "y": 1, "outgoingEdgeIDs": []},
+                {"id": "destination", "x": 2, "y": 0, "outgoingEdgeIDs": []},
+            ],
+            "edges": [
+                {"id": "start_package", "fromNodeID": "start", "toNodeID": "package"},
+                {"id": "before", "fromNodeID": "package", "toNodeID": "holding", "availability": "beforePackage"},
+                {"id": "after", "fromNodeID": "package", "toNodeID": "destination", "availability": "afterPackage"},
+            ],
+        },
+        "startNodeID": "start",
+        "packageNodeID": "package",
+        "destinationNodeID": "destination",
+        "timeLimitSeconds": 30,
+        "parTaps": 0,
+    })
+
+    codes = _codes(validate(level))
+
+    assert not any(code.startswith("conditional_road_dead_end") for code in codes)
+    assert "package_unreachable_before_collection" not in codes
+    assert "destination_unreachable_after_collection" not in codes
+
+
 def test_validate_callers_without_file_path_still_work():
     level = _load_fixture("valid_level.json")
 

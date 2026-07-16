@@ -82,10 +82,17 @@ class AbstractPuzzleSolverService:
         max_state_count = 900 if preset.name in {"hard", "expert"} else 300
         max_path_steps = max(16, len(recipe.nodes) * 3)
 
+        starts_with_package = recipe.package_node_id == "start"
+        initial_indices = self._normalize_switch_indices(
+            tuple(0 for _ in switch_ids),
+            switch_ids,
+            outgoing_by_node_id,
+            starts_with_package,
+        )
         start_state = _SearchState(
             node_id="start",
-            switch_indices=tuple(0 for _ in switch_ids),
-            collected_package=recipe.package_node_id == "start",
+            switch_indices=initial_indices,
+            collected_package=starts_with_package,
             path=("start",),
             decisions=(),
         )
@@ -122,7 +129,8 @@ class AbstractPuzzleSolverService:
                     failures.append(_CompletedPath(state, "abstract_destination_before_package"))
                 continue
 
-            outgoing = outgoing_by_node_id.get(state.node_id, ())
+            authored_outgoing = outgoing_by_node_id.get(state.node_id, ())
+            outgoing = self._usable_outgoing(authored_outgoing, state.collected_package)
             if not outgoing:
                 failures.append(_CompletedPath(state, "abstract_dead_end"))
                 continue
@@ -136,19 +144,44 @@ class AbstractPuzzleSolverService:
                 active_index = 0
                 if state.node_id in switch_index_by_id:
                     switch_tuple_index = switch_index_by_id[state.node_id]
-                    active_index = (switch_indices[switch_tuple_index] + tap_count) % len(outgoing)
+                    current_authored_index = switch_indices[switch_tuple_index]
+                    current_edge = authored_outgoing[current_authored_index]
+                    current_usable_index = next(
+                        (
+                            index
+                            for index, candidate in enumerate(outgoing)
+                            if candidate is current_edge
+                        ),
+                        0,
+                    )
+                    active_usable_index = (current_usable_index + tap_count) % len(outgoing)
+                    active_edge = outgoing[active_usable_index]
+                    active_index = authored_outgoing.index(active_edge)
                     switch_indices = (
                         switch_indices[:switch_tuple_index]
                         + (active_index,)
                         + switch_indices[switch_tuple_index + 1 :]
                     )
-                edge = outgoing[active_index]
+                    edge = active_edge
+                else:
+                    edge = outgoing[0]
                 next_node_id = edge.to_node_id
+                collected_package = (
+                    state.collected_package
+                    or next_node_id == recipe.package_node_id
+                )
+                if collected_package != state.collected_package:
+                    switch_indices = self._normalize_switch_indices(
+                        switch_indices,
+                        switch_ids,
+                        outgoing_by_node_id,
+                        collected_package,
+                    )
                 queue.append(
                     _SearchState(
                         node_id=next_node_id,
                         switch_indices=switch_indices,
-                        collected_package=state.collected_package or next_node_id == recipe.package_node_id,
+                        collected_package=collected_package,
                         path=(*state.path, next_node_id),
                         decisions=next_decisions,
                     )
@@ -235,6 +268,41 @@ class AbstractPuzzleSolverService:
         for edge in edges:
             outgoing.setdefault(edge.from_node_id, []).append(edge)
         return {node_id: tuple(edges) for node_id, edges in outgoing.items()}
+
+    def _usable_outgoing(
+        self,
+        outgoing: tuple[GraphRecipeEdge, ...],
+        collected_package: bool,
+    ) -> tuple[GraphRecipeEdge, ...]:
+        phase_availability = "afterPackage" if collected_package else "beforePackage"
+        return tuple(
+            edge
+            for edge in outgoing
+            if edge.availability in {"always", phase_availability}
+        )
+
+    def _normalize_switch_indices(
+        self,
+        switch_indices: tuple[int, ...],
+        switch_ids: tuple[str, ...],
+        outgoing_by_node_id: dict[str, tuple[GraphRecipeEdge, ...]],
+        collected_package: bool,
+    ) -> tuple[int, ...]:
+        normalized: list[int] = []
+        for node_id, requested_index in zip(switch_ids, switch_indices):
+            authored = outgoing_by_node_id[node_id]
+            usable = self._usable_outgoing(authored, collected_package)
+            if not usable:
+                normalized.append(requested_index)
+                continue
+            requested_edge = (
+                authored[requested_index]
+                if 0 <= requested_index < len(authored)
+                else None
+            )
+            normalized_edge = requested_edge if requested_edge in usable else usable[0]
+            normalized.append(authored.index(normalized_edge))
+        return tuple(normalized)
 
     def _tap_options(
         self,

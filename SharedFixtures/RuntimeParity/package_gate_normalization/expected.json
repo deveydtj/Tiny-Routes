@@ -1,0 +1,14 @@
+{
+  "fixtureID": "package_gate_normalization",
+  "description": "The after-package road replaces the unavailable initial road and reaches the destination.",
+  "expectedOutcome": "completed",
+  "failureReason": null,
+  "acceptedTapCount": 0,
+  "reachedPackage": true,
+  "reachedDestination": true,
+  "safetyStepLimit": null,
+  "finalActiveEdgeIDs": {
+    "package": "e_package_after",
+    "start": "e_start_package"
+  }
+}

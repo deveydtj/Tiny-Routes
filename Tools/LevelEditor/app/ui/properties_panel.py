@@ -180,6 +180,10 @@ class PropertiesPanel(QWidget):
         availability_combo.addItem("Always", "always")
         availability_combo.addItem("Before Package", "beforePackage")
         availability_combo.addItem("After Package", "afterPackage")
+        availability_combo.setToolTip(
+            "Always: road is always usable. Before Package: road closes when the "
+            "package is collected. After Package: road opens when the package is collected."
+        )
         availability_combo.setCurrentIndex(
             max(0, availability_combo.findData(availability))
         )

@@ -74,6 +74,21 @@ class GraphRecipe:
                     f"edge_unknown_availability:{edge.from_node_id}:"
                     f"{edge.to_node_id}:{edge.availability}"
                 )
+        outgoing_by_node_id: dict[str, list[GraphRecipeEdge]] = {}
+        for edge in self.edges:
+            outgoing_by_node_id.setdefault(edge.from_node_id, []).append(edge)
+        for node_id, outgoing in outgoing_by_node_id.items():
+            for package_collected, phase in (
+                (False, "before_package"),
+                (True, "after_package"),
+            ):
+                if not any(
+                    edge.availability == "always"
+                    or edge.availability
+                    == ("afterPackage" if package_collected else "beforePackage")
+                    for edge in outgoing
+                ):
+                    messages.append(f"conditional_road_dead_end:{node_id}:{phase}")
         edge_pairs = {(edge.from_node_id, edge.to_node_id) for edge in self.edges}
         for from_node_id, to_node_id in zip(self.required_path, self.required_path[1:]):
             if (from_node_id, to_node_id) not in edge_pairs:
