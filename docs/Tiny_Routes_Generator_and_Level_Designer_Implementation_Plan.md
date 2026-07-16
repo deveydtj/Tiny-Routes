@@ -2419,6 +2419,8 @@ The recommended first stateful mechanic is **edge availability by package state*
 
 ## Task 17.1 — Extend the road domain model
 
+**Status:** Completed
+
 **Suggested JSON**
 
 ```json
@@ -2447,19 +2449,33 @@ The recommended first stateful mechanic is **edge availability by package state*
 
 **Acceptance tests**
 
-- [ ] Missing availability decodes as `always`.
-- [ ] All values round-trip.
-- [ ] Unknown values produce a validation failure.
+- [x] Missing availability decodes as `always`.
+- [x] All values round-trip.
+- [x] Unknown values produce a validation failure.
+
+**Completion notes**
+
+- [x] Added package-state road availability to Swift, shared Python, editor inspector, generator recipe/motif, layout, signature, and graph-builder models.
+- [x] Preserved omission of legacy `always` fields in Python round trips and preserved legacy generator signatures when every road is always available.
+- [x] Documented the JSON field, defaults, allowed values, and conditional dead-end rule.
 
 ## Task 17.2 — Enforce road availability in Swift
 
+**Status:** Completed
+
 **Steps**
 
-- [ ] Filter usable outgoing edges by package state.
-- [ ] Rotate switches only through currently usable edges.
-- [ ] Normalize an unavailable active edge deterministically before departure.
-- [ ] Update visual arrows when availability changes.
-- [ ] Prevent a node from becoming an unintended dead end unless authored and validated.
+- [x] Filter usable outgoing edges by package state.
+- [x] Rotate switches only through currently usable edges.
+- [x] Normalize an unavailable active edge deterministically before departure.
+- [x] Update visual arrows when availability changes.
+- [x] Prevent a node from becoming an unintended dead end unless authored and validated.
+
+**Completion notes**
+
+- [x] Runtime graph queries, look-ahead traversal, switch taps, smooth transitions, departure, dead-end detection, tap targets, and switch arrows now use the current package state.
+- [x] Package collection renormalizes active roads in authored order, and graph loading rejects conditional nonterminal dead ends in either package state.
+- [x] Added focused Swift coverage for decoding, round trips, invalid values, state-filtered rotation, deterministic normalization, completion, and conditional dead-end rejection.
 
 ## Task 17.3 — Add exact Python parity behavior
 

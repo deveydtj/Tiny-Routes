@@ -164,9 +164,18 @@ class DocumentController(QObject):
                 setattr(document, target_field, node_id)
         self._mutate(EditNodeCommand, f"Set {node_id} role to {role}", mutation)
 
-    def edit_edge(self, edge_id: str, from_node_id: str, to_node_id: str, road_shape: str) -> None:
+    def edit_edge(
+        self,
+        edge_id: str,
+        from_node_id: str,
+        to_node_id: str,
+        road_shape: str,
+        availability: str = "always",
+    ) -> None:
         if road_shape not in {"horizontalFirst", "verticalFirst"}:
             raise ValueError(f"Unknown road shape: {road_shape}")
+        if availability not in {"always", "beforePackage", "afterPackage"}:
+            raise ValueError(f"Unknown road availability: {availability}")
 
         def mutation(document, solution):
             edge = next((item for item in document.graph.edges if item.id == edge_id), None)
@@ -194,6 +203,8 @@ class DocumentController(QObject):
             edge.fromNodeID = from_node_id
             edge.toNodeID = to_node_id
             edge.roadShape = road_shape
+            edge.availability = availability
+            edge._availability_present = availability != "always"
         self._mutate(EditEdgeCommand, f"Edit road {edge_id}", mutation)
 
     def edit_metadata(self, mutation) -> None:

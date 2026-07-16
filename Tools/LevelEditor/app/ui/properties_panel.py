@@ -49,7 +49,7 @@ class PropertiesPanel(QWidget):
     node_position_changed = Signal(str, float, float)
     initial_route_changed = Signal(str, str)
     edge_id_changed = Signal(str, str)
-    edge_properties_changed = Signal(str, str, str, str)
+    edge_properties_changed = Signal(str, str, str, str, str)
 
     def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent)
@@ -155,6 +155,7 @@ class PropertiesPanel(QWidget):
         from_node_id: str,
         to_node_id: str,
         road_shape: str,
+        availability: str = "always",
         available_node_ids: list[str] | None = None,
     ) -> None:
         """Display properties for the selected edge."""
@@ -174,18 +175,29 @@ class PropertiesPanel(QWidget):
         shape_combo.addItem("Horizontal First", "horizontalFirst")
         shape_combo.addItem("Vertical First", "verticalFirst")
         shape_combo.setCurrentIndex(max(0, shape_combo.findData(road_shape)))
+        availability_combo = _InspectableComboBox(use_display_text=True)
+        availability_combo.setObjectName("edgeAvailabilityCombo")
+        availability_combo.addItem("Always", "always")
+        availability_combo.addItem("Before Package", "beforePackage")
+        availability_combo.addItem("After Package", "afterPackage")
+        availability_combo.setCurrentIndex(
+            max(0, availability_combo.findData(availability))
+        )
         emit = lambda: self.edge_properties_changed.emit(
             self._current_edge_id or edge_id,
             str(from_combo.currentData()),
             str(to_combo.currentData()),
             str(shape_combo.currentData()),
+            str(availability_combo.currentData()),
         )
         from_combo.currentIndexChanged.connect(emit)
         to_combo.currentIndexChanged.connect(emit)
         shape_combo.currentIndexChanged.connect(emit)
+        availability_combo.currentIndexChanged.connect(emit)
         self._form_layout.addRow("From:", from_combo)
         self._form_layout.addRow("To:", to_combo)
         self._form_layout.addRow("Road Shape:", shape_combo)
+        self._form_layout.addRow("Availability:", availability_combo)
         self._empty_label.setVisible(False)
         self._form_widget.setVisible(True)
 

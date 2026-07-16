@@ -77,6 +77,7 @@ class TestRouteEdgeModel:
         assert edge.fromNodeID == "a"
         assert edge.toNodeID == "b"
         assert edge.roadShape is None
+        assert edge.availability == "always"
 
     def test_from_dict_with_road_shape(self):
         data = {"id": "e1", "fromNodeID": "a", "toNodeID": "b", "roadShape": "verticalFirst"}
@@ -100,6 +101,20 @@ class TestRouteEdgeModel:
     def test_round_trip_with_road_shape(self):
         data = {"id": "e2", "fromNodeID": "x", "toNodeID": "y", "roadShape": "horizontalFirst"}
         assert RouteEdgeModel.from_dict(data).to_dict() == data
+
+    @pytest.mark.parametrize("availability", ["always", "beforePackage", "afterPackage"])
+    def test_round_trip_with_availability(self, availability):
+        data = {
+            "id": "e2",
+            "fromNodeID": "x",
+            "toNodeID": "y",
+            "availability": availability,
+        }
+
+        edge = RouteEdgeModel.from_dict(data)
+
+        assert edge.availability == availability
+        assert edge.to_dict() == data
 
     def test_preserves_unknown_fields(self):
         data = {"id": "e1", "fromNodeID": "a", "toNodeID": "b", "_future": "value"}

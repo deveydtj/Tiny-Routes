@@ -1213,12 +1213,24 @@ class LevelEditorMainWindow(QMainWindow):
             available_node_ids=[item.id for item in self._current_document.graph.nodes],
         )
 
-    def _on_edge_item_selected(self, edge_id: str, from_node_id: str, to_node_id: str, road_shape: str) -> None:
+    def _on_edge_item_selected(
+        self,
+        edge_id: str,
+        from_node_id: str,
+        to_node_id: str,
+        road_shape: str,
+        availability: str,
+    ) -> None:
         node_ids = [] if self._current_document is None else [
             node.id for node in self._current_document.graph.nodes
         ]
         self._properties_panel.show_edge(
-            edge_id, from_node_id, to_node_id, road_shape, available_node_ids=node_ids
+            edge_id,
+            from_node_id,
+            to_node_id,
+            road_shape,
+            availability,
+            available_node_ids=node_ids,
         )
 
     def _run_property_edit(self, mutation, *, select_node: str | None = None, select_edge: str | None = None) -> None:
@@ -1268,10 +1280,17 @@ class LevelEditorMainWindow(QMainWindow):
             lambda: self._document_controller.rename_edge(old_id, new_id), select_edge=new_id
         )
 
-    def _on_edge_properties_changed(self, edge_id: str, from_node_id: str, to_node_id: str, road_shape: str) -> None:
+    def _on_edge_properties_changed(
+        self,
+        edge_id: str,
+        from_node_id: str,
+        to_node_id: str,
+        road_shape: str,
+        availability: str,
+    ) -> None:
         self._run_property_edit(
             lambda: self._document_controller.edit_edge(
-                edge_id, from_node_id, to_node_id, road_shape
+                edge_id, from_node_id, to_node_id, road_shape, availability
             ),
             select_edge=edge_id,
         )

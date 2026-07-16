@@ -146,6 +146,15 @@ class GeneratedLevelValidationService:
         }
 
         for edge in level.graph.edges:
+            if edge.availability not in {"always", "beforePackage", "afterPackage"}:
+                messages.append(
+                    GeneratorValidationMessage(
+                        severity="error",
+                        code="invalid_road_availability",
+                        message=f"Edge '{edge.id}' has invalid availability '{edge.availability}'.",
+                        related_edge_id=edge.id,
+                    )
+                )
             if not self.road_shape_service.is_allowed(edge.roadShape):
                 messages.append(
                     GeneratorValidationMessage(

@@ -36,6 +36,28 @@ def test_graph_recipe_service_generates_difficulty_recipe() -> None:
     assert recipe.validate() == []
 
 
+def test_graph_recipe_rejects_unknown_road_availability() -> None:
+    recipe = GraphRecipe(
+        level_id="level_001",
+        difficulty="easy",
+        nodes=(
+            GraphRecipeNode("start"),
+            GraphRecipeNode("package"),
+            GraphRecipeNode("destination"),
+        ),
+        edges=(
+            GraphRecipeEdge("start", "package", "sometimes"),
+            GraphRecipeEdge("package", "destination"),
+        ),
+        required_path=("start", "package", "destination"),
+        tap_node_ids=(),
+    )
+
+    assert (
+        "edge_unknown_availability:start:package:sometimes" in recipe.validate()
+    )
+
+
 def test_recipe_to_level_builder_builds_valid_generated_level() -> None:
     preset = DifficultyService().get_preset("easy")
     recipe = GraphRecipeService().generate_recipe("level_012", preset, RandomSource(2))

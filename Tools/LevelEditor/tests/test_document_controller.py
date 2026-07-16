@@ -88,12 +88,15 @@ def test_edit_edge_endpoint_shape_and_undo_preserve_outgoing_references() -> Non
     document = _document()
     controller.open(document, None, saved=True)
 
-    controller.edit_edge("first", "middle", "finish", "verticalFirst")
+    controller.edit_edge(
+        "first", "middle", "finish", "verticalFirst", "afterPackage"
+    )
 
     first = document.graph.edges[0]
     assert (first.fromNodeID, first.toNodeID, first.roadShape) == (
         "middle", "finish", "verticalFirst"
     )
+    assert first.availability == "afterPackage"
     assert document.graph.nodes[0].outgoingEdgeIDs == ["second"]
     assert document.graph.nodes[1].outgoingEdgeIDs == ["first"]
 
@@ -101,6 +104,7 @@ def test_edit_edge_endpoint_shape_and_undo_preserve_outgoing_references() -> Non
     assert document.graph.nodes[0].outgoingEdgeIDs == ["first", "second"]
     assert document.graph.nodes[1].outgoingEdgeIDs == []
     assert document.graph.edges[0].roadShape is None
+    assert document.graph.edges[0].availability == "always"
 
 
 def test_edit_edge_rejects_duplicate_directed_edge_without_mutation() -> None:

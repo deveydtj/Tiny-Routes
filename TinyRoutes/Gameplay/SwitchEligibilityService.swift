@@ -29,7 +29,7 @@ struct SwitchEligibilityService {
         graph: RuntimeRouteGraph,
         dot: DeliveryDot,
         speed: Double,
-        hasCollectedPackage _: Bool,
+        hasCollectedPackage: Bool,
         rules: LevelRules,
         maximumStepCount: Int? = nil
     ) -> SwitchEligibilitySnapshot {
@@ -68,7 +68,10 @@ struct SwitchEligibilityService {
             }
             guard let node = graph.nodesByID[nextNodeID] else { return .noUpcomingSwitch }
 
-            if graph.switchKind(for: node).isSwitchable {
+            if graph.switchKind(
+                for: node,
+                hasCollectedPackage: hasCollectedPackage
+            ).isSwitchable {
                 let travelTime = distance / speed
                 let isEligible = travelTime <= max(rules.switchLookaheadSeconds, 0)
                 return SwitchEligibilitySnapshot(
@@ -79,7 +82,14 @@ struct SwitchEligibilityService {
                 )
             }
 
-            guard let edgeID = node.activeOutgoingEdgeID,
+            let usableEdgeIDs = graph.usableOutgoingEdgeIDs(
+                for: node,
+                hasCollectedPackage: hasCollectedPackage
+            )
+            let selectedEdgeID = node.activeOutgoingEdgeID.flatMap {
+                usableEdgeIDs.contains($0) ? $0 : nil
+            } ?? usableEdgeIDs.first
+            guard let edgeID = selectedEdgeID,
                   let edge = graph.edgesByID[edgeID],
                   edge.fromNodeID == node.id else {
                 return .noUpcomingSwitch

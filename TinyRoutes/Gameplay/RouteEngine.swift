@@ -7,6 +7,7 @@ enum RouteEngineError: Error, LocalizedError {
     case missingStartNode(id: String)
     case edgeReferencesUnknownNode(edgeID: String, nodeID: String)
     case switchHasTooManyOutgoingEdges(nodeID: String, outgoingEdgeCount: Int)
+    case conditionalRoadsCreateDeadEnd(nodeID: String, hasCollectedPackage: Bool)
 
     var errorDescription: String? {
         switch self {
@@ -20,6 +21,9 @@ enum RouteEngineError: Error, LocalizedError {
             return "Edge '\(edgeID)' references unknown node '\(nodeID)'."
         case let .switchHasTooManyOutgoingEdges(nodeID, outgoingEdgeCount):
             return "Node '\(nodeID)' has \(outgoingEdgeCount) valid outgoing edges; at most \(SwitchNodeKind.maximumSupportedOutgoingEdgeCount) are supported."
+        case let .conditionalRoadsCreateDeadEnd(nodeID, hasCollectedPackage):
+            let phase = hasCollectedPackage ? "after" : "before"
+            return "Node '\(nodeID)' has authored outgoing roads but none are available \(phase) package collection."
         }
     }
 }
@@ -110,8 +114,8 @@ final class RouteEngine {
 
     /// Converts a `LevelData` into a `RuntimeRouteGraph` and stores it in `runtimeGraph`.
     ///
-    /// Switch nodes (those with more than one outgoing edge) are initialized with their first
-    /// outgoing edge as the active direction. Leaf nodes have no active edge.
+    /// Switch nodes are initialized with their first pre-package usable outgoing edge as the
+    /// active direction. Leaf nodes have no active edge.
     ///
     /// - Parameter levelData: The decoded level to build the graph from.
     /// - Throws: `RouteEngineError` if the graph data is invalid.
@@ -178,7 +182,8 @@ final class RouteEngine {
                     from: RoadPoint(x: fromNode.x, y: fromNode.y),
                     to: RoadPoint(x: toNode.x, y: toNode.y),
                     shape: edge.roadShape
-                )
+                ),
+                availability: edge.availability
             )
         }
 
@@ -194,7 +199,21 @@ final class RouteEngine {
                     outgoingEdgeCount: validOutgoingEdgeIDs.count
                 )
             }
-            node.activeOutgoingEdgeID = validOutgoingEdgeIDs.first
+            for hasCollectedPackage in [false, true]
+            where !validOutgoingEdgeIDs.isEmpty
+                && runtimeGraph.usableOutgoingEdgeIDs(
+                    for: node,
+                    hasCollectedPackage: hasCollectedPackage
+                ).isEmpty {
+                throw RouteEngineError.conditionalRoadsCreateDeadEnd(
+                    nodeID: node.id,
+                    hasCollectedPackage: hasCollectedPackage
+                )
+            }
+            node.activeOutgoingEdgeID = runtimeGraph.usableOutgoingEdgeIDs(
+                for: node,
+                hasCollectedPackage: false
+            ).first
             runtimeGraph.nodesByID[nodeID] = node
         }
 
@@ -202,7 +221,9 @@ final class RouteEngine {
         packageNodeID = levelData.packageNodeID
         destinationNodeID = levelData.destinationNodeID
         remainingTime = max(TimeInterval(levelData.timeLimitSeconds), 0)
-        collectPackageIfNeeded(dot: &deliveryDot)
+        if collectPackageIfNeeded(dot: &deliveryDot) {
+            runtimeGraph.normalizeActiveOutgoingEdges(hasCollectedPackage: true)
+        }
         evaluateDestinationArrivalIfNeeded(dot: &deliveryDot)
 
         self.runtimeGraph = runtimeGraph
@@ -232,7 +253,7 @@ final class RouteEngine {
     /// Starts the delivery dot moving along the active edge for its current node, if one exists.
     @discardableResult
     func startDotMovement() -> Bool {
-        guard let runtimeGraph, var deliveryDot else {
+        guard var runtimeGraph, var deliveryDot else {
             return false
         }
         if levelOutcome == nil,
@@ -244,7 +265,8 @@ final class RouteEngine {
             self.deliveryDot = deliveryDot
             return false
         }
-        let didStart = beginMovementFromCurrentNode(in: runtimeGraph, dot: &deliveryDot)
+        let didStart = beginMovementFromCurrentNode(in: &runtimeGraph, dot: &deliveryDot)
+        self.runtimeGraph = runtimeGraph
         self.deliveryDot = deliveryDot
         return didStart
     }
@@ -259,7 +281,7 @@ final class RouteEngine {
         didHaltAtDeadEnd = false
         didHitUpdateSafetyStepLimit = false
         guard deltaTime > 0,
-              let runtimeGraph,
+              var runtimeGraph,
               var deliveryDot else {
             return
         }
@@ -306,12 +328,20 @@ final class RouteEngine {
                 guard transitionLength > 0,
                       let toEdge = runtimeGraph.edgesByID[transition.toEdgeID],
                       toEdge.roadPath.totalLength > 0 else {
-                    snapDotToNode(transition.nodeID, dot: &deliveryDot)
+                    snapDotToNode(
+                        transition.nodeID,
+                        runtimeGraph: &runtimeGraph,
+                        dot: &deliveryDot
+                    )
                     if levelOutcome != nil {
                         break
                     }
-                    guard beginMovementFromCurrentNode(in: runtimeGraph, dot: &deliveryDot) else {
-                        didHaltAtDeadEnd = isDeadEnd(nodeID: deliveryDot.currentNodeID, in: runtimeGraph)
+                    guard beginMovementFromCurrentNode(in: &runtimeGraph, dot: &deliveryDot) else {
+                        didHaltAtDeadEnd = isDeadEnd(
+                            nodeID: deliveryDot.currentNodeID,
+                            in: runtimeGraph,
+                            hasCollectedPackage: deliveryDot.hasCollectedPackage
+                        )
                         if didHaltAtDeadEnd {
                             levelOutcome = .failed(reason: .deadEnd)
                         }
@@ -346,12 +376,20 @@ final class RouteEngine {
 
             let edgeLength = edge.roadPath.totalLength
             guard edgeLength > 0 else {
-                snapDotToNode(edge.toNodeID, dot: &deliveryDot)
+                snapDotToNode(
+                    edge.toNodeID,
+                    runtimeGraph: &runtimeGraph,
+                    dot: &deliveryDot
+                )
                 if levelOutcome != nil {
                     break
                 }
-                guard beginMovementFromCurrentNode(in: runtimeGraph, dot: &deliveryDot) else {
-                    didHaltAtDeadEnd = isDeadEnd(nodeID: deliveryDot.currentNodeID, in: runtimeGraph)
+                guard beginMovementFromCurrentNode(in: &runtimeGraph, dot: &deliveryDot) else {
+                    didHaltAtDeadEnd = isDeadEnd(
+                        nodeID: deliveryDot.currentNodeID,
+                        in: runtimeGraph,
+                        hasCollectedPackage: deliveryDot.hasCollectedPackage
+                    )
                     if didHaltAtDeadEnd {
                         levelOutcome = .failed(reason: .deadEnd)
                     }
@@ -361,7 +399,11 @@ final class RouteEngine {
             }
 
             let clampedProgress = max(0, min(deliveryDot.progressAlongEdge, 1))
-            let transition = smoothTransition(from: edge, in: runtimeGraph)
+            let transition = smoothTransition(
+                from: edge,
+                in: runtimeGraph,
+                hasCollectedPackage: deliveryDot.hasCollectedPackage
+            )
             let exitDistanceFromCurrentEdge = transition?.exitDistanceFromCurrentEdge ?? edgeLength
             let targetProgress = max(0, min(exitDistanceFromCurrentEdge / edgeLength, 1))
             let distanceToEdgeTarget = max(0, (targetProgress - clampedProgress) * edgeLength)
@@ -375,19 +417,29 @@ final class RouteEngine {
                 deliveryDot.currentEdgeID = nil
                 deliveryDot.progressAlongEdge = 0
                 deliveryDot.transition = transition.dotTransition
-                collectPackageIfNeeded(dot: &deliveryDot)
+                if collectPackageIfNeeded(dot: &deliveryDot) {
+                    runtimeGraph.normalizeActiveOutgoingEdges(hasCollectedPackage: true)
+                }
                 evaluateDestinationArrivalIfNeeded(dot: &deliveryDot)
                 if levelOutcome != nil {
                     break
                 }
             } else {
                 remainingDistance -= distanceToEdgeTarget
-                snapDotToNode(edge.toNodeID, dot: &deliveryDot)
+                snapDotToNode(
+                    edge.toNodeID,
+                    runtimeGraph: &runtimeGraph,
+                    dot: &deliveryDot
+                )
                 if levelOutcome != nil {
                     break
                 }
-                guard beginMovementFromCurrentNode(in: runtimeGraph, dot: &deliveryDot) else {
-                    didHaltAtDeadEnd = isDeadEnd(nodeID: deliveryDot.currentNodeID, in: runtimeGraph)
+                guard beginMovementFromCurrentNode(in: &runtimeGraph, dot: &deliveryDot) else {
+                    didHaltAtDeadEnd = isDeadEnd(
+                        nodeID: deliveryDot.currentNodeID,
+                        in: runtimeGraph,
+                        hasCollectedPackage: deliveryDot.hasCollectedPackage
+                    )
                     if didHaltAtDeadEnd {
                         levelOutcome = .failed(reason: .deadEnd)
                     }
@@ -405,11 +457,12 @@ final class RouteEngine {
             levelOutcome = .failed(reason: .timeExpired)
         }
 
+        self.runtimeGraph = runtimeGraph
         self.deliveryDot = deliveryDot
     }
 
     /// Rotates the active outgoing edge for a tapped switch node.
-    /// For nodes with zero or one valid outgoing edge, this may normalize
+    /// For nodes with zero or one currently usable outgoing edge, this may normalize
     /// `activeOutgoingEdgeID` without rotating.
     ///
     /// - Parameter nodeID: The tapped node id.
@@ -429,11 +482,19 @@ final class RouteEngine {
            runtimeGraph.edgesByID[currentEdgeID]?.fromNodeID == nodeID {
             return .rejectedCommitted
         }
+        let hasCollectedPackage = deliveryDot?.hasCollectedPackage ?? false
         guard let node = runtimeGraph.nodesByID[nodeID],
-              runtimeGraph.switchKind(for: node).isSwitchable else {
+              runtimeGraph.switchKind(
+                  for: node,
+                  hasCollectedPackage: hasCollectedPackage
+              ).isSwitchable else {
             // Preserve the controller's normalization behavior for malformed or
             // partially valid nodes during the caller migration.
-            _ = nodeSwitchController.rotateSwitch(nodeID: nodeID, in: &runtimeGraph)
+            _ = nodeSwitchController.rotateSwitch(
+                nodeID: nodeID,
+                in: &runtimeGraph,
+                hasCollectedPackage: hasCollectedPackage
+            )
             self.runtimeGraph = runtimeGraph
             return .rejectedNotSwitchable
         }
@@ -448,7 +509,11 @@ final class RouteEngine {
                 return .rejectedCooldown
             }
         }
-        let didRotate = nodeSwitchController.rotateSwitch(nodeID: nodeID, in: &runtimeGraph)
+        let didRotate = nodeSwitchController.rotateSwitch(
+            nodeID: nodeID,
+            in: &runtimeGraph,
+            hasCollectedPackage: hasCollectedPackage
+        )
         self.runtimeGraph = runtimeGraph
         guard didRotate,
               let activeEdgeID = runtimeGraph.nodesByID[nodeID]?.activeOutgoingEdgeID else {
@@ -462,13 +527,30 @@ final class RouteEngine {
     }
 
     @discardableResult
-    private func beginMovementFromCurrentNode(in runtimeGraph: RuntimeRouteGraph, dot: inout DeliveryDot) -> Bool {
+    private func beginMovementFromCurrentNode(
+        in runtimeGraph: inout RuntimeRouteGraph,
+        dot: inout DeliveryDot
+    ) -> Bool {
         guard dot.currentEdgeID == nil,
-              let currentNode = runtimeGraph.nodesByID[dot.currentNodeID],
-              let edgeID = currentNode.activeOutgoingEdgeID,
+              var currentNode = runtimeGraph.nodesByID[dot.currentNodeID] else {
+            return false
+        }
+        let usableEdgeIDs = runtimeGraph.usableOutgoingEdgeIDs(
+            for: currentNode,
+            hasCollectedPackage: dot.hasCollectedPackage
+        )
+        let edgeID = currentNode.activeOutgoingEdgeID.flatMap {
+            usableEdgeIDs.contains($0) ? $0 : nil
+        } ?? usableEdgeIDs.first
+        guard let edgeID,
               let edge = runtimeGraph.edgesByID[edgeID],
               edge.fromNodeID == dot.currentNodeID else {
             return false
+        }
+
+        if currentNode.activeOutgoingEdgeID != edgeID {
+            currentNode.activeOutgoingEdgeID = edgeID
+            runtimeGraph.nodesByID[currentNode.id] = currentNode
         }
 
         dot.currentEdgeID = edgeID
@@ -477,22 +559,30 @@ final class RouteEngine {
         return true
     }
 
-    private func snapDotToNode(_ nodeID: String, dot: inout DeliveryDot) {
+    private func snapDotToNode(
+        _ nodeID: String,
+        runtimeGraph: inout RuntimeRouteGraph,
+        dot: inout DeliveryDot
+    ) {
         dot.currentNodeID = nodeID
         dot.currentEdgeID = nil
         dot.progressAlongEdge = 0
         dot.transition = nil
-        collectPackageIfNeeded(dot: &dot)
+        if collectPackageIfNeeded(dot: &dot) {
+            runtimeGraph.normalizeActiveOutgoingEdges(hasCollectedPackage: true)
+        }
         evaluateDestinationArrivalIfNeeded(dot: &dot)
     }
 
-    private func collectPackageIfNeeded(dot: inout DeliveryDot) {
+    @discardableResult
+    private func collectPackageIfNeeded(dot: inout DeliveryDot) -> Bool {
         guard let packageNodeID,
               !dot.hasCollectedPackage,
               dot.currentNodeID == packageNodeID else {
-            return
+            return false
         }
         dot.hasCollectedPackage = true
+        return true
     }
 
     private func evaluateDestinationArrivalIfNeeded(dot: inout DeliveryDot) {
@@ -507,12 +597,19 @@ final class RouteEngine {
             : .failed(reason: .reachedDestinationWithoutPackage)
     }
 
-    private func isDeadEnd(nodeID: String, in runtimeGraph: RuntimeRouteGraph) -> Bool {
+    private func isDeadEnd(
+        nodeID: String,
+        in runtimeGraph: RuntimeRouteGraph,
+        hasCollectedPackage: Bool
+    ) -> Bool {
         guard let node = runtimeGraph.nodesByID[nodeID] else {
             return false
         }
 
-        return node.outgoingEdgeIDs.isEmpty || node.activeOutgoingEdgeID == nil
+        return runtimeGraph.usableOutgoingEdgeIDs(
+            for: node,
+            hasCollectedPackage: hasCollectedPackage
+        ).isEmpty
     }
 
     private struct SmoothTransition {
@@ -520,12 +617,35 @@ final class RouteEngine {
         let dotTransition: DeliveryDotTransition
     }
 
-    private func smoothTransition(from edge: RuntimeRouteEdge, in runtimeGraph: RuntimeRouteGraph) -> SmoothTransition? {
+    private func smoothTransition(
+        from edge: RuntimeRouteEdge,
+        in runtimeGraph: RuntimeRouteGraph,
+        hasCollectedPackage: Bool
+    ) -> SmoothTransition? {
         guard let node = runtimeGraph.nodesByID[edge.toNodeID] else {
             return nil
         }
 
-        let validOutgoingEdgeIDs = runtimeGraph.validOutgoingEdgeIDs(for: node)
+        // Package collection can change the usable road at this node, so commit
+        // to the node before choosing its outgoing road.
+        if node.id == packageNodeID, !hasCollectedPackage {
+            let beforePackageEdgeIDs = runtimeGraph.usableOutgoingEdgeIDs(
+                for: node,
+                hasCollectedPackage: false
+            )
+            let afterPackageEdgeIDs = runtimeGraph.usableOutgoingEdgeIDs(
+                for: node,
+                hasCollectedPackage: true
+            )
+            if beforePackageEdgeIDs != afterPackageEdgeIDs {
+                return nil
+            }
+        }
+
+        let validOutgoingEdgeIDs = runtimeGraph.usableOutgoingEdgeIDs(
+            for: node,
+            hasCollectedPackage: hasCollectedPackage
+        )
         guard validOutgoingEdgeIDs.count == 1,
               let nextEdgeID = node.activeOutgoingEdgeID,
               validOutgoingEdgeIDs.contains(nextEdgeID),

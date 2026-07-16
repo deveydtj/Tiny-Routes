@@ -11,7 +11,16 @@ try:
     from PySide6.QtCore import QPoint, QPointF, Qt
     from PySide6.QtGui import QColor, QKeyEvent, QPalette
     from PySide6.QtTest import QTest
-    from PySide6.QtWidgets import QApplication, QDialog, QFileDialog, QMessageBox, QPushButton, QToolBar, QWidget
+    from PySide6.QtWidgets import (
+        QApplication,
+        QComboBox,
+        QDialog,
+        QFileDialog,
+        QMessageBox,
+        QPushButton,
+        QToolBar,
+        QWidget,
+    )
 except ImportError as exc:
     pytest.skip(f"PySide6 unavailable in this environment: {exc}", allow_module_level=True)
 
@@ -1898,8 +1907,34 @@ def test_selecting_edge_item_updates_properties_panel(qapplication: QApplication
         assert "start" in labels
         assert "destination" in labels
         assert "Horizontal First" in labels
+        assert "Always" in labels
     finally:
         window.close()
+
+
+def test_edge_properties_panel_edits_package_availability(
+    qapplication: QApplication,
+) -> None:
+    panel = PropertiesPanel()
+    received: list[tuple] = []
+    panel.edge_properties_changed.connect(lambda *args: received.append(args))
+    panel.show_edge(
+        "e1",
+        "start",
+        "destination",
+        "horizontalFirst",
+        "afterPackage",
+        available_node_ids=["start", "destination"],
+    )
+
+    combo = panel.findChild(QComboBox, "edgeAvailabilityCombo")
+    assert combo is not None
+    assert combo.currentData() == "afterPackage"
+
+    combo.setCurrentIndex(combo.findData("beforePackage"))
+    qapplication.processEvents()
+
+    assert received[-1][-1] == "beforePackage"
 
 
 def test_clearing_selection_resets_properties_panel(qapplication: QApplication) -> None:
@@ -2651,11 +2686,12 @@ def test_scene_emits_edge_selected_signal(qapplication: QApplication) -> None:
     qapplication.processEvents()
 
     assert len(received) == 1
-    edge_id, from_id, to_id, road_shape = received[0]
+    edge_id, from_id, to_id, road_shape, availability = received[0]
     assert edge_id == "e1"
     assert from_id == "start"
     assert to_id == "destination"
     assert road_shape == "horizontalFirst"
+    assert availability == "always"
 
 
 def test_scene_emits_selection_cleared_signal(qapplication: QApplication) -> None:

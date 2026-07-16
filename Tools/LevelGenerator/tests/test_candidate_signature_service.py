@@ -31,6 +31,21 @@ def test_changing_edge_changes_topology_hash() -> None:
     assert service.signature_for(generated).topology_hash != service.signature_for(changed).topology_hash
 
 
+def test_changing_edge_availability_changes_topology_hash() -> None:
+    preset = DifficultyService().get_preset("easy")
+    generated = SingleSwitchTemplate().generate(
+        "level_012", 12, preset, RandomSource(10)
+    )
+    changed = deepcopy(generated)
+    changed.level_document.graph.edges[0].availability = "afterPackage"
+    service = CandidateSignatureService()
+
+    assert (
+        service.signature_for(generated).topology_hash
+        != service.signature_for(changed).topology_hash
+    )
+
+
 def test_changing_node_positions_changes_layout_hash() -> None:
     preset = DifficultyService().get_preset("easy")
     generated = SingleSwitchTemplate().generate("level_012", 12, preset, RandomSource(10))

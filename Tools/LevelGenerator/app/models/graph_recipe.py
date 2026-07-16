@@ -20,6 +20,7 @@ class GraphRecipeNode:
 class GraphRecipeEdge:
     from_node_id: str
     to_node_id: str
+    availability: str = "always"
 
 
 @dataclass(frozen=True)
@@ -68,6 +69,11 @@ class GraphRecipe:
                 messages.append(f"edge_unknown_from_node:{edge.from_node_id}")
             if edge.to_node_id not in node_ids:
                 messages.append(f"edge_unknown_to_node:{edge.to_node_id}")
+            if edge.availability not in {"always", "beforePackage", "afterPackage"}:
+                messages.append(
+                    f"edge_unknown_availability:{edge.from_node_id}:"
+                    f"{edge.to_node_id}:{edge.availability}"
+                )
         edge_pairs = {(edge.from_node_id, edge.to_node_id) for edge in self.edges}
         for from_node_id, to_node_id in zip(self.required_path, self.required_path[1:]):
             if (from_node_id, to_node_id) not in edge_pairs:
@@ -526,7 +532,12 @@ class GraphRecipe:
             "family": self.family_name,
             "variant": self.variant_name,
             "nodes": [(node.id, node.role) for node in self.nodes],
-            "edges": [(edge.from_node_id, edge.to_node_id) for edge in self.edges],
+            "edges": [
+                (edge.from_node_id, edge.to_node_id)
+                if edge.availability == "always"
+                else (edge.from_node_id, edge.to_node_id, edge.availability)
+                for edge in self.edges
+            ],
             "requiredPath": list(self.required_path),
             "tapNodeIDs": list(self.tap_node_ids),
             "mechanicTags": list(self.mechanic_tags),

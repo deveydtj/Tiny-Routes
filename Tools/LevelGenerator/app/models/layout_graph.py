@@ -62,6 +62,7 @@ class LayoutGraphEdge:
     edge_id: str
     from_node_id: str
     to_node_id: str
+    availability: str = "always"
 
 
 @dataclass(frozen=True)
@@ -80,7 +81,9 @@ class LayoutGraph:
         for index, edge in enumerate(recipe.edges):
             outgoing.setdefault(edge.from_node_id, []).append(edge.to_node_id)
             incoming.setdefault(edge.to_node_id, []).append(edge.from_node_id)
-            edges.append(LayoutGraphEdge(f"layout_edge_{index}", edge.from_node_id, edge.to_node_id))
+            edges.append(LayoutGraphEdge(
+                f"layout_edge_{index}", edge.from_node_id, edge.to_node_id, edge.availability
+            ))
         nodes = tuple(
             LayoutGraphNode(
                 node_id=node.id,

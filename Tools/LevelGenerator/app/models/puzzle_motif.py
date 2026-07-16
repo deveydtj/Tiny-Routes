@@ -48,6 +48,11 @@ class PuzzleMotif:
                 issues.append(f"motif_edge_unknown_from_node:{edge.from_node_id}")
             if edge.to_node_id not in known:
                 issues.append(f"motif_edge_unknown_to_node:{edge.to_node_id}")
+            if edge.availability not in {"always", "beforePackage", "afterPackage"}:
+                issues.append(
+                    f"motif_edge_unknown_availability:{edge.from_node_id}:"
+                    f"{edge.to_node_id}:{edge.availability}"
+                )
         if not self.intended_decision_effect.strip():
             issues.append("motif_intended_decision_effect_empty")
         if not self.allowed_difficulties:

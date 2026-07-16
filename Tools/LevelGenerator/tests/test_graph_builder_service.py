@@ -30,3 +30,18 @@ def test_switch_outgoing_road_shapes_are_adjusted_for_distinct_visual_starts() -
 
     assert edges[wrong.id].roadShape == "horizontalFirst"
     assert edges[package.id].roadShape == "verticalFirst"
+
+
+def test_builder_preserves_authored_road_availability() -> None:
+    builder = GraphBuilderService()
+    builder.add_node("start", 0, 0)
+    builder.add_node("package", 1, 0)
+
+    edge = builder.add_edge("start", "package", availability="beforePackage")
+    level = builder.build_level_document(
+        "level_012", "Level 012", "start", "package", "package", 30, 0
+    )
+
+    assert level.graph.edges[0].id == edge.id
+    assert level.graph.edges[0].availability == "beforePackage"
+    assert level.graph.edges[0].to_dict()["availability"] == "beforePackage"

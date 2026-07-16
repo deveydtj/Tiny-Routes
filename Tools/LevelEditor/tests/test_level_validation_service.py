@@ -449,6 +449,22 @@ def test_validate_edge_references_missing_to_node():
     assert "edge_references_missing_node" in codes
 
 
+def test_validate_unknown_road_availability_is_an_error():
+    level = _load_fixture("valid_level.json")
+    level.graph.edges[0].availability = "sometimes"
+
+    result = validate(level)
+
+    messages = [
+        message
+        for message in result.messages
+        if message.code == "invalid_road_availability"
+    ]
+    assert len(messages) == 1
+    assert messages[0].severity is ValidationSeverity.ERROR
+    assert messages[0].related_edge_id == level.graph.edges[0].id
+
+
 def test_validate_invalid_fixture_has_edge_referencing_missing_node():
     level = _load_fixture("invalid_missing_node_level.json")
     result = validate(level)

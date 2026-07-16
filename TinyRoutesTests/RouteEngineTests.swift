@@ -48,6 +48,52 @@ final class RouteEngineTests: XCTestCase {
         )
     }
 
+    private func makePackageAvailabilityLevelData() -> LevelData {
+        let nodes = [
+            RouteNode(id: "start", x: 0, y: 0, outgoingEdgeIDs: ["e_start_gate"]),
+            RouteNode(
+                id: "gate",
+                x: 1,
+                y: 0,
+                outgoingEdgeIDs: [
+                    "e_gate_package",
+                    "e_gate_destination",
+                    "e_gate_dead_end"
+                ]
+            ),
+            RouteNode(id: "package", x: 2, y: 0, outgoingEdgeIDs: ["e_package_gate"]),
+            RouteNode(id: "destination", x: 3, y: 0, outgoingEdgeIDs: []),
+            RouteNode(id: "dead_end", x: 1, y: 1, outgoingEdgeIDs: [])
+        ]
+        let edges = [
+            RouteEdge(id: "e_start_gate", fromNodeID: "start", toNodeID: "gate"),
+            RouteEdge(
+                id: "e_gate_package",
+                fromNodeID: "gate",
+                toNodeID: "package",
+                availability: .beforePackage
+            ),
+            RouteEdge(
+                id: "e_gate_destination",
+                fromNodeID: "gate",
+                toNodeID: "destination",
+                availability: .afterPackage
+            ),
+            RouteEdge(id: "e_gate_dead_end", fromNodeID: "gate", toNodeID: "dead_end"),
+            RouteEdge(id: "e_package_gate", fromNodeID: "package", toNodeID: "gate")
+        ]
+        return LevelData(
+            id: "package_availability",
+            name: "Package Availability",
+            graph: RouteGraph(nodes: nodes, edges: edges),
+            startNodeID: "start",
+            packageNodeID: "package",
+            destinationNodeID: "destination",
+            timeLimitSeconds: 30,
+            parTaps: 0
+        )
+    }
+
     private func makeFourWayIntersectionLevelData() -> LevelData {
         let nodes = [
             RouteNode(id: "start", x: -1.0, y: 0.0, outgoingEdgeIDs: ["e_start_entry"]),
@@ -1464,6 +1510,90 @@ final class RouteEngineTests: XCTestCase {
         )
         XCTAssertEqual(engine.rotateSwitchNode(nodeID: "start"), .rejectedNotSwitchable)
         XCTAssertEqual(engine.tapCount, 1)
+    }
+
+    func testSwitchRotationUsesOnlyRoadsAvailableForCurrentPackageState() throws {
+        let beforeEngine = RouteEngine()
+        try beforeEngine.buildGraph(from: makePackageAvailabilityLevelData())
+
+        XCTAssertEqual(
+            beforeEngine.rotateSwitchNode(nodeID: "gate"),
+            .accepted(nodeID: "gate", activeEdgeID: "e_gate_dead_end")
+        )
+
+        var afterLevel = makePackageAvailabilityLevelData()
+        afterLevel.startNodeID = "package"
+        let afterEngine = RouteEngine()
+        try afterEngine.buildGraph(from: afterLevel)
+        XCTAssertEqual(
+            afterEngine.runtimeGraph?.nodesByID["gate"]?.activeOutgoingEdgeID,
+            "e_gate_destination"
+        )
+        XCTAssertEqual(
+            afterEngine.rotateSwitchNode(nodeID: "gate"),
+            .accepted(nodeID: "gate", activeEdgeID: "e_gate_dead_end")
+        )
+    }
+
+    func testPackageCollectionNormalizesUnavailableActiveRoadBeforeDeparture() throws {
+        let engine = RouteEngine(dotSpeed: 1)
+        try engine.buildGraph(from: makePackageAvailabilityLevelData())
+
+        XCTAssertTrue(engine.startDotMovement())
+        engine.updateDot(deltaTime: 10)
+
+        XCTAssertEqual(engine.levelOutcome, .completed)
+        XCTAssertTrue(engine.deliveryDot?.hasCollectedPackage == true)
+        XCTAssertEqual(
+            engine.runtimeGraph?.nodesByID["gate"]?.activeOutgoingEdgeID,
+            "e_gate_destination"
+        )
+        let gate = try XCTUnwrap(engine.runtimeGraph?.nodesByID["gate"])
+        XCTAssertEqual(
+            engine.runtimeGraph?.usableOutgoingEdgeIDs(
+                for: gate,
+                hasCollectedPackage: true
+            ),
+            ["e_gate_destination", "e_gate_dead_end"]
+        )
+    }
+
+    func testBuildGraphRejectsConditionalRoadsThatCreateAnUnintendedDeadEnd() {
+        let nodes = [
+            RouteNode(id: "start", x: 0, y: 0, outgoingEdgeIDs: ["before_only"]),
+            RouteNode(id: "package", x: 1, y: 0, outgoingEdgeIDs: ["to_destination"]),
+            RouteNode(id: "destination", x: 2, y: 0, outgoingEdgeIDs: [])
+        ]
+        let edges = [
+            RouteEdge(
+                id: "before_only",
+                fromNodeID: "start",
+                toNodeID: "package",
+                availability: .beforePackage
+            ),
+            RouteEdge(id: "to_destination", fromNodeID: "package", toNodeID: "destination")
+        ]
+        let level = LevelData(
+            id: "conditional_dead_end",
+            name: "Conditional Dead End",
+            graph: RouteGraph(nodes: nodes, edges: edges),
+            startNodeID: "start",
+            packageNodeID: "package",
+            destinationNodeID: "destination",
+            timeLimitSeconds: 10,
+            parTaps: 0
+        )
+
+        XCTAssertThrowsError(try RouteEngine().buildGraph(from: level)) { error in
+            guard case RouteEngineError.conditionalRoadsCreateDeadEnd(
+                let nodeID,
+                let hasCollectedPackage
+            ) = error else {
+                return XCTFail("Expected conditionalRoadsCreateDeadEnd, got \(error)")
+            }
+            XCTAssertEqual(nodeID, "start")
+            XCTAssertTrue(hasCollectedPackage)
+        }
     }
 
     func testRotateSwitchNodeRejectsFinishedLevel() throws {

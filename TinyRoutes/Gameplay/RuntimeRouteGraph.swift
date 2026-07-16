@@ -17,6 +17,21 @@ struct RuntimeRouteEdge {
     let fromNodeID: String
     let toNodeID: String
     let roadPath: RoadPath
+    let availability: RoadAvailability
+
+    init(
+        id: String,
+        fromNodeID: String,
+        toNodeID: String,
+        roadPath: RoadPath,
+        availability: RoadAvailability = .always
+    ) {
+        self.id = id
+        self.fromNodeID = fromNodeID
+        self.toNodeID = toNodeID
+        self.roadPath = roadPath
+        self.availability = availability
+    }
 }
 
 /// The live, mutable graph used during a running level.
@@ -34,8 +49,50 @@ struct RuntimeRouteGraph {
         }
     }
 
+    func usableOutgoingEdgeIDs(
+        for node: RuntimeRouteNode,
+        hasCollectedPackage: Bool
+    ) -> [String] {
+        validOutgoingEdgeIDs(for: node).filter { edgeID in
+            edgesByID[edgeID]?.availability.isAvailable(
+                hasCollectedPackage: hasCollectedPackage
+            ) == true
+        }
+    }
+
     func switchKind(for node: RuntimeRouteNode) -> SwitchNodeKind {
         SwitchNodeKind(validOutgoingEdgeCount: validOutgoingEdgeIDs(for: node).count)
+    }
+
+    func switchKind(
+        for node: RuntimeRouteNode,
+        hasCollectedPackage: Bool
+    ) -> SwitchNodeKind {
+        SwitchNodeKind(
+            validOutgoingEdgeCount: usableOutgoingEdgeIDs(
+                for: node,
+                hasCollectedPackage: hasCollectedPackage
+            ).count
+        )
+    }
+
+    mutating func normalizeActiveOutgoingEdges(hasCollectedPackage: Bool) {
+        for nodeID in nodesByID.keys {
+            guard var node = nodesByID[nodeID] else {
+                continue
+            }
+            let usableEdgeIDs = usableOutgoingEdgeIDs(
+                for: node,
+                hasCollectedPackage: hasCollectedPackage
+            )
+            let normalizedEdgeID = node.activeOutgoingEdgeID.flatMap {
+                usableEdgeIDs.contains($0) ? $0 : nil
+            } ?? usableEdgeIDs.first
+            if node.activeOutgoingEdgeID != normalizedEdgeID {
+                node.activeOutgoingEdgeID = normalizedEdgeID
+                nodesByID[nodeID] = node
+            }
+        }
     }
 }
 

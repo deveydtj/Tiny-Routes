@@ -34,8 +34,8 @@ class LevelCanvasScene(QGraphicsScene):
 
     # Emitted when a NodeItem is selected.  Args: node_id, node_type, model_x, model_y
     node_item_selected = Signal(str, str, float, float)
-    # Emitted when an EdgeItem is selected.  Args: edge_id, from_node_id, to_node_id, road_shape
-    edge_item_selected = Signal(str, str, str, str)
+    # Emitted when an EdgeItem is selected. Args: id, from, to, shape, availability.
+    edge_item_selected = Signal(str, str, str, str, str)
     # Emitted when the selection is cleared or an unrecognised item is selected
     selection_cleared = Signal()
     # Emitted when a node is repositioned. Args: node_id, model_x, model_y
@@ -189,6 +189,7 @@ class LevelCanvasScene(QGraphicsScene):
                     from_node=from_node,
                     to_node=to_node,
                     road_shape=edge.roadShape,
+                    availability=edge.availability,
                     option_number=option_by_edge_id.get(edge.id),
                     is_initial=edge.id in initial_edge_ids,
                     has_warning=False,
@@ -636,6 +637,7 @@ class LevelCanvasScene(QGraphicsScene):
                 item.from_node_id,
                 item.to_node_id,
                 item.road_shape,
+                item.availability,
             )
         else:
             self.selection_cleared.emit()

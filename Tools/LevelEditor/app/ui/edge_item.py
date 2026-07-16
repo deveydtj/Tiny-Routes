@@ -19,6 +19,7 @@ class EdgeItem(QGraphicsItemGroup):
         from_node: NodeItem,
         to_node: NodeItem,
         road_shape: str | None = None,
+        availability: str = "always",
         option_number: int | None = None,
         is_initial: bool = False,
         has_warning: bool = False,
@@ -30,6 +31,7 @@ class EdgeItem(QGraphicsItemGroup):
         self.from_node_id = from_node.node_id
         self.to_node_id = to_node.node_id
         self.road_shape = road_shape or "horizontalFirst"
+        self.availability = availability
         self._is_initial = is_initial
         self._has_validation_issue = has_warning
         self.setZValue(-1)

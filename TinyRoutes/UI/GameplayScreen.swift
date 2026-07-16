@@ -209,6 +209,7 @@ struct GameplayScreen: View {
         lastFrameDate = frameDate
 
         guard deltaTime > 0 else {
+            runtimeGraph = routeEngine.runtimeGraph
             deliveryDot = routeEngine.deliveryDot
             hasCollectedPackage = routeEngine.deliveryDot?.hasCollectedPackage ?? false
             timeRemaining = routeEngine.timeRemaining
@@ -216,6 +217,7 @@ struct GameplayScreen: View {
         }
 
         routeEngine.updateDot(deltaTime: deltaTime)
+        runtimeGraph = routeEngine.runtimeGraph
         deliveryDot = routeEngine.deliveryDot
         hasCollectedPackage = routeEngine.deliveryDot?.hasCollectedPackage ?? false
         timeRemaining = routeEngine.timeRemaining
@@ -400,7 +402,8 @@ struct RouteBoardView: View {
             let isDeliveryDotMoving = deliveryDot?.currentEdgeID != nil || deliveryDot?.transition != nil
             let tapTargetResolver = RouteBoardTapTargetResolver(
                 runtimeGraph: runtimeGraph,
-                layout: layout
+                layout: layout,
+                hasCollectedPackage: hasCollectedPackage
             )
 
             ZStack {
@@ -513,7 +516,10 @@ struct RouteBoardView: View {
                 iconSize: specialNodeIconSize
             )
         } else if let activeDirectionAngle = activeDirectionAngle(for: node) {
-            let validOutgoingEdgeIDs = runtimeGraph.validOutgoingEdgeIDs(for: node)
+            let validOutgoingEdgeIDs = runtimeGraph.usableOutgoingEdgeIDs(
+                for: node,
+                hasCollectedPackage: hasCollectedPackage
+            )
             SwitchNodeView(
                 activeDirectionAngle: activeDirectionAngle,
                 spriteSize: switchSpriteSize,
@@ -540,7 +546,11 @@ struct RouteBoardView: View {
     }
 
     private func activeDirectionAngle(for node: RuntimeRouteNode) -> Double? {
-        SwitchArrowDirectionResolver.activeDirectionAngle(for: node, in: runtimeGraph)
+        SwitchArrowDirectionResolver.activeDirectionAngle(
+            for: node,
+            in: runtimeGraph,
+            hasCollectedPackage: hasCollectedPackage
+        )
     }
 
     private func optionAngles(for node: RuntimeRouteNode, validOutgoingEdgeIDs: [String]) -> [Double] {
@@ -993,9 +1003,19 @@ enum BoardCameraMode: Equatable {
 struct SwitchArrowDirectionResolver {
     private static let vectorMagnitudeTolerance = 0.000_001
 
-    static func activeDirectionAngle(for node: RuntimeRouteNode, in runtimeGraph: RuntimeRouteGraph) -> Double? {
-        let validOutgoingEdgeIDs = runtimeGraph.validOutgoingEdgeIDs(for: node)
-        let switchKind = runtimeGraph.switchKind(for: node)
+    static func activeDirectionAngle(
+        for node: RuntimeRouteNode,
+        in runtimeGraph: RuntimeRouteGraph,
+        hasCollectedPackage: Bool = false
+    ) -> Double? {
+        let validOutgoingEdgeIDs = runtimeGraph.usableOutgoingEdgeIDs(
+            for: node,
+            hasCollectedPackage: hasCollectedPackage
+        )
+        let switchKind = runtimeGraph.switchKind(
+            for: node,
+            hasCollectedPackage: hasCollectedPackage
+        )
 
         guard switchKind.isSwitchable,
               let activeEdgeID = node.activeOutgoingEdgeID,
@@ -1095,15 +1115,18 @@ struct RouteBoardTapTargetResolver {
     let runtimeGraph: RuntimeRouteGraph
     let layout: BoardLayout
     let tapRadius: CGFloat
+    let hasCollectedPackage: Bool
 
     init(
         runtimeGraph: RuntimeRouteGraph,
         layout: BoardLayout,
-        tapRadius: CGFloat = TRGameplayStyle.Metrics.switchTapTargetSize / 2
+        tapRadius: CGFloat = TRGameplayStyle.Metrics.switchTapTargetSize / 2,
+        hasCollectedPackage: Bool = false
     ) {
         self.runtimeGraph = runtimeGraph
         self.layout = layout
         self.tapRadius = tapRadius
+        self.hasCollectedPackage = hasCollectedPackage
     }
 
     func nodeID(at point: CGPoint) -> String? {
@@ -1111,7 +1134,10 @@ struct RouteBoardTapTargetResolver {
 
         return runtimeGraph.nodesByID.values
             .compactMap { node -> (nodeID: String, distanceSquared: CGFloat)? in
-                guard runtimeGraph.switchKind(for: node).isSwitchable,
+                guard runtimeGraph.switchKind(
+                    for: node,
+                    hasCollectedPackage: hasCollectedPackage
+                ).isSwitchable,
                       let nodePoint = layout.pointsByNodeID[node.id] else {
                     return nil
                 }

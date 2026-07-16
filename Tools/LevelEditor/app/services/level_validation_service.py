@@ -360,6 +360,18 @@ def validate(
 
     # --- Every edge references existing nodes ---
     for edge in level.graph.edges:
+        if edge.availability not in {"always", "beforePackage", "afterPackage"}:
+            messages.append(
+                ValidationMessage(
+                    severity=ValidationSeverity.ERROR,
+                    code="invalid_road_availability",
+                    message=(
+                        f"Edge '{edge.id}' has unknown availability "
+                        f"'{edge.availability}'."
+                    ),
+                    related_edge_id=edge.id,
+                )
+            )
         if edge.fromNodeID not in node_ids:
             messages.append(
                 ValidationMessage(

@@ -26,6 +26,20 @@ def test_generated_level_validation_rejects_invalid_road_shape() -> None:
     assert "invalid_road_shape" in result.error_codes
 
 
+def test_generated_level_validation_rejects_invalid_road_availability() -> None:
+    preset = DifficultyService().get_preset("easy")
+    generated = SingleSwitchTemplate().generate(
+        "level_012", 12, preset, RandomSource(8)
+    )
+    generated.level_document.graph.edges[0].availability = "sometimes"
+
+    result = GeneratedLevelValidationService().validate(
+        generated, preset=preset, overwrite=True
+    )
+
+    assert "invalid_road_availability" in result.error_codes
+
+
 def test_generated_level_validation_rejects_placeholder_solution() -> None:
     preset = DifficultyService().get_preset("easy")
     generated = SingleSwitchTemplate().generate("level_012", 12, preset, RandomSource(9))

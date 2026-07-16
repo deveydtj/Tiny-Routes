@@ -144,10 +144,12 @@ class CandidateSignatureService:
             return tuple(0.0 for _ in relative)
         return tuple(round(value / scale, 4) for value in relative)
 
-    def _normalized_edges(self, level_document) -> tuple[tuple[str, str], ...]:
+    def _normalized_edges(self, level_document) -> tuple[tuple[str, ...], ...]:
         return tuple(
             sorted(
                 (edge.fromNodeID, edge.toNodeID)
+                if edge.availability == "always"
+                else (edge.fromNodeID, edge.toNodeID, edge.availability)
                 for edge in level_document.graph.edges
             )
         )

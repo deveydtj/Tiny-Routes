@@ -75,6 +75,37 @@ final class DomainModelsTests: XCTestCase {
         XCTAssertEqual(decoded.rules, original.rules)
     }
 
+    func testRoadAvailabilityDefaultsToAlwaysWhenMissing() throws {
+        let json = #"{"id":"edge","fromNodeID":"a","toNodeID":"b"}"#
+
+        let edge = try decoder.decode(RouteEdge.self, from: Data(json.utf8))
+
+        XCTAssertEqual(edge.availability, .always)
+    }
+
+    func testRoadAvailabilityValuesRoundTrip() throws {
+        for availability in RoadAvailability.allCases {
+            let edge = RouteEdge(
+                id: "edge_\(availability.rawValue)",
+                fromNodeID: "a",
+                toNodeID: "b",
+                availability: availability
+            )
+
+            let decoded = try decoder.decode(RouteEdge.self, from: encoder.encode(edge))
+
+            XCTAssertEqual(decoded.availability, availability)
+        }
+    }
+
+    func testUnknownRoadAvailabilityFailsDecoding() {
+        let json = #"{"id":"edge","fromNodeID":"a","toNodeID":"b","availability":"sometimes"}"#
+
+        XCTAssertThrowsError(
+            try decoder.decode(RouteEdge.self, from: Data(json.utf8))
+        )
+    }
+
     func testInvalidRuleNumbersProduceValidationIssues() throws {
         var level = try decoder.decode(LevelData.self, from: Data(Self.versionTwoJSON.utf8))
         level.rules = LevelRules(

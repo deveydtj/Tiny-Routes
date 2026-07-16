@@ -6,6 +6,24 @@ enum RoadShape: String, Codable {
     case verticalFirst
 }
 
+/// Controls whether a road can be selected before or after package collection.
+enum RoadAvailability: String, Codable, CaseIterable {
+    case always
+    case beforePackage
+    case afterPackage
+
+    func isAvailable(hasCollectedPackage: Bool) -> Bool {
+        switch self {
+        case .always:
+            return true
+        case .beforePackage:
+            return !hasCollectedPackage
+        case .afterPackage:
+            return hasCollectedPackage
+        }
+    }
+}
+
 struct RoadPoint: Equatable {
     let x: Double
     let y: Double
@@ -536,11 +554,45 @@ struct RouteEdge: Identifiable, Codable {
     let fromNodeID: String
     let toNodeID: String
     var roadShape: RoadShape?
+    var availability: RoadAvailability
 
-    init(id: String, fromNodeID: String, toNodeID: String, roadShape: RoadShape? = nil) {
+    init(
+        id: String,
+        fromNodeID: String,
+        toNodeID: String,
+        roadShape: RoadShape? = nil,
+        availability: RoadAvailability = .always
+    ) {
         self.id = id
         self.fromNodeID = fromNodeID
         self.toNodeID = toNodeID
         self.roadShape = roadShape
+        self.availability = availability
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case id
+        case fromNodeID
+        case toNodeID
+        case roadShape
+        case availability
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        id = try container.decode(String.self, forKey: .id)
+        fromNodeID = try container.decode(String.self, forKey: .fromNodeID)
+        toNodeID = try container.decode(String.self, forKey: .toNodeID)
+        roadShape = try container.decodeIfPresent(RoadShape.self, forKey: .roadShape)
+        availability = try container.decodeIfPresent(RoadAvailability.self, forKey: .availability) ?? .always
+    }
+
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(id, forKey: .id)
+        try container.encode(fromNodeID, forKey: .fromNodeID)
+        try container.encode(toNodeID, forKey: .toNodeID)
+        try container.encodeIfPresent(roadShape, forKey: .roadShape)
+        try container.encode(availability, forKey: .availability)
     }
 }

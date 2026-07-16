@@ -92,7 +92,12 @@ class MotifComposerService:
             rename = {node.id: f"{prefix}_{node.id}" for node in motif.nodes}
             nodes.extend(GraphRecipeNode(rename[node.id], node.role) for node in motif.nodes)
             edges.append(GraphRecipeEdge(previous, rename[motif.entry_connector]))
-            edges.extend(GraphRecipeEdge(rename[edge.from_node_id], rename[edge.to_node_id]) for edge in motif.edges)
+            edges.extend(
+                GraphRecipeEdge(
+                    rename[edge.from_node_id], rename[edge.to_node_id], edge.availability
+                )
+                for edge in motif.edges
+            )
             local_path = self._primary_path(motif)
             required_path.extend(rename[node_id] for node_id in local_path)
             previous = rename[motif.exit_connectors[0]]

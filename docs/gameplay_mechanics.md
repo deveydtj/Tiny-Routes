@@ -32,6 +32,8 @@ A node's switch behavior is inferred from its valid outgoing directed edges:
 
 Valid outgoing edges are the edge IDs listed in `RouteNode.outgoingEdgeIDs` that also exist in the graph and start at that node. Missing edge IDs or edge IDs that belong to another source node do not count as valid switch choices.
 
+Usable outgoing edges are the valid edges whose package-state `availability` condition currently passes. Roads may be `always`, `beforePackage`, or `afterPackage`; omitted availability is `always`. Switch classification, rotation, look-ahead traversal, and departure use only usable edges. When package collection makes the active road unavailable, the first usable road in `outgoingEdgeIDs` order becomes active before departure. Authored nonterminal nodes must have a usable road both before and after package collection.
+
 The tap cycle order is the order of `outgoingEdgeIDs`. At level start, the active outgoing edge is the first valid outgoing edge. Each successful tap rotates the active edge to the next valid edge, wrapping back to the first edge after the last one. Switch state persists unless the player taps the switch again. In `liveLookahead`, such taps are accepted only during the eligibility window; `legacyGlobal` retains the former global interaction while content is migrated.
 
 Roads are directed. Adding an outgoing edge from `central_switch` to `package` does not create a return route from `package` to `central_switch`; that return path must be represented by its own directed edge.

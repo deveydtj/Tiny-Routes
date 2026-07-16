@@ -39,11 +39,14 @@ class GraphBuilderService:
         to_node_id: str,
         road_shape: str | None = None,
         edge_id: str | None = None,
+        availability: str = "always",
     ) -> RouteEdgeModel:
         if from_node_id not in self._node_by_id:
             raise ValueError(f"Unknown from node: {from_node_id}")
         if to_node_id not in self._node_by_id:
             raise ValueError(f"Unknown to node: {to_node_id}")
+        if availability not in {"always", "beforePackage", "afterPackage"}:
+            raise ValueError(f"Unknown road availability: {availability}")
 
         if edge_id is None:
             edge_id = self.id_allocator.reserve_edge_id(from_node_id, to_node_id)
@@ -64,6 +67,7 @@ class GraphBuilderService:
             fromNodeID=from_node_id,
             toNodeID=to_node_id,
             roadShape=resolved_shape,
+            availability=availability,
         )
         if road_shape is not None:
             self._explicit_road_shape_edge_ids.add(edge_id)

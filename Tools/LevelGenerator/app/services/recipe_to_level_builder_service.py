@@ -145,6 +145,7 @@ class RecipeToLevelBuilderService:
                 edge.from_node_id,
                 edge.to_node_id,
                 road_shape=edge_shapes[(edge.from_node_id, edge.to_node_id)],
+                availability=edge.availability,
             )
 
         time_limit = self._time_limit(recipe.required_path, positions, preset.time_limit_padding_seconds)

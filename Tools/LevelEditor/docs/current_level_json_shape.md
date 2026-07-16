@@ -76,6 +76,9 @@ Nodes are identified by their `id` string and by their role in the top-level fie
 | `fromNodeID` | string | yes | `id` of the node this edge originates from |
 | `toNodeID` | string | yes | `id` of the node this edge leads to |
 | `roadShape` | string | no | Optional road rendering hint. Allowed values: `"horizontalFirst"`, `"verticalFirst"`. When omitted, the Swift engine defaults to `horizontalFirst`. |
+| `availability` | string | no | Package-state condition for using the road: `"always"`, `"beforePackage"`, or `"afterPackage"`. Omitted values decode as `"always"`. Unknown values are invalid. |
+
+Road availability is evaluated whenever the runtime chooses or rotates an outgoing road. A `beforePackage` road is usable only until the package is collected; an `afterPackage` road is usable only after collection. Every authored nonterminal node must retain at least one usable outgoing road in both package states so a condition cannot create an accidental dead end.
 
 ---
 
@@ -126,6 +129,7 @@ Solution sidecar files live in `TinyRoutesTests/Resources/LevelSolutions/` and a
 The following fields exist in the Swift runtime models but are computed at runtime and are not stored in the level JSON files:
 
 - `RoadShape` default: When `roadShape` is omitted from an edge, the Swift `RoadPath.make(from:to:shape:)` defaults to `.horizontalFirst`. This default is not written back into the JSON.
+- `RoadAvailability` default: When `availability` is omitted from an edge, Swift and Python both treat it as `always`.
 - `RouteNode.validateOutgoingEdges(against:)`: A validation helper on `RouteNode` that confirms `outgoingEdgeIDs` is consistent with the graph edges list. This is test/debug-time only and not stored in JSON.
 
 ---

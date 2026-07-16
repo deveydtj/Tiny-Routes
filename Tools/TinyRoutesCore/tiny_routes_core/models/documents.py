@@ -39,17 +39,31 @@ class RouteEdge:
     fromNodeID: str
     toNodeID: str
     roadShape: str | None = None
+    availability: str = "always"
     _extra: dict[str, Any] = field(default_factory=dict, repr=False, compare=False)
+    _availability_present: bool = field(default=False, repr=False, compare=False)
 
     @classmethod
     def from_dict(cls, data: Mapping[str, Any]) -> "RouteEdge":
-        return cls(str(data["id"]), str(data["fromNodeID"]), str(data["toNodeID"]),
-                   data.get("roadShape"), _extras(data, {"id", "fromNodeID", "toNodeID", "roadShape"}))
+        return cls(
+            id=str(data["id"]),
+            fromNodeID=str(data["fromNodeID"]),
+            toNodeID=str(data["toNodeID"]),
+            roadShape=data.get("roadShape"),
+            availability=str(data.get("availability", "always")),
+            _extra=_extras(
+                data,
+                {"id", "fromNodeID", "toNodeID", "roadShape", "availability"},
+            ),
+            _availability_present="availability" in data,
+        )
 
     def to_dict(self) -> dict[str, Any]:
         result = {**deepcopy(self._extra), "id": self.id, "fromNodeID": self.fromNodeID,
                   "toNodeID": self.toNodeID}
         if self.roadShape is not None: result["roadShape"] = self.roadShape
+        if self._availability_present or self.availability != "always":
+            result["availability"] = self.availability
         return result
 
     def clone(self) -> "RouteEdge": return deepcopy(self)
