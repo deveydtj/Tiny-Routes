@@ -2685,6 +2685,8 @@ Make the corrected system maintainable by developers who did not implement it.
 
 ## Task 19.1 — Update architecture documentation
 
+**Status:** Completed
+
 **Files to add**
 
 - `docs/architecture/level_runtime.md`
@@ -2692,7 +2694,16 @@ Make the corrected system maintainable by developers who did not implement it.
 - `docs/architecture/editor_architecture.md`
 - `docs/architecture/runtime_parity.md`
 
+**Completion notes**
+
+- [x] Documented the Swift runtime source of truth, serialized/runtime graph boundaries, event ordering, eligibility, package-state roads, UI ownership, and verification workflow.
+- [x] Documented deterministic generator stages, candidate data ownership, rejection flow, portfolio selection, persistence, reporting, and extension points.
+- [x] Documented editor document ownership, undoable mutation boundary, repositories, canvas tools, validation/analysis, playtesting, solution recording, autosave, and safe extension workflow.
+- [x] Documented shared parity inputs, Python and Swift harnesses, generator parity policy, event invariants, and fixture-change procedure.
+
 ## Task 19.2 — Document rejection and validation codes
+
+**Status:** Completed
 
 **File to add**
 
@@ -2705,6 +2716,12 @@ For every code include:
 - Typical cause.
 - How to fix it.
 - Whether it blocks production.
+
+**Completion notes**
+
+- [x] Added a stage-grouped reference for repository/rules errors, runtime tap and simulation results, level and sidecar validation, topology and unique-solution proof, difficulty/quality/parity/selection gates, and layout/visual-clarity diagnostics.
+- [x] Included meaning, typical cause, remediation, and production-blocking behavior for every documented code and dynamic code family.
+- [x] Added a maintenance rule requiring the reference to change with machine-readable code additions, renames, or removals.
 
 ## Task 19.3 — Add generator tuning guidance
 
