@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from app.level_editor_imports import SolutionModel
+from app.level_editor_imports import Solution
 from app.models.abstract_puzzle_solution import AbstractPuzzleSolutionMetadata
 from app.models.generated_level import GeneratedLevel
 from app.random_source import RandomSource
@@ -196,7 +196,7 @@ def _generated_for_geometry_fixture(
     level = _level_for_geometry_fixture(level_id, positions, edges)
     generated = GeneratedLevel(
         level_document=level,
-        solution=SolutionModel(
+        solution=Solution(
             levelID=level.id,
             description="Geometry fixture.",
             expectedOutcome="completed",

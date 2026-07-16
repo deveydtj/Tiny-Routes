@@ -5,7 +5,7 @@ from copy import deepcopy
 from PySide6.QtCore import QObject, QElapsedTimer, QTimer, Signal
 
 from tiny_routes_core.models import LevelDocument
-from tiny_routes_core.models import SolutionModel
+from tiny_routes_core.models import Solution
 from tiny_routes_core.simulation import (
     LevelOutcome,
     RuntimeSimulationResult,
@@ -106,7 +106,7 @@ class PlaytestController(QObject):
         self._publish(running=True, paused=False)
         return record
 
-    def recorded_solution(self) -> SolutionModel | None:
+    def recorded_solution(self) -> Solution | None:
         """Return a canonical solution only when the completed run replays cleanly."""
         if (
             self._level is None
@@ -124,7 +124,7 @@ class PlaytestController(QObject):
             record.code != TapResultCode.ACCEPTED for record in replay.taps
         ):
             return None
-        return SolutionModel(
+        return Solution(
             levelID=self._level.id,
             description="Recorded in Level Editor playtest",
             expectedOutcome="completed",
@@ -143,7 +143,7 @@ class PlaytestController(QObject):
         self._clock.restart()
         self._publish(running=True, paused=self._state.paused)
 
-    def load_replay(self, document: LevelDocument, solution: SolutionModel) -> None:
+    def load_replay(self, document: LevelDocument, solution: Solution) -> None:
         """Load an immutable solution script and pause at its deterministic initial state."""
         self._timer.stop()
         self._level = deepcopy(document)

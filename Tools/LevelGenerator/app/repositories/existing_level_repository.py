@@ -3,7 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from pathlib import Path
 
-from ..level_editor_imports import LevelDocument, SolutionActionModel, SolutionModel
+from ..level_editor_imports import LevelDocument, SolutionAction, Solution
 from ..models.candidate_signature import CandidateSignature
 from ..models.generated_level import GeneratedLevel
 from ..services.candidate_signature_service import CandidateSignatureService
@@ -65,11 +65,11 @@ class ExistingLevelRepository:
                 continue
 
             solution_path = solutions_path / f"{level.id}.solution.json"
-            solution: SolutionModel
+            solution: Solution
             resolved_solution_path: Path | None = solution_path
             if solution_path.exists():
                 try:
-                    solution = SolutionModel.from_dict(self._read_json_object(solution_path))
+                    solution = Solution.from_dict(self._read_json_object(solution_path))
                 except Exception as exc:
                     result.warnings.append(f"Could not load existing solution {solution_path}: {exc}")
                     solution = self._solution_from_embedded_or_empty(level)
@@ -142,14 +142,14 @@ class ExistingLevelRepository:
             result.warnings.append(f"Could not load production manifest {manifest_path}: {exc}")
             return []
 
-    def _solution_from_embedded_or_empty(self, level: LevelDocument) -> SolutionModel:
+    def _solution_from_embedded_or_empty(self, level: LevelDocument) -> Solution:
         actions = []
         if level.solution is not None:
             actions = [
-                SolutionActionModel(timeSeconds=round(0.4 + (index * 0.4), 2), tapNodeID=node_id)
+                SolutionAction(timeSeconds=round(0.4 + (index * 0.4), 2), tapNodeID=node_id)
                 for index, node_id in enumerate(level.solution.tapNodeIDs)
             ]
-        return SolutionModel(
+        return Solution(
             levelID=level.id,
             description="Generated from embedded or missing existing solution data for comparison only.",
             expectedOutcome="completed",

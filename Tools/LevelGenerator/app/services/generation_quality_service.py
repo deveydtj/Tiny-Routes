@@ -764,7 +764,7 @@ class PuzzleQualityScorer:
         score += min(metadata.false_route_count, 4) * 0.07
         score += min(metadata.dead_end_count, 3) * 0.06
         score += min(metadata.loop_count, 2) * 0.08
-        if preset.required_tap_range[0] <= metadata.minimum_required_taps <= preset.required_tap_range[1]:
+        if preset.required_tap_range[0] <= metadata.minimum_required_decisions <= preset.required_tap_range[1]:
             score += 0.14
         if metadata.repeated_switch_usage and preset.allow_repeated_switch_taps:
             score += 0.05

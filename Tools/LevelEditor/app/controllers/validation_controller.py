@@ -5,7 +5,7 @@ from pathlib import Path
 
 from PySide6.QtCore import QObject, QTimer, Signal
 
-from app.models import LevelDocument, SolutionModel
+from app.models import LevelDocument, Solution
 from app.services import LevelValidationService, SolutionValidationService, ValidationResult, validate_layout
 
 
@@ -30,7 +30,7 @@ class ValidationController(QObject):
         self._timer.setInterval(debounce_ms)
         self._timer.timeout.connect(self._run_pending)
         self._generation = 0
-        self._pending: tuple[int, LevelDocument, SolutionModel | None, Path | None] | None = None
+        self._pending: tuple[int, LevelDocument, Solution | None, Path | None] | None = None
 
     @property
     def is_pending(self) -> bool:
@@ -39,7 +39,7 @@ class ValidationController(QObject):
     def schedule(
         self,
         document: LevelDocument,
-        solution: SolutionModel | None,
+        solution: Solution | None,
         file_path: Path | None = None,
     ) -> None:
         self._generation += 1
@@ -55,7 +55,7 @@ class ValidationController(QObject):
     def validate_now(
         self,
         document: LevelDocument,
-        solution: SolutionModel | None,
+        solution: Solution | None,
         file_path: Path | None = None,
     ) -> ValidationResult:
         self._generation += 1
@@ -83,7 +83,7 @@ class ValidationController(QObject):
     def _validate(
         self,
         document: LevelDocument,
-        solution: SolutionModel | None,
+        solution: Solution | None,
         file_path: Path | None,
     ) -> ValidationResult:
         level_result = self._level_service.validate(document, file_path)

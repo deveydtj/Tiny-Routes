@@ -15,7 +15,7 @@ from PySide6.QtWidgets import (
 )
 from shiboken6 import isValid
 
-from app.models import EditorTool, LevelDocument, RouteNodeModel
+from app.models import EditorTool, LevelDocument, RouteNode
 from app.models.playtest_state import PlaytestState
 from tiny_routes_core.simulation import LevelOutcome
 from app.services.switch_classification_service import SwitchClassificationService, SwitchNodeKind
@@ -1005,7 +1005,7 @@ class LevelCanvasScene(QGraphicsScene):
             suffix += 1
         return f"{base_id}_{suffix}"
 
-    def _resolve_node_type(self, document: LevelDocument, node: RouteNodeModel) -> str:
+    def _resolve_node_type(self, document: LevelDocument, node: RouteNode) -> str:
         if node.id == document.startNodeID:
             return "start"
         if node.id == document.packageNodeID:
@@ -1024,7 +1024,7 @@ class LevelCanvasScene(QGraphicsScene):
             return "switch"
         return "route"
 
-    def _resolve_scene_position(self, node: RouteNodeModel, index: int) -> QPointF:
+    def _resolve_scene_position(self, node: RouteNode, index: int) -> QPointF:
         x = node.x
         y = node.y
 
@@ -1069,7 +1069,7 @@ class LevelCanvasScene(QGraphicsScene):
                 self._transition_arc_items.append(arc_item)
                 self.addItem(arc_item)
 
-    def _default_active_outgoing_edge(self, node: RouteNodeModel, edges_by_id: dict):
+    def _default_active_outgoing_edge(self, node: RouteNode, edges_by_id: dict):
         for edge_id in node.outgoingEdgeIDs:
             edge = edges_by_id.get(edge_id)
             if edge is not None and edge.fromNodeID == node.id:

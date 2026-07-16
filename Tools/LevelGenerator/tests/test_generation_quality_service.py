@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from app.random_source import RandomSource
-from app.level_editor_imports import LevelDocument, RouteEdgeModel, RouteGraphModel, RouteNodeModel, SolutionModel
+from app.level_editor_imports import LevelDocument, RouteEdge, RouteGraph, RouteNode, Solution
 from app.models.generated_level import GeneratedLevel
 from app.models.decision_profile import DecisionProfile
 from app.recipes.recipe_family_registry import RecipeFamilyRegistry
@@ -192,21 +192,21 @@ def _parallel_warning_generated_level() -> GeneratedLevel:
     level = LevelDocument(
         id="level_visual_warning",
         name="Visual Warning",
-        graph=RouteGraphModel(
+        graph=RouteGraph(
             nodes=[
-                RouteNodeModel(id="start", x=0.0, y=0.0, outgoingEdgeIDs=["e_start_package"]),
-                RouteNodeModel(id="package", x=1.0, y=0.0, outgoingEdgeIDs=["e_package_destination"]),
-                RouteNodeModel(id="destination", x=2.0, y=0.0, outgoingEdgeIDs=[]),
-                RouteNodeModel(id="side_a", x=0.0, y=1.0, outgoingEdgeIDs=["e_side_ab"]),
-                RouteNodeModel(id="side_b", x=1.0, y=1.0, outgoingEdgeIDs=[]),
-                RouteNodeModel(id="side_c", x=0.0, y=1.1, outgoingEdgeIDs=["e_side_cd"]),
-                RouteNodeModel(id="side_d", x=1.0, y=1.1, outgoingEdgeIDs=[]),
+                RouteNode(id="start", x=0.0, y=0.0, outgoingEdgeIDs=["e_start_package"]),
+                RouteNode(id="package", x=1.0, y=0.0, outgoingEdgeIDs=["e_package_destination"]),
+                RouteNode(id="destination", x=2.0, y=0.0, outgoingEdgeIDs=[]),
+                RouteNode(id="side_a", x=0.0, y=1.0, outgoingEdgeIDs=["e_side_ab"]),
+                RouteNode(id="side_b", x=1.0, y=1.0, outgoingEdgeIDs=[]),
+                RouteNode(id="side_c", x=0.0, y=1.1, outgoingEdgeIDs=["e_side_cd"]),
+                RouteNode(id="side_d", x=1.0, y=1.1, outgoingEdgeIDs=[]),
             ],
             edges=[
-                RouteEdgeModel(id="e_start_package", fromNodeID="start", toNodeID="package"),
-                RouteEdgeModel(id="e_package_destination", fromNodeID="package", toNodeID="destination"),
-                RouteEdgeModel(id="e_side_ab", fromNodeID="side_a", toNodeID="side_b"),
-                RouteEdgeModel(id="e_side_cd", fromNodeID="side_c", toNodeID="side_d"),
+                RouteEdge(id="e_start_package", fromNodeID="start", toNodeID="package"),
+                RouteEdge(id="e_package_destination", fromNodeID="package", toNodeID="destination"),
+                RouteEdge(id="e_side_ab", fromNodeID="side_a", toNodeID="side_b"),
+                RouteEdge(id="e_side_cd", fromNodeID="side_c", toNodeID="side_d"),
             ],
         ),
         startNodeID="start",
@@ -217,7 +217,7 @@ def _parallel_warning_generated_level() -> GeneratedLevel:
     )
     return GeneratedLevel(
         level_document=level,
-        solution=SolutionModel(
+        solution=Solution(
             levelID=level.id,
             description="No taps.",
             expectedOutcome="completed",

@@ -30,7 +30,7 @@ if str(LEVEL_EDITOR_ROOT) not in sys.path:
 
 import app.main_window as main_window_module
 from app.main_window import LevelEditorMainWindow
-from app.models import EditorTool, LevelDocument, RouteEdgeModel, RouteGraphModel, RouteNodeModel, SolutionActionModel, SolutionModel
+from app.models import EditorTool, LevelDocument, RouteEdge, RouteGraph, RouteNode, SolutionAction, Solution
 from app.models.playtest_state import PlaytestState
 from app.services import (
     LevelIdentityService,
@@ -251,7 +251,7 @@ def test_palette_drop_and_click_placement_emit_equivalent_state(qapplication: QA
         LevelDocument(
             id="draft",
             name="Draft",
-            graph=RouteGraphModel(),
+            graph=RouteGraph(),
             startNodeID="start",
             packageNodeID="package",
             destinationNodeID="destination",
@@ -277,7 +277,7 @@ def test_drop_preview_marks_overlapping_placement_invalid(qapplication: QApplica
     document = LevelDocument(
         id="draft",
         name="Draft",
-        graph=RouteGraphModel(nodes=[RouteNodeModel(id="route", x=1.0, y=0.5)]),
+        graph=RouteGraph(nodes=[RouteNode(id="route", x=1.0, y=0.5)]),
         startNodeID="start",
         packageNodeID="package",
         destinationNodeID="destination",
@@ -301,7 +301,7 @@ def test_snap_selected_uses_model_grid_and_snap_off_preserves_free_coordinates(
     document = LevelDocument(
         id="draft",
         name="Draft",
-        graph=RouteGraphModel(nodes=[RouteNodeModel(id="route", x=0.63, y=0.87)]),
+        graph=RouteGraph(nodes=[RouteNode(id="route", x=0.63, y=0.87)]),
         startNodeID="start",
         packageNodeID="package",
         destinationNodeID="destination",
@@ -447,10 +447,10 @@ def test_canvas_view_zoom_to_selection_frames_all_selected_items(
     document = LevelDocument(
         id="zoom_selection",
         name="Zoom Selection",
-        graph=RouteGraphModel(
+        graph=RouteGraph(
             nodes=[
-                RouteNodeModel(id="left", x=-4.0, y=0.0),
-                RouteNodeModel(id="right", x=4.0, y=0.0),
+                RouteNode(id="left", x=-4.0, y=0.0),
+                RouteNode(id="right", x=4.0, y=0.0),
             ]
         ),
         startNodeID="left",
@@ -542,7 +542,7 @@ def test_open_level_still_loads_document_with_canvas_central_widget(
     document = LevelDocument(
         id="level_123",
         name="Sample Level",
-        graph=RouteGraphModel(),
+        graph=RouteGraph(),
         startNodeID="start",
         packageNodeID="package",
         destinationNodeID="destination",
@@ -572,12 +572,12 @@ def test_open_level_draws_nodes_on_canvas(
     document = LevelDocument(
         id="level_456",
         name="Node Drawing Level",
-        graph=RouteGraphModel(
+        graph=RouteGraph(
             nodes=[
-                RouteNodeModel(id="start", x=0.0, y=0.0, outgoingEdgeIDs=["e1"]),
-                RouteNodeModel(id="switch_a", x=1.0, y=0.0, outgoingEdgeIDs=["e2", "e3"]),
-                RouteNodeModel(id="package", x=2.0, y=0.0, outgoingEdgeIDs=["e4"]),
-                RouteNodeModel(id="destination", x=3.0, y=0.0, outgoingEdgeIDs=[]),
+                RouteNode(id="start", x=0.0, y=0.0, outgoingEdgeIDs=["e1"]),
+                RouteNode(id="switch_a", x=1.0, y=0.0, outgoingEdgeIDs=["e2", "e3"]),
+                RouteNode(id="package", x=2.0, y=0.0, outgoingEdgeIDs=["e4"]),
+                RouteNode(id="destination", x=3.0, y=0.0, outgoingEdgeIDs=[]),
             ],
         ),
         startNodeID="start",
@@ -636,20 +636,20 @@ def test_open_level_loads_solution_actions_into_solution_panel(
     document = LevelDocument(
         id="level_002",
         name="Node Drawing Level",
-        graph=RouteGraphModel(),
+        graph=RouteGraph(),
         startNodeID="start",
         packageNodeID="package",
         destinationNodeID="destination",
         timeLimitSeconds=60,
         parTaps=2,
     )
-    solution = SolutionModel(
+    solution = Solution(
         levelID="level_002",
         description="Test",
         expectedOutcome="completed",
         maxTaps=1,
         requiresWithinTimeLimit=True,
-        actions=[SolutionActionModel(timeSeconds=0.5, tapNodeID="choice")],
+        actions=[SolutionAction(timeSeconds=0.5, tapNodeID="choice")],
     )
 
     monkeypatch.setattr(QFileDialog, "getOpenFileName", lambda *args, **kwargs: ("/tmp/level_002.json", ""))
@@ -673,20 +673,20 @@ def test_open_level_does_not_normalize_bad_solution_metadata(
     document = LevelDocument(
         id="level_002",
         name="Node Drawing Level",
-        graph=RouteGraphModel(),
+        graph=RouteGraph(),
         startNodeID="start",
         packageNodeID="package",
         destinationNodeID="destination",
         timeLimitSeconds=60,
         parTaps=2,
     )
-    solution = SolutionModel(
+    solution = Solution(
         levelID="wrong_level",
         description="Test",
         expectedOutcome="completed",
         maxTaps=99,
         requiresWithinTimeLimit=True,
-        actions=[SolutionActionModel(timeSeconds=0.5, tapNodeID="choice")],
+        actions=[SolutionAction(timeSeconds=0.5, tapNodeID="choice")],
     )
 
     monkeypatch.setattr(QFileDialog, "getOpenFileName", lambda *args, **kwargs: ("/tmp/level_002.json", ""))
@@ -709,9 +709,9 @@ def test_validate_current_level_includes_solution_messages(
     document = LevelDocument(
         id="level_002",
         name="Solution Validation Level",
-        graph=RouteGraphModel(
+        graph=RouteGraph(
             nodes=[
-                RouteNodeModel(id="start", x=0.0, y=0.0, outgoingEdgeIDs=[]),
+                RouteNode(id="start", x=0.0, y=0.0, outgoingEdgeIDs=[]),
             ],
             edges=[],
         ),
@@ -721,7 +721,7 @@ def test_validate_current_level_includes_solution_messages(
         timeLimitSeconds=60,
         parTaps=0,
     )
-    solution = SolutionModel(
+    solution = Solution(
         levelID="wrong_level",
         description="Test",
         expectedOutcome="completed",
@@ -752,7 +752,7 @@ def test_validate_current_level_shows_production_metadata_consistent_info(
     document.name = "Level 021"
     window._current_document = document
     window._current_file_path = Path("/tmp/level_021.json")
-    window._current_solution = SolutionModel(
+    window._current_solution = Solution(
         levelID="level_021",
         description="Test",
         expectedOutcome="completed",
@@ -781,7 +781,7 @@ def test_validate_current_level_suppresses_metadata_consistent_info_when_invalid
     document.name = "Level 021"
     window._current_document = document
     window._current_file_path = Path("/tmp/level_021.json")
-    window._current_solution = SolutionModel(
+    window._current_solution = Solution(
         levelID="wrong_level",
         description="Test",
         expectedOutcome="completed",
@@ -812,7 +812,7 @@ def test_validate_current_level_keeps_structural_errors_with_metadata_messages(
     document.startNodeID = ""
     window._current_document = document
     window._current_file_path = Path("/tmp/level_021.json")
-    window._current_solution = SolutionModel(
+    window._current_solution = Solution(
         levelID="level_021",
         description="Test",
         expectedOutcome="completed",
@@ -911,7 +911,7 @@ def test_repair_opened_non_padded_level_suggests_padded_identity(
         window._current_document = _make_two_node_one_edge_document()
         window._current_document.id = "new_level"
         window._current_file_path = Path("/tmp/level_21.json")
-        window._current_solution = SolutionModel(
+        window._current_solution = Solution(
             levelID="new_level",
             description="Test",
             expectedOutcome="completed",
@@ -977,7 +977,7 @@ def test_repair_updates_metadata_and_saves_normalized_files(
         window._current_document.id = "new_level"
         window._current_document.name = "New Level"
         window._current_file_path = Path("/tmp/level_21.json")
-        window._current_solution = SolutionModel(
+        window._current_solution = Solution(
             levelID="new_level",
             description="Test",
             expectedOutcome="completed",
@@ -1003,7 +1003,7 @@ def test_run_level_tests_shows_result_in_validation_panel(qapplication: QApplica
     document = LevelDocument(
         id="level_002",
         name="Run Tests Level",
-        graph=RouteGraphModel(nodes=[RouteNodeModel(id="start", x=0.0, y=0.0, outgoingEdgeIDs=[])]),
+        graph=RouteGraph(nodes=[RouteNode(id="start", x=0.0, y=0.0, outgoingEdgeIDs=[])]),
         startNodeID="start",
         packageNodeID="start",
         destinationNodeID="start",
@@ -1011,7 +1011,7 @@ def test_run_level_tests_shows_result_in_validation_panel(qapplication: QApplica
         parTaps=0,
     )
     window._current_document = document
-    window._current_solution = SolutionModel(
+    window._current_solution = Solution(
         levelID="level_002",
         description="Test",
         expectedOutcome="completed",
@@ -1043,10 +1043,10 @@ def test_canvas_scene_uses_fallback_layout_for_non_finite_coordinates(qapplicati
     document = LevelDocument(
         id="level_invalid_coords",
         name="Invalid Coordinates",
-        graph=RouteGraphModel(
+        graph=RouteGraph(
             nodes=[
-                RouteNodeModel(id="start", x=0.0, y=0.0, outgoingEdgeIDs=["e_start_route"]),
-                RouteNodeModel(id="route_a", x=math.nan, y=math.inf, outgoingEdgeIDs=[]),
+                RouteNode(id="start", x=0.0, y=0.0, outgoingEdgeIDs=["e_start_route"]),
+                RouteNode(id="route_a", x=math.nan, y=math.inf, outgoingEdgeIDs=[]),
             ],
         ),
         startNodeID="start",
@@ -1067,13 +1067,13 @@ def test_canvas_scene_displays_positive_model_y_upward(qapplication: QApplicatio
     document = LevelDocument(
         id="level_vertical",
         name="Vertical Level",
-        graph=RouteGraphModel(
+        graph=RouteGraph(
             nodes=[
-                RouteNodeModel(id="start", x=0.0, y=0.0, outgoingEdgeIDs=["e1"]),
-                RouteNodeModel(id="destination", x=0.0, y=2.0, outgoingEdgeIDs=[]),
+                RouteNode(id="start", x=0.0, y=0.0, outgoingEdgeIDs=["e1"]),
+                RouteNode(id="destination", x=0.0, y=2.0, outgoingEdgeIDs=[]),
             ],
             edges=[
-                RouteEdgeModel(id="e1", fromNodeID="start", toNodeID="destination"),
+                RouteEdge(id="e1", fromNodeID="start", toNodeID="destination"),
             ],
         ),
         startNodeID="start",
@@ -1095,7 +1095,7 @@ def test_canvas_scene_shows_no_nodes_message_for_empty_document(qapplication: QA
     empty_document = LevelDocument(
         id="empty_level",
         name="Empty",
-        graph=RouteGraphModel(),
+        graph=RouteGraph(),
         startNodeID="start",
         packageNodeID="package",
         destinationNodeID="destination",
@@ -1117,7 +1117,7 @@ def test_canvas_scene_clears_and_redraws_nodes(qapplication: QApplication) -> No
     first_document = LevelDocument(
         id="first_level",
         name="First",
-        graph=RouteGraphModel(nodes=[RouteNodeModel(id="start", x=0.0, y=0.0, outgoingEdgeIDs=[])]),
+        graph=RouteGraph(nodes=[RouteNode(id="start", x=0.0, y=0.0, outgoingEdgeIDs=[])]),
         startNodeID="start",
         packageNodeID="start",
         destinationNodeID="start",
@@ -1127,7 +1127,7 @@ def test_canvas_scene_clears_and_redraws_nodes(qapplication: QApplication) -> No
     second_document = LevelDocument(
         id="second_level",
         name="Second",
-        graph=RouteGraphModel(nodes=[RouteNodeModel(id="node_b", x=1.0, y=1.0, outgoingEdgeIDs=[])]),
+        graph=RouteGraph(nodes=[RouteNode(id="node_b", x=1.0, y=1.0, outgoingEdgeIDs=[])]),
         startNodeID="node_b",
         packageNodeID="node_b",
         destinationNodeID="node_b",
@@ -1147,7 +1147,7 @@ def test_canvas_scene_clears_and_redraws_nodes(qapplication: QApplication) -> No
 def test_solution_panel_can_add_edit_and_remove_actions(qapplication: QApplication) -> None:
     panel = SolutionPanel()
     panel.set_solution(
-        SolutionModel(
+        Solution(
             levelID="level_002",
             description="Test",
             expectedOutcome="completed",
@@ -1157,7 +1157,7 @@ def test_solution_panel_can_add_edit_and_remove_actions(qapplication: QApplicati
         )
     )
 
-    emitted_solutions: list[SolutionModel] = []
+    emitted_solutions: list[Solution] = []
     panel.solution_changed.connect(emitted_solutions.append)
 
     try:
@@ -1180,15 +1180,15 @@ def test_solution_panel_can_add_edit_and_remove_actions(qapplication: QApplicati
 
 def test_solution_panel_shows_switch_timeline_for_four_way_taps(qapplication: QApplication) -> None:
     panel = SolutionPanel()
-    solution = SolutionModel(
+    solution = Solution(
         levelID="level_four_way",
         description="Test",
         expectedOutcome="completed",
         maxTaps=2,
         requiresWithinTimeLimit=True,
         actions=[
-            SolutionActionModel(timeSeconds=0.8, tapNodeID="central"),
-            SolutionActionModel(timeSeconds=2.4, tapNodeID="central"),
+            SolutionAction(timeSeconds=0.8, tapNodeID="central"),
+            SolutionAction(timeSeconds=2.4, tapNodeID="central"),
         ],
     )
 
@@ -1214,20 +1214,20 @@ def test_solution_changes_mark_main_window_dirty(
     document = LevelDocument(
         id="level_002",
         name="Dirty State Level",
-        graph=RouteGraphModel(),
+        graph=RouteGraph(),
         startNodeID="start",
         packageNodeID="package",
         destinationNodeID="destination",
         timeLimitSeconds=60,
         parTaps=2,
     )
-    solution = SolutionModel(
+    solution = Solution(
         levelID="level_002",
         description="Test",
         expectedOutcome="completed",
         maxTaps=1,
         requiresWithinTimeLimit=True,
-        actions=[SolutionActionModel(timeSeconds=0.5, tapNodeID="choice")],
+        actions=[SolutionAction(timeSeconds=0.5, tapNodeID="choice")],
     )
 
     monkeypatch.setattr(QFileDialog, "getOpenFileName", lambda *args, **kwargs: ("/tmp/level_002.json", ""))
@@ -1257,20 +1257,20 @@ def test_save_level_also_saves_solution_sidecar(
     document = LevelDocument(
         id="level_050",
         name="Save Level",
-        graph=RouteGraphModel(),
+        graph=RouteGraph(),
         startNodeID="start",
         packageNodeID="package",
         destinationNodeID="destination",
         timeLimitSeconds=60,
         parTaps=2,
     )
-    solution = SolutionModel(
+    solution = Solution(
         levelID="level_050",
         description="Test",
         expectedOutcome="completed",
         maxTaps=1,
         requiresWithinTimeLimit=True,
-        actions=[SolutionActionModel(timeSeconds=0.5, tapNodeID="choice")],
+        actions=[SolutionAction(timeSeconds=0.5, tapNodeID="choice")],
     )
     saved_solution: dict[str, object] = {}
 
@@ -1281,7 +1281,7 @@ def test_save_level_also_saves_solution_sidecar(
     monkeypatch.setattr(window._repository, "save_level", lambda path, doc: None)
     monkeypatch.setattr(window._solution_repository, "find_solution_path", lambda path: tmp_path / "level_050.solution.json")
 
-    def capture_save_solution(path: Path, saved_model: SolutionModel) -> None:
+    def capture_save_solution(path: Path, saved_model: Solution) -> None:
         saved_solution["path"] = path
         saved_solution["model"] = saved_model
 
@@ -1290,7 +1290,7 @@ def test_save_level_also_saves_solution_sidecar(
     try:
         assert window._save_level() is True
         assert saved_solution["path"] == tmp_path / "level_050.solution.json"
-        assert isinstance(saved_solution["model"], SolutionModel)
+        assert isinstance(saved_solution["model"], Solution)
         assert saved_solution["model"].actions[0].tapNodeID == "choice"
     finally:
         window.close()
@@ -1304,13 +1304,13 @@ def _make_two_node_document() -> LevelDocument:
     return LevelDocument(
         id="level_edges",
         name="Edge Level",
-        graph=RouteGraphModel(
+        graph=RouteGraph(
             nodes=[
-                RouteNodeModel(id="start", x=0.0, y=0.0, outgoingEdgeIDs=["e1"]),
-                RouteNodeModel(id="destination", x=2.0, y=0.0, outgoingEdgeIDs=[]),
+                RouteNode(id="start", x=0.0, y=0.0, outgoingEdgeIDs=["e1"]),
+                RouteNode(id="destination", x=2.0, y=0.0, outgoingEdgeIDs=[]),
             ],
             edges=[
-                RouteEdgeModel(id="e1", fromNodeID="start", toNodeID="destination"),
+                RouteEdge(id="e1", fromNodeID="start", toNodeID="destination"),
             ],
         ),
         startNodeID="start",
@@ -1341,12 +1341,12 @@ def test_canvas_scene_ignores_edge_with_missing_node(qapplication: QApplication)
     document = LevelDocument(
         id="level_bad_edge",
         name="Bad Edge Level",
-        graph=RouteGraphModel(
+        graph=RouteGraph(
             nodes=[
-                RouteNodeModel(id="start", x=0.0, y=0.0, outgoingEdgeIDs=["e_missing"]),
+                RouteNode(id="start", x=0.0, y=0.0, outgoingEdgeIDs=["e_missing"]),
             ],
             edges=[
-                RouteEdgeModel(id="e_missing", fromNodeID="start", toNodeID="nonexistent"),
+                RouteEdge(id="e_missing", fromNodeID="start", toNodeID="nonexistent"),
             ],
         ),
         startNodeID="start",
@@ -1372,8 +1372,8 @@ def test_canvas_scene_clears_and_redraws_edges(qapplication: QApplication) -> No
     second_document = LevelDocument(
         id="level_no_edges",
         name="No Edges",
-        graph=RouteGraphModel(
-            nodes=[RouteNodeModel(id="node_a", x=0.0, y=0.0, outgoingEdgeIDs=[])],
+        graph=RouteGraph(
+            nodes=[RouteNode(id="node_a", x=0.0, y=0.0, outgoingEdgeIDs=[])],
             edges=[],
         ),
         startNodeID="node_a",
@@ -1391,13 +1391,13 @@ def test_canvas_scene_skips_edge_between_colocated_nodes(qapplication: QApplicat
     document = LevelDocument(
         id="level_colocated",
         name="Co-located Nodes",
-        graph=RouteGraphModel(
+        graph=RouteGraph(
             nodes=[
-                RouteNodeModel(id="start", x=1.0, y=1.0, outgoingEdgeIDs=["e_same"]),
-                RouteNodeModel(id="destination", x=1.0, y=1.0, outgoingEdgeIDs=[]),
+                RouteNode(id="start", x=1.0, y=1.0, outgoingEdgeIDs=["e_same"]),
+                RouteNode(id="destination", x=1.0, y=1.0, outgoingEdgeIDs=[]),
             ],
             edges=[
-                RouteEdgeModel(id="e_same", fromNodeID="start", toNodeID="destination"),
+                RouteEdge(id="e_same", fromNodeID="start", toNodeID="destination"),
             ],
         ),
         startNodeID="start",
@@ -1418,15 +1418,15 @@ def test_canvas_scene_draws_smooth_transition_arc_for_perpendicular_default_hand
     document = LevelDocument(
         id="level_smooth_corner",
         name="Smooth Corner",
-        graph=RouteGraphModel(
+        graph=RouteGraph(
             nodes=[
-                RouteNodeModel(id="start", x=0.0, y=0.0, outgoingEdgeIDs=["to_corner"]),
-                RouteNodeModel(id="corner", x=1.0, y=0.0, outgoingEdgeIDs=["to_end"]),
-                RouteNodeModel(id="end", x=1.0, y=1.0, outgoingEdgeIDs=[]),
+                RouteNode(id="start", x=0.0, y=0.0, outgoingEdgeIDs=["to_corner"]),
+                RouteNode(id="corner", x=1.0, y=0.0, outgoingEdgeIDs=["to_end"]),
+                RouteNode(id="end", x=1.0, y=1.0, outgoingEdgeIDs=[]),
             ],
             edges=[
-                RouteEdgeModel(id="to_corner", fromNodeID="start", toNodeID="corner"),
-                RouteEdgeModel(id="to_end", fromNodeID="corner", toNodeID="end"),
+                RouteEdge(id="to_corner", fromNodeID="start", toNodeID="corner"),
+                RouteEdge(id="to_end", fromNodeID="corner", toNodeID="end"),
             ],
         ),
         startNodeID="start",
@@ -1459,15 +1459,15 @@ def test_canvas_scene_does_not_draw_transition_arc_for_straight_handoff(
     document = LevelDocument(
         id="level_straight",
         name="Straight",
-        graph=RouteGraphModel(
+        graph=RouteGraph(
             nodes=[
-                RouteNodeModel(id="start", x=0.0, y=0.0, outgoingEdgeIDs=["to_middle"]),
-                RouteNodeModel(id="middle", x=1.0, y=0.0, outgoingEdgeIDs=["to_end"]),
-                RouteNodeModel(id="end", x=2.0, y=0.0, outgoingEdgeIDs=[]),
+                RouteNode(id="start", x=0.0, y=0.0, outgoingEdgeIDs=["to_middle"]),
+                RouteNode(id="middle", x=1.0, y=0.0, outgoingEdgeIDs=["to_end"]),
+                RouteNode(id="end", x=2.0, y=0.0, outgoingEdgeIDs=[]),
             ],
             edges=[
-                RouteEdgeModel(id="to_middle", fromNodeID="start", toNodeID="middle"),
-                RouteEdgeModel(id="to_end", fromNodeID="middle", toNodeID="end"),
+                RouteEdge(id="to_middle", fromNodeID="start", toNodeID="middle"),
+                RouteEdge(id="to_end", fromNodeID="middle", toNodeID="end"),
             ],
         ),
         startNodeID="start",
@@ -1490,17 +1490,17 @@ def test_canvas_scene_transition_arc_uses_first_valid_outgoing_edge_as_default(
     document = LevelDocument(
         id="level_switch_default",
         name="Switch Default",
-        graph=RouteGraphModel(
+        graph=RouteGraph(
             nodes=[
-                RouteNodeModel(id="start", x=0.0, y=0.0, outgoingEdgeIDs=["to_switch"]),
-                RouteNodeModel(id="switch", x=1.0, y=0.0, outgoingEdgeIDs=["to_straight", "to_turn"]),
-                RouteNodeModel(id="straight", x=2.0, y=0.0, outgoingEdgeIDs=[]),
-                RouteNodeModel(id="turn", x=1.0, y=1.0, outgoingEdgeIDs=[]),
+                RouteNode(id="start", x=0.0, y=0.0, outgoingEdgeIDs=["to_switch"]),
+                RouteNode(id="switch", x=1.0, y=0.0, outgoingEdgeIDs=["to_straight", "to_turn"]),
+                RouteNode(id="straight", x=2.0, y=0.0, outgoingEdgeIDs=[]),
+                RouteNode(id="turn", x=1.0, y=1.0, outgoingEdgeIDs=[]),
             ],
             edges=[
-                RouteEdgeModel(id="to_switch", fromNodeID="start", toNodeID="switch"),
-                RouteEdgeModel(id="to_straight", fromNodeID="switch", toNodeID="straight"),
-                RouteEdgeModel(id="to_turn", fromNodeID="switch", toNodeID="turn"),
+                RouteEdge(id="to_switch", fromNodeID="start", toNodeID="switch"),
+                RouteEdge(id="to_straight", fromNodeID="switch", toNodeID="straight"),
+                RouteEdge(id="to_turn", fromNodeID="switch", toNodeID="turn"),
             ],
         ),
         startNodeID="start",
@@ -1525,13 +1525,13 @@ def _make_two_node_one_edge_document() -> LevelDocument:
     return LevelDocument(
         id="level_props",
         name="Properties Test Level",
-        graph=RouteGraphModel(
+        graph=RouteGraph(
             nodes=[
-                RouteNodeModel(id="start", x=0.0, y=0.0, outgoingEdgeIDs=["e1"]),
-                RouteNodeModel(id="destination", x=2.0, y=1.5, outgoingEdgeIDs=[]),
+                RouteNode(id="start", x=0.0, y=0.0, outgoingEdgeIDs=["e1"]),
+                RouteNode(id="destination", x=2.0, y=1.5, outgoingEdgeIDs=[]),
             ],
             edges=[
-                RouteEdgeModel(id="e1", fromNodeID="start", toNodeID="destination"),
+                RouteEdge(id="e1", fromNodeID="start", toNodeID="destination"),
             ],
         ),
         startNodeID="start",
@@ -1546,26 +1546,26 @@ def _make_four_way_editor_document() -> LevelDocument:
     return LevelDocument(
         id="level_four_way",
         name="Four Way Editor Level",
-        graph=RouteGraphModel(
+        graph=RouteGraph(
             nodes=[
-                RouteNodeModel(id="start", x=-1.0, y=0.0, outgoingEdgeIDs=["e_start_central"]),
-                RouteNodeModel(
+                RouteNode(id="start", x=-1.0, y=0.0, outgoingEdgeIDs=["e_start_central"]),
+                RouteNode(
                     id="central",
                     x=0.0,
                     y=0.0,
                     outgoingEdgeIDs=["e_up", "e_right", "e_down", "e_left"],
                 ),
-                RouteNodeModel(id="up", x=0.0, y=1.0, outgoingEdgeIDs=[]),
-                RouteNodeModel(id="right", x=1.0, y=0.0, outgoingEdgeIDs=[]),
-                RouteNodeModel(id="down", x=0.0, y=-1.0, outgoingEdgeIDs=[]),
-                RouteNodeModel(id="left", x=-1.0, y=0.0, outgoingEdgeIDs=[]),
+                RouteNode(id="up", x=0.0, y=1.0, outgoingEdgeIDs=[]),
+                RouteNode(id="right", x=1.0, y=0.0, outgoingEdgeIDs=[]),
+                RouteNode(id="down", x=0.0, y=-1.0, outgoingEdgeIDs=[]),
+                RouteNode(id="left", x=-1.0, y=0.0, outgoingEdgeIDs=[]),
             ],
             edges=[
-                RouteEdgeModel(id="e_start_central", fromNodeID="start", toNodeID="central"),
-                RouteEdgeModel(id="e_up", fromNodeID="central", toNodeID="up"),
-                RouteEdgeModel(id="e_right", fromNodeID="central", toNodeID="right"),
-                RouteEdgeModel(id="e_down", fromNodeID="central", toNodeID="down"),
-                RouteEdgeModel(id="e_left", fromNodeID="central", toNodeID="left"),
+                RouteEdge(id="e_start_central", fromNodeID="start", toNodeID="central"),
+                RouteEdge(id="e_up", fromNodeID="central", toNodeID="up"),
+                RouteEdge(id="e_right", fromNodeID="central", toNodeID="right"),
+                RouteEdge(id="e_down", fromNodeID="central", toNodeID="down"),
+                RouteEdge(id="e_left", fromNodeID="central", toNodeID="left"),
             ],
         ),
         startNodeID="start",
@@ -1765,7 +1765,7 @@ def test_validate_button_runs_validation_service_for_current_level(
         )
 
     window._current_document = document
-    window._current_solution = SolutionModel(
+    window._current_solution = Solution(
         levelID=document.id,
         description="Test",
         expectedOutcome="completed",
@@ -1945,13 +1945,13 @@ def test_playtest_visually_marks_roads_unavailable_for_package_phase(
     document = LevelDocument(
         id="gate_preview",
         name="Gate Preview",
-        graph=RouteGraphModel(
+        graph=RouteGraph(
             nodes=[
-                RouteNodeModel("start", 0.0, 0.0, ["after"]),
-                RouteNodeModel("destination", 1.0, 0.0, []),
+                RouteNode("start", 0.0, 0.0, ["after"]),
+                RouteNode("destination", 1.0, 0.0, []),
             ],
             edges=[
-                RouteEdgeModel(
+                RouteEdge(
                     "after",
                     "start",
                     "destination",
@@ -2337,7 +2337,7 @@ def test_save_level_as_level_021_updates_document_and_solution_metadata(
         saved_level["path"] = path
         saved_level["document"] = level_document
 
-    def fake_save_solution(path: Path, solution: SolutionModel) -> None:
+    def fake_save_solution(path: Path, solution: Solution) -> None:
         saved_solution["path"] = path
         saved_solution["solution"] = solution
 
@@ -2958,8 +2958,8 @@ def test_deleting_last_node_does_not_crash(
     document = LevelDocument(
         id="single_node_level",
         name="Single Node Level",
-        graph=RouteGraphModel(
-            nodes=[RouteNodeModel(id="start", x=0.0, y=0.0, outgoingEdgeIDs=[])]
+        graph=RouteGraph(
+            nodes=[RouteNode(id="start", x=0.0, y=0.0, outgoingEdgeIDs=[])]
         ),
         startNodeID="start",
         packageNodeID="start",
@@ -3003,10 +3003,10 @@ def test_main_window_edge_creation_persists_selected_road_shape(qapplication: QA
         window._current_document = LevelDocument(
             id="level_new_edge",
             name="New Edge",
-            graph=RouteGraphModel(
+            graph=RouteGraph(
                 nodes=[
-                    RouteNodeModel(id="start", x=0.0, y=0.0, outgoingEdgeIDs=[]),
-                    RouteNodeModel(id="destination", x=2.0, y=1.0, outgoingEdgeIDs=[]),
+                    RouteNode(id="start", x=0.0, y=0.0, outgoingEdgeIDs=[]),
+                    RouteNode(id="destination", x=2.0, y=1.0, outgoingEdgeIDs=[]),
                 ],
                 edges=[],
             ),

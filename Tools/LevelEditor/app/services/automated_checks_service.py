@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
 
-from app.models import LevelDocument, SolutionModel
+from app.models import LevelDocument, Solution
 
 from .level_validation_service import LevelValidationService
 from .puzzle_analysis_service import PuzzleAnalysis, PuzzleAnalysisService
@@ -30,7 +30,7 @@ class AutomatedCheckResult:
 class AutomatedChecksReport:
     checks: tuple[AutomatedCheckResult, ...]
     analysis: PuzzleAnalysis
-    verified_solution: SolutionModel | None = None
+    verified_solution: Solution | None = None
 
     @property
     def passed(self) -> bool:
@@ -57,7 +57,7 @@ class AutomatedChecksService:
     def run(
         self,
         level: LevelDocument,
-        solution: SolutionModel | None,
+        solution: Solution | None,
         file_path: Path | None = None,
     ) -> AutomatedChecksReport:
         checks: list[AutomatedCheckResult] = []
@@ -140,13 +140,13 @@ class AutomatedChecksService:
         ))
         return AutomatedChecksReport(tuple(checks), analysis, verified)
 
-    def _safe_find_verified(self, level: LevelDocument) -> SolutionModel | None:
+    def _safe_find_verified(self, level: LevelDocument) -> Solution | None:
         try:
             return self._runtime.find_verified(level)
         except (KeyError, TypeError, ValueError):
             return None
 
-    def _safe_replay(self, level: LevelDocument, solution: SolutionModel | None):
+    def _safe_replay(self, level: LevelDocument, solution: Solution | None):
         if solution is None:
             return None
         try:

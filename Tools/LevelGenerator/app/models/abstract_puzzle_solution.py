@@ -34,20 +34,9 @@ class AbstractPuzzleSolutionMetadata:
     package_before_destination: bool
     failure_reasons: tuple[str, ...] = field(default_factory=tuple)
 
-    @property
-    def solution_tap_node_ids(self) -> tuple[str, ...]:
-        """Deprecated compatibility alias; topology decisions have no timestamp."""
-        return self.decision_node_ids
-
-    @property
-    def minimum_required_taps(self) -> int:
-        """Deprecated compatibility alias for pre-runtime-timing callers."""
-        return self.minimum_required_decisions
-
     def to_dict(self) -> dict[str, Any]:
         return {
             "decisionNodeIDs": list(self.decision_node_ids),
-            "solutionTapNodeIDs": list(self.decision_node_ids),
             "solutionSwitchStates": [state.to_dict() for state in self.solution_switch_states],
             "requiredPath": list(self.required_path),
             "alternatePathCount": self.alternate_path_count,
@@ -56,7 +45,6 @@ class AbstractPuzzleSolutionMetadata:
             "falseRouteCount": self.false_route_count,
             "loopCount": self.loop_count,
             "minimumRequiredDecisions": self.minimum_required_decisions,
-            "minimumRequiredTaps": self.minimum_required_decisions,
             "optionalTapCount": self.optional_tap_count,
             "repeatedSwitchUsage": self.repeated_switch_usage,
             "packageBeforeDestination": self.package_before_destination,

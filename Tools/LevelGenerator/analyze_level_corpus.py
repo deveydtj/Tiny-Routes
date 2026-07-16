@@ -9,7 +9,7 @@ import json
 from collections import Counter
 from pathlib import Path
 
-from app.level_editor_imports import LevelDocument, SolutionModel
+from app.level_editor_imports import LevelDocument, Solution
 from app.models.generated_level import GeneratedLevel
 from app.paths import find_repo_root, get_default_levels_directory, get_default_solutions_directory
 from app.services.python_solution_simulator_service import PythonSolutionSimulatorService
@@ -24,7 +24,7 @@ def _load_object(path: Path) -> dict:
 
 def _generated(level_path: Path, solution_path: Path) -> GeneratedLevel:
     level = LevelDocument.from_dict(_load_object(level_path))
-    solution = SolutionModel.from_dict(_load_object(solution_path))
+    solution = Solution.from_dict(_load_object(solution_path))
     if solution.levelID != level.id:
         raise ValueError(f"Solution {solution_path} targets {solution.levelID}, not {level.id}")
     return GeneratedLevel(level, solution, "production", "baseline", 0)

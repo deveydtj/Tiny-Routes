@@ -1,22 +1,22 @@
 from __future__ import annotations
 
 from app.controllers import DocumentController
-from app.models import LevelDocument, RouteEdgeModel, RouteGraphModel, RouteNodeModel
+from app.models import LevelDocument, RouteEdge, RouteGraph, RouteNode
 
 
 def _document() -> LevelDocument:
     return LevelDocument(
         id="undo_level",
         name="Undo Level",
-        graph=RouteGraphModel(
+        graph=RouteGraph(
             nodes=[
-                RouteNodeModel(id="start", x=0, y=0, outgoingEdgeIDs=["first", "second"]),
-                RouteNodeModel(id="middle", x=1, y=0, outgoingEdgeIDs=[]),
-                RouteNodeModel(id="finish", x=2, y=0, outgoingEdgeIDs=[]),
+                RouteNode(id="start", x=0, y=0, outgoingEdgeIDs=["first", "second"]),
+                RouteNode(id="middle", x=1, y=0, outgoingEdgeIDs=[]),
+                RouteNode(id="finish", x=2, y=0, outgoingEdgeIDs=[]),
             ],
             edges=[
-                RouteEdgeModel(id="first", fromNodeID="start", toNodeID="middle"),
-                RouteEdgeModel(id="second", fromNodeID="start", toNodeID="finish"),
+                RouteEdge(id="first", fromNodeID="start", toNodeID="middle"),
+                RouteEdge(id="second", fromNodeID="start", toNodeID="finish"),
             ],
         ),
         startNodeID="start",

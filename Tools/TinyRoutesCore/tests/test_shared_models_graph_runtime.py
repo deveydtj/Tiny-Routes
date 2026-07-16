@@ -1,4 +1,5 @@
 import pytest
+import tiny_routes_core.models as shared_models
 
 from tiny_routes_core.graph import (GraphIndex, GraphValidationError, cycle_node_ids,
                                     normalize_active_edges, reachable_node_ids, rejoin_node_ids,
@@ -6,6 +7,21 @@ from tiny_routes_core.graph import (GraphIndex, GraphValidationError, cycle_node
 from tiny_routes_core.models import (LevelDocument, RouteEdge, RouteGraph, RouteNode,
                                      Solution)
 from tiny_routes_core.simulation import RuntimeState
+
+
+def test_shared_models_export_only_canonical_type_names():
+    assert shared_models.RouteNode is RouteNode
+    assert shared_models.RouteEdge is RouteEdge
+    assert shared_models.RouteGraph is RouteGraph
+    assert shared_models.Solution is Solution
+    for deprecated_name in (
+        "RouteNodeModel",
+        "RouteEdgeModel",
+        "RouteGraphModel",
+        "SolutionActionModel",
+        "SolutionModel",
+    ):
+        assert not hasattr(shared_models, deprecated_name)
 
 
 def level_dict():

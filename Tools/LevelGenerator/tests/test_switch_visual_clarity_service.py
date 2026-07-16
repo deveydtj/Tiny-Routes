@@ -2,11 +2,11 @@ from __future__ import annotations
 
 from app.level_editor_imports import (
     LevelDocument,
-    RouteEdgeModel,
-    RouteGraphModel,
-    RouteNodeModel,
-    SolutionActionModel,
-    SolutionModel,
+    RouteEdge,
+    RouteGraph,
+    RouteNode,
+    SolutionAction,
+    Solution,
 )
 from app.services.switch_visual_clarity_service import SwitchVisualClarityService
 
@@ -66,17 +66,17 @@ def _level(
     targets: dict[str, tuple[float, float, str]],
     outgoing_edge_ids: list[str],
 ) -> LevelDocument:
-    nodes = [RouteNodeModel(id="switch", x=0.0, y=0.0, outgoingEdgeIDs=outgoing_edge_ids)]
+    nodes = [RouteNode(id="switch", x=0.0, y=0.0, outgoingEdgeIDs=outgoing_edge_ids)]
     edges = []
     for target_id, (x, y, road_shape) in targets.items():
         edge_id = f"e_{target_id}"
-        nodes.append(RouteNodeModel(id=target_id, x=x, y=y, outgoingEdgeIDs=[]))
-        edges.append(RouteEdgeModel(id=edge_id, fromNodeID="switch", toNodeID=target_id, roadShape=road_shape))
+        nodes.append(RouteNode(id=target_id, x=x, y=y, outgoingEdgeIDs=[]))
+        edges.append(RouteEdge(id=edge_id, fromNodeID="switch", toNodeID=target_id, roadShape=road_shape))
 
     return LevelDocument(
         id="level_switch_visual_clarity",
         name="Switch Visual Clarity",
-        graph=RouteGraphModel(nodes=nodes, edges=edges),
+        graph=RouteGraph(nodes=nodes, edges=edges),
         startNodeID="switch",
         packageNodeID=next(iter(targets)),
         destinationNodeID=next(reversed(targets)),
@@ -85,15 +85,15 @@ def _level(
     )
 
 
-def _solution(tap_node_ids: list[str]) -> SolutionModel:
-    return SolutionModel(
+def _solution(tap_node_ids: list[str]) -> Solution:
+    return Solution(
         levelID="level_switch_visual_clarity",
         description="Tap switches.",
         expectedOutcome="completed",
         maxTaps=len(tap_node_ids),
         requiresWithinTimeLimit=True,
         actions=[
-            SolutionActionModel(timeSeconds=float(index + 1), tapNodeID=node_id)
+            SolutionAction(timeSeconds=float(index + 1), tapNodeID=node_id)
             for index, node_id in enumerate(tap_node_ids)
         ],
     )

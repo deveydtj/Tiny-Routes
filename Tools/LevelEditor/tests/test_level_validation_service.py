@@ -7,7 +7,7 @@ LEVEL_EDITOR_ROOT = Path(__file__).resolve().parents[1]
 if str(LEVEL_EDITOR_ROOT) not in sys.path:
     sys.path.insert(0, str(LEVEL_EDITOR_ROOT))
 
-from app.models.level_document import LevelDocument
+from app.models import LevelDocument
 from app.services.level_validation_service import (
     ValidationMessage,
     ValidationResult,

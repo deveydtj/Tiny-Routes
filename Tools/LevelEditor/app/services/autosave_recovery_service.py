@@ -7,7 +7,7 @@ from pathlib import Path
 
 from PySide6.QtCore import QStandardPaths
 
-from app.models import LevelDocument, SolutionModel
+from app.models import LevelDocument, Solution
 
 
 class AutosaveRecoveryError(Exception):
@@ -17,7 +17,7 @@ class AutosaveRecoveryError(Exception):
 @dataclass(frozen=True)
 class AutosaveRecovery:
     document: LevelDocument
-    solution: SolutionModel | None
+    solution: Solution | None
     source_path: Path | None
     candidate_quality: dict | None
     saved_at_utc: str
@@ -45,7 +45,7 @@ class AutosaveRecoveryService:
     def write(
         self,
         document: LevelDocument,
-        solution: SolutionModel | None,
+        solution: Solution | None,
         *,
         source_path: Path | None,
         candidate_quality: dict | None = None,
@@ -95,7 +95,7 @@ class AutosaveRecoveryService:
             solution = (
                 None
                 if solution_payload is None
-                else SolutionModel.from_dict(solution_payload)
+                else Solution.from_dict(solution_payload)
             )
             source_value = payload.get("sourcePath")
             source_path = None if source_value is None else Path(source_value)

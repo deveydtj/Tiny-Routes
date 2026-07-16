@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from tiny_routes_core.models import LevelDocument, SolutionActionModel, SolutionModel
+from tiny_routes_core.models import LevelDocument, SolutionAction, Solution
 from tiny_routes_core.simulation import LevelOutcome, RuntimeSimulator, switch_eligibility
 
 
@@ -30,12 +30,12 @@ class RuntimeSolutionService:
         self.safety_margin_seconds = safety_margin_seconds
         self._simulator = RuntimeSimulator()
 
-    def replay(self, level: LevelDocument, solution: SolutionModel, *, end_time: float | None = None):
+    def replay(self, level: LevelDocument, solution: Solution, *, end_time: float | None = None):
         return self._simulator.simulate(level, solution.actions, end_time=end_time)
 
-    def analyze(self, level: LevelDocument, solution: SolutionModel) -> tuple[ActionTiming, ...]:
+    def analyze(self, level: LevelDocument, solution: Solution) -> tuple[ActionTiming, ...]:
         timings: list[ActionTiming] = []
-        prefix: list[SolutionActionModel] = []
+        prefix: list[SolutionAction] = []
         for action in sorted(solution.actions, key=lambda value: float(value.timeSeconds)):
             at_tap = self._simulator.simulate(level, prefix, end_time=float(action.timeSeconds))
             snapshot = switch_eligibility(at_tap.state)
@@ -48,9 +48,9 @@ class RuntimeSolutionService:
             prefix.append(action)
         return tuple(timings)
 
-    def find_verified(self, level: LevelDocument, *, maximum_actions: int = 12) -> SolutionModel | None:
+    def find_verified(self, level: LevelDocument, *, maximum_actions: int = 12) -> Solution | None:
         """Search branch choices at actual eligibility windows and return only a passing replay."""
-        queue: list[tuple[tuple[SolutionActionModel, ...], float]] = [((), 0.0)]
+        queue: list[tuple[tuple[SolutionAction, ...], float]] = [((), 0.0)]
         seen: set[tuple] = set()
         edge_by_id = {edge.id: edge for edge in level.graph.edges}
         node_by_id = {node.id: node for node in level.graph.nodes}
@@ -59,7 +59,7 @@ class RuntimeSolutionService:
             actions, search_after = queue.pop(0)
             replay = self._simulator.simulate(level, actions)
             if replay.state.outcome == LevelOutcome.COMPLETED:
-                return SolutionModel(
+                return Solution(
                     levelID=level.id,
                     description="Verified by Level Editor runtime search",
                     expectedOutcome="completed",
@@ -82,7 +82,7 @@ class RuntimeSolutionService:
                 if tap_times and tap_times[-1] > close_time - self.safety_margin_seconds + 1e-9:
                     continue
                 candidate = actions + tuple(
-                    SolutionActionModel(timeSeconds=tap_time, tapNodeID=node_id) for tap_time in tap_times
+                    SolutionAction(timeSeconds=tap_time, tapNodeID=node_id) for tap_time in tap_times
                 )
                 probe_time = min(close_time + self.search_step_seconds, float(level.timeLimitSeconds))
                 probe = self._simulator.simulate(level, candidate, end_time=probe_time)
@@ -101,7 +101,7 @@ class RuntimeSolutionService:
                 queue.append((candidate, probe_time))
         return None
 
-    def _next_window(self, level, actions: tuple[SolutionActionModel, ...], start: float):
+    def _next_window(self, level, actions: tuple[SolutionAction, ...], start: float):
         time = max(0.0, start)
         while time <= float(level.timeLimitSeconds) + 1e-9:
             replay = self._simulator.simulate(level, actions, end_time=time)

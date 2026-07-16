@@ -3,7 +3,7 @@ from __future__ import annotations
 import json
 
 from app.generation_config import GenerationConfig
-from app.level_editor_imports import LevelDocument, RouteEdgeModel, RouteGraphModel, RouteNodeModel, SolutionModel
+from app.level_editor_imports import LevelDocument, RouteEdge, RouteGraph, RouteNode, Solution
 from app.models.generated_level import GeneratedLevel
 from app.repositories.generation_report_repository import GenerationReportRepository
 from app.services.candidate_signature_service import CandidateSignatureService
@@ -324,21 +324,21 @@ def _visual_clarity_report_level() -> GeneratedLevel:
     level = LevelDocument(
         id="level_visual_report",
         name="Visual Report",
-        graph=RouteGraphModel(
+        graph=RouteGraph(
             nodes=[
-                RouteNodeModel(id="start", x=0.0, y=0.0, outgoingEdgeIDs=["e_start_package"]),
-                RouteNodeModel(id="package", x=1.0, y=0.0, outgoingEdgeIDs=["e_package_destination"]),
-                RouteNodeModel(id="destination", x=2.0, y=0.0, outgoingEdgeIDs=[]),
-                RouteNodeModel(id="side_a", x=0.0, y=1.0, outgoingEdgeIDs=["e_side_ab"]),
-                RouteNodeModel(id="side_b", x=1.0, y=1.0, outgoingEdgeIDs=[]),
-                RouteNodeModel(id="side_c", x=0.0, y=1.1, outgoingEdgeIDs=["e_side_cd"]),
-                RouteNodeModel(id="side_d", x=1.0, y=1.1, outgoingEdgeIDs=[]),
+                RouteNode(id="start", x=0.0, y=0.0, outgoingEdgeIDs=["e_start_package"]),
+                RouteNode(id="package", x=1.0, y=0.0, outgoingEdgeIDs=["e_package_destination"]),
+                RouteNode(id="destination", x=2.0, y=0.0, outgoingEdgeIDs=[]),
+                RouteNode(id="side_a", x=0.0, y=1.0, outgoingEdgeIDs=["e_side_ab"]),
+                RouteNode(id="side_b", x=1.0, y=1.0, outgoingEdgeIDs=[]),
+                RouteNode(id="side_c", x=0.0, y=1.1, outgoingEdgeIDs=["e_side_cd"]),
+                RouteNode(id="side_d", x=1.0, y=1.1, outgoingEdgeIDs=[]),
             ],
             edges=[
-                RouteEdgeModel(id="e_start_package", fromNodeID="start", toNodeID="package"),
-                RouteEdgeModel(id="e_package_destination", fromNodeID="package", toNodeID="destination"),
-                RouteEdgeModel(id="e_side_ab", fromNodeID="side_a", toNodeID="side_b"),
-                RouteEdgeModel(id="e_side_cd", fromNodeID="side_c", toNodeID="side_d"),
+                RouteEdge(id="e_start_package", fromNodeID="start", toNodeID="package"),
+                RouteEdge(id="e_package_destination", fromNodeID="package", toNodeID="destination"),
+                RouteEdge(id="e_side_ab", fromNodeID="side_a", toNodeID="side_b"),
+                RouteEdge(id="e_side_cd", fromNodeID="side_c", toNodeID="side_d"),
             ],
         ),
         startNodeID="start",
@@ -349,7 +349,7 @@ def _visual_clarity_report_level() -> GeneratedLevel:
     )
     return GeneratedLevel(
         level_document=level,
-        solution=SolutionModel(
+        solution=Solution(
             levelID=level.id,
             description="No taps.",
             expectedOutcome="completed",

@@ -4,7 +4,7 @@ from copy import deepcopy
 
 from PySide6.QtCore import QObject, QTimer, Signal
 
-from app.models import LevelDocument, SolutionModel
+from app.models import LevelDocument, Solution
 from app.services.puzzle_analysis_service import PuzzleAnalysisService
 
 
@@ -27,18 +27,18 @@ class PuzzleAnalysisController(QObject):
         self._timer.setInterval(debounce_ms)
         self._timer.timeout.connect(self._run_pending)
         self._generation = 0
-        self._pending: tuple[int, LevelDocument, SolutionModel | None] | None = None
+        self._pending: tuple[int, LevelDocument, Solution | None] | None = None
 
     @property
     def is_pending(self) -> bool:
         return self._timer.isActive()
 
-    def schedule(self, document: LevelDocument, solution: SolutionModel | None) -> None:
+    def schedule(self, document: LevelDocument, solution: Solution | None) -> None:
         self._generation += 1
         self._pending = (self._generation, deepcopy(document), deepcopy(solution))
         self._timer.start()
 
-    def analyze_now(self, document: LevelDocument, solution: SolutionModel | None):
+    def analyze_now(self, document: LevelDocument, solution: Solution | None):
         self._generation += 1
         self._timer.stop()
         self._pending = None

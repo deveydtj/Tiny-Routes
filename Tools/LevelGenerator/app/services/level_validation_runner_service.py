@@ -4,7 +4,7 @@ import json
 from dataclasses import dataclass, field
 from pathlib import Path
 
-from ..level_editor_imports import LevelDocument, SolutionModel
+from ..level_editor_imports import LevelDocument, Solution
 from ..models.generated_level import GeneratedLevel
 from ..models.generation_result import SwiftTestSummary
 from ..paths import find_repo_root
@@ -54,7 +54,7 @@ class LevelValidationRunnerService:
             solution_path = self.repository.solution_path(level_id, config.solutions_output_dir)
             try:
                 level = LevelDocument.from_dict(json.loads(level_path.read_text(encoding="utf-8")))
-                solution = SolutionModel.from_dict(json.loads(solution_path.read_text(encoding="utf-8")))
+                solution = Solution.from_dict(json.loads(solution_path.read_text(encoding="utf-8")))
             except Exception as exc:
                 result.failures.append(f"{level_id}: could not load level/solution files: {exc}")
                 continue

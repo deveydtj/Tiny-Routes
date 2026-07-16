@@ -7,7 +7,14 @@ LEVEL_EDITOR_ROOT = Path(__file__).resolve().parents[1]
 if str(LEVEL_EDITOR_ROOT) not in sys.path:
     sys.path.insert(0, str(LEVEL_EDITOR_ROOT))
 
-from app.models import LevelDocument, RouteNodeModel, RouteEdgeModel, EmbeddedSolution
+from app.models import LevelDocument, RouteNode, RouteEdge, EmbeddedSolution
+from tiny_routes_core.models import RouteEdge as CoreRouteEdge
+from tiny_routes_core.models import RouteNode as CoreRouteNode
+
+
+def test_editor_uses_canonical_shared_model_types():
+    assert RouteNode is CoreRouteNode
+    assert RouteEdge is CoreRouteEdge
 
 
 # ---------------------------------------------------------------------------
@@ -66,13 +73,13 @@ FIXTURE_LEVEL_WITH_OPTIONALS: dict = {
 
 
 # ---------------------------------------------------------------------------
-# RouteEdgeModel tests
+# RouteEdge tests
 # ---------------------------------------------------------------------------
 
-class TestRouteEdgeModel:
+class TestRouteEdge:
     def test_from_dict_required_fields(self):
         data = {"id": "e1", "fromNodeID": "a", "toNodeID": "b"}
-        edge = RouteEdgeModel.from_dict(data)
+        edge = RouteEdge.from_dict(data)
         assert edge.id == "e1"
         assert edge.fromNodeID == "a"
         assert edge.toNodeID == "b"
@@ -81,26 +88,26 @@ class TestRouteEdgeModel:
 
     def test_from_dict_with_road_shape(self):
         data = {"id": "e1", "fromNodeID": "a", "toNodeID": "b", "roadShape": "verticalFirst"}
-        edge = RouteEdgeModel.from_dict(data)
+        edge = RouteEdge.from_dict(data)
         assert edge.roadShape == "verticalFirst"
 
     def test_to_dict_omits_none_road_shape(self):
-        edge = RouteEdgeModel(id="e1", fromNodeID="a", toNodeID="b")
+        edge = RouteEdge(id="e1", fromNodeID="a", toNodeID="b")
         d = edge.to_dict()
         assert "roadShape" not in d
 
     def test_to_dict_includes_road_shape_when_set(self):
-        edge = RouteEdgeModel(id="e1", fromNodeID="a", toNodeID="b", roadShape="horizontalFirst")
+        edge = RouteEdge(id="e1", fromNodeID="a", toNodeID="b", roadShape="horizontalFirst")
         d = edge.to_dict()
         assert d["roadShape"] == "horizontalFirst"
 
     def test_round_trip_without_road_shape(self):
         data = {"id": "e1", "fromNodeID": "a", "toNodeID": "b"}
-        assert RouteEdgeModel.from_dict(data).to_dict() == data
+        assert RouteEdge.from_dict(data).to_dict() == data
 
     def test_round_trip_with_road_shape(self):
         data = {"id": "e2", "fromNodeID": "x", "toNodeID": "y", "roadShape": "horizontalFirst"}
-        assert RouteEdgeModel.from_dict(data).to_dict() == data
+        assert RouteEdge.from_dict(data).to_dict() == data
 
     @pytest.mark.parametrize("availability", ["always", "beforePackage", "afterPackage"])
     def test_round_trip_with_availability(self, availability):
@@ -111,25 +118,25 @@ class TestRouteEdgeModel:
             "availability": availability,
         }
 
-        edge = RouteEdgeModel.from_dict(data)
+        edge = RouteEdge.from_dict(data)
 
         assert edge.availability == availability
         assert edge.to_dict() == data
 
     def test_preserves_unknown_fields(self):
         data = {"id": "e1", "fromNodeID": "a", "toNodeID": "b", "_future": "value"}
-        result = RouteEdgeModel.from_dict(data).to_dict()
+        result = RouteEdge.from_dict(data).to_dict()
         assert result["_future"] == "value"
 
 
 # ---------------------------------------------------------------------------
-# RouteNodeModel tests
+# RouteNode tests
 # ---------------------------------------------------------------------------
 
-class TestRouteNodeModel:
+class TestRouteNode:
     def test_from_dict_basic(self):
         data = {"id": "start", "x": 0.0, "y": 1.5, "outgoingEdgeIDs": ["e1"]}
-        node = RouteNodeModel.from_dict(data)
+        node = RouteNode.from_dict(data)
         assert node.id == "start"
         assert node.x == 0.0
         assert node.y == 1.5
@@ -137,25 +144,25 @@ class TestRouteNodeModel:
 
     def test_from_dict_empty_outgoing(self):
         data = {"id": "end", "x": 3.0, "y": 0.0, "outgoingEdgeIDs": []}
-        node = RouteNodeModel.from_dict(data)
+        node = RouteNode.from_dict(data)
         assert node.outgoingEdgeIDs == []
 
     def test_to_dict_round_trip(self):
         data = {"id": "start", "x": 0.0, "y": 0.0, "outgoingEdgeIDs": ["e_start_package"]}
-        assert RouteNodeModel.from_dict(data).to_dict() == data
+        assert RouteNode.from_dict(data).to_dict() == data
 
     def test_preserves_unknown_fields(self):
         data = {"id": "n1", "x": 1.0, "y": 2.0, "outgoingEdgeIDs": [], "_meta": "test"}
-        result = RouteNodeModel.from_dict(data).to_dict()
+        result = RouteNode.from_dict(data).to_dict()
         assert result["_meta"] == "test"
 
     def test_missing_outgoing_edge_ids_raises(self):
         with pytest.raises(KeyError):
-            RouteNodeModel.from_dict({"id": "n", "x": 0.0, "y": 0.0})
+            RouteNode.from_dict({"id": "n", "x": 0.0, "y": 0.0})
 
     def test_integer_coordinates_cast_to_float(self):
         data = {"id": "n", "x": 1, "y": 2, "outgoingEdgeIDs": []}
-        node = RouteNodeModel.from_dict(data)
+        node = RouteNode.from_dict(data)
         assert isinstance(node.x, float)
         assert isinstance(node.y, float)
 

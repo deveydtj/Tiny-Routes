@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from app.models import LevelDocument, SolutionModel
+from app.models import LevelDocument, Solution
 
 
 class ReferenceRenameService:
@@ -19,7 +19,7 @@ class ReferenceRenameService:
     def rename_node(
         self,
         document: LevelDocument,
-        solution: SolutionModel | None,
+        solution: Solution | None,
         old_id: str,
         new_id: str,
     ) -> None:
@@ -56,7 +56,7 @@ class ReferenceRenameService:
     def rename_edge(
         self,
         document: LevelDocument,
-        solution: SolutionModel | None,
+        solution: Solution | None,
         old_id: str,
         new_id: str,
     ) -> None:

@@ -6,8 +6,8 @@ from statistics import fmean
 
 from tiny_routes_core.models import (
     LevelDocument,
-    SolutionActionModel,
-    SolutionModel,
+    SolutionAction,
+    Solution,
     SwitchInteractionMode,
 )
 
@@ -76,7 +76,7 @@ class PuzzleAnalysisService:
     def analyze(
         self,
         level: LevelDocument,
-        solution: SolutionModel | None,
+        solution: Solution | None,
         *,
         route_limit: int = 512,
     ) -> PuzzleAnalysis:
@@ -199,7 +199,7 @@ class PuzzleAnalysisService:
             )
         return tuple(routes)
 
-    def _safe_replay(self, level: LevelDocument, solution: SolutionModel | None):
+    def _safe_replay(self, level: LevelDocument, solution: Solution | None):
         if solution is None:
             return None
         try:
@@ -207,7 +207,7 @@ class PuzzleAnalysisService:
         except (KeyError, TypeError, ValueError):
             return None
 
-    def _safe_timings(self, level: LevelDocument, solution: SolutionModel | None):
+    def _safe_timings(self, level: LevelDocument, solution: Solution | None):
         if solution is None:
             return ()
         try:
@@ -258,7 +258,7 @@ class PuzzleAnalysisService:
         return round((len(choices) - len(dependent_indexes)) / len(choices), 4)
 
     def _legacy_front_load_possible(
-        self, level: LevelDocument, solution: SolutionModel | None
+        self, level: LevelDocument, solution: Solution | None
     ) -> bool:
         if solution is None or not solution.actions:
             return False
@@ -269,7 +269,7 @@ class PuzzleAnalysisService:
         )
         diagnostic_solution = solution.clone()
         diagnostic_solution.actions = [
-            SolutionActionModel(timeSeconds=0.0, tapNodeID=action.tapNodeID)
+            SolutionAction(timeSeconds=0.0, tapNodeID=action.tapNodeID)
             for action in solution.actions
         ]
         replay = self._safe_replay(diagnostic_level, diagnostic_solution)
@@ -307,7 +307,7 @@ class PuzzleAnalysisService:
         windows: tuple[float, ...],
         front_load_possible: bool,
         replay,
-        solution: SolutionModel | None,
+        solution: Solution | None,
     ) -> tuple[PuzzleRecommendation, ...]:
         recommendations: list[PuzzleRecommendation] = []
         choice_nodes = tuple(dict.fromkeys(choice.node_id for choice in choices))

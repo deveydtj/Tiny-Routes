@@ -7,7 +7,7 @@ LEVEL_EDITOR_ROOT = Path(__file__).resolve().parents[1]
 if str(LEVEL_EDITOR_ROOT) not in sys.path:
     sys.path.insert(0, str(LEVEL_EDITOR_ROOT))
 
-from app.models import LevelDocument, RouteEdgeModel, RouteNodeModel, SolutionActionModel, SolutionModel
+from app.models import LevelDocument, RouteEdge, RouteNode, SolutionAction, Solution
 from app.services import SolutionValidationService, ValidationSeverity
 
 FIXTURES_DIR = Path(__file__).resolve().parent / "fixtures"
@@ -18,9 +18,9 @@ def _load_level_fixture(filename: str = "valid_level.json") -> LevelDocument:
     return LevelDocument.from_dict(data)
 
 
-def _load_solution_fixture(filename: str = "valid_solution.json") -> SolutionModel:
+def _load_solution_fixture(filename: str = "valid_solution.json") -> Solution:
     data = json.loads((FIXTURES_DIR / filename).read_text(encoding="utf-8"))
-    return SolutionModel.from_dict(data)
+    return Solution.from_dict(data)
 
 
 def _codes(result) -> list[str]:
@@ -87,7 +87,7 @@ def test_negative_max_taps_is_reported() -> None:
 
 def test_max_taps_less_than_action_count_is_reported() -> None:
     solution = _load_solution_fixture()
-    solution.actions.append(SolutionActionModel(timeSeconds=0.5, tapNodeID="start"))
+    solution.actions.append(SolutionAction(timeSeconds=0.5, tapNodeID="start"))
 
     result = SolutionValidationService().validate(_load_level_fixture(), solution)
 
@@ -97,7 +97,7 @@ def test_max_taps_less_than_action_count_is_reported() -> None:
 def test_invalid_action_time_type_is_reported() -> None:
     solution = _load_solution_fixture()
     solution.maxTaps = 1
-    solution.actions.append(SolutionActionModel(timeSeconds=True, tapNodeID="start"))
+    solution.actions.append(SolutionAction(timeSeconds=True, tapNodeID="start"))
 
     result = SolutionValidationService().validate(_load_level_fixture(), solution)
 
@@ -107,7 +107,7 @@ def test_invalid_action_time_type_is_reported() -> None:
 def test_negative_action_time_is_reported() -> None:
     solution = _load_solution_fixture()
     solution.maxTaps = 1
-    solution.actions.append(SolutionActionModel(timeSeconds=-0.25, tapNodeID="start"))
+    solution.actions.append(SolutionAction(timeSeconds=-0.25, tapNodeID="start"))
 
     result = SolutionValidationService().validate(_load_level_fixture(), solution)
 
@@ -118,8 +118,8 @@ def test_unsorted_action_times_are_reported() -> None:
     solution = _load_solution_fixture()
     solution.maxTaps = 2
     solution.actions = [
-        SolutionActionModel(timeSeconds=1.0, tapNodeID="start"),
-        SolutionActionModel(timeSeconds=0.5, tapNodeID="package"),
+        SolutionAction(timeSeconds=1.0, tapNodeID="start"),
+        SolutionAction(timeSeconds=0.5, tapNodeID="package"),
     ]
 
     result = SolutionValidationService().validate(_load_level_fixture(), solution)
@@ -130,7 +130,7 @@ def test_unsorted_action_times_are_reported() -> None:
 def test_unknown_tap_node_is_reported_with_related_node_id() -> None:
     solution = _load_solution_fixture()
     solution.maxTaps = 1
-    solution.actions.append(SolutionActionModel(timeSeconds=0.5, tapNodeID="ghost"))
+    solution.actions.append(SolutionAction(timeSeconds=0.5, tapNodeID="ghost"))
 
     result = SolutionValidationService().validate(_load_level_fixture(), solution)
 
@@ -146,7 +146,7 @@ def test_unknown_tap_node_is_reported_with_related_node_id() -> None:
 def test_tap_node_with_fewer_than_two_outgoing_edges_is_reported() -> None:
     solution = _load_solution_fixture()
     solution.maxTaps = 1
-    solution.actions.append(SolutionActionModel(timeSeconds=0.5, tapNodeID="start"))
+    solution.actions.append(SolutionAction(timeSeconds=0.5, tapNodeID="start"))
 
     result = SolutionValidationService().validate(_load_level_fixture(), solution)
 
@@ -160,13 +160,13 @@ def test_tap_node_with_fewer_than_two_outgoing_edges_is_reported() -> None:
 
 def test_switch_tap_includes_option_count_context() -> None:
     level = _load_level_fixture()
-    level.graph.nodes.append(RouteNodeModel(id="dead", x=1.5, y=1.0, outgoingEdgeIDs=[]))
+    level.graph.nodes.append(RouteNode(id="dead", x=1.5, y=1.0, outgoingEdgeIDs=[]))
     package = next(node for node in level.graph.nodes if node.id == "package")
     package.outgoingEdgeIDs.append("e_package_dead")
-    level.graph.edges.append(RouteEdgeModel(id="e_package_dead", fromNodeID="package", toNodeID="dead"))
+    level.graph.edges.append(RouteEdge(id="e_package_dead", fromNodeID="package", toNodeID="dead"))
     solution = _load_solution_fixture()
     solution.maxTaps = 1
-    solution.actions.append(SolutionActionModel(timeSeconds=0.5, tapNodeID="package"))
+    solution.actions.append(SolutionAction(timeSeconds=0.5, tapNodeID="package"))
 
     result = SolutionValidationService().validate(level, solution)
 

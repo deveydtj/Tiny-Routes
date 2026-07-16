@@ -4,7 +4,7 @@ import json
 from pathlib import Path
 
 from app.config import find_repo_root
-from app.models import SolutionModel
+from app.models import Solution
 from app.services.level_identity_service import LevelIdentityService
 
 
@@ -42,7 +42,7 @@ class SolutionFileIOError(SolutionFileRepositoryError):
 class SolutionFileRepository:
     """Handles solution sidecar JSON loading, saving, and path resolution."""
 
-    def load_solution(self, path: Path | str) -> SolutionModel:
+    def load_solution(self, path: Path | str) -> Solution:
         solution_path = Path(path)
         try:
             raw_content = solution_path.read_text(encoding="utf-8")
@@ -61,14 +61,14 @@ class SolutionFileRepository:
             raise InvalidSolutionJSONError(solution_path, "Expected top-level JSON object.")
 
         try:
-            return SolutionModel.from_dict(raw_solution)
+            return Solution.from_dict(raw_solution)
         except (KeyError, TypeError, ValueError) as exc:
             raise InvalidSolutionJSONError(
                 solution_path,
                 "Solution JSON does not match expected solution shape.",
             ) from exc
 
-    def save_solution(self, path: Path | str, solution: SolutionModel) -> None:
+    def save_solution(self, path: Path | str, solution: Solution) -> None:
         solution_path = Path(path)
         payload = solution.to_dict()
         serialized = json.dumps(payload, ensure_ascii=False, indent=2) + "\n"

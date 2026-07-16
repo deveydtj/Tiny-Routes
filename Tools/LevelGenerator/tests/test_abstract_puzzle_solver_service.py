@@ -32,7 +32,7 @@ def test_abstract_solver_solves_no_switch_tutorial_route() -> None:
     assert solved.solved_metadata is not None
     assert solved.solved_metadata.required_path[0] == "start"
     assert solved.solved_metadata.required_path[-1] == "destination"
-    assert solved.solved_metadata.minimum_required_taps == 0
+    assert solved.solved_metadata.minimum_required_decisions == 0
     assert solved.solved_metadata.package_before_destination is True
 
 
@@ -40,18 +40,20 @@ def test_abstract_solver_solves_single_switch_with_wrong_branch() -> None:
     solved = _solve_family("easy", "single_switch", seed=2)
 
     assert solved.solved_metadata is not None
-    assert solved.solved_metadata.minimum_required_taps == 1
+    assert solved.solved_metadata.minimum_required_decisions == 1
     assert solved.solved_metadata.dead_end_count == 1
-    assert solved.tap_node_ids == solved.solved_metadata.solution_tap_node_ids
+    assert solved.tap_node_ids == solved.solved_metadata.decision_node_ids
 
 
-def test_topology_solver_exposes_decision_terms_and_legacy_aliases() -> None:
+def test_topology_solver_exposes_only_decision_terms() -> None:
     solved = _solve_family("easy", "single_switch", seed=2)
     metadata = solved.solved_metadata
     assert metadata is not None
-    assert metadata.decision_node_ids == metadata.solution_tap_node_ids
-    assert metadata.minimum_required_decisions == metadata.minimum_required_taps
-    assert "minimumRequiredDecisions" in metadata.to_dict()
+    serialized = metadata.to_dict()
+    assert "decisionNodeIDs" in serialized
+    assert "minimumRequiredDecisions" in serialized
+    assert "solutionTapNodeIDs" not in serialized
+    assert "minimumRequiredTaps" not in serialized
 
 
 def test_topology_search_returns_structured_limit_result() -> None:
@@ -77,7 +79,7 @@ def test_abstract_solver_covers_supported_mechanic_families(difficulty: str, fam
     solved = _solve_family(difficulty, family_name, seed=4)
 
     assert solved.solved_metadata is not None
-    assert solved.solved_metadata.minimum_required_taps == len(solved.tap_node_ids)
+    assert solved.solved_metadata.minimum_required_decisions == len(solved.tap_node_ids)
     assert "package" in solved.solved_metadata.required_path
     assert solved.solved_metadata.required_path[-1] == "destination"
 

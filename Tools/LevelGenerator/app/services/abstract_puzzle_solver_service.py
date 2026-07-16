@@ -39,7 +39,7 @@ class AbstractPuzzleSolverService:
         return replace(
             recipe,
             required_path=metadata.required_path,
-            tap_node_ids=metadata.solution_tap_node_ids,
+            tap_node_ids=metadata.decision_node_ids,
             solved_metadata=metadata,
             notes=(
                 *recipe.notes,

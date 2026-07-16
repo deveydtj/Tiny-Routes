@@ -7,7 +7,7 @@ LEVEL_EDITOR_ROOT = Path(__file__).resolve().parents[1]
 if str(LEVEL_EDITOR_ROOT) not in sys.path:
     sys.path.insert(0, str(LEVEL_EDITOR_ROOT))
 
-from app.models import RouteGraphModel, SolutionActionModel, SolutionModel
+from app.models import RouteGraph, SolutionAction, Solution
 from app.services import LevelIdentityService, create_default_level_document
 
 
@@ -72,14 +72,14 @@ def test_apply_identity_updates_document_and_solution_metadata() -> None:
     service = LevelIdentityService()
     identity = service.build_from_number(21)
     document = create_default_level_document()
-    document.graph = RouteGraphModel()
-    solution = SolutionModel(
+    document.graph = RouteGraph()
+    solution = Solution(
         levelID="new_level",
         description="Draft",
         expectedOutcome="completed",
         maxTaps=1,
         requiresWithinTimeLimit=True,
-        actions=[SolutionActionModel(timeSeconds=1.0, tapNodeID="switch")],
+        actions=[SolutionAction(timeSeconds=1.0, tapNodeID="switch")],
     )
 
     service.apply_identity(document, solution, identity)

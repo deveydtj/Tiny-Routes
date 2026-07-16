@@ -7,7 +7,7 @@ from PySide6.QtGui import QUndoCommand
 
 if TYPE_CHECKING:
     from app.controllers.document_controller import DocumentController
-    from app.models import LevelDocument, SolutionModel
+    from app.models import LevelDocument, Solution
 
 
 class DocumentStateCommand(QUndoCommand):
@@ -19,8 +19,8 @@ class DocumentStateCommand(QUndoCommand):
         text: str,
         before_document: "LevelDocument",
         after_document: "LevelDocument",
-        before_solution: "SolutionModel | None",
-        after_solution: "SolutionModel | None",
+        before_solution: "Solution | None",
+        after_solution: "Solution | None",
     ) -> None:
         super().__init__(text)
         self._controller = controller

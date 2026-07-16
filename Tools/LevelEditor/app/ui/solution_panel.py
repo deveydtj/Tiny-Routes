@@ -18,7 +18,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from app.models import LevelDocument, SolutionActionModel, SolutionModel
+from app.models import LevelDocument, SolutionAction, Solution
 
 
 class SolutionPanel(QWidget):
@@ -35,7 +35,7 @@ class SolutionPanel(QWidget):
         super().__init__(parent)
         self.setMinimumHeight(180)
 
-        self._solution: SolutionModel | None = None
+        self._solution: Solution | None = None
         self._level: LevelDocument | None = None
         self._is_updating_table = False
         self._timing_bounds: list[tuple[float | None, float | None]] = []
@@ -133,7 +133,7 @@ class SolutionPanel(QWidget):
         limit = float(level.timeLimitSeconds) if level is not None else 10.0
         self._timeline_slider.setMaximum(max(1, round(limit * 100)))
 
-    def set_solution(self, solution: SolutionModel | None) -> None:
+    def set_solution(self, solution: Solution | None) -> None:
         self._solution = deepcopy(solution) if solution is not None else None
         self._reload_table()
         self._reload_timeline()
@@ -142,7 +142,7 @@ class SolutionPanel(QWidget):
         self._level = None
         self.set_solution(None)
 
-    def current_solution(self) -> SolutionModel | None:
+    def current_solution(self) -> Solution | None:
         return deepcopy(self._solution) if self._solution is not None else None
 
     def set_action_timings(self, timings) -> None:
@@ -170,7 +170,7 @@ class SolutionPanel(QWidget):
         self._update_button_states()
         self._reload_timeline()
 
-    def _populate_row(self, row_index: int, action: SolutionActionModel) -> None:
+    def _populate_row(self, row_index: int, action: SolutionAction) -> None:
         time_item = QTableWidgetItem(self._format_time_value(action.timeSeconds))
         if not self._advanced_timestamps.isChecked():
             time_item.setFlags(time_item.flags() & ~Qt.ItemFlag.ItemIsEditable)
@@ -230,7 +230,7 @@ class SolutionPanel(QWidget):
             return
 
         switches = self._switch_ids()
-        new_action = SolutionActionModel(timeSeconds=0.0, tapNodeID=switches[0] if switches else "")
+        new_action = SolutionAction(timeSeconds=0.0, tapNodeID=switches[0] if switches else "")
         self._solution.actions.append(new_action)
         self._solution.maxTaps = len(self._solution.actions)
 

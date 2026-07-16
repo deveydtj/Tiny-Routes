@@ -2775,13 +2775,20 @@ Include screenshots after implementation for:
 
 ## Task 19.5 — Remove deprecated compatibility code
 
+**Status:** In Progress
+
 Only after production migration and stable releases:
 
-- [ ] Remove deprecated abstract tap names.
-- [ ] Remove duplicate Python models.
+- [x] Remove deprecated abstract tap names.
+- [x] Remove duplicate Python models.
 - [ ] Remove legacy hidden editor workflows that no longer add value.
 - [ ] Decide whether `legacyGlobal` remains supported for archival files or is moved to a migration-only decoder.
 - [ ] Remove unused legacy generator mode only after equivalent coverage exists.
+
+**Completion notes for this increment**
+
+- [x] Removed the deprecated topology metadata aliases and serialized report keys `solutionTapNodeIDs` and `minimumRequiredTaps`; topology reports now expose only decision terminology.
+- [x] Migrated generator and editor callers to the canonical shared `RouteNode`, `RouteEdge`, `RouteGraph`, `SolutionAction`, and `Solution` types, then removed the old `*Model` aliases and editor compatibility modules.
 
 ---
 

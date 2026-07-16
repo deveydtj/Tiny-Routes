@@ -18,7 +18,7 @@ from app.commands import (
     ReorderEdgesCommand,
     RenameReferencesCommand,
 )
-from app.models import LevelDocument, RouteEdgeModel, RouteNodeModel, SolutionModel
+from app.models import LevelDocument, RouteEdge, RouteNode, Solution
 from app.services.reference_rename_service import ReferenceRenameService
 
 
@@ -31,7 +31,7 @@ class DocumentController(QObject):
     def __init__(self, parent: QObject | None = None) -> None:
         super().__init__(parent)
         self.document: LevelDocument | None = None
-        self.solution: SolutionModel | None = None
+        self.solution: Solution | None = None
         self.undo_stack = QUndoStack(self)
         self.undo_stack.cleanChanged.connect(self._on_clean_changed)
         self._reference_rename_service = ReferenceRenameService()
@@ -40,7 +40,7 @@ class DocumentController(QObject):
     def is_dirty(self) -> bool:
         return not self.undo_stack.isClean()
 
-    def open(self, document: LevelDocument, solution: SolutionModel | None, *, saved: bool) -> None:
+    def open(self, document: LevelDocument, solution: Solution | None, *, saved: bool) -> None:
         self.undo_stack.clear()
         self.document = document
         self.solution = solution
@@ -59,7 +59,7 @@ class DocumentController(QObject):
     def mark_saved(self) -> None:
         self.undo_stack.setClean()
 
-    def add_node(self, node: RouteNodeModel, node_type: str) -> None:
+    def add_node(self, node: RouteNode, node_type: str) -> None:
         self._mutate(AddNodeCommand, f"Add {node.id}", lambda document, solution: self._add_node(document, node, node_type))
 
     def move_node(self, node_id: str, x: float, y: float) -> None:
@@ -93,10 +93,10 @@ class DocumentController(QObject):
                 node.outgoingEdgeIDs = [edge_id for edge_id in node.outgoingEdgeIDs if edge_id not in removed_edges]
         self._mutate(DeleteItemsCommand, "Delete items", mutation)
 
-    def add_edge(self, edge: RouteEdgeModel) -> None:
+    def add_edge(self, edge: RouteEdge) -> None:
         self.add_edges([edge])
 
-    def add_edges(self, edges: list[RouteEdgeModel]) -> None:
+    def add_edges(self, edges: list[RouteEdge]) -> None:
         def mutation(document, solution):
             for edge in edges:
                 source = next(node for node in document.graph.nodes if node.id == edge.fromNodeID)
@@ -217,7 +217,7 @@ class DocumentController(QObject):
             document._extra["schemaVersion"] = schema_version
         self._mutate(EditRulesCommand, "Edit level rules", mutation)
 
-    def edit_solution(self, solution: SolutionModel) -> None:
+    def edit_solution(self, solution: Solution) -> None:
         self._mutate(EditSolutionCommand, "Edit solution", lambda document, current: solution)
 
     def _mutate(self, command_type, text: str, mutation) -> None:
@@ -235,7 +235,7 @@ class DocumentController(QObject):
         ))
 
     @staticmethod
-    def _add_node(document: LevelDocument, node: RouteNodeModel, node_type: str) -> None:
+    def _add_node(document: LevelDocument, node: RouteNode, node_type: str) -> None:
         document.graph.nodes.append(deepcopy(node))
         if node_type == "start":
             document.startNodeID = node.id
@@ -244,7 +244,7 @@ class DocumentController(QObject):
         elif node_type == "destination":
             document.destinationNodeID = node.id
 
-    def _restore_state(self, document: LevelDocument, solution: SolutionModel | None) -> None:
+    def _restore_state(self, document: LevelDocument, solution: Solution | None) -> None:
         if self.document is None:
             self.document = deepcopy(document)
         else:

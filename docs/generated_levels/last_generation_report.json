@@ -465,11 +465,6 @@
         "revisitedRouteShapeOverrides": []
       },
       "abstractSolution": {
-        "solutionTapNodeIDs": [
-          "switch_gate",
-          "switch_package",
-          "switch_exit"
-        ],
         "solutionSwitchStates": [
           {
             "nodeID": "switch_gate",
@@ -503,14 +498,19 @@
         "failurePathCount": 4,
         "falseRouteCount": 4,
         "loopCount": 0,
-        "minimumRequiredTaps": 3,
         "optionalTapCount": 0,
         "repeatedSwitchUsage": false,
         "packageBeforeDestination": true,
         "failureReasons": [
           "abstract_dead_end",
           "abstract_destination_before_package"
-        ]
+        ],
+        "decisionNodeIDs": [
+          "switch_gate",
+          "switch_package",
+          "switch_exit"
+        ],
+        "minimumRequiredDecisions": 3
       },
       "seed": 3673204628,
       "difficulty": "hard",
@@ -1374,11 +1374,6 @@
         "revisitedRouteShapeOverrides": []
       },
       "abstractSolution": {
-        "solutionTapNodeIDs": [
-          "phase_one_switch",
-          "exit_choice",
-          "switch_final"
-        ],
         "solutionSwitchStates": [
           {
             "nodeID": "phase_one_switch",
@@ -1412,14 +1407,19 @@
         "failurePathCount": 5,
         "falseRouteCount": 5,
         "loopCount": 0,
-        "minimumRequiredTaps": 3,
         "optionalTapCount": 0,
         "repeatedSwitchUsage": false,
         "packageBeforeDestination": true,
         "failureReasons": [
           "abstract_dead_end",
           "abstract_destination_before_package"
-        ]
+        ],
+        "decisionNodeIDs": [
+          "phase_one_switch",
+          "exit_choice",
+          "switch_final"
+        ],
+        "minimumRequiredDecisions": 3
       },
       "seed": 1346241903,
       "difficulty": "hard",
@@ -2302,11 +2302,6 @@
         "revisitedRouteShapeOverrides": []
       },
       "abstractSolution": {
-        "solutionTapNodeIDs": [
-          "hub",
-          "switch_b",
-          "switch_c"
-        ],
         "solutionSwitchStates": [
           {
             "nodeID": "hub",
@@ -2340,14 +2335,19 @@
         "failurePathCount": 6,
         "falseRouteCount": 6,
         "loopCount": 0,
-        "minimumRequiredTaps": 3,
         "optionalTapCount": 0,
         "repeatedSwitchUsage": false,
         "packageBeforeDestination": true,
         "failureReasons": [
           "abstract_dead_end",
           "abstract_destination_before_package"
-        ]
+        ],
+        "decisionNodeIDs": [
+          "hub",
+          "switch_b",
+          "switch_c"
+        ],
+        "minimumRequiredDecisions": 3
       },
       "seed": 2725263793,
       "difficulty": "hard",
@@ -3237,11 +3237,6 @@
         "revisitedRouteShapeOverrides": []
       },
       "abstractSolution": {
-        "solutionTapNodeIDs": [
-          "hub",
-          "ring_b",
-          "gate"
-        ],
         "solutionSwitchStates": [
           {
             "nodeID": "hub",
@@ -3272,7 +3267,6 @@
         "failurePathCount": 97,
         "falseRouteCount": 53,
         "loopCount": 602,
-        "minimumRequiredTaps": 3,
         "optionalTapCount": 3,
         "repeatedSwitchUsage": false,
         "packageBeforeDestination": true,
@@ -3280,7 +3274,13 @@
           "abstract_dead_end",
           "abstract_destination_before_package",
           "abstract_tap_limit"
-        ]
+        ],
+        "decisionNodeIDs": [
+          "hub",
+          "ring_b",
+          "gate"
+        ],
+        "minimumRequiredDecisions": 3
       },
       "seed": 3220785920,
       "difficulty": "hard",
@@ -4135,11 +4135,6 @@
         "revisitedRouteShapeOverrides": []
       },
       "abstractSolution": {
-        "solutionTapNodeIDs": [
-          "choice",
-          "switch_b",
-          "switch_c"
-        ],
         "solutionSwitchStates": [
           {
             "nodeID": "choice",
@@ -4173,13 +4168,18 @@
         "failurePathCount": 3,
         "falseRouteCount": 3,
         "loopCount": 0,
-        "minimumRequiredTaps": 3,
         "optionalTapCount": 0,
         "repeatedSwitchUsage": false,
         "packageBeforeDestination": true,
         "failureReasons": [
           "abstract_dead_end"
-        ]
+        ],
+        "decisionNodeIDs": [
+          "choice",
+          "switch_b",
+          "switch_c"
+        ],
+        "minimumRequiredDecisions": 3
       },
       "seed": 3716325208,
       "difficulty": "hard",
@@ -5011,11 +5011,6 @@
         "revisitedRouteShapeOverrides": []
       },
       "abstractSolution": {
-        "solutionTapNodeIDs": [
-          "switch_a",
-          "switch_b",
-          "switch_c"
-        ],
         "solutionSwitchStates": [
           {
             "nodeID": "switch_a",
@@ -5048,13 +5043,18 @@
         "failurePathCount": 3,
         "falseRouteCount": 3,
         "loopCount": 0,
-        "minimumRequiredTaps": 3,
         "optionalTapCount": 0,
         "repeatedSwitchUsage": false,
         "packageBeforeDestination": true,
         "failureReasons": [
           "abstract_dead_end"
-        ]
+        ],
+        "decisionNodeIDs": [
+          "switch_a",
+          "switch_b",
+          "switch_c"
+        ],
+        "minimumRequiredDecisions": 3
       },
       "seed": 1683862404,
       "difficulty": "hard",
@@ -5937,11 +5937,6 @@
         "revisitedRouteShapeOverrides": []
       },
       "abstractSolution": {
-        "solutionTapNodeIDs": [
-          "switch_a",
-          "switch_b",
-          "switch_c"
-        ],
         "solutionSwitchStates": [
           {
             "nodeID": "switch_a",
@@ -5974,14 +5969,19 @@
         "failurePathCount": 4,
         "falseRouteCount": 4,
         "loopCount": 0,
-        "minimumRequiredTaps": 3,
         "optionalTapCount": 0,
         "repeatedSwitchUsage": false,
         "packageBeforeDestination": true,
         "failureReasons": [
           "abstract_dead_end",
           "abstract_destination_before_package"
-        ]
+        ],
+        "decisionNodeIDs": [
+          "switch_a",
+          "switch_b",
+          "switch_c"
+        ],
+        "minimumRequiredDecisions": 3
       },
       "seed": 1137362672,
       "difficulty": "hard",

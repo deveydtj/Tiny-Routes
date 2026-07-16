@@ -1,18 +1,23 @@
-from .route_edge_model import RouteEdgeModel
-from .route_node_model import RouteNodeModel
-from .level_document import EmbeddedSolution, RouteGraphModel, LevelDocument
-from .solution_model import SolutionActionModel, SolutionModel
+from tiny_routes_core.models import (
+    EmbeddedSolution,
+    LevelDocument,
+    RouteEdge,
+    RouteGraph,
+    RouteNode,
+    Solution,
+    SolutionAction,
+)
 from .editor_tool import EditorTool
 from .playtest_state import PlaytestState
 
 __all__ = [
-    "RouteEdgeModel",
-    "RouteNodeModel",
+    "RouteEdge",
+    "RouteNode",
     "EmbeddedSolution",
-    "RouteGraphModel",
+    "RouteGraph",
     "LevelDocument",
-    "SolutionActionModel",
-    "SolutionModel",
+    "SolutionAction",
+    "Solution",
     "EditorTool",
     "PlaytestState",
 ]

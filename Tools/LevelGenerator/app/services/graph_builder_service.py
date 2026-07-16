@@ -4,7 +4,7 @@ from dataclasses import dataclass, field
 from itertools import product
 
 from ..id_allocator import IDAllocator
-from ..level_editor_imports import LevelDocument, RouteEdgeModel, RouteGraphModel, RouteNodeModel
+from ..level_editor_imports import LevelDocument, RouteEdge, RouteGraph, RouteNode
 from .road_shape_service import RoadShapeService
 from .route_timing_service import RouteTimingService
 from .switch_direction_assignment_service import SwitchDirectionAssignmentService
@@ -18,19 +18,19 @@ class GraphBuilderService:
     switch_direction_assignment_service: SwitchDirectionAssignmentService = field(default_factory=SwitchDirectionAssignmentService)
 
     def __post_init__(self) -> None:
-        self._nodes: list[RouteNodeModel] = []
-        self._edges: list[RouteEdgeModel] = []
-        self._node_by_id: dict[str, RouteNodeModel] = {}
+        self._nodes: list[RouteNode] = []
+        self._edges: list[RouteEdge] = []
+        self._node_by_id: dict[str, RouteNode] = {}
         self._explicit_road_shape_edge_ids: set[str] = set()
 
-    def add_node(self, node_id: str, x: float, y: float) -> RouteNodeModel:
+    def add_node(self, node_id: str, x: float, y: float) -> RouteNode:
         self.id_allocator.reserve_existing_node_id(node_id)
-        node = RouteNodeModel(id=node_id, x=round(float(x), 4), y=round(float(y), 4), outgoingEdgeIDs=[])
+        node = RouteNode(id=node_id, x=round(float(x), 4), y=round(float(y), 4), outgoingEdgeIDs=[])
         self._nodes.append(node)
         self._node_by_id[node_id] = node
         return node
 
-    def add_reserved_node(self, base_name: str, x: float, y: float) -> RouteNodeModel:
+    def add_reserved_node(self, base_name: str, x: float, y: float) -> RouteNode:
         return self.add_node(self.id_allocator.reserve_node_id(base_name), x, y)
 
     def add_edge(
@@ -40,7 +40,7 @@ class GraphBuilderService:
         road_shape: str | None = None,
         edge_id: str | None = None,
         availability: str = "always",
-    ) -> RouteEdgeModel:
+    ) -> RouteEdge:
         if from_node_id not in self._node_by_id:
             raise ValueError(f"Unknown from node: {from_node_id}")
         if to_node_id not in self._node_by_id:
@@ -62,7 +62,7 @@ class GraphBuilderService:
             to_node.y,
             road_shape,
         )
-        edge = RouteEdgeModel(
+        edge = RouteEdge(
             id=edge_id,
             fromNodeID=from_node_id,
             toNodeID=to_node_id,
@@ -89,7 +89,7 @@ class GraphBuilderService:
         return LevelDocument(
             id=level_id,
             name=name,
-            graph=RouteGraphModel(nodes=list(self._nodes), edges=list(self._edges)),
+            graph=RouteGraph(nodes=list(self._nodes), edges=list(self._edges)),
             startNodeID=start_node_id,
             packageNodeID=package_node_id,
             destinationNodeID=destination_node_id,
@@ -109,7 +109,7 @@ class GraphBuilderService:
                 continue
 
             fixed_shapes: dict[str, str] = {}
-            flexible_edges: list[RouteEdgeModel] = []
+            flexible_edges: list[RouteEdge] = []
             for edge in valid_edges:
                 if edge.id in self._explicit_road_shape_edge_ids:
                     fixed_shapes[edge.id] = edge.roadShape
@@ -125,10 +125,10 @@ class GraphBuilderService:
 
     def _best_clear_shape_assignment(
         self,
-        node: RouteNodeModel,
-        valid_edges: list[RouteEdgeModel],
+        node: RouteNode,
+        valid_edges: list[RouteEdge],
         fixed_shapes: dict[str, str],
-        flexible_edges: list[RouteEdgeModel],
+        flexible_edges: list[RouteEdge],
     ) -> dict[str, str] | None:
         if not flexible_edges:
             return None
@@ -179,7 +179,7 @@ class GraphBuilderService:
 
         return best_assignment
 
-    def _visual_bucket_for_edge(self, node: RouteNodeModel, edge: RouteEdgeModel, road_shape: str) -> str | None:
+    def _visual_bucket_for_edge(self, node: RouteNode, edge: RouteEdge, road_shape: str) -> str | None:
         target = self._node_by_id.get(edge.toNodeID)
         if target is None:
             return None

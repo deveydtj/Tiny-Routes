@@ -5,7 +5,7 @@ from enum import Enum
 import math
 from pathlib import Path
 
-from app.models import LevelDocument, RouteGraphModel, RouteNodeModel
+from app.models import LevelDocument, RouteGraph, RouteNode
 from app.services.level_identity_service import LevelIdentityService
 from app.services.switch_classification_service import (
     MAX_SUPPORTED_OUTGOING_EDGES,
@@ -59,9 +59,9 @@ def create_default_level_document() -> LevelDocument:
     return LevelDocument(
         id="new_level",
         name="New Level",
-        graph=RouteGraphModel(
+        graph=RouteGraph(
             nodes=[
-                RouteNodeModel(
+                RouteNode(
                     id="start",
                     x=0.0,
                     y=0.0,
@@ -702,9 +702,9 @@ def _first_orthogonal_crossing(first_segments, second_segments) -> tuple[float, 
 
 
 def _four_way_readability_messages(
-    node: RouteNodeModel,
+    node: RouteNode,
     valid_outgoing_edge_ids: tuple[str, ...],
-    node_by_id: dict[str, RouteNodeModel],
+    node_by_id: dict[str, RouteNode],
     edge_by_id: dict[str, object],
 ) -> list[ValidationMessage]:
     messages: list[ValidationMessage] = []

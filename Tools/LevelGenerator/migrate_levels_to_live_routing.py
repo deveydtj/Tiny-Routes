@@ -26,7 +26,7 @@ if str(_SHARED_CORE_ROOT) not in sys.path:
 
 from tiny_routes_core.models import LevelRules, SwitchInteractionMode
 
-from app.level_editor_imports import LevelDocument, SolutionModel
+from app.level_editor_imports import LevelDocument, Solution
 from app.models.abstract_puzzle_solution import AbstractPuzzleSolutionMetadata
 from app.models.generated_level import GeneratedLevel
 from app.models.graph_recipe import GraphRecipe, GraphRecipeEdge, GraphRecipeNode
@@ -100,12 +100,12 @@ def _level_number(level_id: str) -> int:
         raise ValueError(f"Level ID does not end in a numeric campaign position: {level_id}") from error
 
 
-def _solution_metadata(solution: SolutionModel) -> dict[str, Any]:
+def _solution_metadata(solution: Solution) -> dict[str, Any]:
     metadata = solution._extra.get("metadata", {})
     return metadata if isinstance(metadata, dict) else {}
 
 
-def _solution_route(level: LevelDocument, solution: SolutionModel, current_result) -> tuple[str, ...]:
+def _solution_route(level: LevelDocument, solution: Solution, current_result) -> tuple[str, ...]:
     raw_route = _solution_metadata(solution).get("solutionRoute")
     if isinstance(raw_route, list) and all(isinstance(item, str) for item in raw_route):
         route = tuple(raw_route)
@@ -126,7 +126,7 @@ def _solution_route(level: LevelDocument, solution: SolutionModel, current_resul
     return route
 
 
-def _topology_solution(level: LevelDocument, solution: SolutionModel, route: tuple[str, ...]):
+def _topology_solution(level: LevelDocument, solution: Solution, route: tuple[str, ...]):
     decisions = tuple(action.tapNodeID for action in solution.actions)
     return AbstractPuzzleSolutionMetadata(
         decision_node_ids=decisions,
@@ -286,7 +286,7 @@ def analyze_level(
     expanded_lookahead_seconds: float | None = None,
 ) -> dict[str, Any]:
     level = LevelDocument.from_dict(level_payload)
-    solution = SolutionModel.from_dict(solution_payload)
+    solution = Solution.from_dict(solution_payload)
     if solution.levelID != level.id:
         raise ValueError(f"Solution targets {solution.levelID}, not {level.id}")
 

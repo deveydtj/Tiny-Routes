@@ -19,7 +19,7 @@ tests can therefore reuse those layers without launching the UI.
 
 ## Document ownership and mutation
 
-`DocumentController` owns the active `LevelDocument`, optional `SolutionModel`,
+`DocumentController` owns the active `LevelDocument`, optional `Solution`,
 and `QUndoStack`. It is the only graph/metadata mutation boundary. Canvas,
 properties, solution, alignment, rename, and delete actions call controller
 methods; commands snapshot before/after state and publish `document_changed`.
@@ -112,4 +112,3 @@ For a new mutating feature:
 
 For a new serialized field, update shared core models first and add an unknown-
 field round-trip regression before adding inspector controls.
-

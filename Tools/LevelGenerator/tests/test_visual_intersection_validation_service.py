@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from app.level_editor_imports import LevelDocument, RouteEdgeModel, RouteGraphModel, RouteNodeModel, SolutionModel
+from app.level_editor_imports import LevelDocument, RouteEdge, RouteGraph, RouteNode, Solution
 from app.models.abstract_puzzle_solution import AbstractPuzzleSolutionMetadata
 from app.models.generated_level import GeneratedLevel
 from app.services.difficulty_service import DifficultyService
@@ -132,7 +132,7 @@ def test_generated_level_validation_rejects_visual_topology_errors() -> None:
                 ("e_side", "side_a", "destination"),
             ],
         ),
-        solution=SolutionModel(
+        solution=Solution(
             levelID="level_visual_topology",
             description="No taps.",
             expectedOutcome="completed",
@@ -158,7 +158,7 @@ def test_generated_level_validation_rejects_visual_topology_errors() -> None:
 def test_generated_level_validation_rejects_return_loop_false_shortcut() -> None:
     generated = GeneratedLevel(
         level_document=_return_loop_level(destination_y=-0.10),
-        solution=SolutionModel(
+        solution=Solution(
             levelID="level_return_loop_shortcut",
             description="Return-loop false shortcut fixture.",
             expectedOutcome="completed",
@@ -205,13 +205,13 @@ def _level(
     return LevelDocument(
         id="level_visual_topology",
         name="Visual Topology",
-        graph=RouteGraphModel(
+        graph=RouteGraph(
             nodes=[
-                RouteNodeModel(id=node_id, x=x, y=y, outgoingEdgeIDs=outgoing_edge_ids)
+                RouteNode(id=node_id, x=x, y=y, outgoingEdgeIDs=outgoing_edge_ids)
                 for node_id, (x, y, outgoing_edge_ids) in nodes.items()
             ],
             edges=[
-                RouteEdgeModel(id=edge_id, fromNodeID=from_node_id, toNodeID=to_node_id)
+                RouteEdge(id=edge_id, fromNodeID=from_node_id, toNodeID=to_node_id)
                 for edge_id, from_node_id, to_node_id in edges
             ],
         ),

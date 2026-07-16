@@ -20,7 +20,7 @@ from app.level_editor_imports import (
     LevelFileRepository,
     LevelValidationService,
     SolutionFileRepository,
-    SolutionModel,
+    Solution,
     SolutionValidationService,
     ValidationSeverity,
 )
@@ -98,7 +98,7 @@ def _debug_candidate_directories(resources_dir: Path) -> list[str]:
 def _disk_round_trip(
     level_id: str,
     level: LevelDocument,
-    solution: SolutionModel,
+    solution: Solution,
 ) -> bool:
     with tempfile.TemporaryDirectory(prefix="tiny-routes-editor-roundtrip-") as root:
         root_path = Path(root)
@@ -159,7 +159,7 @@ def verify(
             raw_level = _read_object(level_path)
             raw_solution = _read_object(solution_path)
             level = LevelDocument.from_dict(raw_level)
-            solution = SolutionModel.from_dict(raw_solution)
+            solution = Solution.from_dict(raw_solution)
         except (OSError, KeyError, TypeError, ValueError, json.JSONDecodeError) as error:
             record.update({
                 "passed": False,

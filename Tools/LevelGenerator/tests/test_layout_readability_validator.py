@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from app.level_editor_imports import LevelDocument, RouteEdgeModel, RouteGraphModel, RouteNodeModel
+from app.level_editor_imports import LevelDocument, RouteEdge, RouteGraph, RouteNode
 from app.services.layout_readability_validator import LayoutReadabilityValidator
 
 
@@ -79,13 +79,13 @@ def _level(
     return LevelDocument(
         id="level_layout_readability",
         name="Layout Readability",
-        graph=RouteGraphModel(
+        graph=RouteGraph(
             nodes=[
-                RouteNodeModel(id=node_id, x=x, y=y, outgoingEdgeIDs=outgoing_edge_ids)
+                RouteNode(id=node_id, x=x, y=y, outgoingEdgeIDs=outgoing_edge_ids)
                 for node_id, (x, y, outgoing_edge_ids) in nodes.items()
             ],
             edges=[
-                RouteEdgeModel(
+                RouteEdge(
                     id=edge_id,
                     fromNodeID=from_node_id,
                     toNodeID=to_node_id,

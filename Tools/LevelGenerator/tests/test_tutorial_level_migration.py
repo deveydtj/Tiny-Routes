@@ -2,13 +2,13 @@ from __future__ import annotations
 
 import json
 
-from app.level_editor_imports import LevelDocument, SolutionModel
+from app.level_editor_imports import LevelDocument, Solution
 from app.models.generated_level import GeneratedLevel
 from app.paths import get_default_levels_directory, get_default_solutions_directory
 from app.services.python_solution_simulator_service import PythonSolutionSimulatorService
 
 
-def _load(level_id: str) -> tuple[dict, LevelDocument, SolutionModel]:
+def _load(level_id: str) -> tuple[dict, LevelDocument, Solution]:
     level_payload = json.loads(
         (get_default_levels_directory() / f"{level_id}.json").read_text(encoding="utf-8")
     )
@@ -18,7 +18,7 @@ def _load(level_id: str) -> tuple[dict, LevelDocument, SolutionModel]:
     return (
         level_payload,
         LevelDocument.from_dict(level_payload),
-        SolutionModel.from_dict(solution_payload),
+        Solution.from_dict(solution_payload),
     )
 
 

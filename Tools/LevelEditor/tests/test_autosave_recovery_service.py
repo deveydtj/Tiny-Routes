@@ -17,10 +17,10 @@ if str(LEVEL_EDITOR_ROOT) not in sys.path:
 from app.main_window import LevelEditorMainWindow
 from app.models import (
     LevelDocument,
-    RouteGraphModel,
-    RouteNodeModel,
-    SolutionActionModel,
-    SolutionModel,
+    RouteGraph,
+    RouteNode,
+    SolutionAction,
+    Solution,
 )
 from app.services import AutosaveRecoveryError, AutosaveRecoveryService
 
@@ -34,8 +34,8 @@ def _document(name: str = "Recovery Level") -> LevelDocument:
     return LevelDocument(
         id="recovery_level",
         name=name,
-        graph=RouteGraphModel(
-            nodes=[RouteNodeModel(id="start", x=0.0, y=0.0)]
+        graph=RouteGraph(
+            nodes=[RouteNode(id="start", x=0.0, y=0.0)]
         ),
         startNodeID="start",
         packageNodeID="start",
@@ -45,14 +45,14 @@ def _document(name: str = "Recovery Level") -> LevelDocument:
     )
 
 
-def _solution() -> SolutionModel:
-    return SolutionModel(
+def _solution() -> Solution:
+    return Solution(
         levelID="recovery_level",
         description="Recovered solution",
         expectedOutcome="completed",
         maxTaps=1,
         requiresWithinTimeLimit=True,
-        actions=[SolutionActionModel(timeSeconds=0.5, tapNodeID="start")],
+        actions=[SolutionAction(timeSeconds=0.5, tapNodeID="start")],
     )
 
 

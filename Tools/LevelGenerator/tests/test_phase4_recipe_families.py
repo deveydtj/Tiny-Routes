@@ -49,7 +49,7 @@ def test_phase4_families_generate_solve_build_and_validate(family_name: str, dif
     assert generated.topology_class in PHASE4_TOPOLOGIES
     assert generated.mechanic_tags
     assert generated.abstract_solution_metadata is not None
-    assert generated.abstract_solution_metadata.minimum_required_taps in range(
+    assert generated.abstract_solution_metadata.minimum_required_decisions in range(
         preset.required_tap_range[0],
         preset.required_tap_range[1] + 1,
     )

@@ -8,8 +8,8 @@ from typing import Any
 
 from .paths import find_repo_root
 from tiny_routes_core.models import (
-    LevelDocument, RouteEdgeModel, RouteGraphModel, RouteNodeModel,
-    SolutionActionModel, SolutionModel,
+    LevelDocument, RouteEdge, RouteGraph, RouteNode,
+    SolutionAction, Solution,
 )
 
 
@@ -30,10 +30,7 @@ def _import_level_editor_symbols() -> dict[str, Any]:
 
     try:
         sys.path.insert(0, str(level_editor_root))
-        models = importlib.import_module("app.models")
-        level_document = importlib.import_module("app.models.level_document")
         repositories = importlib.import_module("app.repositories")
-        services = importlib.import_module("app.services")
         level_validation = importlib.import_module("app.services.level_validation_service")
         solution_validation = importlib.import_module("app.services.solution_validation_service")
 
@@ -66,6 +63,6 @@ ValidationResult = _SYMBOLS["ValidationResult"]
 ValidationSeverity = _SYMBOLS["ValidationSeverity"]
 
 __all__ = [
-    "LevelDocument", "RouteGraphModel", "RouteNodeModel", "RouteEdgeModel",
-    "SolutionModel", "SolutionActionModel", *_SYMBOLS.keys(),
+    "LevelDocument", "RouteGraph", "RouteNode", "RouteEdge",
+    "Solution", "SolutionAction", *_SYMBOLS.keys(),
 ]

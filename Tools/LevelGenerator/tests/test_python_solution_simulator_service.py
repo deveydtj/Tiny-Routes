@@ -3,7 +3,7 @@ from __future__ import annotations
 import pytest
 
 from app.random_source import RandomSource
-from app.level_editor_imports import LevelDocument, RouteEdgeModel, RouteGraphModel, RouteNodeModel, SolutionActionModel, SolutionModel
+from app.level_editor_imports import LevelDocument, RouteEdge, RouteGraph, RouteNode, SolutionAction, Solution
 from app.models.generated_level import GeneratedLevel
 from app.services.difficulty_service import DifficultyService
 from app.services.python_solution_simulator_service import PythonSolutionSimulatorService
@@ -194,25 +194,25 @@ def _single_route_fixture(
     level = LevelDocument(
         id=f"level_parity_{suffix}",
         name=f"Parity {suffix}",
-        graph=RouteGraphModel(
+        graph=RouteGraph(
             nodes=[
-                RouteNodeModel(id="start", x=0.0, y=0.0, outgoingEdgeIDs=["e_start_package"]),
-                RouteNodeModel(
+                RouteNode(id="start", x=0.0, y=0.0, outgoingEdgeIDs=["e_start_package"]),
+                RouteNode(
                     id="package",
                     x=package_position[0],
                     y=package_position[1],
                     outgoingEdgeIDs=["e_package_destination"],
                 ),
-                RouteNodeModel(id="destination", x=destination_position[0], y=destination_position[1], outgoingEdgeIDs=[]),
+                RouteNode(id="destination", x=destination_position[0], y=destination_position[1], outgoingEdgeIDs=[]),
             ],
             edges=[
-                RouteEdgeModel(
+                RouteEdge(
                     id="e_start_package",
                     fromNodeID="start",
                     toNodeID="package",
                     roadShape=first_shape,
                 ),
-                RouteEdgeModel(
+                RouteEdge(
                     id="e_package_destination",
                     fromNodeID="package",
                     toNodeID="destination",
@@ -226,7 +226,7 @@ def _single_route_fixture(
         timeLimitSeconds=20,
         parTaps=0,
     )
-    solution = SolutionModel(
+    solution = Solution(
         levelID=level.id,
         description="No taps.",
         expectedOutcome="completed",

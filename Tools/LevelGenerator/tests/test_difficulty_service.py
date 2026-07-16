@@ -22,25 +22,25 @@ def test_invalid_difficulty_is_rejected() -> None:
 
 
 def test_only_expert_allows_four_outgoing_edges() -> None:
-    from app.level_editor_imports import LevelDocument, RouteEdgeModel, RouteGraphModel, RouteNodeModel, SolutionModel
+    from app.level_editor_imports import LevelDocument, RouteEdge, RouteGraph, RouteNode, Solution
 
     service = DifficultyService()
     level = LevelDocument(
         id="level_999",
         name="Four Way",
-        graph=RouteGraphModel(
+        graph=RouteGraph(
             nodes=[
-                RouteNodeModel(id="switch", x=0.0, y=0.0, outgoingEdgeIDs=["e0", "e1", "e2", "e3"]),
-                RouteNodeModel(id="package", x=0.0, y=1.0, outgoingEdgeIDs=[]),
-                RouteNodeModel(id="destination", x=1.0, y=0.0, outgoingEdgeIDs=[]),
-                RouteNodeModel(id="dead", x=-1.0, y=0.0, outgoingEdgeIDs=[]),
-                RouteNodeModel(id="side", x=0.0, y=-1.0, outgoingEdgeIDs=[]),
+                RouteNode(id="switch", x=0.0, y=0.0, outgoingEdgeIDs=["e0", "e1", "e2", "e3"]),
+                RouteNode(id="package", x=0.0, y=1.0, outgoingEdgeIDs=[]),
+                RouteNode(id="destination", x=1.0, y=0.0, outgoingEdgeIDs=[]),
+                RouteNode(id="dead", x=-1.0, y=0.0, outgoingEdgeIDs=[]),
+                RouteNode(id="side", x=0.0, y=-1.0, outgoingEdgeIDs=[]),
             ],
             edges=[
-                RouteEdgeModel(id="e0", fromNodeID="switch", toNodeID="dead"),
-                RouteEdgeModel(id="e1", fromNodeID="switch", toNodeID="package"),
-                RouteEdgeModel(id="e2", fromNodeID="switch", toNodeID="destination"),
-                RouteEdgeModel(id="e3", fromNodeID="switch", toNodeID="side"),
+                RouteEdge(id="e0", fromNodeID="switch", toNodeID="dead"),
+                RouteEdge(id="e1", fromNodeID="switch", toNodeID="package"),
+                RouteEdge(id="e2", fromNodeID="switch", toNodeID="destination"),
+                RouteEdge(id="e3", fromNodeID="switch", toNodeID="side"),
             ],
         ),
         startNodeID="switch",
@@ -49,7 +49,7 @@ def test_only_expert_allows_four_outgoing_edges() -> None:
         timeLimitSeconds=30,
         parTaps=2,
     )
-    solution = SolutionModel(
+    solution = Solution(
         levelID="level_999",
         description="Test",
         expectedOutcome="completed",

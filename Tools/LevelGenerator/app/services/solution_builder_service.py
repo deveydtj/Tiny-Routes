@@ -3,7 +3,7 @@ from __future__ import annotations
 from collections import Counter
 from typing import Any
 
-from ..level_editor_imports import SolutionActionModel, SolutionModel
+from ..level_editor_imports import SolutionAction, Solution
 from ..models.difficulty_preset import DifficultyPreset
 from ..models.runtime_solution_search import RuntimeSolutionSearchResult
 from .route_timing_service import RouteTimingService
@@ -20,8 +20,8 @@ class SolutionBuilderService:
         level_id: str,
         description: str | None = None,
         solution_route: list[str] | None = None,
-    ) -> SolutionModel:
-        return SolutionModel(
+    ) -> Solution:
+        return Solution(
             levelID=level_id,
             description=description or "No taps required. The default route moves from start to package to destination.",
             expectedOutcome="completed",
@@ -44,7 +44,7 @@ class SolutionBuilderService:
         runtime_result: RuntimeSolutionSearchResult,
         description: str,
         solution_route: list[str] | tuple[str, ...] | None = None,
-    ) -> SolutionModel:
+    ) -> Solution:
         if not runtime_result.passed or runtime_result.replay_result is None or not runtime_result.replay_result.passed:
             raise ValueError(runtime_result.failure_reason or "runtime solution was not verified")
         if len(runtime_result.replay_result.taps) != len(runtime_result.actions):
@@ -58,7 +58,7 @@ class SolutionBuilderService:
         actions = []
         for action in sorted(runtime_result.actions, key=lambda item: item.time_seconds):
             diagnostic = diagnostic_by_node_time[(action.tap_node_id, round(action.time_seconds, 6))]
-            actions.append(SolutionActionModel(
+            actions.append(SolutionAction(
                 timeSeconds=round(action.time_seconds, 3),
                 tapNodeID=action.tap_node_id,
                 _extra={
@@ -69,7 +69,7 @@ class SolutionBuilderService:
                     "expectedEdgeAfterTap": action.expected_edge_after_tap,
                 },
             ))
-        return SolutionModel(
+        return Solution(
             levelID=level_id,
             description=description,
             expectedOutcome="completed",
@@ -94,18 +94,18 @@ class SolutionBuilderService:
         times: list[float] | None = None,
         action_metadata: list[dict[str, Any]] | None = None,
         solution_route: list[str] | None = None,
-    ) -> SolutionModel:
+    ) -> Solution:
         action_pairs = self._resolve_action_pairs(tap_node_ids, preset, times)
         metadata_by_node_time = self._metadata_by_node_time(action_pairs, action_metadata)
         actions = [
-            SolutionActionModel(
+            SolutionAction(
                 timeSeconds=round(time_seconds, 2),
                 tapNodeID=node_id,
                 _extra=metadata_by_node_time.get((node_id, round(time_seconds, 2)), {}),
             )
             for time_seconds, node_id in action_pairs
         ]
-        return SolutionModel(
+        return Solution(
             levelID=level_id,
             description=description,
             expectedOutcome="completed",
@@ -134,7 +134,7 @@ class SolutionBuilderService:
         route_edge_shapes: dict[tuple[str, str], str | None] | None = None,
         route_edge_ids_by_pair: dict[tuple[str, str], str] | None = None,
         outgoing_edge_ids_by_node: dict[str, list[str]] | None = None,
-    ) -> SolutionModel:
+    ) -> Solution:
         """Build an approximate legacy sidecar; do not use for live-lookahead output."""
         times, arrival_times_by_action = self._times_before_route_arrivals(
             tap_node_ids,
@@ -164,7 +164,7 @@ class SolutionBuilderService:
 
     def apply_generation_metadata(
         self,
-        solution: SolutionModel | None,
+        solution: Solution | None,
         *,
         template_name: str,
         seed: int,

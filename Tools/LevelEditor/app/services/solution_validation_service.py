@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from app.models import LevelDocument, SolutionModel
+from app.models import LevelDocument, Solution
 from app.services.level_identity_service import LevelIdentityService
 from app.services.level_validation_service import (
     ValidationMessage,
@@ -24,7 +24,7 @@ class SolutionValidationService:
     def validate(
         self,
         level: LevelDocument,
-        solution: SolutionModel | None,
+        solution: Solution | None,
         file_path: Path | None = None,
     ) -> ValidationResult:
         return validate(level, solution, file_path=file_path)
@@ -32,7 +32,7 @@ class SolutionValidationService:
 
 def validate(
     level: LevelDocument,
-    solution: SolutionModel | None,
+    solution: Solution | None,
     file_path: Path | None = None,
 ) -> ValidationResult:
     """Validate a solution script's metadata, action timing, and node references."""

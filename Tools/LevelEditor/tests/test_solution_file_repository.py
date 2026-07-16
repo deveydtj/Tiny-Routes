@@ -9,7 +9,7 @@ LEVEL_EDITOR_ROOT = Path(__file__).resolve().parents[1]
 if str(LEVEL_EDITOR_ROOT) not in sys.path:
     sys.path.insert(0, str(LEVEL_EDITOR_ROOT))
 
-from app.models import SolutionActionModel, SolutionModel
+from app.models import SolutionAction, Solution
 from app.repositories import (
     InvalidSolutionJSONError,
     MissingSolutionFileError,
@@ -148,13 +148,13 @@ def test_load_solution_wraps_os_error_as_solution_file_io_error(tmp_path: Path) 
 
 def test_save_solution_wraps_os_error_as_solution_file_io_error(tmp_path: Path) -> None:
     repository = SolutionFileRepository()
-    solution = SolutionModel(
+    solution = Solution(
         levelID="level_999",
         description="Test solution",
         expectedOutcome="completed",
         maxTaps=0,
         requiresWithinTimeLimit=True,
-        actions=[SolutionActionModel(timeSeconds=0.0, tapNodeID="start")],
+        actions=[SolutionAction(timeSeconds=0.0, tapNodeID="start")],
     )
     some_path = tmp_path / "solution.json"
 

@@ -4,7 +4,7 @@ import re
 from dataclasses import dataclass
 from pathlib import Path
 
-from app.models import LevelDocument, SolutionModel
+from app.models import LevelDocument, Solution
 
 
 @dataclass(frozen=True)
@@ -76,7 +76,7 @@ class LevelIdentityService:
     def apply_identity(
         self,
         document: LevelDocument,
-        solution: SolutionModel | None,
+        solution: Solution | None,
         identity: LevelIdentity,
     ) -> None:
         document.id = identity.level_id

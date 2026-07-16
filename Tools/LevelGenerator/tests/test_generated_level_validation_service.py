@@ -3,11 +3,11 @@ from __future__ import annotations
 from app.random_source import RandomSource
 from app.level_editor_imports import (
     LevelDocument,
-    RouteEdgeModel,
-    RouteGraphModel,
-    RouteNodeModel,
-    SolutionActionModel,
-    SolutionModel,
+    RouteEdge,
+    RouteGraph,
+    RouteNode,
+    SolutionAction,
+    Solution,
 )
 from app.models.generated_level import GeneratedLevel
 from app.models.decision_profile import DecisionProfile
@@ -190,21 +190,21 @@ def _generated_switch_with_outgoing_count(outgoing_count: int) -> GeneratedLevel
     level = LevelDocument(
         id="level_999",
         name="Switch Count",
-        graph=RouteGraphModel(
+        graph=RouteGraph(
             nodes=[
-                RouteNodeModel(
+                RouteNode(
                     id="switch",
                     x=0.0,
                     y=0.0,
                     outgoingEdgeIDs=[f"e{index}" for index in range(outgoing_count)],
                 ),
                 *[
-                    RouteNodeModel(id=f"target_{index}", x=float(index + 1), y=0.0, outgoingEdgeIDs=[])
+                    RouteNode(id=f"target_{index}", x=float(index + 1), y=0.0, outgoingEdgeIDs=[])
                     for index in range(outgoing_count)
                 ],
             ],
             edges=[
-                RouteEdgeModel(id=f"e{index}", fromNodeID="switch", toNodeID=f"target_{index}")
+                RouteEdge(id=f"e{index}", fromNodeID="switch", toNodeID=f"target_{index}")
                 for index in range(outgoing_count)
             ],
         ),
@@ -216,7 +216,7 @@ def _generated_switch_with_outgoing_count(outgoing_count: int) -> GeneratedLevel
     )
     return GeneratedLevel(
         level_document=level,
-        solution=SolutionModel(
+        solution=Solution(
             levelID=level.id,
             description="No-op",
             expectedOutcome="completed",
@@ -234,20 +234,20 @@ def _generated_repeated_tap_level(times: list[float]) -> GeneratedLevel:
     level = LevelDocument(
         id="level_repeat",
         name="Repeat",
-        graph=RouteGraphModel(
+        graph=RouteGraph(
             nodes=[
-                RouteNodeModel(id="start", x=-1.0, y=0.0, outgoingEdgeIDs=["e_start_switch"]),
-                RouteNodeModel(id="switch", x=0.0, y=0.0, outgoingEdgeIDs=["e_switch_package", "e_switch_return"]),
-                RouteNodeModel(id="package", x=0.7, y=0.0, outgoingEdgeIDs=["e_package_switch"]),
-                RouteNodeModel(id="return", x=-0.5, y=-0.5, outgoingEdgeIDs=["e_return_destination"]),
-                RouteNodeModel(id="destination", x=1.0, y=-0.5, outgoingEdgeIDs=[]),
+                RouteNode(id="start", x=-1.0, y=0.0, outgoingEdgeIDs=["e_start_switch"]),
+                RouteNode(id="switch", x=0.0, y=0.0, outgoingEdgeIDs=["e_switch_package", "e_switch_return"]),
+                RouteNode(id="package", x=0.7, y=0.0, outgoingEdgeIDs=["e_package_switch"]),
+                RouteNode(id="return", x=-0.5, y=-0.5, outgoingEdgeIDs=["e_return_destination"]),
+                RouteNode(id="destination", x=1.0, y=-0.5, outgoingEdgeIDs=[]),
             ],
             edges=[
-                RouteEdgeModel(id="e_start_switch", fromNodeID="start", toNodeID="switch"),
-                RouteEdgeModel(id="e_switch_package", fromNodeID="switch", toNodeID="package"),
-                RouteEdgeModel(id="e_switch_return", fromNodeID="switch", toNodeID="return"),
-                RouteEdgeModel(id="e_package_switch", fromNodeID="package", toNodeID="switch"),
-                RouteEdgeModel(id="e_return_destination", fromNodeID="return", toNodeID="destination"),
+                RouteEdge(id="e_start_switch", fromNodeID="start", toNodeID="switch"),
+                RouteEdge(id="e_switch_package", fromNodeID="switch", toNodeID="package"),
+                RouteEdge(id="e_switch_return", fromNodeID="switch", toNodeID="return"),
+                RouteEdge(id="e_package_switch", fromNodeID="package", toNodeID="switch"),
+                RouteEdge(id="e_return_destination", fromNodeID="return", toNodeID="destination"),
             ],
         ),
         startNodeID="start",
@@ -258,14 +258,14 @@ def _generated_repeated_tap_level(times: list[float]) -> GeneratedLevel:
     )
     return GeneratedLevel(
         level_document=level,
-        solution=SolutionModel(
+        solution=Solution(
             levelID=level.id,
             description="Repeat switch.",
             expectedOutcome="completed",
             maxTaps=len(times),
             requiresWithinTimeLimit=True,
             actions=[
-                SolutionActionModel(timeSeconds=time, tapNodeID="switch")
+                SolutionAction(timeSeconds=time, tapNodeID="switch")
                 for time in times
             ],
         ),

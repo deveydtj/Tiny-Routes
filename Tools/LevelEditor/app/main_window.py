@@ -23,7 +23,7 @@ from app.controllers import (
     PuzzleAnalysisController,
     ValidationController,
 )
-from app.models import EditorTool, LevelDocument, RouteEdgeModel, RouteNodeModel, SolutionModel
+from app.models import EditorTool, LevelDocument, RouteEdge, RouteNode, Solution
 from app.repositories import (
     LevelFileRepository,
     LevelFileRepositoryError,
@@ -73,7 +73,7 @@ class LevelEditorMainWindow(QMainWindow):
         self.resize(1024, 768)
 
         self._current_document: LevelDocument | None = None
-        self._current_solution: SolutionModel | None = None
+        self._current_solution: Solution | None = None
         self._current_file_path: Path | None = None
         self._is_dirty = False
         self._current_candidate_quality: dict | None = None
@@ -1179,7 +1179,7 @@ class LevelEditorMainWindow(QMainWindow):
             return
         self._set_dirty(True)
 
-    def _on_solution_changed(self, updated_solution: SolutionModel) -> None:
+    def _on_solution_changed(self, updated_solution: Solution) -> None:
         if self._current_document is None:
             return
 
@@ -1339,7 +1339,7 @@ class LevelEditorMainWindow(QMainWindow):
             return
 
         node_id = self._generate_unique_default_node_id(node_type)
-        new_node = RouteNodeModel(
+        new_node = RouteNode(
             id=node_id,
             x=model_x,
             y=model_y,
@@ -1374,7 +1374,7 @@ class LevelEditorMainWindow(QMainWindow):
             return
 
         self._ensure_controller_state()
-        edges = [RouteEdgeModel(
+        edges = [RouteEdge(
                 id=edge_id,
                 fromNodeID=from_node_id,
                 toNodeID=to_node_id,
@@ -1383,7 +1383,7 @@ class LevelEditorMainWindow(QMainWindow):
         if bidirectional:
             existing_ids = {edge.id for edge in self._current_document.graph.edges} | {edge_id}
             reverse_edge_id = self._unique_edge_id(existing_ids)
-            edges.append(RouteEdgeModel(
+            edges.append(RouteEdge(
                 id=reverse_edge_id,
                 fromNodeID=to_node_id,
                 toNodeID=from_node_id,
@@ -1537,8 +1537,8 @@ class LevelEditorMainWindow(QMainWindow):
         document: LevelDocument,
         *,
         is_placeholder: bool = False,
-    ) -> SolutionModel:
-        return SolutionModel(
+    ) -> Solution:
+        return Solution(
             levelID=document.id,
             description=f"Solution for {document.name}",
             expectedOutcome="completed",
@@ -1548,7 +1548,7 @@ class LevelEditorMainWindow(QMainWindow):
             isPlaceholder=is_placeholder or None,
         )
 
-    def _load_solution_for_level(self, level_path: Path, document: LevelDocument) -> SolutionModel:
+    def _load_solution_for_level(self, level_path: Path, document: LevelDocument) -> Solution:
         solution_path = self._solution_repository.find_solution_path(level_path)
         try:
             solution = self._solution_repository.load_solution(solution_path)

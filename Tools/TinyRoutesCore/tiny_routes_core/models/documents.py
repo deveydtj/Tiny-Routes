@@ -183,11 +183,3 @@ class Solution:
         return result
 
     def clone(self) -> "Solution": return deepcopy(self)
-
-
-# Compatibility names retained while callers migrate.
-RouteNodeModel = RouteNode
-RouteEdgeModel = RouteEdge
-RouteGraphModel = RouteGraph
-SolutionActionModel = SolutionAction
-SolutionModel = Solution

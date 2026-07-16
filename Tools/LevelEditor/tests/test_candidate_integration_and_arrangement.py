@@ -26,9 +26,9 @@ from app.main import _parse_arguments
 from app.main_window import LevelEditorMainWindow
 from app.models import (
     LevelDocument,
-    RouteGraphModel,
-    RouteNodeModel,
-    SolutionModel,
+    RouteGraph,
+    RouteNode,
+    Solution,
 )
 from app.repositories import LevelFileRepository, SolutionFileRepository
 from app.ui import LevelCanvasScene, LevelCanvasView
@@ -54,10 +54,10 @@ def _document() -> LevelDocument:
     return LevelDocument(
         id="candidate",
         name="Candidate",
-        graph=RouteGraphModel(nodes=[
-            RouteNodeModel(id="a", x=0.0, y=0.0),
-            RouteNodeModel(id="b", x=1.0, y=2.0),
-            RouteNodeModel(id="c", x=6.0, y=5.0),
+        graph=RouteGraph(nodes=[
+            RouteNode(id="a", x=0.0, y=0.0),
+            RouteNode(id="b", x=1.0, y=2.0),
+            RouteNode(id="c", x=6.0, y=5.0),
         ]),
         startNodeID="a",
         packageNodeID="b",
@@ -67,8 +67,8 @@ def _document() -> LevelDocument:
     )
 
 
-def _solution() -> SolutionModel:
-    return SolutionModel(
+def _solution() -> Solution:
+    return Solution(
         levelID="candidate",
         description="Candidate solution",
         expectedOutcome="completed",
