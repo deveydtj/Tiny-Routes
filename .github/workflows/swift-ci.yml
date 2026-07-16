@@ -1,0 +1,47 @@
+name: macOS Swift CI
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: swift-ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: Xcode 16.4 / iOS 18.5
+    runs-on: macos-15
+    timeout-minutes: 45
+    env:
+      DEVELOPER_DIR: /Applications/Xcode_16.4.app/Contents/Developer
+      TINY_ROUTES_XCODE_DESTINATION: platform=iOS Simulator,name=iPhone 16 Pro,OS=18.5
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Verify pinned Xcode and simulator
+        run: |
+          xcodebuild -version
+          xcrun simctl list devices available
+
+      - name: Run domain, runtime, parity, solvability, and UI tests
+        run: >-
+          python3 scripts/run_swift_tests.py
+          --destination "$TINY_ROUTES_XCODE_DESTINATION"
+          --result-bundle "$RUNNER_TEMP/TinyRoutesTests.xcresult"
+
+      - name: Upload Xcode result bundle
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: TinyRoutesTests-xcresult
+          path: ${{ runner.temp }}/TinyRoutesTests.xcresult
+          if-no-files-found: ignore

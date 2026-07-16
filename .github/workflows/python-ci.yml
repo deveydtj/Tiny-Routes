@@ -1,0 +1,81 @@
+name: Python CI
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: python-ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: Python 3.11 checks
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    env:
+      QT_QPA_PLATFORM: minimal
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+          cache-dependency-path: |
+            Tools/TinyRoutesCore/pyproject.toml
+            Tools/LevelGenerator/requirements.txt
+            Tools/LevelEditor/requirements.txt
+
+      - name: Install test dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e Tools/TinyRoutesCore
+          python -m pip install -r Tools/LevelGenerator/requirements.txt
+          python -m pip install -r Tools/LevelEditor/requirements.txt
+
+      - name: Test shared core
+        run: python -m pytest Tools/TinyRoutesCore/tests
+
+      - name: Test level generator
+        run: python -m pytest Tools/LevelGenerator/tests
+
+      - name: Test level editor headlessly
+        run: python -m pytest Tools/LevelEditor/tests
+
+      - name: Verify combined root collection
+        run: >-
+          python -m pytest --collect-only -q
+          Tools/TinyRoutesCore/tests
+          Tools/LevelGenerator/tests
+          Tools/LevelEditor/tests
+
+      - name: Run deterministic generator smoke test
+        run: python scripts/run_generator_smoke.py
+
+      - name: Validate production corpus structure and solutions
+        working-directory: Tools/LevelGenerator
+        run: |
+          python verify_production_corpus.py \
+            --no-swift-tests \
+            --json-output "$RUNNER_TEMP/production_corpus_verification.json" \
+            --markdown-output "$RUNNER_TEMP/production_corpus_verification.md"
+
+      - name: Upload corpus verification report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: production-corpus-verification
+          path: |
+            ${{ runner.temp }}/production_corpus_verification.json
+            ${{ runner.temp }}/production_corpus_verification.md
+          if-no-files-found: ignore

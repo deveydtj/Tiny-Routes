@@ -20,7 +20,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--swift-tests", action="store_true", help="Also run the TinyRoutes Xcode test scheme (macOS only).")
     parser.add_argument(
         "--destination",
-        default="platform=iOS Simulator,name=iPhone 16 Pro",
+        default="platform=iOS Simulator,name=iPhone 16 Pro,OS=18.5",
         help="xcodebuild destination used with --swift-tests.",
     )
     args = parser.parse_args(argv)
@@ -35,10 +35,10 @@ def main(argv: list[str] | None = None) -> int:
     ]
     if args.swift_tests:
         commands.append([
-            "xcodebuild", "test",
-            "-project", "TinyRoutes.xcodeproj",
-            "-scheme", "TinyRoutes",
-            "-destination", args.destination,
+            python,
+            str(scripts / "run_swift_tests.py"),
+            "--destination",
+            args.destination,
         ])
 
     results = [run(command, repo_root) for command in commands]

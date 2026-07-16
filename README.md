@@ -60,8 +60,20 @@ Run all Python checks together, optionally including Swift tests:
 ```bash
 python scripts/run_all_checks.py
 python scripts/run_all_checks.py --swift-tests \
-  --destination 'platform=iOS Simulator,name=iPhone 16 Pro'
+  --destination 'platform=iOS Simulator,name=iPhone 16 Pro,OS=18.5'
 ```
+
+Run the same full Xcode test scheme used by macOS CI:
+
+```bash
+python3 scripts/run_swift_tests.py
+```
+
+CI runs on pushes to `main`, pull requests, and manual dispatches. Python CI
+uses Python 3.11 with the headless `QT_QPA_PLATFORM=minimal`; Swift CI uses the
+`macos-15` runner with Xcode 16.4 and an iPhone 16 Pro running iOS 18.5. Keep
+the destination in `scripts/run_swift_tests.py` synchronized with
+`.github/workflows/swift-ci.yml` when updating the supported toolchain.
 
 Use `--python /path/to/python` with any script when dependencies are installed
 in a different interpreter. The Python suites can also be collected in one

@@ -2553,23 +2553,27 @@ Prevent future changes from reintroducing runtime mismatch, weak levels, or edit
 
 ## Task 18.1 — Add Python CI
 
+**Status:** Completed
+
 **Checks**
 
-- [ ] Shared core tests.
-- [ ] Generator tests.
-- [ ] Editor tests with a headless Qt platform.
-- [ ] Root combined collection test.
-- [ ] Deterministic generator smoke test.
-- [ ] Corpus structural validation.
+- [x] Shared core tests.
+- [x] Generator tests.
+- [x] Editor tests with a headless Qt platform.
+- [x] Root combined collection test.
+- [x] Deterministic generator smoke test.
+- [x] Corpus structural validation.
 
 ## Task 18.2 — Add macOS Swift CI
 
+**Status:** Completed
+
 **Checks**
 
-- [ ] Domain and RouteEngine tests.
-- [ ] Shared runtime parity fixtures.
-- [ ] Production level solvability tests.
-- [ ] Selected UI component tests.
+- [x] Domain and RouteEngine tests.
+- [x] Shared runtime parity fixtures.
+- [x] Production level solvability tests.
+- [x] Selected UI component tests.
 
 Use a pinned supported Xcode and simulator destination. Keep the local command synchronized with CI.
 
