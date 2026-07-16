@@ -2725,6 +2725,8 @@ For every code include:
 
 ## Task 19.3 — Add generator tuning guidance
 
+**Status:** Completed
+
 **File to add**
 
 - `Tools/LevelGenerator/docs/difficulty_and_quality_tuning.md`
@@ -2738,7 +2740,16 @@ Explain:
 - Diversity weights.
 - How to update golden seeds safely.
 
+**Completion notes**
+
+- [x] Documented decision and quality thresholds, including measured strategic evidence and hard acceptance gates.
+- [x] Documented runtime-derived timing windows, safety margins, tap spacing, and parity implications.
+- [x] Documented layout profiles, candidate breadth and pool sizing, quality/portfolio diversity weights, and report-driven tuning.
+- [x] Added a review-first fixed-seed baseline update workflow with focused, full-suite, and release verification commands.
+
 ## Task 19.4 — Add editor user guide
+
+**Status:** Completed
 
 **File to add**
 
@@ -2754,6 +2765,13 @@ Include screenshots after implementation for:
 - Recording a solution.
 - Resolving validation issues.
 - Promoting a draft.
+
+**Completion notes**
+
+- [x] Added an end-to-end guide for installation, node placement, road connection, properties, rules, and canvas controls.
+- [x] Documented switch rotation order and initial-route editing with the resulting solution-validation implications.
+- [x] Documented live playtesting, deterministic replay, successful-run recording, validation triage, automated checks, and draft promotion.
+- [x] Added verified screenshots from the implemented PySide editor for every required workflow.
 
 ## Task 19.5 — Remove deprecated compatibility code
 

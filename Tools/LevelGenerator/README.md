@@ -2,6 +2,8 @@
 
 Procedural generation tool for creating Tiny Routes production level JSON and matching solution sidecar files. The generator writes the same shapes used by the Swift runtime and the Python Level Editor, then validates candidates before saving them.
 
+For threshold, timing, layout, pool-size, diversity, and golden-seed guidance, see [Difficulty and Quality Tuning](docs/difficulty_and_quality_tuning.md).
+
 ## Level Schema and Migration
 
 New generated production levels must declare schema version 2 and live look-ahead rules:
