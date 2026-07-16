@@ -78,6 +78,14 @@ python scripts/run_all_checks.py --swift-tests \
   --destination 'platform=iOS Simulator,name=iPhone 16 Pro,OS=18.5'
 ```
 
+The combined command also verifies the production corpus and manifest. Retain
+the fixed-seed and corpus reports for release review with:
+
+```bash
+python scripts/run_all_checks.py --swift-tests \
+  --reports-dir artifacts/level-system-release
+```
+
 Run the same full Xcode test scheme used by macOS CI:
 
 ```bash

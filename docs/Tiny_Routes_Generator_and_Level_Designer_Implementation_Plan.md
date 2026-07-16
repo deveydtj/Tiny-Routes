@@ -2629,18 +2629,27 @@ Use a pinned supported Xcode and simulator destination. Keep the local command s
 
 ## Task 18.5 — Add editor smoke tests
 
+**Status:** Completed
+
 Automate where practical:
 
-- [ ] New level creation.
-- [ ] Node placement command.
-- [ ] Edge creation command.
-- [ ] Undo/redo.
-- [ ] Property edit.
-- [ ] Save/reopen.
-- [ ] Playtest recorded solution.
-- [ ] Validation focus navigation.
+- [x] New level creation.
+- [x] Node placement command.
+- [x] Edge creation command.
+- [x] Undo/redo.
+- [x] Property edit.
+- [x] Save/reopen.
+- [x] Playtest recorded solution.
+- [x] Validation focus navigation.
+
+**Completion notes**
+
+- [x] Added one headless main-window workflow that authors and edits a level, verifies undo/redo, records a completed playtest, and saves and reopens the level bundle.
+- [x] The smoke workflow activates a validation message and verifies that the related canvas node receives focus.
 
 ## Task 18.6 — Add a release checklist
+
+**Status:** Completed
 
 **File to add**
 
@@ -2648,18 +2657,23 @@ Automate where practical:
 
 **Required signoffs**
 
-- Generator checks passed.
-- Editor checks passed.
-- Swift parity passed.
-- Production corpus passed.
-- Human playtest sample passed.
-- Reports reviewed.
-- Manifest synchronized.
+- [x] Generator checks passed.
+- [x] Editor checks passed.
+- [x] Swift parity passed.
+- [x] Production corpus passed.
+- [x] Human playtest sample passed.
+- [x] Reports reviewed.
+- [x] Manifest synchronized.
+
+**Completion notes**
+
+- [x] Added a release-candidate checklist with automated gates, report/content review, representative human playtesting, named signoffs, and rollback readiness.
+- [x] Extended the root combined command to run production-content verification and optionally retain fixed-seed and corpus reports for signoff evidence.
 
 ### Phase 18 exit gate
 
-- [ ] CI blocks merges on any required failure.
-- [ ] One documented local command reproduces release checks where platform support permits.
+- [x] CI blocks merges on any required failure.
+- [x] One documented local command reproduces release checks where platform support permits.
 
 ---
 

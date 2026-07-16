@@ -19,3 +19,4 @@ docs/generated_levels/debug_failures/*.solution.json
 docs/generated_levels/debug_failures/*.rejection.json
 Tools/LevelGenerator/.scratch/
 docs/generated_levels/editor_drafts/
+artifacts/level-system-release/
