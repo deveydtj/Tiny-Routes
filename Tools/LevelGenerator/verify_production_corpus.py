@@ -38,6 +38,15 @@ from app.services.visual_clarity_validation_service import VisualClarityValidati
 from migrate_levels_to_live_routing import analyze_level
 
 
+_DEBUG_RESOURCE_DIRECTORY_NAMES = {
+    "candidate_debug",
+    "candidate_failures",
+    "debug",
+    "debug_candidates",
+    "failed_candidates",
+}
+
+
 def _read_object(path: Path) -> dict[str, Any]:
     payload = json.loads(path.read_text(encoding="utf-8"))
     if not isinstance(payload, dict):
@@ -57,6 +66,33 @@ def _representative_ids(level_ids: list[str]) -> list[str]:
     if not level_ids:
         return []
     return sorted({level_ids[0], level_ids[len(level_ids) // 2], level_ids[-1]})
+
+
+def _duplicate_values(values: list[str]) -> list[str]:
+    seen: set[str] = set()
+    duplicates: set[str] = set()
+    for value in values:
+        if value in seen:
+            duplicates.add(value)
+        seen.add(value)
+    return sorted(duplicates)
+
+
+def _debug_candidate_directories(resources_dir: Path) -> list[str]:
+    if not resources_dir.exists():
+        return []
+    matches = []
+    for path in resources_dir.rglob("*"):
+        if not path.is_dir():
+            continue
+        normalized = path.name.strip().lower().replace("-", "_").replace(" ", "_")
+        if (
+            normalized in _DEBUG_RESOURCE_DIRECTORY_NAMES
+            or normalized.startswith("debug_candidate")
+            or normalized.startswith("failed_candidate")
+        ):
+            matches.append(str(path.relative_to(resources_dir)))
+    return sorted(matches)
 
 
 def _disk_round_trip(
@@ -87,10 +123,12 @@ def verify(
     *,
     run_swift_tests: bool,
     swift_timeout_seconds: int = 600,
+    app_resources_dir: Path | None = None,
 ) -> dict[str, Any]:
     levels_dir = Path(levels_dir)
     solutions_dir = Path(solutions_dir)
     manifest_path = Path(manifest_path)
+    app_resources_dir = Path(app_resources_dir) if app_resources_dir is not None else levels_dir.parent
     level_paths = sorted(
         path for path in levels_dir.glob("level_*.json")
         if not path.name.endswith(".solution.json")
@@ -130,6 +168,14 @@ def verify(
             records.append(record)
             continue
 
+        sidecar_level_id_matches = raw_solution.get("levelID") == level_id
+        duplicate_node_ids = _duplicate_values(
+            [str(node.get("id", "")) for node in raw_level.get("graph", {}).get("nodes", [])]
+        )
+        duplicate_edge_ids = _duplicate_values(
+            [str(edge.get("id", "")) for edge in raw_level.get("graph", {}).get("edges", [])]
+        )
+
         structural_errors = _error_codes(level_validation.validate(level, level_path))
         structural_errors.extend(
             _error_codes(solution_validation.validate(level, solution, solution_path))
@@ -149,7 +195,15 @@ def verify(
             GeneratedLevel(level, zero_time_solution, "production", "campaign", 0)
         )
         zero_time_gate = not solution.actions or not zero_time_replay.passed
-        migration_analysis = analyze_level(raw_level, raw_solution)
+        try:
+            migration_analysis = analyze_level(raw_level, raw_solution)
+        except (KeyError, TypeError, ValueError) as error:
+            migration_analysis = {
+                "decisionQuality": {
+                    "passed": False,
+                    "issues": [f"analysis_failed:{error}"],
+                }
+            }
         decision_fit = bool(migration_analysis["decisionQuality"]["passed"])
         visual_report = visual_validation.report_for_level(level, solution)
         model_round_trip = (
@@ -164,6 +218,10 @@ def verify(
 
         issues = []
         issues.extend(f"structural:{code}" for code in structural_errors)
+        if not sidecar_level_id_matches:
+            issues.append("sidecar:level_id_mismatch")
+        issues.extend(f"graph:duplicate_node_id:{node_id}" for node_id in duplicate_node_ids)
+        issues.extend(f"graph:duplicate_edge_id:{edge_id}" for edge_id in duplicate_edge_ids)
         if not explicit_live_rules:
             issues.append("rules:not_explicit_schema_v2_live_lookahead")
         if not replay.passed:
@@ -185,6 +243,10 @@ def verify(
             "passed": not issues,
             "issues": issues,
             "structuralValidationPassed": not structural_errors,
+            "sidecarLevelIDMatches": sidecar_level_id_matches,
+            "duplicateNodeIDs": duplicate_node_ids,
+            "duplicateEdgeIDs": duplicate_edge_ids,
+            "graphIDsUnique": not duplicate_node_ids and not duplicate_edge_ids,
             "explicitSchemaV2LiveRules": explicit_live_rules,
             "pythonReplayPassed": replay.passed,
             "zeroTimeSolutionRejected": zero_time_gate,
@@ -211,6 +273,21 @@ def verify(
     except (OSError, ValueError, json.JSONDecodeError):
         committed_manifest = None
     manifest_synchronized = committed_manifest == rebuilt_manifest
+    manifest_level_ids = [
+        str(item.get("levelID", ""))
+        for item in (committed_manifest or {}).get("levels", [])
+        if isinstance(item, dict)
+    ]
+    duplicate_manifest_level_ids = _duplicate_values(manifest_level_ids)
+    missing_manifest_level_ids = sorted(set(level_ids) - set(manifest_level_ids))
+    extra_manifest_level_ids = sorted(set(manifest_level_ids) - set(level_ids))
+    manifest_exactly_once = (
+        not duplicate_manifest_level_ids
+        and not missing_manifest_level_ids
+        and not extra_manifest_level_ids
+        and len(manifest_level_ids) == len(level_ids)
+    )
+    debug_candidate_directories = _debug_candidate_directories(app_resources_dir)
 
     swift_payload: dict[str, Any]
     if run_swift_tests:
@@ -243,6 +320,8 @@ def verify(
         bool(records)
         and corpus_set_synchronized
         and manifest_synchronized
+        and manifest_exactly_once
+        and not debug_candidate_directories
         and all(record["passed"] for record in records)
     )
     overall_passed = non_swift_passed and (
@@ -256,6 +335,24 @@ def verify(
         "missingSolutionIDs": missing_solution_ids,
         "unshippedSolutionIDs": unshipped_solution_ids,
         "manifestSynchronized": manifest_synchronized,
+        "manifestExactlyOnce": manifest_exactly_once,
+        "duplicateManifestLevelIDs": duplicate_manifest_level_ids,
+        "missingManifestLevelIDs": missing_manifest_level_ids,
+        "extraManifestLevelIDs": extra_manifest_level_ids,
+        "debugCandidateDirectories": debug_candidate_directories,
+        "appResourcesClean": not debug_candidate_directories,
+        "everyLevelHasSidecar": not missing_solution_ids,
+        "everySidecarLevelIDMatches": all(
+            record.get("sidecarLevelIDMatches", False) for record in records
+        ),
+        "allGraphIDsUnique": all(record.get("graphIDsUnique", False) for record in records),
+        "allProductionRulesLiveLookahead": all(
+            record.get("explicitSchemaV2LiveRules", False) for record in records
+        ),
+        "allPythonSolutionsComplete": all(
+            record.get("pythonReplayPassed", False) for record in records
+        ),
+        "allSwiftSolutionsComplete": swift_payload["passed"] if run_swift_tests else None,
         "representativeEditorRoundTripLevelIDs": representative_ids,
         "nonSwiftGatesPassed": non_swift_passed,
         "swiftReplay": swift_payload,
@@ -274,17 +371,23 @@ def render_markdown(report: dict[str, Any]) -> str:
         f"- Levels: {report['levelCount']}",
         f"- Level/sidecar sets synchronized: {'yes' if report['corpusSetSynchronized'] else 'no'}",
         f"- Manifest synchronized: {'yes' if report['manifestSynchronized'] else 'no'}",
+        f"- Manifest contains every level exactly once: {'yes' if report['manifestExactlyOnce'] else 'no'}",
+        f"- Sidecar IDs match level IDs: {'yes' if report['everySidecarLevelIDMatches'] else 'no'}",
+        f"- Node and edge IDs are unique: {'yes' if report['allGraphIDsUnique'] else 'no'}",
+        f"- Production rules are live-lookahead: {'yes' if report['allProductionRulesLiveLookahead'] else 'no'}",
+        f"- App resources contain no debug candidate directories: {'yes' if report['appResourcesClean'] else 'no'}",
         f"- Non-Swift gates: {'pass' if report['nonSwiftGatesPassed'] else 'fail'}",
         f"- Swift replay: {('pass' if swift['passed'] else 'fail') if swift['requested'] else 'not requested'}",
         "",
-        "| Level | Structure | v2 live | Python | Zero-time | Decision fit | Visual | Model RT | Disk RT | Result |",
-        "| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |",
+        "| Level | Structure | Sidecar ID | Unique IDs | v2 live | Python | Zero-time | Decision fit | Visual | Model RT | Disk RT | Result |",
+        "| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |",
     ]
     for item in report["levels"]:
         mark = lambda value: "pass" if value else "fail"
         disk = item.get("representativeDiskRoundTripPassed")
         lines.append(
             f"| {item['levelID']} | {mark(item.get('structuralValidationPassed'))} | "
+            f"{mark(item.get('sidecarLevelIDMatches'))} | {mark(item.get('graphIDsUnique'))} | "
             f"{mark(item.get('explicitSchemaV2LiveRules'))} | {mark(item.get('pythonReplayPassed'))} | "
             f"{mark(item.get('zeroTimeSolutionRejected'))} | {mark(item.get('decisionProfilePassed'))} | "
             f"{mark(item.get('visualReadabilityPassed'))} | {mark(item.get('modelRoundTripPassed'))} | "

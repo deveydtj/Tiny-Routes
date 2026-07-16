@@ -13,6 +13,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--skip-tests", action="store_true")
     parser.add_argument("--skip-smoke", action="store_true")
     parser.add_argument("--skip-production-validation", action="store_true")
+    parser.add_argument("--skip-fixed-seed-regressions", action="store_true")
     parser.add_argument("--swift-tests", action="store_true", help="Run optional Swift tests during production validation.")
     args = parser.parse_args(argv)
 
@@ -50,6 +51,13 @@ def main(argv: list[str] | None = None) -> int:
                 "2",
                 "--max-attempts-per-level",
                 "50",
+            ]
+        )
+    if not args.skip_fixed_seed_regressions:
+        commands.append(
+            [
+                args.python,
+                "Tools/LevelGenerator/run_fixed_seed_regressions.py",
             ]
         )
     if not args.skip_production_validation:

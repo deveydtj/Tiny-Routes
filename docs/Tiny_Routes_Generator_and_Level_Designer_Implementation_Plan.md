@@ -2579,6 +2579,8 @@ Use a pinned supported Xcode and simulator destination. Keep the local command s
 
 ## Task 18.3 — Add fixed-seed generator regression suites
 
+**Status:** Completed
+
 **Suites**
 
 - Tutorial fixed seeds.
@@ -2593,23 +2595,37 @@ Use a pinned supported Xcode and simulator destination. Keep the local command s
 
 **Assertions**
 
-- [ ] Requested accepted count is produced.
-- [ ] No accepted action is rejected during replay.
-- [ ] Quality thresholds pass.
-- [ ] Deterministic output hashes match unless intentionally updated.
-- [ ] Rejection-code distribution remains within broad health limits.
+- [x] Requested accepted count is produced.
+- [x] No accepted action is rejected during replay.
+- [x] Quality thresholds pass.
+- [x] Deterministic output hashes match unless intentionally updated.
+- [x] Rejection-code distribution remains within broad health limits.
+
+**Completion notes**
+
+- [x] Added deterministic tutorial-through-expert suites, a mixed 30-level campaign, and measured revisit, high-arity-switch, and conditional-road batches.
+- [x] Added committed SHA-256 output baselines with an explicit review/update command.
+- [x] Added the full suite runner to Python CI and local combined checks.
 
 ## Task 18.4 — Add production-content gates
 
+**Status:** Completed
+
 **Checks**
 
-- [ ] Every level has a sidecar.
-- [ ] Every sidecar level ID matches.
-- [ ] Every solution completes in Swift.
-- [ ] Every level is in the manifest exactly once.
-- [ ] No duplicate node/edge IDs.
-- [ ] No legacy-global production rules remain after migration.
-- [ ] No debug candidate directories are in app resources.
+- [x] Every level has a sidecar.
+- [x] Every sidecar level ID matches.
+- [x] Every solution completes in Swift.
+- [x] Every level is in the manifest exactly once.
+- [x] No duplicate node/edge IDs.
+- [x] No legacy-global production rules remain after migration.
+- [x] No debug candidate directories are in app resources.
+
+**Completion notes**
+
+- [x] Expanded `verify_production_corpus.py` with individually reported sidecar, manifest multiplicity, graph-ID, live-rule, replay, and app-resource hygiene gates.
+- [x] Kept the production Swift replay gate connected to the requested external level/sidecar directories and the macOS Swift CI suite.
+- [x] Added negative regression coverage for mismatched sidecar IDs, duplicate manifest entries, and packaged debug-candidate directories.
 
 ## Task 18.5 — Add editor smoke tests
 

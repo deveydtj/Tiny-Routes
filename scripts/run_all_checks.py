@@ -32,6 +32,7 @@ def main(argv: list[str] | None = None) -> int:
     commands = [
         [python, str(scripts / "run_python_tests.py"), "--python", python],
         [python, str(scripts / "run_generator_smoke.py"), "--python", python],
+        [python, str(repo_root / "Tools/LevelGenerator/run_fixed_seed_regressions.py")],
     ]
     if args.swift_tests:
         commands.append([

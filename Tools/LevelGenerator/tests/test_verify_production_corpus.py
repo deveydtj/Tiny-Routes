@@ -21,6 +21,12 @@ def test_committed_production_corpus_passes_every_non_swift_gate() -> None:
     assert report["passed"] is True
     assert report["levelCount"] == 27
     assert report["manifestSynchronized"] is True
+    assert report["manifestExactlyOnce"] is True
+    assert report["everyLevelHasSidecar"] is True
+    assert report["everySidecarLevelIDMatches"] is True
+    assert report["allGraphIDsUnique"] is True
+    assert report["allProductionRulesLiveLookahead"] is True
+    assert report["appResourcesClean"] is True
     assert report["representativeEditorRoundTripLevelIDs"] == [
         "level_001",
         "level_014",
@@ -32,6 +38,61 @@ def test_committed_production_corpus_passes_every_non_swift_gate() -> None:
     assert all(item["decisionProfilePassed"] for item in report["levels"])
     assert all(item["visualReadabilityPassed"] for item in report["levels"])
     assert all(item["modelRoundTripPassed"] for item in report["levels"])
+
+
+def test_production_gate_rejects_a_sidecar_level_id_mismatch(tmp_path: Path) -> None:
+    root = find_repo_root()
+    levels = tmp_path / "Resources" / "Levels"
+    solutions = tmp_path / "LevelSolutions"
+    levels.mkdir(parents=True)
+    solutions.mkdir()
+    level_id = "level_001"
+    (levels / f"{level_id}.json").write_bytes(
+        (root / "TinyRoutes/Resources/Levels" / f"{level_id}.json").read_bytes()
+    )
+    sidecar = json.loads(
+        (root / "TinyRoutesTests/Resources/LevelSolutions" / f"{level_id}.solution.json").read_text()
+    )
+    sidecar["levelID"] = "level_wrong"
+    (solutions / f"{level_id}.solution.json").write_text(json.dumps(sidecar) + "\n")
+    manifest = tmp_path / "manifest.json"
+    ProductionManifestService().rebuild(levels, solutions, manifest)
+
+    report = verify(levels, solutions, manifest, run_swift_tests=False)
+
+    assert report["passed"] is False
+    assert report["everySidecarLevelIDMatches"] is False
+    assert "sidecar:level_id_mismatch" in report["levels"][0]["issues"]
+
+
+def test_production_gate_rejects_duplicate_manifest_entries_and_debug_resources(tmp_path: Path) -> None:
+    root = find_repo_root()
+    resources = tmp_path / "Resources"
+    levels = resources / "Levels"
+    solutions = tmp_path / "LevelSolutions"
+    levels.mkdir(parents=True)
+    solutions.mkdir()
+    level_id = "level_001"
+    (levels / f"{level_id}.json").write_bytes(
+        (root / "TinyRoutes/Resources/Levels" / f"{level_id}.json").read_bytes()
+    )
+    (solutions / f"{level_id}.solution.json").write_bytes(
+        (root / "TinyRoutesTests/Resources/LevelSolutions" / f"{level_id}.solution.json").read_bytes()
+    )
+    manifest = tmp_path / "manifest.json"
+    ProductionManifestService().rebuild(levels, solutions, manifest)
+    payload = json.loads(manifest.read_text())
+    payload["levels"].append(dict(payload["levels"][0]))
+    manifest.write_text(json.dumps(payload) + "\n")
+    (resources / "debug_candidates").mkdir()
+
+    report = verify(levels, solutions, manifest, run_swift_tests=False)
+
+    assert report["passed"] is False
+    assert report["manifestExactlyOnce"] is False
+    assert report["duplicateManifestLevelIDs"] == [level_id]
+    assert report["appResourcesClean"] is False
+    assert report["debugCandidateDirectories"] == ["debug_candidates"]
 
 
 def test_zero_time_preconfiguration_fails_the_corpus_gate(tmp_path: Path) -> None:

@@ -55,6 +55,21 @@ Run the deterministic, non-writing generator smoke check:
 python scripts/run_generator_smoke.py
 ```
 
+Run all fixed-seed release regressions, including the mixed 30-level campaign
+and the revisit, high-arity-switch, and conditional-road batches:
+
+```bash
+python Tools/LevelGenerator/run_fixed_seed_regressions.py
+```
+
+Intentional generator changes must update the committed hashes explicitly and
+review the JSON report before committing the new baselines:
+
+```bash
+python Tools/LevelGenerator/run_fixed_seed_regressions.py \
+  --update-baselines --json-output /tmp/tiny-routes-fixed-seeds.json
+```
+
 Run all Python checks together, optionally including Swift tests:
 
 ```bash
@@ -70,7 +85,8 @@ python3 scripts/run_swift_tests.py
 ```
 
 CI runs on pushes to `main`, pull requests, and manual dispatches. Python CI
-uses Python 3.11 with the headless `QT_QPA_PLATFORM=minimal`; Swift CI uses the
+also enforces fixed-seed hashes and every non-Swift production-content gate.
+It uses Python 3.11 with the headless `QT_QPA_PLATFORM=minimal`; Swift CI uses the
 `macos-15` runner with Xcode 16.4 and an iPhone 16 Pro running iOS 18.5. Keep
 the destination in `scripts/run_swift_tests.py` synchronized with
 `.github/workflows/swift-ci.yml` when updating the supported toolchain.
