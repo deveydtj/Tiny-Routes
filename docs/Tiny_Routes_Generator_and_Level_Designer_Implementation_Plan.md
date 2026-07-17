@@ -2781,14 +2781,16 @@ Only after production migration and stable releases:
 
 - [x] Remove deprecated abstract tap names.
 - [x] Remove duplicate Python models.
-- [ ] Remove legacy hidden editor workflows that no longer add value.
-- [ ] Decide whether `legacyGlobal` remains supported for archival files or is moved to a migration-only decoder.
+- [x] Remove legacy hidden editor workflows that no longer add value.
+- [x] Decide whether `legacyGlobal` remains supported for archival files or is moved to a migration-only decoder.
 - [ ] Remove unused legacy generator mode only after equivalent coverage exists.
 
 **Completion notes for this increment**
 
 - [x] Removed the deprecated topology metadata aliases and serialized report keys `solutionTapNodeIDs` and `minimumRequiredTaps`; topology reports now expose only decision terminology.
 - [x] Migrated generator and editor callers to the canonical shared `RouteNode`, `RouteEdge`, `RouteGraph`, `SolutionAction`, and `Solution` types, then removed the old `*Model` aliases and editor compatibility modules.
+- [x] Removed the mode-independent right-click road-creation sequence; roads now start only from explicit Connect-mode clicks or visible connection-handle drags.
+- [x] Retained `legacyGlobal` as frozen decode-and-replay compatibility for archived version-1 files, removed it from new-content authoring, and documented that production gates continue to reject it.
 
 ---
 

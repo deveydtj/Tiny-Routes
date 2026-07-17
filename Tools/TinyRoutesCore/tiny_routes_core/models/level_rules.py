@@ -11,6 +11,7 @@ from typing import Any, Mapping
 class SwitchInteractionMode(str, Enum):
     """Serialized values must remain identical to ``SwitchInteractionMode`` in Swift."""
 
+    # Decode and replay only: retained so archived version-1 files remain readable.
     LEGACY_GLOBAL = "legacyGlobal"
     LIVE_LOOKAHEAD = "liveLookahead"
 

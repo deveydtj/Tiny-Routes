@@ -30,10 +30,10 @@ the final authority for shipped content.
 | `invalid_json` | File load | JSON is malformed or does not match the required shape. | Syntax error, wrong top-level type, or missing required field. | Correct the JSON and required fields. | Yes |
 | `io_error` | File load/save | The OS could not read or write the file. | Permissions, missing directory, or disk error. | Fix the path/permissions and retry. | Yes |
 | `rules_must_be_an_object` | Rules decode | `rules` is present but is not an object. | Array, string, or scalar supplied as rules. | Serialize a rules object or omit it only for legacy data. | Yes |
-| `unknown_switch_interaction_mode` | Rules decode | The interaction mode is not recognized. | Misspelled or future enum value. | Use `legacyGlobal` or `liveLookahead`. | Yes |
+| `unknown_switch_interaction_mode` | Rules decode | The interaction mode is not recognized. | Misspelled or future enum value. | Use `liveLookahead`; `legacyGlobal` is accepted only while decoding archived files. | Yes |
 | `invalid_switch_lookahead_seconds` | Structure | Look-ahead is negative, nonnumeric, or nonfinite. | Bad inspector/JSON value. | Use a finite number greater than or equal to zero. | Yes |
 | `invalid_switch_tap_cooldown_seconds` | Structure | Tap cooldown is negative, nonnumeric, or nonfinite. | Bad inspector/JSON value. | Use a finite number greater than or equal to zero. | Yes |
-| `legacy_switch_interaction_mode` | Migration | Level still uses unrestricted legacy interaction. | Missing rules or explicit legacy mode. | Migrate to schema 2 and `liveLookahead`, then regenerate/replay the solution. | Production corpus: Yes; editor warning: No |
+| `legacy_switch_interaction_mode` | Migration | An archived level still uses unrestricted legacy interaction. | Missing rules or explicit legacy mode. | Migrate to schema 2 and `liveLookahead`, then regenerate/replay the solution. | Production corpus: Yes; editor warning: No |
 
 ## Runtime input and simulation outcomes
 

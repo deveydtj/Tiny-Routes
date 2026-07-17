@@ -15,6 +15,7 @@ try:
         QApplication,
         QComboBox,
         QDialog,
+        QDialogButtonBox,
         QFileDialog,
         QMessageBox,
         QPushButton,
@@ -45,12 +46,14 @@ from app.ui import (
     LevelCanvasScene,
     LevelCanvasView,
     LevelMetadataResult,
+    LevelRulesDialog,
     NodeItem,
     PiecePalette,
     PropertiesPanel,
     SolutionPanel,
     TransitionArcItem,
 )
+from tiny_routes_core.models import LevelRules, SwitchInteractionMode
 from app.ui.validation_panel import ValidationPanel
 from app.ui.canvas_colors import (
     DARK_GRID_COLOR,
@@ -3071,6 +3074,72 @@ def test_connect_mode_shows_visible_connection_handles(qapplication: QApplicatio
     scene.set_editor_tool(EditorTool.CONNECT)
 
     assert all(handle.isVisible() for handle in handles)
+
+
+def test_right_click_no_longer_starts_hidden_road_creation(
+    qapplication: QApplication,
+) -> None:
+    document = _make_two_node_one_edge_document()
+    document.graph.edges = []
+    document.graph.nodes[0].outgoingEdgeIDs = []
+    view = LevelCanvasView()
+    try:
+        view.resize(800, 600)
+        view.show()
+        scene = view.scene()
+        scene.display_level(document)
+        created: list[tuple[str, str, str, str, bool]] = []
+        scene.edge_creation_requested.connect(lambda *args: created.append(args))
+        qapplication.processEvents()
+
+        for node_id in ("start", "destination"):
+            QTest.mouseClick(
+                view.viewport(),
+                Qt.MouseButton.RightButton,
+                Qt.KeyboardModifier.NoModifier,
+                view.mapFromScene(scene._node_items_by_id[node_id].pos()),
+            )
+
+        assert created == []
+        assert scene._connection_source_node_id is None
+    finally:
+        view.close()
+
+
+def test_level_rules_dialog_does_not_offer_legacy_mode_for_live_content(
+    qapplication: QApplication,
+) -> None:
+    dialog = LevelRulesDialog(
+        LevelRules(SwitchInteractionMode.LIVE_LOOKAHEAD, 1.35, 0.12), 2
+    )
+    try:
+        assert dialog.mode_combo.count() == 1
+        assert dialog.mode_combo.currentData() == SwitchInteractionMode.LIVE_LOOKAHEAD.value
+        assert dialog.mode_combo.findData(SwitchInteractionMode.LEGACY_GLOBAL) == -1
+    finally:
+        dialog.close()
+
+
+def test_level_rules_dialog_can_migrate_but_not_reauthor_archived_legacy_mode(
+    qapplication: QApplication,
+) -> None:
+    dialog = LevelRulesDialog(LevelRules.legacy_defaults(), 1)
+    try:
+        legacy_index = dialog.mode_combo.findData(SwitchInteractionMode.LEGACY_GLOBAL)
+        assert legacy_index >= 0
+        assert dialog.mode_combo.currentIndex() == legacy_index
+        assert dialog.mode_combo.model().item(legacy_index).isEnabled() is False
+        assert "archived-file decoding and replay" in dialog.warning_label.text()
+        assert not dialog.button_box.button(QDialogButtonBox.StandardButton.Ok).isEnabled()
+
+        dialog.mode_combo.setCurrentIndex(
+            dialog.mode_combo.findData(SwitchInteractionMode.LIVE_LOOKAHEAD)
+        )
+        assert dialog.button_box.button(QDialogButtonBox.StandardButton.Ok).isEnabled()
+        assert dialog.result_value().rules.switch_interaction_mode is SwitchInteractionMode.LIVE_LOOKAHEAD
+        assert dialog.result_value().schema_version == 2
+    finally:
+        dialog.close()
 
 
 def test_connection_drag_emits_one_directed_edge_and_cancel_emits_none(

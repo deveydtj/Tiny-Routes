@@ -55,8 +55,16 @@ palette placement and click placement both resolve model coordinates before
 asking the window/controller to create a node.
 
 Connection handles create directed roads; visible toolbar state selects road
-shape and optional bidirectional creation. Scene items are projections of the
-document and are rebuilt or updated after controller signals.
+shape and optional bidirectional creation. Connect-mode click/drag interactions
+are the only canvas road-creation paths; the old mode-independent right-click
+sequence has been removed. Scene items are projections of the document and are
+rebuilt or updated after controller signals.
+
+New documents and the rules inspector author only `liveLookahead`. The shared
+decoder and simulator retain `legacyGlobal` solely so archived version-1 files
+can be opened, replayed, and migrated. When the inspector opens an archived
+legacy file it displays the mode as disabled and offers migration to live
+look-ahead; production validation continues to reject legacy content.
 
 ## Validation and analysis
 

@@ -19,9 +19,9 @@ New generated production levels must declare schema version 2 and live look-ahea
 }
 ```
 
-These fields accompany the normal level fields; a complete example is in `../LevelEditor/docs/current_level_json_shape.md`. Files without `schemaVersion` or `rules` decode as version 1 with effective defaults of `legacyGlobal`, 1.35 seconds of look-ahead, and a 0.12-second cooldown. Invalid explicit numeric values fail validation.
+These fields accompany the normal level fields; a complete example is in `../LevelEditor/docs/current_level_json_shape.md`. Archived files without `schemaVersion` or `rules` retain decode-and-replay compatibility as version 1 with effective defaults of `legacyGlobal`, 1.35 seconds of look-ahead, and a 0.12-second cooldown. The generator never authors legacy mode, and production gates reject it. Invalid explicit numeric values fail validation.
 
-Migrate existing levels individually: add the version 2 fields, replay the timed solution under `liveLookahead`, and only then replace the legacy production file and sidecar. A level that cannot pass live replay remains legacy until its route or solution is revised.
+Migrate archived levels individually: add the version 2 fields, replay the timed solution under `liveLookahead`, and only then promote the migrated level and sidecar. A level that cannot pass live replay remains in the archive until its route or solution is revised.
 
 Audit the complete corpus before migration with the read-only analyzer:
 

@@ -21,8 +21,9 @@ flows through it.
 - `RouteGraph`, `RouteNode`, and `RouteEdge` describe authored topology.
 - `RoadShape` controls the standardized rendered path. `RoadAvailability`
   (`always`, `beforePackage`, or `afterPackage`) controls package-state use.
-- `LevelData.effectiveRules` maps missing rules to `legacyGlobal`; production
-  schema-version-2 levels explicitly use `liveLookahead`.
+- `LevelData.effectiveRules` maps missing rules to archival `legacyGlobal`
+  decode-and-replay compatibility; production schema-version-2 levels
+  explicitly use `liveLookahead`.
 
 Decoding is deliberately separate from gameplay validation. Repositories can
 decode legacy JSON, while editor, generator, and test gates reject malformed or
@@ -81,8 +82,10 @@ once, increments `tapCount`, records cooldown time, and immediately changes the
 published active edge. `GameplayScreen` rejects paused input before calling the
 engine and feeds the snapshot into `SwitchNodeView`.
 
-Legacy mode keeps unrestricted switch selection for old JSON, but still rejects
-terminal and committed taps. New production content must not depend on it.
+Legacy mode keeps unrestricted switch selection for archived JSON, but still
+rejects terminal and committed taps. This path is frozen compatibility for
+decoding, replay, and migration, not an authoring option; production content
+must not depend on it.
 
 ## Package-state roads
 
@@ -115,4 +118,3 @@ road geometry, package availability, or event ordering:
 3. add or update a shared fixture;
 4. run Python parity tests and the Swift test scheme; and
 5. replay the production corpus before release.
-

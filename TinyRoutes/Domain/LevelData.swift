@@ -14,8 +14,8 @@ struct LevelData: Identifiable, Codable {
     var parTaps: Int
     var tutorialMessage: String?
 
-    /// Rules used by runtime callers. Missing rules retain legacy behavior while
-    /// the production level corpus is migrated to schema version 2.
+    /// Rules used by runtime callers. Missing rules retain decode-and-replay
+    /// compatibility for archived version-1 levels; production is version 2 only.
     var effectiveRules: LevelRules {
         rules ?? .legacyDefaults
     }

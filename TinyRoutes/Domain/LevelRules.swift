@@ -2,6 +2,7 @@ import Foundation
 
 /// Selects the contract used to decide which route switches a player may change.
 enum SwitchInteractionMode: String, Codable, Equatable {
+    /// Decode-and-replay compatibility for archived version-1 levels only.
     case legacyGlobal
     case liveLookahead
 }

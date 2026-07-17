@@ -37,7 +37,7 @@ Dragging a palette item onto the canvas is an equivalent shortcut. A level can h
 
 1. Choose **Connect** (`C`). Connection handles appear on every node.
 2. Select **Horizontal First** or **Vertical First** before drawing a bent road.
-3. Drag from a source handle to the destination node. Clicking a source and then a destination is also supported.
+3. Drag from a source handle to the destination node. Clicking a source and then a destination in Connect mode is also supported.
 4. Enable **Two-Way** before connecting when the editor should create both directed edges.
 5. Select a road afterward to edit its ID, endpoints, shape, and package-state availability in Properties.
 
@@ -60,7 +60,7 @@ Row one is labeled `default`; it is the route used before any accepted tap. Each
 
 ## Edit level rules and metadata
 
-Use **Tools > Edit Level Rules** for schema version, interaction mode, look-ahead seconds, and tap cooldown. New production gameplay should use schema version 2 and `liveLookahead`.
+Use **Tools > Edit Level Rules** for schema version, interaction mode, look-ahead seconds, and tap cooldown. The editor authors schema version 2 `liveLookahead` content. When an archived version-1 level is opened, `Legacy Global (archive only)` is displayed as a disabled compatibility value; choose **Live Look-ahead** to migrate it.
 
 Use **Tools > Edit Level Metadata** for the production number/ID, name, time limit, and par taps. The level ID, level filename, and sidecar `levelID` must agree.
 

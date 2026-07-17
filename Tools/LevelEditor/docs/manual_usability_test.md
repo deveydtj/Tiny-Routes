@@ -35,8 +35,7 @@ tester:
    python Tools/LevelEditor/run_level_editor.py
    ```
 
-5. Do not describe the old right-click workflow or point to controls during the
-   test.
+5. Do not point to controls or otherwise coach the tester during the test.
 
 ## Target puzzle
 

@@ -1,6 +1,6 @@
 # Current Level JSON Shape
 
-This document describes the version 2 level format and the legacy production files in `TinyRoutes/Resources/Levels/`. New files should use version 2; version 1 remains readable during migration.
+This document describes the version 2 level format. All production files in `TinyRoutes/Resources/Levels/` use version 2. Version 1 remains readable only for archived-file inspection, replay, and migration.
 
 ---
 
@@ -25,13 +25,13 @@ This document describes the version 2 level format and the legacy production fil
 
 | Field | Type | Required | Description |
 |---|---|---|---|
-| `switchInteractionMode` | string | yes | `"liveLookahead"` for newly generated production levels. `"legacyGlobal"` is reserved for unmigrated content. |
+| `switchInteractionMode` | string | yes | `"liveLookahead"`. `"legacyGlobal"` is decode-and-replay compatibility for archived files and cannot be selected for new editor content. |
 | `switchLookaheadSeconds` | number | yes | Positive, finite travel-time window in which the first upcoming switch can be tapped. |
 | `switchTapCooldownSeconds` | number | yes | Finite, nonnegative delay between accepted taps. |
 
-When `schemaVersion` or `rules` is missing, the runtime uses `legacyGlobal`, a 1.35-second look-ahead value, and a 0.12-second cooldown. The numeric values complete the effective rules object, but legacy-global interaction does not use look-ahead eligibility. Invalid explicit values are validation errors.
+When `schemaVersion` or `rules` is missing, the runtime uses the archival `legacyGlobal` compatibility behavior, a 1.35-second look-ahead value, and a 0.12-second cooldown. The numeric values complete the effective rules object, but legacy-global interaction does not use look-ahead eligibility. Invalid explicit values are validation errors. Production gates reject legacy mode.
 
-To migrate an old file, add `"schemaVersion": 2` and an explicit `rules` object, replay its solution under live look-ahead behavior, and adjust tap timestamps or redesign the route if necessary. Keep the old file in legacy mode until that replay passes.
+To migrate an archived file, add `"schemaVersion": 2` and an explicit `rules` object, replay its solution under live look-ahead behavior, and adjust tap timestamps or redesign the route if necessary. Keep an unchanged copy in the archive until that replay passes.
 
 ---
 

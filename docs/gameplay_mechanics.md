@@ -15,7 +15,7 @@ Schema version 2 levels contain an explicit `rules` object. New generated produc
 }
 ```
 
-Legacy files may omit both fields. They decode with `legacyGlobal` behavior and effective numeric defaults of 1.35 and 0.12 seconds. Migration is deliberate: add the version 2 fields, replay the canonical solution with eligibility enforced, and keep the level in legacy mode until that replay succeeds. See the [complete level JSON reference](../Tools/LevelEditor/docs/current_level_json_shape.md) for a full valid example.
+Archived files may omit both fields. They retain decode-and-replay compatibility with `legacyGlobal` behavior and effective numeric defaults of 1.35 and 0.12 seconds. The mode cannot be selected for new editor or production content. Migration is deliberate: add the version 2 fields and replay the canonical solution with eligibility enforced. See the [complete level JSON reference](../Tools/LevelEditor/docs/current_level_json_shape.md) for a full valid example.
 
 ## Switch Nodes
 
@@ -34,7 +34,7 @@ Valid outgoing edges are the edge IDs listed in `RouteNode.outgoingEdgeIDs` that
 
 Usable outgoing edges are the valid edges whose package-state `availability` condition currently passes. Roads may be `always`, `beforePackage`, or `afterPackage`; omitted availability is `always`. Switch classification, rotation, look-ahead traversal, and departure use only usable edges. When package collection makes the active road unavailable, the first usable road in `outgoingEdgeIDs` order becomes active before departure. Authored nonterminal nodes must have a usable road both before and after package collection.
 
-The tap cycle order is the order of `outgoingEdgeIDs`. At level start, the active outgoing edge is the first valid outgoing edge. Each successful tap rotates the active edge to the next valid edge, wrapping back to the first edge after the last one. Switch state persists unless the player taps the switch again. In `liveLookahead`, such taps are accepted only during the eligibility window; `legacyGlobal` retains the former global interaction while content is migrated.
+The tap cycle order is the order of `outgoingEdgeIDs`. At level start, the active outgoing edge is the first valid outgoing edge. Each successful tap rotates the active edge to the next valid edge, wrapping back to the first edge after the last one. Switch state persists unless the player taps the switch again. In `liveLookahead`, such taps are accepted only during the eligibility window; `legacyGlobal` retains the former global interaction solely when an archived level is decoded and replayed.
 
 Roads are directed. Adding an outgoing edge from `central_switch` to `package` does not create a return route from `package` to `central_switch`; that return path must be represented by its own directed edge.
 

@@ -420,7 +420,7 @@ class LevelCanvasScene(QGraphicsScene):
         connection_click = (
             self._editor_tool is EditorTool.CONNECT
             and event.button() == Qt.MouseButton.LeftButton
-        ) or event.button() == Qt.MouseButton.RightButton
+        )
         if connection_click:
             node_item = self._resolve_node_item_at_position(event.scenePos())
             if node_item is not None:
@@ -830,7 +830,7 @@ class LevelCanvasScene(QGraphicsScene):
         self._ensure_preview_items()
         self._update_preview_label()
         self.placement_message_changed.emit(
-            "Road start selected. Right-click a destination node to place the road. "
+            "Road start selected. Click a destination node or drag from a connection handle. "
             "Press Tab to switch the turn direction."
         )
 

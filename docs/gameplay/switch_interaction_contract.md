@@ -69,13 +69,15 @@ Look-ahead traversal must track visited traversal states and enforce a hard limi
 
 ## Legacy mode
 
-Levels without `rules` use the Swift-compatible legacy defaults and `legacyGlobal` mode. In legacy mode, any switchable node may rotate while gameplay is running, provided the dot has not committed to an outgoing road from that same node. Look-ahead distance and first-upcoming-switch restrictions do not apply. Cooldown is not applied to legacy behavior, preserving existing level and replay semantics. Paused and terminal-state taps remain rejected.
+The compatibility decision is to retain `legacyGlobal` decoding and replay for archived version-1 files. It is not available for newly authored editor, generator, or production content, and production gates reject it. Levels without `rules` use the Swift-compatible legacy defaults so they can be inspected, replayed, and migrated without changing their historical behavior.
+
+In legacy mode, any switchable node may rotate while gameplay is running, provided the dot has not committed to an outgoing road from that same node. Look-ahead distance and first-upcoming-switch restrictions do not apply. Cooldown is not applied, preserving archived replay semantics. Paused and terminal-state taps remain rejected. No new gameplay features should be added specifically to legacy mode beyond what is required to keep archived decoding and replay safe.
 
 ## UI feedback
 
 In live mode, the UI must visibly distinguish the sole eligible switch and remove that state as soon as its window closes. An accepted tap should immediately show the new active road. A rejected tap may provide subtle, non-blocking feedback and must not look like a successful rotation. Accessibility state must identify the active option and whether the switch is currently actionable.
 
-Legacy mode may continue to display every switchable node as actionable. UI presentation must consume eligibility published by the engine and must not reimplement the eligibility algorithm.
+Archived legacy replay may display every switchable node as actionable. UI presentation must consume eligibility published by the engine and must not reimplement the eligibility algorithm.
 
 ## Numeric parity and event ordering
 
