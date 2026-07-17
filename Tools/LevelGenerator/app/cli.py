@@ -14,6 +14,8 @@ from .generation_config import (
     DEFAULT_RECIPE_POOL_SIZE,
     DEFAULT_ROAD_SHAPES_PER_LAYOUT,
     DEFAULT_VERTICAL_ROUTE_PROBABILITY,
+    DEFAULT_GENERATOR_ARCHITECTURE,
+    GENERATOR_ARCHITECTURES,
     GenerationConfig,
     LAYOUT_ORIENTATION_PREFERENCES,
     LAYOUT_SIZE_PROFILES,
@@ -83,6 +85,12 @@ def build_generate_parser() -> argparse.ArgumentParser:
     parser.add_argument("--start", type=int, required=True, help="First level number to generate, e.g. 12 for level_012.")
     parser.add_argument("--count", type=int, required=True, help="Number of accepted levels to generate.")
     parser.add_argument("--difficulty", required=True, choices=difficulty_names, help="Difficulty preset to use.")
+    parser.add_argument(
+        "--generator-architecture",
+        choices=GENERATOR_ARCHITECTURES,
+        default=DEFAULT_GENERATOR_ARCHITECTURE,
+        help="Generator architecture boundary. Default: v2_legacy.",
+    )
     parser.add_argument("--template", default="mixed", choices=template_names, help="Template to use. Default: mixed.")
     parser.add_argument(
         "--recipe-pool-size",
@@ -244,6 +252,7 @@ def _config_from_args(args: argparse.Namespace, argv: list[str] | None) -> Gener
         start_level_number=args.start,
         count=args.count,
         difficulty=args.difficulty,
+        generator_architecture=args.generator_architecture,
         template_name=args.template,
         recipe_pool_size=args.recipe_pool_size,
         layouts_per_recipe=args.layouts_per_recipe,
@@ -278,6 +287,7 @@ def _print_generation_summary(config: GenerationConfig) -> None:
     print(
         f"Generating {config.count} {config.difficulty} level(s) starting at "
         f"{config.start_level_number:03d} with template={config.template_name} "
+        f"architecture={config.generator_architecture} "
         f"layout_size={config.layout_size_profile} "
         f"seed={config.seed} mode={mode} profile={_generation_profile_name(config)}."
     )

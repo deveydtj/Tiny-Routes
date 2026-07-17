@@ -1,0 +1,28 @@
+{
+  "name": "static_policy",
+  "difficulty": "medium",
+  "nodes": [
+    ["start", "start"],
+    ["switch_a", "switch"],
+    ["dead_a", "dead_end"],
+    ["switch_b", "switch"],
+    ["dead_b", "dead_end"],
+    ["package", "package"],
+    ["destination", "destination"]
+  ],
+  "edges": [
+    ["start", "switch_a", "always"],
+    ["switch_a", "dead_a", "always"],
+    ["switch_a", "switch_b", "always"],
+    ["switch_b", "dead_b", "always"],
+    ["switch_b", "package", "always"],
+    ["package", "destination", "always"]
+  ],
+  "requiredPath": ["start", "switch_a", "switch_b", "package", "destination"],
+  "expected": {
+    "minimumRequiredDecisions": 2,
+    "orderedDependencyCount": 0,
+    "independentDecisionRatio": 1.0,
+    "frontLoadedStaticPolicy": true
+  }
+}

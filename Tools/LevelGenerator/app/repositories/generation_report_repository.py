@@ -47,6 +47,15 @@ class GenerationReportRepository:
             "solutionsOutputDir": str(config.solutions_output_dir),
             "difficulty": config.difficulty,
             "template": config.template_name,
+            "generatorArchitecture": config.generator_architecture,
+            "generatorArchitectureVersion": config.generator_architecture_version,
+            "outputSchemaVersions": sorted(
+                {
+                    version
+                    for level in result.accepted
+                    if (version := self._level_schema_version(level)) is not None
+                }
+            ),
             "generationProfile": "playtest_portfolio" if getattr(config, "playtest_portfolio", False) else "production",
             "playtestPortfolio": bool(getattr(config, "playtest_portfolio", False)),
             "generationMode": "recipe_first",
@@ -89,6 +98,7 @@ class GenerationReportRepository:
                         detail="Accepted during candidate selection.",
                     ),
                     "levelID": level.level_id,
+                    "levelSchemaVersion": self._level_schema_version(level),
                     "selectedPreset": level.difficulty,
                     "template": level.template_name,
                     "recipeFamily": level.recipe_family,
@@ -305,7 +315,10 @@ class GenerationReportRepository:
             f"- Difficulty: `{payload['difficulty']}`",
             f"- Recipe family: `{payload['template']}`",
             f"- Generation profile: `{payload['generationProfile']}`",
-            f"- Generation architecture: `{payload['generationMode']}`",
+            f"- Generator architecture: `{payload['generatorArchitecture']}` "
+            f"(version `{payload['generatorArchitectureVersion']}`)",
+            f"- Output schema versions: `{payload['outputSchemaVersions']}`",
+            f"- V2 pipeline mode: `{payload['generationMode']}`",
             f"- Base seed: `{payload['baseSeed']}`",
             f"- Dry run: `{payload['dryRun']}`",
             f"- Dry-run pass rate: `{payload['dryRunSummary']['passRate']}`",
@@ -1642,6 +1655,11 @@ class GenerationReportRepository:
             edge.roadShape,
         )
         return self.route_timing.direction_label(angle)
+
+    def _level_schema_version(self, level) -> int | None:
+        extra = getattr(level.level_document, "_extra", {}) or {}
+        value = extra.get("schemaVersion")
+        return value if isinstance(value, int) else None
 
     def _recommendations(self, config, result) -> list[str]:
         if getattr(result, "passed", True):

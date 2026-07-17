@@ -94,6 +94,14 @@ class LevelGenerationService:
     def generate(self, config: GenerationConfig) -> GenerationResult:
         from .batch_orchestration_service import BatchOrchestrationService
 
+        if config.generator_architecture == "production_v3":
+            result = GenerationResult(passed=False)
+            result.messages.append(
+                "v3_pipeline_unavailable: production_v3 is isolated from the V2 recipe pipeline; "
+                "the V3 candidate coordinator has not been implemented yet."
+            )
+            self._write_reports(config, result)
+            return result
         return BatchOrchestrationService(self).generate(config)
 
     def _validate_template(self, template_name: str, config: GenerationConfig) -> None:

@@ -621,6 +621,11 @@ Capture:
 
 The baseline exists to prove V3 improvement and prevent accidental loss of working V2 compatibility. It is not a golden target for puzzle quality.
 
+**2026-07-17 completion record:** Added the production-path capture service and
+command, checked-in per-difficulty and per-family evidence under
+`Tools/LevelGenerator/tests/fixtures/v2_generator_baseline/`, adversarial one-tap
+and static-policy fixtures, and the V2 limitations guide.
+
 ## Task 0.4 — Add the V3 feature boundary
 
 **Files to update**
@@ -642,6 +647,11 @@ Rules:
 - Schema version and generator architecture version remain separate fields.
 - V3 can run in dry-run/staging mode before it becomes the default.
 
+**2026-07-17 completion record:** `GenerationConfig`, CLI, GUI, and reports now
+carry `v2_legacy` or `production_v3`. The V3 selection stops at the explicit
+unavailable boundary and never enters `BatchOrchestrationService`, so no V2
+recipe/template fallback is possible.
+
 ## Task 0.5 — Add a real production-path baseline suite
 
 The current fixed-seed fixture suite may use direct templates for hard, expert, and mixed campaigns. Add a separate baseline suite that invokes `LevelGenerationService.generate()` through `BatchOrchestrationService` with the same configuration path used by CLI and GUI.
@@ -657,13 +667,18 @@ Record, without relaxing gates:
 
 It is acceptable for this V2 limitation suite to fail generation. Its purpose is to preserve evidence of the exact problem V3 must solve.
 
+**2026-07-17 completion record:** The checked-in baseline invokes
+`LevelGenerationService.generate()` through `BatchOrchestrationService` for all
+five difficulty bands and records incomplete medium, hard, and expert runs as
+evidence rather than bypassing them with templates.
+
 ## Phase 0 exit gate
 
 - [ ] The completed V2 release gate passes from a clean checkout.
 - [x] The first-plan document accurately reflects implementation status.
-- [ ] V2 behavior and limitations are frozen with reproducible evidence.
-- [ ] V3 work is isolated behind an explicit mode with no fallback.
-- [ ] A full-pipeline baseline exists that does not use template shortcuts.
+- [x] V2 behavior and limitations are frozen with reproducible evidence.
+- [x] V3 work is isolated behind an explicit mode with no fallback.
+- [x] A full-pipeline baseline exists that does not use template shortcuts.
 
 ---
 
@@ -2578,8 +2593,8 @@ The following sequence is intentionally small enough for junior contributors. Ea
 
 - [x] **AG-001:** Add audited V2 baseline verification report using the existing root gate.
 - [x] **AG-002:** Reconcile stale first-plan global and PR checklists with implementation evidence.
-- [ ] **AG-003:** Add real production-path V2 limitation baseline plus one-tap/static-policy fixtures.
-- [ ] **AG-004:** Add explicit `v2_legacy` and `production_v3` architecture modes with no fallback.
+- [x] **AG-003:** Add real production-path V2 limitation baseline plus one-tap/static-policy fixtures.
+- [x] **AG-004:** Add explicit `v2_legacy` and `production_v3` architecture modes with no fallback.
 - [ ] **AG-005:** Add Python `RouteObjective` model and round-trip tests.
 - [ ] **AG-006:** Add Swift `RouteObjective` model and decoding tests.
 - [ ] **AG-007:** Add schema 3 objective validation.

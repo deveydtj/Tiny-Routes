@@ -10,7 +10,8 @@ def test_generation_config_defaults_use_recipe_pipeline_breadth() -> None:
         difficulty="easy",
     )
 
-    assert not hasattr(config, "generation_mode")
+    assert config.generator_architecture == "v2_legacy"
+    assert config.generator_architecture_version == 2
     assert config.recipe_pool_size == 4
     assert config.layouts_per_recipe == 2
     assert config.road_shapes_per_layout == 2
@@ -73,3 +74,27 @@ def test_generation_config_accepts_playtest_portfolio_mode() -> None:
 
     assert config.playtest_portfolio is True
     assert config.playtest_uniqueness_window == 12
+
+
+def test_generation_config_normalizes_and_validates_architecture() -> None:
+    config = GenerationConfig(
+        start_level_number=12,
+        count=1,
+        difficulty="easy",
+        generator_architecture="production-v3",
+    )
+
+    assert config.generator_architecture == "production_v3"
+    assert config.generator_architecture_version == 3
+
+    try:
+        GenerationConfig(
+            start_level_number=12,
+            count=1,
+            difficulty="easy",
+            generator_architecture="hybrid",
+        )
+    except ValueError as exc:
+        assert "generator_architecture" in str(exc)
+    else:
+        raise AssertionError("Expected invalid generator architecture to raise ValueError")

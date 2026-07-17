@@ -12,6 +12,7 @@ from ..generation_config import (
     DEFAULT_RECIPE_POOL_SIZE,
     DEFAULT_ROAD_SHAPES_PER_LAYOUT,
     DEFAULT_VERTICAL_ROUTE_PROBABILITY,
+    DEFAULT_GENERATOR_ARCHITECTURE,
     GenerationConfig,
 )
 from ..paths import get_default_levels_directory, get_default_reports_directory, get_default_solutions_directory
@@ -22,6 +23,7 @@ class GuiGenerationState:
     start_level_number: str = "12"
     count: str = "1"
     difficulty: str = "tutorial"
+    generator_architecture: str = DEFAULT_GENERATOR_ARCHITECTURE
     template_name: str = "mixed"
     recipe_pool_size: str = str(DEFAULT_RECIPE_POOL_SIZE)
     layouts_per_recipe: str = str(DEFAULT_LAYOUTS_PER_RECIPE)
@@ -120,6 +122,7 @@ def to_generation_config(state: GuiGenerationState) -> GenerationConfig:
         start_level_number=start_level_number,
         count=count,
         difficulty=state.difficulty,
+        generator_architecture=state.generator_architecture,
         template_name=state.template_name,
         recipe_pool_size=recipe_pool_size,
         layouts_per_recipe=layouts_per_recipe,
@@ -151,6 +154,7 @@ def build_command_preview(state: GuiGenerationState) -> str:
     _append_pair(args, "--start", state.start_level_number)
     _append_pair(args, "--count", state.count)
     _append_pair(args, "--difficulty", state.difficulty)
+    _append_pair(args, "--generator-architecture", state.generator_architecture)
     _append_pair(args, "--template", state.template_name)
     _append_pair(args, "--recipe-pool-size", state.recipe_pool_size)
     _append_pair(args, "--layouts-per-recipe", state.layouts_per_recipe)
@@ -228,6 +232,8 @@ def _build_command_arguments(
         str(count),
         "--difficulty",
         state.difficulty,
+        "--generator-architecture",
+        state.generator_architecture,
         "--template",
         state.template_name,
         "--recipe-pool-size",

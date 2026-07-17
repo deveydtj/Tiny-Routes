@@ -11,6 +11,8 @@ from .paths import (
 
 LAYOUT_ORIENTATION_PREFERENCES = ("portrait_vertical", "horizontal", "vertical", "mixed", "auto")
 LAYOUT_SIZE_PROFILES = ("difficulty_curve", "standard_portrait", "large_portrait")
+GENERATOR_ARCHITECTURES = ("v2_legacy", "production_v3")
+DEFAULT_GENERATOR_ARCHITECTURE = "v2_legacy"
 DEFAULT_RECIPE_POOL_SIZE = 4
 DEFAULT_LAYOUTS_PER_RECIPE = 2
 DEFAULT_ROAD_SHAPES_PER_LAYOUT = 2
@@ -27,6 +29,7 @@ class GenerationConfig:
     start_level_number: int
     count: int
     difficulty: str
+    generator_architecture: str = DEFAULT_GENERATOR_ARCHITECTURE
     template_name: str = "mixed"
     recipe_pool_size: int = DEFAULT_RECIPE_POOL_SIZE
     layouts_per_recipe: int = DEFAULT_LAYOUTS_PER_RECIPE
@@ -71,6 +74,11 @@ class GenerationConfig:
             raise ValueError("playtest_uniqueness_window must be greater than zero")
 
         object.__setattr__(self, "difficulty", self.difficulty.strip().lower())
+        object.__setattr__(
+            self,
+            "generator_architecture",
+            self.generator_architecture.strip().lower().replace("-", "_"),
+        )
         object.__setattr__(self, "template_name", self.template_name.strip().lower())
         object.__setattr__(
             self,
@@ -96,6 +104,9 @@ class GenerationConfig:
         if self.layout_orientation_preference not in LAYOUT_ORIENTATION_PREFERENCES:
             valid = ", ".join(LAYOUT_ORIENTATION_PREFERENCES)
             raise ValueError(f"layout_orientation_preference must be one of: {valid}")
+        if self.generator_architecture not in GENERATOR_ARCHITECTURES:
+            valid = ", ".join(GENERATOR_ARCHITECTURES)
+            raise ValueError(f"generator_architecture must be one of: {valid}")
         if self.layout_size_profile not in LAYOUT_SIZE_PROFILES:
             valid = ", ".join(LAYOUT_SIZE_PROFILES)
             raise ValueError(f"layout_size_profile must be one of: {valid}")
@@ -111,3 +122,7 @@ class GenerationConfig:
     @property
     def base_seed(self) -> int:
         return self.seed if self.seed is not None else 0
+
+    @property
+    def generator_architecture_version(self) -> int:
+        return 2 if self.generator_architecture == "v2_legacy" else 3

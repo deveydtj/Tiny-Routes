@@ -108,7 +108,8 @@ def test_cli_defaults_create_recipe_pipeline_config() -> None:
 
     config = _config_from_args(args, argv)
 
-    assert not hasattr(config, "generation_mode")
+    assert config.generator_architecture == "v2_legacy"
+    assert config.generator_architecture_version == 2
     assert config.recipe_pool_size == 4
     assert config.layouts_per_recipe == 2
     assert config.road_shapes_per_layout == 2
@@ -218,6 +219,8 @@ def test_cli_accepts_recipe_architecture_options_for_recipe_generation(tmp_path)
 
     assert code == 0
     report = json.loads((tmp_path / "report.json").read_text(encoding="utf-8"))
+    assert report["generatorArchitecture"] == "v2_legacy"
+    assert report["generatorArchitectureVersion"] == 2
     assert report["generationMode"] == "recipe_first"
     assert report["recipePoolSize"] == 3
     assert report["layoutsPerRecipe"] == 2
@@ -260,6 +263,37 @@ def test_cli_rejects_removed_legacy_template_mode(tmp_path) -> None:
 
     assert code == 2
     assert not (tmp_path / "report.json").exists()
+
+
+def test_cli_production_v3_never_falls_back_to_v2(tmp_path, capsys) -> None:
+    code = main_generate(
+        [
+            "--start",
+            "12",
+            "--count",
+            "1",
+            "--difficulty",
+            "easy",
+            "--generator-architecture",
+            "production_v3",
+            "--dry-run",
+            "--output-levels",
+            str(tmp_path / "levels"),
+            "--output-solutions",
+            str(tmp_path / "solutions"),
+            "--report",
+            str(tmp_path / "report.md"),
+            "--json-report",
+            str(tmp_path / "report.json"),
+        ]
+    )
+
+    assert code == 1
+    assert "v3_pipeline_unavailable" in capsys.readouterr().err
+    payload = json.loads((tmp_path / "report.json").read_text(encoding="utf-8"))
+    assert payload["generatorArchitecture"] == "production_v3"
+    assert payload["generatorArchitectureVersion"] == 3
+    assert payload["acceptedLevels"] == []
 
 
 def test_validate_cli_validates_written_files(tmp_path) -> None:

@@ -1,0 +1,23 @@
+{
+  "name": "one_tap",
+  "difficulty": "easy",
+  "nodes": [
+    ["start", "start"],
+    ["switch", "switch"],
+    ["dead", "dead_end"],
+    ["package", "package"],
+    ["destination", "destination"]
+  ],
+  "edges": [
+    ["start", "switch", "always"],
+    ["switch", "dead", "always"],
+    ["switch", "package", "always"],
+    ["package", "destination", "always"]
+  ],
+  "requiredPath": ["start", "switch", "package", "destination"],
+  "expected": {
+    "minimumRequiredDecisions": 1,
+    "oneTapOrLess": true,
+    "frontLoadedStaticPolicy": true
+  }
+}

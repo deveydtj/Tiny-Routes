@@ -196,7 +196,9 @@ Current limitations:
 
 `--compare-existing` rejects candidates that are too similar to existing level files in the configured output folders. This is enabled by default; use `--no-compare-existing` for scratch experiments.
 
-The generator now has one architecture: it solves multiple abstract recipes before layout, then tries layout and road-shape variants. The retired `legacy-template` and `hybrid` execution modes are no longer accepted by the CLI or shown in the GUI. The default breadth is 4 recipes, 2 layouts per recipe, 2 road-shape strategies per layout, and 4 valid candidates scored before accepting the best one.
+The generator now exposes an explicit architecture boundary. `v2_legacy` is the default compatibility pipeline: it solves multiple abstract recipes before layout, then tries layout and road-shape variants. `production_v3` is reserved for the V3 blueprint/composition pipeline and currently returns `v3_pipeline_unavailable` without falling back to V2. The retired `legacy-template` and `hybrid` execution modes remain unsupported. The default V2 breadth is 4 recipes, 2 layouts per recipe, 2 road-shape strategies per layout, and 4 valid candidates scored before accepting the best one.
+
+Select the boundary with `--generator-architecture v2_legacy` or `--generator-architecture production_v3`. The GUI exposes the same choice. JSON and Markdown reports identify the generator architecture/version independently from output schema versions.
 
 `--layout-orientation` defaults to `portrait_vertical`. This profile asks recipe-first layouts to compose routes for mobile portrait play: the generated map should be taller than wide, the start should sit in the lower portion of the layout, and the destination should sit in the upper portion. Horizontal branches, detours, and side movement are still allowed when the overall composition passes the portrait safety checks.
 

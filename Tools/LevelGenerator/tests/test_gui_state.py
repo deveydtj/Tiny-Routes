@@ -43,8 +43,9 @@ def test_default_gui_state_converts_to_generation_config() -> None:
     assert config.start_level_number == 12
     assert config.count == 1
     assert config.difficulty == "tutorial"
+    assert config.generator_architecture == "v2_legacy"
+    assert config.generator_architecture_version == 2
     assert config.template_name == "mixed"
-    assert not hasattr(config, "generation_mode")
     assert config.recipe_pool_size == 4
     assert config.layouts_per_recipe == 2
     assert config.road_shapes_per_layout == 2
@@ -107,6 +108,25 @@ def test_gui_state_converts_layout_orientation_controls(tmp_path) -> None:
     assert "--layout-orientation" in config.command_arguments
     assert "--layout-size-profile" in config.command_arguments
     assert "--no-prefer-vertical-for-long-routes" in config.command_arguments
+
+
+def test_gui_state_carries_generator_architecture_to_config_and_command(tmp_path) -> None:
+    config = to_generation_config(
+        _state_with_paths(tmp_path, generator_architecture="production_v3")
+    )
+
+    assert config.generator_architecture == "production_v3"
+    assert config.generator_architecture_version == 3
+    assert config.command_arguments[:8] == [
+        "--start",
+        "12",
+        "--count",
+        "1",
+        "--difficulty",
+        "tutorial",
+        "--generator-architecture",
+        "production_v3",
+    ]
 
 
 def _state_with_paths(tmp_path, **kwargs) -> GuiGenerationState:
