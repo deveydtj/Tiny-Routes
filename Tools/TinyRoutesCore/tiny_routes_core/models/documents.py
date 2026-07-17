@@ -7,6 +7,7 @@ from dataclasses import dataclass, field
 from typing import Any, Mapping
 
 from .level_rules import LevelRules
+from .route_objective import RouteObjective
 
 
 def _extras(data: Mapping[str, Any], known: set[str]) -> dict[str, Any]:
@@ -111,6 +112,7 @@ class LevelDocument:
     destinationNodeID: str
     timeLimitSeconds: int | float
     parTaps: int
+    objectives: list[RouteObjective] | None = None
     solution: EmbeddedSolution | None = None
     rules: LevelRules = field(default_factory=LevelRules.legacy_defaults)
     _extra: dict[str, Any] = field(default_factory=dict, repr=False, compare=False)
@@ -119,11 +121,13 @@ class LevelDocument:
     @classmethod
     def from_dict(cls, data: Mapping[str, Any]) -> "LevelDocument":
         known = {"id", "name", "graph", "startNodeID", "packageNodeID", "destinationNodeID",
-                 "timeLimitSeconds", "parTaps", "solution", "rules"}
+                 "timeLimitSeconds", "parTaps", "objectives", "solution", "rules"}
         solution = data.get("solution")
+        objectives = data.get("objectives")
         return cls(str(data["id"]), str(data["name"]), RouteGraph.from_dict(data["graph"]),
                    str(data["startNodeID"]), str(data["packageNodeID"]), str(data["destinationNodeID"]),
                    data["timeLimitSeconds"], data["parTaps"],
+                   [RouteObjective.from_dict(item) for item in objectives] if objectives is not None else None,
                    EmbeddedSolution.from_dict(solution) if solution is not None else None,
                    LevelRules.from_level_dict(data), _extras(data, known), "rules" in data)
 
@@ -132,6 +136,7 @@ class LevelDocument:
                   "graph": self.graph.to_dict(), "startNodeID": self.startNodeID,
                   "packageNodeID": self.packageNodeID, "destinationNodeID": self.destinationNodeID,
                   "timeLimitSeconds": self.timeLimitSeconds, "parTaps": self.parTaps}
+        if self.objectives is not None: result["objectives"] = [objective.to_dict() for objective in self.objectives]
         if self.solution is not None: result["solution"] = self.solution.to_dict()
         if self._rules_present or self.rules != LevelRules.legacy_defaults(): result["rules"] = self.rules.to_dict()
         return result

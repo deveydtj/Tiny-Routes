@@ -54,6 +54,7 @@ final class DomainModelsTests: XCTestCase {
 
         XCTAssertNil(level.schemaVersion)
         XCTAssertNil(level.rules)
+        XCTAssertNil(level.objectives)
         XCTAssertEqual(level.effectiveRules, .legacyDefaults)
     }
 
@@ -65,6 +66,7 @@ final class DomainModelsTests: XCTestCase {
         XCTAssertEqual(level.effectiveRules.switchLookaheadSeconds, 1.75)
         XCTAssertEqual(level.effectiveRules.switchTapCooldownSeconds, 0.2)
         XCTAssertEqual(level.tutorialMessage, "Tap the highlighted switch.")
+        XCTAssertNil(level.objectives)
     }
 
     func testVersionTwoRulesRoundTrip() throws {
@@ -73,6 +75,56 @@ final class DomainModelsTests: XCTestCase {
 
         XCTAssertEqual(decoded.schemaVersion, 2)
         XCTAssertEqual(decoded.rules, original.rules)
+    }
+
+    func testVersionThreeObjectivesDecodeAllKindsAndDisplayMetadata() throws {
+        let level = try decoder.decode(LevelData.self, from: Data(Self.versionThreeJSON.utf8))
+        let objectives = try XCTUnwrap(level.objectives)
+
+        XCTAssertEqual(level.schemaVersion, 3)
+        XCTAssertEqual(objectives.map(\.kind), RouteObjectiveKind.allCases)
+        XCTAssertEqual(objectives.map(\.sequenceIndex), [0, 1, 2, 3])
+        XCTAssertEqual(objectives[0].displayMetadata?["title"], .string("Collect the parcel"))
+        XCTAssertEqual(
+            objectives[0].displayMetadata?["marker"],
+            .object(["priority": .integer(1), "visible": .boolean(true)])
+        )
+        XCTAssertEqual(
+            objectives[0].additionalFields["futureBehavior"],
+            .object(["pulse": .boolean(true)])
+        )
+    }
+
+    func testVersionThreeObjectivesPreserveUnknownFieldsWhenRoundTripped() throws {
+        let original = try decoder.decode(LevelData.self, from: Data(Self.versionThreeJSON.utf8))
+        let encoded = try encoder.encode(original)
+        let decoded = try decoder.decode(LevelData.self, from: encoded)
+        let objectives = try XCTUnwrap(decoded.objectives)
+
+        XCTAssertEqual(objectives, original.objectives)
+        XCTAssertEqual(
+            objectives[0].additionalFields["futureBehavior"],
+            .object(["pulse": .boolean(true)])
+        )
+        XCTAssertEqual(objectives[3].displayMetadata, nil)
+
+        let json = try XCTUnwrap(JSONSerialization.jsonObject(with: encoded) as? [String: Any])
+        let encodedObjectives = try XCTUnwrap(json["objectives"] as? [[String: Any]])
+        XCTAssertTrue(encodedObjectives[3].keys.contains("displayMetadata"))
+        XCTAssertTrue(encodedObjectives[3]["displayMetadata"] is NSNull)
+    }
+
+    func testUnknownRouteObjectiveKindFailsDecoding() {
+        let json = """
+        {
+          "id": "unknown", "nodeID": "node", "kind": "mystery",
+          "sequenceIndex": 0, "revealPolicy": "always"
+        }
+        """
+
+        XCTAssertThrowsError(
+            try decoder.decode(RouteObjective.self, from: Data(json.utf8))
+        )
     }
 
     func testRoadAvailabilityDefaultsToAlwaysWhenMissing() throws {
@@ -142,6 +194,53 @@ final class DomainModelsTests: XCTestCase {
       "timeLimitSeconds": 30, "parTaps": 0,
       "tutorialMessage": "Tap the highlighted switch.",
       "futureExtension": {"ignored": true}
+    }
+    """
+
+    private static let versionThreeJSON = """
+    {
+      "schemaVersion": 3,
+      "rules": {
+        "switchInteractionMode": "liveLookahead",
+        "switchLookaheadSeconds": 1.75,
+        "switchTapCooldownSeconds": 0.2
+      },
+      "id": "ordered", "name": "Ordered Objectives",
+      "graph": {
+        "nodes": [
+          {"id": "start", "x": 0, "y": 0, "outgoingEdgeIDs": []},
+          {"id": "pickup", "x": 1, "y": 0, "outgoingEdgeIDs": []},
+          {"id": "checkpoint", "x": 2, "y": 0, "outgoingEdgeIDs": []},
+          {"id": "delivery", "x": 3, "y": 0, "outgoingEdgeIDs": []},
+          {"id": "destination", "x": 4, "y": 0, "outgoingEdgeIDs": []}
+        ],
+        "edges": []
+      },
+      "startNodeID": "start", "packageNodeID": "pickup",
+      "destinationNodeID": "destination", "timeLimitSeconds": 30, "parTaps": 0,
+      "objectives": [
+        {
+          "id": "collect", "nodeID": "pickup", "kind": "pickup",
+          "sequenceIndex": 0, "revealPolicy": "always",
+          "displayMetadata": {
+            "title": "Collect the parcel",
+            "marker": {"priority": 1, "visible": true}
+          },
+          "futureBehavior": {"pulse": true}
+        },
+        {
+          "id": "scan", "nodeID": "checkpoint", "kind": "checkpoint",
+          "sequenceIndex": 1, "revealPolicy": "whenActive"
+        },
+        {
+          "id": "dropoff", "nodeID": "delivery", "kind": "delivery",
+          "sequenceIndex": 2, "revealPolicy": "whenActive"
+        },
+        {
+          "id": "finish", "nodeID": "destination", "kind": "destination",
+          "sequenceIndex": 3, "revealPolicy": "whenActive", "displayMetadata": null
+        }
+      ]
     }
     """
 

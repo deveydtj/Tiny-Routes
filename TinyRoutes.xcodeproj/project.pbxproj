@@ -108,6 +108,7 @@
 		4928E6D6D6AD32AA84CD8E61 /* UserSettingsRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = F4B5563951A5AF431C6F303C /* UserSettingsRepository.swift */; };
 		49665F1391EF0CA110571F44 /* level_095.solution.json in Resources */ = {isa = PBXBuildFile; fileRef = 1653D494781DF6960AF9D612 /* level_095.solution.json */; };
 		4986A68A1EF3C9798A30FF7A /* LevelData.swift in Sources */ = {isa = PBXBuildFile; fileRef = 07D7502FABFF22F936EA1666 /* LevelData.swift */; };
+		A60000000000000000000002 /* RouteObjective.swift in Sources */ = {isa = PBXBuildFile; fileRef = A60000000000000000000001 /* RouteObjective.swift */; };
 		4AF4CB42DAD5634C7EB15FCB /* level_047.solution.json in Resources */ = {isa = PBXBuildFile; fileRef = 3E7254522F21871C6AF874C1 /* level_047.solution.json */; };
 		4F7BC6ED3B684D0BD1B29CC7 /* level_040.solution.json in Resources */ = {isa = PBXBuildFile; fileRef = 88823E4F3ACD287593A8245D /* level_040.solution.json */; };
 		4FEBE1E3843A33FD3478A68B /* README.md in Resources */ = {isa = PBXBuildFile; fileRef = 9285EF0CD4BC02DAE0FF59D6 /* README.md */; };
@@ -354,6 +355,7 @@
 		05B32D760F6E2D8859F9F9F2 /* settings_gear.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = settings_gear.png; sourceTree = "<group>"; };
 		06ECC2E70A22D81A946D4C1B /* TRShopRouteThemePreviewCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TRShopRouteThemePreviewCard.swift; sourceTree = "<group>"; };
 		07D7502FABFF22F936EA1666 /* LevelData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LevelData.swift; sourceTree = "<group>"; };
+		A60000000000000000000001 /* RouteObjective.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RouteObjective.swift; sourceTree = "<group>"; };
 		07F7F36523C14E95D067DB00 /* level_092.solution.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = level_092.solution.json; sourceTree = "<group>"; };
 		08EDEDC6662C77E816DFB0CE /* missing_start_node.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = missing_start_node.json; sourceTree = "<group>"; };
 		0B6634FCA043D2B99D10F4BD /* RouteGraph.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RouteGraph.swift; sourceTree = "<group>"; };
@@ -983,6 +985,7 @@
 				43431F22833C9470B99D4FF5 /* RouteEdge.swift */,
 				0B6634FCA043D2B99D10F4BD /* RouteGraph.swift */,
 				86D5601913C689EB5ED4A957 /* RouteNode.swift */,
+				A60000000000000000000001 /* RouteObjective.swift */,
 				F3254B656FA1479A1C6CEB71 /* ScoreResult.swift */,
 				402F8052D1AC0F0719E01453 /* ShopCatalogItem.swift */,
 				EED2343CD984E02344DF24A4 /* TRProfileSummary.swift */,
@@ -1444,6 +1447,7 @@
 				26CA64E5162D5D762A4548BE /* GameplayScreen.swift in Sources */,
 				E7E9E38DC9513394E5F9B680 /* HomeScreen.swift in Sources */,
 				4986A68A1EF3C9798A30FF7A /* LevelData.swift in Sources */,
+				A60000000000000000000002 /* RouteObjective.swift in Sources */,
 				3DDE58B9701BB050797CCF70 /* LevelRepository.swift in Sources */,
 				C085B5C854E7515D89718CCB /* LevelRules.swift in Sources */,
 				84F3A1A4C912645C82AEDD2A /* LevelRuntimeState.swift in Sources */,

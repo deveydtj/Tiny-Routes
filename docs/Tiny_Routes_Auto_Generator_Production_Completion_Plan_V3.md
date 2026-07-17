@@ -2595,8 +2595,8 @@ The following sequence is intentionally small enough for junior contributors. Ea
 - [x] **AG-002:** Reconcile stale first-plan global and PR checklists with implementation evidence.
 - [x] **AG-003:** Add real production-path V2 limitation baseline plus one-tap/static-policy fixtures.
 - [x] **AG-004:** Add explicit `v2_legacy` and `production_v3` architecture modes with no fallback.
-- [ ] **AG-005:** Add Python `RouteObjective` model and round-trip tests.
-- [ ] **AG-006:** Add Swift `RouteObjective` model and decoding tests.
+- [x] **AG-005:** Add Python `RouteObjective` model and round-trip tests.
+- [x] **AG-006:** Add Swift `RouteObjective` model and decoding tests.
 - [ ] **AG-007:** Add schema 3 objective validation.
 - [ ] **AG-008:** Add legacy package/destination objective adapter.
 - [ ] **AG-009:** Generalize Python package availability into objective-state rules with V2 adapters.

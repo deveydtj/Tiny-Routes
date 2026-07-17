@@ -5,7 +5,7 @@ from tiny_routes_core.graph import (GraphIndex, GraphValidationError, cycle_node
                                     normalize_active_edges, reachable_node_ids, rejoin_node_ids,
                                     usable_outgoing_edges)
 from tiny_routes_core.models import (LevelDocument, RouteEdge, RouteGraph, RouteNode,
-                                     Solution)
+                                     RouteObjective, RouteObjectiveKind, Solution)
 from tiny_routes_core.simulation import RuntimeState
 
 
@@ -13,6 +13,8 @@ def test_shared_models_export_only_canonical_type_names():
     assert shared_models.RouteNode is RouteNode
     assert shared_models.RouteEdge is RouteEdge
     assert shared_models.RouteGraph is RouteGraph
+    assert shared_models.RouteObjective is RouteObjective
+    assert shared_models.RouteObjectiveKind is RouteObjectiveKind
     assert shared_models.Solution is Solution
     for deprecated_name in (
         "RouteNodeModel",
@@ -53,6 +55,82 @@ def test_level_and_solution_round_trip_unknown_fields_and_clone_independently():
                     "actions": [{"timeSeconds": 1, "tapNodeID": "switch", "note": "keep"}],
                     "extension": [1, 2]}
     assert Solution.from_dict(solution_raw).to_dict() == solution_raw
+
+
+def test_route_objective_round_trips_all_kinds_and_unknown_fields():
+    for sequence_index, kind in enumerate(RouteObjectiveKind):
+        raw = {
+            "id": f"objective_{sequence_index}",
+            "nodeID": f"node_{sequence_index}",
+            "kind": kind.value,
+            "sequenceIndex": sequence_index,
+            "revealPolicy": "whenActive",
+            "displayMetadata": {
+                "title": f"Stop {sequence_index + 1}",
+                "marker": {"color": "blue", "priority": sequence_index},
+            },
+            "futureBehavior": {"enabled": True},
+        }
+
+        objective = RouteObjective.from_dict(raw)
+
+        assert objective.kind is kind
+        assert objective.to_dict() == raw
+        clone = objective.clone()
+        clone.displayMetadata["marker"]["color"] = "orange"
+        assert objective.displayMetadata["marker"]["color"] == "blue"
+
+
+def test_level_document_round_trips_optional_objectives_without_rewriting_legacy_levels():
+    legacy = level_dict()
+    assert LevelDocument.from_dict(legacy).to_dict() == legacy
+    assert LevelDocument.from_dict(legacy).objectives is None
+
+    schema_three = level_dict()
+    schema_three["schemaVersion"] = 3
+    schema_three["objectives"] = [
+        {
+            "id": "pickup_package",
+            "nodeID": "package",
+            "kind": "pickup",
+            "sequenceIndex": 0,
+            "revealPolicy": "always",
+        },
+        {
+            "id": "finish_delivery",
+            "nodeID": "destination",
+            "kind": "destination",
+            "sequenceIndex": 1,
+            "revealPolicy": "whenActive",
+            "displayMetadata": None,
+            "futureStyle": "flag",
+        },
+    ]
+
+    level = LevelDocument.from_dict(schema_three)
+
+    assert [objective.id for objective in level.objectives] == [
+        "pickup_package",
+        "finish_delivery",
+    ]
+    assert level.to_dict() == schema_three
+
+
+def test_route_objective_rejects_unknown_kind_and_nonobject_display_metadata():
+    raw = {
+        "id": "unknown",
+        "nodeID": "node",
+        "kind": "mystery",
+        "sequenceIndex": 0,
+        "revealPolicy": "always",
+    }
+    with pytest.raises(ValueError):
+        RouteObjective.from_dict(raw)
+
+    raw["kind"] = "checkpoint"
+    raw["displayMetadata"] = ["not", "an", "object"]
+    with pytest.raises(TypeError, match="displayMetadata must be an object or null"):
+        RouteObjective.from_dict(raw)
 
 
 def test_index_preserves_order_and_duplicate_errors_are_deterministic():

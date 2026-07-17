@@ -13,6 +13,7 @@ struct LevelData: Identifiable, Codable {
     var timeLimitSeconds: Int
     var parTaps: Int
     var tutorialMessage: String?
+    var objectives: [RouteObjective]?
 
     /// Rules used by runtime callers. Missing rules retain decode-and-replay
     /// compatibility for archived version-1 levels; production is version 2 only.
@@ -31,7 +32,8 @@ struct LevelData: Identifiable, Codable {
         destinationNodeID: String,
         timeLimitSeconds: Int,
         parTaps: Int,
-        tutorialMessage: String? = nil
+        tutorialMessage: String? = nil,
+        objectives: [RouteObjective]? = nil
     ) {
         self.schemaVersion = schemaVersion
         self.rules = rules
@@ -44,5 +46,6 @@ struct LevelData: Identifiable, Codable {
         self.timeLimitSeconds = timeLimitSeconds
         self.parTaps = parTaps
         self.tutorialMessage = tutorialMessage
+        self.objectives = objectives
     }
 }
