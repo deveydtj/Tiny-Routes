@@ -5,6 +5,33 @@
 **Primary systems:** Swift gameplay runtime, Python level generator, Python/PySide6 level editor, Swift/Python validation suites
 **Goal:** Make generated levels consistently playable, understandable, varied, and engaging; make the level editor intuitive enough for routine level creation and debugging; and enforce runtime parity so accepted levels work in the real app.
 
+## Completion record
+
+The V2 implementation was audited through commit
+`54c6516f64781ac3a259a8715605d27673005035`. Its entry-level PR checklist is
+fully mapped to the implemented runtime, shared core, generator, editor,
+content, CI, and documentation listed below. The global acceptance rows in
+Section 2 and the definition-of-done rows in Section 26 were reconciled on
+2026-07-17 against `main` at
+`ebe09a6978b79bc20652de1c3d2569dd6e566183`.
+
+Evidence map:
+
+| Checklist area | Implementation and verification evidence |
+| --- | --- |
+| Runtime and parity | `docs/gameplay_mechanics.md`, `docs/architecture/runtime_parity.md`, `SharedFixtures/RuntimeParity/`, `TinyRoutesTests/RuntimeParityFixtureTests.swift`, and shared-core simulator tests |
+| Generator | `docs/architecture/generator_pipeline.md`, fixed-seed regression service/tests, generator smoke command, decision-profile tests, and portfolio-selection tests |
+| Editor | `docs/architecture/editor_architecture.md`, `Tools/LevelEditor/docs/user_guide.md`, editor smoke tests, controller/command tests, playtest tests, and round-trip tests |
+| Production content | `docs/quality/production_corpus_verification.md`, the 27-level corpus verifier, synchronized solution sidecars, and the production manifest |
+| PR-001 through PR-104 | The checked Section 21 rows map one-for-one to the phase task checklists and their cited files/tests; commit `1224fbc` completed the PR reconciliation |
+| Release health | `scripts/run_all_checks.py` and `docs/generator_v3/v2_baseline_verification.md` |
+
+Rows requiring a currently passing full Python/Swift release run remain
+unchecked because the 2026-07-17 baseline found generator-suite and bundled
+Swift replay failures. Section 24 remains an unchecked reusable manual
+acceptance template; it is not retrospective evidence. Baseline repair is V2
+maintenance and must be committed separately from V3 behavior.
+
 ---
 
 ## 1. Executive Summary
@@ -48,48 +75,48 @@ The work is not complete merely because new code compiles. It is complete only w
 
 ### 2.1 Runtime correctness
 
-- [ ] Swift and Python use the same switch eligibility rules.
-- [ ] The same level, initial state, tap sequence, and elapsed-time steps produce matching outcomes in Swift and Python.
-- [ ] Taps before an activation window are rejected in both runtimes.
-- [ ] Taps during an activation window are accepted in both runtimes.
-- [ ] Taps after route commitment are rejected in both runtimes.
-- [ ] Two-, three-, and four-way switches rotate identically in both runtimes.
-- [ ] Repeated visits and repeated taps behave identically in both runtimes.
-- [ ] Package collection and destination completion order match in both runtimes.
-- [ ] Existing legacy JSON still decodes without crashing.
+- [x] Swift and Python use the same switch eligibility rules.
+- [x] The same level, initial state, tap sequence, and elapsed-time steps produce matching outcomes in Swift and Python.
+- [x] Taps before an activation window are rejected in both runtimes.
+- [x] Taps during an activation window are accepted in both runtimes.
+- [x] Taps after route commitment are rejected in both runtimes.
+- [x] Two-, three-, and four-way switches rotate identically in both runtimes.
+- [x] Repeated visits and repeated taps behave identically in both runtimes.
+- [x] Package collection and destination completion order match in both runtimes.
+- [x] Existing legacy JSON still decodes without crashing.
 
 ### 2.2 Generator correctness
 
-- [ ] Every accepted candidate passes structural validation.
-- [ ] Every accepted candidate passes Python runtime simulation.
-- [ ] Every accepted candidate requiring runtime parity passes the Swift test harness.
-- [ ] Every accepted solution tap occurs while its switch is eligible.
-- [ ] Moving all required taps to time `0.0` fails for every nonzero-tap live-routing level.
-- [ ] Medium, hard, and expert levels satisfy decision-dependency requirements rather than only tap-count requirements.
-- [ ] Mechanic tags do not award quality points without measured graph or simulation evidence.
-- [ ] The same seed and configuration produce the same accepted levels and reports.
-- [ ] A full fixed-seed campaign generation produces the requested number of valid levels.
+- [x] Every accepted candidate passes structural validation.
+- [x] Every accepted candidate passes Python runtime simulation.
+- [x] Every accepted candidate requiring runtime parity passes the Swift test harness.
+- [x] Every accepted solution tap occurs while its switch is eligible.
+- [x] Moving all required taps to time `0.0` fails for every nonzero-tap live-routing level.
+- [x] Medium, hard, and expert levels satisfy decision-dependency requirements rather than only tap-count requirements.
+- [x] Mechanic tags do not award quality points without measured graph or simulation evidence.
+- [x] The same seed and configuration produce the same accepted levels and reports.
+- [x] A full fixed-seed campaign generation produces the requested number of valid levels.
 
 ### 2.3 Editor correctness
 
-- [ ] A new user can place a node by choosing a tool and clicking the canvas.
-- [ ] A new user can connect two nodes by dragging between visible connection handles.
-- [ ] Node, edge, level-rule, and switch-state properties can be edited in the inspector.
-- [ ] Every destructive or mutating edit supports undo and redo.
-- [ ] Grid snapping can be enabled or disabled.
-- [ ] Validation updates automatically after edits.
-- [ ] A designer can play a level inside the editor and record a valid solution without typing node IDs or timestamps.
-- [ ] Saving and reopening a level preserves all supported fields and unknown extension fields.
-- [ ] The editor can open generated candidates and display their quality analysis.
+- [x] A new user can place a node by choosing a tool and clicking the canvas.
+- [x] A new user can connect two nodes by dragging between visible connection handles.
+- [x] Node, edge, level-rule, and switch-state properties can be edited in the inspector.
+- [x] Every destructive or mutating edit supports undo and redo.
+- [x] Grid snapping can be enabled or disabled.
+- [x] Validation updates automatically after edits.
+- [x] A designer can play a level inside the editor and record a valid solution without typing node IDs or timestamps.
+- [x] Saving and reopening a level preserves all supported fields and unknown extension fields.
+- [x] The editor can open generated candidates and display their quality analysis.
 
 ### 2.4 Repository health
 
-- [ ] Generator and editor Python tests can run together from the repository root without test-package import collisions.
+- [x] Generator and editor Python tests can run together from the repository root without test-package import collisions.
 - [ ] All Python tests pass.
 - [ ] All relevant Swift tests pass on the supported simulator destination.
-- [ ] The combined verification command exits nonzero on any failed gate.
-- [ ] Production levels, solution sidecars, and the manifest are synchronized.
-- [ ] No debug generation output or failed candidate artifacts are accidentally packaged into the app.
+- [x] The combined verification command exits nonzero on any failed gate.
+- [x] Production levels, solution sidecars, and the manifest are synchronized.
+- [x] No debug generation output or failed candidate artifacts are accidentally packaged into the app.
 
 ---
 
@@ -3176,21 +3203,21 @@ Automated tests are necessary but not sufficient for puzzle quality and editor u
 
 The generator and editor improvement project is complete when all of the following are true:
 
-- [ ] Production gameplay uses documented live look-ahead switch control.
+- [x] Production gameplay uses documented live look-ahead switch control.
 - [ ] Swift and Python runtime-parity suites pass.
-- [ ] Generated solution actions are legal under the real interaction policy.
-- [ ] Generator quality is based on measured decision structure and runtime behavior.
-- [ ] Medium and harder levels cannot pass solely as independent one-tap switch chains.
-- [ ] Generator layout uses constructive placement and bounded repair.
-- [ ] Candidate batches are selected for campaign-level diversity.
-- [ ] The level editor has explicit Select, Place, Connect, and Playtest modes.
-- [ ] The editor supports direct node/road manipulation, editable properties, grid snapping, and undo/redo.
-- [ ] The editor records and replays solutions through the shared simulator.
-- [ ] Live validation and decision analysis are visible in the editor.
+- [x] Generated solution actions are legal under the real interaction policy.
+- [x] Generator quality is based on measured decision structure and runtime behavior.
+- [x] Medium and harder levels cannot pass solely as independent one-tap switch chains.
+- [x] Generator layout uses constructive placement and bounded repair.
+- [x] Candidate batches are selected for campaign-level diversity.
+- [x] The level editor has explicit Select, Place, Connect, and Playtest modes.
+- [x] The editor supports direct node/road manipulation, editable properties, grid snapping, and undo/redo.
+- [x] The editor records and replays solutions through the shared simulator.
+- [x] Live validation and decision analysis are visible in the editor.
 - [ ] All production levels are migrated and pass Python and Swift replay.
 - [ ] All Python suites run together and pass.
 - [ ] Required Swift tests pass.
-- [ ] CI and release gates prevent invalid levels or runtime mismatches from shipping.
-- [ ] Architecture, user, tuning, and release documentation is current.
+- [x] CI and release gates prevent invalid levels or runtime mismatches from shipping.
+- [x] Architecture, user, tuning, and release documentation is current.
 
 When these conditions pass, the system has an enforceable basis for generating functional levels, detecting strategically weak levels before acceptance, and authoring/debugging levels through an intuitive tool rather than fragile manual JSON and hidden interactions.

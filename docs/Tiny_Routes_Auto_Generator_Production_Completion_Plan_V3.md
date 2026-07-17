@@ -579,8 +579,13 @@ Prove the current V2 repository is healthy, reconcile stale documentation, and c
 **Acceptance checks**
 
 - [ ] The existing release-equivalent gate exits zero.
-- [ ] The baseline report records the exact commit and configuration.
-- [ ] Any baseline repair is committed separately from V3 behavior.
+- [x] The baseline report records the exact commit and configuration.
+- [x] Any baseline repair is committed separately from V3 behavior.
+
+**2026-07-17 audit result:** The report was added at
+`docs/generator_v3/v2_baseline_verification.md`. The release-equivalent gate
+did not exit zero, so baseline repair remains a Phase 0 blocker. No baseline
+behavior repair is included in AG-001 or AG-002.
 
 ## Task 0.2 — Reconcile the first-plan document
 
@@ -655,7 +660,7 @@ It is acceptable for this V2 limitation suite to fail generation. Its purpose is
 ## Phase 0 exit gate
 
 - [ ] The completed V2 release gate passes from a clean checkout.
-- [ ] The first-plan document accurately reflects implementation status.
+- [x] The first-plan document accurately reflects implementation status.
 - [ ] V2 behavior and limitations are frozen with reproducible evidence.
 - [ ] V3 work is isolated behind an explicit mode with no fallback.
 - [ ] A full-pipeline baseline exists that does not use template shortcuts.
@@ -2571,8 +2576,8 @@ The following sequence is intentionally small enough for junior contributors. Ea
 
 ## Foundation and schema
 
-- [ ] **AG-001:** Add audited V2 baseline verification report using the existing root gate.
-- [ ] **AG-002:** Reconcile stale first-plan global and PR checklists with implementation evidence.
+- [x] **AG-001:** Add audited V2 baseline verification report using the existing root gate.
+- [x] **AG-002:** Reconcile stale first-plan global and PR checklists with implementation evidence.
 - [ ] **AG-003:** Add real production-path V2 limitation baseline plus one-tap/static-policy fixtures.
 - [ ] **AG-004:** Add explicit `v2_legacy` and `production_v3` architecture modes with no fallback.
 - [ ] **AG-005:** Add Python `RouteObjective` model and round-trip tests.

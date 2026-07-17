@@ -1,0 +1,74 @@
+{
+  "schemaVersion": 1,
+  "verificationDate": "2026-07-17",
+  "verificationTarget": {
+    "branch": "main",
+    "commitSHA": "ebe09a6978b79bc20652de1c3d2569dd6e566183",
+    "cleanBeforeVerification": true,
+    "v3AuditReferenceSHA": "54c6516f64781ac3a259a8715605d27673005035"
+  },
+  "passed": false,
+  "status": "baseline_repair_required",
+  "configuration": {
+    "architecture": "arm64",
+    "hostOS": "macOS 26.5.2 (25F84)",
+    "python": "CPython 3.11.13",
+    "pytest": "9.1.1",
+    "tinyRoutesCore": "0.1.0",
+    "xcode": "26.5 (17F42)",
+    "simulatorDestination": "platform=iOS Simulator,name=iPhone 16 Pro,OS=18.5",
+    "productionWrites": false
+  },
+  "command": [
+    "python3",
+    "scripts/run_all_checks.py",
+    "--python",
+    "/opt/homebrew/bin/python3.11",
+    "--swift-tests",
+    "--destination",
+    "platform=iOS Simulator,name=iPhone 16 Pro,OS=18.5",
+    "--reports-dir",
+    "/tmp/tiny-routes-v2-baseline"
+  ],
+  "gates": [
+    {"name": "tiny_routes_core_tests", "passed": true, "passedCount": 41, "failedCount": 0, "skippedCount": 0},
+    {"name": "level_generator_tests", "passed": false, "passedCount": 362, "failedCount": 61, "skippedCount": 3},
+    {"name": "level_editor_tests", "passed": true, "passedCount": 320, "failedCount": 0, "skippedCount": 0},
+    {"name": "generator_smoke", "passed": true, "requestedCount": 2, "acceptedCount": 2},
+    {"name": "fixed_seed_regressions", "passed": true, "suiteCount": 9, "requestedCount": 46, "acceptedCount": 46},
+    {"name": "production_corpus_non_swift", "passed": true, "levelCount": 27},
+    {"name": "swift_tests", "passed": false, "executedCount": 429, "failureCount": 120, "skippedCount": 1},
+    {"name": "release_wrapper", "passed": false, "exitCode": 1}
+  ],
+  "fixedSeedSuites": [
+    {"name": "tutorial", "seed": 1803001, "requestedCount": 2, "acceptedCount": 2, "outputHash": "be5c3e1021750393ab27f2b37d7e6c75b9a1374affb28537d712f23e583f1d19"},
+    {"name": "easy", "seed": 1803002, "requestedCount": 2, "acceptedCount": 2, "outputHash": "d8f1ed8b978214eb783ab45ee3d8d5adb45b7da9bd9a3892a8a2db307532a5cf"},
+    {"name": "medium", "seed": 1803003, "requestedCount": 2, "acceptedCount": 2, "outputHash": "c0e6396258fe6a8f168ea18cb614f08326fda3084f4dbb96af231b03a6a306f5"},
+    {"name": "hard", "seed": 1803004, "requestedCount": 2, "acceptedCount": 2, "outputHash": "45d159b88800dd880a121c8839f292029f3f7df50699ebaa8ed21a92b3445bd5"},
+    {"name": "expert", "seed": 1803005, "requestedCount": 2, "acceptedCount": 2, "outputHash": "3903000f869bfec2ad0342703cf0d116bc3a250b3de1fc47becc80a21e93dc35"},
+    {"name": "mixed_30_level_campaign", "seed": 1803030, "requestedCount": 30, "acceptedCount": 30, "outputHash": "eb6a2e6620f39755d20b640c58b4c9e46b3255d9379292a4962bd264b122fc36"},
+    {"name": "revisit_heavy", "seed": 1803041, "requestedCount": 2, "acceptedCount": 2, "outputHash": "5896674f6ff0423ea3dd41c19bc7916299ed99cf4bf374336d80fa07cc94d19c"},
+    {"name": "three_four_way_switches", "seed": 1803042, "requestedCount": 2, "acceptedCount": 2, "outputHash": "d9e17bec2e228e06b040e6eba274ee9f333d0bca81bcbf0fe07bb4a5094815a9"},
+    {"name": "conditional_roads", "seed": 1803043, "requestedCount": 2, "acceptedCount": 2, "outputHash": "b4706353fd2e1c547e80aee126277bc1bc1d3900dadc55b166d52e50db9d0c9e"}
+  ],
+  "retainedReportHashes": {
+    "fixed_seed_regressions.json": "d22ae356a6b99472d491d6c2a336387609e59d11fa5e94ba864e47877e099350",
+    "production_corpus_verification.json": "4c931f60b29d71156ffdfeef550877dc76d9ca9e543d417b69f3bd6d96b84ed3",
+    "production_corpus_verification.md": "aa8cb1ac8a02fc1f1050a591863f4141cabfc102347e4276aad555414a9ee6d1"
+  },
+  "failureClusters": [
+    {
+      "gate": "level_generator_tests",
+      "summary": "Strict recipe topology/readability validation conflicts with older recipe and template acceptance tests."
+    },
+    {
+      "gate": "swift_tests",
+      "summary": "Bundled RouteEngine solution replay failed in LevelRepositoryTests.testBundledLevelsHaveReplayableRouteEngineSolutions()."
+    }
+  ],
+  "notes": [
+    "An initial Python 3.14.5 invocation lacked pytest and the editable shared core; the auditable run used the documented --python override.",
+    "No baseline behavior was changed and no production content was written.",
+    "Baseline repair must be committed separately before the Phase 0 exit gate can pass."
+  ]
+}
