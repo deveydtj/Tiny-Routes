@@ -1,6 +1,6 @@
 # Current Level JSON Shape
 
-This document describes the version 2 level format. All production files in `TinyRoutes/Resources/Levels/` use version 2. Version 1 remains readable only for archived-file inspection, replay, and migration.
+This document describes the existing version-2 format and the schema-3 ordered-objective extension. All current production files in `TinyRoutes/Resources/Levels/` remain version 2. Version 1 remains readable only for archived-file inspection, replay, and migration.
 
 ---
 
@@ -8,7 +8,7 @@ This document describes the version 2 level format. All production files in `Tin
 
 | Field | Type | Required | Description |
 |---|---|---|---|
-| `schemaVersion` | integer | version 2: yes; legacy: no | Schema revision. Omitted files are treated as version 1. New files use `2`. |
+| `schemaVersion` | integer | version 2/3: yes; legacy: no | Schema revision. Omitted files are treated as version 1. Existing production files use `2`; schema-3 generator output uses `3`. |
 | `rules` | object | version 2: yes; legacy: no | Switch interaction rules (see below). Omitted rules use the legacy defaults. |
 | `id` | string | yes | Unique level identifier, e.g. `"level_001"` |
 | `name` | string | yes | Human-readable level title, e.g. `"First Pickup"` |
@@ -16,10 +16,25 @@ This document describes the version 2 level format. All production files in `Tin
 | `startNodeID` | string | yes | `id` of the node where the dot begins |
 | `packageNodeID` | string | yes | `id` of the node that holds the package |
 | `destinationNodeID` | string | yes | `id` of the node the dot must reach after picking up the package |
+| `objectives` | array | schema 3 only | Ordered route objectives. Schema-1/2 files adapt package and destination to an internal two-objective sequence without rewriting the file. |
 | `timeLimitSeconds` | integer | yes | Maximum seconds the player has to complete the level |
 | `parTaps` | integer | yes | The par (expected) number of switch taps to solve the level optimally |
 | `tutorialMessage` | string | no | Short gameplay instruction displayed above the board. Use only while introducing a mechanic. |
 | `solution` | object | no | Embedded solution hint present in some levels (see below) |
+
+### Schema-3 objectives
+
+Each `objectives` item contains `id`, `nodeID`, `kind`, `sequenceIndex`, and
+`revealPolicy`, plus optional `displayMetadata`. Supported kinds are `pickup`,
+`checkpoint`, `delivery`, and `destination`. IDs must be unique, sequence
+indices must be contiguous from zero and match array order, every node reference
+must exist, and exactly one `destination` objective must be last.
+
+While the compatibility fields remain present, `packageNodeID` must match the
+first pickup objective and `destinationNodeID` must match the terminal objective.
+A mismatch is a validation error. Schema-1/2 documents keep their original JSON
+on save and expose deterministic `legacy_pickup` and `legacy_destination`
+objectives only to internal callers.
 
 ## Version 2 `rules` Object
 

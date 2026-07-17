@@ -2597,8 +2597,8 @@ The following sequence is intentionally small enough for junior contributors. Ea
 - [x] **AG-004:** Add explicit `v2_legacy` and `production_v3` architecture modes with no fallback.
 - [x] **AG-005:** Add Python `RouteObjective` model and round-trip tests.
 - [x] **AG-006:** Add Swift `RouteObjective` model and decoding tests.
-- [ ] **AG-007:** Add schema 3 objective validation.
-- [ ] **AG-008:** Add legacy package/destination objective adapter.
+- [x] **AG-007:** Add schema 3 objective validation.
+- [x] **AG-008:** Add legacy package/destination objective adapter.
 - [ ] **AG-009:** Generalize Python package availability into objective-state rules with V2 adapters.
 - [ ] **AG-010:** Generalize Swift package availability into objective-state rules with V2 adapters.
 - [ ] **AG-011:** Add objective progression to Python simulator.

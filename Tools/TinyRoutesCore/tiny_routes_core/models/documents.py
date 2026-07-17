@@ -7,7 +7,7 @@ from dataclasses import dataclass, field
 from typing import Any, Mapping
 
 from .level_rules import LevelRules
-from .route_objective import RouteObjective
+from .route_objective import RouteObjective, legacy_route_objectives
 
 
 def _extras(data: Mapping[str, Any], known: set[str]) -> dict[str, Any]:
@@ -140,6 +140,21 @@ class LevelDocument:
         if self.solution is not None: result["solution"] = self.solution.to_dict()
         if self._rules_present or self.rules != LevelRules.legacy_defaults(): result["rules"] = self.rules.to_dict()
         return result
+
+    @property
+    def schema_version(self) -> int:
+        """Return the effective schema version while retaining the original JSON shape."""
+
+        value = self._extra.get("schemaVersion", 1)
+        return value if isinstance(value, int) and not isinstance(value, bool) else 1
+
+    @property
+    def effective_objectives(self) -> list[RouteObjective]:
+        """Return authored schema-3 objectives or an internal legacy two-stop adapter."""
+
+        if self.schema_version >= 3:
+            return [objective.clone() for objective in self.objectives or ()]
+        return legacy_route_objectives(self.packageNodeID, self.destinationNodeID)
 
     def clone(self) -> "LevelDocument": return deepcopy(self)
 

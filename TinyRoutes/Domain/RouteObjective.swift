@@ -64,6 +64,9 @@ enum RouteObjectiveJSONValue: Codable, Equatable {
 
 /// A stable, ordered stop in a schema-3 route.
 struct RouteObjective: Codable, Equatable {
+    static let legacyPickupID = "legacy_pickup"
+    static let legacyDestinationID = "legacy_destination"
+
     var id: String
     var nodeID: String
     var kind: RouteObjectiveKind
@@ -131,6 +134,42 @@ struct RouteObjective: Codable, Equatable {
                 try container.encodeNil(forKey: .displayMetadata)
             }
         }
+    }
+
+    static func legacySequence(
+        packageNodeID: String,
+        destinationNodeID: String
+    ) -> [RouteObjective] {
+        [
+            RouteObjective(
+                id: legacyPickupID,
+                nodeID: packageNodeID,
+                kind: .pickup,
+                sequenceIndex: 0,
+                revealPolicy: "always"
+            ),
+            RouteObjective(
+                id: legacyDestinationID,
+                nodeID: destinationNodeID,
+                kind: .destination,
+                sequenceIndex: 1,
+                revealPolicy: "whenActive"
+            )
+        ]
+    }
+}
+
+struct RouteObjectiveValidationIssue: Equatable {
+    let code: String
+    let message: String
+    let objectiveID: String?
+    let nodeID: String?
+
+    init(code: String, message: String, objectiveID: String? = nil, nodeID: String? = nil) {
+        self.code = code
+        self.message = message
+        self.objectiveID = objectiveID
+        self.nodeID = nodeID
     }
 }
 

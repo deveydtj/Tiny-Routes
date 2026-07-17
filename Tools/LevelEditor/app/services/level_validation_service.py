@@ -210,6 +210,16 @@ def validate(
     messages: list[ValidationMessage] = []
     _add_metadata_validation_messages(messages, level, file_path)
 
+    from tiny_routes_core.validation import validate_level_objectives
+
+    for issue in validate_level_objectives(level):
+        messages.append(ValidationMessage(
+            severity=ValidationSeverity.ERROR,
+            code=issue.code,
+            message=issue.message,
+            related_node_id=issue.node_id,
+        ))
+
     for code in level.rules.validation_messages():
         label = "Look-ahead seconds" if "lookahead" in code else "Tap cooldown seconds"
         messages.append(ValidationMessage(

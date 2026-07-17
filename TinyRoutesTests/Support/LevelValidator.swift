@@ -6,6 +6,13 @@ final class LevelValidator {
         var issues: [LevelValidationIssue] = []
         issues += validateIdentity(level: level)
         issues += validateRules(level: level)
+        issues += level.validateObjectives().map {
+            LevelValidationIssue(
+                severity: .error,
+                levelID: level.id,
+                message: $0.message
+            )
+        }
         issues += validateGraph(level: level)
         guard !hasDuplicateGraphIDs(level) else {
             return issues

@@ -7,6 +7,7 @@ from tiny_routes_core.graph import (GraphIndex, GraphValidationError, cycle_node
 from tiny_routes_core.models import (LevelDocument, RouteEdge, RouteGraph, RouteNode,
                                      RouteObjective, RouteObjectiveKind, Solution)
 from tiny_routes_core.simulation import RuntimeState
+from tiny_routes_core.validation import validate_level_objectives
 
 
 def test_shared_models_export_only_canonical_type_names():
@@ -43,6 +44,28 @@ def level_dict():
         "destinationNodeID": "destination", "timeLimitSeconds": 20, "parTaps": 1,
         "rules": {"switchInteractionMode": "liveLookahead", "futureRule": "kept"},
     }
+
+
+def schema_three_level_dict():
+    raw = level_dict()
+    raw["schemaVersion"] = 3
+    raw["objectives"] = [
+        {
+            "id": "pickup_package",
+            "nodeID": "package",
+            "kind": "pickup",
+            "sequenceIndex": 0,
+            "revealPolicy": "always",
+        },
+        {
+            "id": "finish_delivery",
+            "nodeID": "destination",
+            "kind": "destination",
+            "sequenceIndex": 1,
+            "revealPolicy": "whenActive",
+        },
+    ]
+    return raw
 
 
 def test_level_and_solution_round_trip_unknown_fields_and_clone_independently():
@@ -114,6 +137,107 @@ def test_level_document_round_trips_optional_objectives_without_rewriting_legacy
         "finish_delivery",
     ]
     assert level.to_dict() == schema_three
+
+
+def test_legacy_objective_adapter_is_deterministic_and_does_not_rewrite_source():
+    for schema_version in (1, 2):
+        raw = level_dict()
+        raw["schemaVersion"] = schema_version
+        level = LevelDocument.from_dict(raw)
+
+        effective = level.effective_objectives
+
+        assert [objective.id for objective in effective] == [
+            "legacy_pickup",
+            "legacy_destination",
+        ]
+        assert [objective.nodeID for objective in effective] == ["package", "destination"]
+        assert [objective.kind for objective in effective] == [
+            RouteObjectiveKind.PICKUP,
+            RouteObjectiveKind.DESTINATION,
+        ]
+        assert [objective.sequenceIndex for objective in effective] == [0, 1]
+        assert level.objectives is None
+        assert level.to_dict() == raw
+
+
+def test_schema_three_effective_objectives_use_authored_sequence():
+    level = LevelDocument.from_dict(schema_three_level_dict())
+
+    effective = level.effective_objectives
+
+    assert [objective.id for objective in effective] == [
+        "pickup_package",
+        "finish_delivery",
+    ]
+    effective[0].id = "changed"
+    assert level.objectives[0].id == "pickup_package"
+
+
+def test_schema_three_objective_validation_accepts_valid_sequence():
+    assert validate_level_objectives(
+        LevelDocument.from_dict(schema_three_level_dict())
+    ) == ()
+
+
+@pytest.mark.parametrize(
+    ("mutate", "expected_codes"),
+    [
+        (
+            lambda raw: raw["objectives"].__setitem__(1, {
+                **raw["objectives"][1], "id": "pickup_package",
+            }),
+            {"duplicate_objective_id"},
+        ),
+        (
+            lambda raw: raw["objectives"][1].__setitem__("sequenceIndex", 2),
+            {"noncontiguous_objective_sequence_indices", "objective_array_order_mismatch"},
+        ),
+        (
+            lambda raw: raw["objectives"][0].__setitem__("nodeID", "missing"),
+            {"objective_node_not_found", "legacy_package_objective_conflict"},
+        ),
+        (
+            lambda raw: raw["objectives"][1].__setitem__("kind", "checkpoint"),
+            {"invalid_terminal_objective_count"},
+        ),
+        (
+            lambda raw: raw["objectives"].reverse(),
+            {"objective_array_order_mismatch"},
+        ),
+    ],
+)
+def test_schema_three_objective_validation_rejects_invalid_contracts(mutate, expected_codes):
+    raw = schema_three_level_dict()
+    mutate(raw)
+
+    codes = {issue.code for issue in validate_level_objectives(LevelDocument.from_dict(raw))}
+
+    assert expected_codes <= codes
+
+
+def test_objective_validation_rejects_schema_conflicts_and_missing_schema_three_data():
+    legacy_with_objectives = schema_three_level_dict()
+    legacy_with_objectives["schemaVersion"] = 2
+    assert {issue.code for issue in validate_level_objectives(
+        LevelDocument.from_dict(legacy_with_objectives)
+    )} == {"objectives_require_schema_3"}
+
+    missing = schema_three_level_dict()
+    del missing["objectives"]
+    assert {issue.code for issue in validate_level_objectives(
+        LevelDocument.from_dict(missing)
+    )} == {"schema_3_objectives_required"}
+
+    conflicting = schema_three_level_dict()
+    conflicting["packageNodeID"] = "switch"
+    conflicting["destinationNodeID"] = "package"
+    assert {
+        issue.code for issue in validate_level_objectives(LevelDocument.from_dict(conflicting))
+    } >= {
+        "legacy_package_objective_conflict",
+        "legacy_destination_objective_conflict",
+    }
 
 
 def test_route_objective_rejects_unknown_kind_and_nonobject_display_metadata():

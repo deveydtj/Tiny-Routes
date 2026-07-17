@@ -70,3 +70,31 @@ class RouteObjective:
 
     def clone(self) -> "RouteObjective":
         return deepcopy(self)
+
+
+LEGACY_PICKUP_OBJECTIVE_ID = "legacy_pickup"
+LEGACY_DESTINATION_OBJECTIVE_ID = "legacy_destination"
+
+
+def legacy_route_objectives(
+    package_node_id: str,
+    destination_node_id: str,
+) -> list[RouteObjective]:
+    """Adapt legacy package/destination fields without changing serialized input."""
+
+    return [
+        RouteObjective(
+            id=LEGACY_PICKUP_OBJECTIVE_ID,
+            nodeID=package_node_id,
+            kind=RouteObjectiveKind.PICKUP,
+            sequenceIndex=0,
+            revealPolicy="always",
+        ),
+        RouteObjective(
+            id=LEGACY_DESTINATION_OBJECTIVE_ID,
+            nodeID=destination_node_id,
+            kind=RouteObjectiveKind.DESTINATION,
+            sequenceIndex=1,
+            revealPolicy="whenActive",
+        ),
+    ]

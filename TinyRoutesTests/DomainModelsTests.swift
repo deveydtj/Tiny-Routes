@@ -127,6 +127,89 @@ final class DomainModelsTests: XCTestCase {
         )
     }
 
+    func testLegacyPackageAndDestinationAdaptToEffectiveObjectivesWithoutRewriting() throws {
+        for json in [Self.versionOneJSON, Self.versionTwoJSON] {
+            let level = try decoder.decode(LevelData.self, from: Data(json.utf8))
+            let objectives = level.effectiveObjectives
+
+            XCTAssertEqual(objectives.map(\.id), ["legacy_pickup", "legacy_destination"])
+            XCTAssertEqual(objectives.map(\.nodeID), [level.packageNodeID, level.destinationNodeID])
+            XCTAssertEqual(objectives.map(\.kind), [.pickup, .destination])
+            XCTAssertEqual(objectives.map(\.sequenceIndex), [0, 1])
+            XCTAssertNil(level.objectives)
+
+            let encoded = try XCTUnwrap(
+                JSONSerialization.jsonObject(with: encoder.encode(level)) as? [String: Any]
+            )
+            XCTAssertNil(encoded["objectives"])
+        }
+    }
+
+    func testSchemaThreeUsesAuthoredEffectiveObjectivesAndPassesValidation() throws {
+        let level = try decoder.decode(LevelData.self, from: Data(Self.versionThreeJSON.utf8))
+
+        XCTAssertEqual(level.effectiveObjectives, level.objectives)
+        XCTAssertTrue(level.validateObjectives().isEmpty)
+    }
+
+    func testSchemaThreeObjectiveValidationRejectsContractViolations() throws {
+        let original = try decoder.decode(LevelData.self, from: Data(Self.versionThreeJSON.utf8))
+
+        var duplicate = original
+        let firstObjectiveID = duplicate.objectives?[0].id ?? "collect"
+        duplicate.objectives?[1].id = firstObjectiveID
+        XCTAssertTrue(duplicate.validateObjectives().map(\.code).contains("duplicate_objective_id"))
+
+        var noncontiguous = original
+        noncontiguous.objectives?[1].sequenceIndex = 4
+        XCTAssertTrue(noncontiguous.validateObjectives().map(\.code).contains(
+            "noncontiguous_objective_sequence_indices"
+        ))
+
+        var missingNode = original
+        missingNode.objectives?[0].nodeID = "missing"
+        XCTAssertTrue(missingNode.validateObjectives().map(\.code).contains("objective_node_not_found"))
+
+        var noTerminal = original
+        noTerminal.objectives?[3].kind = .checkpoint
+        XCTAssertTrue(noTerminal.validateObjectives().map(\.code).contains(
+            "invalid_terminal_objective_count"
+        ))
+
+        var terminalNotFinal = original
+        terminalNotFinal.objectives?.swapAt(2, 3)
+        terminalNotFinal.objectives?[2].sequenceIndex = 2
+        terminalNotFinal.objectives?[3].sequenceIndex = 3
+        XCTAssertTrue(terminalNotFinal.validateObjectives().map(\.code).contains(
+            "terminal_objective_not_final"
+        ))
+    }
+
+    func testObjectiveValidationRejectsSchemaAndLegacyAliasConflicts() throws {
+        var legacy = try decoder.decode(LevelData.self, from: Data(Self.versionThreeJSON.utf8))
+        legacy.schemaVersion = 2
+        XCTAssertEqual(legacy.validateObjectives().map(\.code), ["objectives_require_schema_3"])
+
+        var missing = try decoder.decode(LevelData.self, from: Data(Self.versionThreeJSON.utf8))
+        missing.objectives = nil
+        XCTAssertEqual(missing.validateObjectives().map(\.code), ["schema_3_objectives_required"])
+
+        var conflicts = try decoder.decode(LevelData.self, from: Data(Self.versionThreeJSON.utf8))
+        conflicts.packageNodeID = "start"
+        conflicts.destinationNodeID = "delivery"
+        let codes = Set(conflicts.validateObjectives().map(\.code))
+        XCTAssertTrue(codes.contains("legacy_package_objective_conflict"))
+        XCTAssertTrue(codes.contains("legacy_destination_objective_conflict"))
+
+        let messages = Set(LevelValidator().validate(level: conflicts).map(\.message))
+        XCTAssertTrue(messages.contains(
+            "packageNodeID must match the first schema 3 pickup objective nodeID."
+        ))
+        XCTAssertTrue(messages.contains(
+            "destinationNodeID must match the schema 3 destination objective nodeID."
+        ))
+    }
+
     func testRoadAvailabilityDefaultsToAlwaysWhenMissing() throws {
         let json = #"{"id":"edge","fromNodeID":"a","toNodeID":"b"}"#
 

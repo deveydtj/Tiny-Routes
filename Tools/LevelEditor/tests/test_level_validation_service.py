@@ -690,6 +690,42 @@ def test_validate_destination_unreachable_from_package_node():
     assert messages[0].related_node_id == "destination"
 
 
+def test_validate_surfaces_schema_three_objective_errors():
+    level_data = _load_fixture("valid_level.json").to_dict()
+    level_data["schemaVersion"] = 3
+    level_data["objectives"] = [
+        {
+            "id": "collect",
+            "nodeID": "missing",
+            "kind": "pickup",
+            "sequenceIndex": 0,
+            "revealPolicy": "always",
+        },
+        {
+            "id": "collect",
+            "nodeID": "destination",
+            "kind": "checkpoint",
+            "sequenceIndex": 2,
+            "revealPolicy": "whenActive",
+        },
+    ]
+
+    result = validate(LevelDocument.from_dict(level_data))
+    codes = {message.code for message in result.messages}
+
+    assert {
+        "duplicate_objective_id",
+        "noncontiguous_objective_sequence_indices",
+        "objective_node_not_found",
+        "invalid_terminal_objective_count",
+    } <= codes
+    missing_node_issue = next(
+        message for message in result.messages
+        if message.code == "objective_node_not_found"
+    )
+    assert missing_node_issue.related_node_id == "missing"
+
+
 def test_validate_no_qt_imports():
     """Ensure the validation service module imports no Qt modules."""
     service_path = LEVEL_EDITOR_ROOT / "app" / "services" / "level_validation_service.py"
