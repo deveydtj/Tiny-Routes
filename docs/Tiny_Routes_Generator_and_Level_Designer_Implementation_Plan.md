@@ -2835,8 +2835,8 @@ The following is a suggested issue/PR sequence. Each item should be independentl
 - [x] **PR-001:** Add root Python test runner.
 - [x] **PR-002:** Fix generator/editor test package collision.
 - [x] **PR-003:** Add corpus-analysis command and baseline report.
-- [ ] **PR-004:** Add shared parity fixture directory and no-switch fixture.
-- [ ] **PR-005:** Add remaining early/in-window/late switch fixtures.
+- [x] **PR-004:** Add shared parity fixture directory and no-switch fixture.
+- [x] **PR-005:** Add remaining early/in-window/late switch fixtures.
 - [ ] **PR-006:** Add Swift `LevelRules` types and legacy decode tests.
 - [ ] **PR-007:** Add shared Python `LevelRules` model and tests.
 - [ ] **PR-008:** Write switch interaction contract and JSON docs.
