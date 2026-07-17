@@ -2839,124 +2839,124 @@ The following is a suggested issue/PR sequence. Each item should be independentl
 - [x] **PR-005:** Add remaining early/in-window/late switch fixtures.
 - [x] **PR-006:** Add Swift `LevelRules` types and legacy decode tests.
 - [x] **PR-007:** Add shared Python `LevelRules` model and tests.
-- [ ] **PR-008:** Write switch interaction contract and JSON docs.
+- [x] **PR-008:** Write switch interaction contract and JSON docs.
 
 ## Swift runtime PRs
 
-- [ ] **PR-009:** Add structured switch-tap result.
-- [ ] **PR-010:** Add basic upcoming-switch query for a straight approach.
-- [ ] **PR-011:** Extend upcoming-switch query through route-node chains.
-- [ ] **PR-012:** Add cycle safety and boundary tests.
-- [ ] **PR-013:** Enforce live eligibility in `RouteEngine`.
-- [ ] **PR-014:** Add tap cooldown behavior.
-- [ ] **PR-015:** Expose eligible switch state to `GameplayScreen`.
-- [ ] **PR-016:** Add eligible/inactive switch visuals and accessibility.
-- [ ] **PR-017:** Update Swift solution replay diagnostics.
+- [x] **PR-009:** Add structured switch-tap result.
+- [x] **PR-010:** Add basic upcoming-switch query for a straight approach.
+- [x] **PR-011:** Extend upcoming-switch query through route-node chains.
+- [x] **PR-012:** Add cycle safety and boundary tests.
+- [x] **PR-013:** Enforce live eligibility in `RouteEngine`.
+- [x] **PR-014:** Add tap cooldown behavior.
+- [x] **PR-015:** Expose eligible switch state to `GameplayScreen`.
+- [x] **PR-016:** Add eligible/inactive switch visuals and accessibility.
+- [x] **PR-017:** Update Swift solution replay diagnostics.
 
 ## Shared Python/parity PRs
 
-- [ ] **PR-018:** Scaffold `TinyRoutesCore` package.
-- [ ] **PR-019:** Move shared level models with compatibility imports.
-- [ ] **PR-020:** Move shared solution models with compatibility imports.
-- [ ] **PR-021:** Add graph index and ordered outgoing query.
-- [ ] **PR-022:** Add Python runtime-state model.
-- [ ] **PR-023:** Add Python switch eligibility for straight approach.
-- [ ] **PR-024:** Add chained-node and cycle eligibility behavior.
-- [ ] **PR-025:** Add event-driven movement without taps.
-- [ ] **PR-026:** Add simulator tap handling and traces.
-- [ ] **PR-027:** Convert generator simulator service to the shared simulator.
-- [ ] **PR-028:** Add Swift/Python normalized parity comparison.
+- [x] **PR-018:** Scaffold `TinyRoutesCore` package.
+- [x] **PR-019:** Move shared level models with compatibility imports.
+- [x] **PR-020:** Move shared solution models with compatibility imports.
+- [x] **PR-021:** Add graph index and ordered outgoing query.
+- [x] **PR-022:** Add Python runtime-state model.
+- [x] **PR-023:** Add Python switch eligibility for straight approach.
+- [x] **PR-024:** Add chained-node and cycle eligibility behavior.
+- [x] **PR-025:** Add event-driven movement without taps.
+- [x] **PR-026:** Add simulator tap handling and traces.
+- [x] **PR-027:** Convert generator simulator service to the shared simulator.
+- [x] **PR-028:** Add Swift/Python normalized parity comparison.
 
 ## Solver and quality PRs
 
-- [ ] **PR-029:** Rename abstract taps to decisions with aliases.
-- [ ] **PR-030:** Extract topology solver wrapper.
-- [ ] **PR-031:** Add revisit-state analysis.
-- [ ] **PR-032:** Add runtime activation-window extraction.
-- [ ] **PR-033:** Add legal timestamp scheduler for one-tap windows.
-- [ ] **PR-034:** Add multi-tap window scheduler.
-- [ ] **PR-035:** Build sidecars only from verified runtime solutions.
-- [ ] **PR-036:** Add decision-profile model.
-- [ ] **PR-037:** Add independent-decision analysis.
-- [ ] **PR-038:** Add failure-outcome and equivalent-choice analysis.
-- [ ] **PR-039:** Add timing/spacing metrics.
-- [ ] **PR-040:** Add difficulty thresholds.
-- [ ] **PR-041:** Remove tag-only quality bonuses.
-- [ ] **PR-042:** Add decision-profile report output.
+- [x] **PR-029:** Rename abstract taps to decisions with aliases.
+- [x] **PR-030:** Extract topology solver wrapper.
+- [x] **PR-031:** Add revisit-state analysis.
+- [x] **PR-032:** Add runtime activation-window extraction.
+- [x] **PR-033:** Add legal timestamp scheduler for one-tap windows.
+- [x] **PR-034:** Add multi-tap window scheduler.
+- [x] **PR-035:** Build sidecars only from verified runtime solutions.
+- [x] **PR-036:** Add decision-profile model.
+- [x] **PR-037:** Add independent-decision analysis.
+- [x] **PR-038:** Add failure-outcome and equivalent-choice analysis.
+- [x] **PR-039:** Add timing/spacing metrics.
+- [x] **PR-040:** Add difficulty thresholds.
+- [x] **PR-041:** Remove tag-only quality bonuses.
+- [x] **PR-042:** Add decision-profile report output.
 
 ## Topology and layout PRs
 
-- [ ] **PR-043:** Add motif base types and registry.
-- [ ] **PR-044:** Convert straight and binary-choice motifs.
-- [ ] **PR-045:** Add detour and dead-end motifs.
-- [ ] **PR-046:** Add split/rejoin and package-branch motifs.
-- [ ] **PR-047:** Add revisit and return-loop motifs.
-- [ ] **PR-048:** Add motif composer with ID remapping.
-- [ ] **PR-049:** Add dependency composition constraints.
-- [ ] **PR-050:** Add layout constraint/result models.
-- [ ] **PR-051:** Add vertical layer assignment.
-- [ ] **PR-052:** Add branch lane assignment.
-- [ ] **PR-053:** Add switch-port assignment.
-- [ ] **PR-054:** Add incremental road routing.
-- [ ] **PR-055:** Add one-cell node-move repair.
-- [ ] **PR-056:** Add bend-swap and branch-lane repair.
-- [ ] **PR-057:** Reorder generator validation stages.
-- [ ] **PR-058:** Add layout efficiency metrics.
-- [ ] **PR-059:** Expand candidate decision signatures.
-- [ ] **PR-060:** Add valid candidate pool.
-- [ ] **PR-061:** Add deterministic portfolio selection.
+- [x] **PR-043:** Add motif base types and registry.
+- [x] **PR-044:** Convert straight and binary-choice motifs.
+- [x] **PR-045:** Add detour and dead-end motifs.
+- [x] **PR-046:** Add split/rejoin and package-branch motifs.
+- [x] **PR-047:** Add revisit and return-loop motifs.
+- [x] **PR-048:** Add motif composer with ID remapping.
+- [x] **PR-049:** Add dependency composition constraints.
+- [x] **PR-050:** Add layout constraint/result models.
+- [x] **PR-051:** Add vertical layer assignment.
+- [x] **PR-052:** Add branch lane assignment.
+- [x] **PR-053:** Add switch-port assignment.
+- [x] **PR-054:** Add incremental road routing.
+- [x] **PR-055:** Add one-cell node-move repair.
+- [x] **PR-056:** Add bend-swap and branch-lane repair.
+- [x] **PR-057:** Reorder generator validation stages.
+- [x] **PR-058:** Add layout efficiency metrics.
+- [x] **PR-059:** Expand candidate decision signatures.
+- [x] **PR-060:** Add valid candidate pool.
+- [x] **PR-061:** Add deterministic portfolio selection.
 
 ## Editor foundation PRs
 
-- [ ] **PR-062:** Add editor tool-mode enum and toolbar actions.
-- [ ] **PR-063:** Add document controller and dirty-state signal.
-- [ ] **PR-064:** Add undo stack and add-node command.
-- [ ] **PR-065:** Add move-node command.
-- [ ] **PR-066:** Add add-edge command.
-- [ ] **PR-067:** Add delete-items command with restoration tests.
-- [ ] **PR-068:** Move canvas mutations through controller.
-- [ ] **PR-069:** Add click-to-place ghost preview.
-- [ ] **PR-070:** Add drag-and-drop palette placement.
-- [ ] **PR-071:** Add grid snap toggle.
-- [ ] **PR-072:** Add visible connection handles.
-- [ ] **PR-073:** Add drag-to-connect preview.
-- [ ] **PR-074:** Add visible road-shape selector.
-- [ ] **PR-075:** Add optional bidirectional connect action.
+- [x] **PR-062:** Add editor tool-mode enum and toolbar actions.
+- [x] **PR-063:** Add document controller and dirty-state signal.
+- [x] **PR-064:** Add undo stack and add-node command.
+- [x] **PR-065:** Add move-node command.
+- [x] **PR-066:** Add add-edge command.
+- [x] **PR-067:** Add delete-items command with restoration tests.
+- [x] **PR-068:** Move canvas mutations through controller.
+- [x] **PR-069:** Add click-to-place ghost preview.
+- [x] **PR-070:** Add drag-and-drop palette placement.
+- [x] **PR-071:** Add grid snap toggle.
+- [x] **PR-072:** Add visible connection handles.
+- [x] **PR-073:** Add drag-to-connect preview.
+- [x] **PR-074:** Add visible road-shape selector.
+- [x] **PR-075:** Add optional bidirectional connect action.
 
 ## Editor inspector and playtest PRs
 
-- [ ] **PR-076:** Add safe node-reference rename service.
-- [ ] **PR-077:** Add safe edge-reference rename service.
-- [ ] **PR-078:** Make node coordinates and role editable.
-- [ ] **PR-079:** Make outgoing order and initial edge editable.
-- [ ] **PR-080:** Make edge endpoints and shape editable.
-- [ ] **PR-081:** Add level-rules editor.
-- [ ] **PR-082:** Add switch-option annotations to canvas.
-- [ ] **PR-083:** Add playtest controller start/reset behavior.
-- [ ] **PR-084:** Render simulator dot and eligible switch.
-- [ ] **PR-085:** Route playtest clicks to simulator taps.
-- [ ] **PR-086:** Record accepted actions.
-- [ ] **PR-087:** Add “Use Run as Solution.”
-- [ ] **PR-088:** Add solution replay controls.
-- [ ] **PR-089:** Replace raw tap-node entry with dropdown.
-- [ ] **PR-090:** Add automatic/debounced validation.
-- [ ] **PR-091:** Add canvas validation overlays.
-- [ ] **PR-092:** Add Puzzle Analysis panel.
-- [ ] **PR-093:** Add generator candidate open-in-editor workflow.
+- [x] **PR-076:** Add safe node-reference rename service.
+- [x] **PR-077:** Add safe edge-reference rename service.
+- [x] **PR-078:** Make node coordinates and role editable.
+- [x] **PR-079:** Make outgoing order and initial edge editable.
+- [x] **PR-080:** Make edge endpoints and shape editable.
+- [x] **PR-081:** Add level-rules editor.
+- [x] **PR-082:** Add switch-option annotations to canvas.
+- [x] **PR-083:** Add playtest controller start/reset behavior.
+- [x] **PR-084:** Render simulator dot and eligible switch.
+- [x] **PR-085:** Route playtest clicks to simulator taps.
+- [x] **PR-086:** Record accepted actions.
+- [x] **PR-087:** Add “Use Run as Solution.”
+- [x] **PR-088:** Add solution replay controls.
+- [x] **PR-089:** Replace raw tap-node entry with dropdown.
+- [x] **PR-090:** Add automatic/debounced validation.
+- [x] **PR-091:** Add canvas validation overlays.
+- [x] **PR-092:** Add Puzzle Analysis panel.
+- [x] **PR-093:** Add generator candidate open-in-editor workflow.
 
 ## Migration and release PRs
 
-- [ ] **PR-094:** Add live-routing migration analyzer.
-- [ ] **PR-095:** Migrate tutorial levels.
-- [ ] **PR-096:** Migrate easy levels.
-- [ ] **PR-097:** Migrate medium levels.
-- [ ] **PR-098:** Migrate hard/expert levels.
-- [ ] **PR-099:** Rebuild and verify manifest/sidecars.
-- [ ] **PR-100:** Add Python CI.
-- [ ] **PR-101:** Add macOS Swift parity CI.
-- [ ] **PR-102:** Add fixed-seed generator regression CI.
-- [ ] **PR-103:** Add production-content release gate.
-- [ ] **PR-104:** Add editor manual usability guide and final architecture docs.
+- [x] **PR-094:** Add live-routing migration analyzer.
+- [x] **PR-095:** Migrate tutorial levels.
+- [x] **PR-096:** Migrate easy levels.
+- [x] **PR-097:** Migrate medium levels.
+- [x] **PR-098:** Migrate hard/expert levels.
+- [x] **PR-099:** Rebuild and verify manifest/sidecars.
+- [x] **PR-100:** Add Python CI.
+- [x] **PR-101:** Add macOS Swift parity CI.
+- [x] **PR-102:** Add fixed-seed generator regression CI.
+- [x] **PR-103:** Add production-content release gate.
+- [x] **PR-104:** Add editor manual usability guide and final architecture docs.
 
 Phase 17 conditional-road work should be issued as a separate labeled epic after PR-104 or after the core system is stable enough to support it safely.
 
