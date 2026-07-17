@@ -33,7 +33,6 @@ class BatchOrchestrationService:
                 config.count,
                 config.difficulty,
             )
-            self._validate_generation_mode(config)
             self._validate_template(config.template_name, config)
             self._validate_swift_validation_policy(config, [entry.difficulty for entry in batch_plan.entries])
             self._preflight_output_collisions(config)

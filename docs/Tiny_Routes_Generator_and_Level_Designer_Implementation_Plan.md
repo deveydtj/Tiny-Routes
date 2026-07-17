@@ -2775,7 +2775,7 @@ Include screenshots after implementation for:
 
 ## Task 19.5 — Remove deprecated compatibility code
 
-**Status:** In Progress
+**Status:** Completed
 
 Only after production migration and stable releases:
 
@@ -2783,7 +2783,7 @@ Only after production migration and stable releases:
 - [x] Remove duplicate Python models.
 - [x] Remove legacy hidden editor workflows that no longer add value.
 - [x] Decide whether `legacyGlobal` remains supported for archival files or is moved to a migration-only decoder.
-- [ ] Remove unused legacy generator mode only after equivalent coverage exists.
+- [x] Remove unused legacy generator mode only after equivalent coverage exists.
 
 **Completion notes for this increment**
 
@@ -2791,6 +2791,7 @@ Only after production migration and stable releases:
 - [x] Migrated generator and editor callers to the canonical shared `RouteNode`, `RouteEdge`, `RouteGraph`, `SolutionAction`, and `Solution` types, then removed the old `*Model` aliases and editor compatibility modules.
 - [x] Removed the mode-independent right-click road-creation sequence; roads now start only from explicit Connect-mode clicks or visible connection-handle drags.
 - [x] Retained `legacyGlobal` as frozen decode-and-replay compatibility for archived version-1 files, removed it from new-content authoring, and documented that production gates continue to reject it.
+- [x] Removed the `legacy-template` and `hybrid` generator execution branches, retired the CLI/GUI architecture selector, and kept all former template families available through the recipe pipeline and fixed-seed coverage.
 
 ---
 
@@ -2831,9 +2832,9 @@ The following is a suggested issue/PR sequence. Each item should be independentl
 
 ## Foundation PRs
 
-- [ ] **PR-001:** Add root Python test runner.
-- [ ] **PR-002:** Fix generator/editor test package collision.
-- [ ] **PR-003:** Add corpus-analysis command and baseline report.
+- [x] **PR-001:** Add root Python test runner.
+- [x] **PR-002:** Fix generator/editor test package collision.
+- [x] **PR-003:** Add corpus-analysis command and baseline report.
 - [ ] **PR-004:** Add shared parity fixture directory and no-switch fixture.
 - [ ] **PR-005:** Add remaining early/in-window/late switch fixtures.
 - [ ] **PR-006:** Add Swift `LevelRules` types and legacy decode tests.

@@ -39,9 +39,6 @@ class ExpandedRecipeFamilyDefinition:
 
 
 class ExpandedRecipeFamily(RecipeFamily):
-    legacy_template_name = None
-    legacy_compatible = False
-
     def __init__(self, definition: ExpandedRecipeFamilyDefinition) -> None:
         self.name = definition.name
         self.requires_swift_validation = definition.requires_swift_validation

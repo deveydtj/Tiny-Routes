@@ -102,13 +102,13 @@ def test_cli_auto_difficulty_dry_run(tmp_path) -> None:
     assert code == 0
 
 
-def test_cli_defaults_create_recipe_first_config() -> None:
+def test_cli_defaults_create_recipe_pipeline_config() -> None:
     argv = ["--start", "12", "--count", "1", "--difficulty", "easy"]
     args = build_generate_parser().parse_args(argv)
 
     config = _config_from_args(args, argv)
 
-    assert config.generation_mode == "recipe_first"
+    assert not hasattr(config, "generation_mode")
     assert config.recipe_pool_size == 4
     assert config.layouts_per_recipe == 2
     assert config.road_shapes_per_layout == 2
@@ -190,8 +190,6 @@ def test_cli_accepts_recipe_architecture_options_for_recipe_generation(tmp_path)
             "easy",
             "--template",
             "single_switch",
-            "--generation-mode",
-            "recipe-first",
             "--recipe-pool-size",
             "3",
             "--layouts-per-recipe",
@@ -233,7 +231,7 @@ def test_cli_accepts_recipe_architecture_options_for_recipe_generation(tmp_path)
     assert report["acceptedLevels"][0]["layoutSizeProfile"] == "large_portrait"
 
 
-def test_cli_explicit_legacy_template_mode_still_generates(tmp_path) -> None:
+def test_cli_rejects_removed_legacy_template_mode(tmp_path) -> None:
     code = main_generate(
         [
             "--start",
@@ -260,10 +258,8 @@ def test_cli_explicit_legacy_template_mode_still_generates(tmp_path) -> None:
         ]
     )
 
-    assert code == 0
-    report = json.loads((tmp_path / "report.json").read_text(encoding="utf-8"))
-    assert report["generationMode"] == "legacy_template"
-    assert report["acceptedLevels"][0]["recipeFamily"] is None
+    assert code == 2
+    assert not (tmp_path / "report.json").exists()
 
 
 def test_validate_cli_validates_written_files(tmp_path) -> None:

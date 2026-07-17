@@ -9,10 +9,8 @@ from .paths import (
     get_default_solutions_directory,
 )
 
-GENERATION_MODES = ("legacy_template", "recipe_first", "hybrid")
 LAYOUT_ORIENTATION_PREFERENCES = ("portrait_vertical", "horizontal", "vertical", "mixed", "auto")
 LAYOUT_SIZE_PROFILES = ("difficulty_curve", "standard_portrait", "large_portrait")
-DEFAULT_GENERATION_MODE = "recipe_first"
 DEFAULT_RECIPE_POOL_SIZE = 4
 DEFAULT_LAYOUTS_PER_RECIPE = 2
 DEFAULT_ROAD_SHAPES_PER_LAYOUT = 2
@@ -30,7 +28,6 @@ class GenerationConfig:
     count: int
     difficulty: str
     template_name: str = "mixed"
-    generation_mode: str = DEFAULT_GENERATION_MODE
     recipe_pool_size: int = DEFAULT_RECIPE_POOL_SIZE
     layouts_per_recipe: int = DEFAULT_LAYOUTS_PER_RECIPE
     road_shapes_per_layout: int = DEFAULT_ROAD_SHAPES_PER_LAYOUT
@@ -75,7 +72,6 @@ class GenerationConfig:
 
         object.__setattr__(self, "difficulty", self.difficulty.strip().lower())
         object.__setattr__(self, "template_name", self.template_name.strip().lower())
-        object.__setattr__(self, "generation_mode", self.generation_mode.strip().lower().replace("-", "_"))
         object.__setattr__(
             self,
             "layout_orientation_preference",
@@ -97,9 +93,6 @@ class GenerationConfig:
             object.__setattr__(self, "map_seed_path", Path(self.map_seed_path))
         if self.debug_failures_dir is not None:
             object.__setattr__(self, "debug_failures_dir", Path(self.debug_failures_dir))
-        if self.generation_mode not in GENERATION_MODES:
-            valid = ", ".join(GENERATION_MODES)
-            raise ValueError(f"generation_mode must be one of: {valid}")
         if self.layout_orientation_preference not in LAYOUT_ORIENTATION_PREFERENCES:
             valid = ", ".join(LAYOUT_ORIENTATION_PREFERENCES)
             raise ValueError(f"layout_orientation_preference must be one of: {valid}")
@@ -118,7 +111,3 @@ class GenerationConfig:
     @property
     def base_seed(self) -> int:
         return self.seed if self.seed is not None else 0
-
-    @property
-    def uses_legacy_templates(self) -> bool:
-        return self.generation_mode in {"legacy_template", "hybrid"}

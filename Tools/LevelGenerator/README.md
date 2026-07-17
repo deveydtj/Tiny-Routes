@@ -196,9 +196,7 @@ Current limitations:
 
 `--compare-existing` rejects candidates that are too similar to existing level files in the configured output folders. This is enabled by default; use `--no-compare-existing` for scratch experiments.
 
-`--generation-mode` controls the generation architecture. `recipe-first` is the default and preferred path; `legacy-template` and `hybrid` remain available for comparison and fallback runs.
-
-Recipe-first generation solves multiple abstract recipes before layout, then tries layout and road-shape variants. The default breadth is 4 recipes, 2 layouts per recipe, 2 road-shape strategies per layout, and 4 valid candidates scored before accepting the best one.
+The generator now has one architecture: it solves multiple abstract recipes before layout, then tries layout and road-shape variants. The retired `legacy-template` and `hybrid` execution modes are no longer accepted by the CLI or shown in the GUI. The default breadth is 4 recipes, 2 layouts per recipe, 2 road-shape strategies per layout, and 4 valid candidates scored before accepting the best one.
 
 `--layout-orientation` defaults to `portrait_vertical`. This profile asks recipe-first layouts to compose routes for mobile portrait play: the generated map should be taller than wide, the start should sit in the lower portion of the layout, and the destination should sit in the upper portion. Horizontal branches, detours, and side movement are still allowed when the overall composition passes the portrait safety checks.
 

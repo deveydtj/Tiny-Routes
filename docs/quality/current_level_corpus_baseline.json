@@ -1,14 +1,14 @@
 {
   "analysis": {
-    "destinationBeforePackageCount": 3,
-    "frontLoadableAtZeroCount": 24,
-    "frontLoadableWithin0.15SecondsCount": 24,
+    "destinationBeforePackageCount": 0,
+    "frontLoadableAtZeroCount": 1,
+    "frontLoadableWithin0.15SecondsCount": 1,
     "levelCount": 27
   },
   "levels": [
     {
       "allTapsAtZero": {
-        "elapsedTimeSeconds": 2.654,
+        "elapsedTimeSeconds": 2.95,
         "failureReason": null,
         "outcome": "completed",
         "passed": true,
@@ -19,7 +19,7 @@
       "destinationBeforePackageUnderTestedState": false,
       "levelID": "level_001",
       "original": {
-        "elapsedTimeSeconds": 2.654,
+        "elapsedTimeSeconds": 2.95,
         "failureReason": null,
         "outcome": "completed",
         "passed": true,
@@ -36,7 +36,7 @@
       "routeLength": 2.731106,
       "switchCount": 0,
       "tapsCompressedToFirst0.15Seconds": {
-        "elapsedTimeSeconds": 2.654,
+        "elapsedTimeSeconds": 2.95,
         "failureReason": null,
         "outcome": "completed",
         "passed": true,
@@ -47,18 +47,18 @@
     },
     {
       "allTapsAtZero": {
-        "elapsedTimeSeconds": 2.787,
-        "failureReason": null,
-        "outcome": "completed",
-        "passed": true,
-        "reachedDestination": true,
-        "reachedPackage": true,
-        "tapCount": 1
+        "elapsedTimeSeconds": 0.0,
+        "failureReason": "tap_before_activation_window",
+        "outcome": "failed",
+        "passed": false,
+        "reachedDestination": false,
+        "reachedPackage": false,
+        "tapCount": 0
       },
       "destinationBeforePackageUnderTestedState": false,
       "levelID": "level_002",
       "original": {
-        "elapsedTimeSeconds": 2.787,
+        "elapsedTimeSeconds": 5.35,
         "failureReason": null,
         "outcome": "completed",
         "passed": true,
@@ -73,71 +73,72 @@
       },
       "repeatedSwitchTaps": {},
       "requiredTapCount": 1,
-      "routeLength": 2.786903,
+      "routeLength": 5.11823,
       "switchCount": 1,
       "tapsCompressedToFirst0.15Seconds": {
-        "elapsedTimeSeconds": 2.787,
-        "failureReason": null,
-        "outcome": "completed",
-        "passed": true,
-        "reachedDestination": true,
-        "reachedPackage": true,
-        "tapCount": 1
+        "elapsedTimeSeconds": 0.0,
+        "failureReason": "tap_before_activation_window",
+        "outcome": "failed",
+        "passed": false,
+        "reachedDestination": false,
+        "reachedPackage": false,
+        "tapCount": 0
       }
     },
     {
       "allTapsAtZero": {
-        "elapsedTimeSeconds": 2.795,
-        "failureReason": null,
-        "outcome": "completed",
-        "passed": true,
-        "reachedDestination": true,
-        "reachedPackage": true,
+        "elapsedTimeSeconds": 0.0,
+        "failureReason": "tap_before_activation_window",
+        "outcome": "failed",
+        "passed": false,
+        "reachedDestination": false,
+        "reachedPackage": false,
         "tapCount": 0
       },
       "destinationBeforePackageUnderTestedState": false,
       "levelID": "level_003",
       "original": {
-        "elapsedTimeSeconds": 2.795,
+        "elapsedTimeSeconds": 8.15,
         "failureReason": null,
         "outcome": "completed",
         "passed": true,
         "reachedDestination": true,
         "reachedPackage": true,
-        "tapCount": 0
+        "tapCount": 2
       },
       "outgoingDegreeDistribution": {
-        "0": 1,
-        "1": 2
+        "0": 3,
+        "1": 3,
+        "2": 2
       },
       "repeatedSwitchTaps": {},
-      "requiredTapCount": 0,
-      "routeLength": 2.795487,
-      "switchCount": 0,
+      "requiredTapCount": 2,
+      "routeLength": 7.800199,
+      "switchCount": 2,
       "tapsCompressedToFirst0.15Seconds": {
-        "elapsedTimeSeconds": 2.795,
-        "failureReason": null,
-        "outcome": "completed",
-        "passed": true,
-        "reachedDestination": true,
-        "reachedPackage": true,
+        "elapsedTimeSeconds": 0.0,
+        "failureReason": "tap_before_activation_window",
+        "outcome": "failed",
+        "passed": false,
+        "reachedDestination": false,
+        "reachedPackage": false,
         "tapCount": 0
       }
     },
     {
       "allTapsAtZero": {
-        "elapsedTimeSeconds": 2.787,
-        "failureReason": null,
-        "outcome": "completed",
-        "passed": true,
-        "reachedDestination": true,
-        "reachedPackage": true,
-        "tapCount": 1
+        "elapsedTimeSeconds": 0.0,
+        "failureReason": "tap_before_activation_window",
+        "outcome": "failed",
+        "passed": false,
+        "reachedDestination": false,
+        "reachedPackage": false,
+        "tapCount": 0
       },
       "destinationBeforePackageUnderTestedState": false,
       "levelID": "level_004",
       "original": {
-        "elapsedTimeSeconds": 2.787,
+        "elapsedTimeSeconds": 3.95,
         "failureReason": null,
         "outcome": "completed",
         "passed": true,
@@ -152,71 +153,72 @@
       },
       "repeatedSwitchTaps": {},
       "requiredTapCount": 1,
-      "routeLength": 2.786903,
+      "routeLength": 3.752566,
       "switchCount": 1,
       "tapsCompressedToFirst0.15Seconds": {
-        "elapsedTimeSeconds": 2.787,
-        "failureReason": null,
-        "outcome": "completed",
-        "passed": true,
-        "reachedDestination": true,
-        "reachedPackage": true,
-        "tapCount": 1
+        "elapsedTimeSeconds": 0.0,
+        "failureReason": "tap_before_activation_window",
+        "outcome": "failed",
+        "passed": false,
+        "reachedDestination": false,
+        "reachedPackage": false,
+        "tapCount": 0
       }
     },
     {
       "allTapsAtZero": {
-        "elapsedTimeSeconds": 2.795,
-        "failureReason": null,
-        "outcome": "completed",
-        "passed": true,
-        "reachedDestination": true,
-        "reachedPackage": true,
-        "tapCount": 0
+        "elapsedTimeSeconds": 0.0,
+        "failureReason": "tap_noneligible_switch",
+        "outcome": "failed",
+        "passed": false,
+        "reachedDestination": false,
+        "reachedPackage": false,
+        "tapCount": 1
       },
       "destinationBeforePackageUnderTestedState": false,
       "levelID": "level_005",
       "original": {
-        "elapsedTimeSeconds": 2.795,
+        "elapsedTimeSeconds": 2.9,
         "failureReason": null,
         "outcome": "completed",
         "passed": true,
         "reachedDestination": true,
         "reachedPackage": true,
-        "tapCount": 0
+        "tapCount": 2
       },
       "outgoingDegreeDistribution": {
-        "0": 1,
-        "1": 2
+        "0": 3,
+        "1": 2,
+        "2": 2
       },
       "repeatedSwitchTaps": {},
-      "requiredTapCount": 0,
-      "routeLength": 2.795487,
-      "switchCount": 0,
+      "requiredTapCount": 2,
+      "routeLength": 2.745487,
+      "switchCount": 2,
       "tapsCompressedToFirst0.15Seconds": {
-        "elapsedTimeSeconds": 2.795,
-        "failureReason": null,
-        "outcome": "completed",
-        "passed": true,
-        "reachedDestination": true,
-        "reachedPackage": true,
-        "tapCount": 0
+        "elapsedTimeSeconds": 0.15,
+        "failureReason": "tap_noneligible_switch",
+        "outcome": "failed",
+        "passed": false,
+        "reachedDestination": false,
+        "reachedPackage": false,
+        "tapCount": 1
       }
     },
     {
       "allTapsAtZero": {
-        "elapsedTimeSeconds": 3.103,
-        "failureReason": null,
-        "outcome": "completed",
-        "passed": true,
-        "reachedDestination": true,
-        "reachedPackage": true,
-        "tapCount": 1
+        "elapsedTimeSeconds": 0.0,
+        "failureReason": "tap_before_activation_window",
+        "outcome": "failed",
+        "passed": false,
+        "reachedDestination": false,
+        "reachedPackage": false,
+        "tapCount": 0
       },
       "destinationBeforePackageUnderTestedState": false,
       "levelID": "level_006",
       "original": {
-        "elapsedTimeSeconds": 3.103,
+        "elapsedTimeSeconds": 4.3,
         "failureReason": null,
         "outcome": "completed",
         "passed": true,
@@ -231,32 +233,32 @@
       },
       "repeatedSwitchTaps": {},
       "requiredTapCount": 1,
-      "routeLength": 3.102566,
+      "routeLength": 4.06823,
       "switchCount": 1,
       "tapsCompressedToFirst0.15Seconds": {
-        "elapsedTimeSeconds": 3.103,
-        "failureReason": null,
-        "outcome": "completed",
-        "passed": true,
-        "reachedDestination": true,
-        "reachedPackage": true,
-        "tapCount": 1
+        "elapsedTimeSeconds": 0.0,
+        "failureReason": "tap_before_activation_window",
+        "outcome": "failed",
+        "passed": false,
+        "reachedDestination": false,
+        "reachedPackage": false,
+        "tapCount": 0
       }
     },
     {
       "allTapsAtZero": {
-        "elapsedTimeSeconds": 3.11,
-        "failureReason": null,
-        "outcome": "completed",
-        "passed": true,
-        "reachedDestination": true,
-        "reachedPackage": true,
-        "tapCount": 1
+        "elapsedTimeSeconds": 0.0,
+        "failureReason": "tap_before_activation_window",
+        "outcome": "failed",
+        "passed": false,
+        "reachedDestination": false,
+        "reachedPackage": false,
+        "tapCount": 0
       },
       "destinationBeforePackageUnderTestedState": false,
       "levelID": "level_007",
       "original": {
-        "elapsedTimeSeconds": 3.11,
+        "elapsedTimeSeconds": 4.35,
         "failureReason": null,
         "outcome": "completed",
         "passed": true,
@@ -271,32 +273,32 @@
       },
       "repeatedSwitchTaps": {},
       "requiredTapCount": 1,
-      "routeLength": 3.109646,
+      "routeLength": 4.07531,
       "switchCount": 1,
       "tapsCompressedToFirst0.15Seconds": {
-        "elapsedTimeSeconds": 3.11,
-        "failureReason": null,
-        "outcome": "completed",
-        "passed": true,
-        "reachedDestination": true,
-        "reachedPackage": true,
-        "tapCount": 1
+        "elapsedTimeSeconds": 0.0,
+        "failureReason": "tap_before_activation_window",
+        "outcome": "failed",
+        "passed": false,
+        "reachedDestination": false,
+        "reachedPackage": false,
+        "tapCount": 0
       }
     },
     {
       "allTapsAtZero": {
-        "elapsedTimeSeconds": 3.07,
-        "failureReason": null,
-        "outcome": "completed",
-        "passed": true,
-        "reachedDestination": true,
-        "reachedPackage": true,
-        "tapCount": 2
+        "elapsedTimeSeconds": 0.0,
+        "failureReason": "tap_noneligible_switch",
+        "outcome": "failed",
+        "passed": false,
+        "reachedDestination": false,
+        "reachedPackage": false,
+        "tapCount": 1
       },
       "destinationBeforePackageUnderTestedState": false,
       "levelID": "level_008",
       "original": {
-        "elapsedTimeSeconds": 3.07,
+        "elapsedTimeSeconds": 3.3,
         "failureReason": null,
         "outcome": "completed",
         "passed": true,
@@ -314,29 +316,29 @@
       "routeLength": 3.070376,
       "switchCount": 2,
       "tapsCompressedToFirst0.15Seconds": {
-        "elapsedTimeSeconds": 3.07,
-        "failureReason": null,
-        "outcome": "completed",
-        "passed": true,
-        "reachedDestination": true,
-        "reachedPackage": true,
-        "tapCount": 2
+        "elapsedTimeSeconds": 0.15,
+        "failureReason": "tap_noneligible_switch",
+        "outcome": "failed",
+        "passed": false,
+        "reachedDestination": false,
+        "reachedPackage": false,
+        "tapCount": 1
       }
     },
     {
       "allTapsAtZero": {
-        "elapsedTimeSeconds": 3.062,
-        "failureReason": null,
-        "outcome": "completed",
-        "passed": true,
-        "reachedDestination": true,
-        "reachedPackage": true,
-        "tapCount": 1
+        "elapsedTimeSeconds": 0.0,
+        "failureReason": "tap_before_activation_window",
+        "outcome": "failed",
+        "passed": false,
+        "reachedDestination": false,
+        "reachedPackage": false,
+        "tapCount": 0
       },
       "destinationBeforePackageUnderTestedState": false,
       "levelID": "level_009",
       "original": {
-        "elapsedTimeSeconds": 3.062,
+        "elapsedTimeSeconds": 4.3,
         "failureReason": null,
         "outcome": "completed",
         "passed": true,
@@ -351,32 +353,32 @@
       },
       "repeatedSwitchTaps": {},
       "requiredTapCount": 1,
-      "routeLength": 3.061792,
+      "routeLength": 4.027456,
       "switchCount": 1,
       "tapsCompressedToFirst0.15Seconds": {
-        "elapsedTimeSeconds": 3.062,
-        "failureReason": null,
-        "outcome": "completed",
-        "passed": true,
-        "reachedDestination": true,
-        "reachedPackage": true,
-        "tapCount": 1
+        "elapsedTimeSeconds": 0.0,
+        "failureReason": "tap_before_activation_window",
+        "outcome": "failed",
+        "passed": false,
+        "reachedDestination": false,
+        "reachedPackage": false,
+        "tapCount": 0
       }
     },
     {
       "allTapsAtZero": {
-        "elapsedTimeSeconds": 3.07,
-        "failureReason": null,
-        "outcome": "completed",
-        "passed": true,
-        "reachedDestination": true,
-        "reachedPackage": true,
-        "tapCount": 2
+        "elapsedTimeSeconds": 0.0,
+        "failureReason": "tap_noneligible_switch",
+        "outcome": "failed",
+        "passed": false,
+        "reachedDestination": false,
+        "reachedPackage": false,
+        "tapCount": 1
       },
       "destinationBeforePackageUnderTestedState": false,
       "levelID": "level_010",
       "original": {
-        "elapsedTimeSeconds": 3.07,
+        "elapsedTimeSeconds": 3.3,
         "failureReason": null,
         "outcome": "completed",
         "passed": true,
@@ -394,29 +396,29 @@
       "routeLength": 3.070376,
       "switchCount": 2,
       "tapsCompressedToFirst0.15Seconds": {
-        "elapsedTimeSeconds": 3.07,
-        "failureReason": null,
-        "outcome": "completed",
-        "passed": true,
-        "reachedDestination": true,
-        "reachedPackage": true,
-        "tapCount": 2
+        "elapsedTimeSeconds": 0.15,
+        "failureReason": "tap_noneligible_switch",
+        "outcome": "failed",
+        "passed": false,
+        "reachedDestination": false,
+        "reachedPackage": false,
+        "tapCount": 1
       }
     },
     {
       "allTapsAtZero": {
-        "elapsedTimeSeconds": 3.831,
-        "failureReason": null,
-        "outcome": "completed",
-        "passed": true,
-        "reachedDestination": true,
-        "reachedPackage": true,
-        "tapCount": 2
+        "elapsedTimeSeconds": 0.0,
+        "failureReason": "tap_noneligible_switch",
+        "outcome": "failed",
+        "passed": false,
+        "reachedDestination": false,
+        "reachedPackage": false,
+        "tapCount": 1
       },
       "destinationBeforePackageUnderTestedState": false,
       "levelID": "level_011",
       "original": {
-        "elapsedTimeSeconds": 3.831,
+        "elapsedTimeSeconds": 4.05,
         "failureReason": null,
         "outcome": "completed",
         "passed": true,
@@ -435,29 +437,29 @@
       "routeLength": 3.908363,
       "switchCount": 2,
       "tapsCompressedToFirst0.15Seconds": {
-        "elapsedTimeSeconds": 3.831,
-        "failureReason": null,
-        "outcome": "completed",
-        "passed": true,
-        "reachedDestination": true,
-        "reachedPackage": true,
-        "tapCount": 2
+        "elapsedTimeSeconds": 0.15,
+        "failureReason": "tap_noneligible_switch",
+        "outcome": "failed",
+        "passed": false,
+        "reachedDestination": false,
+        "reachedPackage": false,
+        "tapCount": 1
       }
     },
     {
       "allTapsAtZero": {
-        "elapsedTimeSeconds": 4.146,
-        "failureReason": null,
-        "outcome": "completed",
-        "passed": true,
-        "reachedDestination": true,
-        "reachedPackage": true,
-        "tapCount": 2
+        "elapsedTimeSeconds": 0.0,
+        "failureReason": "tap_noneligible_switch",
+        "outcome": "failed",
+        "passed": false,
+        "reachedDestination": false,
+        "reachedPackage": false,
+        "tapCount": 1
       },
       "destinationBeforePackageUnderTestedState": false,
       "levelID": "level_012",
       "original": {
-        "elapsedTimeSeconds": 4.146,
+        "elapsedTimeSeconds": 4.4,
         "failureReason": null,
         "outcome": "completed",
         "passed": true,
@@ -475,29 +477,29 @@
       "routeLength": 4.258363,
       "switchCount": 2,
       "tapsCompressedToFirst0.15Seconds": {
-        "elapsedTimeSeconds": 4.146,
-        "failureReason": null,
-        "outcome": "completed",
-        "passed": true,
-        "reachedDestination": true,
-        "reachedPackage": true,
-        "tapCount": 2
+        "elapsedTimeSeconds": 0.15,
+        "failureReason": "tap_noneligible_switch",
+        "outcome": "failed",
+        "passed": false,
+        "reachedDestination": false,
+        "reachedPackage": false,
+        "tapCount": 1
       }
     },
     {
       "allTapsAtZero": {
-        "elapsedTimeSeconds": 3.239,
-        "failureReason": null,
-        "outcome": "completed",
-        "passed": true,
-        "reachedDestination": true,
-        "reachedPackage": true,
-        "tapCount": 2
+        "elapsedTimeSeconds": 0.0,
+        "failureReason": "tap_noneligible_switch",
+        "outcome": "failed",
+        "passed": false,
+        "reachedDestination": false,
+        "reachedPackage": false,
+        "tapCount": 1
       },
       "destinationBeforePackageUnderTestedState": false,
       "levelID": "level_013",
       "original": {
-        "elapsedTimeSeconds": 3.239,
+        "elapsedTimeSeconds": 3.55,
         "failureReason": null,
         "outcome": "completed",
         "passed": true,
@@ -515,29 +517,29 @@
       "routeLength": 3.238827,
       "switchCount": 2,
       "tapsCompressedToFirst0.15Seconds": {
-        "elapsedTimeSeconds": 3.239,
-        "failureReason": null,
-        "outcome": "completed",
-        "passed": true,
-        "reachedDestination": true,
-        "reachedPackage": true,
-        "tapCount": 2
+        "elapsedTimeSeconds": 0.15,
+        "failureReason": "tap_noneligible_switch",
+        "outcome": "failed",
+        "passed": false,
+        "reachedDestination": false,
+        "reachedPackage": false,
+        "tapCount": 1
       }
     },
     {
       "allTapsAtZero": {
-        "elapsedTimeSeconds": 3.752,
-        "failureReason": null,
-        "outcome": "completed",
-        "passed": true,
-        "reachedDestination": true,
-        "reachedPackage": true,
-        "tapCount": 3
+        "elapsedTimeSeconds": 0.0,
+        "failureReason": "tap_noneligible_switch",
+        "outcome": "failed",
+        "passed": false,
+        "reachedDestination": false,
+        "reachedPackage": false,
+        "tapCount": 1
       },
       "destinationBeforePackageUnderTestedState": false,
       "levelID": "level_014",
       "original": {
-        "elapsedTimeSeconds": 3.752,
+        "elapsedTimeSeconds": 4.1,
         "failureReason": null,
         "outcome": "completed",
         "passed": true,
@@ -555,29 +557,29 @@
       "routeLength": 3.752345,
       "switchCount": 3,
       "tapsCompressedToFirst0.15Seconds": {
-        "elapsedTimeSeconds": 3.752,
-        "failureReason": null,
-        "outcome": "completed",
-        "passed": true,
-        "reachedDestination": true,
-        "reachedPackage": true,
-        "tapCount": 3
-      }
-    },
-    {
-      "allTapsAtZero": {
-        "elapsedTimeSeconds": 4.586,
-        "failureReason": "reached_destination_without_package",
+        "elapsedTimeSeconds": 0.075,
+        "failureReason": "tap_noneligible_switch",
         "outcome": "failed",
         "passed": false,
         "reachedDestination": false,
         "reachedPackage": false,
-        "tapCount": 3
+        "tapCount": 1
+      }
+    },
+    {
+      "allTapsAtZero": {
+        "elapsedTimeSeconds": 0.0,
+        "failureReason": "tap_before_activation_window",
+        "outcome": "failed",
+        "passed": false,
+        "reachedDestination": false,
+        "reachedPackage": false,
+        "tapCount": 0
       },
-      "destinationBeforePackageUnderTestedState": true,
+      "destinationBeforePackageUnderTestedState": false,
       "levelID": "level_015",
       "original": {
-        "elapsedTimeSeconds": 9.268,
+        "elapsedTimeSeconds": 9.45,
         "failureReason": null,
         "outcome": "completed",
         "passed": true,
@@ -597,29 +599,29 @@
       "routeLength": 9.267588,
       "switchCount": 2,
       "tapsCompressedToFirst0.15Seconds": {
-        "elapsedTimeSeconds": 4.586,
-        "failureReason": "reached_destination_without_package",
+        "elapsedTimeSeconds": 0.0,
+        "failureReason": "tap_before_activation_window",
         "outcome": "failed",
         "passed": false,
         "reachedDestination": false,
         "reachedPackage": false,
-        "tapCount": 3
+        "tapCount": 0
       }
     },
     {
       "allTapsAtZero": {
-        "elapsedTimeSeconds": 3.0,
-        "failureReason": null,
-        "outcome": "completed",
-        "passed": true,
-        "reachedDestination": true,
-        "reachedPackage": true,
-        "tapCount": 2
+        "elapsedTimeSeconds": 0.0,
+        "failureReason": "tap_noneligible_switch",
+        "outcome": "failed",
+        "passed": false,
+        "reachedDestination": false,
+        "reachedPackage": false,
+        "tapCount": 1
       },
       "destinationBeforePackageUnderTestedState": false,
       "levelID": "level_016",
       "original": {
-        "elapsedTimeSeconds": 3.0,
+        "elapsedTimeSeconds": 3.3,
         "failureReason": null,
         "outcome": "completed",
         "passed": true,
@@ -637,29 +639,29 @@
       "routeLength": 2.999557,
       "switchCount": 2,
       "tapsCompressedToFirst0.15Seconds": {
-        "elapsedTimeSeconds": 3.0,
-        "failureReason": null,
-        "outcome": "completed",
-        "passed": true,
-        "reachedDestination": true,
-        "reachedPackage": true,
-        "tapCount": 2
-      }
-    },
-    {
-      "allTapsAtZero": {
-        "elapsedTimeSeconds": 4.586,
-        "failureReason": "reached_destination_without_package",
+        "elapsedTimeSeconds": 0.15,
+        "failureReason": "tap_noneligible_switch",
         "outcome": "failed",
         "passed": false,
         "reachedDestination": false,
         "reachedPackage": false,
-        "tapCount": 3
+        "tapCount": 1
+      }
+    },
+    {
+      "allTapsAtZero": {
+        "elapsedTimeSeconds": 0.0,
+        "failureReason": "tap_before_activation_window",
+        "outcome": "failed",
+        "passed": false,
+        "reachedDestination": false,
+        "reachedPackage": false,
+        "tapCount": 0
       },
-      "destinationBeforePackageUnderTestedState": true,
+      "destinationBeforePackageUnderTestedState": false,
       "levelID": "level_017",
       "original": {
-        "elapsedTimeSeconds": 9.268,
+        "elapsedTimeSeconds": 9.45,
         "failureReason": null,
         "outcome": "completed",
         "passed": true,
@@ -679,29 +681,29 @@
       "routeLength": 9.267588,
       "switchCount": 2,
       "tapsCompressedToFirst0.15Seconds": {
-        "elapsedTimeSeconds": 4.586,
-        "failureReason": "reached_destination_without_package",
+        "elapsedTimeSeconds": 0.0,
+        "failureReason": "tap_before_activation_window",
         "outcome": "failed",
         "passed": false,
         "reachedDestination": false,
         "reachedPackage": false,
-        "tapCount": 3
+        "tapCount": 0
       }
     },
     {
       "allTapsAtZero": {
-        "elapsedTimeSeconds": 3.07,
-        "failureReason": null,
-        "outcome": "completed",
-        "passed": true,
-        "reachedDestination": true,
-        "reachedPackage": true,
-        "tapCount": 2
+        "elapsedTimeSeconds": 0.0,
+        "failureReason": "tap_noneligible_switch",
+        "outcome": "failed",
+        "passed": false,
+        "reachedDestination": false,
+        "reachedPackage": false,
+        "tapCount": 1
       },
       "destinationBeforePackageUnderTestedState": false,
       "levelID": "level_018",
       "original": {
-        "elapsedTimeSeconds": 3.07,
+        "elapsedTimeSeconds": 3.3,
         "failureReason": null,
         "outcome": "completed",
         "passed": true,
@@ -719,29 +721,29 @@
       "routeLength": 3.070376,
       "switchCount": 2,
       "tapsCompressedToFirst0.15Seconds": {
-        "elapsedTimeSeconds": 3.07,
-        "failureReason": null,
-        "outcome": "completed",
-        "passed": true,
-        "reachedDestination": true,
-        "reachedPackage": true,
-        "tapCount": 2
-      }
-    },
-    {
-      "allTapsAtZero": {
-        "elapsedTimeSeconds": 4.586,
-        "failureReason": "reached_destination_without_package",
+        "elapsedTimeSeconds": 0.15,
+        "failureReason": "tap_noneligible_switch",
         "outcome": "failed",
         "passed": false,
         "reachedDestination": false,
         "reachedPackage": false,
-        "tapCount": 3
+        "tapCount": 1
+      }
+    },
+    {
+      "allTapsAtZero": {
+        "elapsedTimeSeconds": 0.0,
+        "failureReason": "tap_before_activation_window",
+        "outcome": "failed",
+        "passed": false,
+        "reachedDestination": false,
+        "reachedPackage": false,
+        "tapCount": 0
       },
-      "destinationBeforePackageUnderTestedState": true,
+      "destinationBeforePackageUnderTestedState": false,
       "levelID": "level_019",
       "original": {
-        "elapsedTimeSeconds": 9.268,
+        "elapsedTimeSeconds": 9.45,
         "failureReason": null,
         "outcome": "completed",
         "passed": true,
@@ -761,29 +763,29 @@
       "routeLength": 9.267588,
       "switchCount": 2,
       "tapsCompressedToFirst0.15Seconds": {
-        "elapsedTimeSeconds": 4.586,
-        "failureReason": "reached_destination_without_package",
+        "elapsedTimeSeconds": 0.0,
+        "failureReason": "tap_before_activation_window",
         "outcome": "failed",
         "passed": false,
         "reachedDestination": false,
         "reachedPackage": false,
-        "tapCount": 3
+        "tapCount": 0
       }
     },
     {
       "allTapsAtZero": {
-        "elapsedTimeSeconds": 3.07,
-        "failureReason": null,
-        "outcome": "completed",
-        "passed": true,
-        "reachedDestination": true,
-        "reachedPackage": true,
-        "tapCount": 2
+        "elapsedTimeSeconds": 0.0,
+        "failureReason": "tap_noneligible_switch",
+        "outcome": "failed",
+        "passed": false,
+        "reachedDestination": false,
+        "reachedPackage": false,
+        "tapCount": 1
       },
       "destinationBeforePackageUnderTestedState": false,
       "levelID": "level_020",
       "original": {
-        "elapsedTimeSeconds": 3.07,
+        "elapsedTimeSeconds": 3.3,
         "failureReason": null,
         "outcome": "completed",
         "passed": true,
@@ -801,29 +803,29 @@
       "routeLength": 3.070376,
       "switchCount": 2,
       "tapsCompressedToFirst0.15Seconds": {
-        "elapsedTimeSeconds": 3.07,
-        "failureReason": null,
-        "outcome": "completed",
-        "passed": true,
-        "reachedDestination": true,
-        "reachedPackage": true,
-        "tapCount": 2
+        "elapsedTimeSeconds": 0.15,
+        "failureReason": "tap_noneligible_switch",
+        "outcome": "failed",
+        "passed": false,
+        "reachedDestination": false,
+        "reachedPackage": false,
+        "tapCount": 1
       }
     },
     {
       "allTapsAtZero": {
-        "elapsedTimeSeconds": 5.076,
-        "failureReason": null,
-        "outcome": "completed",
-        "passed": true,
-        "reachedDestination": true,
-        "reachedPackage": true,
-        "tapCount": 3
+        "elapsedTimeSeconds": 0.0,
+        "failureReason": "tap_noneligible_switch",
+        "outcome": "failed",
+        "passed": false,
+        "reachedDestination": false,
+        "reachedPackage": false,
+        "tapCount": 1
       },
       "destinationBeforePackageUnderTestedState": false,
       "levelID": "level_021",
       "original": {
-        "elapsedTimeSeconds": 5.076,
+        "elapsedTimeSeconds": 5.4,
         "failureReason": null,
         "outcome": "completed",
         "passed": true,
@@ -841,29 +843,29 @@
       "routeLength": 5.153208,
       "switchCount": 3,
       "tapsCompressedToFirst0.15Seconds": {
-        "elapsedTimeSeconds": 5.076,
-        "failureReason": null,
-        "outcome": "completed",
-        "passed": true,
-        "reachedDestination": true,
-        "reachedPackage": true,
-        "tapCount": 3
+        "elapsedTimeSeconds": 0.075,
+        "failureReason": "tap_noneligible_switch",
+        "outcome": "failed",
+        "passed": false,
+        "reachedDestination": false,
+        "reachedPackage": false,
+        "tapCount": 1
       }
     },
     {
       "allTapsAtZero": {
-        "elapsedTimeSeconds": 4.19,
-        "failureReason": null,
-        "outcome": "completed",
-        "passed": true,
-        "reachedDestination": true,
-        "reachedPackage": true,
-        "tapCount": 3
+        "elapsedTimeSeconds": 0.0,
+        "failureReason": "tap_noneligible_switch",
+        "outcome": "failed",
+        "passed": false,
+        "reachedDestination": false,
+        "reachedPackage": false,
+        "tapCount": 1
       },
       "destinationBeforePackageUnderTestedState": false,
       "levelID": "level_022",
       "original": {
-        "elapsedTimeSeconds": 4.19,
+        "elapsedTimeSeconds": 4.45,
         "failureReason": null,
         "outcome": "completed",
         "passed": true,
@@ -881,29 +883,29 @@
       "routeLength": 4.267588,
       "switchCount": 3,
       "tapsCompressedToFirst0.15Seconds": {
-        "elapsedTimeSeconds": 4.19,
-        "failureReason": null,
-        "outcome": "completed",
-        "passed": true,
-        "reachedDestination": true,
-        "reachedPackage": true,
-        "tapCount": 3
+        "elapsedTimeSeconds": 0.075,
+        "failureReason": "tap_noneligible_switch",
+        "outcome": "failed",
+        "passed": false,
+        "reachedDestination": false,
+        "reachedPackage": false,
+        "tapCount": 1
       }
     },
     {
       "allTapsAtZero": {
-        "elapsedTimeSeconds": 4.354,
-        "failureReason": null,
-        "outcome": "completed",
-        "passed": true,
-        "reachedDestination": true,
-        "reachedPackage": true,
-        "tapCount": 3
+        "elapsedTimeSeconds": 0.0,
+        "failureReason": "tap_noneligible_switch",
+        "outcome": "failed",
+        "passed": false,
+        "reachedDestination": false,
+        "reachedPackage": false,
+        "tapCount": 1
       },
       "destinationBeforePackageUnderTestedState": false,
       "levelID": "level_023",
       "original": {
-        "elapsedTimeSeconds": 4.354,
+        "elapsedTimeSeconds": 4.65,
         "failureReason": null,
         "outcome": "completed",
         "passed": true,
@@ -922,29 +924,29 @@
       "routeLength": 4.508363,
       "switchCount": 3,
       "tapsCompressedToFirst0.15Seconds": {
-        "elapsedTimeSeconds": 4.354,
-        "failureReason": null,
-        "outcome": "completed",
-        "passed": true,
-        "reachedDestination": true,
-        "reachedPackage": true,
-        "tapCount": 3
+        "elapsedTimeSeconds": 0.075,
+        "failureReason": "tap_noneligible_switch",
+        "outcome": "failed",
+        "passed": false,
+        "reachedDestination": false,
+        "reachedPackage": false,
+        "tapCount": 1
       }
     },
     {
       "allTapsAtZero": {
-        "elapsedTimeSeconds": 3.546,
-        "failureReason": null,
-        "outcome": "completed",
-        "passed": true,
-        "reachedDestination": true,
-        "reachedPackage": true,
-        "tapCount": 3
+        "elapsedTimeSeconds": 0.0,
+        "failureReason": "tap_noneligible_switch",
+        "outcome": "failed",
+        "passed": false,
+        "reachedDestination": false,
+        "reachedPackage": false,
+        "tapCount": 0
       },
       "destinationBeforePackageUnderTestedState": false,
       "levelID": "level_024",
       "original": {
-        "elapsedTimeSeconds": 3.546,
+        "elapsedTimeSeconds": 7.75,
         "failureReason": null,
         "outcome": "completed",
         "passed": true,
@@ -953,39 +955,41 @@
         "tapCount": 3
       },
       "outgoingDegreeDistribution": {
-        "0": 3,
-        "1": 3,
+        "0": 2,
+        "1": 4,
         "2": 1,
-        "3": 2
+        "3": 1
       },
-      "repeatedSwitchTaps": {},
+      "repeatedSwitchTaps": {
+        "ring_b": 2
+      },
       "requiredTapCount": 3,
-      "routeLength": 3.546128,
-      "switchCount": 3,
+      "routeLength": 7.249978,
+      "switchCount": 2,
       "tapsCompressedToFirst0.15Seconds": {
-        "elapsedTimeSeconds": 3.546,
-        "failureReason": null,
-        "outcome": "completed",
-        "passed": true,
-        "reachedDestination": true,
-        "reachedPackage": true,
-        "tapCount": 3
+        "elapsedTimeSeconds": 0.0,
+        "failureReason": "tap_noneligible_switch",
+        "outcome": "failed",
+        "passed": false,
+        "reachedDestination": false,
+        "reachedPackage": false,
+        "tapCount": 0
       }
     },
     {
       "allTapsAtZero": {
-        "elapsedTimeSeconds": 3.969,
-        "failureReason": null,
-        "outcome": "completed",
-        "passed": true,
-        "reachedDestination": true,
-        "reachedPackage": true,
-        "tapCount": 3
+        "elapsedTimeSeconds": 0.0,
+        "failureReason": "tap_noneligible_switch",
+        "outcome": "failed",
+        "passed": false,
+        "reachedDestination": false,
+        "reachedPackage": false,
+        "tapCount": 1
       },
       "destinationBeforePackageUnderTestedState": false,
       "levelID": "level_025",
       "original": {
-        "elapsedTimeSeconds": 3.969,
+        "elapsedTimeSeconds": 4.35,
         "failureReason": null,
         "outcome": "completed",
         "passed": true,
@@ -1003,29 +1007,29 @@
       "routeLength": 4.049557,
       "switchCount": 3,
       "tapsCompressedToFirst0.15Seconds": {
-        "elapsedTimeSeconds": 3.969,
-        "failureReason": null,
-        "outcome": "completed",
-        "passed": true,
-        "reachedDestination": true,
-        "reachedPackage": true,
-        "tapCount": 3
+        "elapsedTimeSeconds": 0.075,
+        "failureReason": "tap_noneligible_switch",
+        "outcome": "failed",
+        "passed": false,
+        "reachedDestination": false,
+        "reachedPackage": false,
+        "tapCount": 1
       }
     },
     {
       "allTapsAtZero": {
-        "elapsedTimeSeconds": 3.053,
-        "failureReason": null,
-        "outcome": "completed",
-        "passed": true,
-        "reachedDestination": true,
-        "reachedPackage": true,
-        "tapCount": 3
+        "elapsedTimeSeconds": 0.0,
+        "failureReason": "tap_noneligible_switch",
+        "outcome": "failed",
+        "passed": false,
+        "reachedDestination": false,
+        "reachedPackage": false,
+        "tapCount": 1
       },
       "destinationBeforePackageUnderTestedState": false,
       "levelID": "level_026",
       "original": {
-        "elapsedTimeSeconds": 3.053,
+        "elapsedTimeSeconds": 4.9,
         "failureReason": null,
         "outcome": "completed",
         "passed": true,
@@ -1040,32 +1044,32 @@
       },
       "repeatedSwitchTaps": {},
       "requiredTapCount": 3,
-      "routeLength": 3.053208,
+      "routeLength": 4.545907,
       "switchCount": 3,
       "tapsCompressedToFirst0.15Seconds": {
-        "elapsedTimeSeconds": 3.053,
-        "failureReason": null,
-        "outcome": "completed",
-        "passed": true,
-        "reachedDestination": true,
-        "reachedPackage": true,
-        "tapCount": 3
+        "elapsedTimeSeconds": 0.075,
+        "failureReason": "tap_noneligible_switch",
+        "outcome": "failed",
+        "passed": false,
+        "reachedDestination": false,
+        "reachedPackage": false,
+        "tapCount": 1
       }
     },
     {
       "allTapsAtZero": {
-        "elapsedTimeSeconds": 3.281,
-        "failureReason": null,
-        "outcome": "completed",
-        "passed": true,
-        "reachedDestination": true,
-        "reachedPackage": true,
-        "tapCount": 3
+        "elapsedTimeSeconds": 0.0,
+        "failureReason": "tap_noneligible_switch",
+        "outcome": "failed",
+        "passed": false,
+        "reachedDestination": false,
+        "reachedPackage": false,
+        "tapCount": 1
       },
       "destinationBeforePackageUnderTestedState": false,
       "levelID": "level_027",
       "original": {
-        "elapsedTimeSeconds": 3.281,
+        "elapsedTimeSeconds": 3.7,
         "failureReason": null,
         "outcome": "completed",
         "passed": true,
@@ -1083,13 +1087,13 @@
       "routeLength": 3.410288,
       "switchCount": 3,
       "tapsCompressedToFirst0.15Seconds": {
-        "elapsedTimeSeconds": 3.281,
-        "failureReason": null,
-        "outcome": "completed",
-        "passed": true,
-        "reachedDestination": true,
-        "reachedPackage": true,
-        "tapCount": 3
+        "elapsedTimeSeconds": 0.075,
+        "failureReason": "tap_noneligible_switch",
+        "outcome": "failed",
+        "passed": false,
+        "reachedDestination": false,
+        "reachedPackage": false,
+        "tapCount": 1
       }
     }
   ],

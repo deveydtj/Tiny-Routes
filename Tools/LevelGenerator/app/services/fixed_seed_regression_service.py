@@ -32,7 +32,6 @@ class FixedSeedSuite:
     start_level_number: int = 700
     recipe_pool_size: int = 2
     max_attempts_per_level: int = 120
-    generation_mode: str = "recipe_first"
     execution: str = "pipeline"
 
 
@@ -248,7 +247,6 @@ class FixedSeedRegressionService:
                 count=suite.count,
                 difficulty=suite.difficulty,
                 template_name=suite.template_name,
-                generation_mode=suite.generation_mode,
                 seed=suite.seed,
                 dry_run=True,
                 compare_against_existing=False,

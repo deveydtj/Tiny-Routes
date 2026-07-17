@@ -8,7 +8,6 @@ import pytest
 from app.generation_config import GenerationConfig
 from app.models.generation_quality import GenerationQualityScore
 from app.models.decision_profile import DecisionProfile
-from app.map_import.osm_seed_importer import MapSeedEdge, MapSeedGraph, MapSeedNode
 from app.random_source import RandomSource
 from app.recipes.recipe_family_registry import RecipeFamilyRegistry
 from app.repositories.generated_level_repository import GeneratedLevelRepository
@@ -17,7 +16,6 @@ from app.services.generated_level_validation_service import GeneratorValidationM
 from app.services.level_generation_service import LevelGenerationService
 from app.services.candidate_rejection_service import CandidateRejectionService
 from app.services.recipe_to_level_builder_service import RecipeToLevelBuilderService
-from app.templates.single_switch_template import SingleSwitchTemplate
 
 
 def _config(tmp_path, **kwargs) -> GenerationConfig:
@@ -39,6 +37,16 @@ def _config(tmp_path, **kwargs) -> GenerationConfig:
         report_path=tmp_path / "report.md",
         json_report_path=tmp_path / "report.json",
         **kwargs,
+    )
+
+
+def _single_switch_candidate(kwargs, seed: int):
+    return _recipe_generated_candidate(
+        "single_switch",
+        kwargs["level_id"],
+        kwargs["level_number"],
+        kwargs["preset"],
+        seed,
     )
 
 
@@ -252,35 +260,6 @@ def test_generation_service_retries_after_rejected_candidate(tmp_path) -> None:
     assert quality_calls["count"] == 1
 
 
-def test_generation_service_rejects_duplicate_batch_candidates(tmp_path) -> None:
-    service = LevelGenerationService()
-
-    class FixedSingleSwitchTemplate:
-        requires_swift_validation = False
-
-        def generate(self, level_id, level_number, preset, rng):
-            return SingleSwitchTemplate().generate(level_id, level_number, preset, RandomSource(2))
-
-    service.template_registry.choose = lambda *args, **kwargs: FixedSingleSwitchTemplate()
-
-    result = service.generate(
-        _config(
-            tmp_path,
-            difficulty="easy",
-            template_name="single_switch",
-            count=2,
-            max_attempts_per_level=2,
-            dry_run=True,
-            generation_mode="legacy_template",
-            candidate_pool_size=1,
-        )
-    )
-
-    assert result.passed is False
-    assert result.accepted[0].level_id == "level_012"
-    assert result.rejection_reason_counts["candidate_too_similar_to_batch"] == 2
-
-
 def test_generation_service_requires_swift_tests_for_hard_mixed_production_writes(tmp_path) -> None:
     result = LevelGenerationService().generate(
         _config(
@@ -318,7 +297,6 @@ def test_generation_service_warns_when_production_uses_pool_size_one(tmp_path) -
             template_name="single_switch",
             dry_run=False,
             compare_against_existing=False,
-            generation_mode="legacy_template",
             candidate_pool_size=1,
             sync_xcode_project=False,
         )
@@ -654,20 +632,14 @@ def test_explicit_recipe_family_selection_ignores_batch_diversity_context(tmp_pa
 def test_generation_service_rejects_candidates_similar_to_existing_levels(tmp_path) -> None:
     preset_result = LevelGenerationService()
     preset = preset_result.difficulty_service.get_preset("easy")
-    existing = SingleSwitchTemplate().generate("level_001", 1, preset, RandomSource(2))
+    existing = _recipe_generated_candidate("single_switch", "level_001", 1, preset, seed=2)
     writer = GeneratedLevelRepository()
     writer.write_level(existing.level_document, tmp_path / "levels" / "level_001.json")
     writer.write_solution(existing.solution, tmp_path / "solutions" / "level_001.solution.json")
 
     service = LevelGenerationService()
 
-    class FixedSingleSwitchTemplate:
-        requires_swift_validation = False
-
-        def generate(self, level_id, level_number, preset, rng):
-            return SingleSwitchTemplate().generate(level_id, level_number, preset, RandomSource(2))
-
-    service.template_registry.choose = lambda *args, **kwargs: FixedSingleSwitchTemplate()
+    service._generate_raw_candidates = lambda **kwargs: [_single_switch_candidate(kwargs, 2)]
 
     result = service.generate(
         _config(
@@ -676,7 +648,6 @@ def test_generation_service_rejects_candidates_similar_to_existing_levels(tmp_pa
             template_name="single_switch",
             max_attempts_per_level=1,
             dry_run=True,
-            generation_mode="legacy_template",
             candidate_pool_size=1,
         )
     )
@@ -689,13 +660,13 @@ def test_generation_service_rejects_candidates_similar_to_existing_levels(tmp_pa
 def test_generation_service_can_skip_existing_similarity_check(tmp_path) -> None:
     preset_result = LevelGenerationService()
     preset = preset_result.difficulty_service.get_preset("easy")
-    existing = SingleSwitchTemplate().generate("level_001", 1, preset, RandomSource(2))
+    existing = _recipe_generated_candidate("single_switch", "level_001", 1, preset, seed=2)
     writer = GeneratedLevelRepository()
     writer.write_level(existing.level_document, tmp_path / "levels" / "level_001.json")
     writer.write_solution(existing.solution, tmp_path / "solutions" / "level_001.solution.json")
 
     service = LevelGenerationService()
-    service.template_registry.choose = lambda *args, **kwargs: SingleSwitchTemplate()
+    service._generate_raw_candidates = lambda **kwargs: [_single_switch_candidate(kwargs, 2)]
 
     result = service.generate(
         _config(
@@ -705,7 +676,6 @@ def test_generation_service_can_skip_existing_similarity_check(tmp_path) -> None
             seed=2,
             dry_run=True,
             compare_against_existing=False,
-            generation_mode="legacy_template",
             candidate_pool_size=1,
         )
     )
@@ -718,16 +688,12 @@ def test_generation_service_selects_highest_quality_candidate_from_pool(tmp_path
     service = LevelGenerationService()
     seeds = iter([2, 3])
 
-    class SequenceTemplate:
-        requires_swift_validation = False
-
-        def generate(self, level_id, level_number, preset, rng):
-            return SingleSwitchTemplate().generate(level_id, level_number, preset, RandomSource(next(seeds)))
-
     class FakeQualityService:
         def score(self, candidate, preset, comparison_signatures):
             total = 0.9 if candidate.seed == 3 else 0.1
             return GenerationQualityScore(
+                total_score=total * 100,
+                category_scores={},
                 total=total,
                 readability=total,
                 uniqueness=1,
@@ -735,7 +701,7 @@ def test_generation_service_selects_highest_quality_candidate_from_pool(tmp_path
                 route_interest=total,
             )
 
-    service.template_registry.choose = lambda *args, **kwargs: SequenceTemplate()
+    service._generate_raw_candidates = lambda **kwargs: [_single_switch_candidate(kwargs, next(seeds))]
     service.quality_service = FakeQualityService()
 
     result = service.generate(
@@ -745,7 +711,6 @@ def test_generation_service_selects_highest_quality_candidate_from_pool(tmp_path
             template_name="single_switch",
             dry_run=True,
             compare_against_existing=False,
-            generation_mode="legacy_template",
             candidate_pool_size=2,
         )
     )
@@ -755,9 +720,9 @@ def test_generation_service_selects_highest_quality_candidate_from_pool(tmp_path
     assert result.accepted[0].quality_score.total == 0.9
     selection = result.candidate_selection_summaries[0]
     assert selection["acceptedCandidate"]["seed"] == 3
-    assert selection["scoreStats"] == {"minimum": 0.1, "average": 0.5, "maximum": 0.9}
+    assert selection["scoreStats"] == {"minimum": 10.0, "average": 50.0, "maximum": 90.0}
     assert selection["topRejectedNearMisses"][0]["seed"] == 2
-    assert "highest deterministic quality score" in selection["selectionRationale"]
+    assert "portfolio objective" in selection["selectionRationale"]
 
 
 def test_generation_service_can_select_diverse_candidate_with_slightly_lower_base_quality(tmp_path) -> None:
@@ -809,7 +774,6 @@ def test_generation_service_can_select_diverse_candidate_with_slightly_lower_bas
             dry_run=True,
             compare_against_existing=False,
             candidate_pool_size=2,
-            generation_mode="recipe_first",
         )
     )
 
@@ -825,16 +789,12 @@ def test_generation_service_rejects_low_switch_clarity_after_scoring(tmp_path) -
     service = LevelGenerationService()
     seeds = iter([2, 3])
 
-    class SequenceTemplate:
-        requires_swift_validation = False
-
-        def generate(self, level_id, level_number, preset, rng):
-            return SingleSwitchTemplate().generate(level_id, level_number, preset, RandomSource(next(seeds)))
-
     class FakeQualityService:
         def score(self, candidate, preset, comparison_signatures):
             if candidate.seed == 2:
                 return GenerationQualityScore(
+                    total_score=95,
+                    category_scores={},
                     total=0.95,
                     readability=1,
                     uniqueness=1,
@@ -845,6 +805,8 @@ def test_generation_service_rejects_low_switch_clarity_after_scoring(tmp_path) -
                     topology_diversity_score=1,
                 )
             return GenerationQualityScore(
+                total_score=80,
+                category_scores={},
                 total=0.8,
                 readability=1,
                 uniqueness=1,
@@ -853,7 +815,7 @@ def test_generation_service_rejects_low_switch_clarity_after_scoring(tmp_path) -
                 switch_clarity=1,
             )
 
-    service.template_registry.choose = lambda *args, **kwargs: SequenceTemplate()
+    service._generate_raw_candidates = lambda **kwargs: [_single_switch_candidate(kwargs, next(seeds))]
     service.quality_service = FakeQualityService()
 
     result = service.generate(
@@ -863,7 +825,6 @@ def test_generation_service_rejects_low_switch_clarity_after_scoring(tmp_path) -
             template_name="single_switch",
             dry_run=True,
             compare_against_existing=False,
-            generation_mode="legacy_template",
             candidate_pool_size=1,
         )
     )
@@ -872,7 +833,8 @@ def test_generation_service_rejects_low_switch_clarity_after_scoring(tmp_path) -
     assert result.accepted[0].seed == 3
     assert result.rejection_reason_counts["quality_switch_clarity_below_threshold"] == 1
     near_miss = result.candidate_selection_summaries[0]["topRejectedNearMisses"][0]
-    assert near_miss["status"] == "quality_switch_clarity_below_threshold"
+    assert near_miss["status"] == "rejected"
+    assert near_miss["rejectionCode"] == "quality_switch_clarity_below_threshold"
 
 
 def test_generation_service_pool_selection_is_deterministic_for_same_seed(tmp_path) -> None:
@@ -919,7 +881,6 @@ def test_recipe_first_mixed_orientation_includes_vertical_candidates(tmp_path) -
         template_name="single_switch",
         dry_run=True,
         compare_against_existing=False,
-        generation_mode="recipe_first",
         layout_orientation_preference="mixed",
         vertical_route_probability=1.0,
     )
@@ -949,7 +910,6 @@ def test_recipe_first_auto_orientation_can_include_vertical_by_probability(tmp_p
         template_name="package_gate",
         dry_run=True,
         compare_against_existing=False,
-        generation_mode="recipe_first",
         layout_orientation_preference="auto",
         vertical_route_probability=1.0,
         prefer_vertical_for_long_routes=False,
@@ -987,7 +947,6 @@ def test_recipe_first_long_routes_can_prefer_vertical_when_configured(tmp_path) 
         template_name="multi_switch_chain",
         dry_run=True,
         compare_against_existing=False,
-        generation_mode="recipe_first",
         layout_orientation_preference="auto",
         vertical_route_probability=0.0,
         prefer_vertical_for_long_routes=True,
@@ -1052,7 +1011,6 @@ def test_generation_service_recipe_first_mode_generates_recipe_metadata(tmp_path
             difficulty="easy",
             template_name="single_switch",
             dry_run=True,
-            generation_mode="recipe_first",
         )
     )
 
@@ -1098,7 +1056,6 @@ def test_generation_service_recipe_first_supports_current_recipe_families(tmp_pa
                 start_level_number=90 + index,
                 difficulty=difficulty,
                 template_name=template_name,
-                generation_mode="recipe_first",
                 recipe_pool_size=2,
                 layouts_per_recipe=2,
                 road_shapes_per_layout=2,
@@ -1109,71 +1066,6 @@ def test_generation_service_recipe_first_supports_current_recipe_families(tmp_pa
 
         assert result.passed is True, (difficulty, template_name, result.rejection_reason_counts, result.messages)
         assert result.accepted[0].recipe_family == template_name
-
-
-def test_generation_service_hybrid_mode_keeps_legacy_templates_available(tmp_path) -> None:
-    service = LevelGenerationService()
-    config = _config(
-        tmp_path,
-        difficulty="easy",
-        template_name="single_switch",
-        generation_mode="hybrid",
-        recipe_pool_size=1,
-        layouts_per_recipe=1,
-        road_shapes_per_layout=1,
-        dry_run=True,
-        compare_against_existing=False,
-    )
-    preset = service.difficulty_service.get_preset("easy")
-    candidates = service._generate_raw_candidates(
-        config=config,
-        level_id="level_012",
-        level_number=12,
-        preset=preset,
-        rng=RandomSource(12),
-        plan_template_weights={},
-    )
-
-    assert len(candidates) == 2
-    assert {candidate.recipe_family for candidate in candidates} == {"single_switch", None}
-
-
-def test_generation_service_applies_map_seed_path(tmp_path) -> None:
-    map_seed_path = tmp_path / "seed.json"
-    seed_graph = MapSeedGraph(
-        nodes=[
-            MapSeedNode("a", 0, 0),
-            MapSeedNode("b", 1, 0),
-            MapSeedNode("c", 2, 1),
-            MapSeedNode("d", 3, 1),
-            MapSeedNode("e", 4, 0),
-            MapSeedNode("f", 5, 0),
-        ],
-        edges=[
-            MapSeedEdge("e1", "a", "b"),
-            MapSeedEdge("e2", "b", "c"),
-            MapSeedEdge("e3", "c", "d"),
-            MapSeedEdge("e4", "d", "e"),
-            MapSeedEdge("e5", "e", "f"),
-        ],
-        attribution="test map",
-    )
-    map_seed_path.write_text(json.dumps(seed_graph.to_dict()) + "\n", encoding="utf-8")
-
-    result = LevelGenerationService().generate(
-        _config(
-            tmp_path,
-            difficulty="easy",
-            template_name="single_switch",
-            dry_run=True,
-            compare_against_existing=False,
-            generation_mode="legacy_template",
-            map_seed_path=map_seed_path,
-        )
-    )
-
-    assert result.passed is True
-    assert any("Map attribution" in note for note in result.accepted[0].generation_notes)
 
 
 def _recipe_generated_candidate(family_name: str, level_id: str, level_number: int, preset, seed: int):

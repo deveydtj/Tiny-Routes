@@ -12,11 +12,20 @@ from pathlib import Path
 
 
 REPO_ROOT = Path(__file__).resolve().parent
+CORE_ROOT = REPO_ROOT / "Tools" / "TinyRoutesCore"
 TOOL_ROOTS = {
     "LevelGenerator": REPO_ROOT / "Tools" / "LevelGenerator",
     "LevelEditor": REPO_ROOT / "Tools" / "LevelEditor",
 }
 _active_tool: str | None = None
+
+
+# Keep the root-level collection command self-contained. Tool-local runs use
+# TinyRoutesCore's package configuration, while a fresh checkout may not have
+# the shared package installed in editable mode yet.
+core_root = str(CORE_ROOT)
+if core_root not in sys.path:
+    sys.path.insert(0, core_root)
 
 
 def _tool_for_path(path: Path) -> str | None:

@@ -5,7 +5,6 @@ from pathlib import Path
 
 from ..generation_config import (
     DEFAULT_CANDIDATE_POOL_SIZE,
-    DEFAULT_GENERATION_MODE,
     DEFAULT_LAYOUTS_PER_RECIPE,
     DEFAULT_LAYOUT_ORIENTATION_PREFERENCE,
     DEFAULT_LAYOUT_SIZE_PROFILE,
@@ -24,7 +23,6 @@ class GuiGenerationState:
     count: str = "1"
     difficulty: str = "tutorial"
     template_name: str = "mixed"
-    generation_mode: str = DEFAULT_GENERATION_MODE
     recipe_pool_size: str = str(DEFAULT_RECIPE_POOL_SIZE)
     layouts_per_recipe: str = str(DEFAULT_LAYOUTS_PER_RECIPE)
     road_shapes_per_layout: str = str(DEFAULT_ROAD_SHAPES_PER_LAYOUT)
@@ -123,7 +121,6 @@ def to_generation_config(state: GuiGenerationState) -> GenerationConfig:
         count=count,
         difficulty=state.difficulty,
         template_name=state.template_name,
-        generation_mode=state.generation_mode,
         recipe_pool_size=recipe_pool_size,
         layouts_per_recipe=layouts_per_recipe,
         road_shapes_per_layout=road_shapes_per_layout,
@@ -155,7 +152,6 @@ def build_command_preview(state: GuiGenerationState) -> str:
     _append_pair(args, "--count", state.count)
     _append_pair(args, "--difficulty", state.difficulty)
     _append_pair(args, "--template", state.template_name)
-    _append_pair(args, "--generation-mode", state.generation_mode)
     _append_pair(args, "--recipe-pool-size", state.recipe_pool_size)
     _append_pair(args, "--layouts-per-recipe", state.layouts_per_recipe)
     _append_pair(args, "--road-shapes-per-layout", state.road_shapes_per_layout)
@@ -234,8 +230,6 @@ def _build_command_arguments(
         state.difficulty,
         "--template",
         state.template_name,
-        "--generation-mode",
-        state.generation_mode,
         "--recipe-pool-size",
         str(recipe_pool_size),
         "--layouts-per-recipe",

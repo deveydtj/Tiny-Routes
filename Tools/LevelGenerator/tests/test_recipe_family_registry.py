@@ -19,14 +19,12 @@ def test_recipe_variant_spec_normalizes_names() -> None:
         family_name=" Single_Switch ",
         difficulty_names=(" Easy ",),
         topology_rules=_simple_topology_rules(),
-        legacy_template_name=" Single_Switch ",
         mechanic_tags=(" Single_Switch ",),
         topology_class=" Single_Branch ",
     )
 
     assert variant.name == "default"
     assert variant.family_name == "single_switch"
-    assert variant.legacy_template_name == "single_switch"
     assert variant.supports_difficulty("easy")
     assert variant.mechanic_tags == ("single_switch",)
     assert variant.primary_mechanic_tag == "single_switch"
@@ -89,7 +87,6 @@ def test_recipe_family_registry_exposes_current_template_families() -> None:
         "controlled_repeated_taps",
         "late_route_reversal",
     }.issubset(family_names)
-    assert registry.get_family("single_switch").legacy_template_name == "single_switch"
 
 
 def test_recipe_family_registry_filters_by_difficulty() -> None:

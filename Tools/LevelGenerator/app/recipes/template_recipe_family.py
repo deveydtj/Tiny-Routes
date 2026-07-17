@@ -43,7 +43,6 @@ class TemplateRecipeFamilyDefinition:
 class TemplateRecipeFamily(RecipeFamily):
     def __init__(self, definition: TemplateRecipeFamilyDefinition) -> None:
         self.name = definition.name
-        self.legacy_template_name = definition.name
         self.requires_swift_validation = definition.requires_swift_validation
         self._variants = definition.variants
         self._build_spec = definition.build_spec
@@ -101,7 +100,6 @@ def template_recipe_family_definitions() -> list[TemplateRecipeFamilyDefinition]
                     name=f"straight_delivery_{count}_intermediate",
                     family_name=StraightDeliveryTemplate.name,
                     difficulty_names=("tutorial",),
-                    legacy_template_name=StraightDeliveryTemplate.name,
                     topology_rules=_TOPOLOGY_RULES["straight_delivery"],
                     mechanic_tags=("straight_delivery",) if count < 2 else ("straight_delivery", "long_route"),
                     primary_mechanic_tag="straight_delivery",
@@ -223,7 +221,6 @@ def _variants_from_template(
             family_name=spec.template_name,
             difficulty_names=spec.difficulty_names,
             topology_rules=topology_rules,
-            legacy_template_name=spec.template_name,
             requires_swift_validation=spec.requires_swift_validation,
             notes=spec.notes,
             mechanic_tags=mechanic_tags,

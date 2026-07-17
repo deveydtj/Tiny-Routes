@@ -259,7 +259,6 @@ def _run_dry_batch(tmp_path, **overrides):
             count=overrides.pop("count"),
             difficulty=overrides.pop("difficulty"),
             template_name="mixed",
-            generation_mode="recipe_first",
             seed=overrides.pop("seed"),
             dry_run=True,
             compare_against_existing=False,

@@ -11,7 +11,6 @@ class RecipeVariantSpec:
     family_name: str
     difficulty_names: tuple[str, ...]
     topology_rules: RecipeTopologyRules
-    legacy_template_name: str | None = None
     requires_swift_validation: bool = False
     notes: tuple[str, ...] = field(default_factory=tuple)
     intended_mechanic: str = ""
@@ -43,8 +42,6 @@ class RecipeVariantSpec:
             "difficulty_names",
             tuple(name.strip().lower() for name in self.difficulty_names),
         )
-        if self.legacy_template_name is not None:
-            object.__setattr__(self, "legacy_template_name", self.legacy_template_name.strip().lower())
         object.__setattr__(
             self,
             "mechanic_tags",

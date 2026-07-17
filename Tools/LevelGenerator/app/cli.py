@@ -6,7 +6,6 @@ from pathlib import Path
 
 from .generation_config import (
     DEFAULT_CANDIDATE_POOL_SIZE,
-    DEFAULT_GENERATION_MODE,
     DEFAULT_LAYOUTS_PER_RECIPE,
     DEFAULT_LAYOUT_ORIENTATION_PREFERENCE,
     DEFAULT_LAYOUT_SIZE_PROFILE,
@@ -27,7 +26,7 @@ from .paths import (
 from .services.difficulty_service import DifficultyService
 from .services.level_generation_service import LevelGenerationService
 from .services.level_validation_runner_service import ExistingLevelValidationConfig, LevelValidationRunnerService
-from .templates.template_registry import TemplateRegistry
+from .recipes.recipe_family_registry import RecipeFamilyRegistry
 
 
 def main_generate(argv: list[str] | None = None) -> int:
@@ -79,18 +78,12 @@ def main_validate(argv: list[str] | None = None) -> int:
 
 def build_generate_parser() -> argparse.ArgumentParser:
     difficulty_names = [*DifficultyService().valid_names, "auto"]
-    template_names = TemplateRegistry().valid_names
+    template_names = RecipeFamilyRegistry().valid_family_names()
     parser = argparse.ArgumentParser(description="Generate Tiny Routes level and solution JSON files.")
     parser.add_argument("--start", type=int, required=True, help="First level number to generate, e.g. 12 for level_012.")
     parser.add_argument("--count", type=int, required=True, help="Number of accepted levels to generate.")
     parser.add_argument("--difficulty", required=True, choices=difficulty_names, help="Difficulty preset to use.")
     parser.add_argument("--template", default="mixed", choices=template_names, help="Template to use. Default: mixed.")
-    parser.add_argument(
-        "--generation-mode",
-        default=DEFAULT_GENERATION_MODE,
-        choices=("legacy-template", "legacy_template", "recipe-first", "recipe_first", "hybrid"),
-        help="Generation architecture mode. Default: recipe-first. legacy-template and hybrid remain available.",
-    )
     parser.add_argument(
         "--recipe-pool-size",
         type=int,
@@ -252,7 +245,6 @@ def _config_from_args(args: argparse.Namespace, argv: list[str] | None) -> Gener
         count=args.count,
         difficulty=args.difficulty,
         template_name=args.template,
-        generation_mode=args.generation_mode,
         recipe_pool_size=args.recipe_pool_size,
         layouts_per_recipe=args.layouts_per_recipe,
         road_shapes_per_layout=args.road_shapes_per_layout,
@@ -286,7 +278,7 @@ def _print_generation_summary(config: GenerationConfig) -> None:
     print(
         f"Generating {config.count} {config.difficulty} level(s) starting at "
         f"{config.start_level_number:03d} with template={config.template_name} "
-        f"generation_mode={config.generation_mode} layout_size={config.layout_size_profile} "
+        f"layout_size={config.layout_size_profile} "
         f"seed={config.seed} mode={mode} profile={_generation_profile_name(config)}."
     )
 

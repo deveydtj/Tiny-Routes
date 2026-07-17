@@ -11,9 +11,7 @@ from ..random_source import RandomSource
 
 class RecipeFamily(ABC):
     name: str
-    legacy_template_name: str | None = None
     requires_swift_validation: bool = False
-    legacy_compatible: bool = True
 
     @property
     @abstractmethod

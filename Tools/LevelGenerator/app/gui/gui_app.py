@@ -10,7 +10,6 @@ from tkinter import messagebox, scrolledtext, ttk
 
 from ..generation_config import (
     DEFAULT_CANDIDATE_POOL_SIZE,
-    DEFAULT_GENERATION_MODE,
     DEFAULT_LAYOUTS_PER_RECIPE,
     DEFAULT_LAYOUT_ORIENTATION_PREFERENCE,
     DEFAULT_LAYOUT_SIZE_PROFILE,
@@ -22,7 +21,7 @@ from ..generation_config import (
     LAYOUT_SIZE_PROFILES,
 )
 from ..services.difficulty_service import DifficultyService
-from ..templates.template_registry import TemplateRegistry
+from ..recipes.recipe_family_registry import RecipeFamilyRegistry
 from .gui_controller import GuiController, format_generation_result, format_validation_result
 from .gui_paths import (
     open_path,
@@ -61,8 +60,7 @@ class LevelGeneratorGui:
         self.root = root
         self.controller = GuiController()
         self.difficulty_names = [*DifficultyService().valid_names, "auto"]
-        self.template_names = TemplateRegistry().valid_names
-        self.generation_modes = ["legacy_template", "recipe_first", "hybrid"]
+        self.template_names = RecipeFamilyRegistry().valid_family_names()
         self.layout_orientation_preferences = list(LAYOUT_ORIENTATION_PREFERENCES)
         self.layout_size_profiles = list(LAYOUT_SIZE_PROFILES)
         self.latest_result = None
@@ -82,7 +80,6 @@ class LevelGeneratorGui:
         self.count_var = tk.StringVar(value="1")
         self.difficulty_var = tk.StringVar(value="tutorial")
         self.template_var = tk.StringVar(value="mixed")
-        self.generation_mode_var = tk.StringVar(value=DEFAULT_GENERATION_MODE)
         self.recipe_pool_var = tk.StringVar(value=str(DEFAULT_RECIPE_POOL_SIZE))
         self.layouts_per_recipe_var = tk.StringVar(value=str(DEFAULT_LAYOUTS_PER_RECIPE))
         self.road_shapes_per_layout_var = tk.StringVar(value=str(DEFAULT_ROAD_SHAPES_PER_LAYOUT))
@@ -189,31 +186,30 @@ class LevelGeneratorGui:
         add_labeled_entry(frame, "Count", self.count_var, 1)
         add_labeled_combobox(frame, "Difficulty", self.difficulty_var, self.difficulty_names, 2)
         add_labeled_combobox(frame, "Template", self.template_var, self.template_names, 3)
-        add_labeled_combobox(frame, "Generation mode", self.generation_mode_var, self.generation_modes, 4)
-        add_labeled_entry(frame, "Recipe pool size", self.recipe_pool_var, 5)
-        add_labeled_entry(frame, "Layouts per recipe", self.layouts_per_recipe_var, 6)
-        add_labeled_entry(frame, "Road shapes per layout", self.road_shapes_per_layout_var, 7)
+        add_labeled_entry(frame, "Recipe pool size", self.recipe_pool_var, 4)
+        add_labeled_entry(frame, "Layouts per recipe", self.layouts_per_recipe_var, 5)
+        add_labeled_entry(frame, "Road shapes per layout", self.road_shapes_per_layout_var, 6)
         add_labeled_combobox(
             frame,
             "Layout orientation",
             self.layout_orientation_var,
             self.layout_orientation_preferences,
-            8,
+            7,
         )
         add_labeled_combobox(
             frame,
             "Layout size profile",
             self.layout_size_profile_var,
             self.layout_size_profiles,
-            9,
+            8,
         )
-        add_labeled_entry(frame, "Vertical route probability", self.vertical_route_probability_var, 10)
+        add_labeled_entry(frame, "Vertical route probability", self.vertical_route_probability_var, 9)
         ttk.Checkbutton(
             frame,
             text="Prefer vertical for long routes",
             variable=self.prefer_vertical_for_long_routes_var,
-        ).grid(row=11, column=0, columnspan=2, sticky="w", pady=3)
-        add_labeled_entry(frame, "Seed", self.seed_var, 12)
+        ).grid(row=10, column=0, columnspan=2, sticky="w", pady=3)
+        add_labeled_entry(frame, "Seed", self.seed_var, 11)
         add_labeled_entry(frame, "Max attempts per level", self.max_attempts_var, 12)
         add_labeled_entry(frame, "Candidate pool size", self.candidate_pool_var, 13)
 
@@ -362,7 +358,6 @@ class LevelGeneratorGui:
             self.count_var,
             self.difficulty_var,
             self.template_var,
-            self.generation_mode_var,
             self.recipe_pool_var,
             self.layouts_per_recipe_var,
             self.road_shapes_per_layout_var,
@@ -398,7 +393,6 @@ class LevelGeneratorGui:
             count=self.count_var.get(),
             difficulty=self.difficulty_var.get(),
             template_name=self.template_var.get(),
-            generation_mode=self.generation_mode_var.get(),
             recipe_pool_size=self.recipe_pool_var.get(),
             layouts_per_recipe=self.layouts_per_recipe_var.get(),
             road_shapes_per_layout=self.road_shapes_per_layout_var.get(),
@@ -707,7 +701,6 @@ class LevelGeneratorGui:
         self.count_var.set("1")
         self.difficulty_var.set("tutorial")
         self.template_var.set("mixed")
-        self.generation_mode_var.set(DEFAULT_GENERATION_MODE)
         self.recipe_pool_var.set(str(DEFAULT_RECIPE_POOL_SIZE))
         self.layouts_per_recipe_var.set(str(DEFAULT_LAYOUTS_PER_RECIPE))
         self.road_shapes_per_layout_var.set(str(DEFAULT_ROAD_SHAPES_PER_LAYOUT))

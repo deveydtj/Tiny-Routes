@@ -19,7 +19,6 @@ from ..repositories.existing_level_repository import ExistingLevelRepository
 from ..repositories.generated_level_repository import GeneratedLevelRepository
 from ..repositories.generation_report_repository import GenerationReportRepository
 from ..recipes.recipe_family_registry import RecipeFamilyRegistry
-from ..templates.template_registry import TemplateRegistry
 from .topology_solver_service import TopologySolverService
 from .candidate_rejection_service import CandidateRejectionService
 from .candidate_signature_service import CandidateSignatureService
@@ -75,7 +74,6 @@ class LevelGenerationService:
     def __init__(self) -> None:
         self.difficulty_service = DifficultyService()
         self.difficulty_curve_service = DifficultyCurveService()
-        self.template_registry = TemplateRegistry()
         self.recipe_family_registry = RecipeFamilyRegistry()
         self.validation_service = GeneratedLevelValidationService()
         self.generated_level_repository = GeneratedLevelRepository()
@@ -98,46 +96,9 @@ class LevelGenerationService:
 
         return BatchOrchestrationService(self).generate(config)
 
-    def _validate_generation_mode(self, config: GenerationConfig) -> None:
-        if config.generation_mode == "legacy_template":
-            return
-        if config.template_name not in self.recipe_family_registry.valid_family_names():
-            raise ValueError(f"Unknown recipe family: {config.template_name}")
-
     def _validate_template(self, template_name: str, config: GenerationConfig) -> None:
-        if not config.uses_legacy_templates:
-            return
-        if template_name not in self.template_registry.valid_names:
-            raise ValueError(f"Unknown template: {template_name}")
-        if (
-            template_name == "mixed"
-            and config.difficulty == "hard"
-            and not config.dry_run
-            and not config.run_swift_tests
-        ):
-            preset = self.difficulty_service.get_preset("hard")
-            eligible_without_swift = self.template_registry.supported_templates(
-                preset,
-                include_swift_required=False,
-            )
-            eligible_with_swift = self.template_registry.supported_templates(
-                preset,
-                include_swift_required=True,
-            )
-            if len(eligible_without_swift) <= 1 and len(eligible_with_swift) > len(eligible_without_swift):
-                without_swift_names = ", ".join(sorted(template.name for template in eligible_without_swift)) or "none"
-                swift_only_names = ", ".join(
-                    sorted(
-                        template.name
-                        for template in eligible_with_swift
-                        if template.name not in {candidate.name for candidate in eligible_without_swift}
-                    )
-                )
-                raise ValueError(
-                    "Hard mixed production generation is too narrow without Swift validation. "
-                    f"Eligible without `--swift-tests`: {without_swift_names}. "
-                    f"Enable `--swift-tests` to unlock: {swift_only_names}."
-                )
+        if template_name not in self.recipe_family_registry.valid_family_names():
+            raise ValueError(f"Unknown recipe family: {template_name}")
         if config.difficulty != "auto":
             preset = self.difficulty_service.get_preset(config.difficulty)
         elif template_name != "mixed":
@@ -146,7 +107,12 @@ class LevelGenerationService:
             return
         if template_name != "mixed":
             include_swift_required = config.run_swift_tests or config.dry_run
-            self.template_registry.choose(template_name, preset, RandomSource(config.base_seed), include_swift_required)
+            self.recipe_family_registry.choose_family(
+                template_name,
+                preset,
+                RandomSource(config.base_seed),
+                include_swift_required,
+            )
 
     def _validate_swift_validation_policy(self, config: GenerationConfig, _planned_difficulties: list[str]) -> None:
         if config.dry_run or config.run_swift_tests:
@@ -174,20 +140,7 @@ class LevelGenerationService:
         include_swift_required = config.run_swift_tests or config.dry_run
         if diversity_decisions is None:
             diversity_decisions = []
-        if config.generation_mode == "legacy_template":
-            return [
-                self._generate_legacy_candidate(
-                    config=config,
-                    level_id=level_id,
-                    level_number=level_number,
-                    preset=preset,
-                    rng=rng,
-                    include_swift_required=include_swift_required,
-                    plan_template_weights=plan_template_weights,
-                )
-            ]
-
-        candidates = self._generate_recipe_candidates(
+        return self._generate_recipe_candidates(
             config=config,
             level_id=level_id,
             level_number=level_number,
@@ -198,40 +151,6 @@ class LevelGenerationService:
             accepted_candidates=accepted_candidates,
             diversity_decisions=diversity_decisions,
         )
-        if config.generation_mode == "hybrid":
-            legacy_seed = rng.child_seed("legacy", len(candidates))
-            candidates.append(
-                self._generate_legacy_candidate(
-                    config=config,
-                    level_id=level_id,
-                    level_number=level_number,
-                    preset=preset,
-                    rng=RandomSource(legacy_seed),
-                    include_swift_required=include_swift_required,
-                    plan_template_weights=plan_template_weights,
-                )
-            )
-        return candidates
-
-    def _generate_legacy_candidate(
-        self,
-        *,
-        config: GenerationConfig,
-        level_id: str,
-        level_number: int,
-        preset,
-        rng: RandomSource,
-        include_swift_required: bool,
-        plan_template_weights: dict[str, int],
-    ):
-        template = self.template_registry.choose(
-            config.template_name,
-            preset,
-            rng,
-            include_swift_required=include_swift_required,
-            weights_override=plan_template_weights if config.difficulty == "auto" else None,
-        )
-        return template.generate(level_id, level_number, preset, rng)
 
     def _generate_recipe_candidates(
         self,

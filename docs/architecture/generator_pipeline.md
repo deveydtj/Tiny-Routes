@@ -19,9 +19,9 @@ The effective pipeline is:
 1. **Plan and preflight.** `DifficultyCurveService` assigns level IDs,
    difficulties, and pacing weights. Configuration, template/family support,
    Swift-validation policy, and output collisions are checked before work.
-2. **Seed topology.** A recipe family composes motifs into a `GraphRecipe` (or
-   the compatibility path invokes a legacy template). Recipe metadata is
-   descriptive; graph validation and measured results are authoritative.
+2. **Seed topology.** A recipe family composes motifs into a `GraphRecipe`.
+   Recipe metadata is descriptive; graph validation and measured results are
+   authoritative. There is no legacy-template or hybrid execution branch.
 3. **Solve topology.** `TopologySolverService` proves a package-before-destination
    route and records required path/decisions. `DecisionProfileService` measures
    dependencies, revisits, package phases, alternate outcomes, and independent
@@ -108,4 +108,3 @@ formatting.
 Run `python scripts/run_all_checks.py` for the local Python, fixed-seed, smoke,
 and production gates; add `--swift-tests` for the release-equivalent runtime
 gate.
-

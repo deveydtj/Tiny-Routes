@@ -44,7 +44,7 @@ def test_default_gui_state_converts_to_generation_config() -> None:
     assert config.count == 1
     assert config.difficulty == "tutorial"
     assert config.template_name == "mixed"
-    assert config.generation_mode == "recipe_first"
+    assert not hasattr(config, "generation_mode")
     assert config.recipe_pool_size == 4
     assert config.layouts_per_recipe == 2
     assert config.road_shapes_per_layout == 2
