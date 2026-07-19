@@ -62,23 +62,39 @@ def test_every_registered_family_variant_emits_status_and_reasons_deterministica
         assert bool(item.reasons) is (item.status == "failed")
 
 
-def test_known_return_loop_aliases_are_quarantined_from_all_production_selection() -> None:
+def test_known_legacy_mismatches_are_quarantined_from_all_production_selection() -> None:
     registry = RecipeFamilyRegistry()
     difficulty = DifficultyService()
+    expected_by_difficulty = {
+        "medium": {
+            "return_loop_intro",
+        },
+        "hard": {
+            "branch_then_rejoin_with_wrong_order",
+            "return_loop_with_gate",
+            "ring_route_gate",
+            "multi_switch_revisit",
+        },
+        "expert": {
+            "late_route_reversal",
+            "multi_four_way_route",
+        },
+    }
     expected = {
-        "return_loop_intro",
-        "return_loop_with_gate",
-        "multi_switch_revisit",
+        family_name
+        for family_names in expected_by_difficulty.values()
+        for family_name in family_names
     }
 
     assert set(registry.quarantined_family_names()) == expected
-    assert "return_loop_intro" not in {
-        family.name for family in registry.supported_families(difficulty.get_preset("medium"))
-    }
-    hard_supported = {
-        family.name for family in registry.supported_families(difficulty.get_preset("hard"))
-    }
-    assert {"return_loop_with_gate", "multi_switch_revisit"}.isdisjoint(hard_supported)
+    for difficulty_name, family_names in expected_by_difficulty.items():
+        supported = {
+            family.name
+            for family in registry.supported_families(
+                difficulty.get_preset(difficulty_name)
+            )
+        }
+        assert family_names.isdisjoint(supported)
 
     for family_name in sorted(expected):
         preset = difficulty.get_preset(
@@ -88,22 +104,67 @@ def test_known_return_loop_aliases_are_quarantined_from_all_production_selection
             registry.choose_family(family_name, preset, RandomSource(44))
 
 
+def test_mislabeled_ring_and_rejoin_families_remain_auditable_fixtures() -> None:
+    expected_reasons = {
+        "ring_route_gate": {
+            "claimed_cycle_not_detected",
+            "claimed_ring_not_detected",
+        },
+        "branch_then_rejoin_with_wrong_order": {
+            "claimed_rejoin_not_detected",
+        },
+    }
+
+    for family_name, expected in expected_reasons.items():
+        for variant_index in (0, 1):
+            evidence = RecipeTopologyContractService().analyze(
+                _recipe(family_name, variant_index)
+            )
+
+            assert evidence.status == "failed"
+            assert expected.issubset(evidence.reasons)
+            assert expected == {
+                reason
+                for reason in evidence.reasons
+                if reason.startswith("claimed_")
+            }
+            assert registry_reason(family_name) in expected
+
+
+def test_advanced_builder_aliases_remain_available_only_as_audit_fixtures() -> None:
+    aliases = {
+        "multi_four_way_route": (
+            "four_way_package_gate",
+            "behavior_isomorphic_alias:four_way_package_gate",
+        ),
+        "late_route_reversal": (
+            "controlled_repeated_taps",
+            "behavior_isomorphic_alias:controlled_repeated_taps",
+        ),
+    }
+
+    for family_name, (canonical_name, expected_reason) in aliases.items():
+        alias = _recipe(family_name)
+        canonical = _recipe(canonical_name)
+        assert _behavior_graph(alias) == _behavior_graph(canonical)
+        assert registry_reason(family_name) == expected_reason
+
+
+def _behavior_graph(recipe) -> tuple[object, ...]:
+    return (
+        recipe.required_path,
+        tuple((edge.from_node_id, edge.to_node_id) for edge in recipe.edges),
+        recipe.tap_node_ids,
+    )
+
+
 def test_repeated_builder_aliases_remain_available_only_as_audit_fixtures() -> None:
     controlled = _recipe("controlled_repeated_taps")
-    controlled_graph = (
-        controlled.required_path,
-        tuple((edge.from_node_id, edge.to_node_id) for edge in controlled.edges),
-        controlled.tap_node_ids,
-    )
+    controlled_graph = _behavior_graph(controlled)
 
     for family_name in ("return_loop_with_gate", "multi_switch_revisit"):
         alias = _recipe(family_name)
-        alias_graph = (
-            alias.required_path,
-            tuple((edge.from_node_id, edge.to_node_id) for edge in alias.edges),
-            alias.tap_node_ids,
-        )
-        assert alias_graph == controlled_graph
+        assert _behavior_graph(alias) == controlled_graph
         assert registry_reason(family_name) == "behavior_isomorphic_alias:controlled_repeated_taps"
 
 

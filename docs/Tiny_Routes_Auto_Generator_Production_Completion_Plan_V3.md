@@ -2719,8 +2719,8 @@ dependency and explicit branch, rejoin, and failure ports.
 
 - [x] **AG-043:** Add recipe topology contract test helper.
 - [x] **AG-044:** Quarantine or repair `return_loop_intro` and repeated-builder aliases.
-- [ ] **AG-045:** Quarantine or repair `ring_route_gate`, `multi_four_way_route`, and `late_route_reversal`.
-- [ ] **AG-046:** Quarantine or implement a true rejoin in `branch_then_rejoin_with_wrong_order`.
+- [x] **AG-045:** Quarantine or repair `ring_route_gate`, `multi_four_way_route`, and `late_route_reversal`.
+- [x] **AG-046:** Quarantine or implement a true rejoin in `branch_then_rejoin_with_wrong_order`.
 - [ ] **AG-047:** Add role-aware graph isomorphism service.
 - [ ] **AG-048:** Add behavior isomorphism service.
 - [ ] **AG-049:** Remove/fix `_swap_dead_end_order()` and reject behavior-isomorphic alternates.
@@ -2737,6 +2737,18 @@ emits a deterministic pass/fail status with stable reason codes.
 `multi_switch_revisit` aliases of `controlled_repeated_taps`. They remain
 available for audit and regression fixtures but are excluded from mixed and
 explicit production recipe selection.
+
+**2026-07-19 AG-045 completion record:** Quarantined `ring_route_gate` because
+its generated graph has no ring or cycle, plus `multi_four_way_route` and
+`late_route_reversal` because they are behavior-identical builder aliases of
+`four_way_package_gate` and `controlled_repeated_taps`. All remain directly
+available as deterministic audit fixtures but cannot be selected for production.
+
+**2026-07-19 AG-046 completion record:** Quarantined
+`branch_then_rejoin_with_wrong_order` because its sole viable branch is the
+required route and its alternate terminates in a dead end instead of rejoining.
+Topology-contract coverage preserves the fixture and proves the claimed rejoin
+remains absent while production selection rejects the family.
 
 ## Composition
 

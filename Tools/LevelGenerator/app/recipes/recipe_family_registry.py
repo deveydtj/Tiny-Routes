@@ -9,8 +9,12 @@ from .template_recipe_family import TemplateRecipeFamily, template_recipe_family
 
 class RecipeFamilyRegistry(MechanicRecipeGenerator):
     QUARANTINED_FAMILY_REASONS: dict[str, str] = {
+        "branch_then_rejoin_with_wrong_order": "claimed_rejoin_not_detected",
+        "late_route_reversal": "behavior_isomorphic_alias:controlled_repeated_taps",
+        "multi_four_way_route": "behavior_isomorphic_alias:four_way_package_gate",
         "return_loop_intro": "claimed_cycle_not_detected",
         "return_loop_with_gate": "behavior_isomorphic_alias:controlled_repeated_taps",
+        "ring_route_gate": "claimed_ring_not_detected",
         "multi_switch_revisit": "behavior_isomorphic_alias:controlled_repeated_taps",
     }
 
