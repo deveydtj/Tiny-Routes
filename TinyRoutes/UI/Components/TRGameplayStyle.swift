@@ -39,6 +39,9 @@ enum TRGameplayStyle {
             max(playerOuterSize - (playerWhiteRimWidth * 2), .zero)
         }
         static let packageMarkerSize: CGFloat = 74
+        static let currentObjectiveMarkerSize: CGFloat = 64
+        static let currentObjectiveIconSize: CGFloat = 34
+        static let currentObjectiveOrderBadgeSize: CGFloat = 22
         static let packageBadgeSize: CGFloat = 38
         static let packageBadgeCornerRadius: CGFloat = 10
         static let packageBadgeIconSize: CGFloat = 24

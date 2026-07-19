@@ -29,6 +29,13 @@ final class GameplayCosmeticLoadoutTests: XCTestCase {
             packageNodeID: "start",
             destinationNodeID: "finish",
             hasCollectedPackage: true,
+            activeObjective: RouteObjective(
+                id: "finish",
+                nodeID: "finish",
+                kind: .destination,
+                sequenceIndex: 1,
+                revealPolicy: "whenActive"
+            ),
             cosmeticLoadout: try customLoadout(),
             isShowingPreview: false,
             pressedSwitchNodeID: nil,
@@ -41,6 +48,44 @@ final class GameplayCosmeticLoadoutTests: XCTestCase {
         )
 
         XCTAssertNotNil(board)
+    }
+
+    func testCurrentObjectiveMarkerUsesAuthoredTitleAndSequenceForAccessibility() {
+        let objective = RouteObjective(
+            id: "inspect",
+            nodeID: "checkpoint",
+            kind: .checkpoint,
+            sequenceIndex: 1,
+            revealPolicy: "whenActive",
+            displayMetadata: ["title": .string("Inspect the bridge")]
+        )
+
+        let presentation = TRCurrentObjectiveMarkerPresentation(objective: objective)
+
+        XCTAssertEqual(presentation.visual, .systemImage("checkmark.seal.fill"))
+        XCTAssertEqual(presentation.title, "Inspect the bridge")
+        XCTAssertEqual(presentation.orderText, "2")
+        XCTAssertEqual(presentation.accessibilityLabel, "Current objective 2: Inspect the bridge")
+    }
+
+    func testCurrentObjectiveMarkerProvidesDistinctVisualsForEveryObjectiveKind() {
+        let kinds: [(RouteObjectiveKind, TRCurrentObjectiveMarkerPresentation.Visual)] = [
+            (.pickup, .package),
+            (.checkpoint, .systemImage("checkmark.seal.fill")),
+            (.delivery, .systemImage("shippingbox.fill")),
+            (.destination, .destination)
+        ]
+
+        for (index, pair) in kinds.enumerated() {
+            let presentation = TRCurrentObjectiveMarkerPresentation(objective: RouteObjective(
+                id: "objective_\(index)",
+                nodeID: "node_\(index)",
+                kind: pair.0,
+                sequenceIndex: index,
+                revealPolicy: "whenActive"
+            ))
+            XCTAssertEqual(presentation.visual, pair.1)
+        }
     }
 
     private func customLoadout() throws -> GameplayCosmeticLoadout {

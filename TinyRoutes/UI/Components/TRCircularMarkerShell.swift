@@ -82,6 +82,124 @@ struct TRPackageMarkerView: View {
     }
 }
 
+struct TRCurrentObjectiveMarkerPresentation: Equatable {
+    enum Visual: Equatable {
+        case package
+        case systemImage(String)
+        case destination
+    }
+
+    let visual: Visual
+    let title: String
+    let orderText: String
+    let accessibilityLabel: String
+
+    init(objective: RouteObjective) {
+        let authoredTitle: String?
+        if case let .string(value)? = objective.displayMetadata?["title"],
+           !value.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            authoredTitle = value
+        } else {
+            authoredTitle = nil
+        }
+
+        let fallbackTitle: String
+        switch objective.kind {
+        case .pickup:
+            visual = .package
+            fallbackTitle = "Pick up package"
+        case .checkpoint:
+            visual = .systemImage("checkmark.seal.fill")
+            fallbackTitle = "Reach checkpoint"
+        case .delivery:
+            visual = .systemImage("shippingbox.fill")
+            fallbackTitle = "Make delivery"
+        case .destination:
+            visual = .destination
+            fallbackTitle = "Reach destination"
+        }
+
+        title = authoredTitle ?? fallbackTitle
+        orderText = String(objective.sequenceIndex + 1)
+        accessibilityLabel = "Current objective \(objective.sequenceIndex + 1): \(title)"
+    }
+}
+
+struct TRCurrentObjectiveMarkerView: View {
+    let objective: RouteObjective
+    let destinationOption: ShopCosmeticOption
+    let size: CGFloat
+    let iconSize: CGFloat
+
+    init(
+        objective: RouteObjective,
+        destinationOption: ShopCosmeticOption,
+        size: CGFloat = TRGameplayStyle.Metrics.currentObjectiveMarkerSize,
+        iconSize: CGFloat = TRGameplayStyle.Metrics.currentObjectiveIconSize
+    ) {
+        self.objective = objective
+        self.destinationOption = destinationOption
+        self.size = size
+        self.iconSize = iconSize
+    }
+
+    var body: some View {
+        let presentation = TRCurrentObjectiveMarkerPresentation(objective: objective)
+
+        ZStack(alignment: .topTrailing) {
+            markerContent(for: presentation)
+
+            Circle()
+                .stroke(TRGameplayStyle.Colors.primaryBlue, lineWidth: 4)
+                .frame(width: size + 8, height: size + 8)
+                .shadow(color: TRGameplayStyle.Colors.primaryBlue.opacity(0.42), radius: 8)
+
+            Text(presentation.orderText)
+                .font(.system(size: 12, weight: .black, design: .rounded))
+                .foregroundStyle(.white)
+                .frame(
+                    width: TRGameplayStyle.Metrics.currentObjectiveOrderBadgeSize,
+                    height: TRGameplayStyle.Metrics.currentObjectiveOrderBadgeSize
+                )
+                .background(TRGameplayStyle.Colors.primaryBlue, in: Circle())
+                .overlay {
+                    Circle().stroke(.white, lineWidth: 2)
+                }
+                .offset(x: 5, y: -5)
+        }
+        .frame(width: size + 12, height: size + 12)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(presentation.accessibilityLabel)
+    }
+
+    @ViewBuilder
+    private func markerContent(
+        for presentation: TRCurrentObjectiveMarkerPresentation
+    ) -> some View {
+        switch presentation.visual {
+        case .package:
+            TRCircularMarkerShell(size: size) {
+                SpriteImage(name: "shipping_box")
+                    .scaledToFit()
+                    .frame(width: iconSize, height: iconSize)
+            }
+        case let .systemImage(name):
+            TRCircularMarkerShell(size: size) {
+                Image(systemName: name)
+                    .font(.system(size: iconSize * 0.72, weight: .black, design: .rounded))
+                    .foregroundStyle(TRGameplayStyle.Colors.primaryBlue)
+                    .symbolRenderingMode(.hierarchical)
+            }
+        case .destination:
+            TRDestinationMarkerView(
+                option: destinationOption,
+                shellSize: size,
+                iconSize: iconSize
+            )
+        }
+    }
+}
+
 #Preview("Gameplay Marker Shells") {
     HStack(spacing: 18) {
         TRPackageMarkerView()

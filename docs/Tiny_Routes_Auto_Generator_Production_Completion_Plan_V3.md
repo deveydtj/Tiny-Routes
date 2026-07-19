@@ -2605,8 +2605,8 @@ The following sequence is intentionally small enough for junior contributors. Ea
 - [x] **AG-012:** Add objective progression to Swift runtime.
 - [x] **AG-013:** Add objective-based road filtering to Python.
 - [x] **AG-014:** Add objective-based road filtering to Swift.
-- [ ] **AG-015:** Add road-state and objective parity fixture.
-- [ ] **AG-016:** Add current-objective gameplay marker.
+- [x] **AG-015:** Add road-state and objective parity fixture.
+- [x] **AG-016:** Add current-objective gameplay marker.
 - [ ] **AG-017:** Add locked-road rendering.
 - [ ] **AG-018:** Add editor objective list controls.
 - [ ] **AG-019:** Add editor road-condition controls.

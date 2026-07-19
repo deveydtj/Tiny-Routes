@@ -1,0 +1,25 @@
+{
+  "fixtureID": "objective_road_state_progression",
+  "description": "Swift and Python complete the ordered objectives and traverse the same objective-gated roads in the same order.",
+  "expectedOutcome": "completed",
+  "failureReason": null,
+  "acceptedTapCount": 0,
+  "reachedPackage": true,
+  "reachedDestination": true,
+  "safetyStepLimit": null,
+  "completedObjectiveIDs": ["collect", "inspect", "finish"],
+  "objectiveCompletionOrder": ["collect", "inspect", "finish"],
+  "edgeUsageCounts": {
+    "e_start_hub": 1,
+    "e_hub_pickup": 1,
+    "e_pickup_hub": 1,
+    "e_hub_checkpoint": 1,
+    "e_checkpoint_hub": 1,
+    "e_hub_destination": 1
+  },
+  "finalActiveEdgeIDs": {
+    "start": "e_start_hub",
+    "pickup": "e_pickup_hub",
+    "checkpoint": "e_checkpoint_hub"
+  }
+}

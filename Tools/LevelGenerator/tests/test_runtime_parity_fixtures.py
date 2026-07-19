@@ -14,6 +14,7 @@ def test_shared_runtime_parity_fixture_set_is_complete_and_valid_json() -> None:
         "four_way_three_rotations", "revisit_different_state", "package_before_destination",
         "destination_before_package", "dead_end_failure", "time_limit_failure", "cycle_safety_limit",
         "package_gate_normalization", "package_gate_revisit_rotation",
+        "objective_road_state_progression",
     }
     assert {item["id"] for item in manifest["fixtures"]} == expected_ids
     for item in manifest["fixtures"]:

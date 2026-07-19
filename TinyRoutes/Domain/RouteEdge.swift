@@ -46,6 +46,35 @@ struct EdgeAvailabilityRule: Codable, Equatable {
         self.usageLimit = usageLimit
     }
 
+    private enum CodingKeys: String, CodingKey {
+        case requiredCompletedObjectiveIDs
+        case forbiddenCompletedObjectiveIDs
+        case minimumObjectiveIndex
+        case maximumObjectiveIndex
+        case usageLimit
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        requiredCompletedObjectiveIDs = try container.decodeIfPresent(
+            [String].self,
+            forKey: .requiredCompletedObjectiveIDs
+        ) ?? []
+        forbiddenCompletedObjectiveIDs = try container.decodeIfPresent(
+            [String].self,
+            forKey: .forbiddenCompletedObjectiveIDs
+        ) ?? []
+        minimumObjectiveIndex = try container.decodeIfPresent(
+            Int.self,
+            forKey: .minimumObjectiveIndex
+        )
+        maximumObjectiveIndex = try container.decodeIfPresent(
+            Int.self,
+            forKey: .maximumObjectiveIndex
+        )
+        usageLimit = try container.decodeIfPresent(Int.self, forKey: .usageLimit)
+    }
+
     static func adapting(
         _ legacyAvailability: RoadAvailability,
         packageObjectiveID: String = RouteObjective.legacyPickupID

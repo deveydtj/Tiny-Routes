@@ -46,7 +46,7 @@ def test_eligibility_boundary(offset, expected_reason):
     "four_way_three_rotations", "revisit_different_state", "package_before_destination",
     "destination_before_package", "dead_end_failure", "time_limit_failure",
     "cycle_safety_limit", "package_gate_normalization",
-    "package_gate_revisit_rotation",
+    "package_gate_revisit_rotation", "objective_road_state_progression",
 ])
 def test_shared_runtime_parity_fixture(fixture_id):
     level, actions, expected = _load(fixture_id)
@@ -63,6 +63,16 @@ def test_shared_runtime_parity_fixture(fixture_id):
     assert result.safety_step_limit == expected["safetyStepLimit"]
     if "finalActiveEdgeIDs" in expected:
         assert result.state.switch_active_edge_ids == expected["finalActiveEdgeIDs"]
+    if "completedObjectiveIDs" in expected:
+        assert result.state.completed_objective_ids == set(expected["completedObjectiveIDs"])
+    if "objectiveCompletionOrder" in expected:
+        assert [
+            event.objective_id
+            for event in result.events
+            if event.kind == "objective_completed"
+        ] == expected["objectiveCompletionOrder"]
+    if "edgeUsageCounts" in expected:
+        assert result.state.runtime_graph.edge_usage_counts == expected["edgeUsageCounts"]
 
 
 def test_simulation_is_deterministic():

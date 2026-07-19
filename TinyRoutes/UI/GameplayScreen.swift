@@ -18,6 +18,7 @@ struct GameplayScreen: View {
     @State private var packageNodeID: String = ""
     @State private var destinationNodeID: String = ""
     @State private var hasCollectedPackage: Bool = false
+    @State private var activeObjective: RouteObjective?
     @State private var tapCount: Int = 0
     @State private var lastRotatedSwitchNodeID: String?
     @State private var switchPressEventToken: Int = 0
@@ -83,6 +84,7 @@ struct GameplayScreen: View {
                         packageNodeID: packageNodeID,
                         destinationNodeID: destinationNodeID,
                         hasCollectedPackage: hasCollectedPackage,
+                        activeObjective: activeObjective,
                         cosmeticLoadout: cosmeticLoadout,
                         isShowingPreview: isShowingLevelPreview,
                         pressedSwitchNodeID: lastRotatedSwitchNodeID,
@@ -147,6 +149,7 @@ struct GameplayScreen: View {
         deliveryDot = nil
         packageNodeID = ""
         destinationNodeID = ""
+        activeObjective = nil
 
         do {
             let levelData = try levelRepository.loadLevel(id: levelID)
@@ -158,6 +161,7 @@ struct GameplayScreen: View {
             packageNodeID = levelData.packageNodeID
             destinationNodeID = levelData.destinationNodeID
             hasCollectedPackage = routeEngine.deliveryDot?.hasCollectedPackage ?? false
+            activeObjective = routeEngine.activeObjective
             timeRemaining = routeEngine.timeRemaining
             tapCount = routeEngine.tapCount
             tutorialMessage = levelData.tutorialMessage?.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -189,6 +193,7 @@ struct GameplayScreen: View {
         packageNodeID = routeEngine.packageNodeID ?? ""
         destinationNodeID = routeEngine.destinationNodeID ?? ""
         hasCollectedPackage = routeEngine.deliveryDot?.hasCollectedPackage ?? false
+        activeObjective = routeEngine.activeObjective
         timeRemaining = routeEngine.timeRemaining
         tapCount = routeEngine.tapCount
         isShowingLevelPreview = shouldPreviewLevel(runtimeGraph: routeEngine.runtimeGraph)
@@ -212,6 +217,7 @@ struct GameplayScreen: View {
             runtimeGraph = routeEngine.runtimeGraph
             deliveryDot = routeEngine.deliveryDot
             hasCollectedPackage = routeEngine.deliveryDot?.hasCollectedPackage ?? false
+            activeObjective = routeEngine.activeObjective
             timeRemaining = routeEngine.timeRemaining
             return
         }
@@ -220,6 +226,7 @@ struct GameplayScreen: View {
         runtimeGraph = routeEngine.runtimeGraph
         deliveryDot = routeEngine.deliveryDot
         hasCollectedPackage = routeEngine.deliveryDot?.hasCollectedPackage ?? false
+        activeObjective = routeEngine.activeObjective
         timeRemaining = routeEngine.timeRemaining
         dispatchLevelOutcomeIfNeeded()
     }
@@ -286,6 +293,7 @@ struct GameplayScreen: View {
     private func resetViewState() {
         previewDismissScheduler.cancel()
         hasCollectedPackage = false
+        activeObjective = nil
         lastFrameDate = nil
         tapCount = 0
         lastRotatedSwitchNodeID = nil
@@ -357,6 +365,7 @@ struct RouteBoardView: View {
     let packageNodeID: String
     let destinationNodeID: String
     let hasCollectedPackage: Bool
+    let activeObjective: RouteObjective?
     let cosmeticLoadout: GameplayCosmeticLoadout
     let isShowingPreview: Bool
     let pressedSwitchNodeID: String?
@@ -503,7 +512,12 @@ struct RouteBoardView: View {
 
     @ViewBuilder
     private func nodeView(for node: RuntimeRouteNode, layout: BoardLayout) -> some View {
-        if node.id == packageNodeID, !hasCollectedPackage {
+        if let activeObjective, node.id == activeObjective.nodeID {
+            TRCurrentObjectiveMarkerView(
+                objective: activeObjective,
+                destinationOption: cosmeticLoadout.destination
+            )
+        } else if node.id == packageNodeID, !hasCollectedPackage {
             TRPackageMarkerView(size: packageBadgeSize)
         } else if node.id == packageNodeID {
             Image(systemName: "checkmark")

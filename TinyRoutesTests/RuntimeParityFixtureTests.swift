@@ -10,7 +10,7 @@ final class RuntimeParityFixtureTests: XCTestCase {
         let manifestData = try Data(contentsOf: root.appendingPathComponent("manifest.json"))
         let manifest = try XCTUnwrap(JSONSerialization.jsonObject(with: manifestData) as? [String: Any])
         let fixtures = try XCTUnwrap(manifest["fixtures"] as? [[String: Any]])
-        XCTAssertEqual(fixtures.count, 15)
+        XCTAssertEqual(fixtures.count, 16)
         for fixture in fixtures {
             for key in ["level", "events", "expected"] {
                 let relativePath = try XCTUnwrap(fixture[key] as? String)
@@ -52,6 +52,35 @@ final class RuntimeParityFixtureTests: XCTestCase {
         }
     }
 
+    func testObjectiveRoadStateFixtureMatchesSharedExpectedState() throws {
+        let fixture = try loadFixture(id: "objective_road_state_progression")
+        let engine = RouteEngine(dotSpeed: 0.6)
+        try engine.buildGraph(from: fixture.level)
+        _ = engine.startDotMovement()
+
+        var elapsed = 0.0
+        while engine.levelOutcome == nil, elapsed < TimeInterval(fixture.level.timeLimitSeconds) {
+            let step = min(1.0 / 120.0, TimeInterval(fixture.level.timeLimitSeconds) - elapsed)
+            engine.updateDot(deltaTime: step)
+            elapsed += step
+        }
+
+        XCTAssertEqual(engine.levelOutcome, .completed)
+        XCTAssertEqual(engine.tapCount, fixture.expectedAcceptedTapCount)
+        XCTAssertEqual(engine.completedObjectiveIDs, Set(fixture.expectedCompletedObjectiveIDs))
+        XCTAssertEqual(
+            engine.objectiveEvents
+                .filter { $0.kind == .completed }
+                .map(\.objectiveID),
+            fixture.expectedObjectiveCompletionOrder
+        )
+        XCTAssertEqual(engine.runtimeGraph?.edgeUsageCounts, fixture.expectedEdgeUsageCounts)
+        let active = engine.runtimeGraph?.nodesByID.compactMapValues { node in
+            node.activeOutgoingEdgeID
+        }
+        XCTAssertEqual(active, fixture.expectedFinalActiveEdgeIDs)
+    }
+
     private func loadFixture(id: String) throws -> PackageGateFixture {
         let testFile = URL(fileURLWithPath: #filePath)
         let directory = testFile.deletingLastPathComponent().deletingLastPathComponent()
@@ -71,7 +100,10 @@ final class RuntimeParityFixtureTests: XCTestCase {
             level: level,
             actions: actions,
             expectedAcceptedTapCount: try XCTUnwrap(expected["acceptedTapCount"] as? Int),
-            expectedFinalActiveEdgeIDs: try XCTUnwrap(expected["finalActiveEdgeIDs"] as? [String: String])
+            expectedFinalActiveEdgeIDs: try XCTUnwrap(expected["finalActiveEdgeIDs"] as? [String: String]),
+            expectedCompletedObjectiveIDs: expected["completedObjectiveIDs"] as? [String] ?? [],
+            expectedObjectiveCompletionOrder: expected["objectiveCompletionOrder"] as? [String] ?? [],
+            expectedEdgeUsageCounts: expected["edgeUsageCounts"] as? [String: Int] ?? [:]
         )
     }
 }
@@ -86,4 +118,7 @@ private struct PackageGateFixture {
     let actions: [FixtureAction]
     let expectedAcceptedTapCount: Int
     let expectedFinalActiveEdgeIDs: [String: String]
+    let expectedCompletedObjectiveIDs: [String]
+    let expectedObjectiveCompletionOrder: [String]
+    let expectedEdgeUsageCounts: [String: Int]
 }

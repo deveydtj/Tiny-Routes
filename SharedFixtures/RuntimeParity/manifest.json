@@ -106,6 +106,13 @@
       "level": "package_gate_revisit_rotation/level.json",
       "events": "package_gate_revisit_rotation/events.json",
       "expected": "package_gate_revisit_rotation/expected.json"
+    },
+    {
+      "id": "objective_road_state_progression",
+      "description": "Ordered objectives deterministically close and open roads at a revisited hub.",
+      "level": "objective_road_state_progression/level.json",
+      "events": "objective_road_state_progression/events.json",
+      "expected": "objective_road_state_progression/expected.json"
     }
   ]
 }
