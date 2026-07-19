@@ -39,10 +39,7 @@ class RuntimeState:
     def initialize(cls, level: LevelDocument) -> "RuntimeState":
         objectives = sorted(level.effective_objectives, key=lambda objective: objective.sequenceIndex)
         package_collected = False
-        runtime_graph = RuntimeGraph.build(
-            level.graph,
-            package_collected=package_collected,
-        )
+        runtime_graph = RuntimeGraph.build(level)
         errors = []
         for label, node_id in (("start", level.startNodeID), ("package", level.packageNodeID),
                                ("destination", level.destinationNodeID)):
@@ -71,6 +68,8 @@ class RuntimeState:
             cascade_legacy_same_node=level.schema_version < 3,
         )
         state.current_edge_id = state.runtime_graph.active_edge_ids.get(level.startNodeID)
+        if state.current_edge_id is not None and state.outcome is LevelOutcome.IN_PROGRESS:
+            state.runtime_graph.record_edge_traversal(state.current_edge_id)
         return state
 
     @property
@@ -129,8 +128,6 @@ class RuntimeState:
             if active.kind is RouteObjectiveKind.PICKUP:
                 self.package_collected = True
             self._record_objective_event("objective_completed", active)
-            self.runtime_graph.normalize_for_package_state(self.package_collected)
-
             next_index = active.sequenceIndex + 1
             if next_index >= len(self.objectives):
                 self.active_objective_index = None
@@ -143,8 +140,17 @@ class RuntimeState:
             if active is not None:
                 self._reveal(active)
                 self._record_objective_event("objective_activated", active)
+            self.runtime_graph.normalize_for_objective_state(
+                self.completed_objective_ids,
+                self.active_objective_index,
+            )
             if not cascade_legacy_same_node:
                 break
+
+        self.runtime_graph.normalize_for_objective_state(
+            self.completed_objective_ids,
+            self.active_objective_index,
+        )
 
         return self.objective_events[event_start:]
 

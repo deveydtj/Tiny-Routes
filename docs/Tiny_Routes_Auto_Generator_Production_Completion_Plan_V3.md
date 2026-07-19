@@ -2603,8 +2603,8 @@ The following sequence is intentionally small enough for junior contributors. Ea
 - [x] **AG-010:** Generalize Swift package availability into objective-state rules with V2 adapters.
 - [x] **AG-011:** Add objective progression to Python simulator.
 - [x] **AG-012:** Add objective progression to Swift runtime.
-- [ ] **AG-013:** Add objective-based road filtering to Python.
-- [ ] **AG-014:** Add objective-based road filtering to Swift.
+- [x] **AG-013:** Add objective-based road filtering to Python.
+- [x] **AG-014:** Add objective-based road filtering to Swift.
 - [ ] **AG-015:** Add road-state and objective parity fixture.
 - [ ] **AG-016:** Add current-objective gameplay marker.
 - [ ] **AG-017:** Add locked-road rendering.

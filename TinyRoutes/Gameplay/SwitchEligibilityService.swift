@@ -31,6 +31,8 @@ struct SwitchEligibilityService {
         speed: Double,
         hasCollectedPackage: Bool,
         rules: LevelRules,
+        completedObjectiveIDs: Set<String>? = nil,
+        activeObjectiveIndex: Int? = nil,
         maximumStepCount: Int? = nil
     ) -> SwitchEligibilitySnapshot {
         guard speed > 0 else {
@@ -68,10 +70,24 @@ struct SwitchEligibilityService {
             }
             guard let node = graph.nodesByID[nextNodeID] else { return .noUpcomingSwitch }
 
-            if graph.switchKind(
-                for: node,
-                hasCollectedPackage: hasCollectedPackage
-            ).isSwitchable {
+            let usableEdgeIDs: [String]
+            let switchKind: SwitchNodeKind
+            if let completedObjectiveIDs {
+                usableEdgeIDs = graph.usableOutgoingEdgeIDs(
+                    for: node,
+                    completedObjectiveIDs: completedObjectiveIDs,
+                    activeObjectiveIndex: activeObjectiveIndex
+                )
+                switchKind = SwitchNodeKind(validOutgoingEdgeCount: usableEdgeIDs.count)
+            } else {
+                usableEdgeIDs = graph.usableOutgoingEdgeIDs(
+                    for: node,
+                    hasCollectedPackage: hasCollectedPackage
+                )
+                switchKind = SwitchNodeKind(validOutgoingEdgeCount: usableEdgeIDs.count)
+            }
+
+            if switchKind.isSwitchable {
                 let travelTime = distance / speed
                 let isEligible = travelTime <= max(rules.switchLookaheadSeconds, 0)
                 return SwitchEligibilitySnapshot(
@@ -82,10 +98,6 @@ struct SwitchEligibilityService {
                 )
             }
 
-            let usableEdgeIDs = graph.usableOutgoingEdgeIDs(
-                for: node,
-                hasCollectedPackage: hasCollectedPackage
-            )
             let selectedEdgeID = node.activeOutgoingEdgeID.flatMap {
                 usableEdgeIDs.contains($0) ? $0 : nil
             } ?? usableEdgeIDs.first

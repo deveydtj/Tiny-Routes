@@ -109,6 +109,70 @@ final class RouteEngineTests: XCTestCase {
         )
     }
 
+    private func makeSchema3ObjectiveRoadFilteringLevelData() -> LevelData {
+        let nodes = [
+            RouteNode(id: "start", x: 0, y: 0, outgoingEdgeIDs: ["to_hub"]),
+            RouteNode(
+                id: "hub",
+                x: 1,
+                y: 0,
+                outgoingEdgeIDs: ["one_use_checkpoint", "unlocked_destination"]
+            ),
+            RouteNode(id: "checkpoint", x: 2, y: 0, outgoingEdgeIDs: ["return_hub"]),
+            RouteNode(id: "destination", x: 3, y: 0, outgoingEdgeIDs: [])
+        ]
+        let edges = [
+            RouteEdge(id: "to_hub", fromNodeID: "start", toNodeID: "hub"),
+            RouteEdge(
+                id: "one_use_checkpoint",
+                fromNodeID: "hub",
+                toNodeID: "checkpoint",
+                availabilityRule: EdgeAvailabilityRule(
+                    maximumObjectiveIndex: 0,
+                    usageLimit: 1
+                )
+            ),
+            RouteEdge(
+                id: "unlocked_destination",
+                fromNodeID: "hub",
+                toNodeID: "destination",
+                availabilityRule: EdgeAvailabilityRule(
+                    requiredCompletedObjectiveIDs: ["inspect"],
+                    minimumObjectiveIndex: 1
+                )
+            ),
+            RouteEdge(id: "return_hub", fromNodeID: "checkpoint", toNodeID: "hub")
+        ]
+        let objectives = [
+            RouteObjective(
+                id: "inspect",
+                nodeID: "checkpoint",
+                kind: .checkpoint,
+                sequenceIndex: 0,
+                revealPolicy: "always"
+            ),
+            RouteObjective(
+                id: "finish",
+                nodeID: "destination",
+                kind: .destination,
+                sequenceIndex: 1,
+                revealPolicy: "whenActive"
+            )
+        ]
+        return LevelData(
+            schemaVersion: 3,
+            id: "schema3_objective_road_filtering",
+            name: "Objective Road Filtering",
+            graph: RouteGraph(nodes: nodes, edges: edges),
+            startNodeID: "start",
+            packageNodeID: "checkpoint",
+            destinationNodeID: "destination",
+            timeLimitSeconds: 20,
+            parTaps: 0,
+            objectives: objectives
+        )
+    }
+
     private func makePackageAvailabilityLevelData() -> LevelData {
         let nodes = [
             RouteNode(id: "start", x: 0, y: 0, outgoingEdgeIDs: ["e_start_gate"]),
@@ -2217,6 +2281,49 @@ final class RouteEngineTests: XCTestCase {
             engine.objectiveEvents.map(\.kind),
             [.revealed, .activated]
         )
+    }
+
+    func testSchema3RoadFilteringUsesObjectiveIndexCompletionAndUsageState() throws {
+        let engine = RouteEngine(dotSpeed: 1)
+        try engine.buildGraph(from: makeSchema3ObjectiveRoadFilteringLevelData())
+
+        let initialGraph = try XCTUnwrap(engine.runtimeGraph)
+        let initialHub = try XCTUnwrap(initialGraph.nodesByID["hub"])
+        XCTAssertEqual(
+            initialGraph.usableOutgoingEdgeIDs(
+                for: initialHub,
+                completedObjectiveIDs: engine.completedObjectiveIDs,
+                activeObjectiveIndex: engine.activeObjectiveIndex
+            ),
+            ["one_use_checkpoint"]
+        )
+
+        XCTAssertTrue(engine.startDotMovement())
+        engine.updateDot(deltaTime: 1.5)
+
+        let inFlightGraph = try XCTUnwrap(engine.runtimeGraph)
+        let inFlightHub = try XCTUnwrap(inFlightGraph.nodesByID["hub"])
+        XCTAssertEqual(engine.deliveryDot?.currentEdgeID, "one_use_checkpoint")
+        XCTAssertEqual(inFlightGraph.edgeUsageCounts["one_use_checkpoint"], 1)
+        XCTAssertEqual(
+            inFlightGraph.usableOutgoingEdgeIDs(
+                for: inFlightHub,
+                completedObjectiveIDs: engine.completedObjectiveIDs,
+                activeObjectiveIndex: engine.activeObjectiveIndex
+            ),
+            []
+        )
+
+        engine.updateDot(deltaTime: 10)
+
+        XCTAssertEqual(engine.levelOutcome, .completed)
+        XCTAssertEqual(engine.deliveryDot?.currentNodeID, "destination")
+        XCTAssertEqual(engine.runtimeGraph?.edgeUsageCounts, [
+            "to_hub": 1,
+            "one_use_checkpoint": 1,
+            "return_hub": 1,
+            "unlocked_destination": 1
+        ])
     }
 
     func testDotCollectsPackageWhenReachingPackageNode() throws {

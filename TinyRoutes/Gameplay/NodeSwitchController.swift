@@ -53,4 +53,46 @@ final class NodeSwitchController {
         runtimeGraph.nodesByID[nodeID] = node
         return true
     }
+
+    @discardableResult
+    func rotateSwitch(
+        nodeID: String,
+        in runtimeGraph: inout RuntimeRouteGraph,
+        completedObjectiveIDs: Set<String>,
+        activeObjectiveIndex: Int?
+    ) -> Bool {
+        guard var node = runtimeGraph.nodesByID[nodeID] else { return false }
+
+        let usableEdgeIDs = runtimeGraph.usableOutgoingEdgeIDs(
+            for: node,
+            completedObjectiveIDs: completedObjectiveIDs,
+            activeObjectiveIndex: activeObjectiveIndex
+        )
+        let switchKind = runtimeGraph.switchKind(
+            for: node,
+            completedObjectiveIDs: completedObjectiveIDs,
+            activeObjectiveIndex: activeObjectiveIndex
+        )
+
+        guard switchKind.isSwitchable else {
+            let normalizedActiveEdgeID = usableEdgeIDs.first
+            if node.activeOutgoingEdgeID != normalizedActiveEdgeID {
+                node.activeOutgoingEdgeID = normalizedActiveEdgeID
+                runtimeGraph.nodesByID[nodeID] = node
+            }
+            return false
+        }
+
+        let nextIndex: Int
+        if let currentActiveEdgeID = node.activeOutgoingEdgeID,
+           let currentIndex = usableEdgeIDs.firstIndex(of: currentActiveEdgeID) {
+            nextIndex = (currentIndex + 1) % usableEdgeIDs.count
+        } else {
+            nextIndex = 0
+        }
+
+        node.activeOutgoingEdgeID = usableEdgeIDs[nextIndex]
+        runtimeGraph.nodesByID[nodeID] = node
+        return true
+    }
 }

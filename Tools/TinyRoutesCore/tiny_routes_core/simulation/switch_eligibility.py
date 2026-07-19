@@ -76,7 +76,8 @@ def switch_eligibility(
             return SwitchEligibilitySnapshot(None, None, None, SwitchEligibilityReason.NO_UPCOMING_SWITCH, steps)
         outgoing = state.runtime_graph.usable_outgoing(
             node.id,
-            state.package_collected,
+            state.completed_objective_ids,
+            state.active_objective_index,
         )
         if len(outgoing) >= 2:
             travel_time = distance / speed

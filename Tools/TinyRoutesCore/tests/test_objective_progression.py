@@ -125,3 +125,93 @@ def test_schema3_arrival_completes_only_one_active_objective_and_fresh_state_res
     assert restarted.completed_objective_ids == {"collect"}
     assert restarted.active_objective_index == 1
     assert restarted.package_collected
+
+
+def test_objective_road_filtering_normalizes_authored_choice_at_state_boundary():
+    nodes = [
+        {"id": "start", "x": 0.0, "y": 0.0, "outgoingEdgeIDs": ["to_hub"]},
+        {
+            "id": "hub",
+            "x": 1.0,
+            "y": 0.0,
+            "outgoingEdgeIDs": ["one_use_checkpoint", "unlocked_destination"],
+        },
+        {"id": "checkpoint", "x": 2.0, "y": 0.0, "outgoingEdgeIDs": ["return_hub"]},
+        {"id": "destination", "x": 3.0, "y": 0.0, "outgoingEdgeIDs": []},
+    ]
+    edges = [
+        {"id": "to_hub", "fromNodeID": "start", "toNodeID": "hub"},
+        {
+            "id": "one_use_checkpoint",
+            "fromNodeID": "hub",
+            "toNodeID": "checkpoint",
+            "availabilityRule": {"maximumObjectiveIndex": 0, "usageLimit": 1},
+        },
+        {
+            "id": "unlocked_destination",
+            "fromNodeID": "hub",
+            "toNodeID": "destination",
+            "availabilityRule": {
+                "requiredCompletedObjectiveIDs": ["inspect"],
+                "minimumObjectiveIndex": 1,
+            },
+        },
+        {"id": "return_hub", "fromNodeID": "checkpoint", "toNodeID": "hub"},
+    ]
+    objectives = [
+        _objective("inspect", "checkpoint", "checkpoint", 0, "always"),
+        _objective("finish", "destination", "destination", 1),
+    ]
+
+    result = RuntimeSimulator().simulate(
+        _level(nodes, edges, objectives, package="checkpoint")
+    )
+
+    assert result.state.outcome == LevelOutcome.COMPLETED
+    assert result.state.runtime_graph.edge_usage_counts == {
+        "to_hub": 1,
+        "one_use_checkpoint": 1,
+        "return_hub": 1,
+        "unlocked_destination": 1,
+    }
+    assert result.state.visited_node_ids == [
+        "start", "hub", "checkpoint", "hub", "destination",
+    ]
+
+
+def test_objective_road_rule_checks_required_forbidden_index_and_usage_state():
+    nodes = [
+        {"id": "start", "x": 0.0, "y": 0.0, "outgoingEdgeIDs": ["conditioned", "fallback"]},
+        {"id": "checkpoint", "x": 1.0, "y": 0.0, "outgoingEdgeIDs": []},
+        {"id": "destination", "x": 2.0, "y": 0.0, "outgoingEdgeIDs": []},
+    ]
+    edges = [
+        {
+            "id": "conditioned",
+            "fromNodeID": "start",
+            "toNodeID": "destination",
+            "availabilityRule": {
+                "requiredCompletedObjectiveIDs": ["inspect"],
+                "forbiddenCompletedObjectiveIDs": ["finish"],
+                "minimumObjectiveIndex": 1,
+                "maximumObjectiveIndex": 2,
+                "usageLimit": 1,
+            },
+        },
+        {"id": "fallback", "fromNodeID": "start", "toNodeID": "checkpoint"},
+    ]
+    objectives = [
+        _objective("inspect", "checkpoint", "checkpoint", 0, "always"),
+        _objective("finish", "destination", "destination", 1),
+    ]
+    state = RuntimeState.initialize(
+        _level(nodes, edges, objectives, package="checkpoint")
+    )
+    edge = state.runtime_graph.index.edges_by_id["conditioned"]
+
+    assert not state.runtime_graph.edge_is_usable(edge, set(), 1)
+    assert state.runtime_graph.edge_is_usable(edge, {"inspect"}, 1)
+    assert not state.runtime_graph.edge_is_usable(edge, {"inspect", "finish"}, 1)
+    assert not state.runtime_graph.edge_is_usable(edge, {"inspect"}, 0)
+    state.runtime_graph.record_edge_traversal("conditioned")
+    assert not state.runtime_graph.edge_is_usable(edge, {"inspect"}, 1)

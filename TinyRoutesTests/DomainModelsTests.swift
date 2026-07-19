@@ -261,6 +261,39 @@ final class DomainModelsTests: XCTestCase {
         XCTAssertEqual(decoded.availabilityRule, rule)
     }
 
+    func testStructuredEdgeAvailabilityRuleEvaluatesCompleteRuntimeState() {
+        let rule = EdgeAvailabilityRule(
+            requiredCompletedObjectiveIDs: ["collect"],
+            forbiddenCompletedObjectiveIDs: ["finish"],
+            minimumObjectiveIndex: 1,
+            maximumObjectiveIndex: 2,
+            usageLimit: 1
+        )
+
+        XCTAssertFalse(rule.allows(completedObjectiveIDs: [], activeObjectiveIndex: 1))
+        XCTAssertTrue(rule.allows(
+            completedObjectiveIDs: ["collect"],
+            activeObjectiveIndex: 1
+        ))
+        XCTAssertFalse(rule.allows(
+            completedObjectiveIDs: ["collect", "finish"],
+            activeObjectiveIndex: 1
+        ))
+        XCTAssertFalse(rule.allows(
+            completedObjectiveIDs: ["collect"],
+            activeObjectiveIndex: 0
+        ))
+        XCTAssertFalse(rule.allows(
+            completedObjectiveIDs: ["collect"],
+            activeObjectiveIndex: 3
+        ))
+        XCTAssertFalse(rule.allows(
+            completedObjectiveIDs: ["collect"],
+            activeObjectiveIndex: 1,
+            usageCount: 1
+        ))
+    }
+
     func testLegacyRoadAvailabilityAdaptsToObjectiveRules() throws {
         let level = try decoder.decode(LevelData.self, from: Data(Self.versionThreeJSON.utf8))
         let legacyLevel = try decoder.decode(LevelData.self, from: Data(Self.versionTwoJSON.utf8))

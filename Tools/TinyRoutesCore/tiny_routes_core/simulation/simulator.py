@@ -180,7 +180,10 @@ class RuntimeSimulator:
                 result.events.append(SimulationEvent(state.elapsed_time, "safety_limit", detail=str(limit)))
                 return
             if state.current_edge_id is None:
-                state.runtime_graph.normalize_for_package_state(state.package_collected)
+                state.runtime_graph.normalize_for_objective_state(
+                    state.completed_objective_ids,
+                    state.active_objective_index,
+                )
                 edge_id = state.runtime_graph.active_edge_ids.get(state.current_node_id)
                 if edge_id is None:
                     state.outcome = LevelOutcome.FAILED_DEAD_END
@@ -189,6 +192,7 @@ class RuntimeSimulator:
                     return
                 state.current_edge_id = edge_id
                 state.edge_progress = 0.0
+                state.runtime_graph.record_edge_traversal(edge_id)
                 result.events.append(SimulationEvent(state.elapsed_time, "begin_edge", state.current_node_id, edge_id))
 
             length = edge_length(state, state.current_edge_id)
@@ -247,7 +251,11 @@ class RuntimeSimulator:
         if state.current_edge_id is not None and index.edges_by_id[state.current_edge_id].fromNodeID == node_id:
             return TapRecord(action, TapResultCode.AFTER_ROUTE_COMMITMENT)
         outgoing = (
-            state.runtime_graph.usable_outgoing(node_id, state.package_collected)
+            state.runtime_graph.usable_outgoing(
+                node_id,
+                state.completed_objective_ids,
+                state.active_objective_index,
+            )
             if node_id in index.nodes_by_id
             else ()
         )

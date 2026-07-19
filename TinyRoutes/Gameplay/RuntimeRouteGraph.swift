@@ -18,19 +18,22 @@ struct RuntimeRouteEdge {
     let toNodeID: String
     let roadPath: RoadPath
     let availability: RoadAvailability
+    let availabilityRule: EdgeAvailabilityRule
 
     init(
         id: String,
         fromNodeID: String,
         toNodeID: String,
         roadPath: RoadPath,
-        availability: RoadAvailability = .always
+        availability: RoadAvailability = .always,
+        availabilityRule: EdgeAvailabilityRule? = nil
     ) {
         self.id = id
         self.fromNodeID = fromNodeID
         self.toNodeID = toNodeID
         self.roadPath = roadPath
         self.availability = availability
+        self.availabilityRule = availabilityRule ?? .adapting(availability)
     }
 }
 
@@ -39,6 +42,17 @@ struct RuntimeRouteEdge {
 struct RuntimeRouteGraph {
     var nodesByID: [String: RuntimeRouteNode]
     let edgesByID: [String: RuntimeRouteEdge]
+    private(set) var edgeUsageCounts: [String: Int]
+
+    init(
+        nodesByID: [String: RuntimeRouteNode],
+        edgesByID: [String: RuntimeRouteEdge],
+        edgeUsageCounts: [String: Int] = [:]
+    ) {
+        self.nodesByID = nodesByID
+        self.edgesByID = edgesByID
+        self.edgeUsageCounts = edgeUsageCounts
+    }
 
     func validOutgoingEdgeIDs(for node: RuntimeRouteNode) -> [String] {
         node.outgoingEdgeIDs.filter { edgeID in
@@ -60,6 +74,21 @@ struct RuntimeRouteGraph {
         }
     }
 
+    func usableOutgoingEdgeIDs(
+        for node: RuntimeRouteNode,
+        completedObjectiveIDs: Set<String>,
+        activeObjectiveIndex: Int?
+    ) -> [String] {
+        validOutgoingEdgeIDs(for: node).filter { edgeID in
+            guard let edge = edgesByID[edgeID] else { return false }
+            return edge.availabilityRule.allows(
+                completedObjectiveIDs: completedObjectiveIDs,
+                activeObjectiveIndex: activeObjectiveIndex,
+                usageCount: edgeUsageCounts[edgeID, default: 0]
+            )
+        }
+    }
+
     func switchKind(for node: RuntimeRouteNode) -> SwitchNodeKind {
         SwitchNodeKind(validOutgoingEdgeCount: validOutgoingEdgeIDs(for: node).count)
     }
@@ -72,6 +101,20 @@ struct RuntimeRouteGraph {
             validOutgoingEdgeCount: usableOutgoingEdgeIDs(
                 for: node,
                 hasCollectedPackage: hasCollectedPackage
+            ).count
+        )
+    }
+
+    func switchKind(
+        for node: RuntimeRouteNode,
+        completedObjectiveIDs: Set<String>,
+        activeObjectiveIndex: Int?
+    ) -> SwitchNodeKind {
+        SwitchNodeKind(
+            validOutgoingEdgeCount: usableOutgoingEdgeIDs(
+                for: node,
+                completedObjectiveIDs: completedObjectiveIDs,
+                activeObjectiveIndex: activeObjectiveIndex
             ).count
         )
     }
@@ -93,6 +136,34 @@ struct RuntimeRouteGraph {
                 nodesByID[nodeID] = node
             }
         }
+    }
+
+    mutating func normalizeActiveOutgoingEdges(
+        completedObjectiveIDs: Set<String>,
+        activeObjectiveIndex: Int?
+    ) {
+        for nodeID in nodesByID.keys {
+            guard var node = nodesByID[nodeID] else { continue }
+            let usableEdgeIDs = usableOutgoingEdgeIDs(
+                for: node,
+                completedObjectiveIDs: completedObjectiveIDs,
+                activeObjectiveIndex: activeObjectiveIndex
+            )
+            let normalizedEdgeID = node.activeOutgoingEdgeID.flatMap {
+                usableEdgeIDs.contains($0) ? $0 : nil
+            } ?? usableEdgeIDs.first
+            if node.activeOutgoingEdgeID != normalizedEdgeID {
+                node.activeOutgoingEdgeID = normalizedEdgeID
+                nodesByID[nodeID] = node
+            }
+        }
+    }
+
+    @discardableResult
+    mutating func recordTraversal(of edgeID: String) -> Int {
+        let updatedCount = edgeUsageCounts[edgeID, default: 0] + 1
+        edgeUsageCounts[edgeID] = updatedCount
+        return updatedCount
     }
 }
 

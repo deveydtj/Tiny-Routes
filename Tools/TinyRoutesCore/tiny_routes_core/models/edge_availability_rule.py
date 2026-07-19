@@ -92,5 +92,34 @@ class EdgeAvailabilityRule:
                 result[name] = value
         return result
 
+    def allows(
+        self,
+        completed_objective_ids: set[str] | frozenset[str],
+        active_objective_index: int | None,
+        *,
+        usage_count: int = 0,
+    ) -> bool:
+        """Return whether this rule permits a new edge traversal.
+
+        A traversal already in progress is never re-evaluated. Callers record the
+        use when movement commits to the edge, so a one-use road remains safe for
+        that traversal and is unavailable for the next one.
+        """
+
+        completed = set(completed_objective_ids)
+        if not set(self.requiredCompletedObjectiveIDs).issubset(completed):
+            return False
+        if set(self.forbiddenCompletedObjectiveIDs).intersection(completed):
+            return False
+        if self.minimumObjectiveIndex is not None:
+            if active_objective_index is None or active_objective_index < self.minimumObjectiveIndex:
+                return False
+        if self.maximumObjectiveIndex is not None:
+            if active_objective_index is None or active_objective_index > self.maximumObjectiveIndex:
+                return False
+        if self.usageLimit is not None and usage_count >= self.usageLimit:
+            return False
+        return True
+
     def clone(self) -> "EdgeAvailabilityRule":
         return deepcopy(self)

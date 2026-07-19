@@ -63,6 +63,33 @@ struct EdgeAvailabilityRule: Codable, Equatable {
             )
         }
     }
+
+    func allows(
+        completedObjectiveIDs: Set<String>,
+        activeObjectiveIndex: Int?,
+        usageCount: Int = 0
+    ) -> Bool {
+        guard Set(requiredCompletedObjectiveIDs).isSubset(of: completedObjectiveIDs),
+              Set(forbiddenCompletedObjectiveIDs).isDisjoint(with: completedObjectiveIDs) else {
+            return false
+        }
+        if let minimumObjectiveIndex {
+            guard let activeObjectiveIndex,
+                  activeObjectiveIndex >= minimumObjectiveIndex else {
+                return false
+            }
+        }
+        if let maximumObjectiveIndex {
+            guard let activeObjectiveIndex,
+                  activeObjectiveIndex <= maximumObjectiveIndex else {
+                return false
+            }
+        }
+        if let usageLimit, usageCount >= usageLimit {
+            return false
+        }
+        return true
+    }
 }
 
 struct RoadPoint: Equatable {
