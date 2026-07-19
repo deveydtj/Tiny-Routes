@@ -8,6 +8,12 @@ from .template_recipe_family import TemplateRecipeFamily, template_recipe_family
 
 
 class RecipeFamilyRegistry(MechanicRecipeGenerator):
+    QUARANTINED_FAMILY_REASONS: dict[str, str] = {
+        "return_loop_intro": "claimed_cycle_not_detected",
+        "return_loop_with_gate": "behavior_isomorphic_alias:controlled_repeated_taps",
+        "multi_switch_revisit": "behavior_isomorphic_alias:controlled_repeated_taps",
+    }
+
     def __init__(self) -> None:
         self._families: dict[str, RecipeFamily] = {
             family.name: family
@@ -31,7 +37,11 @@ class RecipeFamilyRegistry(MechanicRecipeGenerator):
             raise ValueError(f"Unknown recipe family: {name}") from exc
 
     def supported_families(self, preset: DifficultyPreset, include_swift_required: bool = True) -> list[RecipeFamily]:
-        families = [family for family in self._families.values() if family.supports_difficulty(preset)]
+        families = [
+            family
+            for family in self._families.values()
+            if family.supports_difficulty(preset) and not self.is_quarantined(family.name)
+        ]
         if not include_swift_required:
             families = [family for family in families if not family.requires_swift_validation]
         return families
@@ -47,6 +57,12 @@ class RecipeFamilyRegistry(MechanicRecipeGenerator):
         key = name.strip().lower()
         if key != "mixed":
             family = self.get_family(key)
+            quarantine_reason = self.quarantine_reason(key)
+            if quarantine_reason is not None:
+                raise ValueError(
+                    f"Recipe family '{key}' is quarantined from production selection: "
+                    f"{quarantine_reason}"
+                )
             if not family.supports_difficulty(preset):
                 raise ValueError(f"Recipe family '{key}' does not support difficulty '{preset.name}'")
             if family.requires_swift_validation and not include_swift_required:
@@ -60,6 +76,15 @@ class RecipeFamilyRegistry(MechanicRecipeGenerator):
         if not weighted:
             raise ValueError(f"No recipe families support difficulty '{preset.name}'")
         return rng.weighted_choice(weighted)
+
+    def is_quarantined(self, family_name: str) -> bool:
+        return family_name.strip().lower() in self.QUARANTINED_FAMILY_REASONS
+
+    def quarantine_reason(self, family_name: str) -> str | None:
+        return self.QUARANTINED_FAMILY_REASONS.get(family_name.strip().lower())
+
+    def quarantined_family_names(self) -> tuple[str, ...]:
+        return tuple(sorted(self.QUARANTINED_FAMILY_REASONS))
 
     def weight_for(
         self,

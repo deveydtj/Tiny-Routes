@@ -2717,14 +2717,26 @@ dependency and explicit branch, rejoin, and failure ports.
 
 ## Legacy recipe correctness
 
-- [ ] **AG-043:** Add recipe topology contract test helper.
-- [ ] **AG-044:** Quarantine or repair `return_loop_intro` and repeated-builder aliases.
+- [x] **AG-043:** Add recipe topology contract test helper.
+- [x] **AG-044:** Quarantine or repair `return_loop_intro` and repeated-builder aliases.
 - [ ] **AG-045:** Quarantine or repair `ring_route_gate`, `multi_four_way_route`, and `late_route_reversal`.
 - [ ] **AG-046:** Quarantine or implement a true rejoin in `branch_then_rejoin_with_wrong_order`.
 - [ ] **AG-047:** Add role-aware graph isomorphism service.
 - [ ] **AG-048:** Add behavior isomorphism service.
 - [ ] **AG-049:** Remove/fix `_swap_dead_end_order()` and reject behavior-isomorphic alternates.
 - [ ] **AG-050:** Add registry production/fixture/deprecated status.
+
+**2026-07-19 AG-043 completion record:** Added a reusable recipe topology
+contract helper and graph-derived audit evidence for claimed rings, cycles,
+rejoins, revisits, reversals, objective gates, high-arity switches, recoverable
+routes, and unique-success/unique-optimal requirements. Every family variant now
+emits a deterministic pass/fail status with stable reason codes.
+
+**2026-07-19 AG-044 completion record:** Quarantined the false
+`return_loop_intro` contract plus the `return_loop_with_gate` and
+`multi_switch_revisit` aliases of `controlled_repeated_taps`. They remain
+available for audit and regression fixtures but are excluded from mixed and
+explicit production recipe selection.
 
 ## Composition
 
