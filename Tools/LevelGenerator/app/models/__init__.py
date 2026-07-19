@@ -7,7 +7,7 @@ from .decision_dependency_graph import (
     DecisionDependencyKind,
     DecisionNode,
 )
-from .puzzle_blueprint import ObjectiveSpec, StateTransitionSpec
+from .puzzle_blueprint import ObjectiveSpec, PuzzleBlueprint, StateTransitionSpec
 from .puzzle_motif import MotifCompatibilityConstraints, PuzzleMotif
 from .puzzle_experience_target import PuzzleExperienceTarget
 from .generated_level import GeneratedLevel
@@ -37,6 +37,7 @@ __all__ = [
     "DecisionDependencyKind",
     "DecisionNode",
     "ObjectiveSpec",
+    "PuzzleBlueprint",
     "StateTransitionSpec",
     "MotifCompatibilityConstraints",
     "PuzzleMotif",

@@ -1,5 +1,9 @@
 from .candidate_rejection_service import CandidateRejectionService
 from .difficulty_service import DifficultyService
+from .difficulty_target_resolver import (
+    DifficultyTargetResolver,
+    DifficultyTargetResolverService,
+)
 from .decision_profile_service import DecisionProfileService
 from .layout_repair_service import LayoutRepairConfig, LayoutRepairService
 from .generated_level_validation_service import GeneratedLevelValidationService
@@ -47,6 +51,8 @@ __all__ = [
     "CandidateRejectionService",
     "CandidateRoadGeometryPlan",
     "DifficultyService",
+    "DifficultyTargetResolver",
+    "DifficultyTargetResolverService",
     "DecisionProfileService",
     "LayoutRepairConfig",
     "LayoutRepairService",
