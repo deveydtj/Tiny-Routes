@@ -2618,8 +2618,8 @@ The following sequence is intentionally small enough for junior contributors. Ea
 - [x] **AG-022:** Add decision dependency graph model.
 - [x] **AG-023:** Add `PuzzleBlueprint` validation.
 - [x] **AG-024:** Add difficulty target resolver.
-- [ ] **AG-025:** Add return-to-hub blueprint.
-- [ ] **AG-026:** Add unlock-shortcut blueprint.
+- [x] **AG-025:** Add return-to-hub blueprint.
+- [x] **AG-026:** Add unlock-shortcut blueprint.
 - [ ] **AG-027:** Add closed-return blueprint.
 - [ ] **AG-028:** Add ordered-checkpoint blueprint.
 - [ ] **AG-029:** Add recoverable-loop blueprint.

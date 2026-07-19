@@ -4,6 +4,10 @@ from .difficulty_target_resolver import (
     DifficultyTargetResolver,
     DifficultyTargetResolverService,
 )
+from .puzzle_blueprint_service import (
+    PuzzleBlueprintGeneratorService,
+    PuzzleBlueprintService,
+)
 from .decision_profile_service import DecisionProfileService
 from .layout_repair_service import LayoutRepairConfig, LayoutRepairService
 from .generated_level_validation_service import GeneratedLevelValidationService
@@ -53,6 +57,8 @@ __all__ = [
     "DifficultyService",
     "DifficultyTargetResolver",
     "DifficultyTargetResolverService",
+    "PuzzleBlueprintGeneratorService",
+    "PuzzleBlueprintService",
     "DecisionProfileService",
     "LayoutRepairConfig",
     "LayoutRepairService",
