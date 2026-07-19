@@ -2668,8 +2668,8 @@ The following sequence is intentionally small enough for junior contributors. Ea
 - [x] **AG-034:** Add stateful objective-gate motif.
 - [x] **AG-035:** Add unlock-shortcut motif.
 - [x] **AG-036:** Add close-behind motif.
-- [ ] **AG-037:** Add hub-revisit motif.
-- [ ] **AG-038:** Add stateful ring motif.
+- [x] **AG-037:** Add hub-revisit motif.
+- [x] **AG-038:** Add stateful ring motif.
 - [ ] **AG-039:** Add recoverable detour motif.
 - [ ] **AG-040:** Add delayed-consequence motif.
 - [ ] **AG-041:** Add unique-optimal alternate-route motif.
@@ -2684,6 +2684,17 @@ dependency, return-path ports, layout requirements, and composition limits.
 `objective_closed_return_road` contract. Completing its objective closes the
 outbound road behind the player and opens the valid return exit, with exact
 edge-state changes and focused contract tests.
+
+**2026-07-19 AG-037 completion record:** Added an explicit typed
+`objective_state_revisited_hub` contract. Its pre-objective hub choices close
+after collection, the later exit opens, and typed rejoin, return, objective,
+state-change, and recovery ports expose the full cross-phase structure.
+
+**2026-07-19 AG-038 completion record:** Added an explicit typed
+`phase_dependent_ring_exits` contract. Its ring entry and failure branch close
+after collection while the post-objective exit opens, with detected ring,
+revisit, objective-state, return-path, and failure behavior covered by focused
+tests.
 
 ## Legacy recipe correctness
 

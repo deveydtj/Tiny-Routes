@@ -151,6 +151,97 @@ def test_close_behind_motif_closes_outbound_road_and_opens_return_exit() -> None
     assert motif.effects.introduces_revisit is True
 
 
+def test_hub_revisit_motif_changes_the_required_exit_after_objective() -> None:
+    motif = default_motif_registry().get("objective_state_revisited_hub").build()
+
+    assert motif.validate() == ()
+    assert motif.preconditions is not None
+    assert motif.effects is not None
+    assert motif.preconditions.required_incoming_objective_state is (
+        MotifIncomingObjectiveState.BEFORE_ACTIVE_OBJECTIVE
+    )
+    assert motif.effects.completed_objective_node_ids == ("package",)
+    assert {
+        (change.from_node_id, change.to_node_id, change.kind)
+        for change in motif.effects.edge_state_changes
+    } == {
+        ("entry", "outbound", MotifEdgeStateChangeKind.CLOSE),
+        ("entry", "detour", MotifEdgeStateChangeKind.CLOSE),
+        ("entry", "exit", MotifEdgeStateChangeKind.OPEN),
+    }
+    assert motif.effects.gameplay_effects == (
+        MotifGameplayEffect.REQUIRED_HUB_REVISIT,
+        MotifGameplayEffect.STATE_DEPENDENT_BRANCH,
+    )
+    assert motif.effects.expected_downstream_dependency is MotifDependencyEffect.OBJECTIVE_STATE
+    assert motif.effects.introduces_cycle is True
+    assert motif.effects.introduces_revisit is True
+    assert motif.effects.introduces_rejoin is True
+    assert motif.effects.introduces_recovery_exit is True
+    assert {
+        (edge.to_node_id, edge.availability)
+        for edge in motif.edges
+        if edge.from_node_id == "entry"
+    } == {
+        ("outbound", "beforePackage"),
+        ("detour", "beforePackage"),
+        ("exit", "afterPackage"),
+    }
+    assert {port.port_type for port in motif.ports}.issuperset({
+        MotifPortType.BRANCH_INSERTION_POINT,
+        MotifPortType.REJOIN_INPUT,
+        MotifPortType.RETURN_PATH_INPUT,
+        MotifPortType.RETURN_PATH_OUTPUT,
+        MotifPortType.OBJECTIVE_ATTACHMENT,
+        MotifPortType.STATE_CHANGE_ATTACHMENT,
+        MotifPortType.RECOVERY_EXIT,
+    })
+
+
+def test_stateful_ring_changes_available_exit_between_objective_phases() -> None:
+    motif = default_motif_registry().get("phase_dependent_ring_exits").build()
+
+    assert motif.validate() == ()
+    assert motif.preconditions is not None
+    assert motif.effects is not None
+    assert motif.preconditions.required_incoming_objective_state is (
+        MotifIncomingObjectiveState.BEFORE_ACTIVE_OBJECTIVE
+    )
+    assert motif.effects.completed_objective_node_ids == ("package",)
+    assert {
+        (change.from_node_id, change.to_node_id, change.kind)
+        for change in motif.effects.edge_state_changes
+    } == {
+        ("entry", "ring_a", MotifEdgeStateChangeKind.CLOSE),
+        ("entry", "failure", MotifEdgeStateChangeKind.CLOSE),
+        ("entry", "exit", MotifEdgeStateChangeKind.OPEN),
+    }
+    assert motif.effects.structural_effects == (
+        MotifStructuralEffect.SEGMENT,
+        MotifStructuralEffect.SPLIT,
+        MotifStructuralEffect.HUB,
+        MotifStructuralEffect.RING,
+        MotifStructuralEffect.RETURN_CORRIDOR,
+        MotifStructuralEffect.CROSS_PHASE_CONNECTOR,
+    )
+    assert motif.effects.gameplay_effects == (
+        MotifGameplayEffect.STATE_DEPENDENT_BRANCH,
+        MotifGameplayEffect.REQUIRED_HUB_REVISIT,
+    )
+    assert motif.effects.expected_downstream_dependency is MotifDependencyEffect.OBJECTIVE_STATE
+    assert motif.effects.introduces_cycle is True
+    assert motif.effects.introduces_revisit is True
+    assert motif.effects.introduces_failure_exit is True
+    assert {port.port_type for port in motif.ports}.issuperset({
+        MotifPortType.BRANCH_INSERTION_POINT,
+        MotifPortType.RETURN_PATH_INPUT,
+        MotifPortType.RETURN_PATH_OUTPUT,
+        MotifPortType.OBJECTIVE_ATTACHMENT,
+        MotifPortType.STATE_CHANGE_ATTACHMENT,
+        MotifPortType.FAILURE_EXIT,
+    })
+
+
 def test_all_initial_seed_motifs_validate_independently() -> None:
     motifs = seed_motif_factories()
     assert {motif.motif_id for motif in motifs} == EXPECTED

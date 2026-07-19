@@ -232,6 +232,76 @@ def _objective_state_return_contract(
     )
 
 
+def _hub_revisit_ports() -> tuple[MotifPort, ...]:
+    """Expose both outbound choices and the cross-phase return at a hub."""
+
+    return (
+        *_main_route_ports(),
+        MotifPort("branch_insertion", "entry", MotifPortType.BRANCH_INSERTION_POINT),
+        MotifPort("outbound_rejoin", "outbound", MotifPortType.REJOIN_INPUT),
+        MotifPort("detour_rejoin", "detour", MotifPortType.REJOIN_INPUT),
+        MotifPort("return_input", "entry", MotifPortType.RETURN_PATH_INPUT),
+        MotifPort("return_output", "package", MotifPortType.RETURN_PATH_OUTPUT),
+        MotifPort("objective", "package", MotifPortType.OBJECTIVE_ATTACHMENT),
+        MotifPort("state_change", "package", MotifPortType.STATE_CHANGE_ATTACHMENT),
+        MotifPort("recovery", "detour", MotifPortType.RECOVERY_EXIT),
+    )
+
+
+def _stateful_ring_ports() -> tuple[MotifPort, ...]:
+    """Expose the ring, objective transition, and phase-specific failure exit."""
+
+    return (
+        *_main_route_ports(),
+        MotifPort("branch_insertion", "entry", MotifPortType.BRANCH_INSERTION_POINT),
+        MotifPort("return_input", "entry", MotifPortType.RETURN_PATH_INPUT),
+        MotifPort("return_output", "ring_b", MotifPortType.RETURN_PATH_OUTPUT),
+        MotifPort("objective", "package", MotifPortType.OBJECTIVE_ATTACHMENT),
+        MotifPort("state_change", "package", MotifPortType.STATE_CHANGE_ATTACHMENT),
+        MotifPort("failure", "failure", MotifPortType.FAILURE_EXIT),
+    )
+
+
+def _stateful_cycle_contract(
+    *edge_changes: tuple[str, str, MotifEdgeStateChangeKind],
+    structural_effects: tuple[MotifStructuralEffect, ...],
+    gameplay_effects: tuple[MotifGameplayEffect, ...],
+    introduces_rejoin: bool = False,
+    introduces_failure_exit: bool = False,
+    introduces_recovery_exit: bool = False,
+) -> tuple[MotifPreconditionContract, MotifEffectContract]:
+    """Build an explicit objective-state contract for a revisited cycle."""
+
+    return (
+        MotifPreconditionContract(
+            minimum_objective_phase_index=0,
+            required_incoming_objective_state=(
+                MotifIncomingObjectiveState.BEFORE_ACTIVE_OBJECTIVE
+            ),
+            forbidden_completed_objective_roles=("active_objective",),
+        ),
+        MotifEffectContract(
+            completed_objective_node_ids=("package",),
+            edge_state_changes=tuple(
+                MotifEdgeStateChange(from_node, to_node, kind, "package")
+                for from_node, to_node, kind in edge_changes
+            ),
+            decision_node_ids=("entry",),
+            structural_effects=structural_effects,
+            gameplay_effects=gameplay_effects,
+            expected_downstream_dependency=MotifDependencyEffect.OBJECTIVE_STATE,
+            introduces_cycle=True,
+            introduces_revisit=True,
+            introduces_rejoin=introduces_rejoin,
+            introduces_failure_exit=introduces_failure_exit,
+            introduces_recovery_exit=introduces_recovery_exit,
+            minimum_layout_footprint=(6, 3),
+            incompatible_effects=("secondEmbeddedObjective",),
+            maximum_instances_per_composition=1,
+        ),
+    )
+
+
 def _complete_typed_contract(factory: SeedMotif) -> SeedMotif:
     """Migrate a seed fixture to the V3 contract without changing its graph."""
 
@@ -454,6 +524,45 @@ def seed_motif_factories() -> tuple[BaseMotif, ...]:
         gameplay_effect=MotifGameplayEffect.CLOSE_BEHIND_ROUTE,
         minimum_layout_footprint=(5, 2),
     )
+    hub_revisit_preconditions, hub_revisit_effects = _stateful_cycle_contract(
+        ("entry", "outbound", MotifEdgeStateChangeKind.CLOSE),
+        ("entry", "detour", MotifEdgeStateChangeKind.CLOSE),
+        ("entry", "exit", MotifEdgeStateChangeKind.OPEN),
+        structural_effects=(
+            MotifStructuralEffect.SEGMENT,
+            MotifStructuralEffect.SPLIT,
+            MotifStructuralEffect.REJOIN,
+            MotifStructuralEffect.HUB,
+            MotifStructuralEffect.RING,
+            MotifStructuralEffect.RETURN_CORRIDOR,
+            MotifStructuralEffect.CROSS_PHASE_CONNECTOR,
+            MotifStructuralEffect.LANE_EXPANSION,
+        ),
+        gameplay_effects=(
+            MotifGameplayEffect.REQUIRED_HUB_REVISIT,
+            MotifGameplayEffect.STATE_DEPENDENT_BRANCH,
+        ),
+        introduces_rejoin=True,
+        introduces_recovery_exit=True,
+    )
+    stateful_ring_preconditions, stateful_ring_effects = _stateful_cycle_contract(
+        ("entry", "ring_a", MotifEdgeStateChangeKind.CLOSE),
+        ("entry", "failure", MotifEdgeStateChangeKind.CLOSE),
+        ("entry", "exit", MotifEdgeStateChangeKind.OPEN),
+        structural_effects=(
+            MotifStructuralEffect.SEGMENT,
+            MotifStructuralEffect.SPLIT,
+            MotifStructuralEffect.HUB,
+            MotifStructuralEffect.RING,
+            MotifStructuralEffect.RETURN_CORRIDOR,
+            MotifStructuralEffect.CROSS_PHASE_CONNECTOR,
+        ),
+        gameplay_effects=(
+            MotifGameplayEffect.STATE_DEPENDENT_BRANCH,
+            MotifGameplayEffect.REQUIRED_HUB_REVISIT,
+        ),
+        introduces_failure_exit=True,
+    )
     motifs = (
         _motif("straight_segment", (("entry", "route"), ("exit", "route")), (("entry", "exit"),),
                ("entry", "exit"), "Adds readable travel spacing.", ports=_main_route_ports()),
@@ -648,6 +757,9 @@ def seed_motif_factories() -> tuple[BaseMotif, ...]:
             ("entry", "ring_a", "package", "ring_b", "entry", "exit"),
             "The useful ring exit changes after the objective is collected.",
             difficulties=hard, cycle=True, revisit=True, dead_end=True, embedded_package=True,
+            ports=_stateful_ring_ports(),
+            preconditions=stateful_ring_preconditions,
+            effects=stateful_ring_effects,
         ),
         _motif(
             "destination_before_objectives_decoy",
@@ -693,6 +805,9 @@ def seed_motif_factories() -> tuple[BaseMotif, ...]:
             ("entry", "outbound", "package", "return", "entry", "exit"),
             "A three-way hub is revisited with a newly required exit.",
             difficulties=hard, cycle=True, rejoin=True, revisit=True, embedded_package=True,
+            ports=_hub_revisit_ports(),
+            preconditions=hub_revisit_preconditions,
+            effects=hub_revisit_effects,
         ),
         _motif(
             "three_phase_relay",
