@@ -1123,7 +1123,7 @@ After migrating the existing catalog, add behavior-distinct coverage for:
 - [x] Objective branch that changes later availability.
 - [x] Readability spacer/lane expansion.
 
-**2026-07-19 AG-035 completion record:** The evidence-backed production catalog
+**2026-07-19 Task 3.5 completion record:** The evidence-backed production catalog
 now contains 22 behavior-distinct typed motifs and covers all 20 required
 capabilities. New stateful assets include real objective-opened and
 objective-closed roads, a traversal-consumed one-use edge, changed hub and
@@ -1147,7 +1147,7 @@ Every motif test proves:
 
 Mechanic names and tags can never satisfy these checks.
 
-**2026-07-19 AG-036 completion record:** Added exact graph-derived motif evidence
+**2026-07-19 Task 3.6 completion record:** Added exact graph-derived motif evidence
 for topology, meaningful branch outcomes, objective-state transitions,
 dependency kinds, typed exits, difficulty/precondition constraints, composition
 limits, and ID-independent behavior signatures. Contract tests prove misleading
@@ -2666,14 +2666,24 @@ The following sequence is intentionally small enough for junior contributors. Ea
 - [x] **AG-032:** Add explicit precondition/effect contracts and migrate package-state motifs.
 - [x] **AG-033:** Convert structural split/rejoin motif.
 - [x] **AG-034:** Add stateful objective-gate motif.
-- [ ] **AG-035:** Add unlock-shortcut motif.
-- [ ] **AG-036:** Add close-behind motif.
+- [x] **AG-035:** Add unlock-shortcut motif.
+- [x] **AG-036:** Add close-behind motif.
 - [ ] **AG-037:** Add hub-revisit motif.
 - [ ] **AG-038:** Add stateful ring motif.
 - [ ] **AG-039:** Add recoverable detour motif.
 - [ ] **AG-040:** Add delayed-consequence motif.
 - [ ] **AG-041:** Add unique-optimal alternate-route motif.
 - [ ] **AG-042:** Add motif contract test helper.
+
+**2026-07-19 AG-035 completion record:** Added an explicit typed
+`objective_unlocked_shortcut` contract. Completing its objective opens a real
+post-objective shortcut on the revisited entry switch, with objective-state
+dependency, return-path ports, layout requirements, and composition limits.
+
+**2026-07-19 AG-036 completion record:** Added an explicit typed
+`objective_closed_return_road` contract. Completing its objective closes the
+outbound road behind the player and opens the valid return exit, with exact
+edge-state changes and focused contract tests.
 
 ## Legacy recipe correctness
 

@@ -179,6 +179,59 @@ def _objective_gate_ports() -> tuple[MotifPort, ...]:
     )
 
 
+def _objective_state_return_ports() -> tuple[MotifPort, ...]:
+    """Typed ports shared by objective-driven outbound/return route changes."""
+
+    return (
+        *_main_route_ports(),
+        MotifPort("branch_insertion", "entry", MotifPortType.BRANCH_INSERTION_POINT),
+        MotifPort("return_input", "entry", MotifPortType.RETURN_PATH_INPUT),
+        MotifPort("return_output", "package", MotifPortType.RETURN_PATH_OUTPUT),
+        MotifPort("objective", "package", MotifPortType.OBJECTIVE_ATTACHMENT),
+        MotifPort("state_change", "package", MotifPortType.STATE_CHANGE_ATTACHMENT),
+    )
+
+
+def _objective_state_return_contract(
+    *edge_changes: tuple[str, str, MotifEdgeStateChangeKind],
+    gameplay_effect: MotifGameplayEffect,
+    minimum_layout_footprint: tuple[int, int],
+) -> tuple[MotifPreconditionContract, MotifEffectContract]:
+    """Build the explicit contract for one objective-state return motif."""
+
+    return (
+        MotifPreconditionContract(
+            minimum_objective_phase_index=0,
+            required_incoming_objective_state=(
+                MotifIncomingObjectiveState.BEFORE_ACTIVE_OBJECTIVE
+            ),
+            forbidden_completed_objective_roles=("active_objective",),
+        ),
+        MotifEffectContract(
+            completed_objective_node_ids=("package",),
+            edge_state_changes=tuple(
+                MotifEdgeStateChange(from_node, to_node, kind, "package")
+                for from_node, to_node, kind in edge_changes
+            ),
+            decision_node_ids=("entry",),
+            structural_effects=(
+                MotifStructuralEffect.SEGMENT,
+                MotifStructuralEffect.SPLIT,
+                MotifStructuralEffect.RING,
+                MotifStructuralEffect.RETURN_CORRIDOR,
+                MotifStructuralEffect.CROSS_PHASE_CONNECTOR,
+            ),
+            gameplay_effects=(gameplay_effect,),
+            expected_downstream_dependency=MotifDependencyEffect.OBJECTIVE_STATE,
+            introduces_cycle=True,
+            introduces_revisit=True,
+            minimum_layout_footprint=minimum_layout_footprint,
+            incompatible_effects=("secondEmbeddedObjective",),
+            maximum_instances_per_composition=1,
+        ),
+    )
+
+
 def _complete_typed_contract(factory: SeedMotif) -> SeedMotif:
     """Migrate a seed fixture to the V3 contract without changing its graph."""
 
@@ -389,6 +442,17 @@ def seed_motif_factories() -> tuple[BaseMotif, ...]:
         minimum_layout_footprint=(4, 2),
         incompatible_effects=("secondEmbeddedObjective",),
         maximum_instances_per_composition=1,
+    )
+    unlock_shortcut_preconditions, unlock_shortcut_effects = _objective_state_return_contract(
+        ("entry", "shortcut", MotifEdgeStateChangeKind.OPEN),
+        gameplay_effect=MotifGameplayEffect.UNLOCK_SHORTCUT,
+        minimum_layout_footprint=(6, 2),
+    )
+    close_behind_preconditions, close_behind_effects = _objective_state_return_contract(
+        ("entry", "return_road", MotifEdgeStateChangeKind.CLOSE),
+        ("entry", "exit", MotifEdgeStateChangeKind.OPEN),
+        gameplay_effect=MotifGameplayEffect.CLOSE_BEHIND_ROUTE,
+        minimum_layout_footprint=(5, 2),
     )
     motifs = (
         _motif("straight_segment", (("entry", "route"), ("exit", "route")), (("entry", "exit"),),
@@ -674,6 +738,9 @@ def seed_motif_factories() -> tuple[BaseMotif, ...]:
             ("entry", "outbound", "package", "return", "entry", "shortcut", "exit"),
             "Completing the objective unlocks a shorter return route.",
             difficulties=advanced, cycle=True, revisit=True, embedded_package=True,
+            ports=_objective_state_return_ports(),
+            preconditions=unlock_shortcut_preconditions,
+            effects=unlock_shortcut_effects,
         ),
         _motif(
             "objective_closed_return_road",
@@ -688,6 +755,9 @@ def seed_motif_factories() -> tuple[BaseMotif, ...]:
             ("entry", "return_road", "package", "loop", "entry", "exit"),
             "The outbound return road closes behind the completed objective.",
             difficulties=advanced, cycle=True, revisit=True, embedded_package=True,
+            ports=_objective_state_return_ports(),
+            preconditions=close_behind_preconditions,
+            effects=close_behind_effects,
         ),
     )
     return tuple(_complete_typed_contract(factory) for factory in motifs)

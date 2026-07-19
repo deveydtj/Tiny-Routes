@@ -86,6 +86,71 @@ def test_objective_gate_has_stateful_gameplay_contract_and_real_gate_edges() -> 
     })
 
 
+def test_unlock_shortcut_motif_opens_a_real_post_objective_route() -> None:
+    motif = default_motif_registry().get("objective_unlocked_shortcut").build()
+
+    assert motif.validate() == ()
+    assert motif.preconditions is not None
+    assert motif.effects is not None
+    assert motif.preconditions.required_incoming_objective_state is (
+        MotifIncomingObjectiveState.BEFORE_ACTIVE_OBJECTIVE
+    )
+    assert motif.effects.completed_objective_node_ids == ("package",)
+    assert len(motif.effects.edge_state_changes) == 1
+    change = motif.effects.edge_state_changes[0]
+    assert (change.from_node_id, change.to_node_id, change.kind) == (
+        "entry", "shortcut", MotifEdgeStateChangeKind.OPEN,
+    )
+    assert motif.effects.gameplay_effects == (MotifGameplayEffect.UNLOCK_SHORTCUT,)
+    assert motif.effects.expected_downstream_dependency is MotifDependencyEffect.OBJECTIVE_STATE
+    assert {
+        (edge.from_node_id, edge.to_node_id, edge.availability)
+        for edge in motif.edges
+        if edge.from_node_id == "entry"
+    } == {
+        ("entry", "outbound", "always"),
+        ("entry", "shortcut", "afterPackage"),
+    }
+    assert {port.port_type for port in motif.ports}.issuperset({
+        MotifPortType.BRANCH_INSERTION_POINT,
+        MotifPortType.OBJECTIVE_ATTACHMENT,
+        MotifPortType.STATE_CHANGE_ATTACHMENT,
+        MotifPortType.RETURN_PATH_INPUT,
+        MotifPortType.RETURN_PATH_OUTPUT,
+    })
+
+
+def test_close_behind_motif_closes_outbound_road_and_opens_return_exit() -> None:
+    motif = default_motif_registry().get("objective_closed_return_road").build()
+
+    assert motif.validate() == ()
+    assert motif.preconditions is not None
+    assert motif.effects is not None
+    assert motif.preconditions.required_incoming_objective_state is (
+        MotifIncomingObjectiveState.BEFORE_ACTIVE_OBJECTIVE
+    )
+    assert motif.effects.completed_objective_node_ids == ("package",)
+    assert {
+        (change.from_node_id, change.to_node_id, change.kind)
+        for change in motif.effects.edge_state_changes
+    } == {
+        ("entry", "return_road", MotifEdgeStateChangeKind.CLOSE),
+        ("entry", "exit", MotifEdgeStateChangeKind.OPEN),
+    }
+    assert motif.effects.gameplay_effects == (MotifGameplayEffect.CLOSE_BEHIND_ROUTE,)
+    assert motif.effects.expected_downstream_dependency is MotifDependencyEffect.OBJECTIVE_STATE
+    assert {
+        (edge.from_node_id, edge.to_node_id, edge.availability)
+        for edge in motif.edges
+        if edge.from_node_id == "entry"
+    } == {
+        ("entry", "return_road", "beforePackage"),
+        ("entry", "exit", "afterPackage"),
+    }
+    assert motif.effects.introduces_cycle is True
+    assert motif.effects.introduces_revisit is True
+
+
 def test_all_initial_seed_motifs_validate_independently() -> None:
     motifs = seed_motif_factories()
     assert {motif.motif_id for motif in motifs} == EXPECTED
