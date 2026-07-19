@@ -1,6 +1,13 @@
 from .candidate_signature import CandidateSignature
 from .difficulty_preset import DifficultyPreset
 from .decision_profile import DecisionProfile
+from .decision_dependency_graph import (
+    DecisionDependency,
+    DecisionDependencyGraph,
+    DecisionDependencyKind,
+    DecisionNode,
+)
+from .puzzle_blueprint import ObjectiveSpec, StateTransitionSpec
 from .puzzle_motif import MotifCompatibilityConstraints, PuzzleMotif
 from .puzzle_experience_target import PuzzleExperienceTarget
 from .generated_level import GeneratedLevel
@@ -25,6 +32,12 @@ from .stage_result import CandidateStageResult, StageResult
 __all__ = [
     "DifficultyPreset",
     "DecisionProfile",
+    "DecisionDependency",
+    "DecisionDependencyGraph",
+    "DecisionDependencyKind",
+    "DecisionNode",
+    "ObjectiveSpec",
+    "StateTransitionSpec",
     "MotifCompatibilityConstraints",
     "PuzzleMotif",
     "PuzzleExperienceTarget",
