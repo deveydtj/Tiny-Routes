@@ -81,24 +81,89 @@ def test_unlock_shortcut_blueprints_are_deterministic_and_valid(
     assert hub_visits[0].phase_index < hub_visits[1].phase_index
 
 
+@pytest.mark.parametrize("difficulty", ("easy", "medium", "hard", "expert"))
+@pytest.mark.parametrize("seed", (0, 3, 41, 62_000))
+def test_closed_return_blueprints_are_deterministic_and_close_outbound_route(
+    difficulty: str,
+    seed: int,
+) -> None:
+    service = PuzzleBlueprintService()
+
+    first = service.build_closed_return(difficulty, seed)
+    second = service.build_closed_return(difficulty, seed)
+
+    assert first == second
+    assert first.archetype == "closed_return"
+    assert first.validate() == ()
+    assert first.required_mechanic_categories == ("close_behind",)
+    assert first.objectives[0].id == "return_pickup"
+
+    closure = first.state_transitions[0]
+    assert closure.trigger_objective_id == "return_pickup"
+    assert closure.opened_edge_roles == ("alternate_return_route",)
+    assert closure.closed_edge_roles == ("outbound_route",)
+
+    junction_visits = tuple(
+        decision
+        for decision in first.decision_graph.decisions
+        if decision.switch_role == "return_junction"
+    )
+    assert junction_visits[0].required_outgoing_edge_role == "outbound_route"
+    assert junction_visits[1].required_outgoing_edge_role == "alternate_return_route"
+    assert junction_visits[0].phase_index < junction_visits[1].phase_index
+
+
+@pytest.mark.parametrize("difficulty", ("easy", "medium", "hard", "expert"))
+@pytest.mark.parametrize("seed", (0, 4, 53, 73_000))
+def test_ordered_checkpoint_blueprints_keep_ordered_points_visible_and_stateful(
+    difficulty: str,
+    seed: int,
+) -> None:
+    service = PuzzleBlueprintService()
+
+    first = service.build_ordered_checkpoint(difficulty, seed)
+    second = service.build_ordered_checkpoint(difficulty, seed)
+
+    assert first == second
+    assert first.archetype == "ordered_checkpoint"
+    assert first.validate() == ()
+    assert first.required_mechanic_categories == ("ordered_checkpoint",)
+    assert all(objective.reveal_policy == "always" for objective in first.objectives)
+    assert [objective.id for objective in first.objectives[:-1]] == [
+        f"checkpoint_{index}"
+        for index in range(1, len(first.objectives))
+    ]
+    assert first.objectives[-1].id == "destination"
+
+    for transition in first.state_transitions:
+        expected_completed = tuple(
+            objective.id
+            for objective in first.objectives[: transition.to_phase_index]
+        )
+        assert transition.required_completed_objective_ids == expected_completed
+        assert transition.revealed_objective_ids == ()
+
+
 def test_generate_selects_only_completed_archetypes_and_supports_explicit_choice() -> None:
     service = PuzzleBlueprintService()
 
     assert service.generate("easy", 0).archetype == "return_to_hub"
     assert service.generate("easy", 1).archetype == "unlock_shortcut"
+    assert service.generate("easy", 2).archetype == "closed_return"
+    assert service.generate("easy", 3).archetype == "ordered_checkpoint"
     assert (
         service.generate("medium", 9, archetype=" RETURN_TO_HUB ").archetype
         == "return_to_hub"
     )
 
 
-def test_blueprint_service_rejects_invalid_seed_and_unfinished_archetype() -> None:
+def test_blueprint_service_rejects_invalid_seed_and_unknown_archetype() -> None:
     service = PuzzleBlueprintService()
 
     with pytest.raises(ValueError, match="seed must be an integer"):
         service.generate("easy", True)
     with pytest.raises(ValueError, match="Unknown production V3 blueprint archetype"):
-        service.generate("easy", 0, archetype="closed_return")
+        service.generate("easy", 0, archetype="recoverable_loop")
 
 
 def test_generator_service_alias_preserves_existing_service_naming_convention() -> None:

@@ -34,6 +34,7 @@ class DifficultyTargetResolver:
                     "objective_gate",
                     "ordered_checkpoint",
                     "unlock_shortcut",
+                    "close_behind",
                     "recoverable_detour",
                     "hub_revisit",
                 ),

@@ -28,7 +28,12 @@ class PuzzleBlueprintService:
     partially specified fallback.
     """
 
-    supported_archetypes = ("return_to_hub", "unlock_shortcut")
+    supported_archetypes = (
+        "return_to_hub",
+        "unlock_shortcut",
+        "closed_return",
+        "ordered_checkpoint",
+    )
 
     def __init__(
         self,
@@ -59,6 +64,8 @@ class PuzzleBlueprintService:
         builders = {
             "return_to_hub": self.build_return_to_hub,
             "unlock_shortcut": self.build_unlock_shortcut,
+            "closed_return": self.build_closed_return,
+            "ordered_checkpoint": self.build_ordered_checkpoint,
         }
         try:
             builder = builders[archetype]
@@ -114,8 +121,64 @@ class PuzzleBlueprintService:
                 "shortcut_recovery_detour",
             ),
             objective_prefix="shortcut",
+            first_objective_id="shortcut_key",
             required_mechanics=("unlock_shortcut",),
             transition_factory=self._unlock_shortcut_transition,
+        )
+
+    def build_closed_return(
+        self,
+        difficulty: str,
+        seed: int = 0,
+    ) -> PuzzleBlueprint:
+        """Close the outbound road after pickup and require another way back."""
+
+        seed = self._validated_seed(seed)
+        target = self._difficulty_resolver.resolve(difficulty)
+        randomizer = Random(f"closed_return:{target.difficulty}:{seed}")
+        return self._build_blueprint(
+            archetype="closed_return",
+            seed=seed,
+            target=target,
+            randomizer=randomizer,
+            hub_switch_role="return_junction",
+            hub_outgoing_roles=(
+                "outbound_route",
+                "alternate_return_route",
+                "return_recovery_detour",
+            ),
+            objective_prefix="closed_return",
+            first_objective_id="return_pickup",
+            required_mechanics=("close_behind",),
+            transition_factory=self._closed_return_transition,
+        )
+
+    def build_ordered_checkpoint(
+        self,
+        difficulty: str,
+        seed: int = 0,
+    ) -> PuzzleBlueprint:
+        """Keep every checkpoint visible while requiring its authored order."""
+
+        seed = self._validated_seed(seed)
+        target = self._difficulty_resolver.resolve(difficulty)
+        randomizer = Random(f"ordered_checkpoint:{target.difficulty}:{seed}")
+        return self._build_blueprint(
+            archetype="ordered_checkpoint",
+            seed=seed,
+            target=target,
+            randomizer=randomizer,
+            hub_switch_role="checkpoint_router",
+            hub_outgoing_roles=(
+                "checkpoint_route_1",
+                "checkpoint_route_2",
+                "checkpoint_recovery_detour",
+            ),
+            objective_prefix="ordered_checkpoint",
+            first_objective_id="checkpoint_1",
+            required_mechanics=("ordered_checkpoint",),
+            transition_factory=self._ordered_checkpoint_transition,
+            objective_factory=self._build_ordered_checkpoint_objectives,
         )
 
     def _build_blueprint(
@@ -128,11 +191,13 @@ class PuzzleBlueprintService:
         hub_switch_role: str,
         hub_outgoing_roles: tuple[str, ...],
         objective_prefix: str,
+        first_objective_id: str | None = None,
         required_mechanics: tuple[str, ...],
         transition_factory: Callable[
             [int, tuple[ObjectiveSpec, ...]],
             StateTransitionSpec,
         ],
+        objective_factory: Callable[[int], tuple[ObjectiveSpec, ...]] | None = None,
     ) -> PuzzleBlueprint:
         objective_count = randomizer.randint(*target.objective_count_range)
         decision_lower = max(target.meaningful_decision_range[0], objective_count)
@@ -162,13 +227,14 @@ class PuzzleBlueprintService:
             state_change_upper,
         )
 
-        objectives = self._build_objectives(
-            objective_count,
-            objective_prefix=objective_prefix,
-            first_objective_id=(
-                "shortcut_key" if archetype == "unlock_shortcut" else "primary_pickup"
-            ),
-        )
+        if objective_factory is None:
+            objectives = self._build_objectives(
+                objective_count,
+                objective_prefix=objective_prefix,
+                first_objective_id=first_objective_id or "primary_pickup",
+            )
+        else:
+            objectives = objective_factory(objective_count)
         phase_indices = self._decision_phase_indices(decision_count, objective_count)
         hub_indices = self._hub_visit_indices(phase_indices, revisit_count)
         decisions = self._build_decisions(
@@ -273,6 +339,33 @@ class PuzzleBlueprintService:
             min((index * objective_count) // decision_count, objective_count - 1)
             for index in range(decision_count)
         )
+
+    @staticmethod
+    def _build_ordered_checkpoint_objectives(
+        count: int,
+    ) -> tuple[ObjectiveSpec, ...]:
+        objectives = [
+            ObjectiveSpec(
+                id=f"checkpoint_{index + 1}",
+                kind="checkpoint",
+                sequence_index=index,
+                phase_entry_role=f"ordered_checkpoint_phase_{index}_entry",
+                phase_exit_role=f"ordered_checkpoint_phase_{index}_exit",
+                reveal_policy="always",
+            )
+            for index in range(count - 1)
+        ]
+        objectives.append(
+            ObjectiveSpec(
+                id="destination",
+                kind="destination",
+                sequence_index=count - 1,
+                phase_entry_role=f"ordered_checkpoint_phase_{count - 1}_entry",
+                phase_exit_role=f"ordered_checkpoint_phase_{count - 1}_exit",
+                reveal_policy="always",
+            )
+        )
+        return tuple(objectives)
 
     @staticmethod
     def _hub_visit_indices(
@@ -449,6 +542,55 @@ class PuzzleBlueprintService:
             trigger_objective_id=trigger.id,
             required_completed_objective_ids=(trigger.id,),
             revealed_objective_ids=(following.id,),
+            opened_edge_roles=opened_roles,
+            closed_edge_roles=closed_roles,
+        )
+
+    @staticmethod
+    def _closed_return_transition(
+        phase_index: int,
+        objectives: tuple[ObjectiveSpec, ...],
+    ) -> StateTransitionSpec:
+        trigger = objectives[phase_index]
+        following = objectives[phase_index + 1]
+        if phase_index == 0:
+            opened_roles = ("alternate_return_route",)
+            closed_roles = ("outbound_route",)
+        else:
+            opened_roles = (f"closed_return_phase_{phase_index + 1}_connector",)
+            closed_roles = (f"closed_return_phase_{phase_index}_connector",)
+        return StateTransitionSpec(
+            id=f"closed_return_phase_{phase_index + 1}",
+            from_phase_index=phase_index,
+            to_phase_index=phase_index + 1,
+            trigger_objective_id=trigger.id,
+            required_completed_objective_ids=(trigger.id,),
+            revealed_objective_ids=(following.id,),
+            opened_edge_roles=opened_roles,
+            closed_edge_roles=closed_roles,
+        )
+
+    @staticmethod
+    def _ordered_checkpoint_transition(
+        phase_index: int,
+        objectives: tuple[ObjectiveSpec, ...],
+    ) -> StateTransitionSpec:
+        trigger = objectives[phase_index]
+        required_completed_ids = tuple(
+            objective.id for objective in objectives[: phase_index + 1]
+        )
+        if phase_index == 0:
+            opened_roles = ("checkpoint_route_2",)
+            closed_roles = ("checkpoint_route_1",)
+        else:
+            opened_roles = (f"checkpoint_phase_{phase_index + 1}_connector",)
+            closed_roles = (f"checkpoint_phase_{phase_index}_connector",)
+        return StateTransitionSpec(
+            id=f"ordered_checkpoint_phase_{phase_index + 1}",
+            from_phase_index=phase_index,
+            to_phase_index=phase_index + 1,
+            trigger_objective_id=trigger.id,
+            required_completed_objective_ids=required_completed_ids,
             opened_edge_roles=opened_roles,
             closed_edge_roles=closed_roles,
         )

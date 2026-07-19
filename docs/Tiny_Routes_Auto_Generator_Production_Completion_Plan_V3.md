@@ -2620,8 +2620,8 @@ The following sequence is intentionally small enough for junior contributors. Ea
 - [x] **AG-024:** Add difficulty target resolver.
 - [x] **AG-025:** Add return-to-hub blueprint.
 - [x] **AG-026:** Add unlock-shortcut blueprint.
-- [ ] **AG-027:** Add closed-return blueprint.
-- [ ] **AG-028:** Add ordered-checkpoint blueprint.
+- [x] **AG-027:** Add closed-return blueprint.
+- [x] **AG-028:** Add ordered-checkpoint blueprint.
 - [ ] **AG-029:** Add recoverable-loop blueprint.
 - [ ] **AG-030:** Add competing-success-routes blueprint.
 
