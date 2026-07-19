@@ -2672,8 +2672,17 @@ The following sequence is intentionally small enough for junior contributors. Ea
 - [x] **AG-038:** Add stateful ring motif.
 - [x] **AG-039:** Add recoverable detour motif.
 - [x] **AG-040:** Add delayed-consequence motif.
-- [ ] **AG-041:** Add unique-optimal alternate-route motif.
-- [ ] **AG-042:** Add motif contract test helper.
+- [x] **AG-041:** Add unique-optimal alternate-route motif.
+- [x] **AG-042:** Add motif contract test helper.
+
+**2026-07-19 AG-041 completion record:** Upgraded `parallel_unique_optimum` to an
+explicit typed contract with two successful rejoining lanes, a slower recovery
+exit, and graph-derived proof that exactly one successful route has minimum cost.
+
+**2026-07-19 AG-042 completion record:** Added a reusable motif-contract test
+helper that checks model validity, detected topology and decisions, observed state
+effects, dependency evidence, typed exits, satisfiable preconditions, incompatible
+effects, and composition limits. The full seed catalog now runs through the helper.
 
 **2026-07-19 AG-035 completion record:** Added an explicit typed
 `objective_unlocked_shortcut` contract. Completing its objective opens a real

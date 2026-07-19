@@ -16,6 +16,8 @@ class MotifContractEvidence:
     observed_state_change_count: int
     explicit_exit_port_ids: tuple[str, ...]
     maximum_outcome_count: int
+    successful_route_costs: tuple[int, ...]
+    has_unique_optimal_success: bool
     behavior_signature: str
     issues: tuple[str, ...] = ()
 

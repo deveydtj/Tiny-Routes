@@ -7,6 +7,7 @@ from app.models.motif_contract import (
 )
 from app.models.motif_port import MotifPortType
 from app.motifs.seed_motifs import default_motif_registry, seed_motif_factories
+from test_support import assert_motif_contract
 
 
 EXPECTED = {
@@ -315,6 +316,31 @@ def test_stateful_ring_changes_available_exit_between_objective_phases() -> None
         MotifPortType.STATE_CHANGE_ATTACHMENT,
         MotifPortType.FAILURE_EXIT,
     })
+
+
+def test_parallel_routes_have_one_proven_optimum_and_one_successful_alternate() -> None:
+    motif = default_motif_registry().get("parallel_unique_optimum").build()
+
+    evidence = assert_motif_contract(motif)
+
+    assert motif.effects.gameplay_effects == (
+        MotifGameplayEffect.ALTERNATE_SUCCESSFUL_DETOUR,
+        MotifGameplayEffect.UNIQUE_OPTIMAL_ALTERNATE_ROUTE,
+    )
+    assert motif.effects.decision_node_ids == ("entry",)
+    assert motif.effects.expected_downstream_dependency is MotifDependencyEffect.EARLIER_CHOICE
+    assert motif.effects.introduces_rejoin is True
+    assert motif.effects.introduces_recovery_exit is True
+    assert evidence.successful_route_costs == (2, 3)
+    assert evidence.has_unique_optimal_success is True
+    assert {port.port_type for port in motif.ports}.issuperset({
+        MotifPortType.BRANCH_INSERTION_POINT,
+        MotifPortType.REJOIN_INPUT,
+        MotifPortType.RECOVERY_EXIT,
+    })
+    assert len(tuple(
+        port for port in motif.ports if port.port_type is MotifPortType.REJOIN_INPUT
+    )) == 2
 
 
 def test_all_initial_seed_motifs_validate_independently() -> None:

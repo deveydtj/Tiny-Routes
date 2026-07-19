@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from collections import deque
-
 from ..models.motif_contract import (
     MotifDependencyEffect,
     MotifEdgeStateChangeKind,
@@ -119,7 +117,7 @@ class ProductionMotifCatalogService:
         structural = set(evidence.detected_structural_effects)
         dependencies = set(evidence.detected_dependencies)
         changes = {change.kind for change in effects.edge_state_changes}
-        unequal = self._has_unequal_success_costs(motif)
+        unequal = len(set(evidence.successful_route_costs)) >= 2
         requirements = {
             ProductionMotifCapability.BINARY_LATER_CONSEQUENCE:
                 evidence.maximum_outcome_count >= 2 and MotifDependencyEffect.EARLIER_CHOICE in dependencies,
@@ -154,7 +152,8 @@ class ProductionMotifCatalogService:
             ProductionMotifCapability.THREE_PHASE_RELAY:
                 len(effects.completed_objective_node_ids) >= 3 and effects.introduces_revisit,
             ProductionMotifCapability.PARALLEL_UNIQUE_OPTIMUM:
-                MotifGameplayEffect.ALTERNATE_SUCCESSFUL_DETOUR in gameplay and unequal,
+                MotifGameplayEffect.UNIQUE_OPTIMAL_ALTERNATE_ROUTE in gameplay
+                and evidence.has_unique_optimal_success,
             ProductionMotifCapability.DELAYED_DOWNSTREAM_CONSEQUENCE:
                 MotifGameplayEffect.DELAYED_CONSEQUENCE in gameplay and MotifDependencyEffect.EARLIER_CHOICE in dependencies,
             ProductionMotifCapability.OBJECTIVE_BRANCH_CHANGES_AVAILABILITY:
@@ -163,32 +162,3 @@ class ProductionMotifCatalogService:
                 MotifStructuralEffect.SEGMENT in structural and not evidence.meaningful_decision_node_ids,
         }
         return requirements[capability]
-
-    @staticmethod
-    def _has_unequal_success_costs(motif) -> bool:
-        adjacency: dict[str, list[str]] = {node.id: [] for node in motif.nodes}
-        for edge in motif.edges:
-            adjacency[edge.from_node_id].append(edge.to_node_id)
-        exit_node = motif.main_route_exit_connectors[0]
-        for node_id, targets in adjacency.items():
-            if len(targets) < 2:
-                continue
-            distances = []
-            for target in targets:
-                queue = deque([(target, 0)])
-                visited = {target}
-                found = None
-                while queue:
-                    current, distance = queue.popleft()
-                    if current == exit_node:
-                        found = distance
-                        break
-                    for next_node in adjacency[current]:
-                        if next_node not in visited:
-                            visited.add(next_node)
-                            queue.append((next_node, distance + 1))
-                if found is not None:
-                    distances.append(found)
-            if len(distances) >= 2 and len(set(distances)) >= 2:
-                return True
-        return False

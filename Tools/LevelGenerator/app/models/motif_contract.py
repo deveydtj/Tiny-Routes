@@ -56,6 +56,7 @@ class MotifGameplayEffect(str, Enum):
     RECOVERABLE_LOOP = "recoverableLoop"
     DELAYED_CONSEQUENCE = "delayedConsequence"
     ALTERNATE_SUCCESSFUL_DETOUR = "alternateSuccessfulDetour"
+    UNIQUE_OPTIMAL_ALTERNATE_ROUTE = "uniqueOptimalAlternateRoute"
     ONE_USE_CONNECTOR = "oneUseConnector"
 
 

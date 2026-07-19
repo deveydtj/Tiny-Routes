@@ -179,6 +179,18 @@ def _recoverable_detour_ports() -> tuple[MotifPort, ...]:
     )
 
 
+def _unique_optimal_route_ports() -> tuple[MotifPort, ...]:
+    """Expose both successful lanes and identify the slower recovery exit."""
+
+    return (
+        *_main_route_ports(),
+        MotifPort("route_choice", "entry", MotifPortType.BRANCH_INSERTION_POINT),
+        MotifPort("optimal_rejoin", "fast", MotifPortType.REJOIN_INPUT),
+        MotifPort("alternate_rejoin", "slow_b", MotifPortType.REJOIN_INPUT),
+        MotifPort("alternate_success", "slow_b", MotifPortType.RECOVERY_EXIT),
+    )
+
+
 def _delayed_consequence_ports() -> tuple[MotifPort, ...]:
     """Expose an early commitment and its later success/failure decision."""
 
@@ -524,6 +536,24 @@ def seed_motif_factories() -> tuple[BaseMotif, ...]:
         introduces_rejoin=True,
         introduces_recovery_exit=True,
         minimum_layout_footprint=(4, 2),
+        maximum_instances_per_composition=2,
+    )
+    unique_optimal_route_effects = MotifEffectContract(
+        decision_node_ids=("entry",),
+        structural_effects=(
+            MotifStructuralEffect.SEGMENT,
+            MotifStructuralEffect.SPLIT,
+            MotifStructuralEffect.REJOIN,
+            MotifStructuralEffect.LANE_EXPANSION,
+        ),
+        gameplay_effects=(
+            MotifGameplayEffect.ALTERNATE_SUCCESSFUL_DETOUR,
+            MotifGameplayEffect.UNIQUE_OPTIMAL_ALTERNATE_ROUTE,
+        ),
+        expected_downstream_dependency=MotifDependencyEffect.EARLIER_CHOICE,
+        introduces_rejoin=True,
+        introduces_recovery_exit=True,
+        minimum_layout_footprint=(5, 2),
         maximum_instances_per_composition=2,
     )
     delayed_consequence_effects = MotifEffectContract(
@@ -908,6 +938,9 @@ def seed_motif_factories() -> tuple[BaseMotif, ...]:
             ("entry", "fast", "exit"),
             "Two successful parallel routes have unequal proven edge cost.",
             difficulties=advanced, rejoin=True,
+            ports=_unique_optimal_route_ports(),
+            preconditions=MotifPreconditionContract(),
+            effects=unique_optimal_route_effects,
         ),
         _motif(
             "objective_unlocked_shortcut",

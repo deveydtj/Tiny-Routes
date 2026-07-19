@@ -6,6 +6,7 @@ from app.models.motif_contract import (
     MotifEdgeStateChangeKind,
     MotifIncomingObjectiveState,
 )
+from app.models.graph_recipe import GraphRecipeEdge
 from app.models.motif_port import MotifPortType
 from app.models.production_motif_catalog import ProductionMotifCapability
 from app.motifs.seed_motifs import default_motif_registry, seed_motif_factories
@@ -15,16 +16,16 @@ from app.services.production_motif_catalog_service import (
     PRODUCTION_MOTIF_IDS,
     ProductionMotifCatalogService,
 )
+from test_support import assert_motif_contract
 
 
 def test_every_seed_motif_has_valid_typed_contract_evidence() -> None:
     analyzer = MotifContractEvidenceService()
 
-    reports = tuple(analyzer.analyze(factory.build()) for factory in seed_motif_factories())
-
-    assert all(report.is_valid for report in reports), {
-        report.motif_id: report.issues for report in reports if report.issues
-    }
+    reports = tuple(
+        assert_motif_contract(factory.build(), evidence_service=analyzer)
+        for factory in seed_motif_factories()
+    )
     assert all(report.explicit_exit_port_ids for report in reports)
 
 
@@ -143,3 +144,22 @@ def test_exact_analysis_detects_objective_and_revisit_dependencies() -> None:
         MotifDependencyEffect.OBJECTIVE_STATE,
         MotifDependencyEffect.REVISIT,
     })
+
+
+def test_unique_optimal_claim_requires_one_strictly_cheapest_success() -> None:
+    motif = default_motif_registry().get("parallel_unique_optimum").build()
+    analyzer = MotifContractEvidenceService()
+
+    report = analyzer.analyze(motif)
+
+    assert report.successful_route_costs == (2, 3)
+    assert report.has_unique_optimal_success is True
+
+    tied = replace(
+        motif,
+        edges=motif.edges + (GraphRecipeEdge("slow_a", "exit"),),
+    )
+    tied_report = analyzer.analyze(tied)
+    assert tied_report.successful_route_costs == (2, 2, 3)
+    assert tied_report.has_unique_optimal_success is False
+    assert "motif_evidence_unique_optimal_success_not_detected" in tied_report.issues

@@ -9,6 +9,7 @@ from collections import deque
 from ..models.motif_contract import (
     MotifDependencyEffect,
     MotifEdgeStateChangeKind,
+    MotifGameplayEffect,
     MotifIncomingObjectiveState,
     MotifStructuralEffect,
 )
@@ -34,6 +35,11 @@ class MotifContractEvidenceService:
             if len(adjacency[node_id]) >= 2 and self._decision_is_meaningful(motif, node_id, adjacency)
         )
         observed_changes = self._observed_state_changes(motif)
+        successful_route_costs = self._successful_route_costs(motif, adjacency)
+        has_unique_optimal_success = (
+            len(successful_route_costs) >= 2
+            and successful_route_costs.count(min(successful_route_costs)) == 1
+        )
         detected_dependencies = self._detected_dependencies(
             motif, meaningful, cyclic_nodes, observed_changes, adjacency
         )
@@ -58,6 +64,12 @@ class MotifContractEvidenceService:
             dependency = motif.effects.expected_downstream_dependency
             if dependency is not MotifDependencyEffect.NONE and dependency not in detected_dependencies:
                 issues.append(f"motif_evidence_dependency_not_detected:{dependency.value}")
+            if (
+                MotifGameplayEffect.UNIQUE_OPTIMAL_ALTERNATE_ROUTE
+                in motif.effects.gameplay_effects
+                and not has_unique_optimal_success
+            ):
+                issues.append("motif_evidence_unique_optimal_success_not_detected")
             port_types = {port.port_type for port in motif.ports}
             if motif.effects.introduces_failure_exit and MotifPortType.FAILURE_EXIT not in port_types:
                 issues.append("motif_evidence_failure_exit_not_explicit")
@@ -106,9 +118,30 @@ class MotifContractEvidenceService:
             observed_state_change_count=len(observed_changes),
             explicit_exit_port_ids=explicit_exits,
             maximum_outcome_count=maximum_outcomes,
+            successful_route_costs=successful_route_costs,
+            has_unique_optimal_success=has_unique_optimal_success,
             behavior_signature=self._behavior_signature(motif),
             issues=tuple(dict.fromkeys(issues)),
         )
+
+    @staticmethod
+    def _successful_route_costs(motif, adjacency) -> tuple[int, ...]:
+        """Enumerate motif-local simple paths to each declared main-route exit."""
+
+        exit_nodes = set(motif.main_route_exit_connectors)
+        costs: list[int] = []
+        stack = [(motif.main_route_entry_connector, 0, frozenset())]
+        while stack:
+            node_id, cost, visited = stack.pop()
+            if node_id in visited:
+                continue
+            if node_id in exit_nodes:
+                costs.append(cost)
+                continue
+            next_visited = visited | {node_id}
+            for edge in adjacency[node_id]:
+                stack.append((edge.to_node_id, cost + 1, next_visited))
+        return tuple(sorted(costs))
 
     def _detected_structural_effects(self, motif, adjacency, reverse, cyclic_nodes):
         effects: list[MotifStructuralEffect] = []
