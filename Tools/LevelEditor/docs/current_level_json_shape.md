@@ -91,9 +91,29 @@ Nodes are identified by their `id` string and by their role in the top-level fie
 | `fromNodeID` | string | yes | `id` of the node this edge originates from |
 | `toNodeID` | string | yes | `id` of the node this edge leads to |
 | `roadShape` | string | no | Optional road rendering hint. Allowed values: `"horizontalFirst"`, `"verticalFirst"`. When omitted, the Swift engine defaults to `horizontalFirst`. |
-| `availability` | string | no | Package-state condition for using the road: `"always"`, `"beforePackage"`, or `"afterPackage"`. Omitted values decode as `"always"`. Unknown values are invalid. |
+| `availability` | string | schema 1/2 only; no | Legacy package-state condition for using the road: `"always"`, `"beforePackage"`, or `"afterPackage"`. Omitted values decode as `"always"`. Unknown values are invalid. |
+| `availabilityRule` | object | schema 3 only; no | Structured ordered-objective condition. Omission means the road is always available. |
 
 Road availability is evaluated whenever the runtime chooses or rotates an outgoing road. A `beforePackage` road is usable only until the package is collected; an `afterPackage` road is usable only after collection. Every authored nonterminal node must retain at least one usable outgoing road in both package states so a condition cannot create an accidental dead end.
+
+Schema-1/2 conditions adapt internally without rewriting their files:
+`beforePackage` forbids completion of `legacy_pickup`, `afterPackage` requires
+completion of `legacy_pickup`, and `always` becomes an empty rule. For schema 3,
+the adapter targets the authored first pickup objective ID.
+
+### Schema-3 `availabilityRule` Object
+
+| Field | Type | Required | Description |
+|---|---|---|---|
+| `requiredCompletedObjectiveIDs` | array of strings | no | Every listed objective must be complete. |
+| `forbiddenCompletedObjectiveIDs` | array of strings | no | Every listed objective must still be incomplete. |
+| `minimumObjectiveIndex` | integer | no | Earliest active objective index for which the road may be used. |
+| `maximumObjectiveIndex` | integer | no | Latest active objective index for which the road may be used. |
+| `usageLimit` | integer | no | Maximum deterministic traversal count for the road. |
+
+The model is deliberately limited to these typed fields; it does not interpret
+scripts or arbitrary expressions. Objective-state filtering and usage tracking
+are applied at runtime rather than during decoding.
 
 ---
 

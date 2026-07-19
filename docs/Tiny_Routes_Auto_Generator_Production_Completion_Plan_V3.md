@@ -2599,8 +2599,8 @@ The following sequence is intentionally small enough for junior contributors. Ea
 - [x] **AG-006:** Add Swift `RouteObjective` model and decoding tests.
 - [x] **AG-007:** Add schema 3 objective validation.
 - [x] **AG-008:** Add legacy package/destination objective adapter.
-- [ ] **AG-009:** Generalize Python package availability into objective-state rules with V2 adapters.
-- [ ] **AG-010:** Generalize Swift package availability into objective-state rules with V2 adapters.
+- [x] **AG-009:** Generalize Python package availability into objective-state rules with V2 adapters.
+- [x] **AG-010:** Generalize Swift package availability into objective-state rules with V2 adapters.
 - [ ] **AG-011:** Add objective progression to Python simulator.
 - [ ] **AG-012:** Add objective progression to Swift runtime.
 - [ ] **AG-013:** Add objective-based road filtering to Python.

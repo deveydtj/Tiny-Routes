@@ -241,6 +241,70 @@ final class DomainModelsTests: XCTestCase {
         )
     }
 
+    func testStructuredEdgeAvailabilityRuleRoundTrips() throws {
+        let rule = EdgeAvailabilityRule(
+            requiredCompletedObjectiveIDs: ["collect"],
+            forbiddenCompletedObjectiveIDs: ["finish"],
+            minimumObjectiveIndex: 1,
+            maximumObjectiveIndex: 2,
+            usageLimit: 1
+        )
+        let edge = RouteEdge(
+            id: "objective_gate",
+            fromNodeID: "a",
+            toNodeID: "b",
+            availabilityRule: rule
+        )
+
+        let decoded = try decoder.decode(RouteEdge.self, from: encoder.encode(edge))
+
+        XCTAssertEqual(decoded.availabilityRule, rule)
+    }
+
+    func testLegacyRoadAvailabilityAdaptsToObjectiveRules() throws {
+        let level = try decoder.decode(LevelData.self, from: Data(Self.versionThreeJSON.utf8))
+        let legacyLevel = try decoder.decode(LevelData.self, from: Data(Self.versionTwoJSON.utf8))
+
+        let always = level.effectiveAvailabilityRule(for: RouteEdge(
+            id: "always", fromNodeID: "a", toNodeID: "b"
+        ))
+        let before = level.effectiveAvailabilityRule(for: RouteEdge(
+            id: "before", fromNodeID: "a", toNodeID: "b", availability: .beforePackage
+        ))
+        let after = level.effectiveAvailabilityRule(for: RouteEdge(
+            id: "after", fromNodeID: "a", toNodeID: "b", availability: .afterPackage
+        ))
+
+        XCTAssertEqual(always, EdgeAvailabilityRule())
+        XCTAssertEqual(before.forbiddenCompletedObjectiveIDs, ["collect"])
+        XCTAssertEqual(before.requiredCompletedObjectiveIDs, [])
+        XCTAssertEqual(after.requiredCompletedObjectiveIDs, ["collect"])
+        XCTAssertEqual(after.forbiddenCompletedObjectiveIDs, [])
+        XCTAssertEqual(
+            legacyLevel.effectiveAvailabilityRule(for: RouteEdge(
+                id: "legacy_after",
+                fromNodeID: "a",
+                toNodeID: "b",
+                availability: .afterPackage
+            )).requiredCompletedObjectiveIDs,
+            [RouteObjective.legacyPickupID]
+        )
+    }
+
+    func testStructuredRuleTakesPrecedenceOverLegacyAvailability() throws {
+        let level = try decoder.decode(LevelData.self, from: Data(Self.versionThreeJSON.utf8))
+        let authored = EdgeAvailabilityRule(requiredCompletedObjectiveIDs: ["scan"])
+        let edge = RouteEdge(
+            id: "authored",
+            fromNodeID: "a",
+            toNodeID: "b",
+            availability: .beforePackage,
+            availabilityRule: authored
+        )
+
+        XCTAssertEqual(level.effectiveAvailabilityRule(for: edge), authored)
+    }
+
     func testInvalidRuleNumbersProduceValidationIssues() throws {
         var level = try decoder.decode(LevelData.self, from: Data(Self.versionTwoJSON.utf8))
         level.rules = LevelRules(

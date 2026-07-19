@@ -1,5 +1,6 @@
 """Versioned Tiny Routes data models."""
 
+from .edge_availability_rule import EdgeAvailabilityRule
 from .level_rules import LevelRules, SwitchInteractionMode
 from .route_objective import (
     LEGACY_DESTINATION_OBJECTIVE_ID,

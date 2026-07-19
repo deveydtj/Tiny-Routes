@@ -4,8 +4,9 @@ import tiny_routes_core.models as shared_models
 from tiny_routes_core.graph import (GraphIndex, GraphValidationError, cycle_node_ids,
                                     normalize_active_edges, reachable_node_ids, rejoin_node_ids,
                                     usable_outgoing_edges)
-from tiny_routes_core.models import (LevelDocument, RouteEdge, RouteGraph, RouteNode,
-                                     RouteObjective, RouteObjectiveKind, Solution)
+from tiny_routes_core.models import (EdgeAvailabilityRule, LevelDocument, RouteEdge,
+                                     RouteGraph, RouteNode, RouteObjective,
+                                     RouteObjectiveKind, Solution)
 from tiny_routes_core.simulation import RuntimeState
 from tiny_routes_core.validation import validate_level_objectives
 
@@ -14,6 +15,7 @@ def test_shared_models_export_only_canonical_type_names():
     assert shared_models.RouteNode is RouteNode
     assert shared_models.RouteEdge is RouteEdge
     assert shared_models.RouteGraph is RouteGraph
+    assert shared_models.EdgeAvailabilityRule is EdgeAvailabilityRule
     assert shared_models.RouteObjective is RouteObjective
     assert shared_models.RouteObjectiveKind is RouteObjectiveKind
     assert shared_models.Solution is Solution
@@ -304,6 +306,77 @@ def test_package_state_queries_preserve_authored_order_and_normalize_active_edge
     assert reachable_node_ids(index, "switch", package_collected=False) == (
         "switch", "package", "destination",
     )
+
+
+def test_structured_edge_availability_rule_round_trips_losslessly():
+    raw = schema_three_level_dict()
+    raw["graph"]["edges"][1]["availabilityRule"] = {
+        "requiredCompletedObjectiveIDs": ["pickup_package"],
+        "forbiddenCompletedObjectiveIDs": ["future_checkpoint"],
+        "minimumObjectiveIndex": 1,
+        "maximumObjectiveIndex": 2,
+        "usageLimit": 1,
+        "futureCondition": {"trace": True},
+    }
+
+    level = LevelDocument.from_dict(raw)
+    rule = level.graph.edges[1].availabilityRule
+
+    assert rule is not None
+    assert rule.requiredCompletedObjectiveIDs == ["pickup_package"]
+    assert rule.forbiddenCompletedObjectiveIDs == ["future_checkpoint"]
+    assert rule.minimumObjectiveIndex == 1
+    assert rule.maximumObjectiveIndex == 2
+    assert rule.usageLimit == 1
+    assert level.to_dict() == raw
+
+
+@pytest.mark.parametrize(
+    ("availability", "required", "forbidden"),
+    [
+        ("always", [], []),
+        ("beforePackage", [], ["pickup_package"]),
+        ("afterPackage", ["pickup_package"], []),
+    ],
+)
+def test_legacy_edge_availability_adapts_to_effective_pickup_objective(
+    availability, required, forbidden
+):
+    raw = schema_three_level_dict()
+    raw["graph"]["edges"][1]["availability"] = availability
+    level = LevelDocument.from_dict(raw)
+
+    rule = level.effective_edge_availability_rule(level.graph.edges[1])
+
+    assert rule.requiredCompletedObjectiveIDs == required
+    assert rule.forbiddenCompletedObjectiveIDs == forbidden
+    assert level.to_dict() == raw
+
+
+def test_version_two_edge_availability_uses_legacy_pickup_adapter_id():
+    raw = level_dict()
+    raw["schemaVersion"] = 2
+    raw["graph"]["edges"][1]["availability"] = "afterPackage"
+    level = LevelDocument.from_dict(raw)
+
+    rule = level.effective_edge_availability_rule(level.graph.edges[1])
+
+    assert rule.requiredCompletedObjectiveIDs == ["legacy_pickup"]
+    assert level.to_dict() == raw
+
+
+def test_authored_structured_rule_is_the_effective_source_of_truth():
+    raw = schema_three_level_dict()
+    raw["graph"]["edges"][1].update({
+        "availability": "beforePackage",
+        "availabilityRule": {"requiredCompletedObjectiveIDs": ["finish_delivery"]},
+    })
+    level = LevelDocument.from_dict(raw)
+
+    rule = level.effective_edge_availability_rule(level.graph.edges[1])
+
+    assert rule.requiredCompletedObjectiveIDs == ["finish_delivery"]
+    assert rule.forbiddenCompletedObjectiveIDs == []
 
 
 def test_runtime_rejects_conditional_nonterminal_dead_end_in_either_phase():

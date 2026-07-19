@@ -33,6 +33,16 @@ struct LevelData: Identifiable, Codable {
         return objectives ?? []
     }
 
+    /// Resolve schema-3 rules directly and schema-1/2 package conditions through
+    /// the effective pickup objective without changing serialized legacy levels.
+    func effectiveAvailabilityRule(for edge: RouteEdge) -> EdgeAvailabilityRule {
+        let packageObjectiveID = effectiveObjectives
+            .filter { $0.kind == .pickup }
+            .min { $0.sequenceIndex < $1.sequenceIndex }?
+            .id ?? RouteObjective.legacyPickupID
+        return edge.effectiveAvailabilityRule(packageObjectiveID: packageObjectiveID)
+    }
+
     func validateObjectives() -> [RouteObjectiveValidationIssue] {
         let version = schemaVersion ?? 1
         guard version >= 3 else {

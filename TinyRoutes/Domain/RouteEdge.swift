@@ -24,6 +24,47 @@ enum RoadAvailability: String, Codable, CaseIterable {
     }
 }
 
+/// A schema-3 road condition expressed only in ordered-objective state.
+struct EdgeAvailabilityRule: Codable, Equatable {
+    var requiredCompletedObjectiveIDs: [String]
+    var forbiddenCompletedObjectiveIDs: [String]
+    var minimumObjectiveIndex: Int?
+    var maximumObjectiveIndex: Int?
+    var usageLimit: Int?
+
+    init(
+        requiredCompletedObjectiveIDs: [String] = [],
+        forbiddenCompletedObjectiveIDs: [String] = [],
+        minimumObjectiveIndex: Int? = nil,
+        maximumObjectiveIndex: Int? = nil,
+        usageLimit: Int? = nil
+    ) {
+        self.requiredCompletedObjectiveIDs = requiredCompletedObjectiveIDs
+        self.forbiddenCompletedObjectiveIDs = forbiddenCompletedObjectiveIDs
+        self.minimumObjectiveIndex = minimumObjectiveIndex
+        self.maximumObjectiveIndex = maximumObjectiveIndex
+        self.usageLimit = usageLimit
+    }
+
+    static func adapting(
+        _ legacyAvailability: RoadAvailability,
+        packageObjectiveID: String = RouteObjective.legacyPickupID
+    ) -> EdgeAvailabilityRule {
+        switch legacyAvailability {
+        case .always:
+            return EdgeAvailabilityRule()
+        case .beforePackage:
+            return EdgeAvailabilityRule(
+                forbiddenCompletedObjectiveIDs: [packageObjectiveID]
+            )
+        case .afterPackage:
+            return EdgeAvailabilityRule(
+                requiredCompletedObjectiveIDs: [packageObjectiveID]
+            )
+        }
+    }
+}
+
 struct RoadPoint: Equatable {
     let x: Double
     let y: Double
@@ -555,19 +596,22 @@ struct RouteEdge: Identifiable, Codable {
     let toNodeID: String
     var roadShape: RoadShape?
     var availability: RoadAvailability
+    var availabilityRule: EdgeAvailabilityRule?
 
     init(
         id: String,
         fromNodeID: String,
         toNodeID: String,
         roadShape: RoadShape? = nil,
-        availability: RoadAvailability = .always
+        availability: RoadAvailability = .always,
+        availabilityRule: EdgeAvailabilityRule? = nil
     ) {
         self.id = id
         self.fromNodeID = fromNodeID
         self.toNodeID = toNodeID
         self.roadShape = roadShape
         self.availability = availability
+        self.availabilityRule = availabilityRule
     }
 
     private enum CodingKeys: String, CodingKey {
@@ -576,6 +620,7 @@ struct RouteEdge: Identifiable, Codable {
         case toNodeID
         case roadShape
         case availability
+        case availabilityRule
     }
 
     init(from decoder: Decoder) throws {
@@ -585,6 +630,10 @@ struct RouteEdge: Identifiable, Codable {
         toNodeID = try container.decode(String.self, forKey: .toNodeID)
         roadShape = try container.decodeIfPresent(RoadShape.self, forKey: .roadShape)
         availability = try container.decodeIfPresent(RoadAvailability.self, forKey: .availability) ?? .always
+        availabilityRule = try container.decodeIfPresent(
+            EdgeAvailabilityRule.self,
+            forKey: .availabilityRule
+        )
     }
 
     func encode(to encoder: Encoder) throws {
@@ -594,5 +643,13 @@ struct RouteEdge: Identifiable, Codable {
         try container.encode(toNodeID, forKey: .toNodeID)
         try container.encodeIfPresent(roadShape, forKey: .roadShape)
         try container.encode(availability, forKey: .availability)
+        try container.encodeIfPresent(availabilityRule, forKey: .availabilityRule)
+    }
+
+    func effectiveAvailabilityRule(packageObjectiveID: String) -> EdgeAvailabilityRule {
+        availabilityRule ?? EdgeAvailabilityRule.adapting(
+            availability,
+            packageObjectiveID: packageObjectiveID
+        )
     }
 }

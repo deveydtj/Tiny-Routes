@@ -6,8 +6,14 @@ from copy import deepcopy
 from dataclasses import dataclass, field
 from typing import Any, Mapping
 
+from .edge_availability_rule import EdgeAvailabilityRule
 from .level_rules import LevelRules
-from .route_objective import RouteObjective, legacy_route_objectives
+from .route_objective import (
+    LEGACY_PICKUP_OBJECTIVE_ID,
+    RouteObjective,
+    RouteObjectiveKind,
+    legacy_route_objectives,
+)
 
 
 def _extras(data: Mapping[str, Any], known: set[str]) -> dict[str, Any]:
@@ -41,6 +47,7 @@ class RouteEdge:
     toNodeID: str
     roadShape: str | None = None
     availability: str = "always"
+    availabilityRule: EdgeAvailabilityRule | None = None
     _extra: dict[str, Any] = field(default_factory=dict, repr=False, compare=False)
     _availability_present: bool = field(default=False, repr=False, compare=False)
 
@@ -52,9 +59,21 @@ class RouteEdge:
             toNodeID=str(data["toNodeID"]),
             roadShape=data.get("roadShape"),
             availability=str(data.get("availability", "always")),
+            availabilityRule=(
+                EdgeAvailabilityRule.from_dict(data["availabilityRule"])
+                if data.get("availabilityRule") is not None
+                else None
+            ),
             _extra=_extras(
                 data,
-                {"id", "fromNodeID", "toNodeID", "roadShape", "availability"},
+                {
+                    "id",
+                    "fromNodeID",
+                    "toNodeID",
+                    "roadShape",
+                    "availability",
+                    "availabilityRule",
+                },
             ),
             _availability_present="availability" in data,
         )
@@ -65,7 +84,22 @@ class RouteEdge:
         if self.roadShape is not None: result["roadShape"] = self.roadShape
         if self._availability_present or self.availability != "always":
             result["availability"] = self.availability
+        if self.availabilityRule is not None:
+            result["availabilityRule"] = self.availabilityRule.to_dict()
         return result
+
+    def effective_availability_rule(
+        self,
+        package_objective_id: str,
+    ) -> EdgeAvailabilityRule:
+        """Return the schema-3 rule or adapt the legacy package-state value."""
+
+        if self.availabilityRule is not None:
+            return self.availabilityRule.clone()
+        return EdgeAvailabilityRule.adapting_legacy_availability(
+            self.availability,
+            package_objective_id,
+        )
 
     def clone(self) -> "RouteEdge": return deepcopy(self)
 
@@ -155,6 +189,21 @@ class LevelDocument:
         if self.schema_version >= 3:
             return [objective.clone() for objective in self.objectives or ()]
         return legacy_route_objectives(self.packageNodeID, self.destinationNodeID)
+
+    def effective_edge_availability_rule(self, edge: RouteEdge) -> EdgeAvailabilityRule:
+        """Resolve a road rule against this document's effective pickup objective."""
+
+        pickup = min(
+            (
+                objective
+                for objective in self.effective_objectives
+                if objective.kind is RouteObjectiveKind.PICKUP
+            ),
+            key=lambda objective: objective.sequenceIndex,
+            default=None,
+        )
+        package_objective_id = pickup.id if pickup is not None else LEGACY_PICKUP_OBJECTIVE_ID
+        return edge.effective_availability_rule(package_objective_id)
 
     def clone(self) -> "LevelDocument": return deepcopy(self)
 
