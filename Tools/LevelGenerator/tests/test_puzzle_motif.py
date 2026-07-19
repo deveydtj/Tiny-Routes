@@ -1,4 +1,9 @@
 from app.models.graph_recipe import GraphRecipeEdge, GraphRecipeNode
+from app.models.motif_contract import (
+    MotifEffectContract,
+    MotifGameplayEffect,
+    MotifStructuralEffect,
+)
 from app.models.motif_port import MotifPort, MotifPortType
 from app.models.puzzle_motif import PuzzleMotif
 from app.motifs.base_motif import BaseMotif
@@ -81,4 +86,26 @@ def test_typed_ports_reject_unknown_nodes_and_connector_mismatches() -> None:
         "motif_port_node_unknown:outgoing:missing",
         "motif_main_route_entry_port_connector_mismatch",
         "motif_main_route_exit_port_connectors_mismatch",
+    )
+
+
+def test_declared_structural_and_gameplay_effects_require_graph_evidence() -> None:
+    motif = PuzzleMotif(
+        motif_id="unsupported_effects",
+        entry_connector="entry",
+        exit_connectors=("exit",),
+        nodes=(GraphRecipeNode("entry"), GraphRecipeNode("exit")),
+        edges=(GraphRecipeEdge("entry", "exit"),),
+        intended_decision_effect="Invalid declarations for validation coverage.",
+        allowed_difficulties=("medium",),
+        effects=MotifEffectContract(
+            structural_effects=(MotifStructuralEffect.SPLIT, MotifStructuralEffect.REJOIN),
+            gameplay_effects=(MotifGameplayEffect.OBJECTIVE_GATE,),
+        ),
+    )
+
+    assert motif.validate() == (
+        "motif_effect_split_not_detected",
+        "motif_effect_rejoin_not_detected",
+        "motif_effect_objective_gate_evidence_missing",
     )

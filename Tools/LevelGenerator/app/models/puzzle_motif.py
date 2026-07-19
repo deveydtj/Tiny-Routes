@@ -3,7 +3,13 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 
 from .graph_recipe import GraphRecipeEdge, GraphRecipeNode
-from .motif_contract import MotifEffectContract, MotifEdgeStateChangeKind, MotifPreconditionContract
+from .motif_contract import (
+    MotifEffectContract,
+    MotifEdgeStateChangeKind,
+    MotifGameplayEffect,
+    MotifPreconditionContract,
+    MotifStructuralEffect,
+)
 from .motif_port import MotifPort, MotifPortType
 
 
@@ -123,8 +129,10 @@ class PuzzleMotif:
         assert self.effects is not None
         issues: list[str] = []
         outgoing_counts: dict[str, int] = {}
+        incoming_counts: dict[str, int] = {}
         for edge in self.edges:
             outgoing_counts[edge.from_node_id] = outgoing_counts.get(edge.from_node_id, 0) + 1
+            incoming_counts[edge.to_node_id] = incoming_counts.get(edge.to_node_id, 0) + 1
         for node_id in self.effects.completed_objective_node_ids:
             if node_id not in known:
                 issues.append(f"motif_effect_objective_node_unknown:{node_id}")
@@ -161,4 +169,22 @@ class PuzzleMotif:
         for name, contracted, legacy in declared_flags:
             if contracted != legacy:
                 issues.append(f"motif_effect_{name}_legacy_flag_mismatch")
+        if (
+            MotifStructuralEffect.SPLIT in self.effects.structural_effects
+            and not any(count >= 2 for count in outgoing_counts.values())
+        ):
+            issues.append("motif_effect_split_not_detected")
+        if (
+            MotifStructuralEffect.REJOIN in self.effects.structural_effects
+            and not any(count >= 2 for count in incoming_counts.values())
+        ):
+            issues.append("motif_effect_rejoin_not_detected")
+        if (
+            MotifGameplayEffect.OBJECTIVE_GATE in self.effects.gameplay_effects
+            and (
+                not self.effects.completed_objective_node_ids
+                or not self.effects.edge_state_changes
+            )
+        ):
+            issues.append("motif_effect_objective_gate_evidence_missing")
         return tuple(issues)

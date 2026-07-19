@@ -1062,6 +1062,11 @@ Convert and contract-test these existing assets before adding replacements:
 
 The four package-state motifs become the first objective-state migration fixtures. Do not rewrite them from scratch unless their contract cannot be represented safely.
 
+**2026-07-19 AG-033 completion record:** Converted `split_and_rejoin` into a typed,
+explicitly structural motif with split/rejoin insertion ports and detected
+topology evidence. It deliberately declares no gameplay decision effect because
+its equal branches do not yet create distinct future consequences.
+
 ## Task 3.4 — Separate structural and gameplay effects
 
 **Structural operations** shape the graph:
@@ -1087,6 +1092,11 @@ The four package-state motifs become the first objective-state migration fixture
 - One-use connector.
 
 A production motif may combine both, but the report and contract must distinguish them.
+
+**2026-07-19 AG-034 completion record:** Motif contracts now classify structural and
+gameplay effects separately. Added `objective_gate`, whose bypass and objective
+branches visibly rejoin at a downstream gate; objective completion closes the
+failure road and opens the successful road.
 
 ## Task 3.5 — Complete the minimum production motif catalog
 
@@ -2640,8 +2650,8 @@ The following sequence is intentionally small enough for junior contributors. Ea
 
 - [x] **AG-031:** Add typed ports to the existing `PuzzleMotif` model and migrate one V2 motif.
 - [x] **AG-032:** Add explicit precondition/effect contracts and migrate package-state motifs.
-- [ ] **AG-033:** Convert structural split/rejoin motif.
-- [ ] **AG-034:** Add stateful objective-gate motif.
+- [x] **AG-033:** Convert structural split/rejoin motif.
+- [x] **AG-034:** Add stateful objective-gate motif.
 - [ ] **AG-035:** Add unlock-shortcut motif.
 - [ ] **AG-036:** Add close-behind motif.
 - [ ] **AG-037:** Add hub-revisit motif.

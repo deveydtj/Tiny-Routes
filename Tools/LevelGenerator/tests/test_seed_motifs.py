@@ -1,7 +1,9 @@
 from app.models.motif_contract import (
     MotifDependencyEffect,
     MotifEdgeStateChangeKind,
+    MotifGameplayEffect,
     MotifIncomingObjectiveState,
+    MotifStructuralEffect,
 )
 from app.models.motif_port import MotifPortType
 from app.motifs.seed_motifs import default_motif_registry, seed_motif_factories
@@ -9,7 +11,7 @@ from app.motifs.seed_motifs import default_motif_registry, seed_motif_factories
 
 EXPECTED = {
     "straight_segment", "single_binary_choice", "dead_end_decoy", "recoverable_detour",
-    "split_and_rejoin", "package_branch", "return_loop", "revisited_switch", "ring_route",
+    "split_and_rejoin", "objective_gate", "package_branch", "return_loop", "revisited_switch", "ring_route",
     "three_way_hub", "four_way_hub",
     "road_opens_after_package", "shortcut_closes_after_package",
     "return_route_changes_after_package", "package_state_revisited_switch",
@@ -21,6 +23,62 @@ PACKAGE_STATE_MOTIFS = {
     "return_route_changes_after_package",
     "package_state_revisited_switch",
 }
+
+
+def test_split_and_rejoin_is_a_typed_structural_motif() -> None:
+    motif = default_motif_registry().get("split_and_rejoin").build()
+
+    assert motif.validate() == ()
+    assert {port.port_type for port in motif.ports} == {
+        MotifPortType.MAIN_ROUTE_ENTRY,
+        MotifPortType.MAIN_ROUTE_EXIT,
+        MotifPortType.BRANCH_INSERTION_POINT,
+        MotifPortType.REJOIN_INPUT,
+    }
+    assert motif.effects is not None
+    assert motif.effects.structural_effects == (
+        MotifStructuralEffect.SPLIT,
+        MotifStructuralEffect.REJOIN,
+    )
+    assert motif.effects.gameplay_effects == ()
+    assert motif.effects.decision_node_ids == ()
+    assert motif.effects.introduces_rejoin is True
+
+
+def test_objective_gate_has_stateful_gameplay_contract_and_real_gate_edges() -> None:
+    motif = default_motif_registry().get("objective_gate").build()
+
+    assert motif.validate() == ()
+    assert motif.preconditions is not None
+    assert motif.effects is not None
+    assert motif.effects.completed_objective_node_ids == ("package",)
+    assert motif.effects.expected_downstream_dependency is MotifDependencyEffect.OBJECTIVE_STATE
+    assert motif.effects.structural_effects == (
+        MotifStructuralEffect.SPLIT,
+        MotifStructuralEffect.REJOIN,
+    )
+    assert motif.effects.gameplay_effects == (
+        MotifGameplayEffect.OBJECTIVE_GATE,
+        MotifGameplayEffect.STATE_DEPENDENT_BRANCH,
+        MotifGameplayEffect.DELAYED_CONSEQUENCE,
+    )
+    assert {change.kind for change in motif.effects.edge_state_changes} == {
+        MotifEdgeStateChangeKind.OPEN,
+        MotifEdgeStateChangeKind.CLOSE,
+    }
+    assert {
+        (edge.from_node_id, edge.to_node_id, edge.availability)
+        for edge in motif.edges
+        if edge.from_node_id == "gate"
+    } == {
+        ("gate", "exit", "afterPackage"),
+        ("gate", "failure", "beforePackage"),
+    }
+    assert {port.port_type for port in motif.ports}.issuperset({
+        MotifPortType.OBJECTIVE_ATTACHMENT,
+        MotifPortType.STATE_CHANGE_ATTACHMENT,
+        MotifPortType.FAILURE_EXIT,
+    })
 
 
 def test_all_initial_seed_motifs_validate_independently() -> None:

@@ -31,6 +31,34 @@ class MotifDependencyEffect(str, Enum):
     REVISIT = "revisit"
 
 
+class MotifStructuralEffect(str, Enum):
+    """Graph-shaping operation contributed by a motif."""
+
+    SEGMENT = "segment"
+    SPLIT = "split"
+    REJOIN = "rejoin"
+    HUB = "hub"
+    RING = "ring"
+    RETURN_CORRIDOR = "returnCorridor"
+    CROSS_PHASE_CONNECTOR = "crossPhaseConnector"
+    LANE_EXPANSION = "laneExpansion"
+
+
+class MotifGameplayEffect(str, Enum):
+    """Player-facing reasoning effect contributed by a motif."""
+
+    OBJECTIVE_GATE = "objectiveGate"
+    UNLOCK_SHORTCUT = "unlockShortcut"
+    CLOSE_BEHIND_ROUTE = "closeBehindRoute"
+    REQUIRED_HUB_REVISIT = "requiredHubRevisit"
+    STATE_DEPENDENT_BRANCH = "stateDependentBranch"
+    DESTINATION_DECOY = "destinationDecoy"
+    RECOVERABLE_LOOP = "recoverableLoop"
+    DELAYED_CONSEQUENCE = "delayedConsequence"
+    ALTERNATE_SUCCESSFUL_DETOUR = "alternateSuccessfulDetour"
+    ONE_USE_CONNECTOR = "oneUseConnector"
+
+
 @dataclass(frozen=True)
 class MotifEdgeStateChange:
     """A verifiable state change on one motif-local directed edge."""
@@ -110,6 +138,8 @@ class MotifEffectContract:
     completed_objective_node_ids: tuple[str, ...] = ()
     edge_state_changes: tuple[MotifEdgeStateChange, ...] = ()
     decision_node_ids: tuple[str, ...] = ()
+    structural_effects: tuple[MotifStructuralEffect, ...] = ()
+    gameplay_effects: tuple[MotifGameplayEffect, ...] = ()
     expected_downstream_dependency: MotifDependencyEffect = MotifDependencyEffect.NONE
     introduces_cycle: bool = False
     introduces_revisit: bool = False
@@ -125,10 +155,32 @@ class MotifEffectContract:
             "completed_objective_node_ids",
             "edge_state_changes",
             "decision_node_ids",
+            "structural_effects",
+            "gameplay_effects",
             "minimum_layout_footprint",
             "incompatible_effects",
         ):
             object.__setattr__(self, field_name, tuple(getattr(self, field_name)))
+        object.__setattr__(
+            self,
+            "structural_effects",
+            tuple(
+                value
+                if isinstance(value, MotifStructuralEffect)
+                else MotifStructuralEffect(value)
+                for value in self.structural_effects
+            ),
+        )
+        object.__setattr__(
+            self,
+            "gameplay_effects",
+            tuple(
+                value
+                if isinstance(value, MotifGameplayEffect)
+                else MotifGameplayEffect(value)
+                for value in self.gameplay_effects
+            ),
+        )
         if not isinstance(self.expected_downstream_dependency, MotifDependencyEffect):
             object.__setattr__(
                 self,
@@ -141,6 +193,8 @@ class MotifEffectContract:
         for field_name, values in (
             ("completed_objective_nodes", self.completed_objective_node_ids),
             ("decision_nodes", self.decision_node_ids),
+            ("structural_effects", self.structural_effects),
+            ("gameplay_effects", self.gameplay_effects),
             ("incompatible_effects", self.incompatible_effects),
         ):
             if len(values) != len(set(values)):

@@ -8,8 +8,10 @@ from ..models.motif_contract import (
     MotifEdgeStateChange,
     MotifEdgeStateChangeKind,
     MotifEffectContract,
+    MotifGameplayEffect,
     MotifIncomingObjectiveState,
     MotifPreconditionContract,
+    MotifStructuralEffect,
 )
 from ..models.motif_port import MotifPort, MotifPortType
 from ..models.puzzle_motif import MotifCompatibilityConstraints, PuzzleMotif
@@ -151,6 +153,27 @@ def _package_state_contract(
     )
 
 
+def _split_rejoin_ports() -> tuple[MotifPort, ...]:
+    return (
+        *_main_route_ports(),
+        MotifPort("branch_insertion", "entry", MotifPortType.BRANCH_INSERTION_POINT),
+        MotifPort("upper_rejoin", "upper", MotifPortType.REJOIN_INPUT),
+        MotifPort("lower_rejoin", "lower", MotifPortType.REJOIN_INPUT),
+    )
+
+
+def _objective_gate_ports() -> tuple[MotifPort, ...]:
+    return (
+        *_main_route_ports(),
+        MotifPort("branch_insertion", "entry", MotifPortType.BRANCH_INSERTION_POINT),
+        MotifPort("objective_rejoin", "package", MotifPortType.REJOIN_INPUT),
+        MotifPort("bypass_rejoin", "bypass", MotifPortType.REJOIN_INPUT),
+        MotifPort("objective", "package", MotifPortType.OBJECTIVE_ATTACHMENT),
+        MotifPort("state_change", "package", MotifPortType.STATE_CHANGE_ATTACHMENT),
+        MotifPort("failure", "failure", MotifPortType.FAILURE_EXIT),
+    )
+
+
 def seed_motif_factories() -> tuple[BaseMotif, ...]:
     advanced = ("medium", "hard", "expert")
     hard = ("hard", "expert")
@@ -169,6 +192,42 @@ def seed_motif_factories() -> tuple[BaseMotif, ...]:
         ("entry", "outbound", MotifEdgeStateChangeKind.CLOSE),
         ("entry", "exit", MotifEdgeStateChangeKind.OPEN),
     )
+    split_rejoin_effects = MotifEffectContract(
+        structural_effects=(MotifStructuralEffect.SPLIT, MotifStructuralEffect.REJOIN),
+        introduces_rejoin=True,
+        minimum_layout_footprint=(3, 2),
+    )
+    objective_gate_preconditions = MotifPreconditionContract(
+        minimum_objective_phase_index=0,
+        required_incoming_objective_state=(
+            MotifIncomingObjectiveState.BEFORE_ACTIVE_OBJECTIVE
+        ),
+        forbidden_completed_objective_roles=("active_objective",),
+    )
+    objective_gate_effects = MotifEffectContract(
+        completed_objective_node_ids=("package",),
+        edge_state_changes=(
+            MotifEdgeStateChange(
+                "gate", "exit", MotifEdgeStateChangeKind.OPEN, "package"
+            ),
+            MotifEdgeStateChange(
+                "gate", "failure", MotifEdgeStateChangeKind.CLOSE, "package"
+            ),
+        ),
+        decision_node_ids=("entry",),
+        structural_effects=(MotifStructuralEffect.SPLIT, MotifStructuralEffect.REJOIN),
+        gameplay_effects=(
+            MotifGameplayEffect.OBJECTIVE_GATE,
+            MotifGameplayEffect.STATE_DEPENDENT_BRANCH,
+            MotifGameplayEffect.DELAYED_CONSEQUENCE,
+        ),
+        expected_downstream_dependency=MotifDependencyEffect.OBJECTIVE_STATE,
+        introduces_rejoin=True,
+        introduces_failure_exit=True,
+        minimum_layout_footprint=(4, 2),
+        incompatible_effects=("secondEmbeddedObjective",),
+        maximum_instances_per_composition=1,
+    )
     return (
         _motif("straight_segment", (("entry", "route"), ("exit", "route")), (("entry", "exit"),),
                ("entry", "exit"), "Adds readable travel spacing.", ports=_main_route_ports()),
@@ -181,7 +240,38 @@ def seed_motif_factories() -> tuple[BaseMotif, ...]:
                ("entry", "detour_a", "detour_b", "exit"), "A longer choice that safely rejoins.", rejoin=True),
         _motif("split_and_rejoin", (("entry", "switch"), ("upper", "route"), ("lower", "route"), ("exit", "route")),
                (("entry", "upper"), ("entry", "lower"), ("upper", "exit"), ("lower", "exit")),
-               ("entry", "upper", "exit"), "Alternative routes split and rejoin.", difficulties=advanced, rejoin=True),
+               ("entry", "upper", "exit"),
+               "Structural split/rejoin lanes for later gameplay-effect insertion.",
+               difficulties=advanced, rejoin=True, ports=_split_rejoin_ports(),
+               preconditions=MotifPreconditionContract(), effects=split_rejoin_effects),
+        _motif(
+            "objective_gate",
+            (
+                ("entry", "switch"),
+                ("package", "package"),
+                ("bypass", "route"),
+                ("gate", "switch"),
+                ("exit", "route"),
+                ("failure", "dead_end"),
+            ),
+            (
+                ("entry", "package"),
+                ("entry", "bypass"),
+                ("package", "gate"),
+                ("bypass", "gate"),
+                ("gate", "exit", "afterPackage"),
+                ("gate", "failure", "beforePackage"),
+            ),
+            ("entry", "package", "gate", "exit"),
+            "The earlier branch choice determines objective state at a downstream gate.",
+            difficulties=advanced,
+            rejoin=True,
+            dead_end=True,
+            embedded_package=True,
+            ports=_objective_gate_ports(),
+            preconditions=objective_gate_preconditions,
+            effects=objective_gate_effects,
+        ),
         _motif("package_branch", (("entry", "switch"), ("package", "package"), ("bypass", "route"), ("exit", "route")),
                (("entry", "package"), ("entry", "bypass"), ("package", "exit"), ("bypass", "exit")),
                ("entry", "package", "exit"), "The correct branch collects the package.", rejoin=True),

@@ -14,8 +14,10 @@ from .motif_contract import (
     MotifEdgeStateChange,
     MotifEdgeStateChangeKind,
     MotifEffectContract,
+    MotifGameplayEffect,
     MotifIncomingObjectiveState,
     MotifPreconditionContract,
+    MotifStructuralEffect,
 )
 from .motif_port import MotifPort, MotifPortType
 from .puzzle_experience_target import PuzzleExperienceTarget
@@ -56,8 +58,10 @@ __all__ = [
     "MotifEdgeStateChange",
     "MotifEdgeStateChangeKind",
     "MotifEffectContract",
+    "MotifGameplayEffect",
     "MotifIncomingObjectiveState",
     "MotifPreconditionContract",
+    "MotifStructuralEffect",
     "PuzzleExperienceTarget",
     "CandidateSignature",
     "GeneratedLevel",
