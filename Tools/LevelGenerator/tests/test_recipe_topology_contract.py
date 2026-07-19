@@ -29,8 +29,9 @@ def test_recipe_topology_contract_helper_returns_stable_graph_evidence() -> None
     assert evidence.to_dict()["status"] == "passed"
 
 
-def test_false_return_loop_claim_fails_for_both_variants_with_stable_reason() -> None:
-    for variant_index in (0, 1):
+def test_false_return_loop_claim_fails_for_each_registered_variant_with_stable_reason() -> None:
+    family = RecipeFamilyRegistry().get_family("return_loop_intro")
+    for variant_index, _variant in enumerate(family.variants):
         evidence = RecipeTopologyContractService().analyze(
             _recipe("return_loop_intro", variant_index)
         )
@@ -116,7 +117,8 @@ def test_mislabeled_ring_and_rejoin_families_remain_auditable_fixtures() -> None
     }
 
     for family_name, expected in expected_reasons.items():
-        for variant_index in (0, 1):
+        family = RecipeFamilyRegistry().get_family(family_name)
+        for variant_index, _variant in enumerate(family.variants):
             evidence = RecipeTopologyContractService().analyze(
                 _recipe(family_name, variant_index)
             )

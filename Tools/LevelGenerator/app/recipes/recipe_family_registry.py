@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from ..models.difficulty_preset import DifficultyPreset
+from ..models.recipe_lifecycle import RecipeLifecycleRecord, RecipeLifecycleStatus
 from ..random_source import RandomSource
 from .base_recipe import MechanicRecipeGenerator, RecipeFamily
 from .expanded_recipe_family import ExpandedRecipeFamily, expanded_recipe_family_definitions
@@ -8,7 +9,7 @@ from .template_recipe_family import TemplateRecipeFamily, template_recipe_family
 
 
 class RecipeFamilyRegistry(MechanicRecipeGenerator):
-    QUARANTINED_FAMILY_REASONS: dict[str, str] = {
+    DEPRECATED_FAMILY_REASONS: dict[str, str] = {
         "branch_then_rejoin_with_wrong_order": "claimed_rejoin_not_detected",
         "late_route_reversal": "behavior_isomorphic_alias:controlled_repeated_taps",
         "multi_four_way_route": "behavior_isomorphic_alias:four_way_package_gate",
@@ -17,6 +18,40 @@ class RecipeFamilyRegistry(MechanicRecipeGenerator):
         "ring_route_gate": "claimed_ring_not_detected",
         "multi_switch_revisit": "behavior_isomorphic_alias:controlled_repeated_taps",
     }
+    FIXTURE_ONLY_FAMILY_NAMES = frozenset(
+        {
+            "controlled_repeated_taps",
+            "fake_shortcut",
+            "four_way_intersection",
+            "four_way_intro",
+            "four_way_package_gate",
+            "four_way_ring",
+            "hub_choice",
+            "long_detour_gate",
+            "multi_switch_chain",
+            "multi_switch_order",
+            "package_before_destination_intro",
+            "package_gate",
+            "package_gate_double_choice",
+            "package_gate_simple",
+            "package_inside_loop",
+            "return_loop",
+            "ring_route",
+            "safe_dead_end_choice",
+            "short_detour_gate",
+            "single_switch",
+            "single_switch_intro",
+            "single_switch_package_choice",
+            "single_switch_wrong_dead_end",
+            "split_path_rejoin",
+            "straight_delivery",
+            "straight_delivery_intro",
+            "two_phase_route",
+            "two_switch_order_intro",
+        }
+    )
+    # Compatibility alias for callers written before lifecycle status existed.
+    QUARANTINED_FAMILY_REASONS = DEPRECATED_FAMILY_REASONS
 
     def __init__(self) -> None:
         self._families: dict[str, RecipeFamily] = {
@@ -27,6 +62,7 @@ class RecipeFamilyRegistry(MechanicRecipeGenerator):
             ]
         }
         self._validate_topology_rules()
+        self._validate_lifecycle_registry()
 
     def valid_family_names(self) -> list[str]:
         return sorted([*self._families, "mixed"])
@@ -44,7 +80,8 @@ class RecipeFamilyRegistry(MechanicRecipeGenerator):
         families = [
             family
             for family in self._families.values()
-            if family.supports_difficulty(preset) and not self.is_quarantined(family.name)
+            if family.supports_difficulty(preset)
+            and self.lifecycle_status(family.name) is RecipeLifecycleStatus.FIXTURE_ONLY
         ]
         if not include_swift_required:
             families = [family for family in families if not family.requires_swift_validation]
@@ -82,13 +119,52 @@ class RecipeFamilyRegistry(MechanicRecipeGenerator):
         return rng.weighted_choice(weighted)
 
     def is_quarantined(self, family_name: str) -> bool:
-        return family_name.strip().lower() in self.QUARANTINED_FAMILY_REASONS
+        return self.lifecycle_status(family_name) is RecipeLifecycleStatus.DEPRECATED
 
     def quarantine_reason(self, family_name: str) -> str | None:
-        return self.QUARANTINED_FAMILY_REASONS.get(family_name.strip().lower())
+        return self.DEPRECATED_FAMILY_REASONS.get(family_name.strip().lower())
 
     def quarantined_family_names(self) -> tuple[str, ...]:
-        return tuple(sorted(self.QUARANTINED_FAMILY_REASONS))
+        return tuple(sorted(self.DEPRECATED_FAMILY_REASONS))
+
+    def lifecycle_status(self, family_name: str) -> RecipeLifecycleStatus:
+        key = family_name.strip().lower()
+        if key not in self._families:
+            raise ValueError(f"Unknown recipe family: {family_name}")
+        if key in self.DEPRECATED_FAMILY_REASONS:
+            return RecipeLifecycleStatus.DEPRECATED
+        if key in self.FIXTURE_ONLY_FAMILY_NAMES:
+            return RecipeLifecycleStatus.FIXTURE_ONLY
+        raise ValueError(f"Recipe family '{key}' has no lifecycle status")
+
+    def lifecycle_reason(self, family_name: str) -> str:
+        key = family_name.strip().lower()
+        status = self.lifecycle_status(key)
+        if status is RecipeLifecycleStatus.DEPRECATED:
+            return self.DEPRECATED_FAMILY_REASONS[key]
+        return "legacy_fixed_recipe_retained_for_v2_and_test_fixtures"
+
+    def lifecycle_records(self) -> tuple[RecipeLifecycleRecord, ...]:
+        records: list[RecipeLifecycleRecord] = []
+        for family_name in sorted(self._families):
+            family = self._families[family_name]
+            status = self.lifecycle_status(family_name)
+            reason = self.lifecycle_reason(family_name)
+            records.append(RecipeLifecycleRecord(family_name, None, status, reason))
+            records.extend(
+                RecipeLifecycleRecord(family_name, variant.name, status, reason)
+                for variant in family.variants
+            )
+        return tuple(records)
+
+    def production_v3_families(self) -> tuple[RecipeFamily, ...]:
+        """Fixed recipes are never a hidden fallback for V3 composition."""
+
+        return tuple(
+            family
+            for family in self._families.values()
+            if self.lifecycle_status(family.name) is RecipeLifecycleStatus.PRODUCTION_V3
+        )
 
     def weight_for(
         self,
@@ -169,3 +245,14 @@ class RecipeFamilyRegistry(MechanicRecipeGenerator):
                     raise ValueError(
                         f"Recipe family '{family.name}' variant '{variant.name}' has mismatched Swift validation rules"
                     )
+
+    def _validate_lifecycle_registry(self) -> None:
+        classified = self.FIXTURE_ONLY_FAMILY_NAMES | self.DEPRECATED_FAMILY_REASONS.keys()
+        registered = self._families.keys()
+        missing = sorted(registered - classified)
+        unknown = sorted(classified - registered)
+        if missing or unknown:
+            raise ValueError(
+                "Recipe lifecycle registry mismatch: "
+                f"missing={missing}, unknown={unknown}"
+            )

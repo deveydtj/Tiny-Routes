@@ -43,10 +43,7 @@ class ExpandedRecipeFamily(RecipeFamily):
         self.name = definition.name
         self.requires_swift_validation = definition.requires_swift_validation
         self._definition = definition
-        self._variants = (
-            self._variant("primary"),
-            self._variant("alternate"),
-        )
+        self._variants = (self._variant("primary"),)
 
     @property
     def variants(self) -> tuple[RecipeVariantSpec, ...]:
@@ -67,8 +64,6 @@ class ExpandedRecipeFamily(RecipeFamily):
             raise ValueError(f"Recipe variant '{selected_variant.name}' does not support difficulty '{preset.name}'")
 
         route, pairs, tap_node_ids = self._definition.build_spec(selected_variant.name, preset, rng)
-        if selected_variant.name.endswith("_alternate"):
-            pairs = _swap_dead_end_order(pairs, route)
         node_ids = tuple(dict.fromkeys([*route, *(node_id for pair in pairs for node_id in pair)]))
         recipe = GraphRecipe(
             level_id=level_id,
@@ -1198,28 +1193,6 @@ def _single_switch_route(dead_end_id: str):
 
 def _pairs(route: tuple[str, ...]) -> tuple[tuple[str, str], ...]:
     return tuple(zip(route, route[1:]))
-
-
-def _swap_dead_end_order(
-    pairs: tuple[tuple[str, str], ...],
-    route: tuple[str, ...],
-) -> tuple[tuple[str, str], ...]:
-    route_edges = set(zip(route, route[1:]))
-    grouped: dict[str, list[tuple[str, str]]] = {}
-    order: list[str] = []
-    for pair in pairs:
-        if pair[0] not in grouped:
-            grouped[pair[0]] = []
-            order.append(pair[0])
-        grouped[pair[0]].append(pair)
-    swapped: list[tuple[str, str]] = []
-    for from_node_id in order:
-        outgoing = grouped[from_node_id]
-        if len(outgoing) == 2 and outgoing[1] in route_edges and outgoing[0][1].startswith(("dead_end", "wrong", "shortcut")):
-            swapped.extend(outgoing)
-        else:
-            swapped.extend(outgoing)
-    return tuple(swapped)
 
 
 def _role_for_node(node_id: str) -> str:

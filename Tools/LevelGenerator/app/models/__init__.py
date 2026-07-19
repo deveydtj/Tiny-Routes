@@ -36,6 +36,7 @@ from .layout_constraints import ConstraintViolation, LayoutConstraints, RepairOp
 from .layout_graph import GridCell, Lane, LayoutGraph, NodeFootprint, SwitchPortDirection
 from .layout_result import LayerAssignment, LayoutLayerResult, LayoutResult
 from .recipe_variant_spec import RecipeVariantSpec
+from .recipe_lifecycle import RecipeLifecycleRecord, RecipeLifecycleStatus
 from .recipe_topology_rules import RecipeTopologyRules
 from .runtime_parity import RuntimeParityValidationResult
 from .runtime_solution_search import (
@@ -95,6 +96,8 @@ __all__ = [
     "ReservedIconClearance",
     "SwitchPortDirection",
     "RecipeTopologyRules",
+    "RecipeLifecycleRecord",
+    "RecipeLifecycleStatus",
     "RecipeVariantSpec",
     "RuntimeParityValidationResult",
     "RuntimeDecisionTimingDiagnostic",

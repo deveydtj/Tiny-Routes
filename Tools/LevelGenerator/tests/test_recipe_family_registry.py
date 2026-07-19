@@ -2,10 +2,11 @@ from __future__ import annotations
 
 import pytest
 
+from app.models.recipe_lifecycle import RecipeLifecycleStatus
 from app.models.recipe_topology_rules import RecipeTopologyRules
 from app.models.recipe_variant_spec import RecipeVariantSpec
 from app.random_source import RandomSource
-from app.recipes import RecipeFamilyRegistry
+from app.recipes import RecipeFamilyRegistry, expanded_recipe_family as expanded_recipe_family_module
 from app.recipes.expanded_recipe_family import expanded_recipe_family_definitions
 from app.services.abstract_puzzle_solver_service import AbstractPuzzleSolverService
 from app.services.difficulty_service import DifficultyService
@@ -87,6 +88,45 @@ def test_recipe_family_registry_exposes_current_template_families() -> None:
         "controlled_repeated_taps",
         "late_route_reversal",
     }.issubset(family_names)
+
+
+def test_expanded_families_remove_behavior_isomorphic_alternates() -> None:
+    registry = RecipeFamilyRegistry()
+
+    assert not hasattr(expanded_recipe_family_module, "_swap_dead_end_order")
+    for definition in expanded_recipe_family_definitions():
+        variants = registry.get_family(definition.name).variants
+        assert tuple(variant.name for variant in variants) == (
+            f"{definition.name}_primary",
+        )
+
+
+def test_every_fixed_recipe_family_and_variant_has_explicit_lifecycle_status() -> None:
+    registry = RecipeFamilyRegistry()
+    records = registry.lifecycle_records()
+    expected_record_count = sum(
+        1 + len(registry.get_family(family_name).variants)
+        for family_name in registry.valid_family_names()
+        if family_name != "mixed"
+    )
+
+    assert len(records) == expected_record_count
+    assert len(
+        {(record.family_name, record.variant_name) for record in records}
+    ) == len(records)
+    assert {record.status for record in records} == {
+        RecipeLifecycleStatus.FIXTURE_ONLY,
+        RecipeLifecycleStatus.DEPRECATED,
+    }
+    assert registry.production_v3_families() == ()
+
+    for record in records:
+        assert record.reason
+        assert record.to_dict()["status"] == record.status.value
+        if record.family_name in registry.quarantined_family_names():
+            assert record.status is RecipeLifecycleStatus.DEPRECATED
+        else:
+            assert record.status is RecipeLifecycleStatus.FIXTURE_ONLY
 
 
 def test_recipe_family_registry_filters_by_difficulty() -> None:

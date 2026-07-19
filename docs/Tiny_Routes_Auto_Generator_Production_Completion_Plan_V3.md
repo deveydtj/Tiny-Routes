@@ -2723,8 +2723,8 @@ dependency and explicit branch, rejoin, and failure ports.
 - [x] **AG-046:** Quarantine or implement a true rejoin in `branch_then_rejoin_with_wrong_order`.
 - [x] **AG-047:** Add role-aware graph isomorphism service.
 - [x] **AG-048:** Add behavior isomorphism service.
-- [ ] **AG-049:** Remove/fix `_swap_dead_end_order()` and reject behavior-isomorphic alternates.
-- [ ] **AG-050:** Add registry production/fixture/deprecated status.
+- [x] **AG-049:** Remove/fix `_swap_dead_end_order()` and reject behavior-isomorphic alternates.
+- [x] **AG-050:** Add registry production/fixture/deprecated status.
 
 **2026-07-19 AG-043 completion record:** Added a reusable recipe topology
 contract helper and graph-derived audit evidence for claimed rings, cycles,
@@ -2763,6 +2763,19 @@ edge usage. Its ID-independent signatures record strategy-equivalence classes,
 failure and recovery outcomes, optimal cost vectors, and unique-optimal evidence.
 Focused tests prove known legacy builder aliases collapse to the same behavior
 while runtime-significant edge ordering remains distinct.
+
+**2026-07-19 AG-049 completion record:** Removed the no-op
+`_swap_dead_end_order()` path and the expanded-family alternate variants whose
+only claimed distinction depended on it. Expanded fixed recipes now expose one
+auditable primary variant; genuinely authored template variants remain intact,
+and focused tests prevent the behavior-isomorphic alternates from returning.
+
+**2026-07-19 AG-050 completion record:** Added explicit `production_v3`,
+`fixture_only`, and `deprecated` lifecycle types plus deterministic family and
+variant audit records. Every fixed recipe is classified, registry construction
+fails for missing or unknown classifications, quarantined mismatches are
+deprecated, sound legacy recipes are fixture-only, and the fixed-recipe registry
+exposes no hidden `production_v3` fallback.
 
 ## Composition
 
