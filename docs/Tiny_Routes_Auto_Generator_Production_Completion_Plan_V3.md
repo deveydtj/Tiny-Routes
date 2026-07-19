@@ -2601,8 +2601,8 @@ The following sequence is intentionally small enough for junior contributors. Ea
 - [x] **AG-008:** Add legacy package/destination objective adapter.
 - [x] **AG-009:** Generalize Python package availability into objective-state rules with V2 adapters.
 - [x] **AG-010:** Generalize Swift package availability into objective-state rules with V2 adapters.
-- [ ] **AG-011:** Add objective progression to Python simulator.
-- [ ] **AG-012:** Add objective progression to Swift runtime.
+- [x] **AG-011:** Add objective progression to Python simulator.
+- [x] **AG-012:** Add objective progression to Swift runtime.
 - [ ] **AG-013:** Add objective-based road filtering to Python.
 - [ ] **AG-014:** Add objective-based road filtering to Swift.
 - [ ] **AG-015:** Add road-state and objective parity fixture.

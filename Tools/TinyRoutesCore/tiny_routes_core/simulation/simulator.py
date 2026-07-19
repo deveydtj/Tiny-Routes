@@ -8,7 +8,7 @@ from typing import Iterable
 
 from tiny_routes_core.models import LevelDocument, SolutionAction, SwitchInteractionMode
 from .results import LevelOutcome
-from .runtime_state import RuntimeState
+from .runtime_state import ObjectiveProgressEvent, RuntimeState
 from .switch_eligibility import NUMERIC_TOLERANCE, edge_length, switch_eligibility
 
 
@@ -29,6 +29,8 @@ class SimulationEvent:
     node_id: str | None = None
     edge_id: str | None = None
     detail: str = ""
+    objective_id: str | None = None
+    objective_index: int | None = None
 
 
 @dataclass(frozen=True)
@@ -65,7 +67,7 @@ class RuntimeSimulator:
         end_time: float | None = None,
     ) -> RuntimeSimulationResult:
         state = RuntimeState.initialize(level)
-        result = RuntimeSimulationResult(state)
+        result = self._make_result(state)
         ordered = sorted(enumerate(actions), key=lambda pair: (float(pair[1].timeSeconds), pair[0]))
         for _, action in ordered:
             target = float(action.timeSeconds)
@@ -93,7 +95,44 @@ class RuntimeSimulator:
 
     def begin(self, level: LevelDocument) -> RuntimeSimulationResult:
         """Create an incremental simulation session for interactive clients."""
-        return RuntimeSimulationResult(RuntimeState.initialize(level))
+        return self._make_result(RuntimeState.initialize(level))
+
+    def _make_result(self, state: RuntimeState) -> RuntimeSimulationResult:
+        result = RuntimeSimulationResult(state)
+        self._append_objective_events(result, state.objective_events)
+        if state.outcome == LevelOutcome.COMPLETED:
+            result.events.append(SimulationEvent(state.elapsed_time, "complete", state.current_node_id))
+        elif state.outcome == LevelOutcome.FAILED_MISSING_PACKAGE:
+            result.failure_reason = "reached_destination_without_package"
+            result.events.append(SimulationEvent(
+                state.elapsed_time,
+                "destination_without_package",
+                state.current_node_id,
+            ))
+        return result
+
+    def _append_objective_events(
+        self,
+        result: RuntimeSimulationResult,
+        events: Iterable[ObjectiveProgressEvent],
+    ) -> None:
+        for event in events:
+            if event.kind == "objective_completed" and event.objective_kind.value == "pickup":
+                result.events.append(SimulationEvent(
+                    result.state.elapsed_time,
+                    "collect_package",
+                    event.node_id,
+                    objective_id=event.objective_id,
+                    objective_index=event.sequence_index,
+                ))
+            result.events.append(SimulationEvent(
+                result.state.elapsed_time,
+                event.kind,
+                event.node_id,
+                detail=f"{event.objective_id}:{event.sequence_index}",
+                objective_id=event.objective_id,
+                objective_index=event.sequence_index,
+            ))
 
     def advance(
         self,
@@ -176,18 +215,22 @@ class RuntimeSimulator:
             state.visited_node_ids.append(state.current_node_id)
             steps += 1
             result.events.append(SimulationEvent(state.elapsed_time, "arrive_node", state.current_node_id, arrived_edge_id))
-            if state.current_node_id == level.packageNodeID and not state.package_collected:
-                state.package_collected = True
-                state.runtime_graph.normalize_for_package_state(True)
-                result.events.append(SimulationEvent(state.elapsed_time, "collect_package", state.current_node_id))
-            if state.current_node_id == level.destinationNodeID:
-                if state.package_collected:
-                    state.outcome = LevelOutcome.COMPLETED
-                    result.events.append(SimulationEvent(state.elapsed_time, "complete", state.current_node_id))
-                else:
-                    state.outcome = LevelOutcome.FAILED_MISSING_PACKAGE
-                    result.failure_reason = "reached_destination_without_package"
-                    result.events.append(SimulationEvent(state.elapsed_time, "destination_without_package", state.current_node_id))
+            objective_events = state.process_objective_arrival(
+                state.current_node_id,
+                preserve_legacy_destination_failure=level.schema_version < 3,
+                cascade_legacy_same_node=level.schema_version < 3,
+            )
+            self._append_objective_events(result, objective_events)
+            if state.outcome == LevelOutcome.COMPLETED:
+                result.events.append(SimulationEvent(state.elapsed_time, "complete", state.current_node_id))
+                return
+            if state.outcome == LevelOutcome.FAILED_MISSING_PACKAGE:
+                result.failure_reason = "reached_destination_without_package"
+                result.events.append(SimulationEvent(
+                    state.elapsed_time,
+                    "destination_without_package",
+                    state.current_node_id,
+                ))
                 return
 
         if state.elapsed_time < target_time:

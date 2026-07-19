@@ -50,6 +50,21 @@ enum LevelFailureReason: Equatable {
     }
 }
 
+enum RouteObjectiveEventKind: String, Equatable {
+    case revealed = "objective_revealed"
+    case activated = "objective_activated"
+    case completed = "objective_completed"
+    case futureObjectiveVisited = "future_objective_visited"
+}
+
+/// A normalized objective-state transition emitted at a node-arrival boundary.
+struct RouteObjectiveEvent: Equatable {
+    let kind: RouteObjectiveEventKind
+    let objectiveID: String
+    let sequenceIndex: Int
+    let nodeID: String
+}
+
 /// Drives dot movement and evaluates win/loss conditions for a running level.
 final class RouteEngine {
     private let dotSpeed: Double
@@ -60,6 +75,11 @@ final class RouteEngine {
     private var lastAcceptedSwitchTapTime: TimeInterval?
     private(set) var packageNodeID: String?
     private(set) var destinationNodeID: String?
+    private(set) var objectives: [RouteObjective] = []
+    private(set) var activeObjectiveIndex: Int?
+    private(set) var completedObjectiveIDs: Set<String> = []
+    private(set) var revealedObjectiveIDs: Set<String> = []
+    private(set) var objectiveEvents: [RouteObjectiveEvent] = []
     private var remainingTime: TimeInterval?
     private(set) var tapCount: Int = 0
 
@@ -107,6 +127,13 @@ final class RouteEngine {
 
     var eligibleSwitchNodeID: String? { switchEligibilitySnapshot.eligibleNodeID }
     var upcomingSwitchTravelTime: TimeInterval? { switchEligibilitySnapshot.travelTimeSeconds }
+    var activeObjective: RouteObjective? {
+        guard let activeObjectiveIndex,
+              objectives.indices.contains(activeObjectiveIndex) else {
+            return nil
+        }
+        return objectives[activeObjectiveIndex]
+    }
 
     init(dotSpeed: Double = 1) {
         self.dotSpeed = max(0, dotSpeed)
@@ -124,6 +151,11 @@ final class RouteEngine {
         deliveryDot = nil
         packageNodeID = nil
         destinationNodeID = nil
+        objectives = []
+        activeObjectiveIndex = nil
+        completedObjectiveIDs = []
+        revealedObjectiveIDs = []
+        objectiveEvents = []
         remainingTime = nil
         tapCount = 0
         activeRules = levelData.effectiveRules
@@ -217,14 +249,17 @@ final class RouteEngine {
             runtimeGraph.nodesByID[nodeID] = node
         }
 
+        initializeObjectiveProgression(from: levelData)
         var deliveryDot = DeliveryDot(currentNodeID: levelData.startNodeID)
         packageNodeID = levelData.packageNodeID
         destinationNodeID = levelData.destinationNodeID
         remainingTime = max(TimeInterval(levelData.timeLimitSeconds), 0)
-        if collectPackageIfNeeded(dot: &deliveryDot) {
-            runtimeGraph.normalizeActiveOutgoingEdges(hasCollectedPackage: true)
-        }
-        evaluateDestinationArrivalIfNeeded(dot: &deliveryDot)
+        processObjectiveArrival(
+            at: levelData.startNodeID,
+            dot: &deliveryDot,
+            runtimeGraph: &runtimeGraph,
+            preserveLegacyBehavior: (levelData.schemaVersion ?? 1) < 3
+        )
 
         self.runtimeGraph = runtimeGraph
         self.deliveryDot = deliveryDot
@@ -417,10 +452,12 @@ final class RouteEngine {
                 deliveryDot.currentEdgeID = nil
                 deliveryDot.progressAlongEdge = 0
                 deliveryDot.transition = transition.dotTransition
-                if collectPackageIfNeeded(dot: &deliveryDot) {
-                    runtimeGraph.normalizeActiveOutgoingEdges(hasCollectedPackage: true)
-                }
-                evaluateDestinationArrivalIfNeeded(dot: &deliveryDot)
+                processObjectiveArrival(
+                    at: deliveryDot.currentNodeID,
+                    dot: &deliveryDot,
+                    runtimeGraph: &runtimeGraph,
+                    preserveLegacyBehavior: (loadedLevelData?.schemaVersion ?? 1) < 3
+                )
                 if levelOutcome != nil {
                     break
                 }
@@ -568,33 +605,99 @@ final class RouteEngine {
         dot.currentEdgeID = nil
         dot.progressAlongEdge = 0
         dot.transition = nil
-        if collectPackageIfNeeded(dot: &dot) {
-            runtimeGraph.normalizeActiveOutgoingEdges(hasCollectedPackage: true)
-        }
-        evaluateDestinationArrivalIfNeeded(dot: &dot)
+        processObjectiveArrival(
+            at: nodeID,
+            dot: &dot,
+            runtimeGraph: &runtimeGraph,
+            preserveLegacyBehavior: (loadedLevelData?.schemaVersion ?? 1) < 3
+        )
     }
 
-    @discardableResult
-    private func collectPackageIfNeeded(dot: inout DeliveryDot) -> Bool {
-        guard let packageNodeID,
-              !dot.hasCollectedPackage,
-              dot.currentNodeID == packageNodeID else {
-            return false
+    private func initializeObjectiveProgression(from levelData: LevelData) {
+        objectives = levelData.effectiveObjectives.sorted {
+            $0.sequenceIndex < $1.sequenceIndex
         }
-        dot.hasCollectedPackage = true
-        return true
+        activeObjectiveIndex = objectives.isEmpty ? nil : 0
+        for objective in objectives where objective.revealPolicy == "always" {
+            revealObjectiveIfNeeded(objective)
+        }
+        if let activeObjective {
+            revealObjectiveIfNeeded(activeObjective)
+            recordObjectiveEvent(.activated, objective: activeObjective)
+        }
     }
 
-    private func evaluateDestinationArrivalIfNeeded(dot: inout DeliveryDot) {
+    private func processObjectiveArrival(
+        at nodeID: String,
+        dot: inout DeliveryDot,
+        runtimeGraph: inout RuntimeRouteGraph,
+        preserveLegacyBehavior: Bool
+    ) {
         guard levelOutcome == nil,
-              let destinationNodeID,
-              dot.currentNodeID == destinationNodeID else {
+              var objective = activeObjective,
+              let currentIndex = activeObjectiveIndex else {
             return
         }
 
-        levelOutcome = dot.hasCollectedPackage
-            ? .completed
-            : .failed(reason: .reachedDestinationWithoutPackage)
+        guard nodeID == objective.nodeID else {
+            let futureObjective = objectives
+                .dropFirst(currentIndex + 1)
+                .first { $0.nodeID == nodeID }
+            guard let futureObjective else { return }
+            if preserveLegacyBehavior, futureObjective.kind == .destination {
+                levelOutcome = .failed(reason: .reachedDestinationWithoutPackage)
+            } else {
+                recordObjectiveEvent(.futureObjectiveVisited, objective: futureObjective)
+            }
+            return
+        }
+
+        var index = currentIndex
+        while nodeID == objective.nodeID {
+            completedObjectiveIDs.insert(objective.id)
+            if objective.kind == .pickup {
+                dot.hasCollectedPackage = true
+            }
+            recordObjectiveEvent(.completed, objective: objective)
+            runtimeGraph.normalizeActiveOutgoingEdges(
+                hasCollectedPackage: dot.hasCollectedPackage
+            )
+
+            let nextIndex = index + 1
+            guard objectives.indices.contains(nextIndex) else {
+                activeObjectiveIndex = nil
+                if objective.kind == .destination {
+                    levelOutcome = .completed
+                }
+                return
+            }
+
+            activeObjectiveIndex = nextIndex
+            index = nextIndex
+            objective = objectives[nextIndex]
+            revealObjectiveIfNeeded(objective)
+            recordObjectiveEvent(.activated, objective: objective)
+            if !preserveLegacyBehavior {
+                return
+            }
+        }
+    }
+
+    private func revealObjectiveIfNeeded(_ objective: RouteObjective) {
+        guard revealedObjectiveIDs.insert(objective.id).inserted else { return }
+        recordObjectiveEvent(.revealed, objective: objective)
+    }
+
+    private func recordObjectiveEvent(
+        _ kind: RouteObjectiveEventKind,
+        objective: RouteObjective
+    ) {
+        objectiveEvents.append(RouteObjectiveEvent(
+            kind: kind,
+            objectiveID: objective.id,
+            sequenceIndex: objective.sequenceIndex,
+            nodeID: objective.nodeID
+        ))
     }
 
     private func isDeadEnd(
@@ -628,7 +731,9 @@ final class RouteEngine {
 
         // Package collection can change the usable road at this node, so commit
         // to the node before choosing its outgoing road.
-        if node.id == packageNodeID, !hasCollectedPackage {
+        if node.id == activeObjective?.nodeID,
+           activeObjective?.kind == .pickup,
+           !hasCollectedPackage {
             let beforePackageEdgeIDs = runtimeGraph.usableOutgoingEdgeIDs(
                 for: node,
                 hasCollectedPackage: false

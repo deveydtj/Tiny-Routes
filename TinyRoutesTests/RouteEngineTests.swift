@@ -48,6 +48,67 @@ final class RouteEngineTests: XCTestCase {
         )
     }
 
+    private func makeSchema3ObjectiveLevelData() -> LevelData {
+        let nodeIDs = ["start", "pickup", "checkpoint", "delivery", "destination"]
+        let nodes = nodeIDs.enumerated().map { index, nodeID in
+            RouteNode(
+                id: nodeID,
+                x: Double(index),
+                y: 0,
+                outgoingEdgeIDs: index < nodeIDs.count - 1 ? ["e\(index)"] : []
+            )
+        }
+        let edges = (0..<(nodeIDs.count - 1)).map { index in
+            RouteEdge(
+                id: "e\(index)",
+                fromNodeID: nodeIDs[index],
+                toNodeID: nodeIDs[index + 1]
+            )
+        }
+        let objectives = [
+            RouteObjective(
+                id: "collect",
+                nodeID: "pickup",
+                kind: .pickup,
+                sequenceIndex: 0,
+                revealPolicy: "always"
+            ),
+            RouteObjective(
+                id: "inspect",
+                nodeID: "checkpoint",
+                kind: .checkpoint,
+                sequenceIndex: 1,
+                revealPolicy: "whenActive"
+            ),
+            RouteObjective(
+                id: "deliver",
+                nodeID: "delivery",
+                kind: .delivery,
+                sequenceIndex: 2,
+                revealPolicy: "whenActive"
+            ),
+            RouteObjective(
+                id: "finish",
+                nodeID: "destination",
+                kind: .destination,
+                sequenceIndex: 3,
+                revealPolicy: "whenActive"
+            )
+        ]
+        return LevelData(
+            schemaVersion: 3,
+            id: "schema3_objectives",
+            name: "Schema 3 Objectives",
+            graph: RouteGraph(nodes: nodes, edges: edges),
+            startNodeID: "start",
+            packageNodeID: "pickup",
+            destinationNodeID: "destination",
+            timeLimitSeconds: 20,
+            parTaps: 0,
+            objectives: objectives
+        )
+    }
+
     private func makePackageAvailabilityLevelData() -> LevelData {
         let nodes = [
             RouteNode(id: "start", x: 0, y: 0, outgoingEdgeIDs: ["e_start_gate"]),
@@ -2052,6 +2113,111 @@ final class RouteEngineTests: XCTestCase {
     }
 
     // MARK: - Package pickup state (STORY-014)
+
+    func testSchema3CompletesOrderedObjectivesAndEmitsNormalizedEvents() throws {
+        let engine = RouteEngine(dotSpeed: 1)
+        try engine.buildGraph(from: makeSchema3ObjectiveLevelData())
+
+        XCTAssertEqual(engine.activeObjective?.id, "collect")
+        XCTAssertTrue(engine.startDotMovement())
+        engine.updateDot(deltaTime: 10)
+
+        XCTAssertEqual(engine.levelOutcome, .completed)
+        XCTAssertNil(engine.activeObjective)
+        XCTAssertEqual(engine.completedObjectiveIDs, ["collect", "inspect", "deliver", "finish"])
+        XCTAssertEqual(engine.revealedObjectiveIDs, ["collect", "inspect", "deliver", "finish"])
+        XCTAssertTrue(engine.deliveryDot?.hasCollectedPackage == true)
+        XCTAssertEqual(
+            engine.objectiveEvents
+                .filter { $0.kind == .completed }
+                .map(\.objectiveID),
+            ["collect", "inspect", "deliver", "finish"]
+        )
+    }
+
+    func testSchema3FutureObjectiveVisitDoesNotUseLegacyDestinationFailure() throws {
+        let nodes = [
+            RouteNode(id: "start", x: 0, y: 0, outgoingEdgeIDs: ["to_destination"]),
+            RouteNode(id: "destination", x: 1, y: 0, outgoingEdgeIDs: ["to_pickup"]),
+            RouteNode(id: "pickup", x: 2, y: 0, outgoingEdgeIDs: ["back_to_destination"])
+        ]
+        let edges = [
+            RouteEdge(id: "to_destination", fromNodeID: "start", toNodeID: "destination"),
+            RouteEdge(id: "to_pickup", fromNodeID: "destination", toNodeID: "pickup"),
+            RouteEdge(id: "back_to_destination", fromNodeID: "pickup", toNodeID: "destination")
+        ]
+        let objectives = [
+            RouteObjective(
+                id: "collect",
+                nodeID: "pickup",
+                kind: .pickup,
+                sequenceIndex: 0,
+                revealPolicy: "always"
+            ),
+            RouteObjective(
+                id: "finish",
+                nodeID: "destination",
+                kind: .destination,
+                sequenceIndex: 1,
+                revealPolicy: "whenActive"
+            )
+        ]
+        let level = LevelData(
+            schemaVersion: 3,
+            id: "future_objective_visit",
+            name: "Future Objective Visit",
+            graph: RouteGraph(nodes: nodes, edges: edges),
+            startNodeID: "start",
+            packageNodeID: "pickup",
+            destinationNodeID: "destination",
+            timeLimitSeconds: 20,
+            parTaps: 0,
+            objectives: objectives
+        )
+        let engine = RouteEngine(dotSpeed: 1)
+        try engine.buildGraph(from: level)
+
+        XCTAssertTrue(engine.startDotMovement())
+        engine.updateDot(deltaTime: 10)
+
+        XCTAssertEqual(engine.levelOutcome, .completed)
+        XCTAssertEqual(
+            engine.objectiveEvents
+                .filter { $0.kind == .futureObjectiveVisited }
+                .map(\.objectiveID),
+            ["finish"]
+        )
+    }
+
+    func testSchema3ArrivalCompletesOnlyTheActiveObjective() throws {
+        var level = makeSchema3ObjectiveLevelData()
+        level.startNodeID = "pickup"
+        level.objectives?[1].nodeID = "pickup"
+
+        let engine = RouteEngine()
+        try engine.buildGraph(from: level)
+
+        XCTAssertEqual(engine.completedObjectiveIDs, ["collect"])
+        XCTAssertEqual(engine.activeObjective?.id, "inspect")
+    }
+
+    func testRestartRestoresSchema3ObjectiveState() throws {
+        let engine = RouteEngine(dotSpeed: 1)
+        try engine.buildGraph(from: makeSchema3ObjectiveLevelData())
+        XCTAssertTrue(engine.startDotMovement())
+        engine.updateDot(deltaTime: 1.1)
+        XCTAssertEqual(engine.completedObjectiveIDs, ["collect"])
+
+        XCTAssertTrue(engine.restartLevel())
+
+        XCTAssertEqual(engine.completedObjectiveIDs, [])
+        XCTAssertEqual(engine.activeObjective?.id, "collect")
+        XCTAssertTrue(engine.deliveryDot?.hasCollectedPackage == false)
+        XCTAssertEqual(
+            engine.objectiveEvents.map(\.kind),
+            [.revealed, .activated]
+        )
+    }
 
     func testDotCollectsPackageWhenReachingPackageNode() throws {
         let engine = RouteEngine(dotSpeed: 1)
