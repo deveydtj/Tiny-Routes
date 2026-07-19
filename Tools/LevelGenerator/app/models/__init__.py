@@ -9,6 +9,15 @@ from .decision_dependency_graph import (
 )
 from .puzzle_blueprint import ObjectiveSpec, PuzzleBlueprint, StateTransitionSpec
 from .puzzle_motif import MotifCompatibilityConstraints, PuzzleMotif
+from .motif_contract import (
+    MotifDependencyEffect,
+    MotifEdgeStateChange,
+    MotifEdgeStateChangeKind,
+    MotifEffectContract,
+    MotifIncomingObjectiveState,
+    MotifPreconditionContract,
+)
+from .motif_port import MotifPort, MotifPortType
 from .puzzle_experience_target import PuzzleExperienceTarget
 from .generated_level import GeneratedLevel
 from .generation_quality import GenerationQualityScore
@@ -41,6 +50,14 @@ __all__ = [
     "StateTransitionSpec",
     "MotifCompatibilityConstraints",
     "PuzzleMotif",
+    "MotifPort",
+    "MotifPortType",
+    "MotifDependencyEffect",
+    "MotifEdgeStateChange",
+    "MotifEdgeStateChangeKind",
+    "MotifEffectContract",
+    "MotifIncomingObjectiveState",
+    "MotifPreconditionContract",
     "PuzzleExperienceTarget",
     "CandidateSignature",
     "GeneratedLevel",

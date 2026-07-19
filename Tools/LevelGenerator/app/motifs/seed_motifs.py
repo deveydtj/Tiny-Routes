@@ -1,8 +1,17 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 
 from ..models.graph_recipe import GraphRecipe, GraphRecipeEdge, GraphRecipeNode
+from ..models.motif_contract import (
+    MotifDependencyEffect,
+    MotifEdgeStateChange,
+    MotifEdgeStateChangeKind,
+    MotifEffectContract,
+    MotifIncomingObjectiveState,
+    MotifPreconditionContract,
+)
+from ..models.motif_port import MotifPort, MotifPortType
 from ..models.puzzle_motif import MotifCompatibilityConstraints, PuzzleMotif
 from .base_motif import BaseMotif
 from .motif_registry import MotifRegistry
@@ -65,6 +74,9 @@ def _motif(
     revisit: bool = False,
     dead_end: bool = False,
     embedded_package: bool = False,
+    ports: tuple[MotifPort, ...] = (),
+    preconditions: MotifPreconditionContract | None = None,
+    effects: MotifEffectContract | None = None,
 ) -> SeedMotif:
     metadata = [("primaryPath", ",".join(primary_path)), ("category", motif_id)]
     if embedded_package:
@@ -80,6 +92,9 @@ def _motif(
         ),
         intended_decision_effect=effect,
         allowed_difficulties=difficulties,
+        ports=ports,
+        preconditions=preconditions,
+        effects=effects,
         may_introduce_cycle=cycle,
         may_introduce_rejoin=rejoin,
         may_introduce_revisit=revisit,
@@ -89,12 +104,74 @@ def _motif(
     ))
 
 
+def _main_route_ports(entry: str = "entry", exit: str = "exit") -> tuple[MotifPort, ...]:
+    return (
+        MotifPort("main_entry", entry, MotifPortType.MAIN_ROUTE_ENTRY),
+        MotifPort("main_exit", exit, MotifPortType.MAIN_ROUTE_EXIT),
+    )
+
+
+def _package_state_ports() -> tuple[MotifPort, ...]:
+    return (
+        *_main_route_ports(),
+        MotifPort("branch_insertion", "entry", MotifPortType.BRANCH_INSERTION_POINT),
+        MotifPort("return_input", "entry", MotifPortType.RETURN_PATH_INPUT),
+        MotifPort("objective", "package", MotifPortType.OBJECTIVE_ATTACHMENT),
+        MotifPort("state_change", "package", MotifPortType.STATE_CHANGE_ATTACHMENT),
+        MotifPort("return_output", "package", MotifPortType.RETURN_PATH_OUTPUT),
+    )
+
+
+def _package_state_contract(
+    *edge_changes: tuple[str, str, MotifEdgeStateChangeKind],
+    decision_node_ids: tuple[str, ...] = ("entry",),
+) -> tuple[MotifPreconditionContract, MotifEffectContract]:
+    return (
+        MotifPreconditionContract(
+            minimum_objective_phase_index=0,
+            required_incoming_objective_state=(
+                MotifIncomingObjectiveState.BEFORE_ACTIVE_OBJECTIVE
+            ),
+            forbidden_completed_objective_roles=("active_objective",),
+        ),
+        MotifEffectContract(
+            completed_objective_node_ids=("package",),
+            edge_state_changes=tuple(
+                MotifEdgeStateChange(from_node, to_node, kind, "package")
+                for from_node, to_node, kind in edge_changes
+            ),
+            decision_node_ids=decision_node_ids,
+            expected_downstream_dependency=MotifDependencyEffect.OBJECTIVE_STATE,
+            introduces_cycle=True,
+            introduces_revisit=True,
+            minimum_layout_footprint=(3, 2),
+            incompatible_effects=("secondEmbeddedObjective",),
+            maximum_instances_per_composition=1,
+        ),
+    )
+
+
 def seed_motif_factories() -> tuple[BaseMotif, ...]:
     advanced = ("medium", "hard", "expert")
     hard = ("hard", "expert")
+    opens_preconditions, opens_effects = _package_state_contract(
+        ("entry", "exit", MotifEdgeStateChangeKind.OPEN)
+    )
+    closes_preconditions, closes_effects = _package_state_contract(
+        ("entry", "shortcut", MotifEdgeStateChangeKind.CLOSE)
+    )
+    changes_preconditions, changes_effects = _package_state_contract(
+        ("entry", "outbound", MotifEdgeStateChangeKind.CLOSE),
+        ("entry", "exit", MotifEdgeStateChangeKind.OPEN),
+        decision_node_ids=(),
+    )
+    revisited_preconditions, revisited_effects = _package_state_contract(
+        ("entry", "outbound", MotifEdgeStateChangeKind.CLOSE),
+        ("entry", "exit", MotifEdgeStateChangeKind.OPEN),
+    )
     return (
         _motif("straight_segment", (("entry", "route"), ("exit", "route")), (("entry", "exit"),),
-               ("entry", "exit"), "Adds readable travel spacing."),
+               ("entry", "exit"), "Adds readable travel spacing.", ports=_main_route_ports()),
         _motif("single_binary_choice", (("entry", "switch"), ("exit", "route"), ("decoy", "dead_end")),
                (("entry", "exit"), ("entry", "decoy")), ("entry", "exit"), "One binary routing decision.", dead_end=True),
         _motif("dead_end_decoy", (("entry", "switch"), ("exit", "route"), ("dead_end", "dead_end")),
@@ -138,6 +215,9 @@ def seed_motif_factories() -> tuple[BaseMotif, ...]:
             cycle=True,
             revisit=True,
             embedded_package=True,
+            ports=_package_state_ports(),
+            preconditions=opens_preconditions,
+            effects=opens_effects,
         ),
         _motif(
             "shortcut_closes_after_package",
@@ -154,6 +234,9 @@ def seed_motif_factories() -> tuple[BaseMotif, ...]:
             cycle=True,
             revisit=True,
             embedded_package=True,
+            ports=_package_state_ports(),
+            preconditions=closes_preconditions,
+            effects=closes_effects,
         ),
         _motif(
             "return_route_changes_after_package",
@@ -170,6 +253,9 @@ def seed_motif_factories() -> tuple[BaseMotif, ...]:
             cycle=True,
             revisit=True,
             embedded_package=True,
+            ports=_package_state_ports(),
+            preconditions=changes_preconditions,
+            effects=changes_effects,
         ),
         _motif(
             "package_state_revisited_switch",
@@ -194,6 +280,9 @@ def seed_motif_factories() -> tuple[BaseMotif, ...]:
             revisit=True,
             dead_end=True,
             embedded_package=True,
+            ports=_package_state_ports(),
+            preconditions=revisited_preconditions,
+            effects=replace(revisited_effects, introduces_failure_exit=True),
         ),
     )
 

@@ -1014,6 +1014,11 @@ Build on the existing `PuzzleMotif`, `MotifRegistry`, and package-state seed mot
 
 Compatibility rules must be validated before graph mutation.
 
+**2026-07-19 completion record:** Added the typed `MotifPort` model and all
+required port roles, integrated typed main-route resolution and validation into
+`PuzzleMotif` and `MotifComposerService`, and migrated `straight_segment` while
+preserving legacy connector compatibility.
+
 ## Task 3.2 — Add explicit motif preconditions and effects
 
 Each motif declares machine-readable:
@@ -1028,6 +1033,12 @@ Each motif declares machine-readable:
 - Incompatible effects and composition limits.
 
 Tags and prose remain documentation only.
+
+**2026-07-19 completion record:** Added validated, machine-readable motif
+precondition, edge-state-change, dependency, structural-effect, layout, and
+composition-limit contracts. Migrated all four package-state motifs with typed
+objective/state/return ports and contracts verified against their actual
+conditional roads and legacy topology flags.
 
 ## Task 3.3 — Migrate the completed V2 motif catalog first
 
@@ -2627,8 +2638,8 @@ The following sequence is intentionally small enough for junior contributors. Ea
 
 ## Typed motifs
 
-- [ ] **AG-031:** Add typed ports to the existing `PuzzleMotif` model and migrate one V2 motif.
-- [ ] **AG-032:** Add explicit precondition/effect contracts and migrate package-state motifs.
+- [x] **AG-031:** Add typed ports to the existing `PuzzleMotif` model and migrate one V2 motif.
+- [x] **AG-032:** Add explicit precondition/effect contracts and migrate package-state motifs.
 - [ ] **AG-033:** Convert structural split/rejoin motif.
 - [ ] **AG-034:** Add stateful objective-gate motif.
 - [ ] **AG-035:** Add unlock-shortcut motif.

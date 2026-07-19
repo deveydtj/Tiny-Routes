@@ -113,7 +113,7 @@ class MotifComposerService:
             )
             if embedded_package_node:
                 nodes.append(GraphRecipeNode("package", "package"))
-            edges.append(GraphRecipeEdge(previous, rename[motif.entry_connector]))
+            edges.append(GraphRecipeEdge(previous, rename[motif.main_route_entry_connector]))
             edges.extend(
                 GraphRecipeEdge(
                     rename[edge.from_node_id], rename[edge.to_node_id], edge.availability
@@ -122,7 +122,7 @@ class MotifComposerService:
             )
             local_path = self._primary_path(motif)
             required_path.extend(rename[node_id] for node_id in local_path)
-            previous = rename[motif.exit_connectors[0]]
+            previous = rename[motif.main_route_exit_connectors[0]]
             declared_tags.append(motif.motif_id)
             cycle_count += int(motif.may_introduce_cycle)
             allows_rejoin = allows_rejoin or motif.may_introduce_rejoin
@@ -347,7 +347,11 @@ class MotifComposerService:
     def _primary_path(self, motif) -> tuple[str, ...]:
         metadata = dict(motif.mechanic_metadata)
         path = tuple(item for item in metadata.get("primaryPath", "").split(",") if item)
-        if not path or path[0] != motif.entry_connector or path[-1] not in motif.exit_connectors:
+        if (
+            not path
+            or path[0] != motif.main_route_entry_connector
+            or path[-1] not in motif.main_route_exit_connectors
+        ):
             raise MotifCompositionError(f"invalid_primary_path:{motif.motif_id}")
         edge_pairs = {(edge.from_node_id, edge.to_node_id) for edge in motif.edges}
         if any(pair not in edge_pairs for pair in zip(path, path[1:])):
