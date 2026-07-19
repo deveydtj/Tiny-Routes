@@ -2622,8 +2622,8 @@ The following sequence is intentionally small enough for junior contributors. Ea
 - [x] **AG-026:** Add unlock-shortcut blueprint.
 - [x] **AG-027:** Add closed-return blueprint.
 - [x] **AG-028:** Add ordered-checkpoint blueprint.
-- [ ] **AG-029:** Add recoverable-loop blueprint.
-- [ ] **AG-030:** Add competing-success-routes blueprint.
+- [x] **AG-029:** Add recoverable-loop blueprint.
+- [x] **AG-030:** Add competing-success-routes blueprint.
 
 ## Typed motifs
 

@@ -33,6 +33,8 @@ class PuzzleBlueprintService:
         "unlock_shortcut",
         "closed_return",
         "ordered_checkpoint",
+        "recoverable_loop",
+        "competing_success_routes",
     )
 
     def __init__(
@@ -55,8 +57,10 @@ class PuzzleBlueprintService:
         """
 
         seed = self._validated_seed(seed)
+        target = self._difficulty_resolver.resolve(difficulty)
         if archetype is None:
-            archetype = self.supported_archetypes[seed % len(self.supported_archetypes)]
+            available_archetypes = self._available_archetypes(target)
+            archetype = available_archetypes[seed % len(available_archetypes)]
         if not isinstance(archetype, str):
             raise ValueError("archetype must be a supported blueprint name")
         archetype = archetype.strip().lower()
@@ -66,6 +70,8 @@ class PuzzleBlueprintService:
             "unlock_shortcut": self.build_unlock_shortcut,
             "closed_return": self.build_closed_return,
             "ordered_checkpoint": self.build_ordered_checkpoint,
+            "recoverable_loop": self.build_recoverable_loop,
+            "competing_success_routes": self.build_competing_success_routes,
         }
         try:
             builder = builders[archetype]
@@ -181,6 +187,74 @@ class PuzzleBlueprintService:
             objective_factory=self._build_ordered_checkpoint_objectives,
         )
 
+    def build_recoverable_loop(
+        self,
+        difficulty: str,
+        seed: int = 0,
+    ) -> PuzzleBlueprint:
+        """Offer a costly wrong branch that returns to the same route decision."""
+
+        seed = self._validated_seed(seed)
+        target = self._difficulty_resolver.resolve(difficulty)
+        randomizer = Random(f"recoverable_loop:{target.difficulty}:{seed}")
+        return self._build_blueprint(
+            archetype="recoverable_loop",
+            seed=seed,
+            target=target,
+            randomizer=randomizer,
+            hub_switch_role="recoverable_loop_junction",
+            hub_outgoing_roles=(
+                "loop_route_before_objective",
+                "loop_route_after_objective",
+                "recoverable_wrong_loop",
+            ),
+            hub_required_outgoing_roles=(
+                "loop_route_before_objective",
+                "loop_route_after_objective",
+            ),
+            objective_prefix="recoverable_loop",
+            first_objective_id="loop_checkpoint",
+            required_mechanics=("recoverable_detour",),
+            transition_factory=self._recoverable_loop_transition,
+        )
+
+    def build_competing_success_routes(
+        self,
+        difficulty: str,
+        seed: int = 0,
+    ) -> PuzzleBlueprint:
+        """Require a unique optimum while preserving a slower successful route."""
+
+        seed = self._validated_seed(seed)
+        target = self._difficulty_resolver.resolve(difficulty)
+        if "competing_routes" not in target.allowed_mechanic_categories:
+            raise ValueError(
+                "competing_success_routes requires a difficulty that allows "
+                "competing_routes"
+            )
+        randomizer = Random(f"competing_success_routes:{target.difficulty}:{seed}")
+        return self._build_blueprint(
+            archetype="competing_success_routes",
+            seed=seed,
+            target=target,
+            randomizer=randomizer,
+            hub_switch_role="competing_route_junction",
+            hub_outgoing_roles=(
+                "optimal_route_before_objective",
+                "optimal_route_after_objective",
+                "slower_success_route",
+            ),
+            hub_required_outgoing_roles=(
+                "optimal_route_before_objective",
+                "optimal_route_after_objective",
+            ),
+            objective_prefix="competing_route",
+            first_objective_id="route_checkpoint",
+            required_mechanics=("competing_routes",),
+            transition_factory=self._competing_success_routes_transition,
+            successful_strategy_minimum=2,
+        )
+
     def _build_blueprint(
         self,
         *,
@@ -190,6 +264,7 @@ class PuzzleBlueprintService:
         randomizer: Random,
         hub_switch_role: str,
         hub_outgoing_roles: tuple[str, ...],
+        hub_required_outgoing_roles: tuple[str, ...] | None = None,
         objective_prefix: str,
         first_objective_id: str | None = None,
         required_mechanics: tuple[str, ...],
@@ -198,6 +273,7 @@ class PuzzleBlueprintService:
             StateTransitionSpec,
         ],
         objective_factory: Callable[[int], tuple[ObjectiveSpec, ...]] | None = None,
+        successful_strategy_minimum: int = 1,
     ) -> PuzzleBlueprint:
         objective_count = randomizer.randint(*target.objective_count_range)
         decision_lower = max(target.meaningful_decision_range[0], objective_count)
@@ -242,6 +318,9 @@ class PuzzleBlueprintService:
             hub_indices=hub_indices,
             hub_switch_role=hub_switch_role,
             hub_outgoing_roles=hub_outgoing_roles,
+            hub_required_outgoing_roles=(
+                hub_required_outgoing_roles or hub_outgoing_roles
+            ),
             archetype=archetype,
         )
         dependencies = self._build_dependencies(
@@ -282,8 +361,14 @@ class PuzzleBlueprintService:
                 decisions[index].id for index in hub_indices[1:]
             ),
             successful_strategy_count_range=(
-                target.successful_route_class_range[0],
-                min(2, target.successful_route_class_range[1]),
+                max(
+                    successful_strategy_minimum,
+                    target.successful_route_class_range[0],
+                ),
+                min(
+                    max(2, successful_strategy_minimum),
+                    target.successful_route_class_range[1],
+                ),
             ),
             requires_unique_optimal_strategy=True,
             requires_static_policy_rejection=True,
@@ -389,6 +474,7 @@ class PuzzleBlueprintService:
         hub_indices: tuple[int, ...],
         hub_switch_role: str,
         hub_outgoing_roles: tuple[str, ...],
+        hub_required_outgoing_roles: tuple[str, ...],
         archetype: str,
     ) -> tuple[DecisionNode, ...]:
         hub_visit_by_index = {
@@ -406,8 +492,8 @@ class PuzzleBlueprintService:
                         phase_index=phase_index,
                         switch_role=hub_switch_role,
                         outgoing_edge_roles=hub_outgoing_roles,
-                        required_outgoing_edge_role=hub_outgoing_roles[
-                            visit_index % len(hub_outgoing_roles)
+                        required_outgoing_edge_role=hub_required_outgoing_roles[
+                            visit_index % len(hub_required_outgoing_roles)
                         ],
                     )
                 )
@@ -593,6 +679,67 @@ class PuzzleBlueprintService:
             required_completed_objective_ids=required_completed_ids,
             opened_edge_roles=opened_roles,
             closed_edge_roles=closed_roles,
+        )
+
+    @staticmethod
+    def _recoverable_loop_transition(
+        phase_index: int,
+        objectives: tuple[ObjectiveSpec, ...],
+    ) -> StateTransitionSpec:
+        trigger = objectives[phase_index]
+        following = objectives[phase_index + 1]
+        if phase_index == 0:
+            opened_roles = ("loop_route_after_objective",)
+            closed_roles = ("loop_route_before_objective",)
+        else:
+            opened_roles = (f"recoverable_loop_phase_{phase_index + 1}_connector",)
+            closed_roles = (f"recoverable_loop_phase_{phase_index}_connector",)
+        return StateTransitionSpec(
+            id=f"recoverable_loop_phase_{phase_index + 1}",
+            from_phase_index=phase_index,
+            to_phase_index=phase_index + 1,
+            trigger_objective_id=trigger.id,
+            required_completed_objective_ids=(trigger.id,),
+            revealed_objective_ids=(following.id,),
+            opened_edge_roles=opened_roles,
+            closed_edge_roles=closed_roles,
+        )
+
+    @staticmethod
+    def _competing_success_routes_transition(
+        phase_index: int,
+        objectives: tuple[ObjectiveSpec, ...],
+    ) -> StateTransitionSpec:
+        trigger = objectives[phase_index]
+        following = objectives[phase_index + 1]
+        if phase_index == 0:
+            opened_roles = ("optimal_route_after_objective",)
+            closed_roles = ("optimal_route_before_objective",)
+        else:
+            opened_roles = (f"competing_route_phase_{phase_index + 1}_connector",)
+            closed_roles = (f"competing_route_phase_{phase_index}_connector",)
+        return StateTransitionSpec(
+            id=f"competing_route_phase_{phase_index + 1}",
+            from_phase_index=phase_index,
+            to_phase_index=phase_index + 1,
+            trigger_objective_id=trigger.id,
+            required_completed_objective_ids=(trigger.id,),
+            revealed_objective_ids=(following.id,),
+            opened_edge_roles=opened_roles,
+            closed_edge_roles=closed_roles,
+        )
+
+    @classmethod
+    def _available_archetypes(
+        cls,
+        target: PuzzleExperienceTarget,
+    ) -> tuple[str, ...]:
+        if "competing_routes" in target.allowed_mechanic_categories:
+            return cls.supported_archetypes
+        return tuple(
+            archetype
+            for archetype in cls.supported_archetypes
+            if archetype != "competing_success_routes"
         )
 
     @staticmethod

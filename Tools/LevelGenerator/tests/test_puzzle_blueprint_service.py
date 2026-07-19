@@ -144,6 +144,89 @@ def test_ordered_checkpoint_blueprints_keep_ordered_points_visible_and_stateful(
         assert transition.revealed_objective_ids == ()
 
 
+@pytest.mark.parametrize("difficulty", ("easy", "medium", "hard", "expert"))
+@pytest.mark.parametrize("seed", (0, 5, 67, 84_000))
+def test_recoverable_loop_blueprints_return_wrong_choices_to_the_junction(
+    difficulty: str,
+    seed: int,
+) -> None:
+    service = PuzzleBlueprintService()
+
+    first = service.build_recoverable_loop(difficulty, seed)
+    second = service.build_recoverable_loop(difficulty, seed)
+
+    assert first == second
+    assert first.archetype == "recoverable_loop"
+    assert first.validate() == ()
+    assert first.required_mechanic_categories == ("recoverable_detour",)
+    assert first.recoverable_mistake_target >= 1
+
+    junction_visits = tuple(
+        decision
+        for decision in first.decision_graph.decisions
+        if decision.switch_role == "recoverable_loop_junction"
+    )
+    assert junction_visits
+    assert all(
+        "recoverable_wrong_loop" in decision.outgoing_edge_roles
+        for decision in junction_visits
+    )
+    assert all(
+        decision.required_outgoing_edge_role != "recoverable_wrong_loop"
+        for decision in junction_visits
+    )
+    assert first.state_transitions[0].opened_edge_roles == (
+        "loop_route_after_objective",
+    )
+    assert first.state_transitions[0].closed_edge_roles == (
+        "loop_route_before_objective",
+    )
+
+
+@pytest.mark.parametrize("difficulty", ("hard", "expert"))
+@pytest.mark.parametrize("seed", (0, 6, 79, 95_000))
+def test_competing_success_route_blueprints_require_multiple_routes_and_one_optimum(
+    difficulty: str,
+    seed: int,
+) -> None:
+    service = PuzzleBlueprintService()
+
+    first = service.build_competing_success_routes(difficulty, seed)
+    second = service.build_competing_success_routes(difficulty, seed)
+
+    assert first == second
+    assert first.archetype == "competing_success_routes"
+    assert first.validate() == ()
+    assert first.required_mechanic_categories == ("competing_routes",)
+    assert first.successful_strategy_count_range[0] >= 2
+    assert first.requires_unique_optimal_strategy is True
+
+    route_choices = tuple(
+        decision
+        for decision in first.decision_graph.decisions
+        if decision.switch_role == "competing_route_junction"
+    )
+    assert route_choices
+    assert all(
+        "slower_success_route" in decision.outgoing_edge_roles
+        for decision in route_choices
+    )
+    assert all(
+        decision.required_outgoing_edge_role != "slower_success_route"
+        for decision in route_choices
+    )
+
+
+@pytest.mark.parametrize("difficulty", ("easy", "medium"))
+def test_competing_success_routes_respect_difficulty_mechanic_allowlist(
+    difficulty: str,
+) -> None:
+    service = PuzzleBlueprintService()
+
+    with pytest.raises(ValueError, match="requires a difficulty"):
+        service.build_competing_success_routes(difficulty, seed=0)
+
+
 def test_generate_selects_only_completed_archetypes_and_supports_explicit_choice() -> None:
     service = PuzzleBlueprintService()
 
@@ -151,6 +234,8 @@ def test_generate_selects_only_completed_archetypes_and_supports_explicit_choice
     assert service.generate("easy", 1).archetype == "unlock_shortcut"
     assert service.generate("easy", 2).archetype == "closed_return"
     assert service.generate("easy", 3).archetype == "ordered_checkpoint"
+    assert service.generate("easy", 4).archetype == "recoverable_loop"
+    assert service.generate("hard", 5).archetype == "competing_success_routes"
     assert (
         service.generate("medium", 9, archetype=" RETURN_TO_HUB ").archetype
         == "return_to_hub"
@@ -163,7 +248,7 @@ def test_blueprint_service_rejects_invalid_seed_and_unknown_archetype() -> None:
     with pytest.raises(ValueError, match="seed must be an integer"):
         service.generate("easy", True)
     with pytest.raises(ValueError, match="Unknown production V3 blueprint archetype"):
-        service.generate("easy", 0, archetype="recoverable_loop")
+        service.generate("easy", 0, archetype="split_commitment")
 
 
 def test_generator_service_alias_preserves_existing_service_naming_convention() -> None:
