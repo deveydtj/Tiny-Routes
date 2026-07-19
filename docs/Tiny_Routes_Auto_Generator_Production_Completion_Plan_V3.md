@@ -2670,8 +2670,8 @@ The following sequence is intentionally small enough for junior contributors. Ea
 - [x] **AG-036:** Add close-behind motif.
 - [x] **AG-037:** Add hub-revisit motif.
 - [x] **AG-038:** Add stateful ring motif.
-- [ ] **AG-039:** Add recoverable detour motif.
-- [ ] **AG-040:** Add delayed-consequence motif.
+- [x] **AG-039:** Add recoverable detour motif.
+- [x] **AG-040:** Add delayed-consequence motif.
 - [ ] **AG-041:** Add unique-optimal alternate-route motif.
 - [ ] **AG-042:** Add motif contract test helper.
 
@@ -2695,6 +2695,16 @@ state-change, and recovery ports expose the full cross-phase structure.
 after collection while the post-objective exit opens, with detected ring,
 revisit, objective-state, return-path, and failure behavior covered by focused
 tests.
+
+**2026-07-19 AG-039 completion record:** Added an explicit typed
+`recoverable_detour` contract. Its direct and longer nonfatal branches have
+unequal route costs, safely rejoin, and expose branch, rejoin, and recovery
+ports with focused evidence tests.
+
+**2026-07-19 AG-040 completion record:** Added an explicit typed
+`binary_delayed_consequence` contract. Its early safe-or-commit decision leads
+to a distinct downstream success/failure choice, with declared earlier-choice
+dependency and explicit branch, rejoin, and failure ports.
 
 ## Legacy recipe correctness
 

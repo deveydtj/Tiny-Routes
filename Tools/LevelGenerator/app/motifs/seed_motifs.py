@@ -167,6 +167,35 @@ def _split_rejoin_ports() -> tuple[MotifPort, ...]:
     )
 
 
+def _recoverable_detour_ports() -> tuple[MotifPort, ...]:
+    """Expose the direct route and the nonfatal branch before they rejoin."""
+
+    return (
+        *_main_route_ports(),
+        MotifPort("branch_insertion", "entry", MotifPortType.BRANCH_INSERTION_POINT),
+        MotifPort("direct_rejoin", "entry", MotifPortType.REJOIN_INPUT),
+        MotifPort("detour_rejoin", "detour_b", MotifPortType.REJOIN_INPUT),
+        MotifPort("recovery", "detour_b", MotifPortType.RECOVERY_EXIT),
+    )
+
+
+def _delayed_consequence_ports() -> tuple[MotifPort, ...]:
+    """Expose an early commitment and its later success/failure decision."""
+
+    return (
+        *_main_route_ports(),
+        MotifPort("early_branch", "entry", MotifPortType.BRANCH_INSERTION_POINT),
+        MotifPort(
+            "downstream_consequence",
+            "consequence",
+            MotifPortType.BRANCH_INSERTION_POINT,
+        ),
+        MotifPort("safe_rejoin", "safe", MotifPortType.REJOIN_INPUT),
+        MotifPort("commit_rejoin", "consequence", MotifPortType.REJOIN_INPUT),
+        MotifPort("failure", "failure", MotifPortType.FAILURE_EXIT),
+    )
+
+
 def _objective_gate_ports() -> tuple[MotifPort, ...]:
     return (
         *_main_route_ports(),
@@ -482,6 +511,36 @@ def seed_motif_factories() -> tuple[BaseMotif, ...]:
         introduces_rejoin=True,
         minimum_layout_footprint=(3, 2),
     )
+    recoverable_detour_effects = MotifEffectContract(
+        decision_node_ids=("entry",),
+        structural_effects=(
+            MotifStructuralEffect.SEGMENT,
+            MotifStructuralEffect.SPLIT,
+            MotifStructuralEffect.REJOIN,
+            MotifStructuralEffect.LANE_EXPANSION,
+        ),
+        gameplay_effects=(MotifGameplayEffect.ALTERNATE_SUCCESSFUL_DETOUR,),
+        expected_downstream_dependency=MotifDependencyEffect.EARLIER_CHOICE,
+        introduces_rejoin=True,
+        introduces_recovery_exit=True,
+        minimum_layout_footprint=(4, 2),
+        maximum_instances_per_composition=2,
+    )
+    delayed_consequence_effects = MotifEffectContract(
+        decision_node_ids=("entry", "consequence"),
+        structural_effects=(
+            MotifStructuralEffect.SEGMENT,
+            MotifStructuralEffect.SPLIT,
+            MotifStructuralEffect.REJOIN,
+            MotifStructuralEffect.LANE_EXPANSION,
+        ),
+        gameplay_effects=(MotifGameplayEffect.DELAYED_CONSEQUENCE,),
+        expected_downstream_dependency=MotifDependencyEffect.EARLIER_CHOICE,
+        introduces_rejoin=True,
+        introduces_failure_exit=True,
+        minimum_layout_footprint=(6, 2),
+        maximum_instances_per_composition=2,
+    )
     objective_gate_preconditions = MotifPreconditionContract(
         minimum_objective_phase_index=0,
         required_incoming_objective_state=(
@@ -570,9 +629,17 @@ def seed_motif_factories() -> tuple[BaseMotif, ...]:
                (("entry", "exit"), ("entry", "decoy")), ("entry", "exit"), "One binary routing decision.", dead_end=True),
         _motif("dead_end_decoy", (("entry", "switch"), ("exit", "route"), ("dead_end", "dead_end")),
                (("entry", "dead_end"), ("entry", "exit")), ("entry", "exit"), "A visibly punishable wrong branch.", dead_end=True),
-        _motif("recoverable_detour", (("entry", "switch"), ("detour_a", "route"), ("detour_b", "route"), ("exit", "route")),
-               (("entry", "exit"), ("entry", "detour_a"), ("detour_a", "detour_b"), ("detour_b", "exit")),
-               ("entry", "detour_a", "detour_b", "exit"), "A longer choice that safely rejoins.", rejoin=True),
+        _motif(
+            "recoverable_detour",
+            (("entry", "switch"), ("detour_a", "route"), ("detour_b", "route"), ("exit", "route")),
+            (("entry", "exit"), ("entry", "detour_a"), ("detour_a", "detour_b"), ("detour_b", "exit")),
+            ("entry", "detour_a", "detour_b", "exit"),
+            "A longer choice that safely rejoins.",
+            rejoin=True,
+            ports=_recoverable_detour_ports(),
+            preconditions=MotifPreconditionContract(),
+            effects=recoverable_detour_effects,
+        ),
         _motif("split_and_rejoin", (("entry", "switch"), ("upper", "route"), ("lower", "route"), ("exit", "route")),
                (("entry", "upper"), ("entry", "lower"), ("upper", "exit"), ("lower", "exit")),
                ("entry", "upper", "exit"),
@@ -742,6 +809,9 @@ def seed_motif_factories() -> tuple[BaseMotif, ...]:
             ("entry", "commit", "consequence", "exit"),
             "An early commitment changes the later consequence reached by the player.",
             difficulties=advanced, rejoin=True, dead_end=True,
+            ports=_delayed_consequence_ports(),
+            preconditions=MotifPreconditionContract(),
+            effects=delayed_consequence_effects,
         ),
         _motif(
             "phase_dependent_ring_exits",

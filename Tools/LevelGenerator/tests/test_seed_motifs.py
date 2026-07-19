@@ -50,6 +50,81 @@ def test_split_and_rejoin_is_a_typed_structural_motif() -> None:
     assert motif.effects.introduces_rejoin is True
 
 
+def test_recoverable_detour_exposes_two_successful_routes_with_unequal_cost() -> None:
+    motif = default_motif_registry().get("recoverable_detour").build()
+
+    assert motif.validate() == ()
+    assert motif.preconditions is not None
+    assert motif.effects is not None
+    assert motif.effects.decision_node_ids == ("entry",)
+    assert motif.effects.structural_effects == (
+        MotifStructuralEffect.SEGMENT,
+        MotifStructuralEffect.SPLIT,
+        MotifStructuralEffect.REJOIN,
+        MotifStructuralEffect.LANE_EXPANSION,
+    )
+    assert motif.effects.gameplay_effects == (
+        MotifGameplayEffect.ALTERNATE_SUCCESSFUL_DETOUR,
+    )
+    assert motif.effects.expected_downstream_dependency is MotifDependencyEffect.EARLIER_CHOICE
+    assert motif.effects.introduces_rejoin is True
+    assert motif.effects.introduces_failure_exit is False
+    assert motif.effects.introduces_recovery_exit is True
+    assert {
+        (edge.from_node_id, edge.to_node_id)
+        for edge in motif.edges
+    } == {
+        ("entry", "exit"),
+        ("entry", "detour_a"),
+        ("detour_a", "detour_b"),
+        ("detour_b", "exit"),
+    }
+    assert {port.port_type for port in motif.ports}.issuperset({
+        MotifPortType.BRANCH_INSERTION_POINT,
+        MotifPortType.REJOIN_INPUT,
+        MotifPortType.RECOVERY_EXIT,
+    })
+    assert len(tuple(
+        port for port in motif.ports if port.port_type is MotifPortType.REJOIN_INPUT
+    )) == 2
+
+
+def test_delayed_consequence_exposes_early_commitment_and_later_failure() -> None:
+    motif = default_motif_registry().get("binary_delayed_consequence").build()
+
+    assert motif.validate() == ()
+    assert motif.preconditions is not None
+    assert motif.effects is not None
+    assert motif.effects.decision_node_ids == ("entry", "consequence")
+    assert motif.effects.structural_effects == (
+        MotifStructuralEffect.SEGMENT,
+        MotifStructuralEffect.SPLIT,
+        MotifStructuralEffect.REJOIN,
+        MotifStructuralEffect.LANE_EXPANSION,
+    )
+    assert motif.effects.gameplay_effects == (MotifGameplayEffect.DELAYED_CONSEQUENCE,)
+    assert motif.effects.expected_downstream_dependency is MotifDependencyEffect.EARLIER_CHOICE
+    assert motif.effects.introduces_rejoin is True
+    assert motif.effects.introduces_failure_exit is True
+    assert motif.effects.introduces_recovery_exit is False
+    assert {
+        edge.to_node_id for edge in motif.edges if edge.from_node_id == "entry"
+    } == {"commit", "safe"}
+    assert {
+        edge.to_node_id for edge in motif.edges if edge.from_node_id == "consequence"
+    } == {"exit", "failure"}
+    assert {port.port_type for port in motif.ports}.issuperset({
+        MotifPortType.BRANCH_INSERTION_POINT,
+        MotifPortType.REJOIN_INPUT,
+        MotifPortType.FAILURE_EXIT,
+    })
+    assert len(tuple(
+        port
+        for port in motif.ports
+        if port.port_type is MotifPortType.BRANCH_INSERTION_POINT
+    )) == 2
+
+
 def test_objective_gate_has_stateful_gameplay_contract_and_real_gate_edges() -> None:
     motif = default_motif_registry().get("objective_gate").build()
 
