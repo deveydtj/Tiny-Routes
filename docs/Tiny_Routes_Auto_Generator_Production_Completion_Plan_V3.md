@@ -2779,8 +2779,8 @@ exposes no hidden `production_v3` fallback.
 
 ## Composition
 
-- [ ] **AG-051:** Add composition search state.
-- [ ] **AG-052:** Add typed port connection validator.
+- [x] **AG-051:** Add composition search state.
+- [x] **AG-052:** Add typed port connection validator.
 - [ ] **AG-053:** Add edge insertion operation.
 - [ ] **AG-054:** Add branch expansion operation.
 - [ ] **AG-055:** Add rejoin operation.
@@ -2790,6 +2790,19 @@ exposes no hidden `production_v3` fallback.
 - [ ] **AG-059:** Add partial strategic pruning.
 - [ ] **AG-060:** Add composition transformation framework.
 - [ ] **AG-061:** Add composition duplicate rejection.
+
+**2026-07-19 AG-051 completion record:** Added an immutable composition search
+state that tracks unfulfilled blueprint decisions, qualified open ports,
+objective-phase boundaries, the partial graph, assigned route-state effects,
+motif placements, graph counts, layout footprint, and partial strategic metrics.
+Stable validation codes, immutable successor creation, and deterministic state
+signatures provide the foundation for backtracking and duplicate pruning.
+
+**2026-07-19 AG-052 completion record:** Added an explicit typed-port
+compatibility validator for main-route, branch-expansion, rejoin, return-path,
+objective-attachment, and state-change-attachment connections. It enforces port
+direction, open-port membership, forward/return phase semantics, terminal
+failure exits, and same-phase attachments with stable rejection codes.
 
 ## Exact strategy analysis
 

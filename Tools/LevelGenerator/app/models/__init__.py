@@ -26,6 +26,15 @@ from .production_motif_catalog import (
     ProductionMotifCatalogReport,
 )
 from .motif_port import MotifPort, MotifPortType
+from .composition_state import (
+    AssignedStateEffect,
+    CompositionGraph,
+    CompositionState,
+    LayoutFootprintEstimate,
+    ObjectivePhaseBoundary,
+    OpenCompositionPort,
+    PartialStrategicMetrics,
+)
 from .puzzle_experience_target import PuzzleExperienceTarget
 from .generated_level import GeneratedLevel
 from .generation_quality import GenerationQualityScore
@@ -61,6 +70,13 @@ __all__ = [
     "PuzzleMotif",
     "MotifPort",
     "MotifPortType",
+    "AssignedStateEffect",
+    "CompositionGraph",
+    "CompositionState",
+    "LayoutFootprintEstimate",
+    "ObjectivePhaseBoundary",
+    "OpenCompositionPort",
+    "PartialStrategicMetrics",
     "MotifDependencyEffect",
     "MotifEdgeStateChange",
     "MotifEdgeStateChangeKind",

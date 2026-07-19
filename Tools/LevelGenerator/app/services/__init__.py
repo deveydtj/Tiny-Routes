@@ -43,6 +43,13 @@ from .switch_port_assignment_service import (
     SwitchPortAssignmentResult,
     SwitchPortAssignmentService,
 )
+from .typed_port_connection_validator import (
+    MotifPortConnectionValidator,
+    PortConnectionKind,
+    PortConnectionValidationError,
+    PortConnectionValidationResult,
+    TypedPortConnectionValidator,
+)
 from .swift_test_service import SwiftTestService
 from .unique_solution_validator_service import (
     UniqueSolutionPathSummary,
@@ -96,6 +103,11 @@ __all__ = [
     "SwitchPortAssignment",
     "SwitchPortAssignmentResult",
     "SwitchPortAssignmentService",
+    "MotifPortConnectionValidator",
+    "PortConnectionKind",
+    "PortConnectionValidationError",
+    "PortConnectionValidationResult",
+    "TypedPortConnectionValidator",
     "SwitchVisualClarityService",
     "SwiftTestService",
     "UniqueSolutionPathSummary",
