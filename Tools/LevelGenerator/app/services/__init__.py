@@ -13,6 +13,12 @@ from .production_motif_catalog_service import ProductionMotifCatalogService
 from .decision_profile_service import DecisionProfileService
 from .layout_repair_service import LayoutRepairConfig, LayoutRepairService
 from .generated_level_validation_service import GeneratedLevelValidationService
+from .graph_isomorphism_service import GraphIsomorphismService
+from .behavior_signature_service import (
+    BehaviorSignature,
+    BehaviorSignatureService,
+    StrategyBehaviorClass,
+)
 from .graph_builder_service import GraphBuilderService
 from .graph_layout_service import BoundingBox, GraphLayoutPlannerService, GraphLayoutService, LayoutPlanResult
 from .layout_layer_service import LayoutLayerService
@@ -67,6 +73,10 @@ __all__ = [
     "LayoutRepairConfig",
     "LayoutRepairService",
     "GeneratedLevelValidationService",
+    "GraphIsomorphismService",
+    "BehaviorSignature",
+    "BehaviorSignatureService",
+    "StrategyBehaviorClass",
     "GraphBuilderService",
     "GraphLayoutPlannerService",
     "GraphLayoutService",

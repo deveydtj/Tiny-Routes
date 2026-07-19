@@ -2721,8 +2721,8 @@ dependency and explicit branch, rejoin, and failure ports.
 - [x] **AG-044:** Quarantine or repair `return_loop_intro` and repeated-builder aliases.
 - [x] **AG-045:** Quarantine or repair `ring_route_gate`, `multi_four_way_route`, and `late_route_reversal`.
 - [x] **AG-046:** Quarantine or implement a true rejoin in `branch_then_rejoin_with_wrong_order`.
-- [ ] **AG-047:** Add role-aware graph isomorphism service.
-- [ ] **AG-048:** Add behavior isomorphism service.
+- [x] **AG-047:** Add role-aware graph isomorphism service.
+- [x] **AG-048:** Add behavior isomorphism service.
 - [ ] **AG-049:** Remove/fix `_swap_dead_end_order()` and reject behavior-isomorphic alternates.
 - [ ] **AG-050:** Add registry production/fixture/deprecated status.
 
@@ -2749,6 +2749,20 @@ available as deterministic audit fixtures but cannot be selected for production.
 required route and its alternate terminates in a dead end instead of rejoining.
 Topology-contract coverage preserves the fixture and proves the claimed rejoin
 remains absent while production selection rejects the family.
+
+**2026-07-19 AG-047 completion record:** Added exact rooted, edge-ordered graph
+canonicalization that preserves node roles, ordered objective phases, switch
+degree and authored order, availability, usage limits, and future dataclass edge
+effects while ignoring identifier, family, variant, note, and layout metadata.
+The service exposes stable signatures, exact comparisons, and canonical node
+mappings with focused rename, role, phase, edge-order, and edge-state tests.
+
+**2026-07-19 AG-048 completion record:** Added bounded canonical behavior-state
+exploration over objective phase, persistent switch state, authored choices, and
+edge usage. Its ID-independent signatures record strategy-equivalence classes,
+failure and recovery outcomes, optimal cost vectors, and unique-optimal evidence.
+Focused tests prove known legacy builder aliases collapse to the same behavior
+while runtime-significant edge ordering remains distinct.
 
 ## Composition
 
