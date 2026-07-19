@@ -7,6 +7,7 @@ from .motif_contract import (
     MotifEffectContract,
     MotifEdgeStateChangeKind,
     MotifGameplayEffect,
+    MotifIncomingObjectiveState,
     MotifPreconditionContract,
     MotifStructuralEffect,
 )
@@ -102,6 +103,14 @@ class PuzzleMotif:
                     f"motif_edge_unknown_availability:{edge.from_node_id}:"
                     f"{edge.to_node_id}:{edge.availability}"
                 )
+            if edge.usage_limit is not None and (
+                not isinstance(edge.usage_limit, int)
+                or isinstance(edge.usage_limit, bool)
+                or edge.usage_limit <= 0
+            ):
+                issues.append(
+                    f"motif_edge_usage_limit_invalid:{edge.from_node_id}:{edge.to_node_id}"
+                )
         if not self.intended_decision_effect.strip():
             issues.append("motif_intended_decision_effect_empty")
         if not self.allowed_difficulties:
@@ -123,6 +132,72 @@ class PuzzleMotif:
                 issues.append(f"motif_embedded_package_unknown:{embedded_package_node}")
             elif next(node for node in self.nodes if node.id == embedded_package_node).role != "package":
                 issues.append(f"motif_embedded_package_role_invalid:{embedded_package_node}")
+        return tuple(issues)
+
+    def validate_composition_context(
+        self,
+        *,
+        difficulty: str,
+        objective_phase_index: int,
+        incoming_objective_state: MotifIncomingObjectiveState | str,
+        completed_objective_roles: tuple[str, ...] = (),
+        existing_motif_ids: tuple[str, ...] = (),
+        existing_effects: tuple[str, ...] = (),
+        existing_instance_count: int = 0,
+    ) -> tuple[str, ...]:
+        """Enforce difficulty, precondition, compatibility, and count limits.
+
+        Composition search is introduced in Phase 5. Keeping this check on the
+        motif makes the Phase 3 contracts executable now instead of leaving
+        their restrictions as advisory metadata.
+        """
+
+        issues: list[str] = []
+        if difficulty not in self.allowed_difficulties:
+            issues.append(f"motif_difficulty_not_allowed:{self.motif_id}:{difficulty}")
+        if not isinstance(objective_phase_index, int) or isinstance(objective_phase_index, bool):
+            issues.append(f"motif_objective_phase_invalid:{self.motif_id}")
+            return tuple(issues)
+        try:
+            state = (
+                incoming_objective_state
+                if isinstance(incoming_objective_state, MotifIncomingObjectiveState)
+                else MotifIncomingObjectiveState(incoming_objective_state)
+            )
+        except ValueError:
+            issues.append(f"motif_incoming_objective_state_invalid:{self.motif_id}")
+            return tuple(issues)
+
+        if self.preconditions is not None:
+            contract = self.preconditions
+            if objective_phase_index < contract.minimum_objective_phase_index:
+                issues.append(f"motif_objective_phase_too_early:{self.motif_id}")
+            if (
+                contract.maximum_objective_phase_index is not None
+                and objective_phase_index > contract.maximum_objective_phase_index
+            ):
+                issues.append(f"motif_objective_phase_too_late:{self.motif_id}")
+            required_state = contract.required_incoming_objective_state
+            if required_state is not MotifIncomingObjectiveState.ANY and state is not required_state:
+                issues.append(f"motif_incoming_objective_state_mismatch:{self.motif_id}")
+            completed = set(completed_objective_roles)
+            for role in contract.required_completed_objective_roles:
+                if role not in completed:
+                    issues.append(f"motif_required_objective_role_missing:{self.motif_id}:{role}")
+            for role in contract.forbidden_completed_objective_roles:
+                if role in completed:
+                    issues.append(f"motif_forbidden_objective_role_present:{self.motif_id}:{role}")
+
+        for motif_id in self.compatibility.incompatible_motif_ids:
+            if motif_id in existing_motif_ids:
+                issues.append(f"motif_incompatible_motif:{self.motif_id}:{motif_id}")
+        if self.effects is not None:
+            for effect in self.effects.incompatible_effects:
+                if effect in existing_effects:
+                    issues.append(f"motif_incompatible_effect:{self.motif_id}:{effect}")
+            limit = self.effects.maximum_instances_per_composition
+            if limit is not None and existing_instance_count >= limit:
+                issues.append(f"motif_composition_limit_reached:{self.motif_id}:{limit}")
         return tuple(issues)
 
     def _validate_effect_contract(self, known: set[str]) -> tuple[str, ...]:
@@ -155,7 +230,12 @@ class PuzzleMotif:
                 issues.append(f"motif_effect_open_edge_not_state_gated:{description}")
             elif change.kind is MotifEdgeStateChangeKind.CLOSE and edge.availability != "beforePackage":
                 issues.append(f"motif_effect_close_edge_not_state_gated:{description}")
-            if change.trigger_objective_node_id not in self.effects.completed_objective_node_ids:
+            elif change.kind is MotifEdgeStateChangeKind.CONSUME and edge.usage_limit != 1:
+                issues.append(f"motif_effect_consumed_edge_not_one_use:{description}")
+            if (
+                change.kind is not MotifEdgeStateChangeKind.CONSUME
+                and change.trigger_objective_node_id not in self.effects.completed_objective_node_ids
+            ):
                 issues.append(
                     f"motif_effect_trigger_objective_not_completed:"
                     f"{change.trigger_objective_node_id}"

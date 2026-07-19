@@ -116,7 +116,10 @@ class MotifComposerService:
             edges.append(GraphRecipeEdge(previous, rename[motif.main_route_entry_connector]))
             edges.extend(
                 GraphRecipeEdge(
-                    rename[edge.from_node_id], rename[edge.to_node_id], edge.availability
+                    rename[edge.from_node_id],
+                    rename[edge.to_node_id],
+                    edge.availability,
+                    edge.usage_limit,
                 )
                 for edge in motif.edges
             )

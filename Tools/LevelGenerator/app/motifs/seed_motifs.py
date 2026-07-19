@@ -66,7 +66,7 @@ class RecipeSeedMotifAdapter(BaseMotif):
 def _motif(
     motif_id: str,
     nodes: tuple[tuple[str, str], ...],
-    edges: tuple[tuple[str, str] | tuple[str, str, str], ...],
+    edges: tuple[tuple[str, str] | tuple[str, str, str] | tuple[str, str, str, int], ...],
     primary_path: tuple[str, ...],
     effect: str,
     *,
@@ -89,7 +89,12 @@ def _motif(
         exit_connectors=(primary_path[-1],),
         nodes=tuple(GraphRecipeNode(node_id, role) for node_id, role in nodes),
         edges=tuple(
-            GraphRecipeEdge(edge[0], edge[1], edge[2] if len(edge) == 3 else "always")
+            GraphRecipeEdge(
+                edge[0],
+                edge[1],
+                edge[2] if len(edge) >= 3 else "always",
+                edge[3] if len(edge) == 4 else None,
+            )
             for edge in edges
         ),
         intended_decision_effect=effect,
@@ -174,6 +179,163 @@ def _objective_gate_ports() -> tuple[MotifPort, ...]:
     )
 
 
+def _complete_typed_contract(factory: SeedMotif) -> SeedMotif:
+    """Migrate a seed fixture to the V3 contract without changing its graph."""
+
+    motif = factory.build()
+    if motif.ports and motif.preconditions is not None and motif.effects is not None:
+        return factory
+
+    outgoing: dict[str, list[GraphRecipeEdge]] = {node.id: [] for node in motif.nodes}
+    incoming: dict[str, list[GraphRecipeEdge]] = {node.id: [] for node in motif.nodes}
+    for edge in motif.edges:
+        outgoing[edge.from_node_id].append(edge)
+        incoming[edge.to_node_id].append(edge)
+
+    ports: list[MotifPort] = list(_main_route_ports(motif.entry_connector, motif.exit_connectors[0]))
+    for node_id, edges in outgoing.items():
+        if len(edges) >= 2:
+            ports.append(MotifPort(f"branch_{node_id}", node_id, MotifPortType.BRANCH_INSERTION_POINT))
+    for node_id, edges in incoming.items():
+        if len(edges) >= 2:
+            for index, edge in enumerate(edges):
+                ports.append(MotifPort(
+                    f"rejoin_{node_id}_{index}", edge.from_node_id, MotifPortType.REJOIN_INPUT
+                ))
+    objective_nodes = tuple(
+        node.id for node in motif.nodes
+        if node.role in {"package", "pickup", "checkpoint", "delivery", "objective"}
+    )
+    for node_id in objective_nodes:
+        ports.append(MotifPort(f"objective_{node_id}", node_id, MotifPortType.OBJECTIVE_ATTACHMENT))
+    for node in motif.nodes:
+        if node.role in {"dead_end", "failure"}:
+            ports.append(MotifPort(f"failure_{node.id}", node.id, MotifPortType.FAILURE_EXIT))
+        if node.role == "recovery":
+            ports.append(MotifPort(f"recovery_{node.id}", node.id, MotifPortType.RECOVERY_EXIT))
+    if motif.may_introduce_cycle or motif.may_introduce_revisit:
+        ports.extend((
+            MotifPort("return_input", motif.entry_connector, MotifPortType.RETURN_PATH_INPUT),
+            MotifPort("return_output", motif.entry_connector, MotifPortType.RETURN_PATH_OUTPUT),
+        ))
+
+    changes: list[MotifEdgeStateChange] = []
+    trigger = objective_nodes[0] if objective_nodes else None
+    if trigger is not None:
+        for edge in motif.edges:
+            if edge.availability == "afterPackage":
+                changes.append(MotifEdgeStateChange(
+                    edge.from_node_id, edge.to_node_id, MotifEdgeStateChangeKind.OPEN, trigger
+                ))
+            elif edge.availability == "beforePackage":
+                changes.append(MotifEdgeStateChange(
+                    edge.from_node_id, edge.to_node_id, MotifEdgeStateChangeKind.CLOSE, trigger
+                ))
+            if edge.usage_limit == 1:
+                changes.append(MotifEdgeStateChange(
+                    edge.from_node_id, edge.to_node_id, MotifEdgeStateChangeKind.CONSUME
+                ))
+        if changes:
+            ports.append(MotifPort("state_change", trigger, MotifPortType.STATE_CHANGE_ATTACHMENT))
+
+    structural: list[MotifStructuralEffect] = [MotifStructuralEffect.SEGMENT]
+    if any(len(edges) >= 2 for edges in outgoing.values()):
+        structural.append(MotifStructuralEffect.SPLIT)
+    if any(len(edges) >= 2 for edges in incoming.values()):
+        structural.append(MotifStructuralEffect.REJOIN)
+    if any(len(edges) >= 3 for edges in outgoing.values()):
+        structural.append(MotifStructuralEffect.HUB)
+    if motif.may_introduce_cycle:
+        structural.append(MotifStructuralEffect.RETURN_CORRIDOR)
+        if len(motif.nodes) >= 4:
+            structural.append(MotifStructuralEffect.RING)
+    if changes:
+        structural.append(MotifStructuralEffect.CROSS_PHASE_CONNECTOR)
+    if MotifStructuralEffect.SPLIT in structural and MotifStructuralEffect.REJOIN in structural:
+        structural.append(MotifStructuralEffect.LANE_EXPANSION)
+
+    gameplay_by_id = {
+        "recoverable_detour": (MotifGameplayEffect.ALTERNATE_SUCCESSFUL_DETOUR,),
+        "return_loop": (MotifGameplayEffect.RECOVERABLE_LOOP,),
+        "revisited_switch": (MotifGameplayEffect.REQUIRED_HUB_REVISIT,),
+        "ring_route": (MotifGameplayEffect.RECOVERABLE_LOOP,),
+        "three_way_hub": (MotifGameplayEffect.DELAYED_CONSEQUENCE,),
+        "four_way_hub": (MotifGameplayEffect.DELAYED_CONSEQUENCE,),
+        "binary_delayed_consequence": (MotifGameplayEffect.DELAYED_CONSEQUENCE,),
+        "phase_dependent_ring_exits": (
+            MotifGameplayEffect.STATE_DEPENDENT_BRANCH,
+            MotifGameplayEffect.REQUIRED_HUB_REVISIT,
+        ),
+        "destination_before_objectives_decoy": (MotifGameplayEffect.DESTINATION_DECOY,),
+        "one_use_objective_connector": (
+            MotifGameplayEffect.ONE_USE_CONNECTOR,
+            MotifGameplayEffect.CLOSE_BEHIND_ROUTE,
+        ),
+        "objective_state_revisited_hub": (
+            MotifGameplayEffect.REQUIRED_HUB_REVISIT,
+            MotifGameplayEffect.STATE_DEPENDENT_BRANCH,
+        ),
+        "three_phase_relay": (MotifGameplayEffect.DELAYED_CONSEQUENCE,),
+        "parallel_unique_optimum": (MotifGameplayEffect.ALTERNATE_SUCCESSFUL_DETOUR,),
+        "objective_unlocked_shortcut": (MotifGameplayEffect.UNLOCK_SHORTCUT,),
+        "objective_closed_return_road": (MotifGameplayEffect.CLOSE_BEHIND_ROUTE,),
+    }
+    gameplay = gameplay_by_id.get(motif.motif_id, ())
+    decision_exclusions = {"split_and_rejoin", "straight_segment", "return_route_changes_after_package"}
+    decision_nodes = () if motif.motif_id in decision_exclusions else tuple(
+        node_id for node_id, edges in outgoing.items() if len(edges) >= 2
+    )
+    dependency = MotifDependencyEffect.NONE
+    if changes:
+        dependency = MotifDependencyEffect.OBJECTIVE_STATE
+    elif motif.may_introduce_revisit and decision_nodes:
+        dependency = MotifDependencyEffect.REVISIT
+    elif MotifGameplayEffect.DELAYED_CONSEQUENCE in gameplay:
+        dependency = MotifDependencyEffect.EARLIER_CHOICE
+
+    introduces_recovery = motif.motif_id in {
+        "recoverable_detour", "return_loop", "ring_route", "parallel_unique_optimum"
+    } or any(node.role == "recovery" for node in motif.nodes)
+    if introduces_recovery and not any(
+        port.port_type is MotifPortType.RECOVERY_EXIT for port in ports
+    ):
+        ports.append(MotifPort("recovery_exit", motif.exit_connectors[0], MotifPortType.RECOVERY_EXIT))
+
+    preconditions = MotifPreconditionContract(
+        minimum_objective_phase_index=0,
+        required_incoming_objective_state=(
+            MotifIncomingObjectiveState.BEFORE_ACTIVE_OBJECTIVE
+            if changes else MotifIncomingObjectiveState.ANY
+        ),
+        forbidden_completed_objective_roles=("active_objective",) if changes else (),
+    )
+    effects = MotifEffectContract(
+        completed_objective_node_ids=objective_nodes,
+        edge_state_changes=tuple(changes),
+        decision_node_ids=decision_nodes,
+        structural_effects=tuple(dict.fromkeys(structural)),
+        gameplay_effects=gameplay,
+        expected_downstream_dependency=dependency,
+        introduces_cycle=motif.may_introduce_cycle,
+        introduces_revisit=motif.may_introduce_revisit,
+        introduces_rejoin=motif.may_introduce_rejoin,
+        introduces_failure_exit=motif.may_introduce_dead_end,
+        introduces_recovery_exit=introduces_recovery,
+        minimum_layout_footprint=(
+            max(2, min(6, len(motif.nodes))),
+            2 if any(len(edges) >= 2 for edges in outgoing.values()) else 1,
+        ),
+        incompatible_effects=("secondEmbeddedObjective",) if changes else (),
+        maximum_instances_per_composition=1 if changes else 2,
+    )
+    return SeedMotif(replace(
+        motif,
+        ports=tuple(ports),
+        preconditions=preconditions,
+        effects=effects,
+    ))
+
+
 def seed_motif_factories() -> tuple[BaseMotif, ...]:
     advanced = ("medium", "hard", "expert")
     hard = ("hard", "expert")
@@ -228,7 +390,7 @@ def seed_motif_factories() -> tuple[BaseMotif, ...]:
         incompatible_effects=("secondEmbeddedObjective",),
         maximum_instances_per_composition=1,
     )
-    return (
+    motifs = (
         _motif("straight_segment", (("entry", "route"), ("exit", "route")), (("entry", "exit"),),
                ("entry", "exit"), "Adds readable travel spacing.", ports=_main_route_ports()),
         _motif("single_binary_choice", (("entry", "switch"), ("exit", "route"), ("decoy", "dead_end")),
@@ -283,13 +445,30 @@ def seed_motif_factories() -> tuple[BaseMotif, ...]:
                "The same switch is encountered in two phases.", difficulties=hard, cycle=True, revisit=True),
         _motif("ring_route", (("entry", "switch"), ("ring_a", "route"), ("ring_b", "route"), ("exit", "route")),
                (("entry", "ring_a"), ("ring_a", "ring_b"), ("ring_b", "entry"), ("entry", "exit")),
-               ("entry", "exit"), "A ring offers a looping alternate route.", difficulties=hard, cycle=True),
-        _motif("three_way_hub", (("entry", "switch"), ("exit", "route"), ("spur_a", "dead_end"), ("spur_b", "dead_end")),
-               (("entry", "spur_a"), ("entry", "exit"), ("entry", "spur_b")), ("entry", "exit"),
-               "A three-way ordered switch.", difficulties=advanced, dead_end=True),
-        _motif("four_way_hub", (("entry", "switch"), ("exit", "route"), ("spur_a", "dead_end"), ("spur_b", "dead_end"), ("spur_c", "dead_end")),
-               (("entry", "spur_a"), ("entry", "spur_b"), ("entry", "exit"), ("entry", "spur_c")),
-               ("entry", "exit"), "A four-way ordered switch.", difficulties=("expert",), dead_end=True),
+               ("entry", "exit"), "A ring offers a looping alternate route.",
+               difficulties=hard, cycle=True, revisit=True),
+        _motif(
+            "three_way_hub",
+            (("entry", "switch"), ("exit", "route"), ("failure", "dead_end"), ("detour", "recovery")),
+            (("entry", "failure"), ("entry", "exit"), ("entry", "detour"), ("detour", "exit")),
+            ("entry", "exit"),
+            "A three-way hub with success, failure, and recoverable-detour outcomes.",
+            difficulties=advanced, rejoin=True, dead_end=True,
+        ),
+        _motif(
+            "four_way_hub",
+            (
+                ("entry", "switch"), ("exit", "route"), ("failure", "dead_end"),
+                ("detour", "recovery"), ("package", "package"),
+            ),
+            (
+                ("entry", "failure"), ("entry", "detour"), ("entry", "exit"),
+                ("entry", "package"), ("detour", "exit"), ("package", "exit"),
+            ),
+            ("entry", "package", "exit"),
+            "A four-way hub with optimal, objective, recoverable, and failure outcomes.",
+            difficulties=("expert",), rejoin=True, dead_end=True, embedded_package=True,
+        ),
         _motif(
             "road_opens_after_package",
             (("entry", "switch"), ("outbound", "route"), ("package", "package"), ("exit", "route")),
@@ -370,11 +549,148 @@ def seed_motif_factories() -> tuple[BaseMotif, ...]:
             revisit=True,
             dead_end=True,
             embedded_package=True,
-            ports=_package_state_ports(),
+            ports=(
+                *_package_state_ports(),
+                MotifPort("failure", "decoy", MotifPortType.FAILURE_EXIT),
+            ),
             preconditions=revisited_preconditions,
             effects=replace(revisited_effects, introduces_failure_exit=True),
         ),
+        _motif(
+            "binary_delayed_consequence",
+            (
+                ("entry", "switch"), ("commit", "route"), ("safe", "route"),
+                ("consequence", "switch"), ("exit", "route"), ("failure", "dead_end"),
+            ),
+            (
+                ("entry", "commit"), ("entry", "safe"), ("commit", "consequence"),
+                ("safe", "exit"), ("consequence", "exit"), ("consequence", "failure"),
+            ),
+            ("entry", "commit", "consequence", "exit"),
+            "An early commitment changes the later consequence reached by the player.",
+            difficulties=advanced, rejoin=True, dead_end=True,
+        ),
+        _motif(
+            "phase_dependent_ring_exits",
+            (
+                ("entry", "switch"), ("ring_a", "route"), ("package", "package"),
+                ("ring_b", "route"), ("exit", "route"), ("failure", "dead_end"),
+            ),
+            (
+                ("entry", "ring_a", "beforePackage"), ("entry", "exit", "afterPackage"),
+                ("entry", "failure", "beforePackage"), ("ring_a", "package"),
+                ("package", "ring_b"), ("ring_b", "entry"),
+            ),
+            ("entry", "ring_a", "package", "ring_b", "entry", "exit"),
+            "The useful ring exit changes after the objective is collected.",
+            difficulties=hard, cycle=True, revisit=True, dead_end=True, embedded_package=True,
+        ),
+        _motif(
+            "destination_before_objectives_decoy",
+            (
+                ("entry", "switch"), ("destination_decoy", "destination"),
+                ("package", "package"), ("return", "route"), ("exit", "route"),
+            ),
+            (
+                ("entry", "destination_decoy", "beforePackage"),
+                ("entry", "package"), ("package", "return"), ("return", "entry"),
+                ("entry", "exit", "afterPackage"),
+            ),
+            ("entry", "package", "return", "entry", "exit"),
+            "A visible terminal is a premature decoy until prior objectives are complete.",
+            difficulties=advanced, cycle=True, revisit=True, embedded_package=True,
+        ),
+        _motif(
+            "one_use_objective_connector",
+            (
+                ("entry", "switch"), ("connector", "route"), ("package", "package"),
+                ("return", "route"), ("exit", "route"),
+            ),
+            (
+                ("entry", "connector"), ("connector", "package", "always", 1),
+                ("package", "return"), ("return", "entry"),
+                ("entry", "exit", "afterPackage"),
+            ),
+            ("entry", "connector", "package", "return", "entry", "exit"),
+            "The objective connector closes after its single useful phase.",
+            difficulties=advanced, cycle=True, revisit=True, embedded_package=True,
+        ),
+        _motif(
+            "objective_state_revisited_hub",
+            (
+                ("entry", "switch"), ("outbound", "route"), ("package", "package"),
+                ("return", "route"), ("exit", "route"), ("detour", "recovery"),
+            ),
+            (
+                ("entry", "outbound", "beforePackage"), ("entry", "detour", "beforePackage"),
+                ("outbound", "package"), ("detour", "package"), ("package", "return"),
+                ("return", "entry"), ("entry", "exit", "afterPackage"),
+            ),
+            ("entry", "outbound", "package", "return", "entry", "exit"),
+            "A three-way hub is revisited with a newly required exit.",
+            difficulties=hard, cycle=True, rejoin=True, revisit=True, embedded_package=True,
+        ),
+        _motif(
+            "three_phase_relay",
+            (
+                ("entry", "route"), ("pickup", "pickup"), ("relay", "switch"),
+                ("checkpoint", "checkpoint"), ("return", "route"),
+                ("delivery", "delivery"), ("exit", "route"),
+            ),
+            (
+                ("entry", "pickup"), ("pickup", "relay"), ("relay", "checkpoint"),
+                ("relay", "delivery"), ("checkpoint", "return"), ("return", "relay"),
+                ("delivery", "exit"),
+            ),
+            ("entry", "pickup", "relay", "checkpoint", "return", "relay", "delivery", "exit"),
+            "Three ordered objectives form a relay through a revisited decision.",
+            difficulties=("expert",), cycle=True, rejoin=True, revisit=True,
+        ),
+        _motif(
+            "parallel_unique_optimum",
+            (
+                ("entry", "switch"), ("fast", "route"), ("slow_a", "route"),
+                ("slow_b", "recovery"), ("exit", "route"),
+            ),
+            (
+                ("entry", "fast"), ("fast", "exit"), ("entry", "slow_a"),
+                ("slow_a", "slow_b"), ("slow_b", "exit"),
+            ),
+            ("entry", "fast", "exit"),
+            "Two successful parallel routes have unequal proven edge cost.",
+            difficulties=advanced, rejoin=True,
+        ),
+        _motif(
+            "objective_unlocked_shortcut",
+            (
+                ("entry", "switch"), ("outbound", "route"), ("package", "package"),
+                ("return", "route"), ("shortcut", "route"), ("exit", "route"),
+            ),
+            (
+                ("entry", "outbound"), ("outbound", "package"), ("package", "return"),
+                ("return", "entry"), ("entry", "shortcut", "afterPackage"),
+                ("shortcut", "exit"),
+            ),
+            ("entry", "outbound", "package", "return", "entry", "shortcut", "exit"),
+            "Completing the objective unlocks a shorter return route.",
+            difficulties=advanced, cycle=True, revisit=True, embedded_package=True,
+        ),
+        _motif(
+            "objective_closed_return_road",
+            (
+                ("entry", "switch"), ("return_road", "route"), ("package", "package"),
+                ("loop", "route"), ("exit", "route"),
+            ),
+            (
+                ("entry", "return_road", "beforePackage"), ("return_road", "package"),
+                ("package", "loop"), ("loop", "entry"), ("entry", "exit", "afterPackage"),
+            ),
+            ("entry", "return_road", "package", "loop", "entry", "exit"),
+            "The outbound return road closes behind the completed objective.",
+            difficulties=advanced, cycle=True, revisit=True, embedded_package=True,
+        ),
     )
+    return tuple(_complete_typed_contract(factory) for factory in motifs)
 
 
 def default_motif_registry() -> MotifRegistry:

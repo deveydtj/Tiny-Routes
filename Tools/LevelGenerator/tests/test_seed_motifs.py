@@ -15,6 +15,11 @@ EXPECTED = {
     "three_way_hub", "four_way_hub",
     "road_opens_after_package", "shortcut_closes_after_package",
     "return_route_changes_after_package", "package_state_revisited_switch",
+    "binary_delayed_consequence", "phase_dependent_ring_exits",
+    "destination_before_objectives_decoy", "one_use_objective_connector",
+    "objective_state_revisited_hub", "three_phase_relay",
+    "parallel_unique_optimum", "objective_unlocked_shortcut",
+    "objective_closed_return_road",
 }
 
 PACKAGE_STATE_MOTIFS = {

@@ -1102,26 +1102,33 @@ failure road and opens the successful road.
 
 After migrating the existing catalog, add behavior-distinct coverage for:
 
-- [ ] Binary split with later consequences.
-- [ ] Three-way hub with three distinct outcomes.
-- [ ] Four-way hub with four distinct outcomes.
-- [ ] Split/rejoin with unequal route costs.
-- [ ] Objective-gated branch.
-- [ ] Objective-unlocked shortcut.
-- [ ] Objective-closed return road.
-- [ ] Hub revisit with changed desired exit.
-- [ ] Switch revisit with changed desired state.
-- [ ] Recoverable loop.
-- [ ] Phase-dependent ring exits.
-- [ ] Destination-before-objectives decoy.
-- [ ] Nonfatal detour.
-- [ ] One-use connector.
-- [ ] Two-phase route reversal.
-- [ ] Three-phase relay.
-- [ ] Parallel successful routes with a unique optimum.
-- [ ] Branch with delayed downstream consequence.
-- [ ] Objective branch that changes later availability.
-- [ ] Readability spacer/lane expansion.
+- [x] Binary split with later consequences.
+- [x] Three-way hub with three distinct outcomes.
+- [x] Four-way hub with four distinct outcomes.
+- [x] Split/rejoin with unequal route costs.
+- [x] Objective-gated branch.
+- [x] Objective-unlocked shortcut.
+- [x] Objective-closed return road.
+- [x] Hub revisit with changed desired exit.
+- [x] Switch revisit with changed desired state.
+- [x] Recoverable loop.
+- [x] Phase-dependent ring exits.
+- [x] Destination-before-objectives decoy.
+- [x] Nonfatal detour.
+- [x] One-use connector.
+- [x] Two-phase route reversal.
+- [x] Three-phase relay.
+- [x] Parallel successful routes with a unique optimum.
+- [x] Branch with delayed downstream consequence.
+- [x] Objective branch that changes later availability.
+- [x] Readability spacer/lane expansion.
+
+**2026-07-19 AG-035 completion record:** The evidence-backed production catalog
+now contains 22 behavior-distinct typed motifs and covers all 20 required
+capabilities. New stateful assets include real objective-opened and
+objective-closed roads, a traversal-consumed one-use edge, changed hub and
+switch revisits, phase-dependent ring exits, a three-objective relay, and
+parallel successful routes with unequal cost.
 
 A migrated V2 motif counts toward this catalog only after it passes the V3 typed contract and produces distinct behavior.
 
@@ -1140,13 +1147,20 @@ Every motif test proves:
 
 Mechanic names and tags can never satisfy these checks.
 
+**2026-07-19 AG-036 completion record:** Added exact graph-derived motif evidence
+for topology, meaningful branch outcomes, objective-state transitions,
+dependency kinds, typed exits, difficulty/precondition constraints, composition
+limits, and ID-independent behavior signatures. Contract tests prove misleading
+names, tags, prose, equal branches, and unsupported effect declarations cannot
+satisfy production catalog checks.
+
 ## Phase 3 exit gate
 
-- [ ] Every existing seed motif is migrated, quarantined, or explicitly deprecated.
-- [ ] At least 20 behavior-distinct production motifs pass typed contracts.
-- [ ] Objective-state effects are represented directly.
-- [ ] Every production motif can participate in typed, nonserial composition.
-- [ ] No motif is accepted because of its name or metadata tags alone.
+- [x] Every existing seed motif is migrated, quarantined, or explicitly deprecated.
+- [x] At least 20 behavior-distinct production motifs pass typed contracts.
+- [x] Objective-state effects are represented directly.
+- [x] Every production motif can participate in typed, nonserial composition.
+- [x] No motif is accepted because of its name or metadata tags alone.
 
 ---
 

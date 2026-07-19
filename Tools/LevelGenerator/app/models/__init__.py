@@ -19,6 +19,12 @@ from .motif_contract import (
     MotifPreconditionContract,
     MotifStructuralEffect,
 )
+from .motif_evidence import MotifContractEvidence
+from .production_motif_catalog import (
+    ProductionMotifCapability,
+    ProductionMotifCatalogEntry,
+    ProductionMotifCatalogReport,
+)
 from .motif_port import MotifPort, MotifPortType
 from .puzzle_experience_target import PuzzleExperienceTarget
 from .generated_level import GeneratedLevel
@@ -62,6 +68,10 @@ __all__ = [
     "MotifIncomingObjectiveState",
     "MotifPreconditionContract",
     "MotifStructuralEffect",
+    "MotifContractEvidence",
+    "ProductionMotifCapability",
+    "ProductionMotifCatalogEntry",
+    "ProductionMotifCatalogReport",
     "PuzzleExperienceTarget",
     "CandidateSignature",
     "GeneratedLevel",

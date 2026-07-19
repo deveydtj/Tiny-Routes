@@ -21,6 +21,7 @@ class GraphRecipeEdge:
     from_node_id: str
     to_node_id: str
     availability: str = "always"
+    usage_limit: int | None = None
 
 
 @dataclass(frozen=True)
@@ -73,6 +74,14 @@ class GraphRecipe:
                 messages.append(
                     f"edge_unknown_availability:{edge.from_node_id}:"
                     f"{edge.to_node_id}:{edge.availability}"
+                )
+            if edge.usage_limit is not None and (
+                not isinstance(edge.usage_limit, int)
+                or isinstance(edge.usage_limit, bool)
+                or edge.usage_limit <= 0
+            ):
+                messages.append(
+                    f"edge_usage_limit_invalid:{edge.from_node_id}:{edge.to_node_id}"
                 )
         outgoing_by_node_id: dict[str, list[GraphRecipeEdge]] = {}
         for edge in self.edges:

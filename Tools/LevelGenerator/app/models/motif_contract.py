@@ -66,7 +66,7 @@ class MotifEdgeStateChange:
     from_node_id: str
     to_node_id: str
     kind: MotifEdgeStateChangeKind
-    trigger_objective_node_id: str
+    trigger_objective_node_id: str | None = None
 
     def __post_init__(self) -> None:
         if not isinstance(self.kind, MotifEdgeStateChangeKind):

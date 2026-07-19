@@ -8,6 +8,8 @@ from .puzzle_blueprint_service import (
     PuzzleBlueprintGeneratorService,
     PuzzleBlueprintService,
 )
+from .motif_contract_evidence_service import MotifContractEvidenceService
+from .production_motif_catalog_service import ProductionMotifCatalogService
 from .decision_profile_service import DecisionProfileService
 from .layout_repair_service import LayoutRepairConfig, LayoutRepairService
 from .generated_level_validation_service import GeneratedLevelValidationService
@@ -59,6 +61,8 @@ __all__ = [
     "DifficultyTargetResolverService",
     "PuzzleBlueprintGeneratorService",
     "PuzzleBlueprintService",
+    "MotifContractEvidenceService",
+    "ProductionMotifCatalogService",
     "DecisionProfileService",
     "LayoutRepairConfig",
     "LayoutRepairService",
