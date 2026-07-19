@@ -2609,11 +2609,11 @@ The following sequence is intentionally small enough for junior contributors. Ea
 - [x] **AG-016:** Add current-objective gameplay marker.
 - [x] **AG-017:** Add locked-road rendering.
 - [x] **AG-018:** Add editor objective list controls.
-- [ ] **AG-019:** Add editor road-condition controls.
+- [x] **AG-019:** Add editor road-condition controls.
 
 ## Blueprint models
 
-- [ ] **AG-020:** Add `PuzzleExperienceTarget`.
+- [x] **AG-020:** Add `PuzzleExperienceTarget`.
 - [ ] **AG-021:** Add `ObjectiveSpec` and `StateTransitionSpec`.
 - [ ] **AG-022:** Add decision dependency graph model.
 - [ ] **AG-023:** Add `PuzzleBlueprint` validation.

@@ -18,7 +18,9 @@ try:
         QDialogButtonBox,
         QFileDialog,
         QMessageBox,
+        QLineEdit,
         QPushButton,
+        QSpinBox,
         QToolBar,
         QWidget,
     )
@@ -53,7 +55,7 @@ from app.ui import (
     SolutionPanel,
     TransitionArcItem,
 )
-from tiny_routes_core.models import LevelRules, SwitchInteractionMode
+from tiny_routes_core.models import EdgeAvailabilityRule, LevelRules, SwitchInteractionMode
 from app.ui.validation_panel import ValidationPanel
 from app.ui.canvas_colors import (
     DARK_GRID_COLOR,
@@ -1940,6 +1942,56 @@ def test_edge_properties_panel_edits_package_availability(
     qapplication.processEvents()
 
     assert received[-1][-1] == "beforePackage"
+
+
+def test_edge_properties_panel_edits_structured_objective_rule(
+    qapplication: QApplication,
+) -> None:
+    panel = PropertiesPanel()
+    received: list[tuple[str, EdgeAvailabilityRule | None]] = []
+    panel.edge_availability_rule_changed.connect(
+        lambda edge_id, rule: received.append((edge_id, rule))
+    )
+    panel.show_edge(
+        "e1",
+        "start",
+        "destination",
+        "horizontalFirst",
+        availability_rule=EdgeAvailabilityRule(
+            requiredCompletedObjectiveIDs=["pickup"],
+            maximumObjectiveIndex=2,
+            usageLimit=1,
+        ),
+        available_node_ids=["start", "destination"],
+        available_objective_ids=["pickup", "destination"],
+        schema_version=3,
+    )
+
+    mode_combo = panel.findChild(QComboBox, "edgeAvailabilityCombo")
+    required_edit = panel.findChild(QLineEdit, "edgeRequiredObjectivesEdit")
+    maximum_index = panel.findChild(QSpinBox, "edgeMaximumObjectiveIndexSpinBox")
+    usage_limit = panel.findChild(QSpinBox, "edgeUsageLimitSpinBox")
+    assert mode_combo is not None
+    assert required_edit is not None
+    assert maximum_index is not None
+    assert usage_limit is not None
+    assert mode_combo.currentData() == "objectiveRule"
+    assert mode_combo.findData("beforePackage") == -1
+    assert required_edit.text() == "pickup"
+    assert maximum_index.value() == 2
+    assert usage_limit.value() == 1
+    assert required_edit.isEnabled()
+
+    required_edit.setText("pickup, destination")
+    required_edit.editingFinished.emit()
+    qapplication.processEvents()
+
+    edge_id, rule = received[-1]
+    assert edge_id == "e1"
+    assert rule is not None
+    assert rule.requiredCompletedObjectiveIDs == ["pickup", "destination"]
+    assert rule.maximumObjectiveIndex == 2
+    assert rule.usageLimit == 1
 
 
 def test_playtest_visually_marks_roads_unavailable_for_package_phase(

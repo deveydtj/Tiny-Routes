@@ -19,6 +19,7 @@ from app.commands import (
     RenameReferencesCommand,
 )
 from app.models import (
+    EdgeAvailabilityRule,
     LevelDocument,
     RouteEdge,
     RouteNode,
@@ -213,6 +214,79 @@ class DocumentController(QObject):
             edge.availability = availability
             edge._availability_present = availability != "always"
         self._mutate(EditEdgeCommand, f"Edit road {edge_id}", mutation)
+
+    def edit_edge_availability_rule(
+        self,
+        edge_id: str,
+        rule: EdgeAvailabilityRule | None,
+    ) -> None:
+        """Set a structured schema-3 road rule as one undoable edit."""
+
+        def mutation(document, solution):
+            edge = next((item for item in document.graph.edges if item.id == edge_id), None)
+            if edge is None:
+                raise ValueError(f"Unknown edge ID: {edge_id}")
+
+            if rule is not None:
+                if document.schema_version < 3:
+                    document.objectives = document.effective_objectives
+                required = list(rule.requiredCompletedObjectiveIDs)
+                forbidden = list(rule.forbiddenCompletedObjectiveIDs)
+                if len(required) != len(set(required)):
+                    raise ValueError("Required objective IDs must be unique")
+                if len(forbidden) != len(set(forbidden)):
+                    raise ValueError("Forbidden objective IDs must be unique")
+                overlap = sorted(set(required).intersection(forbidden))
+                if overlap:
+                    raise ValueError(
+                        "An objective cannot be both required and forbidden: "
+                        + ", ".join(overlap)
+                    )
+
+                known_objective_ids = {
+                    objective.id for objective in document.effective_objectives
+                }
+                unknown = sorted((set(required) | set(forbidden)) - known_objective_ids)
+                if unknown:
+                    raise ValueError(
+                        "Road rules reference unknown objective IDs: " + ", ".join(unknown)
+                    )
+                if (
+                    rule.minimumObjectiveIndex is not None
+                    and rule.minimumObjectiveIndex < 0
+                ):
+                    raise ValueError("Minimum objective index cannot be negative")
+                if (
+                    rule.maximumObjectiveIndex is not None
+                    and rule.maximumObjectiveIndex < 0
+                ):
+                    raise ValueError("Maximum objective index cannot be negative")
+                objective_count = len(document.objectives or ())
+                for label, index in (
+                    ("Minimum", rule.minimumObjectiveIndex),
+                    ("Maximum", rule.maximumObjectiveIndex),
+                ):
+                    if index is not None and index >= objective_count:
+                        raise ValueError(
+                            f"{label} objective index must be less than {objective_count}"
+                        )
+                if (
+                    rule.minimumObjectiveIndex is not None
+                    and rule.maximumObjectiveIndex is not None
+                    and rule.minimumObjectiveIndex > rule.maximumObjectiveIndex
+                ):
+                    raise ValueError(
+                        "Minimum objective index cannot exceed maximum objective index"
+                    )
+                if rule.usageLimit is not None and rule.usageLimit <= 0:
+                    raise ValueError("Usage limit must be greater than zero")
+
+                document._extra["schemaVersion"] = 3
+                edge.availability = "always"
+                edge._availability_present = False
+            edge.availabilityRule = deepcopy(rule)
+
+        self._mutate(EditEdgeCommand, f"Edit road {edge_id} condition", mutation)
 
     def edit_metadata(self, mutation) -> None:
         self._mutate(EditMetadataCommand, "Edit level metadata", mutation)

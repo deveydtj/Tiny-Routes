@@ -219,6 +219,9 @@ class LevelEditorMainWindow(QMainWindow):
         self._properties_panel.initial_route_changed.connect(self._on_initial_route_changed)
         self._properties_panel.edge_id_changed.connect(self._on_edge_id_changed)
         self._properties_panel.edge_properties_changed.connect(self._on_edge_properties_changed)
+        self._properties_panel.edge_availability_rule_changed.connect(
+            self._on_edge_availability_rule_changed
+        )
         self._objective_list_panel.objectives_changed.connect(self._on_objectives_changed)
         self._solution_panel.solution_changed.connect(self._on_solution_changed)
         self._solution_panel.replay_requested.connect(self._replay_solution)
@@ -1237,6 +1240,13 @@ class LevelEditorMainWindow(QMainWindow):
         node_ids = [] if self._current_document is None else [
             node.id for node in self._current_document.graph.nodes
         ]
+        edge = None if self._current_document is None else next(
+            (item for item in self._current_document.graph.edges if item.id == edge_id),
+            None,
+        )
+        objective_ids = [] if self._current_document is None else [
+            objective.id for objective in self._current_document.effective_objectives
+        ]
         self._properties_panel.show_edge(
             edge_id,
             from_node_id,
@@ -1244,6 +1254,11 @@ class LevelEditorMainWindow(QMainWindow):
             road_shape,
             availability,
             available_node_ids=node_ids,
+            availability_rule=None if edge is None else edge.availabilityRule,
+            available_objective_ids=objective_ids,
+            schema_version=(
+                2 if self._current_document is None else self._current_document.schema_version
+            ),
         )
 
     def _run_property_edit(self, mutation, *, select_node: str | None = None, select_edge: str | None = None) -> None:
@@ -1305,6 +1320,12 @@ class LevelEditorMainWindow(QMainWindow):
             lambda: self._document_controller.edit_edge(
                 edge_id, from_node_id, to_node_id, road_shape, availability
             ),
+            select_edge=edge_id,
+        )
+
+    def _on_edge_availability_rule_changed(self, edge_id: str, rule) -> None:
+        self._run_property_edit(
+            lambda: self._document_controller.edit_edge_availability_rule(edge_id, rule),
             select_edge=edge_id,
         )
 

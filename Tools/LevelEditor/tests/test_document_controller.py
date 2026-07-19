@@ -1,7 +1,8 @@
 from __future__ import annotations
 
 from app.controllers import DocumentController
-from app.models import LevelDocument, RouteEdge, RouteGraph, RouteNode
+from app.models import EdgeAvailabilityRule, LevelDocument, RouteEdge, RouteGraph, RouteNode
+from tiny_routes_core.models import LEGACY_PICKUP_OBJECTIVE_ID
 
 
 def _document() -> LevelDocument:
@@ -105,6 +106,52 @@ def test_edit_edge_endpoint_shape_and_undo_preserve_outgoing_references() -> Non
     assert document.graph.nodes[1].outgoingEdgeIDs == []
     assert document.graph.edges[0].roadShape is None
     assert document.graph.edges[0].availability == "always"
+
+
+def test_edit_edge_objective_rule_upgrades_legacy_document_and_is_undoable() -> None:
+    controller = DocumentController()
+    document = _document()
+    controller.open(document, None, saved=True)
+
+    controller.edit_edge_availability_rule(
+        "first",
+        EdgeAvailabilityRule(
+            requiredCompletedObjectiveIDs=[LEGACY_PICKUP_OBJECTIVE_ID],
+            maximumObjectiveIndex=1,
+            usageLimit=1,
+        ),
+    )
+
+    edge = document.graph.edges[0]
+    assert document.schema_version == 3
+    assert document.objectives is not None
+    assert edge.availability == "always"
+    assert edge.availabilityRule is not None
+    assert edge.availabilityRule.usageLimit == 1
+    assert "availability" not in edge.to_dict()
+
+    controller.undo_stack.undo()
+    assert document.schema_version == 1
+    assert document.objectives is None
+    assert document.graph.edges[0].availabilityRule is None
+
+
+def test_edit_edge_objective_rule_rejects_unknown_objective_reference() -> None:
+    controller = DocumentController()
+    document = _document()
+    controller.open(document, None, saved=True)
+
+    try:
+        controller.edit_edge_availability_rule(
+            "first",
+            EdgeAvailabilityRule(requiredCompletedObjectiveIDs=["missing"]),
+        )
+    except ValueError as exc:
+        assert "unknown objective IDs" in str(exc)
+    else:
+        raise AssertionError("Expected an unknown objective reference to be rejected")
+
+    assert controller.undo_stack.canUndo() is False
 
 
 def test_edit_edge_rejects_duplicate_directed_edge_without_mutation() -> None:

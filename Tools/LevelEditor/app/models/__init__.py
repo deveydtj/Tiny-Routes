@@ -1,4 +1,5 @@
 from tiny_routes_core.models import (
+    EdgeAvailabilityRule,
     EmbeddedSolution,
     LevelDocument,
     RouteEdge,
@@ -13,6 +14,7 @@ from .editor_tool import EditorTool
 from .playtest_state import PlaytestState
 
 __all__ = [
+    "EdgeAvailabilityRule",
     "RouteEdge",
     "RouteNode",
     "RouteObjective",

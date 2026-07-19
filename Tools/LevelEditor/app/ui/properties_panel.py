@@ -1,3 +1,5 @@
+from copy import deepcopy
+
 from PySide6.QtCore import Qt, Signal
 from PySide6.QtWidgets import (
     QAbstractItemView,
@@ -9,11 +11,13 @@ from PySide6.QtWidgets import (
     QLabel,
     QLineEdit,
     QPushButton,
+    QSpinBox,
     QTableWidget,
     QTableWidgetItem,
     QVBoxLayout,
     QWidget,
 )
+from tiny_routes_core.models import EdgeAvailabilityRule
 
 
 class _InspectableComboBox(QComboBox):
@@ -50,6 +54,7 @@ class PropertiesPanel(QWidget):
     initial_route_changed = Signal(str, str)
     edge_id_changed = Signal(str, str)
     edge_properties_changed = Signal(str, str, str, str, str)
+    edge_availability_rule_changed = Signal(str, object)
 
     def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent)
@@ -157,6 +162,9 @@ class PropertiesPanel(QWidget):
         road_shape: str,
         availability: str = "always",
         available_node_ids: list[str] | None = None,
+        availability_rule: EdgeAvailabilityRule | None = None,
+        available_objective_ids: list[str] | None = None,
+        schema_version: int = 2,
     ) -> None:
         """Display properties for the selected edge."""
         self._reset_form()
@@ -178,30 +186,134 @@ class PropertiesPanel(QWidget):
         availability_combo = _InspectableComboBox(use_display_text=True)
         availability_combo.setObjectName("edgeAvailabilityCombo")
         availability_combo.addItem("Always", "always")
-        availability_combo.addItem("Before Package", "beforePackage")
-        availability_combo.addItem("After Package", "afterPackage")
+        if schema_version < 3:
+            availability_combo.addItem("Before Package", "beforePackage")
+            availability_combo.addItem("After Package", "afterPackage")
+        availability_combo.addItem("Objective State Rule", "objectiveRule")
         availability_combo.setToolTip(
             "Always: road is always usable. Before Package: road closes when the "
             "package is collected. After Package: road opens when the package is collected."
         )
-        availability_combo.setCurrentIndex(
-            max(0, availability_combo.findData(availability))
+        availability_combo.setCurrentIndex(max(
+            0,
+            availability_combo.findData(
+                "objectiveRule" if availability_rule is not None else availability
+            ),
+        ))
+
+        required_edit = QLineEdit(
+            ", ".join(
+                getattr(availability_rule, "requiredCompletedObjectiveIDs", ())
+            )
         )
-        emit = lambda: self.edge_properties_changed.emit(
-            self._current_edge_id or edge_id,
-            str(from_combo.currentData()),
-            str(to_combo.currentData()),
-            str(shape_combo.currentData()),
-            str(availability_combo.currentData()),
+        required_edit.setObjectName("edgeRequiredObjectivesEdit")
+        forbidden_edit = QLineEdit(
+            ", ".join(
+                getattr(availability_rule, "forbiddenCompletedObjectiveIDs", ())
+            )
         )
-        from_combo.currentIndexChanged.connect(emit)
-        to_combo.currentIndexChanged.connect(emit)
-        shape_combo.currentIndexChanged.connect(emit)
-        availability_combo.currentIndexChanged.connect(emit)
+        forbidden_edit.setObjectName("edgeForbiddenObjectivesEdit")
+        objective_ids = list(available_objective_ids or ())
+        objective_hint = ", ".join(objective_ids) if objective_ids else "No objectives authored"
+        required_edit.setPlaceholderText(objective_hint)
+        forbidden_edit.setPlaceholderText(objective_hint)
+
+        minimum_index = self._optional_index_spinbox(
+            getattr(availability_rule, "minimumObjectiveIndex", None),
+            "edgeMinimumObjectiveIndexSpinBox",
+        )
+        maximum_index = self._optional_index_spinbox(
+            getattr(availability_rule, "maximumObjectiveIndex", None),
+            "edgeMaximumObjectiveIndexSpinBox",
+        )
+        usage_limit = QSpinBox()
+        usage_limit.setObjectName("edgeUsageLimitSpinBox")
+        usage_limit.setRange(0, 999)
+        usage_limit.setSpecialValueText("Unlimited")
+        usage_limit.setValue(getattr(availability_rule, "usageLimit", None) or 0)
+
+        rule_widgets = (
+            required_edit,
+            forbidden_edit,
+            minimum_index,
+            maximum_index,
+            usage_limit,
+        )
+
+        def parsed_ids(editor: QLineEdit) -> list[str]:
+            return [value.strip() for value in editor.text().split(",") if value.strip()]
+
+        def current_rule() -> EdgeAvailabilityRule:
+            rule = (
+                deepcopy(availability_rule)
+                if availability_rule is not None
+                else EdgeAvailabilityRule()
+            )
+            rule.requiredCompletedObjectiveIDs = parsed_ids(required_edit)
+            rule.forbiddenCompletedObjectiveIDs = parsed_ids(forbidden_edit)
+            rule.minimumObjectiveIndex = (
+                minimum_index.value() if minimum_index.value() >= 0 else None
+            )
+            rule.maximumObjectiveIndex = (
+                maximum_index.value() if maximum_index.value() >= 0 else None
+            )
+            rule.usageLimit = usage_limit.value() or None
+            return rule
+
+        def emit_properties(*_args) -> None:
+            selected_availability = str(availability_combo.currentData())
+            if selected_availability == "objectiveRule":
+                return
+            self.edge_properties_changed.emit(
+                self._current_edge_id or edge_id,
+                str(from_combo.currentData()),
+                str(to_combo.currentData()),
+                str(shape_combo.currentData()),
+                selected_availability,
+            )
+
+        def emit_rule(*_args) -> None:
+            if availability_combo.currentData() != "objectiveRule":
+                return
+            self.edge_availability_rule_changed.emit(
+                self._current_edge_id or edge_id,
+                current_rule(),
+            )
+
+        def availability_mode_changed(*_args) -> None:
+            structured = availability_combo.currentData() == "objectiveRule"
+            for widget in rule_widgets:
+                widget.setEnabled(structured)
+            if structured:
+                emit_rule()
+            else:
+                self.edge_availability_rule_changed.emit(
+                    self._current_edge_id or edge_id,
+                    None,
+                )
+                emit_properties()
+
+        from_combo.currentIndexChanged.connect(emit_properties)
+        to_combo.currentIndexChanged.connect(emit_properties)
+        shape_combo.currentIndexChanged.connect(emit_properties)
+        availability_combo.currentIndexChanged.connect(availability_mode_changed)
+        required_edit.editingFinished.connect(emit_rule)
+        forbidden_edit.editingFinished.connect(emit_rule)
+        minimum_index.valueChanged.connect(emit_rule)
+        maximum_index.valueChanged.connect(emit_rule)
+        usage_limit.valueChanged.connect(emit_rule)
         self._form_layout.addRow("From:", from_combo)
         self._form_layout.addRow("To:", to_combo)
         self._form_layout.addRow("Road Shape:", shape_combo)
         self._form_layout.addRow("Availability:", availability_combo)
+        self._form_layout.addRow("Requires Objectives:", required_edit)
+        self._form_layout.addRow("Forbids Objectives:", forbidden_edit)
+        self._form_layout.addRow("Minimum Objective:", minimum_index)
+        self._form_layout.addRow("Maximum Objective:", maximum_index)
+        self._form_layout.addRow("Usage Limit:", usage_limit)
+        structured = availability_combo.currentData() == "objectiveRule"
+        for widget in rule_widgets:
+            widget.setEnabled(structured)
         self._empty_label.setVisible(False)
         self._form_widget.setVisible(True)
 
@@ -217,6 +329,15 @@ class PropertiesPanel(QWidget):
     # ------------------------------------------------------------------
     # Helpers
     # ------------------------------------------------------------------
+
+    @staticmethod
+    def _optional_index_spinbox(value: int | None, object_name: str) -> QSpinBox:
+        spinbox = QSpinBox()
+        spinbox.setObjectName(object_name)
+        spinbox.setRange(-1, 999)
+        spinbox.setSpecialValueText("Any")
+        spinbox.setValue(-1 if value is None else value)
+        return spinbox
 
     def _reset_form(self) -> None:
         self._outgoing_table = None

@@ -39,7 +39,7 @@ Dragging a palette item onto the canvas is an equivalent shortcut. A level can h
 2. Select **Horizontal First** or **Vertical First** before drawing a bent road.
 3. Drag from a source handle to the destination node. Clicking a source and then a destination in Connect mode is also supported.
 4. Enable **Two-Way** before connecting when the editor should create both directed edges.
-5. Select a road afterward to edit its ID, endpoints, shape, and package-state availability in Properties.
+5. Select a road afterward to edit its ID, endpoints, shape, and availability in Properties. Schema-3 roads can require or forbid completed objectives, limit active objective indices, and set a deterministic usage limit.
 
 Road arrows show direction. For switch exits, the numbered labels show rotation order and the green road is the initial route. Undo removes the complete connect operation, including both directions of a two-way road.
 

@@ -2,6 +2,7 @@ from .candidate_signature import CandidateSignature
 from .difficulty_preset import DifficultyPreset
 from .decision_profile import DecisionProfile
 from .puzzle_motif import MotifCompatibilityConstraints, PuzzleMotif
+from .puzzle_experience_target import PuzzleExperienceTarget
 from .generated_level import GeneratedLevel
 from .generation_quality import GenerationQualityScore
 from .generation_batch_plan import GenerationBatchPlan, GenerationBatchPlanEntry
@@ -26,6 +27,7 @@ __all__ = [
     "DecisionProfile",
     "MotifCompatibilityConstraints",
     "PuzzleMotif",
+    "PuzzleExperienceTarget",
     "CandidateSignature",
     "GeneratedLevel",
     "GenerationQualityScore",
