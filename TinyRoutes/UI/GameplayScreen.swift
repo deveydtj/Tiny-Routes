@@ -19,6 +19,8 @@ struct GameplayScreen: View {
     @State private var destinationNodeID: String = ""
     @State private var hasCollectedPackage: Bool = false
     @State private var activeObjective: RouteObjective?
+    @State private var activeObjectiveIndex: Int?
+    @State private var completedObjectiveIDs: Set<String> = []
     @State private var tapCount: Int = 0
     @State private var lastRotatedSwitchNodeID: String?
     @State private var switchPressEventToken: Int = 0
@@ -85,6 +87,8 @@ struct GameplayScreen: View {
                         destinationNodeID: destinationNodeID,
                         hasCollectedPackage: hasCollectedPackage,
                         activeObjective: activeObjective,
+                        activeObjectiveIndex: activeObjectiveIndex,
+                        completedObjectiveIDs: completedObjectiveIDs,
                         cosmeticLoadout: cosmeticLoadout,
                         isShowingPreview: isShowingLevelPreview,
                         pressedSwitchNodeID: lastRotatedSwitchNodeID,
@@ -150,6 +154,8 @@ struct GameplayScreen: View {
         packageNodeID = ""
         destinationNodeID = ""
         activeObjective = nil
+        activeObjectiveIndex = nil
+        completedObjectiveIDs = []
 
         do {
             let levelData = try levelRepository.loadLevel(id: levelID)
@@ -162,6 +168,8 @@ struct GameplayScreen: View {
             destinationNodeID = levelData.destinationNodeID
             hasCollectedPackage = routeEngine.deliveryDot?.hasCollectedPackage ?? false
             activeObjective = routeEngine.activeObjective
+            activeObjectiveIndex = routeEngine.activeObjectiveIndex
+            completedObjectiveIDs = routeEngine.completedObjectiveIDs
             timeRemaining = routeEngine.timeRemaining
             tapCount = routeEngine.tapCount
             tutorialMessage = levelData.tutorialMessage?.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -194,6 +202,8 @@ struct GameplayScreen: View {
         destinationNodeID = routeEngine.destinationNodeID ?? ""
         hasCollectedPackage = routeEngine.deliveryDot?.hasCollectedPackage ?? false
         activeObjective = routeEngine.activeObjective
+        activeObjectiveIndex = routeEngine.activeObjectiveIndex
+        completedObjectiveIDs = routeEngine.completedObjectiveIDs
         timeRemaining = routeEngine.timeRemaining
         tapCount = routeEngine.tapCount
         isShowingLevelPreview = shouldPreviewLevel(runtimeGraph: routeEngine.runtimeGraph)
@@ -218,6 +228,8 @@ struct GameplayScreen: View {
             deliveryDot = routeEngine.deliveryDot
             hasCollectedPackage = routeEngine.deliveryDot?.hasCollectedPackage ?? false
             activeObjective = routeEngine.activeObjective
+            activeObjectiveIndex = routeEngine.activeObjectiveIndex
+            completedObjectiveIDs = routeEngine.completedObjectiveIDs
             timeRemaining = routeEngine.timeRemaining
             return
         }
@@ -227,6 +239,8 @@ struct GameplayScreen: View {
         deliveryDot = routeEngine.deliveryDot
         hasCollectedPackage = routeEngine.deliveryDot?.hasCollectedPackage ?? false
         activeObjective = routeEngine.activeObjective
+        activeObjectiveIndex = routeEngine.activeObjectiveIndex
+        completedObjectiveIDs = routeEngine.completedObjectiveIDs
         timeRemaining = routeEngine.timeRemaining
         dispatchLevelOutcomeIfNeeded()
     }
@@ -294,6 +308,8 @@ struct GameplayScreen: View {
         previewDismissScheduler.cancel()
         hasCollectedPackage = false
         activeObjective = nil
+        activeObjectiveIndex = nil
+        completedObjectiveIDs = []
         lastFrameDate = nil
         tapCount = 0
         lastRotatedSwitchNodeID = nil
@@ -366,6 +382,8 @@ struct RouteBoardView: View {
     let destinationNodeID: String
     let hasCollectedPackage: Bool
     let activeObjective: RouteObjective?
+    var activeObjectiveIndex: Int? = nil
+    var completedObjectiveIDs: Set<String> = []
     let cosmeticLoadout: GameplayCosmeticLoadout
     let isShowingPreview: Bool
     let pressedSwitchNodeID: String?
@@ -421,13 +439,30 @@ struct RouteBoardView: View {
                     .allowsHitTesting(false)
                     .accessibilityHidden(true)
 
-                roadLayer(roadPaths, color: cosmeticStyle.roadShadowColor, lineWidth: roadOuterWidth + 3, yOffset: 2)
-                roadLayer(roadPaths, color: cosmeticStyle.roadEdgeColor, lineWidth: roadOuterWidth)
-                roadLayer(roadPaths, color: cosmeticStyle.roadFillColor, lineWidth: roadInnerWidth)
-                roadLayer(roadPaths, color: cosmeticStyle.roadHighlightColor, lineWidth: roadHighlightWidth, yOffset: -3)
+                roadLayer(roadPaths, state: .available, color: cosmeticStyle.roadShadowColor, lineWidth: roadOuterWidth + 3, yOffset: 2)
+                roadLayer(roadPaths, state: .available, color: cosmeticStyle.roadEdgeColor, lineWidth: roadOuterWidth)
+                roadLayer(roadPaths, state: .available, color: cosmeticStyle.roadFillColor, lineWidth: roadInnerWidth)
+                roadLayer(roadPaths, state: .available, color: cosmeticStyle.roadHighlightColor, lineWidth: roadHighlightWidth, yOffset: -3)
+                unavailableRoadLayer(roadPaths)
                 roadHubLayer(roadHubs, color: cosmeticStyle.roadEdgeColor, size: roadOuterWidth * 1.15)
                 roadHubLayer(roadHubs, color: cosmeticStyle.roadFillColor, size: roadInnerWidth * 1.35)
                 roadHubLayer(roadHubs, color: cosmeticStyle.roadHighlightColor, size: roadHighlightWidth * 1.15, yOffset: -3)
+
+                ForEach(roadPaths.filter { $0.state != .available }) { roadPath in
+                    Image(systemName: roadPath.state == .consumed ? "nosign" : "lock.fill")
+                        .font(.system(size: 10, weight: .bold))
+                        .foregroundStyle(Color.white)
+                        .padding(5)
+                        .background(
+                            Circle().fill(roadPath.state == .closed || roadPath.state == .consumed
+                                ? TRGameplayStyle.Colors.resultFailureRed
+                                : TRGameplayStyle.Colors.secondaryText)
+                        )
+                        .overlay(Circle().stroke(Color.white.opacity(0.8), lineWidth: 1.5))
+                        .position(roadPath.badgePoint)
+                        .accessibilityLabel(roadPath.accessibilityLabel)
+                        .allowsHitTesting(false)
+                }
 
                 ForEach(nodes, id: \.id) { node in
                     if let nodePoint = layout.pointsByNodeID[node.id] {
@@ -480,17 +515,42 @@ struct RouteBoardView: View {
     @ViewBuilder
     private func roadLayer(
         _ roadPaths: [RenderedRoadPath],
+        state: RoadPresentationState,
         color: Color,
         lineWidth: CGFloat,
         yOffset: CGFloat = 0
     ) -> some View {
-        ForEach(roadPaths) { roadPath in
+        ForEach(roadPaths.filter { $0.state == state }) { roadPath in
             roadPath.path
                 .stroke(
                     color,
                     style: StrokeStyle(lineWidth: lineWidth, lineCap: .round, lineJoin: .round)
                 )
                 .offset(y: yOffset)
+        }
+    }
+
+    @ViewBuilder
+    private func unavailableRoadLayer(_ roadPaths: [RenderedRoadPath]) -> some View {
+        ForEach(roadPaths.filter { $0.state != .available }) { roadPath in
+            roadPath.path
+                .stroke(
+                    Color.black.opacity(0.18),
+                    style: StrokeStyle(lineWidth: roadOuterWidth + 2, lineCap: .round, lineJoin: .round)
+                )
+                .offset(y: 2)
+            roadPath.path
+                .stroke(
+                    roadPath.state == .locked
+                        ? TRGameplayStyle.Colors.secondaryText.opacity(0.72)
+                        : TRGameplayStyle.Colors.resultFailureRed.opacity(0.58),
+                    style: StrokeStyle(
+                        lineWidth: roadInnerWidth,
+                        lineCap: .round,
+                        lineJoin: .round,
+                        dash: [7, 7]
+                    )
+                )
         }
     }
 
@@ -626,7 +686,19 @@ struct RouteBoardView: View {
                 fromDistance: startDistance,
                 toDistance: endDistance
             )
-            return RenderedRoadPath(id: "edge-\(edge.id)", path: roadPath(for: visibleRoadPath, layout: layout))
+            let presentation = RoadPresentation.resolve(
+                edge: edge,
+                edgeUsageCount: runtimeGraph.edgeUsageCounts[edge.id, default: 0],
+                completedObjectiveIDs: completedObjectiveIDs,
+                activeObjectiveIndex: activeObjectiveIndex
+            )
+            return RenderedRoadPath(
+                id: "edge-\(edge.id)",
+                path: roadPath(for: visibleRoadPath, layout: layout),
+                state: presentation.state,
+                badgePoint: layout.point(for: visibleRoadPath.point(atProgress: 0.5)) ?? .zero,
+                accessibilityLabel: presentation.accessibilityLabel
+            )
         }
 
         return edgePaths + connectorGeometry.paths
@@ -723,7 +795,10 @@ struct RouteBoardView: View {
                     )
                     paths.append(RenderedRoadPath(
                         id: "connector-\(incomingEdge.id)-\(outgoingEdge.id)",
-                        path: roadPath(for: connector.roadPath, layout: layout)
+                        path: roadPath(for: connector.roadPath, layout: layout),
+                        state: .available,
+                        badgePoint: .zero,
+                        accessibilityLabel: "Road connector available"
                     ))
                 }
             }
@@ -1109,9 +1184,57 @@ struct SwitchArrowDirectionResolver {
     }
 }
 
+enum RoadPresentationState: Equatable {
+    case available
+    case locked
+    case closed
+    case consumed
+}
+
+struct RoadPresentation: Equatable {
+    let state: RoadPresentationState
+    let accessibilityLabel: String
+
+    static func resolve(
+        edge: RuntimeRouteEdge,
+        edgeUsageCount: Int,
+        completedObjectiveIDs: Set<String>,
+        activeObjectiveIndex: Int?
+    ) -> RoadPresentation {
+        let rule = edge.availabilityRule
+        if let usageLimit = rule.usageLimit, edgeUsageCount >= usageLimit {
+            return RoadPresentation(
+                state: .consumed,
+                accessibilityLabel: "Road \(edge.id), consumed"
+            )
+        }
+        if rule.allows(
+            completedObjectiveIDs: completedObjectiveIDs,
+            activeObjectiveIndex: activeObjectiveIndex,
+            usageCount: edgeUsageCount
+        ) {
+            return RoadPresentation(
+                state: .available,
+                accessibilityLabel: "Road \(edge.id), available"
+            )
+        }
+        let isClosed = !Set(rule.forbiddenCompletedObjectiveIDs).isDisjoint(with: completedObjectiveIDs)
+            || (rule.maximumObjectiveIndex.map { maximum in
+                activeObjectiveIndex.map { $0 > maximum } ?? false
+            } ?? false)
+        return RoadPresentation(
+            state: isClosed ? .closed : .locked,
+            accessibilityLabel: "Road \(edge.id), \(isClosed ? "closed" : "locked")"
+        )
+    }
+}
+
 private struct RenderedRoadPath: Identifiable {
     let id: String
     let path: Path
+    let state: RoadPresentationState
+    let badgePoint: CGPoint
+    let accessibilityLabel: String
 }
 
 private struct RenderedConnectorGeometry {

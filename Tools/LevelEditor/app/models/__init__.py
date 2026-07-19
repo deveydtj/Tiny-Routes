@@ -4,6 +4,8 @@ from tiny_routes_core.models import (
     RouteEdge,
     RouteGraph,
     RouteNode,
+    RouteObjective,
+    RouteObjectiveKind,
     Solution,
     SolutionAction,
 )
@@ -13,6 +15,8 @@ from .playtest_state import PlaytestState
 __all__ = [
     "RouteEdge",
     "RouteNode",
+    "RouteObjective",
+    "RouteObjectiveKind",
     "EmbeddedSolution",
     "RouteGraph",
     "LevelDocument",

@@ -2607,8 +2607,8 @@ The following sequence is intentionally small enough for junior contributors. Ea
 - [x] **AG-014:** Add objective-based road filtering to Swift.
 - [x] **AG-015:** Add road-state and objective parity fixture.
 - [x] **AG-016:** Add current-objective gameplay marker.
-- [ ] **AG-017:** Add locked-road rendering.
-- [ ] **AG-018:** Add editor objective list controls.
+- [x] **AG-017:** Add locked-road rendering.
+- [x] **AG-018:** Add editor objective list controls.
 - [ ] **AG-019:** Add editor road-condition controls.
 
 ## Blueprint models

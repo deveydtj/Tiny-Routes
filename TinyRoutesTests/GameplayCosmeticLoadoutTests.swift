@@ -88,6 +88,72 @@ final class GameplayCosmeticLoadoutTests: XCTestCase {
         }
     }
 
+    func testRoadPresentationKeepsUnavailableRoadsVisibleAsLockedOrClosed() {
+        let lockedEdge = RuntimeRouteEdge(
+            id: "shortcut",
+            fromNodeID: "start",
+            toNodeID: "finish",
+            roadPath: RoadPath.make(from: RoadPoint(x: 0, y: 0), to: RoadPoint(x: 1, y: 0)),
+            availabilityRule: EdgeAvailabilityRule(
+                requiredCompletedObjectiveIDs: ["pickup"]
+            )
+        )
+        let closedEdge = RuntimeRouteEdge(
+            id: "return",
+            fromNodeID: "finish",
+            toNodeID: "start",
+            roadPath: RoadPath.make(from: RoadPoint(x: 1, y: 0), to: RoadPoint(x: 0, y: 0)),
+            availabilityRule: EdgeAvailabilityRule(
+                forbiddenCompletedObjectiveIDs: ["pickup"]
+            )
+        )
+
+        let locked = RoadPresentation.resolve(
+            edge: lockedEdge,
+            edgeUsageCount: 0,
+            completedObjectiveIDs: [],
+            activeObjectiveIndex: 0
+        )
+        let opened = RoadPresentation.resolve(
+            edge: lockedEdge,
+            edgeUsageCount: 0,
+            completedObjectiveIDs: ["pickup"],
+            activeObjectiveIndex: 1
+        )
+        let closed = RoadPresentation.resolve(
+            edge: closedEdge,
+            edgeUsageCount: 0,
+            completedObjectiveIDs: ["pickup"],
+            activeObjectiveIndex: 1
+        )
+
+        XCTAssertEqual(locked.state, .locked)
+        XCTAssertEqual(locked.accessibilityLabel, "Road shortcut, locked")
+        XCTAssertEqual(opened.state, .available)
+        XCTAssertEqual(closed.state, .closed)
+        XCTAssertEqual(closed.accessibilityLabel, "Road return, closed")
+    }
+
+    func testRoadPresentationMarksExhaustedOneUseRoadConsumed() {
+        let edge = RuntimeRouteEdge(
+            id: "one_use",
+            fromNodeID: "start",
+            toNodeID: "finish",
+            roadPath: RoadPath.make(from: RoadPoint(x: 0, y: 0), to: RoadPoint(x: 1, y: 0)),
+            availabilityRule: EdgeAvailabilityRule(usageLimit: 1)
+        )
+
+        let presentation = RoadPresentation.resolve(
+            edge: edge,
+            edgeUsageCount: 1,
+            completedObjectiveIDs: [],
+            activeObjectiveIndex: 0
+        )
+
+        XCTAssertEqual(presentation.state, .consumed)
+        XCTAssertEqual(presentation.accessibilityLabel, "Road one_use, consumed")
+    }
+
     private func customLoadout() throws -> GameplayCosmeticLoadout {
         GameplayCosmeticLoadout(
             routeTheme: try XCTUnwrap(catalogService.option(withID: "themeForestPath")),

@@ -6,6 +6,7 @@ from .level_metadata_dialog import LevelMetadataDialog, LevelMetadataResult
 from .level_rules_dialog import LevelRulesDialog, LevelRulesResult
 from .keyboard_shortcuts_dialog import KeyboardShortcutsDialog
 from .node_item import NodeItem
+from .objective_list_panel import ObjectiveListPanel
 from .piece_palette import PiecePalette
 from .properties_panel import PropertiesPanel
 from .puzzle_analysis_panel import PuzzleAnalysisPanel
@@ -24,6 +25,7 @@ __all__ = [
     "LevelRulesResult",
     "KeyboardShortcutsDialog",
     "NodeItem",
+    "ObjectiveListPanel",
     "PiecePalette",
     "PropertiesPanel",
     "PuzzleAnalysisPanel",

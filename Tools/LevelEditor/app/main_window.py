@@ -55,6 +55,7 @@ from app.ui import (
     LevelMetadataDialog,
     LevelMetadataResult,
     LevelRulesDialog,
+    ObjectiveListPanel,
     PiecePalette,
     PropertiesPanel,
     PuzzleAnalysisPanel,
@@ -101,6 +102,7 @@ class LevelEditorMainWindow(QMainWindow):
         self._canvas_view = LevelCanvasView()
         self._piece_palette = PiecePalette()
         self._properties_panel = PropertiesPanel()
+        self._objective_list_panel = ObjectiveListPanel()
         self._solution_panel = SolutionPanel()
         self._validation_panel = ValidationPanel()
         self._puzzle_analysis_panel = PuzzleAnalysisPanel()
@@ -140,6 +142,15 @@ class LevelEditorMainWindow(QMainWindow):
             | QDockWidget.DockWidgetFeature.DockWidgetFloatable,
         )
         self.addDockWidget(Qt.DockWidgetArea.RightDockWidgetArea, self._properties_dock)
+
+        self._objectives_dock = QDockWidget("Objectives", self)
+        self._objectives_dock.setObjectName("objectivesDock")
+        self._objectives_dock.setWidget(self._objective_list_panel)
+        self._objectives_dock.setFeatures(
+            QDockWidget.DockWidgetFeature.DockWidgetMovable
+            | QDockWidget.DockWidgetFeature.DockWidgetFloatable,
+        )
+        self.addDockWidget(Qt.DockWidgetArea.RightDockWidgetArea, self._objectives_dock)
 
         self._validation_dock = QDockWidget("Validation", self)
         self._validation_dock.setWidget(self._validation_panel)
@@ -208,6 +219,7 @@ class LevelEditorMainWindow(QMainWindow):
         self._properties_panel.initial_route_changed.connect(self._on_initial_route_changed)
         self._properties_panel.edge_id_changed.connect(self._on_edge_id_changed)
         self._properties_panel.edge_properties_changed.connect(self._on_edge_properties_changed)
+        self._objective_list_panel.objectives_changed.connect(self._on_objectives_changed)
         self._solution_panel.solution_changed.connect(self._on_solution_changed)
         self._solution_panel.replay_requested.connect(self._replay_solution)
         self._solution_panel.find_verified_requested.connect(self._find_verified_solution)
@@ -254,6 +266,7 @@ class LevelEditorMainWindow(QMainWindow):
         editing_enabled = tool is not EditorTool.PLAYTEST
         self._piece_palette.setEnabled(editing_enabled)
         self._properties_panel.setEnabled(editing_enabled)
+        self._objective_list_panel.setEnabled(editing_enabled)
         for action in getattr(self, "_road_shape_actions", {}).values():
             action.setEnabled(tool is EditorTool.CONNECT)
         self._bidirectional_road_action.setEnabled(tool is EditorTool.CONNECT)
@@ -1472,6 +1485,8 @@ class LevelEditorMainWindow(QMainWindow):
         if viewport_state is not None:
             self._canvas_view.restore_viewport(viewport_state)
         self._properties_panel.clear()
+        if not self._objective_list_panel.is_emitting:
+            self._objective_list_panel.set_level(document)
         self._solution_panel.set_level(document)
         self._solution_panel.set_solution(solution)
         self._validation_panel.clear()
@@ -1491,6 +1506,12 @@ class LevelEditorMainWindow(QMainWindow):
             self._puzzle_analysis_controller.cancel()
         self._update_run_tests_action_states()
         self._update_window_title()
+
+    def _on_objectives_changed(self, objectives) -> None:
+        if self._current_document is None:
+            return
+        self._ensure_controller_state()
+        self._document_controller.edit_objectives(objectives)
 
     def _ensure_controller_state(self) -> None:
         if self._current_document is None:

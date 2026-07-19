@@ -18,7 +18,14 @@ from app.commands import (
     ReorderEdgesCommand,
     RenameReferencesCommand,
 )
-from app.models import LevelDocument, RouteEdge, RouteNode, Solution
+from app.models import (
+    LevelDocument,
+    RouteEdge,
+    RouteNode,
+    RouteObjective,
+    RouteObjectiveKind,
+    Solution,
+)
 from app.services.reference_rename_service import ReferenceRenameService
 
 
@@ -216,6 +223,32 @@ class DocumentController(QObject):
             document._rules_present = True
             document._extra["schemaVersion"] = schema_version
         self._mutate(EditRulesCommand, "Edit level rules", mutation)
+
+    def edit_objectives(self, objectives: list[RouteObjective]) -> None:
+        """Replace and renumber ordered objectives, upgrading the document to schema 3."""
+
+        def mutation(document, solution):
+            document.objectives = deepcopy(objectives)
+            for sequence_index, objective in enumerate(document.objectives):
+                objective.sequenceIndex = sequence_index
+            document._extra["schemaVersion"] = 3
+
+            first_pickup = next(
+                (objective for objective in document.objectives
+                 if objective.kind is RouteObjectiveKind.PICKUP),
+                None,
+            )
+            destination = next(
+                (objective for objective in reversed(document.objectives)
+                 if objective.kind is RouteObjectiveKind.DESTINATION),
+                None,
+            )
+            if first_pickup is not None:
+                document.packageNodeID = first_pickup.nodeID
+            if destination is not None:
+                document.destinationNodeID = destination.nodeID
+
+        self._mutate(EditMetadataCommand, "Edit ordered objectives", mutation)
 
     def edit_solution(self, solution: Solution) -> None:
         self._mutate(EditSolutionCommand, "Edit solution", lambda document, current: solution)
