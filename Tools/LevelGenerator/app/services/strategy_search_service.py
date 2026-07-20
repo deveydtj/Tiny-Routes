@@ -13,9 +13,11 @@ from ..models.strategy_search import (
     StrategyAction,
     StrategyCost,
     StrategySearchResult,
+    StrategyStateTransition,
     StrategyTrace,
 )
 from .puzzle_state_transition_service import PuzzleStateTransitionService
+from .strategy_equivalence_service import StrategyEquivalenceService
 
 
 @dataclass(frozen=True)
@@ -45,8 +47,10 @@ class StrategySearchService:
     def __init__(
         self,
         transition_service: PuzzleStateTransitionService | None = None,
+        equivalence_service: StrategyEquivalenceService | None = None,
     ) -> None:
         self.transition_service = transition_service or PuzzleStateTransitionService()
+        self.equivalence_service = equivalence_service or StrategyEquivalenceService()
 
     def search(
         self,
@@ -126,6 +130,8 @@ class StrategySearchService:
                     traversed_edge_ids=transition.traversed_edge_ids,
                     visited_node_ids=transition.visited_node_ids,
                     completed_objective_ids=transition.completed_objective_ids,
+                    meaningful_decision=len(decisions) >= 2,
+                    state_transition=self._state_transition(state, transition.state),
                 )
                 next_actions = (*actions, action)
                 outcome_code = transition.failure_reason or (
@@ -159,8 +165,8 @@ class StrategySearchService:
         if queue:
             limit_reasons.add("strategy_search_incomplete")
 
-        successes = self._unique_sorted(successes)
-        failures = self._unique_sorted(failures)
+        successes = self._unique_sorted(level, successes)
+        failures = self._unique_sorted(level, failures)
         if not successes:
             return StrategySearchResult(
                 optimal_cost=None,
@@ -196,16 +202,37 @@ class StrategySearchService:
             limit_reasons=tuple(sorted(limit_reasons)),
         )
 
+    def _unique_sorted(
+        self,
+        level: LevelDocument,
+        traces: list[StrategyTrace],
+    ) -> list[StrategyTrace]:
+        return [
+            strategy_class.canonical_trace
+            for strategy_class in self.equivalence_service.classify(traces, level=level)
+        ]
+
     @staticmethod
-    def _unique_sorted(traces: list[StrategyTrace]) -> list[StrategyTrace]:
-        unique: dict[tuple[tuple[object, ...], ...], StrategyTrace] = {}
-        for trace in traces:
-            existing = unique.get(trace.signature)
-            if existing is None or trace.cost < existing.cost:
-                unique[trace.signature] = trace
-        return sorted(
-            unique.values(),
-            key=lambda trace: (trace.cost, trace.signature, trace.outcome_code),
+    def _state_transition(
+        before: PuzzleState,
+        after: PuzzleState,
+    ) -> StrategyStateTransition:
+        available_before = set(before.available_edge_ids)
+        available_after = set(after.available_edge_ids)
+        newly_consumed = set(after.consumed_edge_ids).difference(before.consumed_edge_ids)
+        return StrategyStateTransition(
+            objective_index_before=before.objective_index,
+            objective_index_after=after.objective_index,
+            completed_objective_ids=tuple(
+                objective_id
+                for objective_id in after.completed_objective_ids
+                if objective_id not in before.completed_objective_ids
+            ),
+            opened_edge_ids=tuple(sorted(available_after.difference(available_before))),
+            closed_edge_ids=tuple(
+                sorted(available_before.difference(available_after, newly_consumed))
+            ),
+            consumed_edge_ids=tuple(sorted(newly_consumed)),
         )
 
     @staticmethod

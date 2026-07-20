@@ -59,10 +59,15 @@ from .composition_diversity import (
 )
 from .puzzle_state import PuzzleState, PuzzleTerminalOutcome
 from .strategy_search import (
+    OptimalStrategyRequirements,
     StrategyAction,
     StrategyCost,
+    StrategyEquivalenceClass,
+    StrategyEquivalenceKey,
     StrategySearchResult,
+    StrategyStateTransition,
     StrategyTrace,
+    UniqueOptimalProof,
 )
 from .puzzle_experience_target import PuzzleExperienceTarget
 from .generated_level import GeneratedLevel
@@ -124,8 +129,13 @@ __all__ = [
     "PuzzleTerminalOutcome",
     "StrategyAction",
     "StrategyCost",
+    "StrategyEquivalenceClass",
+    "StrategyEquivalenceKey",
+    "StrategyStateTransition",
     "StrategySearchResult",
     "StrategyTrace",
+    "OptimalStrategyRequirements",
+    "UniqueOptimalProof",
     "MotifDependencyEffect",
     "MotifEdgeStateChange",
     "MotifEdgeStateChangeKind",

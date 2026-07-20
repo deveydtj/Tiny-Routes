@@ -65,6 +65,8 @@ from .puzzle_state_transition_service import (
     StructuralTransitionResult,
 )
 from .strategy_search_service import StrategySearchConfig, StrategySearchService
+from .strategy_equivalence_service import StrategyEquivalenceService
+from .unique_optimal_proof_service import UniqueOptimalProofService
 from .swift_test_service import SwiftTestService
 from .unique_solution_validator_service import (
     UniqueSolutionPathSummary,
@@ -136,6 +138,8 @@ __all__ = [
     "StructuralTransitionResult",
     "StrategySearchConfig",
     "StrategySearchService",
+    "StrategyEquivalenceService",
+    "UniqueOptimalProofService",
     "SwitchVisualClarityService",
     "SwiftTestService",
     "UniqueSolutionPathSummary",

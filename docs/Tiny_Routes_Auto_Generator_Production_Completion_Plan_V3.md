@@ -2872,8 +2872,8 @@ for exact strategy signatures.
 - [x] **AG-062:** Add canonical `PuzzleState`.
 - [x] **AG-063:** Add structural state transition service.
 - [x] **AG-064:** Add weighted strategy search.
-- [ ] **AG-065:** Add strategy equivalence classifier.
-- [ ] **AG-066:** Add unique-optimal proof.
+- [x] **AG-065:** Add strategy equivalence classifier.
+- [x] **AG-066:** Add unique-optimal proof.
 - [ ] **AG-067:** Add alternate-success classification.
 - [ ] **AG-068:** Add failure/recovery classification.
 - [ ] **AG-069:** Add static-policy solver.
@@ -2899,6 +2899,19 @@ search over canonical puzzle states with the locked accepted-tap, travel-time,
 and route-distance cost ordering. Typed proof results retain a canonical optimum,
 all exact equal-cost action classes, configured near-optimal and longer successes,
 failure traces, explored-state counts, and explicit non-exhaustive limit reasons.
+
+**2026-07-20 AG-065 completion record:** Added typed gameplay-equivalence keys,
+classes, and classification over exact structural traces. Meaningful outgoing-road
+choices, ordered objectives, observable route-state changes, outcomes, and success
+cost remain distinct while pass-through movement and trace noise collapse into one
+deterministic canonical class. Exact search now deduplicates completed strategies
+through this classifier without weakening its internal queue identity.
+
+**2026-07-20 AG-066 completion record:** Added a hard unique-optimal proof service
+that consumes exhaustive exact-search evidence and equivalence classes. It rejects
+missing successes, bounded-search uncertainty, non-equivalent equal-cost optima,
+and missing required decision, objective, opened-road, closed-road, or consumed-road
+evidence using stable reason codes, while retaining typed canonical proof evidence.
 
 ## Agents and quality
 
