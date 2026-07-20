@@ -2783,8 +2783,8 @@ exposes no hidden `production_v3` fallback.
 - [x] **AG-052:** Add typed port connection validator.
 - [x] **AG-053:** Add edge insertion operation.
 - [x] **AG-054:** Add branch expansion operation.
-- [ ] **AG-055:** Add rejoin operation.
-- [ ] **AG-056:** Add cross-phase return operation.
+- [x] **AG-055:** Add rejoin operation.
+- [x] **AG-056:** Add cross-phase return operation.
 - [ ] **AG-057:** Add objective attachment operation.
 - [ ] **AG-058:** Add deterministic composition backtracking.
 - [ ] **AG-059:** Add partial strategic pruning.
@@ -2813,6 +2813,16 @@ state effects are retargeted, and unconsumed nested ports remain open.
 consumes an open branch-insertion port, requires an existing route to create a
 real alternate, validates port and phase compatibility before graph changes,
 and exposes the attached motif's remaining ports for nested composition.
+
+**2026-07-19 AG-055 completion record:** Added atomic typed rejoin attachment
+for one or more branch exits. The operation consumes open ports only after all
+connectors pass validation, rejects duplicate edges and decorative single-path
+merges, and updates graph-derived rejoin counts deterministically.
+
+**2026-07-19 AG-056 completion record:** Added typed cross-phase return
+connection from a later objective phase to an earlier return input. The
+operation requires a real directed cycle, consumes both ports atomically, and
+records the new cycle and revisit evidence with stable rejection codes.
 
 ## Exact strategy analysis
 

@@ -195,6 +195,183 @@ def test_branch_expansion_rejects_wrong_or_closed_source_before_graph_change() -
     assert state.current_graph.edges == (GraphRecipeEdge("hub", "main"),)
 
 
+def _rejoin_state() -> tuple[
+    CompositionState,
+    tuple[OpenCompositionPort, OpenCompositionPort],
+    OpenCompositionPort,
+]:
+    left = OpenCompositionPort(
+        "left",
+        MotifPort("exit", "left_end", MotifPortType.REJOIN_INPUT),
+        1,
+    )
+    right = OpenCompositionPort(
+        "right",
+        MotifPort("exit", "right_end", MotifPortType.RECOVERY_EXIT),
+        1,
+    )
+    target = OpenCompositionPort(
+        "merge",
+        MotifPort("entry", "merge", MotifPortType.MAIN_ROUTE_ENTRY),
+        1,
+    )
+    state = CompositionState(
+        blueprint_id="blueprint",
+        unfulfilled_decision_ids=("join_branches",),
+        open_ports=(left, right, target),
+        objective_phase_boundaries=(),
+        current_graph=CompositionGraph(
+            nodes=(
+                GraphRecipeNode("left_end"),
+                GraphRecipeNode("right_end", "recovery"),
+                GraphRecipeNode("merge"),
+                GraphRecipeNode("exit"),
+            ),
+            edges=(GraphRecipeEdge("merge", "exit"),),
+        ),
+    )
+    return state, (left, right), target
+
+
+def test_rejoin_atomically_connects_two_branches_and_consumes_ports() -> None:
+    state, sources, target = _rejoin_state()
+
+    successor = PuzzleComposerService().attach_rejoin(
+        state,
+        source_ports=sources,
+        target_port=target,
+        fulfilled_decision_ids=("join_branches",),
+    )
+
+    assert state.current_graph.edges == (GraphRecipeEdge("merge", "exit"),)
+    assert successor.current_graph.edges[-2:] == (
+        GraphRecipeEdge("left_end", "merge"),
+        GraphRecipeEdge("right_end", "merge"),
+    )
+    assert successor.open_ports == ()
+    assert successor.unfulfilled_decision_ids == ()
+    assert successor.rejoin_count == 1
+    assert successor.validate() == ()
+
+
+def test_rejoin_requires_a_real_merge_and_rejects_duplicate_connectors() -> None:
+    state, sources, target = _rejoin_state()
+    service = PuzzleComposerService()
+
+    with pytest.raises(PuzzleCompositionError, match="requires_two_branches"):
+        service.connect_rejoin(
+            state,
+            source_port=sources[0],
+            target_port=target,
+        )
+
+    existing = replace(
+        state,
+        current_graph=CompositionGraph(
+            nodes=state.current_graph.nodes,
+            edges=(
+                *state.current_graph.edges,
+                GraphRecipeEdge("left_end", "merge"),
+            ),
+        ),
+    )
+    with pytest.raises(PuzzleCompositionError, match="edge_exists"):
+        service.connect_rejoin(
+            existing,
+            source_port=sources[0],
+            target_port=target,
+        )
+
+
+def _return_state(*, source_phase: int = 2, target_phase: int = 0) -> tuple[
+    CompositionState,
+    OpenCompositionPort,
+    OpenCompositionPort,
+]:
+    source = OpenCompositionPort(
+        "later",
+        MotifPort("return_out", "later_exit", MotifPortType.RETURN_PATH_OUTPUT),
+        source_phase,
+    )
+    target = OpenCompositionPort(
+        "earlier",
+        MotifPort("return_in", "hub", MotifPortType.RETURN_PATH_INPUT),
+        target_phase,
+    )
+    state = CompositionState(
+        blueprint_id="blueprint",
+        unfulfilled_decision_ids=("return_to_hub",),
+        open_ports=(source, target),
+        objective_phase_boundaries=(),
+        current_graph=CompositionGraph(
+            nodes=(
+                GraphRecipeNode("hub", "switch"),
+                GraphRecipeNode("objective", "package"),
+                GraphRecipeNode("later_exit"),
+            ),
+            edges=(
+                GraphRecipeEdge("hub", "objective"),
+                GraphRecipeEdge("objective", "later_exit"),
+            ),
+        ),
+    )
+    return state, source, target
+
+
+def test_cross_phase_return_closes_cycle_and_records_revisit() -> None:
+    state, source, target = _return_state()
+
+    successor = PuzzleComposerService().connect_cross_phase_return(
+        state,
+        source_port=source,
+        target_port=target,
+        fulfilled_decision_ids=("return_to_hub",),
+        usage_limit=1,
+    )
+
+    assert state.current_graph.edges[-1] == GraphRecipeEdge(
+        "objective", "later_exit"
+    )
+    assert successor.current_graph.edges[-1] == GraphRecipeEdge(
+        "later_exit", "hub", "afterPackage", 1
+    )
+    assert successor.open_ports == ()
+    assert successor.unfulfilled_decision_ids == ()
+    assert successor.cycle_count == 1
+    assert successor.rejoin_count == 0
+    assert successor.partial_strategic_metrics.revisit_count == 1
+    assert successor.validate() == ()
+
+
+def test_cross_phase_return_rejects_wrong_phase_or_non_cycle() -> None:
+    same_phase_state, source, target = _return_state(source_phase=1, target_phase=1)
+    service = PuzzleComposerService()
+
+    with pytest.raises(PuzzleCompositionError, match="return_path_not_earlier"):
+        service.connect_return_path(
+            same_phase_state,
+            source_port=source,
+            target_port=target,
+        )
+
+    state, source, target = _return_state()
+    disconnected = replace(
+        state,
+        current_graph=CompositionGraph(
+            nodes=state.current_graph.nodes,
+            edges=(GraphRecipeEdge("hub", "objective"),),
+        ),
+    )
+    with pytest.raises(PuzzleCompositionError, match="does_not_close_cycle"):
+        service.connect_cross_phase_return(
+            disconnected,
+            source_port=source,
+            target_port=target,
+        )
+
+    assert disconnected.current_graph.edges == (GraphRecipeEdge("hub", "objective"),)
+
+
 def test_reusing_instance_id_is_rejected_deterministically() -> None:
     state = _edge_state()
     motif = default_motif_registry().get("straight_segment").build()

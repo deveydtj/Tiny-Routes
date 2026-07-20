@@ -221,16 +221,155 @@ class PuzzleComposerService:
 
         return self.expand_branch(*args, **kwargs)  # type: ignore[arg-type]
 
+    def attach_rejoin(
+        self,
+        state: CompositionState,
+        *,
+        target_port: OpenCompositionPort | str,
+        source_ports: tuple[OpenCompositionPort | str, ...] = (),
+        source_port: OpenCompositionPort | str | None = None,
+        fulfilled_decision_ids: tuple[str, ...] = (),
+        availability: str = "always",
+        usage_limit: int | None = None,
+    ) -> CompositionState:
+        """Connect one or more branch exits to a real merge point.
+
+        ``source_port`` is a convenience selector for the common case where
+        the target node already has an incoming main route. ``source_ports``
+        supports attaching two or more disconnected branches atomically. The
+        target is consumed only after every connector has been validated.
+        """
+
+        self._require_state(state)
+        sources = self._resolve_source_ports(
+            state,
+            source_ports=source_ports,
+            source_port=source_port,
+        )
+        target = self._resolve_open_port(state, target_port, role="target")
+        if target.id in {source.id for source in sources}:
+            raise PuzzleCompositionError(f"composition_rejoin_same_port:{target.id}")
+
+        for source in sources:
+            validation = self.port_validator.validate(source, target, state=state)
+            if not validation.is_valid:
+                raise PuzzleCompositionError(validation.issues[0])
+            if validation.kind is not PortConnectionKind.REJOIN:
+                raise PuzzleCompositionError("composition_operation_not_rejoin")
+        self._validate_connector_attributes(availability, usage_limit)
+
+        connectors = tuple(
+            GraphRecipeEdge(source.node_id, target.node_id, availability, usage_limit)
+            for source in sources
+        )
+        self._require_new_connectors(state.current_graph, connectors, "rejoin")
+        graph = CompositionGraph(
+            nodes=state.current_graph.nodes,
+            edges=(*state.current_graph.edges, *connectors),
+        )
+        incoming_sources = {
+            edge.from_node_id
+            for edge in graph.edges
+            if edge.to_node_id == target.node_id
+        }
+        if len(incoming_sources) < 2:
+            raise PuzzleCompositionError(
+                f"composition_rejoin_requires_two_branches:{target.id}"
+            )
+
+        consumed_ids = {target.id, *(source.id for source in sources)}
+        return self._connection_successor(
+            state,
+            graph,
+            tuple(port for port in state.open_ports if port.id not in consumed_ids),
+            fulfilled_decision_ids,
+        )
+
+    def connect_rejoin(
+        self,
+        *args: object,
+        **kwargs: object,
+    ) -> CompositionState:
+        """Task-name alias for :meth:`attach_rejoin`."""
+
+        return self.attach_rejoin(*args, **kwargs)  # type: ignore[arg-type]
+
+    def connect_cross_phase_return(
+        self,
+        state: CompositionState,
+        *,
+        source_port: OpenCompositionPort | str,
+        target_port: OpenCompositionPort | str,
+        fulfilled_decision_ids: tuple[str, ...] = (),
+        availability: str = "afterPackage",
+        usage_limit: int | None = None,
+    ) -> CompositionState:
+        """Connect a later objective phase back to a reachable earlier hub."""
+
+        self._require_state(state)
+        source = self._resolve_open_port(state, source_port, role="source")
+        target = self._resolve_open_port(state, target_port, role="target")
+        validation = self.port_validator.validate(source, target, state=state)
+        if not validation.is_valid:
+            raise PuzzleCompositionError(validation.issues[0])
+        if validation.kind is not PortConnectionKind.RETURN_PATH:
+            raise PuzzleCompositionError("composition_operation_not_return_path")
+        self._validate_connector_attributes(availability, usage_limit)
+
+        connector = GraphRecipeEdge(
+            source.node_id,
+            target.node_id,
+            availability,
+            usage_limit,
+        )
+        self._require_new_connectors(
+            state.current_graph,
+            (connector,),
+            "return_path",
+        )
+        if not self._is_reachable(
+            state.current_graph,
+            target.node_id,
+            source.node_id,
+        ):
+            raise PuzzleCompositionError(
+                "composition_return_path_does_not_close_cycle:"
+                f"{source.id}:{target.id}"
+            )
+
+        graph = CompositionGraph(
+            nodes=state.current_graph.nodes,
+            edges=(*state.current_graph.edges, connector),
+        )
+        consumed_ids = {source.id, target.id}
+        metrics = replace(
+            state.partial_strategic_metrics,
+            revisit_count=state.partial_strategic_metrics.revisit_count + 1,
+        )
+        return self._connection_successor(
+            state,
+            graph,
+            tuple(port for port in state.open_ports if port.id not in consumed_ids),
+            fulfilled_decision_ids,
+            cycle_delta=1,
+            metrics=metrics,
+        )
+
+    def connect_return_path(
+        self,
+        *args: object,
+        **kwargs: object,
+    ) -> CompositionState:
+        """Short alias for :meth:`connect_cross_phase_return`."""
+
+        return self.connect_cross_phase_return(*args, **kwargs)  # type: ignore[arg-type]
+
     @staticmethod
     def _require_state_and_motif(
         state: CompositionState,
         motif: PuzzleMotif,
     ) -> None:
-        if not isinstance(state, CompositionState):
-            raise TypeError("state must be a CompositionState")
-        state_issues = state.validate()
-        if state_issues:
-            raise PuzzleCompositionError(f"composition_state_invalid:{state_issues[0]}")
+        PuzzleComposerService._require_state(state)
         if not isinstance(motif, PuzzleMotif):
             raise TypeError("motif must be a PuzzleMotif")
         motif_issues = motif.validate()
@@ -240,6 +379,14 @@ class PuzzleComposerService:
             raise PuzzleCompositionError(
                 f"composition_motif_typed_ports_required:{motif.motif_id}"
             )
+
+    @staticmethod
+    def _require_state(state: CompositionState) -> None:
+        if not isinstance(state, CompositionState):
+            raise TypeError("state must be a CompositionState")
+        state_issues = state.validate()
+        if state_issues:
+            raise PuzzleCompositionError(f"composition_state_invalid:{state_issues[0]}")
 
     @staticmethod
     def _resolve_edge(
@@ -369,14 +516,90 @@ class PuzzleComposerService:
     def _resolve_open_port(
         state: CompositionState,
         value: OpenCompositionPort | str,
+        *,
+        role: str = "source",
     ) -> OpenCompositionPort:
         port_id = value.id if isinstance(value, OpenCompositionPort) else value
         if not isinstance(port_id, str) or not port_id.strip():
-            raise PuzzleCompositionError("composition_source_port_id_empty")
+            raise PuzzleCompositionError(f"composition_{role}_port_id_empty")
         matches = tuple(port for port in state.open_ports if port.id == port_id)
         if len(matches) != 1:
-            raise PuzzleCompositionError(f"composition_source_port_not_open:{port_id}")
+            raise PuzzleCompositionError(f"composition_{role}_port_not_open:{port_id}")
         return matches[0]
+
+    @classmethod
+    def _resolve_source_ports(
+        cls,
+        state: CompositionState,
+        *,
+        source_ports: tuple[OpenCompositionPort | str, ...],
+        source_port: OpenCompositionPort | str | None,
+    ) -> tuple[OpenCompositionPort, ...]:
+        values = tuple(source_ports)
+        if source_port is not None:
+            if values:
+                raise PuzzleCompositionError(
+                    "composition_rejoin_source_selector_ambiguous"
+                )
+            values = (source_port,)
+        if not values:
+            raise PuzzleCompositionError("composition_rejoin_source_ports_empty")
+        resolved = tuple(cls._resolve_open_port(state, value) for value in values)
+        ids = tuple(port.id for port in resolved)
+        if len(ids) != len(set(ids)):
+            duplicate_id = next(
+                port_id
+                for index, port_id in enumerate(ids)
+                if port_id in ids[:index]
+            )
+            raise PuzzleCompositionError(
+                f"composition_rejoin_source_port_duplicate:{duplicate_id}"
+            )
+        return resolved
+
+    @staticmethod
+    def _require_new_connectors(
+        graph: CompositionGraph,
+        connectors: tuple[GraphRecipeEdge, ...],
+        operation: str,
+    ) -> None:
+        existing_pairs = {
+            (edge.from_node_id, edge.to_node_id) for edge in graph.edges
+        }
+        new_pairs: set[tuple[str, str]] = set()
+        for connector in connectors:
+            pair = (connector.from_node_id, connector.to_node_id)
+            if connector.from_node_id == connector.to_node_id:
+                raise PuzzleCompositionError(
+                    f"composition_{operation}_self_loop:{connector.from_node_id}"
+                )
+            if pair in existing_pairs or pair in new_pairs:
+                raise PuzzleCompositionError(
+                    f"composition_{operation}_edge_exists:"
+                    f"{connector.from_node_id}:{connector.to_node_id}"
+                )
+            new_pairs.add(pair)
+
+    @staticmethod
+    def _is_reachable(
+        graph: CompositionGraph,
+        start_node_id: str,
+        target_node_id: str,
+    ) -> bool:
+        outgoing: dict[str, list[str]] = {}
+        for edge in graph.edges:
+            outgoing.setdefault(edge.from_node_id, []).append(edge.to_node_id)
+        pending = [start_node_id]
+        visited: set[str] = set()
+        while pending:
+            node_id = pending.pop()
+            if node_id == target_node_id:
+                return True
+            if node_id in visited:
+                continue
+            visited.add(node_id)
+            pending.extend(reversed(outgoing.get(node_id, ())))
+        return False
 
     @staticmethod
     def _validate_connector_attributes(
@@ -433,6 +656,34 @@ class PuzzleComposerService:
             rejoin_count=state.rejoin_count + max(0, next_rejoins - previous_rejoins),
             estimated_layout_footprint=footprint,
             partial_strategic_metrics=metrics,
+        )
+
+    def _connection_successor(
+        self,
+        state: CompositionState,
+        graph: CompositionGraph,
+        open_ports: tuple[OpenCompositionPort, ...],
+        fulfilled_decision_ids: tuple[str, ...],
+        *,
+        cycle_delta: int = 0,
+        metrics: PartialStrategicMetrics | None = None,
+    ) -> CompositionState:
+        fulfilled = self._fulfilled_decisions(state, fulfilled_decision_ids)
+        previous_rejoins = self._rejoin_count(state.current_graph)
+        next_rejoins = self._rejoin_count(graph)
+        return state.evolve(
+            unfulfilled_decision_ids=tuple(
+                decision_id
+                for decision_id in state.unfulfilled_decision_ids
+                if decision_id not in fulfilled
+            ),
+            open_ports=open_ports,
+            current_graph=graph,
+            cycle_count=state.cycle_count + cycle_delta,
+            rejoin_count=state.rejoin_count + max(0, next_rejoins - previous_rejoins),
+            partial_strategic_metrics=(
+                state.partial_strategic_metrics if metrics is None else metrics
+            ),
         )
 
     @staticmethod
