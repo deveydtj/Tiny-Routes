@@ -2948,8 +2948,8 @@ enumerator. Focused regression coverage proves that separation.
 - [x] **AG-072:** Add random agent.
 - [x] **AG-073:** Add greedy-objective agent.
 - [x] **AG-074:** Add one-step lookahead agent.
-- [ ] **AG-075:** Add two-step planning agent.
-- [ ] **AG-076:** Add optimal agent adapter.
+- [x] **AG-075:** Add two-step planning agent.
+- [x] **AG-076:** Add optimal agent adapter.
 - [ ] **AG-077:** Add policy evaluation report.
 - [ ] **AG-078:** Add planning-horizon classifier.
 - [ ] **AG-079:** Add local-obviousness rejection.
@@ -2976,6 +2976,18 @@ lookahead policy that evaluates exactly one canonical structural transition per
 visible action. It rejects immediate failures, prefers objective progress, and
 ranks surviving states by traveled plus straight-line objective distance without
 recursively expanding the next decision.
+
+**2026-07-20 AG-075 completion record:** Added a deterministic two-step planning
+policy that expands every visible current action and exactly one successor
+decision. It ranks the resulting frontier by terminal outcome, ordered-objective
+progress, traveled plus visible straight-line distance, and tap cost without
+expanding a third decision.
+
+**2026-07-20 AG-076 completion record:** Added an optimal policy adapter that
+turns exhaustive exact-search evidence into the shared player-observation agent
+interface. It replays and validates the canonical proof into a state-aware policy,
+re-solves observations outside that path, confines choices to presented legal
+actions, and rejects incomplete or unsuccessful proof input.
 
 ## Runtime timing and layout
 
