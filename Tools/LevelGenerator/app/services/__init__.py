@@ -51,6 +51,10 @@ from .typed_port_connection_validator import (
     TypedPortConnectionValidator,
 )
 from .puzzle_composer_service import PuzzleComposerService, PuzzleCompositionError
+from .composition_backtracking_service import (
+    CompositionBacktrackingService,
+    CompositionSearchService,
+)
 from .swift_test_service import SwiftTestService
 from .unique_solution_validator_service import (
     UniqueSolutionPathSummary,
@@ -111,6 +115,8 @@ __all__ = [
     "TypedPortConnectionValidator",
     "PuzzleComposerService",
     "PuzzleCompositionError",
+    "CompositionBacktrackingService",
+    "CompositionSearchService",
     "SwitchVisualClarityService",
     "SwiftTestService",
     "UniqueSolutionPathSummary",

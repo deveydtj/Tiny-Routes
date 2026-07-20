@@ -2785,8 +2785,8 @@ exposes no hidden `production_v3` fallback.
 - [x] **AG-054:** Add branch expansion operation.
 - [x] **AG-055:** Add rejoin operation.
 - [x] **AG-056:** Add cross-phase return operation.
-- [ ] **AG-057:** Add objective attachment operation.
-- [ ] **AG-058:** Add deterministic composition backtracking.
+- [x] **AG-057:** Add objective attachment operation.
+- [x] **AG-058:** Add deterministic composition backtracking.
 - [ ] **AG-059:** Add partial strategic pruning.
 - [ ] **AG-060:** Add composition transformation framework.
 - [ ] **AG-061:** Add composition duplicate rejection.
@@ -2823,6 +2823,18 @@ merges, and updates graph-derived rejoin counts deterministically.
 connection from a later objective phase to an earlier return input. The
 operation requires a real directed cycle, consumes both ports atomically, and
 records the new cycle and revisit evidence with stable rejection codes.
+
+**2026-07-19 AG-057 completion record:** Added atomic objective attachment for
+both objective-bearing motifs and separately composed objective branches. The
+operation enforces typed ports and objective-phase alignment, consumes ports,
+binds concrete entry/exit nodes to the ordered phase boundary, prevents duplicate
+objective placement, and leaves rejected immutable states unchanged.
+
+**2026-07-19 AG-058 completion record:** Added bounded deterministic depth-first
+composition search over immutable states. Stable choice ordering retries motifs,
+then ports, then blueprint realizations; visited-state signatures prevent repeat
+work; and results record attempted branches, expanded and visited states, every
+rejection reason, a reproducible trace, and hard budget exhaustion.
 
 ## Exact strategy analysis
 

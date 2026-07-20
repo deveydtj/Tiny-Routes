@@ -9,6 +9,7 @@ from ..models.composition_state import (
     CompositionGraph,
     CompositionState,
     LayoutFootprintEstimate,
+    ObjectivePhaseBoundary,
     OpenCompositionPort,
     PartialStrategicMetrics,
 )
@@ -364,6 +365,179 @@ class PuzzleComposerService:
 
         return self.connect_cross_phase_return(*args, **kwargs)  # type: ignore[arg-type]
 
+    def attach_objective(
+        self,
+        state: CompositionState,
+        *,
+        objective_id: str,
+        objective_port: OpenCompositionPort | str | None = None,
+        source_port: OpenCompositionPort | str | None = None,
+        target_port: OpenCompositionPort | str | None = None,
+        phase_entry_node_id: str | None = None,
+        phase_exit_node_id: str | None = None,
+        fulfilled_decision_ids: tuple[str, ...] = (),
+        availability: str = "always",
+        usage_limit: int | None = None,
+    ) -> CompositionState:
+        """Bind one blueprint objective phase to concrete composed nodes.
+
+        Existing stateful motifs expose an objective node directly through
+        ``objective_port``.  Composition can therefore bind that node without
+        introducing a decorative connector.  The two-port form connects a
+        separately composed objective branch from ``source_port`` to
+        ``target_port`` and records those nodes as the phase entry and exit.
+
+        Both forms consume their selected ports and update the matching
+        ``ObjectivePhaseBoundary`` in the same immutable successor.  A failed
+        validation leaves the input state untouched.
+        """
+
+        self._require_state(state)
+        boundary_index, boundary = self._resolve_objective_boundary(
+            state,
+            objective_id,
+        )
+        single_port_mode = objective_port is not None
+        paired_port_mode = source_port is not None or target_port is not None
+        if single_port_mode == paired_port_mode:
+            raise PuzzleCompositionError(
+                "composition_objective_selector_requires_single_or_paired_ports"
+            )
+
+        graph = state.current_graph
+        consumed_ids: set[str]
+        if single_port_mode:
+            assert objective_port is not None
+            if availability != "always" or usage_limit is not None:
+                raise PuzzleCompositionError(
+                    "composition_objective_connector_attributes_require_paired_ports"
+                )
+            attached = self._resolve_open_port(
+                state,
+                objective_port,
+                role="objective",
+            )
+            if attached.port_type is not MotifPortType.OBJECTIVE_ATTACHMENT:
+                raise PuzzleCompositionError(
+                    "composition_objective_port_type_invalid:"
+                    f"{attached.id}:{attached.port_type.value}"
+                )
+            if attached.objective_phase_index != boundary.phase_index:
+                raise PuzzleCompositionError(
+                    "composition_objective_phase_mismatch:"
+                    f"{boundary.phase_index}:{attached.objective_phase_index}"
+                )
+            entry_node_id = self._objective_boundary_node(
+                phase_entry_node_id,
+                attached.node_id,
+                "entry",
+            )
+            exit_node_id = self._objective_boundary_node(
+                phase_exit_node_id,
+                attached.node_id,
+                "exit",
+            )
+            consumed_ids = {attached.id}
+        else:
+            if source_port is None or target_port is None:
+                raise PuzzleCompositionError(
+                    "composition_objective_paired_ports_incomplete"
+                )
+            source = self._resolve_open_port(state, source_port, role="source")
+            target = self._resolve_open_port(state, target_port, role="target")
+            validation = self.port_validator.validate(source, target, state=state)
+            if not validation.is_valid:
+                raise PuzzleCompositionError(validation.issues[0])
+            if validation.kind is not PortConnectionKind.OBJECTIVE_ATTACHMENT:
+                raise PuzzleCompositionError(
+                    "composition_operation_not_objective_attachment"
+                )
+            if target.objective_phase_index != boundary.phase_index:
+                raise PuzzleCompositionError(
+                    "composition_objective_phase_mismatch:"
+                    f"{boundary.phase_index}:{target.objective_phase_index}"
+                )
+            self._validate_connector_attributes(availability, usage_limit)
+            connector = GraphRecipeEdge(
+                source.node_id,
+                target.node_id,
+                availability,
+                usage_limit,
+            )
+            self._require_new_connectors(
+                state.current_graph,
+                (connector,),
+                "objective_attachment",
+            )
+            graph = CompositionGraph(
+                nodes=state.current_graph.nodes,
+                edges=(*state.current_graph.edges, connector),
+            )
+            entry_node_id = self._objective_boundary_node(
+                phase_entry_node_id,
+                source.node_id,
+                "entry",
+            )
+            exit_node_id = self._objective_boundary_node(
+                phase_exit_node_id,
+                target.node_id,
+                "exit",
+            )
+            consumed_ids = {source.id, target.id}
+
+        known_nodes = set(graph.node_ids)
+        for role, node_id in (
+            ("entry", entry_node_id),
+            ("exit", exit_node_id),
+        ):
+            if node_id not in known_nodes:
+                raise PuzzleCompositionError(
+                    f"composition_objective_{role}_node_unknown:{node_id}"
+                )
+        if not self._is_reachable(graph, entry_node_id, exit_node_id):
+            raise PuzzleCompositionError(
+                "composition_objective_boundary_not_reachable:"
+                f"{entry_node_id}:{exit_node_id}"
+            )
+        self._require_objective_node_available(
+            state,
+            objective_id=boundary.objective_id,
+            objective_node_id=exit_node_id,
+        )
+
+        boundaries = list(state.objective_phase_boundaries)
+        boundaries[boundary_index] = ObjectivePhaseBoundary(
+            boundary.objective_id,
+            boundary.phase_index,
+            entry_node_id,
+            exit_node_id,
+        )
+        return self._connection_successor(
+            state,
+            graph,
+            tuple(port for port in state.open_ports if port.id not in consumed_ids),
+            fulfilled_decision_ids,
+            objective_phase_boundaries=tuple(boundaries),
+        )
+
+    def attach_objective_to_port(
+        self,
+        *args: object,
+        **kwargs: object,
+    ) -> CompositionState:
+        """Descriptive alias for the single-port objective operation."""
+
+        return self.attach_objective(*args, **kwargs)  # type: ignore[arg-type]
+
+    def connect_objective_attachment(
+        self,
+        *args: object,
+        **kwargs: object,
+    ) -> CompositionState:
+        """Task-name alias supporting the paired-port objective operation."""
+
+        return self.attach_objective(*args, **kwargs)  # type: ignore[arg-type]
+
     @staticmethod
     def _require_state_and_motif(
         state: CompositionState,
@@ -527,6 +701,60 @@ class PuzzleComposerService:
             raise PuzzleCompositionError(f"composition_{role}_port_not_open:{port_id}")
         return matches[0]
 
+    @staticmethod
+    def _resolve_objective_boundary(
+        state: CompositionState,
+        objective_id: str,
+    ) -> tuple[int, ObjectivePhaseBoundary]:
+        if not isinstance(objective_id, str) or not objective_id.strip():
+            raise PuzzleCompositionError("composition_objective_id_empty")
+        normalized = objective_id.strip()
+        matches = tuple(
+            (index, boundary)
+            for index, boundary in enumerate(state.objective_phase_boundaries)
+            if boundary.objective_id == normalized
+        )
+        if len(matches) != 1:
+            raise PuzzleCompositionError(
+                f"composition_objective_boundary_unknown:{normalized}"
+            )
+        index, boundary = matches[0]
+        if boundary.entry_node_id is not None or boundary.exit_node_id is not None:
+            raise PuzzleCompositionError(
+                f"composition_objective_already_attached:{normalized}"
+            )
+        return index, boundary
+
+    @staticmethod
+    def _require_objective_node_available(
+        state: CompositionState,
+        *,
+        objective_id: str,
+        objective_node_id: str,
+    ) -> None:
+        for boundary in state.objective_phase_boundaries:
+            if boundary.objective_id == objective_id:
+                continue
+            if boundary.exit_node_id == objective_node_id:
+                raise PuzzleCompositionError(
+                    "composition_objective_node_already_assigned:"
+                    f"{objective_node_id}:{boundary.objective_id}"
+                )
+
+    @staticmethod
+    def _objective_boundary_node(
+        explicit_node_id: str | None,
+        default_node_id: str,
+        role: str,
+    ) -> str:
+        if explicit_node_id is None:
+            return default_node_id
+        if not isinstance(explicit_node_id, str) or not explicit_node_id.strip():
+            raise PuzzleCompositionError(
+                f"composition_objective_{role}_node_id_empty"
+            )
+        return explicit_node_id.strip()
+
     @classmethod
     def _resolve_source_ports(
         cls,
@@ -667,6 +895,7 @@ class PuzzleComposerService:
         *,
         cycle_delta: int = 0,
         metrics: PartialStrategicMetrics | None = None,
+        objective_phase_boundaries: tuple[ObjectivePhaseBoundary, ...] | None = None,
     ) -> CompositionState:
         fulfilled = self._fulfilled_decisions(state, fulfilled_decision_ids)
         previous_rejoins = self._rejoin_count(state.current_graph)
@@ -678,6 +907,11 @@ class PuzzleComposerService:
                 if decision_id not in fulfilled
             ),
             open_ports=open_ports,
+            objective_phase_boundaries=(
+                state.objective_phase_boundaries
+                if objective_phase_boundaries is None
+                else objective_phase_boundaries
+            ),
             current_graph=graph,
             cycle_count=state.cycle_count + cycle_delta,
             rejoin_count=state.rejoin_count + max(0, next_rejoins - previous_rejoins),

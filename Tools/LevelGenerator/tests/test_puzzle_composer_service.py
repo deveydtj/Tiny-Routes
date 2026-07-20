@@ -11,6 +11,7 @@ from app.models import (
     MotifEdgeStateChangeKind,
     MotifPort,
     MotifPortType,
+    ObjectivePhaseBoundary,
     OpenCompositionPort,
 )
 from app.models.graph_recipe import GraphRecipeEdge, GraphRecipeNode
@@ -370,6 +371,126 @@ def test_cross_phase_return_rejects_wrong_phase_or_non_cycle() -> None:
         )
 
     assert disconnected.current_graph.edges == (GraphRecipeEdge("hub", "objective"),)
+
+
+def _objective_state(*, port_phase: int = 0) -> tuple[CompositionState, OpenCompositionPort]:
+    objective = OpenCompositionPort(
+        "objective_motif",
+        MotifPort("objective", "pickup", MotifPortType.OBJECTIVE_ATTACHMENT),
+        port_phase,
+    )
+    return (
+        CompositionState(
+            blueprint_id="blueprint",
+            unfulfilled_decision_ids=("place_pickup",),
+            open_ports=(objective,),
+            objective_phase_boundaries=(
+                ObjectivePhaseBoundary("pickup_a", 0),
+                ObjectivePhaseBoundary("destination", 1),
+            ),
+            current_graph=CompositionGraph(
+                nodes=(
+                    GraphRecipeNode("start", "start"),
+                    GraphRecipeNode("pickup", "package"),
+                    GraphRecipeNode("end", "destination"),
+                ),
+                edges=(
+                    GraphRecipeEdge("start", "pickup"),
+                    GraphRecipeEdge("pickup", "end"),
+                ),
+            ),
+        ),
+        objective,
+    )
+
+
+def test_objective_attachment_binds_phase_boundary_and_consumes_typed_port() -> None:
+    state, objective = _objective_state()
+
+    successor = PuzzleComposerService().attach_objective(
+        state,
+        objective_id="pickup_a",
+        objective_port=objective,
+        phase_entry_node_id="start",
+        fulfilled_decision_ids=("place_pickup",),
+    )
+
+    assert state.objective_phase_boundaries[0].entry_node_id is None
+    assert successor.objective_phase_boundaries[0] == ObjectivePhaseBoundary(
+        "pickup_a",
+        0,
+        "start",
+        "pickup",
+    )
+    assert successor.open_ports == ()
+    assert successor.unfulfilled_decision_ids == ()
+    assert successor.current_graph == state.current_graph
+    assert successor.validate() == ()
+
+
+def test_paired_objective_attachment_connects_separate_branch_atomically() -> None:
+    source = OpenCompositionPort(
+        "branch",
+        MotifPort("objective_anchor", "hub", MotifPortType.OBJECTIVE_ATTACHMENT),
+        0,
+    )
+    target = OpenCompositionPort(
+        "pickup",
+        MotifPort("objective", "pickup", MotifPortType.OBJECTIVE_ATTACHMENT),
+        0,
+    )
+    state = CompositionState(
+        blueprint_id="blueprint",
+        unfulfilled_decision_ids=(),
+        open_ports=(source, target),
+        objective_phase_boundaries=(ObjectivePhaseBoundary("pickup_a", 0),),
+        current_graph=CompositionGraph(
+            nodes=(GraphRecipeNode("hub", "switch"), GraphRecipeNode("pickup", "package")),
+            edges=(),
+        ),
+    )
+
+    successor = PuzzleComposerService().connect_objective_attachment(
+        state,
+        objective_id="pickup_a",
+        source_port=source,
+        target_port=target,
+        usage_limit=1,
+    )
+
+    assert successor.current_graph.edges == (GraphRecipeEdge("hub", "pickup", "always", 1),)
+    assert successor.objective_phase_boundaries == (
+        ObjectivePhaseBoundary("pickup_a", 0, "hub", "pickup"),
+    )
+    assert successor.open_ports == ()
+    assert successor.is_complete
+
+
+def test_objective_attachment_rejects_wrong_phase_and_repeat_without_mutation() -> None:
+    state, wrong_phase = _objective_state(port_phase=1)
+    service = PuzzleComposerService()
+
+    with pytest.raises(PuzzleCompositionError, match="objective_phase_mismatch"):
+        service.attach_objective(
+            state,
+            objective_id="pickup_a",
+            objective_port=wrong_phase,
+        )
+
+    valid_state, objective = _objective_state()
+    attached = service.attach_objective(
+        valid_state,
+        objective_id="pickup_a",
+        objective_port=objective,
+    )
+    with pytest.raises(PuzzleCompositionError, match="objective_already_attached"):
+        service.attach_objective(
+            attached,
+            objective_id="pickup_a",
+            objective_port=objective,
+        )
+
+    assert state.objective_phase_boundaries[0] == ObjectivePhaseBoundary("pickup_a", 0)
 
 
 def test_reusing_instance_id_is_rejected_deterministically() -> None:

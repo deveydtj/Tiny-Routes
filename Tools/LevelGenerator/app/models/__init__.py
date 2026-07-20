@@ -35,6 +35,12 @@ from .composition_state import (
     OpenCompositionPort,
     PartialStrategicMetrics,
 )
+from .composition_search import (
+    CompositionRejectionCount,
+    CompositionSearchChoice,
+    CompositionSearchResult,
+    CompositionSearchTraceEntry,
+)
 from .puzzle_experience_target import PuzzleExperienceTarget
 from .generated_level import GeneratedLevel
 from .generation_quality import GenerationQualityScore
@@ -77,6 +83,10 @@ __all__ = [
     "ObjectivePhaseBoundary",
     "OpenCompositionPort",
     "PartialStrategicMetrics",
+    "CompositionRejectionCount",
+    "CompositionSearchChoice",
+    "CompositionSearchResult",
+    "CompositionSearchTraceEntry",
     "MotifDependencyEffect",
     "MotifEdgeStateChange",
     "MotifEdgeStateChangeKind",
