@@ -2874,8 +2874,8 @@ for exact strategy signatures.
 - [x] **AG-064:** Add weighted strategy search.
 - [x] **AG-065:** Add strategy equivalence classifier.
 - [x] **AG-066:** Add unique-optimal proof.
-- [ ] **AG-067:** Add alternate-success classification.
-- [ ] **AG-068:** Add failure/recovery classification.
+- [x] **AG-067:** Add alternate-success classification.
+- [x] **AG-068:** Add failure/recovery classification.
 - [ ] **AG-069:** Add static-policy solver.
 - [ ] **AG-070:** Add search-limit hard rejection.
 - [ ] **AG-071:** Adapt legacy decision profile from exact analysis.
@@ -2912,6 +2912,17 @@ that consumes exhaustive exact-search evidence and equivalence classes. It rejec
 missing successes, bounded-search uncertainty, non-equivalent equal-cost optima,
 and missing required decision, objective, opened-road, closed-road, or consumed-road
 evidence using stable reason codes, while retaining typed canonical proof evidence.
+
+**2026-07-20 AG-067 completion record:** Added typed alternate-success proof
+evidence over exact gameplay-equivalence classes. Every non-canonical success is
+deterministically classified as an equal-cost route, a slower same-tap route, or
+a higher-tap route, with component cost deltas and search-exhaustiveness evidence.
+
+**2026-07-20 AG-068 completion record:** Added per-choice failure and recovery
+analysis keyed by decision ordinal, objective phase, node, and selected road. The
+report distinguishes immediate dead ends, objective-order failures, recoverable
+rejoins, slower and higher-tap successes, loops, and state traps while retaining
+canonical and supporting exact traces for reproducible proof.
 
 ## Agents and quality
 

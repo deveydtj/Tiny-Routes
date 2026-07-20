@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from enum import Enum
 
 from .puzzle_state import PuzzleState, PuzzleTerminalOutcome
 
@@ -269,3 +270,135 @@ class StrategySearchResult:
             *self.near_optimal_strategies,
             *self.longer_successful_strategies,
         )
+
+
+class AlternateSuccessKind(str, Enum):
+    """Why a non-canonical successful strategy is not the chosen optimum."""
+
+    EQUAL_COST_ROUTE = "equalCostRoute"
+    SUCCESSFUL_SLOWER_ROUTE = "successfulSlowerRoute"
+    SUCCESSFUL_HIGHER_TAP_ROUTE = "successfulHigherTapRoute"
+
+
+@dataclass(frozen=True)
+class AlternateSuccessClassification:
+    """One gameplay-distinct success compared with the canonical optimum."""
+
+    kind: AlternateSuccessKind
+    strategy_class: StrategyEquivalenceClass
+    accepted_tap_delta: int
+    travel_time_delta_seconds: float
+    route_distance_delta: float
+
+    def __post_init__(self) -> None:
+        if not isinstance(self.kind, AlternateSuccessKind):
+            object.__setattr__(self, "kind", AlternateSuccessKind(self.kind))
+        for field_name in (
+            "accepted_tap_delta",
+            "travel_time_delta_seconds",
+            "route_distance_delta",
+        ):
+            value = getattr(self, field_name)
+            if not isinstance(value, (int, float)) or isinstance(value, bool):
+                raise ValueError(f"{field_name} must be numeric")
+        object.__setattr__(
+            self,
+            "travel_time_delta_seconds",
+            round(float(self.travel_time_delta_seconds), 9),
+        )
+        object.__setattr__(
+            self,
+            "route_distance_delta",
+            round(float(self.route_distance_delta), 9),
+        )
+
+
+@dataclass(frozen=True)
+class AlternateSuccessReport:
+    """Complete alternate-success evidence from one exact search."""
+
+    optimal_strategy_class: StrategyEquivalenceClass | None
+    classifications: tuple[AlternateSuccessClassification, ...]
+    exhaustive: bool
+    limit_reasons: tuple[str, ...] = ()
+
+    def __post_init__(self) -> None:
+        classifications = tuple(self.classifications)
+        keys = tuple(item.strategy_class.key for item in classifications)
+        if len(keys) != len(set(keys)):
+            raise ValueError("alternate success strategy classes must be unique")
+        object.__setattr__(self, "classifications", classifications)
+        object.__setattr__(self, "limit_reasons", tuple(sorted(set(self.limit_reasons))))
+
+
+class MeaningfulChoiceOutcomeKind(str, Enum):
+    """Locked outcome classes for a non-optimal meaningful route choice."""
+
+    IMMEDIATE_DEAD_END = "immediateDeadEnd"
+    OBJECTIVE_ORDER_FAILURE = "objectiveOrderFailure"
+    RECOVERABLE_DETOUR = "recoverableDetour"
+    SUCCESSFUL_SLOWER_ROUTE = "successfulSlowerRoute"
+    SUCCESSFUL_HIGHER_TAP_ROUTE = "successfulHigherTapRoute"
+    SUCCESSFUL_EQUAL_COST_ROUTE = "successfulEqualCostRoute"
+    LOOP_UNTIL_TIME_EXPIRES = "loopUntilTimeExpires"
+    STATE_TRAP = "stateTrap"
+
+
+@dataclass(frozen=True, order=True)
+class MeaningfulChoiceKey:
+    """Stable identity for one deviation from the canonical optimal strategy."""
+
+    decision_ordinal: int
+    objective_index: int
+    node_id: str
+    selected_edge_id: str
+
+    def __post_init__(self) -> None:
+        for field_name in ("decision_ordinal", "objective_index"):
+            value = getattr(self, field_name)
+            if not isinstance(value, int) or isinstance(value, bool) or value < 0:
+                raise ValueError(f"{field_name} must be a non-negative integer")
+        for field_name in ("node_id", "selected_edge_id"):
+            value = getattr(self, field_name)
+            if not isinstance(value, str) or not value.strip():
+                raise ValueError(f"{field_name} cannot be empty")
+            object.__setattr__(self, field_name, value.strip())
+
+
+@dataclass(frozen=True)
+class MeaningfulChoiceClassification:
+    """Best proven outcome and supporting traces for one non-optimal choice."""
+
+    key: MeaningfulChoiceKey
+    kind: MeaningfulChoiceOutcomeKind
+    canonical_trace: StrategyTrace
+    supporting_traces: tuple[StrategyTrace, ...]
+    rejoins_optimal_route: bool = False
+
+    def __post_init__(self) -> None:
+        if not isinstance(self.kind, MeaningfulChoiceOutcomeKind):
+            object.__setattr__(self, "kind", MeaningfulChoiceOutcomeKind(self.kind))
+        traces = tuple(self.supporting_traces)
+        if not traces:
+            raise ValueError("a meaningful choice classification requires evidence")
+        if self.canonical_trace not in traces:
+            raise ValueError("canonical_trace must belong to supporting_traces")
+        object.__setattr__(self, "supporting_traces", traces)
+
+
+@dataclass(frozen=True)
+class FailureRecoveryReport:
+    """Outcome proof for every observed non-optimal meaningful choice."""
+
+    optimal_strategy_class: StrategyEquivalenceClass | None
+    classifications: tuple[MeaningfulChoiceClassification, ...]
+    exhaustive: bool
+    limit_reasons: tuple[str, ...] = ()
+
+    def __post_init__(self) -> None:
+        classifications = tuple(self.classifications)
+        keys = tuple(item.key for item in classifications)
+        if len(keys) != len(set(keys)):
+            raise ValueError("meaningful choice classifications must be unique")
+        object.__setattr__(self, "classifications", classifications)
+        object.__setattr__(self, "limit_reasons", tuple(sorted(set(self.limit_reasons))))

@@ -59,6 +59,13 @@ from .composition_diversity import (
 )
 from .puzzle_state import PuzzleState, PuzzleTerminalOutcome
 from .strategy_search import (
+    AlternateSuccessClassification,
+    AlternateSuccessKind,
+    AlternateSuccessReport,
+    FailureRecoveryReport,
+    MeaningfulChoiceClassification,
+    MeaningfulChoiceKey,
+    MeaningfulChoiceOutcomeKind,
     OptimalStrategyRequirements,
     StrategyAction,
     StrategyCost,
@@ -127,6 +134,13 @@ __all__ = [
     "CompositionPoolResult",
     "PuzzleState",
     "PuzzleTerminalOutcome",
+    "AlternateSuccessClassification",
+    "AlternateSuccessKind",
+    "AlternateSuccessReport",
+    "FailureRecoveryReport",
+    "MeaningfulChoiceClassification",
+    "MeaningfulChoiceKey",
+    "MeaningfulChoiceOutcomeKind",
     "StrategyAction",
     "StrategyCost",
     "StrategyEquivalenceClass",
