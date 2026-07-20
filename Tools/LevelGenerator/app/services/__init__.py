@@ -57,6 +57,7 @@ from .composition_backtracking_service import (
 )
 from .composition_strategic_pruning_service import CompositionStrategicPruningService
 from .composition_transformation_service import CompositionTransformationService
+from .composition_duplicate_rejection_service import CompositionDuplicateRejectionService
 from .swift_test_service import SwiftTestService
 from .unique_solution_validator_service import (
     UniqueSolutionPathSummary,
@@ -121,6 +122,7 @@ __all__ = [
     "CompositionSearchService",
     "CompositionStrategicPruningService",
     "CompositionTransformationService",
+    "CompositionDuplicateRejectionService",
     "SwitchVisualClarityService",
     "SwiftTestService",
     "UniqueSolutionPathSummary",

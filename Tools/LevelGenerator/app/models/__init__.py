@@ -51,6 +51,13 @@ from .composition_transformation import (
     CompositionTransformationProof,
     CompositionTransformationResult,
 )
+from .composition_diversity import (
+    CompositionDiversityConstraints,
+    CompositionDuplicateAssessment,
+    CompositionPoolEntry,
+    CompositionPoolResult,
+)
+from .puzzle_state import PuzzleState, PuzzleTerminalOutcome
 from .puzzle_experience_target import PuzzleExperienceTarget
 from .generated_level import GeneratedLevel
 from .generation_quality import GenerationQualityScore
@@ -103,6 +110,12 @@ __all__ = [
     "CompositionTransformationKind",
     "CompositionTransformationProof",
     "CompositionTransformationResult",
+    "CompositionDiversityConstraints",
+    "CompositionDuplicateAssessment",
+    "CompositionPoolEntry",
+    "CompositionPoolResult",
+    "PuzzleState",
+    "PuzzleTerminalOutcome",
     "MotifDependencyEffect",
     "MotifEdgeStateChange",
     "MotifEdgeStateChangeKind",

@@ -2802,7 +2802,7 @@ exposes no hidden `production_v3` fallback.
 - [x] **AG-058:** Add deterministic composition backtracking.
 - [x] **AG-059:** Add partial strategic pruning.
 - [x] **AG-060:** Add composition transformation framework.
-- [ ] **AG-061:** Add composition duplicate rejection.
+- [x] **AG-061:** Add composition duplicate rejection.
 
 **2026-07-19 AG-051 completion record:** Added an immutable composition search
 state that tracks unfulfilled blueprint decisions, qualified open ports,
@@ -2860,9 +2860,16 @@ seven controlled variant categories in Task 5.5. Each valid changed candidate
 must receive a fresh solver proof, and solver-rejected variants cannot surface
 an accepted transformed state.
 
+**2026-07-19 AG-061 completion record:** Added deterministic candidate-pool
+gates for repeated blueprint archetypes, motif multisets, and dependency DAGs.
+Completed compositions receive an ID-independent topology, objective-state,
+authored-order, and route-effect signature; behavior-equivalent candidates are
+rejected before they can consume diversity-cap capacity, with an adapter ready
+for exact strategy signatures.
+
 ## Exact strategy analysis
 
-- [ ] **AG-062:** Add canonical `PuzzleState`.
+- [x] **AG-062:** Add canonical `PuzzleState`.
 - [ ] **AG-063:** Add structural state transition service.
 - [ ] **AG-064:** Add weighted strategy search.
 - [ ] **AG-065:** Add strategy equivalence classifier.
@@ -2872,6 +2879,13 @@ an accepted transformed state.
 - [ ] **AG-069:** Add static-policy solver.
 - [ ] **AG-070:** Add search-limit hard rejection.
 - [ ] **AG-071:** Adapt legacy decision profile from exact analysis.
+
+**2026-07-19 AG-062 completion record:** Added a compact immutable and hashable
+`PuzzleState` covering node-or-edge position, ordered objective progress,
+available and consumed roads, persistent switch selections, visit counts,
+accepted taps, elapsed runtime-search time, and terminal outcome. Set/map-like
+fields normalize into stable tuples so logically equal states share one search
+key regardless of construction order.
 
 ## Agents and quality
 
