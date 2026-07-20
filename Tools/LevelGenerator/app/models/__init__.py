@@ -58,6 +58,12 @@ from .composition_diversity import (
     CompositionPoolResult,
 )
 from .puzzle_state import PuzzleState, PuzzleTerminalOutcome
+from .strategy_search import (
+    StrategyAction,
+    StrategyCost,
+    StrategySearchResult,
+    StrategyTrace,
+)
 from .puzzle_experience_target import PuzzleExperienceTarget
 from .generated_level import GeneratedLevel
 from .generation_quality import GenerationQualityScore
@@ -116,6 +122,10 @@ __all__ = [
     "CompositionPoolResult",
     "PuzzleState",
     "PuzzleTerminalOutcome",
+    "StrategyAction",
+    "StrategyCost",
+    "StrategySearchResult",
+    "StrategyTrace",
     "MotifDependencyEffect",
     "MotifEdgeStateChange",
     "MotifEdgeStateChangeKind",

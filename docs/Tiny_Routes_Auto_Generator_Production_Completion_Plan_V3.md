@@ -2870,8 +2870,8 @@ for exact strategy signatures.
 ## Exact strategy analysis
 
 - [x] **AG-062:** Add canonical `PuzzleState`.
-- [ ] **AG-063:** Add structural state transition service.
-- [ ] **AG-064:** Add weighted strategy search.
+- [x] **AG-063:** Add structural state transition service.
+- [x] **AG-064:** Add weighted strategy search.
 - [ ] **AG-065:** Add strategy equivalence classifier.
 - [ ] **AG-066:** Add unique-optimal proof.
 - [ ] **AG-067:** Add alternate-success classification.
@@ -2886,6 +2886,19 @@ available and consumed roads, persistent switch selections, visit counts,
 accepted taps, elapsed runtime-search time, and terminal outcome. Set/map-like
 fields normalize into stable tuples so logically equal states share one search
 key regardless of construction order.
+
+**2026-07-19 AG-063 completion record:** Added a schema-aware structural state
+transition service that rotates persistent switches in authored order, collapses
+pass-through travel to the next decision boundary, completes ordered objectives,
+recomputes conditional-road availability, consumes one-use roads safely,
+normalizes switches after state changes, records revisits, and terminates on
+success, dead ends, early legacy destinations, or automatic cycles.
+
+**2026-07-19 AG-064 completion record:** Added deterministic Dijkstra strategy
+search over canonical puzzle states with the locked accepted-tap, travel-time,
+and route-distance cost ordering. Typed proof results retain a canonical optimum,
+all exact equal-cost action classes, configured near-optimal and longer successes,
+failure traces, explored-state counts, and explicit non-exhaustive limit reasons.
 
 ## Agents and quality
 
