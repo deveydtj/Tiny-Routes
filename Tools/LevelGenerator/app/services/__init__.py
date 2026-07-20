@@ -50,6 +50,7 @@ from .typed_port_connection_validator import (
     PortConnectionValidationResult,
     TypedPortConnectionValidator,
 )
+from .puzzle_composer_service import PuzzleComposerService, PuzzleCompositionError
 from .swift_test_service import SwiftTestService
 from .unique_solution_validator_service import (
     UniqueSolutionPathSummary,
@@ -108,6 +109,8 @@ __all__ = [
     "PortConnectionValidationError",
     "PortConnectionValidationResult",
     "TypedPortConnectionValidator",
+    "PuzzleComposerService",
+    "PuzzleCompositionError",
     "SwitchVisualClarityService",
     "SwiftTestService",
     "UniqueSolutionPathSummary",

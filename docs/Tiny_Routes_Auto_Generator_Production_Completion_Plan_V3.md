@@ -2781,8 +2781,8 @@ exposes no hidden `production_v3` fallback.
 
 - [x] **AG-051:** Add composition search state.
 - [x] **AG-052:** Add typed port connection validator.
-- [ ] **AG-053:** Add edge insertion operation.
-- [ ] **AG-054:** Add branch expansion operation.
+- [x] **AG-053:** Add edge insertion operation.
+- [x] **AG-054:** Add branch expansion operation.
 - [ ] **AG-055:** Add rejoin operation.
 - [ ] **AG-056:** Add cross-phase return operation.
 - [ ] **AG-057:** Add objective attachment operation.
@@ -2803,6 +2803,16 @@ compatibility validator for main-route, branch-expansion, rejoin, return-path,
 objective-attachment, and state-change-attachment connections. It enforces port
 direction, open-port membership, forward/return phase semantics, terminal
 failure exits, and same-phase attachments with stable rejection codes.
+
+**2026-07-19 AG-053 completion record:** Added immutable motif insertion into a
+selected existing edge. Motif node IDs and ports are instance-qualified, the
+replaced edge's availability and one-use semantics are preserved, assigned
+state effects are retargeted, and unconsumed nested ports remain open.
+
+**2026-07-19 AG-054 completion record:** Added typed branch expansion that
+consumes an open branch-insertion port, requires an existing route to create a
+real alternate, validates port and phase compatibility before graph changes,
+and exposes the attached motif's remaining ports for nested composition.
 
 ## Exact strategy analysis
 
