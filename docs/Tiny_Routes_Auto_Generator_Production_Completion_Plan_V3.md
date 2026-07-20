@@ -2950,8 +2950,8 @@ enumerator. Focused regression coverage proves that separation.
 - [x] **AG-074:** Add one-step lookahead agent.
 - [x] **AG-075:** Add two-step planning agent.
 - [x] **AG-076:** Add optimal agent adapter.
-- [ ] **AG-077:** Add policy evaluation report.
-- [ ] **AG-078:** Add planning-horizon classifier.
+- [x] **AG-077:** Add policy evaluation report.
+- [x] **AG-078:** Add planning-horizon classifier.
 - [ ] **AG-079:** Add local-obviousness rejection.
 - [ ] **AG-080:** Add `PuzzleAnalysis` model.
 - [ ] **AG-081:** Add production anti-triviality gates.
@@ -2988,6 +2988,20 @@ turns exhaustive exact-search evidence into the shared player-observation agent
 interface. It replays and validates the canonical proof into a state-aware policy,
 re-solves observations outside that path, confines choices to presented legal
 actions, and rejects incomplete or unsuccessful proof input.
+
+**2026-07-20 AG-077 completion record:** Added deterministic bounded simulation
+of named player-visible policies against exhaustive optimal proof evidence. Typed
+reports retain per-run outcomes, success rate, successful-run tap/time/distance
+averages, stable failure counts, regret relative to the optimum, and every on-path
+decision where a policy diverges; the standard suite evaluates seeded random,
+greedy, one-step, two-step, and optimal agents.
+
+**2026-07-20 AG-078 completion record:** Added deterministic classification of
+every canonical optimal decision into immediate-edge, one-transition,
+two-transition, objective-state, or cross-phase knowledge. The classifier replays
+the exact proof through canonical visible states, records which bounded policy
+first agrees with the optimum, explains each classification, summarizes the
+maximum horizon, and rejects incomplete or unsuccessful proof input.
 
 ## Runtime timing and layout
 

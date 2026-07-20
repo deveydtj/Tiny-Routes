@@ -58,6 +58,19 @@ from .composition_diversity import (
     CompositionPoolResult,
 )
 from .puzzle_state import PuzzleState, PuzzleTerminalOutcome
+from .policy_evaluation import (
+    PolicyDivergence,
+    PolicyEvaluationReport,
+    PolicyEvaluationResult,
+    PolicyFailureCount,
+    PolicyRegret,
+    PolicyRunResult,
+)
+from .planning_horizon import (
+    PlanningHorizon,
+    PlanningHorizonDecision,
+    PlanningHorizonReport,
+)
 from .static_policy import (
     SearchLimitRejectionResult,
     StaticPolicyAssignment,
@@ -140,6 +153,15 @@ __all__ = [
     "CompositionPoolResult",
     "PuzzleState",
     "PuzzleTerminalOutcome",
+    "PolicyDivergence",
+    "PolicyEvaluationReport",
+    "PolicyEvaluationResult",
+    "PolicyFailureCount",
+    "PolicyRegret",
+    "PolicyRunResult",
+    "PlanningHorizon",
+    "PlanningHorizonDecision",
+    "PlanningHorizonReport",
     "SearchLimitRejectionResult",
     "StaticPolicyAssignment",
     "StaticPolicySearchResult",

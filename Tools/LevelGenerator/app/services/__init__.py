@@ -75,6 +75,15 @@ from .static_policy_solver_service import (
     StaticPolicySolverService,
 )
 from .search_limit_rejection_service import SearchLimitRejectionService
+from .policy_evaluation_service import (
+    PolicyEvaluationConfig,
+    PolicyEvaluationService,
+)
+from .planning_horizon_classification_service import (
+    PlanningHorizonClassificationService,
+    PlanningHorizonClassifier,
+    PlanningHorizonClassifierService,
+)
 from .swift_test_service import SwiftTestService
 from .unique_solution_validator_service import (
     UniqueSolutionPathSummary,
@@ -154,6 +163,11 @@ __all__ = [
     "StaticPolicySearchConfig",
     "StaticPolicySolverService",
     "SearchLimitRejectionService",
+    "PolicyEvaluationConfig",
+    "PolicyEvaluationService",
+    "PlanningHorizonClassificationService",
+    "PlanningHorizonClassifier",
+    "PlanningHorizonClassifierService",
     "SwitchVisualClarityService",
     "SwiftTestService",
     "UniqueSolutionPathSummary",
