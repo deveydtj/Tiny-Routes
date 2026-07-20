@@ -2946,8 +2946,8 @@ enumerator. Focused regression coverage proves that separation.
 ## Agents and quality
 
 - [x] **AG-072:** Add random agent.
-- [ ] **AG-073:** Add greedy-objective agent.
-- [ ] **AG-074:** Add one-step lookahead agent.
+- [x] **AG-073:** Add greedy-objective agent.
+- [x] **AG-074:** Add one-step lookahead agent.
 - [ ] **AG-075:** Add two-step planning agent.
 - [ ] **AG-076:** Add optimal agent adapter.
 - [ ] **AG-077:** Add policy evaluation report.
@@ -2964,6 +2964,18 @@ agent plus the shared player-observation protocol that later policy agents will
 reuse. The agent receives only canonical player-visible state and legal actions;
 tests cover deterministic choice streams, legal-action confinement, terminal
 behavior, observation validation, and seed validation.
+
+**2026-07-20 AG-073 completion record:** Added a deterministic greedy-objective
+policy that selects the legal road whose immediate endpoint is geometrically
+closest to the currently active ordered objective. It performs no downstream
+simulation, preserves visible action order for ties, and follows objective-state
+progress across multi-stop levels.
+
+**2026-07-20 AG-074 completion record:** Added a deterministic one-step
+lookahead policy that evaluates exactly one canonical structural transition per
+visible action. It rejects immediate failures, prefers objective progress, and
+ranks surviving states by traveled plus straight-line objective distance without
+recursively expanding the next decision.
 
 ## Runtime timing and layout
 
