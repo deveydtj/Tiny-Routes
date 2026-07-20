@@ -11,6 +11,7 @@ from .puzzle_blueprint_service import (
 from .motif_contract_evidence_service import MotifContractEvidenceService
 from .production_motif_catalog_service import ProductionMotifCatalogService
 from .decision_profile_service import DecisionProfileService
+from .exact_decision_profile_adapter_service import ExactDecisionProfileAdapterService
 from .layout_repair_service import LayoutRepairConfig, LayoutRepairService
 from .generated_level_validation_service import GeneratedLevelValidationService
 from .graph_isomorphism_service import GraphIsomorphismService
@@ -101,6 +102,7 @@ __all__ = [
     "MotifContractEvidenceService",
     "ProductionMotifCatalogService",
     "DecisionProfileService",
+    "ExactDecisionProfileAdapterService",
     "LayoutRepairConfig",
     "LayoutRepairService",
     "GeneratedLevelValidationService",

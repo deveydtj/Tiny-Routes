@@ -5,10 +5,14 @@ from dataclasses import dataclass
 from statistics import fmean
 from typing import Callable
 
+from tiny_routes_core.models import LevelDocument
+
 from ..models.abstract_puzzle_solution import AbstractPuzzleSolutionMetadata
 from ..models.decision_profile import DecisionProfile
 from ..models.graph_recipe import GraphRecipe, GraphRecipeEdge
 from ..models.runtime_solution_search import RuntimeSolutionSearchResult
+from ..models.static_policy import StaticPolicySearchResult
+from ..models.strategy_search import FailureRecoveryReport, StrategySearchResult
 
 
 @dataclass(frozen=True)
@@ -94,6 +98,29 @@ class DecisionProfileService:
             multiple_taps_in_window_count=multi_taps,
             front_loaded_legacy_solution_possible=frontloadable,
             no_op_or_equivalent_choice_count=self._equivalent_choice_count(recipe),
+        )
+
+    def analyze_exact(
+        self,
+        level: LevelDocument,
+        strategy_search: StrategySearchResult,
+        static_policy_search: StaticPolicySearchResult,
+        runtime_solution: RuntimeSolutionSearchResult | None = None,
+        *,
+        failure_recovery: FailureRecoveryReport | None = None,
+    ) -> DecisionProfile:
+        """Return the legacy profile view without bounded recipe enumeration."""
+
+        from .exact_decision_profile_adapter_service import (
+            ExactDecisionProfileAdapterService,
+        )
+
+        return ExactDecisionProfileAdapterService().adapt(
+            level,
+            strategy_search,
+            static_policy_search,
+            runtime_solution,
+            failure_recovery=failure_recovery,
         )
 
     def _enumerate_routes(self, recipe: GraphRecipe, route_limit: int) -> tuple[_Route, ...]:

@@ -2878,7 +2878,7 @@ for exact strategy signatures.
 - [x] **AG-068:** Add failure/recovery classification.
 - [x] **AG-069:** Add static-policy solver.
 - [x] **AG-070:** Add search-limit hard rejection.
-- [ ] **AG-071:** Adapt legacy decision profile from exact analysis.
+- [x] **AG-071:** Adapt legacy decision profile from exact analysis.
 
 **2026-07-19 AG-062 completion record:** Added a compact immutable and hashable
 `PuzzleState` covering node-or-edge position, ordered objective progress,
@@ -2936,9 +2936,16 @@ budget exhaustion now emits stable source-specific rejection reasons; uncertaint
 cannot pass, while an already-found static-policy witness remains a conclusive
 candidate rejection even if later assignment enumeration is bounded.
 
+**2026-07-20 AG-071 completion record:** Added an exact-analysis compatibility
+adapter for the legacy `DecisionProfile`. It derives decision, revisit,
+objective-phase, alternate/failure, recovery, road-state, runtime-timing, and
+front-loaded-policy fields from exact strategy, classification, and static-policy
+proof artifacts without invoking the legacy bounded `GraphRecipe` route
+enumerator. Focused regression coverage proves that separation.
+
 ## Agents and quality
 
-- [ ] **AG-072:** Add random agent.
+- [x] **AG-072:** Add random agent.
 - [ ] **AG-073:** Add greedy-objective agent.
 - [ ] **AG-074:** Add one-step lookahead agent.
 - [ ] **AG-075:** Add two-step planning agent.
@@ -2951,6 +2958,12 @@ candidate rejection even if later assignment enumeration is bounded.
 - [ ] **AG-082:** Add unique-optimal gate.
 - [ ] **AG-083:** Derive par taps from optimal strategy.
 - [ ] **AG-084:** Derive time limit from runtime distribution.
+
+**2026-07-20 AG-072 completion record:** Added a seeded uniform random policy
+agent plus the shared player-observation protocol that later policy agents will
+reuse. The agent receives only canonical player-visible state and legal actions;
+tests cover deterministic choice streams, legal-action confinement, terminal
+behavior, observation validation, and seed validation.
 
 ## Runtime timing and layout
 
