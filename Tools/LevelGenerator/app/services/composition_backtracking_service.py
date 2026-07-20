@@ -27,11 +27,14 @@ class CompositionBacktrackingService:
         *,
         composition_budget: int,
         is_complete: Callable[[CompositionState], bool] | None = None,
+        prune: Callable[[CompositionState], Iterable[str]] | None = None,
     ) -> CompositionSearchResult:
         if not callable(expand):
             raise TypeError("expand must be callable")
         if is_complete is not None and not callable(is_complete):
             raise TypeError("is_complete must be callable")
+        if prune is not None and not callable(prune):
+            raise TypeError("prune must be callable")
         if (
             not isinstance(composition_budget, int)
             or isinstance(composition_budget, bool)
@@ -114,6 +117,19 @@ class CompositionBacktrackingService:
                         )
                     )
                     continue
+                pruning_reasons = self._pruning_reasons(prune, successor)
+                if pruning_reasons:
+                    for reason in pruning_reasons:
+                        rejection_counts[reason] += 1
+                    trace.append(
+                        CompositionSearchTraceEntry(
+                            parent.signature,
+                            choice.choice_id,
+                            "pruned",
+                            pruning_reasons[0],
+                        )
+                    )
+                    continue
                 signature = successor.signature
                 if signature in visited_signatures or signature in scheduled_signatures:
                     reason = "composition_search_duplicate_state"
@@ -142,6 +158,19 @@ class CompositionBacktrackingService:
             assert isinstance(state, CompositionState)
             scheduled_signatures.discard(state.signature)
             if state.signature in visited_signatures:
+                continue
+            pruning_reasons = self._pruning_reasons(prune, state)
+            if pruning_reasons:
+                for reason in pruning_reasons:
+                    rejection_counts[reason] += 1
+                trace.append(
+                    CompositionSearchTraceEntry(
+                        state.signature,
+                        None,
+                        "pruned",
+                        pruning_reasons[0],
+                    )
+                )
                 continue
             visited_signatures.add(state.signature)
             if complete(state):
@@ -223,6 +252,18 @@ class CompositionBacktrackingService:
         if len(signatures) != len(set(signatures)):
             raise ValueError("initial_states must be unique")
         return ordered
+
+    @staticmethod
+    def _pruning_reasons(
+        prune: Callable[[CompositionState], Iterable[str]] | None,
+        state: CompositionState,
+    ) -> tuple[str, ...]:
+        if prune is None:
+            return ()
+        reasons = tuple(prune(state))
+        if any(not isinstance(reason, str) or not reason.strip() for reason in reasons):
+            raise TypeError("prune must return non-empty string reason codes")
+        return tuple(sorted(set(reason.strip() for reason in reasons)))
 
     @staticmethod
     def _result(

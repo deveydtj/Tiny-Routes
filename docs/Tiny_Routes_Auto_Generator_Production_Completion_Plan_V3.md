@@ -1329,6 +1329,12 @@ Prune partial graphs when they cannot still reach:
 - Switch-degree bounds.
 - Layout footprint bounds.
 
+**2026-07-19 AG-059 completion record:** Added blueprint-scoped partial
+strategic feasibility assessment for meaningful and adaptive decisions,
+dependency depth, revisits, objectives, recovery, switch count/degree, and
+layout footprint. Deterministic backtracking now prunes impossible successors
+before expansion and records every stable pruning reason in search evidence.
+
 ## Task 5.5 — Add composition transformations
 
 After a valid graph is built, produce true variants through controlled transformations:
@@ -1342,6 +1348,13 @@ After a valid graph is built, produce true variants through controlled transform
 - Insert or remove a non-strategic readability segment.
 
 Every transformation must re-run the solver.
+
+**2026-07-19 AG-060 completion record:** Added typed, deterministic
+transformations for phase-specific hub exits, objective branch placement, ring
+phase order, fatal-to-recoverable branches, shortcut triggers, branch-cost
+choice, and readability segment insertion/removal. A transformed state is
+returned only after a fresh injected solver proof accepts it; rejected proofs
+remain explicit results with no accepted graph.
 
 ## Task 5.6 — Add composition diversity constraints
 
@@ -2787,8 +2800,8 @@ exposes no hidden `production_v3` fallback.
 - [x] **AG-056:** Add cross-phase return operation.
 - [x] **AG-057:** Add objective attachment operation.
 - [x] **AG-058:** Add deterministic composition backtracking.
-- [ ] **AG-059:** Add partial strategic pruning.
-- [ ] **AG-060:** Add composition transformation framework.
+- [x] **AG-059:** Add partial strategic pruning.
+- [x] **AG-060:** Add composition transformation framework.
 - [ ] **AG-061:** Add composition duplicate rejection.
 
 **2026-07-19 AG-051 completion record:** Added an immutable composition search
@@ -2835,6 +2848,17 @@ composition search over immutable states. Stable choice ordering retries motifs,
 then ports, then blueprint realizations; visited-state signatures prevent repeat
 work; and results record attempted branches, expanded and visited states, every
 rejection reason, a reproducible trace, and hard budget exhaustion.
+
+**2026-07-19 AG-059 completion record:** Added blueprint-scoped partial
+strategic feasibility assessment for meaningful and adaptive decisions,
+dependency depth, revisits, objectives, recovery, switch count/degree, and
+layout footprint. Deterministic backtracking prunes impossible branches before
+expansion and records stable reasons for every failed bound.
+
+**2026-07-19 AG-060 completion record:** Added typed transformations for all
+seven controlled variant categories in Task 5.5. Each valid changed candidate
+must receive a fresh solver proof, and solver-rejected variants cannot surface
+an accepted transformed state.
 
 ## Exact strategy analysis
 

@@ -55,6 +55,8 @@ from .composition_backtracking_service import (
     CompositionBacktrackingService,
     CompositionSearchService,
 )
+from .composition_strategic_pruning_service import CompositionStrategicPruningService
+from .composition_transformation_service import CompositionTransformationService
 from .swift_test_service import SwiftTestService
 from .unique_solution_validator_service import (
     UniqueSolutionPathSummary,
@@ -117,6 +119,8 @@ __all__ = [
     "PuzzleCompositionError",
     "CompositionBacktrackingService",
     "CompositionSearchService",
+    "CompositionStrategicPruningService",
+    "CompositionTransformationService",
     "SwitchVisualClarityService",
     "SwiftTestService",
     "UniqueSolutionPathSummary",

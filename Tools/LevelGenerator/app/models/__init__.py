@@ -41,6 +41,16 @@ from .composition_search import (
     CompositionSearchResult,
     CompositionSearchTraceEntry,
 )
+from .composition_pruning import (
+    CompositionPruningAssessment,
+    CompositionStrategicConstraints,
+)
+from .composition_transformation import (
+    CompositionTransformation,
+    CompositionTransformationKind,
+    CompositionTransformationProof,
+    CompositionTransformationResult,
+)
 from .puzzle_experience_target import PuzzleExperienceTarget
 from .generated_level import GeneratedLevel
 from .generation_quality import GenerationQualityScore
@@ -87,6 +97,12 @@ __all__ = [
     "CompositionSearchChoice",
     "CompositionSearchResult",
     "CompositionSearchTraceEntry",
+    "CompositionPruningAssessment",
+    "CompositionStrategicConstraints",
+    "CompositionTransformation",
+    "CompositionTransformationKind",
+    "CompositionTransformationProof",
+    "CompositionTransformationResult",
     "MotifDependencyEffect",
     "MotifEdgeStateChange",
     "MotifEdgeStateChangeKind",
