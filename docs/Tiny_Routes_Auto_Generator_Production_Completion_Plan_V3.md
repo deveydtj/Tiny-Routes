@@ -2876,8 +2876,8 @@ for exact strategy signatures.
 - [x] **AG-066:** Add unique-optimal proof.
 - [x] **AG-067:** Add alternate-success classification.
 - [x] **AG-068:** Add failure/recovery classification.
-- [ ] **AG-069:** Add static-policy solver.
-- [ ] **AG-070:** Add search-limit hard rejection.
+- [x] **AG-069:** Add static-policy solver.
+- [x] **AG-070:** Add search-limit hard rejection.
 - [ ] **AG-071:** Adapt legacy decision profile from exact analysis.
 
 **2026-07-19 AG-062 completion record:** Added a compact immutable and hashable
@@ -2923,6 +2923,18 @@ analysis keyed by decision ordinal, objective phase, node, and selected road. Th
 report distinguishes immediate dead ends, objective-order failures, recoverable
 rejoins, slower and higher-tap successes, loops, and state traps while retaining
 canonical and supporting exact traces for reproducible proof.
+
+**2026-07-20 AG-069 completion record:** Added bounded exhaustive static-policy
+search over permanent authored outgoing-edge assignments. The solver reuses the
+canonical structural transition engine, detects fixed-policy loops, retains typed
+successful witnesses and traces, and accepts a candidate only after proving that
+no permanent assignment completes every ordered objective.
+
+**2026-07-20 AG-070 completion record:** Added a hard search-limit gate across
+exact strategy and static-policy proof results. State, action, and assignment
+budget exhaustion now emits stable source-specific rejection reasons; uncertainty
+cannot pass, while an already-found static-policy witness remains a conclusive
+candidate rejection even if later assignment enumeration is bounded.
 
 ## Agents and quality
 

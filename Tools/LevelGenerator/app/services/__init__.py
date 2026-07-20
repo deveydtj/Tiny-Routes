@@ -69,6 +69,11 @@ from .strategy_equivalence_service import StrategyEquivalenceService
 from .unique_optimal_proof_service import UniqueOptimalProofService
 from .alternate_success_classification_service import AlternateSuccessClassificationService
 from .failure_recovery_classification_service import FailureRecoveryClassificationService
+from .static_policy_solver_service import (
+    StaticPolicySearchConfig,
+    StaticPolicySolverService,
+)
+from .search_limit_rejection_service import SearchLimitRejectionService
 from .swift_test_service import SwiftTestService
 from .unique_solution_validator_service import (
     UniqueSolutionPathSummary,
@@ -144,6 +149,9 @@ __all__ = [
     "UniqueOptimalProofService",
     "AlternateSuccessClassificationService",
     "FailureRecoveryClassificationService",
+    "StaticPolicySearchConfig",
+    "StaticPolicySolverService",
+    "SearchLimitRejectionService",
     "SwitchVisualClarityService",
     "SwiftTestService",
     "UniqueSolutionPathSummary",

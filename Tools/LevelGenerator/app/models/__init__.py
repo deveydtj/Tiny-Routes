@@ -58,6 +58,12 @@ from .composition_diversity import (
     CompositionPoolResult,
 )
 from .puzzle_state import PuzzleState, PuzzleTerminalOutcome
+from .static_policy import (
+    SearchLimitRejectionResult,
+    StaticPolicyAssignment,
+    StaticPolicySearchResult,
+    StaticPolicySolution,
+)
 from .strategy_search import (
     AlternateSuccessClassification,
     AlternateSuccessKind,
@@ -134,6 +140,10 @@ __all__ = [
     "CompositionPoolResult",
     "PuzzleState",
     "PuzzleTerminalOutcome",
+    "SearchLimitRejectionResult",
+    "StaticPolicyAssignment",
+    "StaticPolicySearchResult",
+    "StaticPolicySolution",
     "AlternateSuccessClassification",
     "AlternateSuccessKind",
     "AlternateSuccessReport",
