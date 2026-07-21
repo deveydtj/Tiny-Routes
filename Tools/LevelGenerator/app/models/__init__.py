@@ -163,6 +163,16 @@ from .stage_result import CandidateStageResult, StageResult
 from .blueprint_stage_result import BlueprintStageResult
 from .strategy_stage_result import StrategyStageResult
 from .quality_stage_result import QualityStageResult
+from .search_planning import (
+    AdaptiveSearchBreadthResult,
+    BlueprintPlanningConstraints,
+    RejectionFeedbackAdjustment,
+    RejectionFeedbackEvent,
+    RejectionFeedbackPlan,
+    SearchBreadth,
+    SearchBreadthAdjustment,
+    SearchYieldEvidence,
+)
 
 __all__ = [
     "DifficultyPreset",
@@ -308,4 +318,12 @@ __all__ = [
     "BlueprintStageResult",
     "StrategyStageResult",
     "QualityStageResult",
+    "AdaptiveSearchBreadthResult",
+    "BlueprintPlanningConstraints",
+    "RejectionFeedbackAdjustment",
+    "RejectionFeedbackEvent",
+    "RejectionFeedbackPlan",
+    "SearchBreadth",
+    "SearchBreadthAdjustment",
+    "SearchYieldEvidence",
 ]

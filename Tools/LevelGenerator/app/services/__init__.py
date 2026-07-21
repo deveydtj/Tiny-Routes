@@ -132,6 +132,11 @@ from .v3_candidate_pipeline_coordinator import (
     V3CandidatePipelineRequest,
     V3CandidatePipelineResult,
 )
+from .adaptive_search_breadth_service import (
+    AdaptiveSearchBreadthConfig,
+    AdaptiveSearchBreadthService,
+)
+from .rejection_feedback_planner_service import RejectionFeedbackPlannerService
 
 __all__ = [
     "BoundingBox",
@@ -235,4 +240,7 @@ __all__ = [
     "V3CandidatePipelineHandlers",
     "V3CandidatePipelineRequest",
     "V3CandidatePipelineResult",
+    "AdaptiveSearchBreadthConfig",
+    "AdaptiveSearchBreadthService",
+    "RejectionFeedbackPlannerService",
 ]

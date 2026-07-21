@@ -3136,8 +3136,8 @@ locked, consumed, objective, and active-switch state from shared schema rules.
 - [x] **AG-096:** Add typed strategy stage result.
 - [x] **AG-097:** Add typed final quality stage result.
 - [x] **AG-098:** Add V3 candidate pipeline coordinator.
-- [ ] **AG-099:** Add adaptive search breadth.
-- [ ] **AG-100:** Add rejection feedback planner.
+- [x] **AG-099:** Add adaptive search breadth.
+- [x] **AG-100:** Add rejection feedback planner.
 - [ ] **AG-101:** Expand candidate signatures.
 - [ ] **AG-102:** Add campaign candidate pools.
 - [ ] **AG-103:** Add portfolio optimizer constraints.
@@ -3172,6 +3172,23 @@ and quality order. It validates stable candidate identity at every boundary,
 stops on the first rejection so strategically weak graphs never consume layout
 or runtime work, converts stage exceptions to stable fail-closed results, and
 returns ordered report-ready evidence for every stage reached.
+
+**2026-07-21 AG-099 completion record:** Added deterministic, bounded adaptive
+search breadth planning driven by typed candidate-yield evidence. Low-yield
+difficulty/archetype samples expand blueprint count, composition alternatives,
+layout variants, road-shape variants, candidate-pool size, and attempt budget;
+small or sufficient-yield samples remain unchanged, persisted breadth never
+shrinks, hard quality gates cannot be relaxed, and every expansion is retained
+as report-ready automatic-adjustment evidence.
+
+**2026-07-21 AG-100 completion record:** Added a deterministic rejection
+feedback planner that waits for repeated stable causes before changing retry
+constraints. It records exact motif combinations to avoid, requests progressively
+larger layouts, rotates production archetypes, bounds optional state-space
+branching without reducing decision targets, and varies outgoing-edge ordering
+for timing failures. Pipeline-result adapters preserve rejection stage, code,
+archetype, and motif evidence, and milestone tracking prevents duplicate
+adjustments while retaining a JSON-safe planning audit.
 
 ## Transactional production
 
