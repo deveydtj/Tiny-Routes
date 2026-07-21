@@ -3053,8 +3053,8 @@ rejected when the solve-time cap cannot preserve the required planning margin.
 - [x] **AG-086:** Add timing jitter replay.
 - [x] **AG-087:** Add rapid multi-tap cap.
 - [x] **AG-088:** Add state-change visibility timing check.
-- [ ] **AG-089:** Add phase metadata to layout graph.
-- [ ] **AG-090:** Add stateful hub spacing rules.
+- [x] **AG-089:** Add phase metadata to layout graph.
+- [x] **AG-090:** Add stateful hub spacing rules.
 - [ ] **AG-091:** Add objective marker clearance rules.
 - [ ] **AG-092:** Add pre/post-state layout validation.
 - [ ] **AG-093:** Add phase-aware layout repairs.
@@ -3088,6 +3088,19 @@ road consumption are matched to the next required input window; every production
 band requires at least one second of visible lead time, short gaps fail with
 `state_change_not_visible_before_decision`, and generation reports retain the
 changed objectives, roads, active objective, next switch, and measured interval.
+
+**2026-07-21 AG-089 completion record:** Extended the layout graph with
+per-node and per-edge objective-phase membership, explicit revisited-hub flags,
+open/close/consume relationships, and primary, alternate, failure, and recovery
+corridor roles. Legacy recipes infer package phases through a compatibility
+adapter, while completed V3 composition states retain explicit phase routes and
+assigned state effects.
+
+**2026-07-21 AG-090 completion record:** Added deterministic stateful-hub
+spacing rules and validation. Cross-phase hubs reserve enlarged footprints and
+three-cell icon clearance; validation enforces separated and sufficiently long
+exits, visible return approaches, extra room on state-changing roads, and safe
+camera framing with stable failure codes.
 
 ## Pipeline and campaign
 

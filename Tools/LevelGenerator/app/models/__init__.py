@@ -118,7 +118,15 @@ from .generation_batch_plan import GenerationBatchPlan, GenerationBatchPlanEntry
 from .generation_result import GenerationResult, SwiftTestSummary
 from .graph_recipe import GraphRecipe, GraphRecipeEdge, GraphRecipeNode
 from .layout_constraints import ConstraintViolation, LayoutConstraints, RepairOperation, ReservedIconClearance
-from .layout_graph import GridCell, Lane, LayoutGraph, NodeFootprint, SwitchPortDirection
+from .layout_graph import (
+    GridCell,
+    Lane,
+    LayoutCorridorKind,
+    LayoutGraph,
+    LayoutStateRelationship,
+    NodeFootprint,
+    SwitchPortDirection,
+)
 from .layout_result import LayerAssignment, LayoutLayerResult, LayoutResult
 from .recipe_variant_spec import RecipeVariantSpec
 from .recipe_lifecycle import RecipeLifecycleRecord, RecipeLifecycleStatus
@@ -245,10 +253,12 @@ __all__ = [
     "GridCell",
     "Lane",
     "LayerAssignment",
+    "LayoutCorridorKind",
     "LayoutConstraints",
     "LayoutGraph",
     "LayoutLayerResult",
     "LayoutResult",
+    "LayoutStateRelationship",
     "NodeFootprint",
     "RepairOperation",
     "ReservedIconClearance",

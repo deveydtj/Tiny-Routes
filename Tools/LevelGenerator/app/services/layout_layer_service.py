@@ -6,6 +6,7 @@ from ..models.graph_recipe import GraphRecipe
 from ..models.layout_constraints import ConstraintViolation, ReservedIconClearance
 from ..models.layout_graph import GridCell, Lane, LayoutGraph
 from ..models.layout_result import LayerAssignment, LayoutLayerResult
+from .stateful_hub_spacing_service import StatefulHubSpacingService
 
 
 class LayoutLayerService:
@@ -58,10 +59,17 @@ class LayoutLayerService:
                 if lanes[edge.from_node_id] == 0 and edge.from_node_id not in {graph.destination_node_id}:
                     lanes[edge.from_node_id] = return_lane
 
+        stateful_clearance_by_node_id = {
+            rule.hub_node_id: rule.reserved_clearance
+            for rule in StatefulHubSpacingService().rules_for(graph)
+        }
         clearances = tuple(
-            ReservedIconClearance(node.node_id, 2, 2)
+            stateful_clearance_by_node_id.get(
+                node.node_id,
+                ReservedIconClearance(node.node_id, 2, 2),
+            )
             for node in graph.nodes
-            if len(node.outgoing_node_ids) >= 3
+            if len(node.outgoing_node_ids) >= 3 or node.is_revisited_hub
         )
         assignments = tuple(
             LayerAssignment(node_id, layers[node_id], Lane(lanes[node_id], self._lane_kind(lanes[node_id])), GridCell(lanes[node_id], layers[node_id]))

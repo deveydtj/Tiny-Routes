@@ -23,6 +23,11 @@ from .behavior_signature_service import (
 from .graph_builder_service import GraphBuilderService
 from .graph_layout_service import BoundingBox, GraphLayoutPlannerService, GraphLayoutService, LayoutPlanResult
 from .layout_layer_service import LayoutLayerService
+from .stateful_hub_spacing_service import (
+    StatefulHubSpacingRule,
+    StatefulHubSpacingService,
+    StatefulHubSpacingThresholds,
+)
 from .level_naming_service import LevelNamingService
 from .road_geometry_validation_service import (
     RoadGeometryIssue,
@@ -137,6 +142,9 @@ __all__ = [
     "GraphLayoutService",
     "LayoutPlanResult",
     "LayoutLayerService",
+    "StatefulHubSpacingRule",
+    "StatefulHubSpacingService",
+    "StatefulHubSpacingThresholds",
     "LevelNamingService",
     "MAX_SUPPORTED_OUTGOING_EDGES",
     "RoadGeometryIssue",
