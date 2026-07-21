@@ -62,3 +62,4 @@ class RuntimeSolutionSearchResult:
     failure_reason: str | None = None
     replay_result: Any | None = field(default=None, repr=False)
     jitter_report: Any | None = field(default=None, repr=False)
+    timing_accessibility_report: Any | None = field(default=None, repr=False)

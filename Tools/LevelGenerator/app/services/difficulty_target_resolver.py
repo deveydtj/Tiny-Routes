@@ -30,6 +30,9 @@ class DifficultyTargetResolver:
                 recoverable_mistake_range=(1, 2),
                 fatal_mistake_cap=1,
                 decision_window_targets=(2.25, 4.0),
+                rapid_multi_tap_encounter_cap=0,
+                maximum_taps_per_rapid_burst=2,
+                minimum_state_change_visibility_seconds=1.0,
                 allowed_mechanic_categories=(
                     "objective_gate",
                     "ordered_checkpoint",
@@ -54,6 +57,9 @@ class DifficultyTargetResolver:
                 recoverable_mistake_range=(1, 3),
                 fatal_mistake_cap=2,
                 decision_window_targets=(1.80, 4.0),
+                rapid_multi_tap_encounter_cap=1,
+                maximum_taps_per_rapid_burst=2,
+                minimum_state_change_visibility_seconds=1.0,
                 allowed_mechanic_categories=(
                     "objective_gate",
                     "ordered_checkpoint",
@@ -80,6 +86,9 @@ class DifficultyTargetResolver:
                 recoverable_mistake_range=(2, 4),
                 fatal_mistake_cap=2,
                 decision_window_targets=(1.45, 4.0),
+                rapid_multi_tap_encounter_cap=1,
+                maximum_taps_per_rapid_burst=2,
+                minimum_state_change_visibility_seconds=1.0,
                 allowed_mechanic_categories=(
                     "objective_gate",
                     "ordered_checkpoint",
@@ -110,6 +119,9 @@ class DifficultyTargetResolver:
                 recoverable_mistake_range=(2, 5),
                 fatal_mistake_cap=3,
                 decision_window_targets=(1.20, 4.0),
+                rapid_multi_tap_encounter_cap=2,
+                maximum_taps_per_rapid_burst=2,
+                minimum_state_change_visibility_seconds=1.0,
                 allowed_mechanic_categories=(
                     "objective_gate",
                     "ordered_checkpoint",

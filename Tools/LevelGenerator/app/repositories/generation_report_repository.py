@@ -1426,7 +1426,61 @@ class GenerationReportRepository:
         }
         if result.jitter_report is not None:
             payload["timingJitterReplay"] = self._timing_jitter_payload(result.jitter_report)
+        timing_accessibility_report = getattr(
+            result,
+            "timing_accessibility_report",
+            None,
+        )
+        if timing_accessibility_report is not None:
+            payload["timingAccessibility"] = self._timing_accessibility_payload(
+                timing_accessibility_report
+            )
         return payload
+
+    @staticmethod
+    def _timing_accessibility_payload(report) -> dict[str, Any]:
+        return {
+            "difficulty": report.difficulty,
+            "passed": report.passed,
+            "rejectionReasons": list(report.rejection_reasons),
+            "rapidMultiTapEncounterCap": report.rapid_multi_tap_encounter_cap,
+            "maximumTapsPerBurst": report.maximum_taps_per_burst,
+            "minimumStateChangeVisibilitySeconds": (
+                report.minimum_state_change_visibility_seconds
+            ),
+            "rapidMultiTapEncounters": [
+                {
+                    "nodeID": item.node_id,
+                    "visitIndex": item.visit_index,
+                    "requiredTapCount": item.required_tap_count,
+                    "tapTimesSeconds": list(item.tap_times_seconds),
+                    "burstDurationSeconds": item.burst_duration_seconds,
+                    "openingSafetyMarginSeconds": item.opening_safety_margin_seconds,
+                    "closingSafetyMarginSeconds": item.closing_safety_margin_seconds,
+                    "requiredSafetyMarginSeconds": item.required_safety_margin_seconds,
+                    "withinPerEncounterLimit": item.within_per_encounter_limit,
+                    "preservesSafetyMargin": item.preserves_safety_margin,
+                }
+                for item in report.rapid_multi_tap_encounters
+            ],
+            "stateChangeVisibility": [
+                {
+                    "stateChangeTimeSeconds": item.state_change_time_seconds,
+                    "nextWindowOpenSeconds": item.next_window_open_seconds,
+                    "visibilitySeconds": item.visibility_seconds,
+                    "requiredVisibilitySeconds": item.required_visibility_seconds,
+                    "nextDecisionNodeID": item.next_decision_node_id,
+                    "nextDecisionVisitIndex": item.next_decision_visit_index,
+                    "completedObjectiveIDs": list(item.completed_objective_ids),
+                    "openedEdgeIDs": list(item.opened_edge_ids),
+                    "closedEdgeIDs": list(item.closed_edge_ids),
+                    "consumedEdgeIDs": list(item.consumed_edge_ids),
+                    "activeObjectiveID": item.active_objective_id,
+                    "passed": item.passed,
+                }
+                for item in report.state_change_visibility
+            ],
+        }
 
     @staticmethod
     def _timing_jitter_payload(report) -> dict[str, Any] | None:

@@ -441,6 +441,8 @@ These are initial locked engineering targets. Human calibration may tune numeric
 | Greedy-local policy success | Allowed only in intro subset | ≤35% of target corpus | ≤10% | 0% |
 | Minimum safe decision window | 2.25 s | 1.80 s | 1.45 s | 1.20 s |
 | Required rapid multi-tap windows | 0 | ≤1 | ≤1 | ≤2 |
+| Maximum taps in one rapid burst | 2 | 2 | 2 | 2 |
+| State-change visibility before next input window | ≥1.00 s | ≥1.00 s | ≥1.00 s | ≥1.00 s |
 
 ### 6.4 Campaign pacing rules
 
@@ -3049,8 +3051,8 @@ rejected when the solve-time cap cannot preserve the required planning margin.
 
 - [x] **AG-085:** Make runtime timing search objective-state aware.
 - [x] **AG-086:** Add timing jitter replay.
-- [ ] **AG-087:** Add rapid multi-tap cap.
-- [ ] **AG-088:** Add state-change visibility timing check.
+- [x] **AG-087:** Add rapid multi-tap cap.
+- [x] **AG-088:** Add state-change visibility timing check.
 - [ ] **AG-089:** Add phase metadata to layout graph.
 - [ ] **AG-090:** Add stateful hub spacing rules.
 - [ ] **AG-091:** Add objective marker clearance rules.
@@ -3073,6 +3075,19 @@ quantization, and configurable speed-integration variation; any rejected tap,
 wrong selected edge, incomplete replay, or failed completion emits
 `solution_jitter_failure`, and generation reports retain every reproducible
 scenario and failure reason.
+
+**2026-07-21 AG-087 completion record:** Added a fail-closed rapid multi-tap
+gate to production-target runtime search. Difficulty targets now enforce the
+locked 0/1/1/2 encounter caps for easy through expert, reject any burst requiring
+more than two taps, verify both window safety margins, and retain typed encounter
+evidence that keeps reasoning-decision counts separate from raw accepted taps.
+
+**2026-07-21 AG-088 completion record:** Added runtime-event-backed state-change
+visibility validation. Objective progress, route openings/closures, and one-use
+road consumption are matched to the next required input window; every production
+band requires at least one second of visible lead time, short gaps fail with
+`state_change_not_visible_before_decision`, and generation reports retain the
+changed objectives, roads, active objective, next switch, and measured interval.
 
 ## Pipeline and campaign
 

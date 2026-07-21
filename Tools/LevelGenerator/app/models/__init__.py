@@ -132,6 +132,11 @@ from .timing_jitter import (
     TimingJitterReplayReport,
     TimingJitterScenarioResult,
 )
+from .runtime_timing_accessibility import (
+    RapidMultiTapEncounter,
+    RuntimeTimingAccessibilityReport,
+    StateChangeVisibilityEvidence,
+)
 from .simulation import SimulationResult, SimulationStep
 from .template_spec import TemplateSpec
 from .template_variant_spec import TemplateVariantSpec
@@ -259,6 +264,9 @@ __all__ = [
     "TimingJitterReplayConfig",
     "TimingJitterReplayReport",
     "TimingJitterScenarioResult",
+    "RapidMultiTapEncounter",
+    "RuntimeTimingAccessibilityReport",
+    "StateChangeVisibilityEvidence",
     "SimulationResult",
     "SimulationStep",
     "SwiftTestSummary",

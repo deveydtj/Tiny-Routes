@@ -19,6 +19,9 @@ def _target(**overrides) -> PuzzleExperienceTarget:
         "recoverable_mistake_range": (2, 4),
         "fatal_mistake_cap": 2,
         "decision_window_targets": (1.45, 3.0),
+        "rapid_multi_tap_encounter_cap": 1,
+        "maximum_taps_per_rapid_burst": 2,
+        "minimum_state_change_visibility_seconds": 1.0,
         "allowed_mechanic_categories": ("objective_gate", "hub_revisit"),
         "layout_complexity_target": 0.75,
         "desired_solve_time_range": (20.0, 55.0),
@@ -42,6 +45,9 @@ def test_puzzle_experience_target_preserves_all_resolved_constraints() -> None:
     assert target.recoverable_mistake_range == (2, 4)
     assert target.fatal_mistake_cap == 2
     assert target.decision_window_targets == (1.45, 3.0)
+    assert target.rapid_multi_tap_encounter_cap == 1
+    assert target.maximum_taps_per_rapid_burst == 2
+    assert target.minimum_state_change_visibility_seconds == 1.0
     assert target.allowed_mechanic_categories == ("objective_gate", "hub_revisit")
     assert target.layout_complexity_target == 0.75
     assert target.desired_solve_time_range == (20.0, 55.0)
@@ -54,6 +60,13 @@ def test_puzzle_experience_target_preserves_all_resolved_constraints() -> None:
         ("meaningful_decision_range", (1.0, 3), "values must be integers"),
         ("planning_decision_minimum", -1, "non-negative integer"),
         ("decision_window_targets", (2.0, 1.0), "non-negative and ordered"),
+        ("rapid_multi_tap_encounter_cap", -1, "non-negative integer"),
+        ("maximum_taps_per_rapid_burst", 1, "at least two"),
+        (
+            "minimum_state_change_visibility_seconds",
+            float("inf"),
+            "finite and non-negative",
+        ),
         ("layout_complexity_target", 1.1, "between 0.0 and 1.0"),
         ("desired_solve_time_range", (10.0, float("inf")), "finite numbers"),
     ],

@@ -13,6 +13,7 @@ from ..models.runtime_solution_search import (
 )
 from ..models.strategy_search import StrategyTrace
 from .timing_jitter_replay_service import TimingJitterReplayService
+from .runtime_timing_accessibility_service import RuntimeTimingAccessibilityService
 
 
 @dataclass(frozen=True)
@@ -38,12 +39,22 @@ class RuntimeSolutionSearchService:
         safety_margin_seconds: float = 0.12,
         search_step_seconds: float = 0.02,
         jitter_replay_service: TimingJitterReplayService | None = None,
+        timing_accessibility_service: RuntimeTimingAccessibilityService | None = None,
     ) -> None:
         self.safety_margin_seconds = safety_margin_seconds
         self.search_step_seconds = search_step_seconds
         self.jitter_replay_service = jitter_replay_service or TimingJitterReplayService()
+        self.timing_accessibility_service = (
+            timing_accessibility_service or RuntimeTimingAccessibilityService()
+        )
 
-    def search(self, level, topology_solution) -> RuntimeSolutionSearchResult:
+    def search(
+        self,
+        level,
+        topology_solution,
+        *,
+        experience_target=None,
+    ) -> RuntimeSolutionSearchResult:
         if level.rules.switch_interaction_mode != SwitchInteractionMode.LIVE_LOOKAHEAD:
             return RuntimeSolutionSearchResult(False, failure_reason="runtime_search_requires_live_lookahead")
 
@@ -235,12 +246,31 @@ class RuntimeSolutionSearchService:
                     final_replay,
                     jitter_report,
                 )
+        timing_accessibility_report = None
+        if experience_target is not None:
+            timing_accessibility_report = self.timing_accessibility_service.evaluate(
+                level,
+                tuple(diagnostics),
+                final_replay,
+                experience_target,
+            )
+            if not timing_accessibility_report.passed:
+                return RuntimeSolutionSearchResult(
+                    False,
+                    tuple(actions),
+                    tuple(diagnostics),
+                    timing_accessibility_report.failure_reason,
+                    final_replay,
+                    jitter_report,
+                    timing_accessibility_report,
+                )
         return RuntimeSolutionSearchResult(
             True,
             tuple(actions),
             tuple(diagnostics),
             replay_result=final_replay,
             jitter_report=jitter_report,
+            timing_accessibility_report=timing_accessibility_report,
         )
 
     def _find_window_open(

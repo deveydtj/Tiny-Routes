@@ -31,6 +31,9 @@ class PuzzleExperienceTarget:
     recoverable_mistake_range: IntRange
     fatal_mistake_cap: int
     decision_window_targets: FloatRange
+    rapid_multi_tap_encounter_cap: int
+    maximum_taps_per_rapid_burst: int
+    minimum_state_change_visibility_seconds: float
     allowed_mechanic_categories: tuple[str, ...]
     layout_complexity_target: float
     desired_solve_time_range: FloatRange
@@ -56,10 +59,18 @@ class PuzzleExperienceTarget:
             "planning_decision_minimum",
             "adaptive_decision_minimum",
             "fatal_mistake_cap",
+            "rapid_multi_tap_encounter_cap",
         ):
             value = getattr(self, field_name)
             if not isinstance(value, int) or isinstance(value, bool) or value < 0:
                 raise ValueError(f"{field_name} must be a non-negative integer")
+
+        if (
+            not isinstance(self.maximum_taps_per_rapid_burst, int)
+            or isinstance(self.maximum_taps_per_rapid_burst, bool)
+            or self.maximum_taps_per_rapid_burst < 2
+        ):
+            raise ValueError("maximum_taps_per_rapid_burst must be at least two")
 
         meaningful_maximum = self.meaningful_decision_range[1]
         if self.planning_decision_minimum > meaningful_maximum:
@@ -73,6 +84,21 @@ class PuzzleExperienceTarget:
 
         self._validate_float_range("decision_window_targets", self.decision_window_targets)
         self._validate_float_range("desired_solve_time_range", self.desired_solve_time_range)
+        visibility = self.minimum_state_change_visibility_seconds
+        if (
+            isinstance(visibility, bool)
+            or not isinstance(visibility, (int, float))
+            or not isfinite(float(visibility))
+            or float(visibility) < 0.0
+        ):
+            raise ValueError(
+                "minimum_state_change_visibility_seconds must be finite and non-negative"
+            )
+        object.__setattr__(
+            self,
+            "minimum_state_change_visibility_seconds",
+            float(visibility),
+        )
 
         mechanics = tuple(category.strip() for category in self.allowed_mechanic_categories)
         if any(not category for category in mechanics):

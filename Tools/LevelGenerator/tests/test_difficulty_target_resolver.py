@@ -30,6 +30,19 @@ def test_resolver_matches_locked_v3_difficulty_matrix() -> None:
         assert target.fatal_mistake_cap == values[7]
         assert target.decision_window_targets[0] == values[8]
 
+    assert [
+        resolver.resolve(difficulty).rapid_multi_tap_encounter_cap
+        for difficulty in resolver.band_order
+    ] == [0, 1, 1, 2]
+    assert all(
+        resolver.resolve(difficulty).maximum_taps_per_rapid_burst == 2
+        for difficulty in resolver.band_order
+    )
+    assert all(
+        resolver.resolve(difficulty).minimum_state_change_visibility_seconds == 1.0
+        for difficulty in resolver.band_order
+    )
+
 
 def test_resolver_is_normalized_deterministic_and_has_compatibility_spelling() -> None:
     resolver = DifficultyTargetResolverService()
