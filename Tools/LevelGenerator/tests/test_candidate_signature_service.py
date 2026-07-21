@@ -2,11 +2,13 @@ from __future__ import annotations
 
 from copy import deepcopy
 from dataclasses import replace
+from types import SimpleNamespace
 
 from app.random_source import RandomSource
 from app.recipes.recipe_family_registry import RecipeFamilyRegistry
 from app.services.candidate_signature_service import CandidateSignatureService
 from app.services.difficulty_service import DifficultyService
+from app.services.puzzle_blueprint_service import PuzzleBlueprintService
 from app.services.recipe_to_level_builder_service import RecipeToLevelBuilderService
 from app.templates.four_way_intersection_template import FourWayIntersectionTemplate
 from app.templates.package_gate_template import PackageGateTemplate
@@ -146,3 +148,135 @@ def test_same_topology_with_different_dependency_behavior_is_distinguishable() -
 
     assert original_signature.topology_hash == changed_signature.topology_hash
     assert original_signature.decision_dependency_pattern != changed_signature.decision_dependency_pattern
+
+
+def test_v3_signature_includes_complete_strategy_and_state_evidence() -> None:
+    preset = DifficultyService().get_preset("easy")
+    generated = SingleSwitchTemplate().generate(
+        "level_012", 12, preset, RandomSource(10)
+    )
+    blueprint = PuzzleBlueprintService().build_unlock_shortcut("easy", 10)
+    transition = SimpleNamespace(
+        objective_index_before=0,
+        objective_index_after=1,
+        completed_objective_ids=("pickup",),
+        opened_edge_ids=("shortcut",),
+        closed_edge_ids=("long_route",),
+        consumed_edge_ids=(),
+    )
+    actions = (
+        SimpleNamespace(
+            node_id="hub",
+            selected_edge_id="outbound",
+            tap_count=1,
+            traversed_edge_ids=("outbound",),
+            visited_node_ids=("hub", "pickup"),
+            completed_objective_ids=("pickup",),
+            meaningful_decision=True,
+            state_transition=transition,
+        ),
+        SimpleNamespace(
+            node_id="hub",
+            selected_edge_id="shortcut",
+            tap_count=0,
+            traversed_edge_ids=("shortcut",),
+            visited_node_ids=("hub", "destination"),
+            completed_objective_ids=("destination",),
+            meaningful_decision=True,
+            state_transition=SimpleNamespace(
+                objective_index_before=1,
+                objective_index_after=2,
+                completed_objective_ids=("destination",),
+                opened_edge_ids=(),
+                closed_edge_ids=(),
+                consumed_edge_ids=(),
+            ),
+        ),
+    )
+    trace = SimpleNamespace(
+        actions=actions,
+        outcome_code="success",
+        cost=SimpleNamespace(
+            accepted_taps=1,
+            travel_time_seconds=8.0,
+            route_distance=6.0,
+        ),
+    )
+    strategy = SimpleNamespace(
+        canonical_optimal_strategy=trace,
+        all_successful_strategies=(trace,),
+        failure_outcomes=(SimpleNamespace(outcome_code="state_trap"),),
+    )
+    static_policy = SimpleNamespace(
+        exhaustive=True,
+        tested_policy_count=6,
+        total_policy_count=6,
+        successful_policies=(),
+        limit_reasons=(),
+    )
+    agent = SimpleNamespace(
+        policy_name="greedy_objective",
+        success_rate=0.25,
+        average_taps=2.0,
+        average_completion_time_seconds=12.0,
+        average_route_distance=9.0,
+        failure_types=(SimpleNamespace(code="dead_end", count=3),),
+    )
+    policy = SimpleNamespace(evaluations=(agent,))
+
+    signature = CandidateSignatureService().signature_for(
+        generated,
+        blueprint=blueprint,
+        strategy_result=strategy,
+        static_policy_result=static_policy,
+        policy_evaluation=policy,
+    )
+
+    assert signature.blueprint_archetype == "unlock_shortcut"
+    assert signature.objective_count == 2
+    assert signature.objective_kinds == ("pickup", "destination")
+    assert signature.dependency_dag_signature
+    assert signature.adaptive_decision_pattern
+    assert signature.state_transition_pattern
+    assert signature.static_policy_proof_signature
+    assert signature.agent_performance_profile[0][:2] == (
+        "greedy_objective",
+        0.25,
+    )
+    assert signature.switch_degree_sequence
+    assert signature.revisit_pattern == ((0, 1, 1),)
+    assert signature.success_failure_distribution == (
+        ("state_trap", 1),
+        ("successful", 1),
+    )
+    assert signature.optimal_strategy_signature
+    assert signature.layout_silhouette
+    assert signature.road_state_visual_signature
+
+
+def test_pipeline_signature_fails_closed_when_proof_evidence_is_missing() -> None:
+    preset = DifficultyService().get_preset("easy")
+    generated = SingleSwitchTemplate().generate(
+        "level_012", 12, preset, RandomSource(10)
+    )
+    result = SimpleNamespace(
+        passed=True,
+        candidate=generated,
+        stage_results=(
+            SimpleNamespace(stage="blueprint", blueprint=None),
+            SimpleNamespace(
+                stage="strategy",
+                strategy_search=None,
+                static_policy_search=None,
+                policy_evaluation=None,
+            ),
+            SimpleNamespace(stage="quality", puzzle_analysis=None),
+        ),
+    )
+
+    try:
+        CandidateSignatureService().signature_for_pipeline_result(result)
+    except ValueError as error:
+        assert "incomplete signature evidence" in str(error)
+    else:
+        raise AssertionError("incomplete proof evidence must not enter a V3 pool")

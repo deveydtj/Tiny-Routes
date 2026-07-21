@@ -137,6 +137,7 @@ from .adaptive_search_breadth_service import (
     AdaptiveSearchBreadthService,
 )
 from .rejection_feedback_planner_service import RejectionFeedbackPlannerService
+from .candidate_pool_service import CandidatePoolService
 
 __all__ = [
     "BoundingBox",
@@ -243,4 +244,5 @@ __all__ = [
     "AdaptiveSearchBreadthConfig",
     "AdaptiveSearchBreadthService",
     "RejectionFeedbackPlannerService",
+    "CandidatePoolService",
 ]

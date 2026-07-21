@@ -41,3 +41,15 @@ class CandidateSignature:
     mirrored_layout_silhouette: tuple[tuple[float, float], ...] = ()
     road_direction_histogram: tuple[tuple[str, int], ...] = ()
     solution_decision_timing_pattern: tuple[float, ...] = ()
+    blueprint_archetype: str = ""
+    objective_count: int = 0
+    objective_kinds: tuple[str, ...] = ()
+    dependency_dag_signature: str = ""
+    adaptive_decision_pattern: tuple[tuple[object, ...], ...] = ()
+    state_transition_pattern: tuple[tuple[object, ...], ...] = ()
+    static_policy_proof_signature: str = ""
+    agent_performance_profile: tuple[tuple[object, ...], ...] = ()
+    revisit_pattern: tuple[tuple[int, int, int], ...] = ()
+    success_failure_distribution: tuple[tuple[str, int], ...] = ()
+    optimal_strategy_signature: str = ""
+    road_state_visual_signature: str = ""

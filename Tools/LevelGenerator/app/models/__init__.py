@@ -1,4 +1,11 @@
 from .candidate_signature import CandidateSignature
+from .candidate_pool import (
+    CampaignCandidatePoolResult,
+    CandidatePoolAttempt,
+    CandidatePoolRequest,
+    CandidatePoolSlot,
+    CandidateSlotPool,
+)
 from .difficulty_preset import DifficultyPreset
 from .decision_profile import DecisionProfile
 from .decision_dependency_graph import (
@@ -175,6 +182,11 @@ from .search_planning import (
 )
 
 __all__ = [
+    "CampaignCandidatePoolResult",
+    "CandidatePoolAttempt",
+    "CandidatePoolRequest",
+    "CandidatePoolSlot",
+    "CandidateSlotPool",
     "DifficultyPreset",
     "DecisionProfile",
     "DecisionDependency",

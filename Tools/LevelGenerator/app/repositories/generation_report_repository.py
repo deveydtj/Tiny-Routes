@@ -826,6 +826,18 @@ class GenerationReportRepository:
             "mirroredLayoutSilhouette": [list(item) for item in signature.mirrored_layout_silhouette],
             "roadDirectionHistogram": [list(item) for item in signature.road_direction_histogram],
             "solutionDecisionTimingPattern": list(signature.solution_decision_timing_pattern),
+            "blueprintArchetype": signature.blueprint_archetype or None,
+            "objectiveCount": signature.objective_count,
+            "objectiveKinds": list(signature.objective_kinds),
+            "dependencyDAGSignature": signature.dependency_dag_signature or None,
+            "adaptiveDecisionPattern": [list(item) for item in signature.adaptive_decision_pattern],
+            "stateTransitionPattern": [list(item) for item in signature.state_transition_pattern],
+            "staticPolicyProofSignature": signature.static_policy_proof_signature or None,
+            "agentPerformanceProfile": [list(item) for item in signature.agent_performance_profile],
+            "revisitPattern": [list(item) for item in signature.revisit_pattern],
+            "successFailureDistribution": [list(item) for item in signature.success_failure_distribution],
+            "optimalStrategySignature": signature.optimal_strategy_signature or None,
+            "roadStateVisualSignature": signature.road_state_visual_signature or None,
         }
 
     def _candidate_status_payload(

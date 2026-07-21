@@ -3138,8 +3138,8 @@ locked, consumed, objective, and active-switch state from shared schema rules.
 - [x] **AG-098:** Add V3 candidate pipeline coordinator.
 - [x] **AG-099:** Add adaptive search breadth.
 - [x] **AG-100:** Add rejection feedback planner.
-- [ ] **AG-101:** Expand candidate signatures.
-- [ ] **AG-102:** Add campaign candidate pools.
+- [x] **AG-101:** Expand candidate signatures.
+- [x] **AG-102:** Add campaign candidate pools.
 - [ ] **AG-103:** Add portfolio optimizer constraints.
 - [ ] **AG-104:** Add targeted portfolio backtracking.
 - [ ] **AG-105:** Add existing-corpus behavior comparison.
@@ -3189,6 +3189,22 @@ branching without reducing decision targets, and varies outgoing-edge ordering
 for timing failures. Pipeline-result adapters preserve rejection stage, code,
 archetype, and motif evidence, and milestone tracking prevents duplicate
 adjustments while retaining a JSON-safe planning audit.
+
+**2026-07-21 AG-101 completion record:** Expanded production candidate
+signatures with canonical blueprint archetype, ordered objective kinds,
+dependency DAG, adaptive-decision, state-transition, static-policy proof, agent
+performance, exact revisit, success/failure, optimal-strategy, and road-state
+visual evidence. Accepted V3 pipeline results now produce the complete signature
+from their retained proof artifacts, and reports plus production manifests
+serialize the new fields while remaining compatible with older manifests.
+
+**2026-07-21 AG-102 completion record:** Added deterministic campaign-wide
+candidate-pool construction over the V3 pipeline. Every requested level slot is
+filled with multiple signed, hard-gate-passing candidates before selection;
+attempts run round-robin in bounded waves, rejected proof artifacts collapse to
+compact audit records, per-slot attempt budgets are enforced, and incomplete
+campaign pools report their exact constrained slots without selecting a partial
+batch.
 
 ## Transactional production
 

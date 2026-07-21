@@ -135,12 +135,45 @@ class ExistingLevelRepository:
                         max_outgoing_edge_count=int(entry.get("maxOutgoingEdgeCount", 0)),
                         has_four_way_switch=bool(entry.get("hasFourWaySwitch", False)),
                         central_switch_revisit_count=int(entry.get("centralSwitchRevisitCount", 0)),
+                        blueprint_archetype=str(entry.get("blueprintArchetype", "")),
+                        objective_count=int(entry.get("objectiveCount", 0)),
+                        objective_kinds=tuple(str(value) for value in entry.get("objectiveKinds", ())),
+                        dependency_dag_signature=str(entry.get("dependencyDAGSignature", "")),
+                        adaptive_decision_pattern=tuple(
+                            self._nested_tuple(value)
+                            for value in entry.get("adaptiveDecisionPattern", ())
+                        ),
+                        state_transition_pattern=tuple(
+                            self._nested_tuple(value)
+                            for value in entry.get("stateTransitionPattern", ())
+                        ),
+                        static_policy_proof_signature=str(entry.get("staticPolicyProofSignature", "")),
+                        agent_performance_profile=tuple(
+                            self._nested_tuple(value)
+                            for value in entry.get("agentPerformanceProfile", ())
+                        ),
+                        revisit_pattern=tuple(
+                            tuple(int(item) for item in value)
+                            for value in entry.get("revisitPattern", ())
+                        ),
+                        success_failure_distribution=tuple(
+                            (str(value[0]), int(value[1]))
+                            for value in entry.get("successFailureDistribution", ())
+                        ),
+                        optimal_strategy_signature=str(entry.get("optimalStrategySignature", "")),
+                        road_state_visual_signature=str(entry.get("roadStateVisualSignature", "")),
                     )
                 )
             return signatures
         except Exception as exc:
             result.warnings.append(f"Could not load production manifest {manifest_path}: {exc}")
             return []
+
+    @classmethod
+    def _nested_tuple(cls, value):
+        if isinstance(value, list):
+            return tuple(cls._nested_tuple(item) for item in value)
+        return value
 
     def _solution_from_embedded_or_empty(self, level: LevelDocument) -> Solution:
         actions = []

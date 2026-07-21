@@ -28,6 +28,18 @@ class ProductionManifestService:
                     "layoutHash": signature.layout_hash if signature else None,
                     "solutionHash": signature.solution_hash if signature else None,
                     "normalizedPositions": list(signature.normalized_positions) if signature else [],
+                    "blueprintArchetype": signature.blueprint_archetype if signature else "",
+                    "objectiveCount": signature.objective_count if signature else 0,
+                    "objectiveKinds": list(signature.objective_kinds) if signature else [],
+                    "dependencyDAGSignature": signature.dependency_dag_signature if signature else "",
+                    "adaptiveDecisionPattern": list(signature.adaptive_decision_pattern) if signature else [],
+                    "stateTransitionPattern": list(signature.state_transition_pattern) if signature else [],
+                    "staticPolicyProofSignature": signature.static_policy_proof_signature if signature else "",
+                    "agentPerformanceProfile": list(signature.agent_performance_profile) if signature else [],
+                    "revisitPattern": list(signature.revisit_pattern) if signature else [],
+                    "successFailureDistribution": list(signature.success_failure_distribution) if signature else [],
+                    "optimalStrategySignature": signature.optimal_strategy_signature if signature else "",
+                    "roadStateVisualSignature": signature.road_state_visual_signature if signature else "",
                 }
             )
         payload = {
