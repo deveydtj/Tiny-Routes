@@ -37,6 +37,7 @@ from .stateful_hub_spacing_service import (
     StatefulHubSpacingService,
     StatefulHubSpacingThresholds,
 )
+from .state_snapshot_preview_service import StateSnapshotPreviewService
 from .level_naming_service import LevelNamingService
 from .road_geometry_validation_service import (
     RoadGeometryIssue,
@@ -159,6 +160,7 @@ __all__ = [
     "StatefulHubSpacingRule",
     "StatefulHubSpacingService",
     "StatefulHubSpacingThresholds",
+    "StateSnapshotPreviewService",
     "LevelNamingService",
     "MAX_SUPPORTED_OUTGOING_EDGES",
     "RoadGeometryIssue",

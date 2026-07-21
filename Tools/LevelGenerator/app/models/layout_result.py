@@ -35,6 +35,9 @@ class LayoutResult:
     violations: tuple[ConstraintViolation, ...] = ()
     repair_operations: tuple[RepairOperation, ...] = ()
     attempted_repair_operations: tuple[RepairOperation, ...] = ()
+    edge_shapes: dict[str, str] = field(default_factory=dict)
+    objective_marker_positions: dict[str, tuple[float, float]] = field(default_factory=dict)
+    lock_indicator_positions: dict[str, tuple[float, float]] = field(default_factory=dict)
 
 
 @dataclass(frozen=True)

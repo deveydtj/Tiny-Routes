@@ -45,6 +45,13 @@ class RepairOperationKind(str, Enum):
     MIRROR_BRANCH = "mirror_branch"
     MOVE_REJOIN = "move_rejoin"
     INSERT_INTERSECTION_NODE = "insert_intersection_node"
+    MOVE_STATEFUL_HUB = "move_stateful_hub"
+    WIDEN_RETURN_LANE = "widen_return_lane"
+    RELOCATE_OBJECTIVE_MARKER = "relocate_objective_marker"
+    MOVE_LOCK_INDICATOR = "move_lock_indicator"
+    SWAP_BRANCH_LANES = "swap_branch_lanes"
+    EXPAND_PHASE_SPACING = "expand_phase_spacing"
+    CHANGE_BEND_ORDER = "change_bend_order"
 
 
 @dataclass(frozen=True)

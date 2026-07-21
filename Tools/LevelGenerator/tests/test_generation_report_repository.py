@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+from pathlib import Path
 
 from app.generation_config import GenerationConfig
 from app.level_editor_imports import LevelDocument, RouteEdge, RouteGraph, RouteNode, Solution
@@ -89,6 +90,46 @@ def test_generation_report_repository_writes_candidate_signatures(tmp_path) -> N
     assert solution["requiredTapOrder"] == [action.tapNodeID for action in generated.solution.actions]
     assert solution["actions"][0]["reason"]
     assert "Required taps" in config.report_path.read_text(encoding="utf-8")
+
+
+def test_generation_report_option_writes_selected_state_previews(tmp_path) -> None:
+    preset = DifficultyService().get_preset("easy")
+    generated = SingleSwitchTemplate().generate("level_012", 12, preset, RandomSource(10))
+    config = GenerationConfig(
+        start_level_number=12,
+        count=1,
+        difficulty="easy",
+        levels_output_dir=tmp_path / "levels",
+        solutions_output_dir=tmp_path / "solutions",
+        report_path=tmp_path / "report.md",
+        json_report_path=tmp_path / "report.json",
+        state_snapshot_previews=True,
+    )
+    result = type(
+        "Result",
+        (),
+        {
+            "accepted": [generated],
+            "rejected_candidate_count": 0,
+            "rejection_reason_counts": {},
+            "written_level_paths": [],
+            "written_solution_paths": [],
+            "swift_test_summary": type(
+                "Swift",
+                (),
+                {"passed": None, "command": [], "exit_code": None, "summary": "not run"},
+            )(),
+            "messages": [],
+        },
+    )()
+
+    GenerationReportRepository().write_json(config.json_report_path, config, result)
+
+    payload = json.loads(config.json_report_path.read_text(encoding="utf-8"))
+    paths = payload["acceptedLevels"][0]["stateSnapshotPreviewPaths"]
+    assert payload["stateSnapshotPreviews"] is True
+    assert len(paths) == 4
+    assert all(Path(path).exists() for path in paths)
 
 
 def test_generation_report_repository_adds_duplicate_exhaustion_recommendations(tmp_path) -> None:

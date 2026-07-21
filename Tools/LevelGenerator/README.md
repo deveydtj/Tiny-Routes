@@ -212,6 +212,13 @@ Generation reports include the selected layout profile, layout size profile, and
 
 The CLI and GUI write the same Markdown and JSON reports when report paths are configured. The JSON report is the audit source of truth; the Markdown report is optimized for quick human review.
 
+Pass `--state-snapshot-previews` to add deterministic SVGs for the initial
+route state, every post-objective state, and the final optimal route. When
+`--debug-failures DIR` is also set, rejected candidates receive the same state
+artifacts in their debug folder. Strategy comparison SVGs are emitted when an
+alternate successful route is available. Selected artifact paths appear in
+`acceptedLevels[].stateSnapshotPreviewPaths`.
+
 Each accepted level and candidate-selection summary uses standardized candidate status fields:
 
 - `candidateID`, `levelID`, `seed`, `difficulty`

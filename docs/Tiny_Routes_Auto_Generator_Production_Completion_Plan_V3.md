@@ -3057,8 +3057,8 @@ rejected when the solve-time cap cannot preserve the required planning margin.
 - [x] **AG-090:** Add stateful hub spacing rules.
 - [x] **AG-091:** Add objective marker clearance rules.
 - [x] **AG-092:** Add pre/post-state layout validation.
-- [ ] **AG-093:** Add phase-aware layout repairs.
-- [ ] **AG-094:** Add state snapshot previews.
+- [x] **AG-093:** Add phase-aware layout repairs.
+- [x] **AG-094:** Add state snapshot previews.
 
 **2026-07-20 AG-085 completion record:** Extended runtime solution search to
 consume canonical exact strategy traces with phase-specific selected roads and
@@ -3114,6 +3114,21 @@ recomputes available, locked, and consumed roads and active switches per state,
 then checks objective and lock overlays, route crossings, node clearance, and
 camera bounds across the complete state sequence rather than only the initial
 map.
+
+**2026-07-21 AG-093 completion record:** Added bounded deterministic repairs for
+stateful-hub movement, return-lane widening, independent objective-marker and
+lock-indicator relocation, branch-lane swaps, inter-phase vertical expansion,
+and road bend-order changes. Every candidate is revalidated across all objective
+states and hub-spacing rules, repaired overlay geometry is retained explicitly,
+and the immutable layout graph keeps topology, authored edge order, route state,
+and objective behavior unchanged.
+
+**2026-07-21 AG-094 completion record:** Added opt-in deterministic SVG debug
+artifacts for the initial state, every objective-completion state, the final
+optimal route, and optimal-versus-alternate route comparisons. The shared CLI
+option writes previews for selected report candidates and debug-rejected
+candidates, records selected artifact paths in JSON reports, and renders open,
+locked, consumed, objective, and active-switch state from shared schema rules.
 
 ## Pipeline and campaign
 

@@ -135,6 +135,10 @@ from .layout_state import (
     PrePostStateLayoutValidationResult,
 )
 from .layout_result import LayerAssignment, LayoutLayerResult, LayoutResult
+from .state_snapshot_preview import (
+    StateSnapshotPreviewArtifact,
+    StateSnapshotPreviewResult,
+)
 from .recipe_variant_spec import RecipeVariantSpec
 from .recipe_lifecycle import RecipeLifecycleRecord, RecipeLifecycleStatus
 from .recipe_topology_rules import RecipeTopologyRules
@@ -272,6 +276,8 @@ __all__ = [
     "NodeFootprint",
     "ObjectiveMarkerPlacement",
     "PrePostStateLayoutValidationResult",
+    "StateSnapshotPreviewArtifact",
+    "StateSnapshotPreviewResult",
     "RepairOperation",
     "ReservedIconClearance",
     "SwitchPortDirection",

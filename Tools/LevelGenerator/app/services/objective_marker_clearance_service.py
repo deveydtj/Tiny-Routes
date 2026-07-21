@@ -88,6 +88,7 @@ class ObjectiveMarkerClearanceService:
         graph: LayoutGraph,
         positions: dict[str, tuple[float, float]],
         *,
+        marker_positions: dict[str, tuple[float, float]] | None = None,
         visible_objective_ids: tuple[str, ...] | None = None,
         active_objective_id: str | None = None,
         completed_objective_ids: tuple[str, ...] = (),
@@ -103,7 +104,14 @@ class ObjectiveMarkerClearanceService:
             graph.objectives,
             key=lambda item: (item.phase_index, item.objective_id),
         ):
-            if objective.objective_id not in visible or objective.node_id not in positions:
+            resolved_positions = marker_positions or {}
+            if (
+                objective.objective_id not in visible
+                or (
+                    objective.objective_id not in resolved_positions
+                    and objective.node_id not in positions
+                )
+            ):
                 continue
             status = (
                 "active"
@@ -112,12 +120,15 @@ class ObjectiveMarkerClearanceService:
                 if objective.objective_id in completed
                 else "future"
             )
+            marker_position = resolved_positions.get(objective.objective_id)
+            if marker_position is None:
+                marker_position = positions[objective.node_id]
             placements.append(ObjectiveMarkerPlacement(
                 objective.objective_id,
                 objective.node_id,
                 objective.phase_index,
                 status,
-                positions[objective.node_id],
+                marker_position,
             ))
         return tuple(placements)
 
@@ -126,6 +137,7 @@ class ObjectiveMarkerClearanceService:
         graph: LayoutGraph,
         positions: dict[str, tuple[float, float]],
         *,
+        marker_positions: dict[str, tuple[float, float]] | None = None,
         visible_objective_ids: tuple[str, ...] | None = None,
         active_objective_id: str | None = None,
         completed_objective_ids: tuple[str, ...] = (),
@@ -145,6 +157,7 @@ class ObjectiveMarkerClearanceService:
         placements = self.placements_for(
             graph,
             positions,
+            marker_positions=marker_positions,
             visible_objective_ids=tuple(item.objective_id for item in selected),
             active_objective_id=active_objective_id,
             completed_objective_ids=completed_objective_ids,

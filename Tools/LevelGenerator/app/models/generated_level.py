@@ -31,6 +31,7 @@ class GeneratedLevel:
     runtime_solution_search_result: RuntimeSolutionSearchResult | None = None
     quality_score: GenerationQualityScore | None = None
     preview_path: Path | None = None
+    state_preview_paths: tuple[Path, ...] = field(default_factory=tuple)
     warning_messages: list[str] = field(default_factory=list)
     recipe_family: str | None = None
     recipe_variant: str | None = None

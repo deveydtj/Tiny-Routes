@@ -26,14 +26,26 @@ class GenerationReportRepository:
     def write_markdown(self, path: Path, config, result) -> Path:
         path = Path(path)
         path.parent.mkdir(parents=True, exist_ok=True)
-        self._write_previews(path.parent, result)
+        self._write_previews(
+            path.parent,
+            result,
+            include_state_snapshots=bool(
+                getattr(config, "state_snapshot_previews", False)
+            ),
+        )
         path.write_text(self._markdown(config, result), encoding="utf-8")
         return path
 
     def write_json(self, path: Path, config, result) -> Path:
         path = Path(path)
         path.parent.mkdir(parents=True, exist_ok=True)
-        self._write_previews(path.parent, result)
+        self._write_previews(
+            path.parent,
+            result,
+            include_state_snapshots=bool(
+                getattr(config, "state_snapshot_previews", False)
+            ),
+        )
         path.write_text(json.dumps(self._payload(config, result), indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
         return path
 
@@ -70,6 +82,9 @@ class GenerationReportRepository:
             "preferVerticalForLongRoutes": getattr(config, "prefer_vertical_for_long_routes", True),
             "baseSeed": config.seed,
             "dryRun": config.dry_run,
+            "stateSnapshotPreviews": bool(
+                getattr(config, "state_snapshot_previews", False)
+            ),
             "dryRunSummary": self._dry_run_summary(config, result),
             "overwrite": config.overwrite,
             "syncXcodeProject": config.sync_xcode_project,
@@ -215,6 +230,10 @@ class GenerationReportRepository:
                     "roadShapeReport": (road_shape_report := self._road_shape_report_payload(level)),
                     **road_shape_report,
                     "previewPath": str(level.preview_path) if level.preview_path else None,
+                    "stateSnapshotPreviewPaths": [
+                        str(path)
+                        for path in getattr(level, "state_preview_paths", ())
+                    ],
                     "status": "accepted",
                     "notes": level.generation_notes,
                     "warnings": list(getattr(level, "warning_messages", [])),
@@ -744,13 +763,24 @@ class GenerationReportRepository:
         )
         return "\n".join(lines)
 
-    def _write_previews(self, report_dir: Path, result) -> None:
+    def _write_previews(
+        self,
+        report_dir: Path,
+        result,
+        *,
+        include_state_snapshots: bool = False,
+    ) -> None:
         if not result.accepted:
             return
         preview_dir = report_dir / "previews"
         for level in result.accepted:
             if level.preview_path is None:
                 self.preview_image_service.write_preview(level, preview_dir)
+            if include_state_snapshots and not getattr(level, "state_preview_paths", ()):
+                self.preview_image_service.write_state_snapshot_previews(
+                    level,
+                    preview_dir / "states" / level.level_id,
+                )
 
     def _signature_payload(self, level) -> dict[str, Any] | None:
         signature = getattr(level, "candidate_signature", None)

@@ -180,6 +180,14 @@ def build_generate_parser() -> argparse.ArgumentParser:
     parser.add_argument("--map-seed-path", type=Path, default=None, help="Optional simplified map seed JSON path.")
     parser.add_argument("--debug-failures", type=Path, default=None, help="Directory for rejected candidate debug files.")
     parser.add_argument(
+        "--state-snapshot-previews",
+        action="store_true",
+        help=(
+            "Write initial, post-objective, final-route, and available strategy "
+            "comparison SVGs for selected and debug-rejected candidates."
+        ),
+    )
+    parser.add_argument(
         "--max-attempts-per-level",
         type=int,
         default=DEFAULT_MAX_ATTEMPTS_PER_LEVEL,
@@ -271,6 +279,7 @@ def _config_from_args(args: argparse.Namespace, argv: list[str] | None) -> Gener
         json_report_path=args.json_report,
         map_seed_path=args.map_seed_path,
         debug_failures_dir=args.debug_failures,
+        state_snapshot_previews=args.state_snapshot_previews,
         max_attempts_per_level=args.max_attempts_per_level,
         candidate_pool_size=candidate_pool_size,
         swift_timeout_seconds=args.swift_timeout_seconds,

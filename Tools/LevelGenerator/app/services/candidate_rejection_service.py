@@ -5,6 +5,7 @@ from collections import Counter
 from pathlib import Path
 
 from .generated_level_validation_service import GeneratorValidationMessage, GeneratorValidationResult
+from .state_snapshot_preview_service import StateSnapshotPreviewService
 
 
 class CandidateRejectionService:
@@ -65,8 +66,10 @@ class CandidateRejectionService:
         "no_valid_solution_found",
     }
 
-    def __init__(self) -> None:
+    def __init__(self, *, include_state_snapshot_previews: bool = False) -> None:
         self.reason_counts: Counter[str] = Counter()
+        self.include_state_snapshot_previews = include_state_snapshot_previews
+        self.state_snapshot_previews = StateSnapshotPreviewService()
 
     def can_save(self, validation_result: GeneratorValidationResult) -> bool:
         return not validation_result.has_errors
@@ -184,3 +187,8 @@ class CandidateRejectionService:
             json.dumps([message.__dict__ for message in validation_result.messages], indent=2) + "\n",
             encoding="utf-8",
         )
+        if self.include_state_snapshot_previews:
+            self.state_snapshot_previews.write_generated_level_previews(
+                generated_level,
+                directory / f"{stem}.state-previews",
+            )

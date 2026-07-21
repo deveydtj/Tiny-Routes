@@ -117,6 +117,9 @@ class PrePostStateLayoutValidationService:
         positions: dict[str, tuple[float, float]],
         *,
         bounds: BoundingBox | None = None,
+        objective_marker_positions: dict[str, tuple[float, float]] | None = None,
+        lock_indicator_positions: dict[str, tuple[float, float]] | None = None,
+        edge_shapes: dict[str, str] | None = None,
     ) -> PrePostStateLayoutValidationResult:
         resolved_bounds = bounds or BoundingBox()
         validations: list[LayoutStateValidation] = []
@@ -125,6 +128,7 @@ class PrePostStateLayoutValidationService:
             issues = list(self.objective_markers.validate(
                 graph,
                 positions,
+                marker_positions=objective_marker_positions,
                 visible_objective_ids=snapshot.visible_objective_ids,
                 active_objective_id=snapshot.active_objective_id,
                 completed_objective_ids=snapshot.completed_objective_ids,
@@ -134,6 +138,7 @@ class PrePostStateLayoutValidationService:
             markers = self.objective_markers.placements_for(
                 graph,
                 positions,
+                marker_positions=objective_marker_positions,
                 visible_objective_ids=snapshot.visible_objective_ids,
                 active_objective_id=snapshot.active_objective_id,
                 completed_objective_ids=snapshot.completed_objective_ids,
@@ -148,18 +153,24 @@ class PrePostStateLayoutValidationService:
                 for edge_id in snapshot.locked_edge_ids
                 if edge_id in edge_by_id
             )
-            lock_indicators = self._lock_indicators(locked_edges, positions)
+            lock_indicators = self._lock_indicators(
+                locked_edges,
+                positions,
+                lock_indicator_positions,
+            )
             issues.extend(self._missing_positions(graph, positions, snapshot.state_index))
             issues.extend(self._route_crossings(
                 available_edges,
                 positions,
                 snapshot.state_index,
+                edge_shapes,
             ))
             issues.extend(self._node_road_clearance(
                 graph,
                 available_edges,
                 positions,
                 snapshot.state_index,
+                edge_shapes,
             ))
             issues.extend(self._lock_indicator_clearance(
                 graph,
@@ -265,14 +276,37 @@ class PrePostStateLayoutValidationService:
         edges: tuple[LayoutGraphEdge, ...],
         positions: dict[str, tuple[float, float]],
         state_index: int,
+        edge_shapes: dict[str, str] | None = None,
     ) -> tuple[ConstraintViolation, ...]:
-        crossings = self.geometry.edge_crossings(
-            positions,
-            (
-                (edge.from_node_id, edge.to_node_id, edge.edge_id)
-                for edge in edges
-            ),
-        )
+        if not edge_shapes:
+            crossings = self.geometry.edge_crossings(
+                positions,
+                (
+                    (edge.from_node_id, edge.to_node_id, edge.edge_id)
+                    for edge in edges
+                ),
+            )
+        else:
+            crossings = []
+            for index, first in enumerate(edges):
+                if first.from_node_id not in positions or first.to_node_id not in positions:
+                    continue
+                for second in edges[index + 1:]:
+                    if second.from_node_id not in positions or second.to_node_id not in positions:
+                        continue
+                    if len({
+                        first.from_node_id,
+                        first.to_node_id,
+                        second.from_node_id,
+                        second.to_node_id,
+                    }) < 4:
+                        continue
+                    if any(
+                        self.geometry.segments_intersect(a1, a2, b1, b2)
+                        for a1, a2 in self._edge_segments(first, positions, edge_shapes)
+                        for b1, b2 in self._edge_segments(second, positions, edge_shapes)
+                    ):
+                        crossings.append((first.edge_id, second.edge_id))
         return tuple(
             ConstraintViolation(
                 "layout_state_route_crossing_failure",
@@ -289,6 +323,7 @@ class PrePostStateLayoutValidationService:
         edges: tuple[LayoutGraphEdge, ...],
         positions: dict[str, tuple[float, float]],
         state_index: int,
+        edge_shapes: dict[str, str] | None = None,
     ) -> tuple[ConstraintViolation, ...]:
         issues: list[ConstraintViolation] = []
         for edge in edges:
@@ -302,7 +337,14 @@ class PrePostStateLayoutValidationService:
                 point = positions.get(node.node_id)
                 if point is None:
                     continue
-                distance = self._point_to_segment_distance(point, start, end)
+                distance = min(
+                    self._point_to_segment_distance(point, segment_start, segment_end)
+                    for segment_start, segment_end in self._edge_segments(
+                        edge,
+                        positions,
+                        edge_shapes,
+                    )
+                )
                 if distance < self.thresholds.minimum_node_road_clearance:
                     issues.append(ConstraintViolation(
                         "layout_state_node_clearance_failure",
@@ -315,12 +357,39 @@ class PrePostStateLayoutValidationService:
         return tuple(issues)
 
     @staticmethod
+    def _edge_segments(
+        edge: LayoutGraphEdge,
+        positions: dict[str, tuple[float, float]],
+        edge_shapes: dict[str, str] | None,
+    ) -> tuple[
+        tuple[tuple[float, float], tuple[float, float]],
+        ...,
+    ]:
+        start = positions[edge.from_node_id]
+        end = positions[edge.to_node_id]
+        shape = (edge_shapes or {}).get(edge.edge_id)
+        if shape not in {"horizontalFirst", "verticalFirst"}:
+            return ((start, end),)
+        bend = (
+            (end[0], start[1])
+            if shape == "horizontalFirst"
+            else (start[0], end[1])
+        )
+        if bend in {start, end}:
+            return ((start, end),)
+        return ((start, bend), (bend, end))
+
+    @staticmethod
     def _lock_indicators(
         edges: tuple[LayoutGraphEdge, ...],
         positions: dict[str, tuple[float, float]],
+        overrides: dict[str, tuple[float, float]] | None = None,
     ) -> dict[str, tuple[float, float]]:
         indicators: dict[str, tuple[float, float]] = {}
         for edge in edges:
+            if overrides is not None and edge.edge_id in overrides:
+                indicators[edge.edge_id] = overrides[edge.edge_id]
+                continue
             start = positions.get(edge.from_node_id)
             end = positions.get(edge.to_node_id)
             if start is None or end is None:

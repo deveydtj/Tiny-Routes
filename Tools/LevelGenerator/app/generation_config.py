@@ -52,6 +52,7 @@ class GenerationConfig:
     )
     map_seed_path: Path | None = None
     debug_failures_dir: Path | None = None
+    state_snapshot_previews: bool = False
     max_attempts_per_level: int = DEFAULT_MAX_ATTEMPTS_PER_LEVEL
     candidate_pool_size: int = DEFAULT_CANDIDATE_POOL_SIZE
     swift_timeout_seconds: int = 180

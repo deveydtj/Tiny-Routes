@@ -52,7 +52,9 @@ class BatchOrchestrationService:
                 "batch/existing similarity and route-interest selection filters are relaxed for large batches."
             )
 
-        rejection_service = CandidateRejectionService()
+        rejection_service = CandidateRejectionService(
+            include_state_snapshot_previews=config.state_snapshot_previews,
+        )
         seed_plan = CandidateSeedPlanningService(config.base_seed)
         batch_candidate_pools = {}
         batch_near_misses = {}

@@ -3,14 +3,34 @@ from __future__ import annotations
 from html import escape
 from pathlib import Path
 
+from .state_snapshot_preview_service import StateSnapshotPreviewService
+
 
 class PreviewImageService:
+    def __init__(self) -> None:
+        self.state_snapshots = StateSnapshotPreviewService()
+
     def write_preview(self, generated_level, output_dir: Path) -> Path:
         output_dir.mkdir(parents=True, exist_ok=True)
         path = output_dir / f"{generated_level.level_id}.svg"
         path.write_text(self._svg(generated_level), encoding="utf-8")
         generated_level.preview_path = path
         return path
+
+    def write_state_snapshot_previews(
+        self,
+        generated_level,
+        output_dir: Path,
+        *,
+        optimal_route=None,
+        alternate_routes=(),
+    ):
+        return self.state_snapshots.write_generated_level_previews(
+            generated_level,
+            output_dir,
+            optimal_route=optimal_route,
+            alternate_routes=alternate_routes,
+        )
 
     def _svg(self, generated_level) -> str:
         level = generated_level.level_document
