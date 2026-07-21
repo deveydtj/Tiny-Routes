@@ -16,6 +16,13 @@ def test_legacy_recipe_infers_cross_phase_hub_and_state_relationships() -> None:
     nodes = {node.node_id: node for node in graph.nodes}
     edges = {(edge.from_node_id, edge.to_node_id): edge for edge in graph.edges}
     assert graph.objective_phase_count == 2
+    assert [
+        (objective.objective_id, objective.node_id, objective.phase_index)
+        for objective in graph.objectives
+    ] == [
+        ("package", "package", 0),
+        ("destination", "destination", 1),
+    ]
     assert graph.stateful_hub_node_ids == ("hub",)
     assert nodes["hub"].objective_phase_indices == (0, 1)
     assert nodes["hub"].is_revisited_hub
@@ -89,6 +96,13 @@ def test_composition_adapter_retains_phase_effect_and_strategy_corridors() -> No
 
     edges = {(edge.from_node_id, edge.to_node_id): edge for edge in graph.edges}
     assert graph.stateful_hub_node_ids == ("hub",)
+    assert [
+        (objective.objective_id, objective.node_id, objective.phase_index)
+        for objective in graph.objectives
+    ] == [
+        ("pickup", "pickup", 0),
+        ("destination", "destination", 1),
+    ]
     assert edges[("hub", "destination")].state_relationships[0].transition_id == (
         "pickup_unlock"
     )

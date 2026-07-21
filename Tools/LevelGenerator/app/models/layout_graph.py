@@ -5,7 +5,7 @@ from enum import Enum
 from typing import Iterable, Sequence
 
 from .composition_state import CompositionState
-from .graph_recipe import GraphRecipe
+from .graph_recipe import GraphRecipe, GraphRecipeNode
 from .motif_contract import MotifEdgeStateChangeKind
 
 
@@ -40,6 +40,29 @@ class LayoutStateRelationship:
         object.__setattr__(self, "transition_id", self.transition_id.strip())
         if not isinstance(self.kind, MotifEdgeStateChangeKind):
             object.__setattr__(self, "kind", MotifEdgeStateChangeKind(self.kind))
+
+
+@dataclass(frozen=True, order=True)
+class LayoutObjective:
+    """One ordered objective marker retained by the layout stage."""
+
+    objective_id: str
+    node_id: str
+    phase_index: int
+    kind: str = "objective"
+
+    def __post_init__(self) -> None:
+        for field_name in ("objective_id", "node_id", "kind"):
+            value = getattr(self, field_name)
+            if not isinstance(value, str) or not value.strip():
+                raise ValueError(f"{field_name} must not be empty")
+            object.__setattr__(self, field_name, value.strip())
+        if (
+            not isinstance(self.phase_index, int)
+            or isinstance(self.phase_index, bool)
+            or self.phase_index < 0
+        ):
+            raise ValueError("phase_index must be a non-negative integer")
 
 
 @dataclass(frozen=True, order=True)
@@ -109,6 +132,7 @@ class LayoutGraph:
     start_node_id: str
     destination_node_id: str
     primary_route: tuple[str, ...]
+    objectives: tuple[LayoutObjective, ...] = ()
 
     @property
     def stateful_hub_node_ids(self) -> tuple[str, ...]:
@@ -126,6 +150,7 @@ class LayoutGraph:
             for edge in self.edges
             for phase_index in edge.objective_phase_indices
         )
+        indices.update(objective.phase_index for objective in self.objectives)
         return max(indices, default=-1) + 1
 
     @classmethod
@@ -139,6 +164,28 @@ class LayoutGraph:
         recovery_routes: Sequence[Sequence[str]] = (),
     ) -> "LayoutGraph":
         resolved_phase_routes = cls._recipe_phase_routes(recipe, phase_routes)
+        objective_nodes = {node.id: node for node in recipe.nodes}
+        objectives = [
+            LayoutObjective(
+                recipe.package_node_id,
+                recipe.package_node_id,
+                0,
+                objective_nodes.get(
+                    recipe.package_node_id,
+                    GraphRecipeNode(recipe.package_node_id, "package"),
+                ).role,
+            )
+        ]
+        if recipe.destination_node_id != recipe.package_node_id:
+            objectives.append(LayoutObjective(
+                recipe.destination_node_id,
+                recipe.destination_node_id,
+                max(0, len(resolved_phase_routes) - 1),
+                objective_nodes.get(
+                    recipe.destination_node_id,
+                    GraphRecipeNode(recipe.destination_node_id, "destination"),
+                ).role,
+            ))
         return cls._build(
             nodes=recipe.nodes,
             recipe_edges=recipe.edges,
@@ -150,6 +197,7 @@ class LayoutGraph:
             failure_routes=failure_routes,
             recovery_routes=recovery_routes,
             relationship_by_edge=cls._legacy_state_relationships(recipe),
+            objectives=tuple(objectives),
         )
 
     @classmethod
@@ -179,6 +227,23 @@ class LayoutGraph:
             relationships.setdefault(
                 (effect.from_node_id, effect.to_node_id), []
             ).append(LayoutStateRelationship(effect.transition_id, effect.kind))
+        node_by_id = {node.id: node for node in state.current_graph.nodes}
+        objectives = tuple(
+            LayoutObjective(
+                boundary.objective_id,
+                boundary.exit_node_id,
+                boundary.phase_index,
+                node_by_id.get(
+                    boundary.exit_node_id,
+                    GraphRecipeNode(boundary.exit_node_id, "objective"),
+                ).role,
+            )
+            for boundary in sorted(
+                state.objective_phase_boundaries,
+                key=lambda item: (item.phase_index, item.objective_id),
+            )
+            if boundary.exit_node_id is not None
+        )
         return cls._build(
             nodes=state.current_graph.nodes,
             recipe_edges=state.current_graph.edges,
@@ -192,6 +257,7 @@ class LayoutGraph:
             relationship_by_edge={
                 pair: tuple(values) for pair, values in relationships.items()
             },
+            objectives=objectives,
         )
 
     @classmethod
@@ -210,6 +276,7 @@ class LayoutGraph:
         relationship_by_edge: dict[
             tuple[str, str], tuple[LayoutStateRelationship, ...]
         ],
+        objectives: tuple[LayoutObjective, ...],
     ) -> "LayoutGraph":
         outgoing: dict[str, list[str]] = {node.id: [] for node in nodes}
         incoming: dict[str, list[str]] = {node.id: [] for node in nodes}
@@ -254,7 +321,11 @@ class LayoutGraph:
         layout_nodes: list[LayoutGraphNode] = []
         for node in nodes:
             phases = tuple(sorted(node_phases.get(node.id, ())))
-            is_revisited_hub = len(phases) > 1 and len(outgoing.get(node.id, ())) >= 2
+            is_revisited_hub = (
+                primary_route.count(node.id) > 1
+                and len(phases) > 1
+                and len(outgoing.get(node.id, ())) >= 2
+            )
             layout_nodes.append(LayoutGraphNode(
                 node_id=node.id,
                 role=node.role,
@@ -273,6 +344,7 @@ class LayoutGraph:
             start_node_id,
             destination_node_id,
             primary_route,
+            objectives,
         )
 
     @staticmethod

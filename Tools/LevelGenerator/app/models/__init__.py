@@ -123,9 +123,16 @@ from .layout_graph import (
     Lane,
     LayoutCorridorKind,
     LayoutGraph,
+    LayoutObjective,
     LayoutStateRelationship,
     NodeFootprint,
     SwitchPortDirection,
+)
+from .layout_state import (
+    LayoutStateSnapshot,
+    LayoutStateValidation,
+    ObjectiveMarkerPlacement,
+    PrePostStateLayoutValidationResult,
 )
 from .layout_result import LayerAssignment, LayoutLayerResult, LayoutResult
 from .recipe_variant_spec import RecipeVariantSpec
@@ -256,10 +263,15 @@ __all__ = [
     "LayoutCorridorKind",
     "LayoutConstraints",
     "LayoutGraph",
+    "LayoutObjective",
     "LayoutLayerResult",
     "LayoutResult",
     "LayoutStateRelationship",
+    "LayoutStateSnapshot",
+    "LayoutStateValidation",
     "NodeFootprint",
+    "ObjectiveMarkerPlacement",
+    "PrePostStateLayoutValidationResult",
     "RepairOperation",
     "ReservedIconClearance",
     "SwitchPortDirection",

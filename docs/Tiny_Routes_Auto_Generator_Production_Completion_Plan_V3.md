@@ -3055,8 +3055,8 @@ rejected when the solve-time cap cannot preserve the required planning margin.
 - [x] **AG-088:** Add state-change visibility timing check.
 - [x] **AG-089:** Add phase metadata to layout graph.
 - [x] **AG-090:** Add stateful hub spacing rules.
-- [ ] **AG-091:** Add objective marker clearance rules.
-- [ ] **AG-092:** Add pre/post-state layout validation.
+- [x] **AG-091:** Add objective marker clearance rules.
+- [x] **AG-092:** Add pre/post-state layout validation.
 - [ ] **AG-093:** Add phase-aware layout repairs.
 - [ ] **AG-094:** Add state snapshot previews.
 
@@ -3101,6 +3101,19 @@ spacing rules and validation. Cross-phase hubs reserve enlarged footprints and
 three-cell icon clearance; validation enforces separated and sufficiently long
 exits, visible return approaches, extra room on state-changing roads, and safe
 camera framing with stable failure codes.
+
+**2026-07-21 AG-091 completion record:** Added ordered objective metadata to the
+phase-aware layout graph plus deterministic two-cell marker reservations. Current
+and future marker validation now rejects marker overlap, stateful-hub and node
+collisions, road encroachment, missing marker positions, and unsafe camera-edge
+placement with stable failure codes.
+
+**2026-07-21 AG-092 completion record:** Added typed visual-state snapshots for
+the initial layout and every post-objective state. The fail-closed validator
+recomputes available, locked, and consumed roads and active switches per state,
+then checks objective and lock overlays, route crossings, node clearance, and
+camera bounds across the complete state sequence rather than only the initial
+map.
 
 ## Pipeline and campaign
 

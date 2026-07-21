@@ -16,7 +16,15 @@ def test_stateful_hub_reserves_larger_clearance_and_identifies_return_lane() -> 
     assert rule.return_approach_node_ids == ("return",)
     assert rule.reserved_clearance.horizontal_cells == 3
     assert rule.reserved_clearance.vertical_cells == 3
-    assert layers.reserved_icon_clearances == (rule.reserved_clearance,)
+    clearances = {
+        item.node_id: (item.horizontal_cells, item.vertical_cells)
+        for item in layers.reserved_icon_clearances
+    }
+    assert clearances == {
+        "hub": (3, 3),
+        "package": (2, 2),
+        "destination": (2, 2),
+    }
 
 
 def test_well_spaced_stateful_hub_passes_all_rules() -> None:

@@ -48,7 +48,14 @@ def test_multiway_switch_reserves_expanded_icon_clearance() -> None:
         route=("start", "hub", "package", "destination"),
     ))
 
-    assert [(item.node_id, item.horizontal_cells, item.vertical_cells) for item in result.reserved_icon_clearances] == [("hub", 2, 2)]
+    assert [
+        (item.node_id, item.horizontal_cells, item.vertical_cells)
+        for item in result.reserved_icon_clearances
+    ] == [
+        ("hub", 2, 2),
+        ("package", 2, 2),
+        ("destination", 2, 2),
+    ]
 
 
 def _recipe(*, nodes, edges, route) -> GraphRecipe:

@@ -6,6 +6,7 @@ from ..models.graph_recipe import GraphRecipe
 from ..models.layout_constraints import ConstraintViolation, ReservedIconClearance
 from ..models.layout_graph import GridCell, Lane, LayoutGraph
 from ..models.layout_result import LayerAssignment, LayoutLayerResult
+from .objective_marker_clearance_service import ObjectiveMarkerClearanceService
 from .stateful_hub_spacing_service import StatefulHubSpacingService
 
 
@@ -59,17 +60,31 @@ class LayoutLayerService:
                 if lanes[edge.from_node_id] == 0 and edge.from_node_id not in {graph.destination_node_id}:
                     lanes[edge.from_node_id] = return_lane
 
-        stateful_clearance_by_node_id = {
+        clearance_by_node_id = {
             rule.hub_node_id: rule.reserved_clearance
             for rule in StatefulHubSpacingService().rules_for(graph)
         }
+        for rule in ObjectiveMarkerClearanceService().rules_for(graph):
+            current = clearance_by_node_id.get(rule.node_id)
+            if current is None:
+                clearance_by_node_id[rule.node_id] = rule.reserved_clearance
+            else:
+                clearance_by_node_id[rule.node_id] = ReservedIconClearance(
+                    rule.node_id,
+                    max(current.horizontal_cells, rule.reserved_clearance.horizontal_cells),
+                    max(current.vertical_cells, rule.reserved_clearance.vertical_cells),
+                )
         clearances = tuple(
-            stateful_clearance_by_node_id.get(
+            clearance_by_node_id.get(
                 node.node_id,
                 ReservedIconClearance(node.node_id, 2, 2),
             )
             for node in graph.nodes
-            if len(node.outgoing_node_ids) >= 3 or node.is_revisited_hub
+            if (
+                len(node.outgoing_node_ids) >= 3
+                or node.is_revisited_hub
+                or node.node_id in clearance_by_node_id
+            )
         )
         assignments = tuple(
             LayerAssignment(node_id, layers[node_id], Lane(lanes[node_id], self._lane_kind(lanes[node_id])), GridCell(lanes[node_id], layers[node_id]))
