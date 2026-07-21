@@ -2954,8 +2954,8 @@ enumerator. Focused regression coverage proves that separation.
 - [x] **AG-078:** Add planning-horizon classifier.
 - [x] **AG-079:** Add local-obviousness rejection.
 - [x] **AG-080:** Add `PuzzleAnalysis` model.
-- [ ] **AG-081:** Add production anti-triviality gates.
-- [ ] **AG-082:** Add unique-optimal gate.
+- [x] **AG-081:** Add production anti-triviality gates.
+- [x] **AG-082:** Add unique-optimal gate.
 - [ ] **AG-083:** Derive par taps from optimal strategy.
 - [ ] **AG-084:** Derive time limit from runtime distribution.
 
@@ -3018,6 +3018,21 @@ objective phases, state changes, revisits, strategy-class and uniqueness values;
 recovery/failure counts; equivalent and no-op choices; optimal tap, distance, and
 timing costs; and visual complexity. Convenience accessors preserve raw values for
 the upcoming hard-gate and calibrated-ranking services.
+
+**2026-07-20 AG-081 completion record:** Added a deterministic, fail-closed
+production puzzle gate that evaluates every hard rule before ranking. Difficulty-
+resolved decision, dependency, objective, state-change, recovery, and fatal-choice
+limits now combine with one-tap, static-policy, greedy-policy, equivalent-choice,
+local-obviousness, state-readability, and runtime-robustness checks. Typed per-check
+evidence returns every stable rejection code in one pass, and failed candidates
+are explicitly ineligible for preference scoring.
+
+**2026-07-20 AG-082 completion record:** Added an independent production-boundary
+unique-optimal gate. It requires one accepted exhaustive gameplay-equivalence
+class, canonical proof and cost evidence, and exact agreement between the proof's
+tap, distance, and travel-time costs and `PuzzleAnalysis`. Missing, bounded,
+non-unique, rejected, or stale evidence produces `unique_optimal_not_proven` while
+retaining the underlying proof reasons for diagnosis.
 
 ## Runtime timing and layout
 

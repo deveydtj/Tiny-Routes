@@ -77,6 +77,11 @@ from .local_obviousness import (
     LocalObviousnessReport,
 )
 from .puzzle_analysis import PuzzleAnalysis, PuzzleOutcomeCount
+from .production_puzzle_gate import (
+    ProductionPuzzleGateCheck,
+    ProductionPuzzleGateResult,
+    UniqueOptimalGateResult,
+)
 from .static_policy import (
     SearchLimitRejectionResult,
     StaticPolicyAssignment,
@@ -173,6 +178,9 @@ __all__ = [
     "LocalObviousnessReport",
     "PuzzleAnalysis",
     "PuzzleOutcomeCount",
+    "ProductionPuzzleGateCheck",
+    "ProductionPuzzleGateResult",
+    "UniqueOptimalGateResult",
     "SearchLimitRejectionResult",
     "StaticPolicyAssignment",
     "StaticPolicySearchResult",

@@ -88,6 +88,8 @@ from .local_obviousness_analysis_service import (
     LocalObviousnessAnalysisService,
     LocalObviousnessService,
 )
+from .production_puzzle_gate_service import ProductionPuzzleGateService
+from .unique_optimal_gate_service import UniqueOptimalGateService
 from .swift_test_service import SwiftTestService
 from .unique_solution_validator_service import (
     UniqueSolutionPathSummary,
@@ -174,6 +176,8 @@ __all__ = [
     "PlanningHorizonClassifierService",
     "LocalObviousnessAnalysisService",
     "LocalObviousnessService",
+    "ProductionPuzzleGateService",
+    "UniqueOptimalGateService",
     "SwitchVisualClarityService",
     "SwiftTestService",
     "UniqueSolutionPathSummary",
