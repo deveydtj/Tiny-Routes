@@ -3047,8 +3047,8 @@ rejected when the solve-time cap cannot preserve the required planning margin.
 
 ## Runtime timing and layout
 
-- [ ] **AG-085:** Make runtime timing search objective-state aware.
-- [ ] **AG-086:** Add timing jitter replay.
+- [x] **AG-085:** Make runtime timing search objective-state aware.
+- [x] **AG-086:** Add timing jitter replay.
 - [ ] **AG-087:** Add rapid multi-tap cap.
 - [ ] **AG-088:** Add state-change visibility timing check.
 - [ ] **AG-089:** Add phase metadata to layout graph.
@@ -3057,6 +3057,22 @@ rejected when the solve-time cap cannot preserve the required planning margin.
 - [ ] **AG-092:** Add pre/post-state layout validation.
 - [ ] **AG-093:** Add phase-aware layout repairs.
 - [ ] **AG-094:** Add state snapshot previews.
+
+**2026-07-20 AG-085 completion record:** Extended runtime solution search to
+consume canonical exact strategy traces with phase-specific selected roads and
+objective indices. Scheduling now replays the shared runtime as the source of
+truth for availability, one-use consumption, switch normalization, and revisits;
+zero-tap choices advance past commitment correctly, robust schedules are centered
+inside their legal windows, and diagnostics retain the complete objective and
+road state for every encounter while preserving the legacy metadata adapter.
+
+**2026-07-20 AG-086 completion record:** Added typed deterministic timing-jitter
+configuration, scenario evidence, and replay reports. Exact V3 schedules now run
+through ±50/100 ms uniform and per-action perturbations, 60/30 Hz frame
+quantization, and configurable speed-integration variation; any rejected tap,
+wrong selected edge, incomplete replay, or failed completion emits
+`solution_jitter_failure`, and generation reports retain every reproducible
+scenario and failure reason.
 
 ## Pipeline and campaign
 

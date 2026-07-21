@@ -127,6 +127,11 @@ from .runtime_parity import RuntimeParityValidationResult
 from .runtime_solution_search import (
     RuntimeDecisionTimingDiagnostic, RuntimeSolutionAction, RuntimeSolutionSearchResult,
 )
+from .timing_jitter import (
+    TimingJitterReplayConfig,
+    TimingJitterReplayReport,
+    TimingJitterScenarioResult,
+)
 from .simulation import SimulationResult, SimulationStep
 from .template_spec import TemplateSpec
 from .template_variant_spec import TemplateVariantSpec
@@ -251,6 +256,9 @@ __all__ = [
     "RuntimeDecisionTimingDiagnostic",
     "RuntimeSolutionAction",
     "RuntimeSolutionSearchResult",
+    "TimingJitterReplayConfig",
+    "TimingJitterReplayReport",
+    "TimingJitterScenarioResult",
     "SimulationResult",
     "SimulationStep",
     "SwiftTestSummary",

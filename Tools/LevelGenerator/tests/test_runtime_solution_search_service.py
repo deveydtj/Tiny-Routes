@@ -7,6 +7,7 @@ from tiny_routes_core.models import (
 from app.models.abstract_puzzle_solution import AbstractPuzzleSolutionMetadata
 from app.services.runtime_solution_search_service import RuntimeSolutionSearchService
 from app.services.solution_builder_service import SolutionBuilderService
+from app.services.strategy_search_service import StrategySearchService
 
 
 def _metadata(decisions: tuple[str, ...], path: tuple[str, ...]) -> AbstractPuzzleSolutionMetadata:
@@ -107,3 +108,93 @@ def test_verified_solution_sidecar_uses_search_actions_and_diagnostics() -> None
     assert solution.actions[0]._extra["windowOpenSeconds"] < solution.actions[0].timeSeconds
     assert solution.actions[0].timeSeconds < solution.actions[0]._extra["windowCloseSeconds"]
     assert solution._extra["metadata"]["validationVersion"] == "verified_runtime_solution_v1"
+
+
+def test_exact_strategy_timing_tracks_objective_state_normalization_and_one_use_roads() -> None:
+    level = LevelDocument.from_dict(
+        {
+            "schemaVersion": 3,
+            "id": "stateful_runtime_timing",
+            "name": "Stateful Runtime Timing",
+            "startNodeID": "start",
+            "packageNodeID": "checkpoint",
+            "destinationNodeID": "destination",
+            "timeLimitSeconds": 20,
+            "parTaps": 1,
+            "rules": {
+                "switchInteractionMode": "liveLookahead",
+                "switchLookaheadSeconds": 1.35,
+                "switchTapCooldownSeconds": 0.12,
+            },
+            "objectives": [
+                {
+                    "id": "inspect",
+                    "nodeID": "checkpoint",
+                    "kind": "checkpoint",
+                    "sequenceIndex": 0,
+                    "revealPolicy": "always",
+                },
+                {
+                    "id": "finish",
+                    "nodeID": "destination",
+                    "kind": "destination",
+                    "sequenceIndex": 1,
+                    "revealPolicy": "whenActive",
+                },
+            ],
+            "graph": {
+                "nodes": [
+                    {"id": "start", "x": 0, "y": 0, "outgoingEdgeIDs": ["to_hub"]},
+                    {
+                        "id": "hub",
+                        "x": 2,
+                        "y": 0,
+                        "outgoingEdgeIDs": ["to_checkpoint", "to_dead", "to_destination"],
+                    },
+                    {"id": "dead", "x": 2, "y": -1, "outgoingEdgeIDs": []},
+                    {"id": "checkpoint", "x": 3, "y": 1, "outgoingEdgeIDs": ["return_hub"]},
+                    {"id": "destination", "x": 4, "y": 0, "outgoingEdgeIDs": []},
+                ],
+                "edges": [
+                    {"id": "to_hub", "fromNodeID": "start", "toNodeID": "hub"},
+                    {"id": "to_dead", "fromNodeID": "hub", "toNodeID": "dead"},
+                    {
+                        "id": "to_checkpoint",
+                        "fromNodeID": "hub",
+                        "toNodeID": "checkpoint",
+                        "availabilityRule": {"maximumObjectiveIndex": 0, "usageLimit": 1},
+                    },
+                    {
+                        "id": "to_destination",
+                        "fromNodeID": "hub",
+                        "toNodeID": "destination",
+                        "availabilityRule": {
+                            "requiredCompletedObjectiveIDs": ["inspect"],
+                            "minimumObjectiveIndex": 1,
+                        },
+                    },
+                    {"id": "return_hub", "fromNodeID": "checkpoint", "toNodeID": "hub"},
+                ],
+            },
+        }
+    )
+    exact = StrategySearchService().search(level).canonical_optimal_strategy
+
+    result = RuntimeSolutionSearchService().search(level, exact)
+
+    assert result.passed
+    assert [action.expected_edge_after_tap for action in result.actions] == ["to_destination"]
+    assert [item.visit_index for item in result.diagnostics] == [1, 2]
+    assert [item.rotation_count for item in result.diagnostics] == [0, 1]
+    assert [item.selected_edge_id for item in result.diagnostics] == [
+        "to_checkpoint",
+        "to_destination",
+    ]
+    assert [item.objective_index for item in result.diagnostics] == [0, 1]
+    assert result.diagnostics[0].active_objective_id == "inspect"
+    assert result.diagnostics[1].active_objective_id == "finish"
+    assert result.diagnostics[1].completed_objective_ids == ("inspect",)
+    assert "to_checkpoint" in result.diagnostics[1].consumed_edge_ids
+    assert "to_checkpoint" not in result.diagnostics[1].available_edge_ids
+    assert "to_destination" in result.diagnostics[1].available_edge_ids
+    assert result.jitter_report is not None and result.jitter_report.passed

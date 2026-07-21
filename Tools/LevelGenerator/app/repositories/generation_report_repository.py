@@ -1407,7 +1407,7 @@ class GenerationReportRepository:
         result = getattr(level, "runtime_solution_search_result", None)
         if result is None:
             return None
-        return {
+        payload = {
             "passed": result.passed,
             "failureReason": result.failure_reason,
             "finalReplayPassed": bool(result.replay_result and result.replay_result.passed),
@@ -1423,6 +1423,32 @@ class GenerationReportRepository:
                 for action in result.actions
             ],
             "decisionTiming": [diagnostic.to_dict() for diagnostic in result.diagnostics],
+        }
+        if result.jitter_report is not None:
+            payload["timingJitterReplay"] = self._timing_jitter_payload(result.jitter_report)
+        return payload
+
+    @staticmethod
+    def _timing_jitter_payload(report) -> dict[str, Any] | None:
+        if report is None:
+            return None
+        return {
+            "passed": report.passed,
+            "rejectionReasons": list(report.rejection_reasons),
+            "scenarios": [
+                {
+                    "scenarioID": scenario.scenario_id,
+                    "passed": scenario.passed,
+                    "speed": scenario.speed,
+                    "failureReason": scenario.failure_reason,
+                    "rejectedTapIndex": scenario.rejected_tap_index,
+                    "elapsedTimeSeconds": scenario.elapsed_time_seconds,
+                    "actionTimesSeconds": [
+                        action.time_seconds for action in scenario.actions
+                    ],
+                }
+                for scenario in report.scenarios
+            ],
         }
 
     def _simulation_payload(self, level) -> dict[str, Any] | None:

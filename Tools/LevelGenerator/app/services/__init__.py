@@ -32,6 +32,7 @@ from .road_geometry_validation_service import (
 from .road_shape_service import CandidateRoadGeometryPlan, RoadShapeService
 from .solution_builder_service import SolutionBuilderService
 from .runtime_solution_search_service import RuntimeSolutionSearchService
+from .timing_jitter_replay_service import TimingJitterReplayService
 from .switch_classification_service import (
     MAX_SUPPORTED_OUTGOING_EDGES,
     SwitchClassificationService,
@@ -140,6 +141,7 @@ __all__ = [
     "RoadShapeService",
     "SolutionBuilderService",
     "RuntimeSolutionSearchService",
+    "TimingJitterReplayService",
     "SwitchClassificationService",
     "SwitchNodeClassification",
     "SwitchNodeKind",
