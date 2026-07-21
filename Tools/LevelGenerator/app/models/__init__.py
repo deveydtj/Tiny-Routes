@@ -160,6 +160,8 @@ from .simulation import SimulationResult, SimulationStep
 from .template_spec import TemplateSpec
 from .template_variant_spec import TemplateVariantSpec
 from .stage_result import CandidateStageResult, StageResult
+from .blueprint_stage_result import BlueprintStageResult
+from .strategy_stage_result import StrategyStageResult
 
 __all__ = [
     "DifficultyPreset",
@@ -302,4 +304,6 @@ __all__ = [
     "TemplateVariantSpec",
     "CandidateStageResult",
     "StageResult",
+    "BlueprintStageResult",
+    "StrategyStageResult",
 ]

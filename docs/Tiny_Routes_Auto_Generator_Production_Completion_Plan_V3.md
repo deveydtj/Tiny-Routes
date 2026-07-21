@@ -3132,8 +3132,8 @@ locked, consumed, objective, and active-switch state from shared schema rules.
 
 ## Pipeline and campaign
 
-- [ ] **AG-095:** Add typed blueprint stage result.
-- [ ] **AG-096:** Add typed strategy stage result.
+- [x] **AG-095:** Add typed blueprint stage result.
+- [x] **AG-096:** Add typed strategy stage result.
 - [ ] **AG-097:** Add typed final quality stage result.
 - [ ] **AG-098:** Add V3 candidate pipeline coordinator.
 - [ ] **AG-099:** Add adaptive search breadth.
@@ -3143,6 +3143,21 @@ locked, consumed, objective, and active-switch state from shared schema rules.
 - [ ] **AG-103:** Add portfolio optimizer constraints.
 - [ ] **AG-104:** Add targeted portfolio backtracking.
 - [ ] **AG-105:** Add existing-corpus behavior comparison.
+
+**2026-07-21 AG-095 completion record:** Added an immutable, report-compatible
+blueprint pipeline boundary that retains the resolved experience target, attempt
+identity, generated blueprint, and exact validation codes. Accepted results
+require target-matched valid intent; rejected generation and validation results
+preserve deterministic diagnostics without allowing malformed blueprints to
+reach composition.
+
+**2026-07-21 AG-096 completion record:** Added an immutable, fail-closed
+strategy pipeline boundary carrying exact search, unique-optimal, alternate
+success, recovery/failure, static-policy, representative-agent, planning-horizon,
+local-obviousness, and search-limit evidence. Accepted results require complete,
+consistent, exhaustive proofs, while rejected results retain partial artifacts
+and stable reasons; JSON-safe summaries are emitted only at the reporting
+boundary.
 
 ## Transactional production
 
