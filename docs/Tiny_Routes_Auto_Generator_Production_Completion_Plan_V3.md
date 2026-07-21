@@ -2956,8 +2956,8 @@ enumerator. Focused regression coverage proves that separation.
 - [x] **AG-080:** Add `PuzzleAnalysis` model.
 - [x] **AG-081:** Add production anti-triviality gates.
 - [x] **AG-082:** Add unique-optimal gate.
-- [ ] **AG-083:** Derive par taps from optimal strategy.
-- [ ] **AG-084:** Derive time limit from runtime distribution.
+- [x] **AG-083:** Derive par taps from optimal strategy.
+- [x] **AG-084:** Derive time limit from runtime distribution.
 
 **2026-07-20 AG-072 completion record:** Added a seeded uniform random policy
 agent plus the shared player-observation protocol that later policy agents will
@@ -3033,6 +3033,17 @@ class, canonical proof and cost evidence, and exact agreement between the proof'
 tap, distance, and travel-time costs and `PuzzleAnalysis`. Missing, bounded,
 non-unique, rejected, or stale evidence produces `unique_optimal_not_proven` while
 retaining the underlying proof reasons for diagnosis.
+
+**2026-07-20 AG-083 completion record:** Added fail-closed par-tap derivation
+from accepted, exhaustive, unique-optimal proof evidence. The derived `parTaps`
+must exactly equal the proof's accepted-tap cost; missing, rejected, non-unique,
+or cost-inconsistent proof artifacts cannot produce a production par value.
+
+**2026-07-20 AG-084 completion record:** Added deterministic time-limit
+derivation from exact optimal and near-optimal runtime distributions. Difficulty
+targets contribute planning-window allowance, presets contribute input-spacing
+allowance, optional star thresholds are distribution-derived, and candidates are
+rejected when the solve-time cap cannot preserve the required planning margin.
 
 ## Runtime timing and layout
 

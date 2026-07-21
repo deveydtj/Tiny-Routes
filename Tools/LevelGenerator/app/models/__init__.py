@@ -77,6 +77,11 @@ from .local_obviousness import (
     LocalObviousnessReport,
 )
 from .puzzle_analysis import PuzzleAnalysis, PuzzleOutcomeCount
+from .solution_limits import (
+    ParTapDerivationResult,
+    RuntimeDistributionSummary,
+    TimeLimitDerivationResult,
+)
 from .production_puzzle_gate import (
     ProductionPuzzleGateCheck,
     ProductionPuzzleGateResult,
@@ -178,6 +183,9 @@ __all__ = [
     "LocalObviousnessReport",
     "PuzzleAnalysis",
     "PuzzleOutcomeCount",
+    "ParTapDerivationResult",
+    "RuntimeDistributionSummary",
+    "TimeLimitDerivationResult",
     "ProductionPuzzleGateCheck",
     "ProductionPuzzleGateResult",
     "UniqueOptimalGateResult",

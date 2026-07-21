@@ -90,6 +90,8 @@ from .local_obviousness_analysis_service import (
 )
 from .production_puzzle_gate_service import ProductionPuzzleGateService
 from .unique_optimal_gate_service import UniqueOptimalGateService
+from .par_tap_derivation_service import ParTapDerivationService
+from .time_limit_derivation_service import TimeLimitDerivationService
 from .swift_test_service import SwiftTestService
 from .unique_solution_validator_service import (
     UniqueSolutionPathSummary,
@@ -178,6 +180,8 @@ __all__ = [
     "LocalObviousnessService",
     "ProductionPuzzleGateService",
     "UniqueOptimalGateService",
+    "ParTapDerivationService",
+    "TimeLimitDerivationService",
     "SwitchVisualClarityService",
     "SwiftTestService",
     "UniqueSolutionPathSummary",
