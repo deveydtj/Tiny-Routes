@@ -84,6 +84,10 @@ from .planning_horizon_classification_service import (
     PlanningHorizonClassifier,
     PlanningHorizonClassifierService,
 )
+from .local_obviousness_analysis_service import (
+    LocalObviousnessAnalysisService,
+    LocalObviousnessService,
+)
 from .swift_test_service import SwiftTestService
 from .unique_solution_validator_service import (
     UniqueSolutionPathSummary,
@@ -168,6 +172,8 @@ __all__ = [
     "PlanningHorizonClassificationService",
     "PlanningHorizonClassifier",
     "PlanningHorizonClassifierService",
+    "LocalObviousnessAnalysisService",
+    "LocalObviousnessService",
     "SwitchVisualClarityService",
     "SwiftTestService",
     "UniqueSolutionPathSummary",

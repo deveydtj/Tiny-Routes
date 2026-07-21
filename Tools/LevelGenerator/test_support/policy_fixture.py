@@ -130,3 +130,44 @@ def deep_policy_level(*, multi_stop: bool) -> LevelDocument:
             },
         }
     )
+
+
+def locally_obvious_policy_level() -> LevelDocument:
+    """Build a route solved by every representative local rule."""
+
+    return LevelDocument.from_dict(
+        {
+            "schemaVersion": 3,
+            "id": "locally_obvious_fixture",
+            "name": "Locally Obvious Fixture",
+            "startNodeID": "start",
+            "packageNodeID": "destination",
+            "destinationNodeID": "destination",
+            "timeLimitSeconds": 30,
+            "parTaps": 0,
+            "objectives": [
+                {
+                    "id": "destination_objective",
+                    "nodeID": "destination",
+                    "kind": "destination",
+                    "sequenceIndex": 0,
+                    "revealPolicy": "always",
+                }
+            ],
+            "graph": {
+                "nodes": [
+                    {"id": "start", "x": 0, "y": 0, "outgoingEdgeIDs": ["advance", "start_trap"]},
+                    {"id": "junction", "x": 2, "y": 0, "outgoingEdgeIDs": ["finish", "backward_trap"]},
+                    {"id": "destination", "x": 4, "y": 0, "outgoingEdgeIDs": []},
+                    {"id": "dead_start", "x": -1, "y": 1, "outgoingEdgeIDs": []},
+                    {"id": "dead_back", "x": 1, "y": 1, "outgoingEdgeIDs": []},
+                ],
+                "edges": [
+                    {"id": "advance", "fromNodeID": "start", "toNodeID": "junction"},
+                    {"id": "start_trap", "fromNodeID": "start", "toNodeID": "dead_start"},
+                    {"id": "finish", "fromNodeID": "junction", "toNodeID": "destination"},
+                    {"id": "backward_trap", "fromNodeID": "junction", "toNodeID": "dead_back"},
+                ],
+            },
+        }
+    )

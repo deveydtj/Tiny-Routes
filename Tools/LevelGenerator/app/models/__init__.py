@@ -71,6 +71,12 @@ from .planning_horizon import (
     PlanningHorizonDecision,
     PlanningHorizonReport,
 )
+from .local_obviousness import (
+    LocalObviousnessDecision,
+    LocalObviousnessKind,
+    LocalObviousnessReport,
+)
+from .puzzle_analysis import PuzzleAnalysis, PuzzleOutcomeCount
 from .static_policy import (
     SearchLimitRejectionResult,
     StaticPolicyAssignment,
@@ -162,6 +168,11 @@ __all__ = [
     "PlanningHorizon",
     "PlanningHorizonDecision",
     "PlanningHorizonReport",
+    "LocalObviousnessDecision",
+    "LocalObviousnessKind",
+    "LocalObviousnessReport",
+    "PuzzleAnalysis",
+    "PuzzleOutcomeCount",
     "SearchLimitRejectionResult",
     "StaticPolicyAssignment",
     "StaticPolicySearchResult",

@@ -2952,8 +2952,8 @@ enumerator. Focused regression coverage proves that separation.
 - [x] **AG-076:** Add optimal agent adapter.
 - [x] **AG-077:** Add policy evaluation report.
 - [x] **AG-078:** Add planning-horizon classifier.
-- [ ] **AG-079:** Add local-obviousness rejection.
-- [ ] **AG-080:** Add `PuzzleAnalysis` model.
+- [x] **AG-079:** Add local-obviousness rejection.
+- [x] **AG-080:** Add `PuzzleAnalysis` model.
 - [ ] **AG-081:** Add production anti-triviality gates.
 - [ ] **AG-082:** Add unique-optimal gate.
 - [ ] **AG-083:** Derive par taps from optimal strategy.
@@ -3002,6 +3002,22 @@ two-transition, objective-state, or cross-phase knowledge. The classifier replay
 the exact proof through canonical visible states, records which bounded policy
 first agrees with the optimum, explains each classification, summarizes the
 maximum horizon, and rejects incomplete or unsuccessful proof input.
+
+**2026-07-20 AG-079 completion record:** Added exhaustive optimal-trace
+local-obviousness analysis for meaningful decisions. Per-decision evidence covers
+unique Euclidean closeness to the active objective, the only immediate non-dead-end
+road, the only non-backward road, authored first-edge selection, and globally
+fixed cardinal-direction rules. Candidates are rejected when every meaningful
+optimal decision has a trivial explanation, while incomplete proof evidence and
+levels without meaningful decisions cannot pass.
+
+**2026-07-20 AG-080 completion record:** Added a validated, unweighted
+`PuzzleAnalysis` model containing meaningful, planning, and adaptive decision
+counts; dependency and independence values; typed static-policy and agent results;
+objective phases, state changes, revisits, strategy-class and uniqueness values;
+recovery/failure counts; equivalent and no-op choices; optimal tap, distance, and
+timing costs; and visual complexity. Convenience accessors preserve raw values for
+the upcoming hard-gate and calibrated-ranking services.
 
 ## Runtime timing and layout
 
