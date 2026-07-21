@@ -3134,8 +3134,8 @@ locked, consumed, objective, and active-switch state from shared schema rules.
 
 - [x] **AG-095:** Add typed blueprint stage result.
 - [x] **AG-096:** Add typed strategy stage result.
-- [ ] **AG-097:** Add typed final quality stage result.
-- [ ] **AG-098:** Add V3 candidate pipeline coordinator.
+- [x] **AG-097:** Add typed final quality stage result.
+- [x] **AG-098:** Add V3 candidate pipeline coordinator.
 - [ ] **AG-099:** Add adaptive search breadth.
 - [ ] **AG-100:** Add rejection feedback planner.
 - [ ] **AG-101:** Expand candidate signatures.
@@ -3158,6 +3158,20 @@ local-obviousness, and search-limit evidence. Accepted results require complete,
 consistent, exhaustive proofs, while rejected results retain partial artifacts
 and stable reasons; JSON-safe summaries are emitted only at the reporting
 boundary.
+
+**2026-07-21 AG-097 completion record:** Added an immutable final quality
+boundary carrying the generated candidate, raw puzzle analysis, complete hard-
+gate evidence, and preference score. Failed hard gates cannot carry a score,
+accepted results require every artifact, ranking-threshold rejections retain
+their valid score, and JSON-safe summaries expose the exact gate checks and
+ranking evidence.
+
+**2026-07-21 AG-098 completion record:** Added a focused V3 candidate pipeline
+coordinator with the locked blueprint, composition, strategy, layout, runtime,
+and quality order. It validates stable candidate identity at every boundary,
+stops on the first rejection so strategically weak graphs never consume layout
+or runtime work, converts stage exceptions to stable fail-closed results, and
+returns ordered report-ready evidence for every stage reached.
 
 ## Transactional production
 

@@ -7,6 +7,12 @@ import pytest
 
 from app.models import (
     BlueprintStageResult,
+    GeneratedLevel,
+    GenerationQualityScore,
+    ProductionPuzzleGateCheck,
+    ProductionPuzzleGateResult,
+    PuzzleAnalysis,
+    QualityStageResult,
     StaticPolicySearchResult,
     StrategyStageResult,
 )
@@ -225,4 +231,116 @@ def test_strategy_stage_rejects_static_policy_witness_and_deduplicates_codes() -
             planning_horizon=planning_horizon,
             local_obviousness=local_obviousness,
             search_limit_gate=limit_gate,
+        )
+
+
+def _quality_evidence():
+    level = two_step_policy_level()
+    generated = GeneratedLevel(
+        level_document=level,
+        solution=object(),
+        template_name="production_v3",
+        difficulty="easy",
+        seed=98,
+    )
+    analysis = PuzzleAnalysis(
+        meaningful_decisions=2,
+        planning_decisions=1,
+        adaptive_decisions=1,
+        dependency_depth=1,
+        independent_decision_ratio=0.5,
+        static_policy_result=StaticPolicySearchResult((), 0, 0, True),
+        agent_results=(),
+        objective_phases=2,
+        state_changes=1,
+        revisits=0,
+        successful_strategy_classes=1,
+        optimal_uniqueness=True,
+        recovery_failure_distribution=(),
+        equivalent_choices=0,
+        no_op_choices=0,
+        optimal_accepted_taps=2,
+        optimal_route_distance=4.0,
+        optimal_travel_time_seconds=4.0,
+        visual_complexity=0.4,
+    )
+    gate = ProductionPuzzleGateResult(
+        checks=(ProductionPuzzleGateCheck("all_final_gates", True, "true", "true"),),
+        rejection_reasons=(),
+    )
+    score = GenerationQualityScore(
+        total_score=84.0,
+        category_scores={"logic": 90.0, "layout": 78.0},
+        total=0.84,
+        readability=0.8,
+        uniqueness=0.9,
+        difficulty_fit=0.85,
+        route_interest=0.81,
+        estimated_difficulty_band="easy",
+    )
+    return generated, analysis, gate, score
+
+
+def test_quality_stage_allows_ranking_only_after_every_hard_gate_passes() -> None:
+    generated, analysis, gate, score = _quality_evidence()
+
+    result = QualityStageResult.accepted(
+        candidate_id="policy_evaluation_fixture:98",
+        level_id=generated.level_id,
+        seed=98,
+        difficulty="easy",
+        generated_level=generated,
+        puzzle_analysis=analysis,
+        hard_gate=gate,
+        quality_score=score,
+    )
+
+    report = result.to_report_dict()
+    assert result.passed
+    assert result.ranking_eligible
+    assert report["hardGate"]["accepted"] is True
+    assert report["qualityScore"]["totalScore"] == 84.0
+    assert report["analysis"]["adaptiveDecisionCount"] == 1
+    json.dumps(report, sort_keys=True)
+
+
+def test_quality_stage_rejects_scoring_that_would_mask_a_hard_gate_failure() -> None:
+    generated, analysis, _, score = _quality_evidence()
+    failed_gate = ProductionPuzzleGateResult(
+        checks=(
+            ProductionPuzzleGateCheck(
+                "runtime_solution_not_robust",
+                False,
+                "false",
+                "true",
+            ),
+        ),
+        rejection_reasons=("runtime_solution_not_robust",),
+    )
+
+    result = QualityStageResult.rejected(
+        candidate_id="policy_evaluation_fixture:98",
+        level_id=generated.level_id,
+        seed=98,
+        difficulty="easy",
+        generated_level=generated,
+        puzzle_analysis=analysis,
+        hard_gate=failed_gate,
+        rejection_reasons=("runtime_solution_not_robust",),
+    )
+
+    assert not result.passed
+    assert not result.ranking_eligible
+    assert result.quality_score is None
+    with pytest.raises(ValueError, match="hard-gate failure cannot have a quality score"):
+        QualityStageResult.rejected(
+            candidate_id="policy_evaluation_fixture:98",
+            level_id=generated.level_id,
+            seed=98,
+            difficulty="easy",
+            generated_level=generated,
+            puzzle_analysis=analysis,
+            hard_gate=failed_gate,
+            quality_score=score,
+            rejection_reasons=("runtime_solution_not_robust",),
         )

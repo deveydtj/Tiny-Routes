@@ -126,6 +126,12 @@ from .visual_clarity_validation_service import (
     VisualClarityReport,
     VisualClarityValidationService,
 )
+from .v3_candidate_pipeline_coordinator import (
+    V3CandidatePipelineCoordinator,
+    V3CandidatePipelineHandlers,
+    V3CandidatePipelineRequest,
+    V3CandidatePipelineResult,
+)
 
 __all__ = [
     "BoundingBox",
@@ -225,4 +231,8 @@ __all__ = [
     "VisualClarityIssue",
     "VisualClarityReport",
     "VisualClarityValidationService",
+    "V3CandidatePipelineCoordinator",
+    "V3CandidatePipelineHandlers",
+    "V3CandidatePipelineRequest",
+    "V3CandidatePipelineResult",
 ]

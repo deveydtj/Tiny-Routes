@@ -162,6 +162,7 @@ from .template_variant_spec import TemplateVariantSpec
 from .stage_result import CandidateStageResult, StageResult
 from .blueprint_stage_result import BlueprintStageResult
 from .strategy_stage_result import StrategyStageResult
+from .quality_stage_result import QualityStageResult
 
 __all__ = [
     "DifficultyPreset",
@@ -306,4 +307,5 @@ __all__ = [
     "StageResult",
     "BlueprintStageResult",
     "StrategyStageResult",
+    "QualityStageResult",
 ]
