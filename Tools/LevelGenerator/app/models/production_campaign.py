@@ -12,6 +12,7 @@ from ..paths import (
     get_default_reports_directory,
     get_default_solutions_directory,
 )
+from .quality_profile import CURRENT_QUALITY_PROFILE_VERSION
 
 
 @dataclass(frozen=True)
@@ -25,6 +26,7 @@ class ProductionCampaignConfig:
     candidates_per_slot: int = 4
     max_attempts_per_slot: int = 120
     wave_size: int = 1
+    quality_profile_version: str = CURRENT_QUALITY_PROFILE_VERSION
     levels_output_dir: Path = field(default_factory=get_default_levels_directory)
     solutions_output_dir: Path = field(default_factory=get_default_solutions_directory)
     production_manifest_path: Path = field(
@@ -58,6 +60,14 @@ class ProductionCampaignConfig:
             not isinstance(self.seed, int) or isinstance(self.seed, bool)
         ):
             raise ValueError("seed must be an integer or None")
+        if (
+            not isinstance(self.quality_profile_version, str)
+            or not self.quality_profile_version.strip()
+        ):
+            raise ValueError("quality_profile_version cannot be empty")
+        object.__setattr__(
+            self, "quality_profile_version", self.quality_profile_version.strip()
+        )
         if not self.run_swift_tests:
             raise ValueError("production V3 campaigns require Swift staged validation")
         object.__setattr__(self, "difficulty", difficulty)
@@ -82,6 +92,7 @@ class ProductionCampaignConfig:
             "candidatesPerSlot": self.candidates_per_slot,
             "maxAttemptsPerSlot": self.max_attempts_per_slot,
             "waveSize": self.wave_size,
+            "qualityProfileVersion": self.quality_profile_version,
             "levelsOutputDirectory": str(self.levels_output_dir.resolve(strict=False)),
             "solutionsOutputDirectory": str(
                 self.solutions_output_dir.resolve(strict=False)
@@ -103,6 +114,8 @@ class ProductionCampaignResult:
     reproducibility_bundle_path: Path | None = None
     health_report_path: Path | None = None
     workspace_path: Path | None = None
+    quality_profile_version: str | None = None
+    quality_profile_fingerprint: str | None = None
     promoted_paths: tuple[Path, ...] = ()
     failure_reason: str | None = None
 
@@ -137,6 +150,8 @@ class ProductionCampaignResult:
                 str(self.health_report_path) if self.health_report_path else None
             ),
             "workspacePath": str(self.workspace_path) if self.workspace_path else None,
+            "qualityProfileVersion": self.quality_profile_version,
+            "qualityProfileFingerprint": self.quality_profile_fingerprint,
             "promotedPaths": [str(path) for path in self.promoted_paths],
             "failureReason": self.failure_reason,
         }

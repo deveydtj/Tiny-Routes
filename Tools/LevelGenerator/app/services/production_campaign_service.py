@@ -24,6 +24,7 @@ from .production_staged_corpus_validation_service import (
 from .production_staged_output_service import ProductionStagedOutputService
 from .production_staging_service import ProductionStagingService
 from .reproducibility_bundle_service import ReproducibilityBundleService
+from .quality_profile_service import QualityProfileService
 from .transactional_promotion_service import TransactionalPromotionService
 
 
@@ -53,6 +54,7 @@ class ProductionCampaignService:
         seed_factory: Callable[[], int] | None = None,
         reproducibility_bundle_service: ReproducibilityBundleService | None = None,
         health_metrics_service: GeneratorHealthMetricsService | None = None,
+        quality_profile_service: QualityProfileService | None = None,
     ) -> None:
         if candidate_pool_service is None and candidate_pipeline is not None:
             candidate_pool_service = CandidatePoolService(candidate_pipeline)
@@ -79,6 +81,7 @@ class ProductionCampaignService:
         self.health_metrics_service = (
             health_metrics_service or GeneratorHealthMetricsService()
         )
+        self.quality_profile_service = quality_profile_service or QualityProfileService()
 
     def run(
         self,
@@ -88,6 +91,9 @@ class ProductionCampaignService:
     ) -> ProductionCampaignResult:
         if not isinstance(config, ProductionCampaignConfig):
             raise TypeError("config must be a ProductionCampaignConfig")
+        quality_profile = self.quality_profile_service.load(
+            config.quality_profile_version
+        )
         seed = config.seed if config.seed is not None else self.seed_factory()
         run_id = self.run_id_factory(seed)
         staging = ProductionStagingService(config.staging_root)
@@ -195,6 +201,8 @@ class ProductionCampaignService:
                     requested_count=config.count,
                     selected_count=selected_count,
                     workspace_path=workspace.root,
+                    quality_profile_version=quality_profile.version,
+                    quality_profile_fingerprint=quality_profile.fingerprint,
                     promoted_paths=promotion.promoted_paths,
                     failure_reason=promotion.failure_reason,
                 )
@@ -216,6 +224,8 @@ class ProductionCampaignService:
                 requested_count=config.count,
                 selected_count=selected_count,
                 workspace_path=workspace.root,
+                quality_profile_version=quality_profile.version,
+                quality_profile_fingerprint=quality_profile.fingerprint,
                 promoted_paths=promotion.promoted_paths,
             )
             result = self._with_report(
@@ -236,6 +246,8 @@ class ProductionCampaignService:
                 requested_count=config.count,
                 selected_count=selected_count,
                 workspace_path=workspace.root,
+                quality_profile_version=quality_profile.version,
+                quality_profile_fingerprint=quality_profile.fingerprint,
                 failure_reason=str(error) or error.__class__.__name__,
             )
             result = self._with_report(
@@ -357,6 +369,8 @@ class ProductionCampaignService:
             f"- Seed: `{result.seed}`\n"
             f"- Requested: {result.requested_count}\n"
             f"- Selected: {result.selected_count}\n"
+            f"- Quality profile: `{result.quality_profile_version}`\n"
+            f"- Quality profile fingerprint: `{result.quality_profile_fingerprint}`\n"
         )
         if result.failure_reason:
             summary += f"- Failure: {result.failure_reason}\n"

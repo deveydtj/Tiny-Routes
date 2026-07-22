@@ -14,6 +14,7 @@ from .paths import (
     get_default_solutions_directory,
 )
 from .services.production_campaign_service import ProductionCampaignService
+from .services.quality_profile_service import CURRENT_QUALITY_PROFILE_VERSION
 
 
 def build_production_parser() -> argparse.ArgumentParser:
@@ -55,6 +56,11 @@ def build_production_parser() -> argparse.ArgumentParser:
     parser.add_argument("--max-attempts-per-level", type=int, default=120)
     parser.add_argument("--wave-size", type=int, default=1)
     parser.add_argument(
+        "--quality-profile",
+        default=CURRENT_QUALITY_PROFILE_VERSION,
+        help="Versioned calibrated quality profile (default: current).",
+    )
+    parser.add_argument(
         "--output-levels", type=Path, default=get_default_levels_directory()
     )
     parser.add_argument(
@@ -91,6 +97,7 @@ def main_production(
             candidates_per_slot=args.candidate_pool_size,
             max_attempts_per_slot=args.max_attempts_per_level,
             wave_size=args.wave_size,
+            quality_profile_version=args.quality_profile,
             levels_output_dir=args.output_levels,
             solutions_output_dir=args.output_solutions,
             production_manifest_path=args.production_manifest,
@@ -103,7 +110,11 @@ def main_production(
         print(f"{parser.prog}: error: {error}", file=sys.stderr)
         return 2
 
-    result = (service or ProductionCampaignService()).run(config)
+    try:
+        result = (service or ProductionCampaignService()).run(config)
+    except (OSError, TypeError, ValueError) as error:
+        print(f"{parser.prog}: error: {error}", file=sys.stderr)
+        return 2
     report = str(result.report_path) if result.report_path else "none"
     detail = f" failure={result.failure_reason}" if result.failure_reason else ""
     print(

@@ -3327,8 +3327,8 @@ does not enter the legacy generation or manual approval workflow.
 - [x] **AG-122:** Add five-level smoke through the exact V3 production orchestration path.
 - [x] **AG-123:** Add nightly 30-level V3 campaign with fallback-path detection.
 - [x] **AG-124:** Add 100-campaign release stress using staging and the exact production path.
-- [ ] **AG-125:** Add blinded playtest export.
-- [ ] **AG-126:** Add calibrated quality-profile versioning.
+- [x] **AG-125:** Add blinded playtest export.
+- [x] **AG-126:** Add calibrated quality-profile versioning.
 - [ ] **AG-127:** Add deterministic candidate parallelism.
 - [ ] **AG-128:** Add global attempt budgeting.
 - [ ] **AG-129:** Make V3 production default.
@@ -3426,6 +3426,27 @@ stress interface remains available behind its explicit `v2_legacy` mode.
 Successful campaign workspaces are summarized and removed immediately to bound
 release-run disk use; the first failed campaign stops the suite and retains its
 complete staging and reproduction evidence for diagnosis.
+
+**2026-07-21 AG-125 completion record:** Added a deterministic blinded-playtest
+export command and typed service. It requires declared coverage across every
+production V3 difficulty and blueprint archetype, varied objective counts,
+recovery and failure patterns, varied layouts, production candidates, and known
+weak controls. The distributable tester package contains only anonymized level
+IDs, levels, a fixed short rubric, and response rows; source identity, intended
+difficulty, automated metrics, seeds, solutions, and weak-control labels remain
+in a separately held researcher key. Stable assignment and package fingerprints
+make each calibration corpus reproducible without unblinding testers.
+
+**2026-07-21 AG-126 completion record:** Moved the locked V3 experience targets,
+ranking weights, archetype frequencies, calibration evidence reference, and
+fixed-seed comparison reference into a checked-in semantic-versioned quality
+profile. The loader fingerprints canonical profile content, rejects unknown or
+invalid versions, prevents every non-negotiable anti-triviality invariant from
+being weakened, and requires a higher version plus updated playtest and
+fixed-seed evidence for any tuning change. The same profile now drives
+`DifficultyTargetResolver`; production terminal reports and reproduction
+request snapshots record the active version, with terminal reports also
+recording its fingerprint.
 
 ---
 

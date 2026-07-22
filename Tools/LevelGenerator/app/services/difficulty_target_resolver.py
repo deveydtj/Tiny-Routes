@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from ..models.puzzle_experience_target import PuzzleExperienceTarget
+from .quality_profile_service import QualityProfileService
 
 
 class DifficultyTargetResolver:
@@ -15,132 +16,19 @@ class DifficultyTargetResolver:
 
     band_order = ("easy", "medium", "hard", "expert")
 
-    def __init__(self) -> None:
-        self._targets = {
-            "easy": PuzzleExperienceTarget(
-                difficulty="easy",
-                objective_count_range=(2, 3),
-                meaningful_decision_range=(2, 3),
-                planning_decision_minimum=1,
-                adaptive_decision_minimum=1,
-                dependency_depth_range=(1, 3),
-                state_change_range=(1, 2),
-                revisit_range=(0, 1),
-                successful_route_class_range=(1, 2),
-                recoverable_mistake_range=(1, 2),
-                fatal_mistake_cap=1,
-                decision_window_targets=(2.25, 4.0),
-                rapid_multi_tap_encounter_cap=0,
-                maximum_taps_per_rapid_burst=2,
-                minimum_state_change_visibility_seconds=1.0,
-                allowed_mechanic_categories=(
-                    "objective_gate",
-                    "ordered_checkpoint",
-                    "unlock_shortcut",
-                    "close_behind",
-                    "recoverable_detour",
-                    "hub_revisit",
-                ),
-                layout_complexity_target=0.40,
-                desired_solve_time_range=(15.0, 35.0),
-            ),
-            "medium": PuzzleExperienceTarget(
-                difficulty="medium",
-                objective_count_range=(3, 4),
-                meaningful_decision_range=(3, 5),
-                planning_decision_minimum=2,
-                adaptive_decision_minimum=1,
-                dependency_depth_range=(2, 5),
-                state_change_range=(1, 2),
-                revisit_range=(1, 2),
-                successful_route_class_range=(1, 3),
-                recoverable_mistake_range=(1, 3),
-                fatal_mistake_cap=2,
-                decision_window_targets=(1.80, 4.0),
-                rapid_multi_tap_encounter_cap=1,
-                maximum_taps_per_rapid_burst=2,
-                minimum_state_change_visibility_seconds=1.0,
-                allowed_mechanic_categories=(
-                    "objective_gate",
-                    "ordered_checkpoint",
-                    "unlock_shortcut",
-                    "close_behind",
-                    "recoverable_detour",
-                    "hub_revisit",
-                    "split_commitment",
-                    "route_reversal",
-                ),
-                layout_complexity_target=0.58,
-                desired_solve_time_range=(25.0, 55.0),
-            ),
-            "hard": PuzzleExperienceTarget(
-                difficulty="hard",
-                objective_count_range=(3, 5),
-                meaningful_decision_range=(5, 7),
-                planning_decision_minimum=3,
-                adaptive_decision_minimum=2,
-                dependency_depth_range=(3, 7),
-                state_change_range=(2, 3),
-                revisit_range=(1, 3),
-                successful_route_class_range=(1, 4),
-                recoverable_mistake_range=(2, 4),
-                fatal_mistake_cap=2,
-                decision_window_targets=(1.45, 4.0),
-                rapid_multi_tap_encounter_cap=1,
-                maximum_taps_per_rapid_burst=2,
-                minimum_state_change_visibility_seconds=1.0,
-                allowed_mechanic_categories=(
-                    "objective_gate",
-                    "ordered_checkpoint",
-                    "unlock_shortcut",
-                    "close_behind",
-                    "recoverable_detour",
-                    "hub_revisit",
-                    "split_commitment",
-                    "route_reversal",
-                    "stateful_ring",
-                    "delayed_consequence",
-                    "competing_routes",
-                    "one_use_connector",
-                ),
-                layout_complexity_target=0.72,
-                desired_solve_time_range=(40.0, 85.0),
-            ),
-            "expert": PuzzleExperienceTarget(
-                difficulty="expert",
-                objective_count_range=(4, 6),
-                meaningful_decision_range=(6, 10),
-                planning_decision_minimum=4,
-                adaptive_decision_minimum=3,
-                dependency_depth_range=(4, 10),
-                state_change_range=(3, 5),
-                revisit_range=(2, 4),
-                successful_route_class_range=(1, 5),
-                recoverable_mistake_range=(2, 5),
-                fatal_mistake_cap=3,
-                decision_window_targets=(1.20, 4.0),
-                rapid_multi_tap_encounter_cap=2,
-                maximum_taps_per_rapid_burst=2,
-                minimum_state_change_visibility_seconds=1.0,
-                allowed_mechanic_categories=(
-                    "objective_gate",
-                    "ordered_checkpoint",
-                    "unlock_shortcut",
-                    "close_behind",
-                    "recoverable_detour",
-                    "hub_revisit",
-                    "split_commitment",
-                    "route_reversal",
-                    "stateful_ring",
-                    "delayed_consequence",
-                    "competing_routes",
-                    "one_use_connector",
-                    "multi_hub_relay",
-                ),
-                layout_complexity_target=0.84,
-                desired_solve_time_range=(55.0, 120.0),
-            ),
-        }
+    def __init__(
+        self,
+        quality_profile_service: QualityProfileService | None = None,
+        *,
+        quality_profile_version: str | None = None,
+    ) -> None:
+        service = quality_profile_service or QualityProfileService()
+        self.quality_profile = (
+            service.load(quality_profile_version)
+            if quality_profile_version is not None
+            else service.load_current()
+        )
+        self._targets = dict(self.quality_profile.difficulty_targets)
 
     @property
     def valid_names(self) -> list[str]:

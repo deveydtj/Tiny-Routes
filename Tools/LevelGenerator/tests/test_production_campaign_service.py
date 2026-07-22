@@ -132,6 +132,8 @@ def test_complete_campaign_uses_one_transactional_path(tmp_path) -> None:
     assert result.report_path.is_file()
     assert result.reproducibility_bundle_path.is_file()
     assert result.health_report_path.is_file()
+    assert result.quality_profile_version == "1.0.0"
+    assert len(result.quality_profile_fingerprint) == 64
     assert staged.staged
     assert promotion.called
     assert progress == [
@@ -145,6 +147,14 @@ def test_complete_campaign_uses_one_transactional_path(tmp_path) -> None:
     ]
     assert pool.requests[0].slots[0].level_id == "level_031"
     assert pool.requests[0].slots[0].difficulty == "hard"
+    report = result.report_path.read_text(encoding="utf-8")
+    assert '"qualityProfileVersion": "1.0.0"' in report
+    bundle_request = (
+        result.reproducibility_bundle_path.parent / "request_configuration.json"
+    )
+    assert '"qualityProfileVersion": "1.0.0"' in bundle_request.read_text(
+        encoding="utf-8"
+    )
 
 
 def test_candidate_failure_leaves_production_untouched(tmp_path) -> None:

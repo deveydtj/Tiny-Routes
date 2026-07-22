@@ -74,6 +74,34 @@ Start level, count, difficulty, seed, and output directories come from the main
 form; stage progress and the final report path appear in the activity log. No
 candidate approval or Level Editor cleanup is part of this action.
 
+Production V3 resolves its difficulty targets from the checked-in calibrated
+quality profile under `config/quality_profiles`. Every production report and
+reproduction request records the profile version and the terminal report also
+records its content fingerprint. Select an older retained profile explicitly
+with `--quality-profile MAJOR.MINOR.PATCH`. A tuning change must use a higher
+semantic version and cite both updated blinded-playtest evidence and an updated
+fixed-seed comparison; protected anti-triviality invariants cannot be relaxed.
+
+Create a blinded calibration package from a researcher-authored source manifest:
+
+```bash
+python Tools/LevelGenerator/export_blinded_playtest.py \
+  --source-manifest scratch/playtest_sources.json \
+  --output scratch/playtest_round_01 \
+  --seed 20260721
+```
+
+The source manifest uses schema version 1, lists every supported blueprint in
+`expectedArchetypes`, and supplies samples with `sourceID`, `levelPath`,
+`difficulty`, `blueprintArchetype`, `objectiveCount`, `recoveryPattern`,
+`failurePattern`, `layoutProfile`, `knownWeak`, and optional
+`automatedMetrics`. Export fails unless the corpus covers easy through expert,
+all six production archetypes, varied objective/recovery/failure/layout
+profiles, at least one production candidate, and at least one weak control.
+Distribute only `tester_package`; it contains anonymized levels and the short
+response rubric. Keep `researcher_package` private because it contains the
+assignment key, intended cohorts, automated metrics, and weak-control labels.
+
 Dry-run one tutorial level:
 
 ```bash

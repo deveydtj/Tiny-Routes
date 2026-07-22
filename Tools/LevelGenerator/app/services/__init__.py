@@ -184,6 +184,11 @@ from .generator_health_anomaly_service import (
     GeneratorHealthAnomalyError,
     GeneratorHealthAnomalyService,
 )
+from .blinded_playtest_export_service import BlindedPlaytestExportService
+from .quality_profile_service import (
+    CURRENT_QUALITY_PROFILE_VERSION,
+    QualityProfileService,
+)
 
 __all__ = [
     "BoundingBox",
@@ -321,4 +326,7 @@ __all__ = [
     "GeneratorHealthMetricsService",
     "GeneratorHealthAnomalyError",
     "GeneratorHealthAnomalyService",
+    "BlindedPlaytestExportService",
+    "QualityProfileService",
+    "CURRENT_QUALITY_PROFILE_VERSION",
 ]

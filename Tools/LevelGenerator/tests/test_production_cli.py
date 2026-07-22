@@ -14,6 +14,14 @@ class _Service:
         return self.result
 
 
+class _FailingService:
+    def run(self, config):
+        raise ValueError(
+            "unknown production V3 quality profile: "
+            f"{config.quality_profile_version}"
+        )
+
+
 def test_production_cli_builds_locked_v3_request_and_prints_one_summary(tmp_path, capsys) -> None:
     service = _Service(
         ProductionCampaignResult(
@@ -33,6 +41,7 @@ def test_production_cli_builds_locked_v3_request_and_prints_one_summary(tmp_path
             "--difficulty", "auto",
             "--seed", "12345",
             "--swift-tests",
+            "--quality-profile", "1.0.0",
             "--output-levels", str(tmp_path / "levels"),
             "--output-solutions", str(tmp_path / "solutions"),
             "--production-manifest", str(tmp_path / "manifest.json"),
@@ -44,6 +53,7 @@ def test_production_cli_builds_locked_v3_request_and_prints_one_summary(tmp_path
     assert code == 0
     assert service.config.seed == 12345
     assert service.config.run_swift_tests is True
+    assert service.config.quality_profile_version == "1.0.0"
     assert capsys.readouterr().out.count("\n") == 1
 
 
@@ -65,3 +75,18 @@ def test_production_cli_returns_failure_status(tmp_path, capsys) -> None:
 
     assert code == 1
     assert "status=failed_no_changes" in capsys.readouterr().out
+
+
+def test_production_cli_reports_unknown_quality_profile_without_traceback(capsys) -> None:
+    code = main_production(
+        [
+            "--start", "31",
+            "--count", "1",
+            "--difficulty", "hard",
+            "--quality-profile", "9.9.9",
+        ],
+        service=_FailingService(),
+    )
+
+    assert code == 2
+    assert "unknown production V3 quality profile: 9.9.9" in capsys.readouterr().err

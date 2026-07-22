@@ -135,6 +135,12 @@ from .generator_health import (
     GeneratorHealthThresholds,
     PortfolioDiversityMetrics,
 )
+from .playtest_export import BlindedPlaytestExportResult, PlaytestSample
+from .quality_profile import (
+    CURRENT_QUALITY_PROFILE_VERSION,
+    CalibratedQualityProfile,
+    QualityProfileEvidence,
+)
 from .generation_quality import GenerationQualityScore
 from .generation_batch_plan import GenerationBatchPlan, GenerationBatchPlanEntry
 from .generation_result import GenerationResult, SwiftTestSummary
@@ -215,6 +221,11 @@ __all__ = [
     "GeneratorHealthAnomaly",
     "GeneratorHealthAnomalyReport",
     "PortfolioDiversityMetrics",
+    "PlaytestSample",
+    "BlindedPlaytestExportResult",
+    "CalibratedQualityProfile",
+    "QualityProfileEvidence",
+    "CURRENT_QUALITY_PROFILE_VERSION",
     "DecisionProfile",
     "DecisionDependency",
     "DecisionDependencyGraph",
