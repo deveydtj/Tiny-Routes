@@ -6,6 +6,7 @@ from dataclasses import dataclass
 from typing import Iterable
 
 from ..models.blueprint_stage_result import BlueprintStageResult
+from ..models.policy_evaluation import PolicyEvaluationResult
 from ..models.strategy_search import StrategyTrace
 from ..models.strategy_stage_result import StrategyStageResult
 from .v3_candidate_pipeline_coordinator import V3CandidatePipelineResult
@@ -146,6 +147,16 @@ class ProductionPipelinePolicyService:
                 if isinstance(strategy_result, StrategyStageResult)
                 else None
             )
+            static_policy_search = (
+                strategy_result.static_policy_search
+                if isinstance(strategy_result, StrategyStageResult)
+                else None
+            )
+            policy_evaluation = (
+                strategy_result.policy_evaluation
+                if isinstance(strategy_result, StrategyStageResult)
+                else None
+            )
             optimal_trace = (
                 strategy_search.canonical_optimal_strategy
                 if strategy_search is not None
@@ -168,6 +179,62 @@ class ProductionPipelinePolicyService:
                     )
                 )
 
+            if static_policy_search is None:
+                issues.append(
+                    ProductionPipelinePolicyIssue(
+                        "production_static_policy_evidence_missing",
+                        level_id,
+                        "Selected candidates require exhaustive static-policy proof evidence.",
+                    )
+                )
+            else:
+                if static_policy_search.static_policy_solvable:
+                    issues.append(
+                        ProductionPipelinePolicyIssue(
+                            "static_policy_solution_exists",
+                            level_id,
+                            "A permanent outgoing-road assignment completes every objective.",
+                        )
+                    )
+                if not static_policy_search.exhaustive:
+                    issues.append(
+                        ProductionPipelinePolicyIssue(
+                            "static_policy_search_incomplete",
+                            level_id,
+                            "Production requires exhaustive rejection of every permanent assignment.",
+                        )
+                    )
+
+            greedy = self.policy_result(policy_evaluation, "greedy_objective")
+            if policy_evaluation is None or not policy_evaluation.strategy_proof_exhaustive:
+                issues.append(
+                    ProductionPipelinePolicyIssue(
+                        "production_policy_evidence_missing",
+                        level_id,
+                        "Selected candidates require exhaustive representative-policy evidence.",
+                    )
+                )
+            if greedy is None:
+                issues.append(
+                    ProductionPipelinePolicyIssue(
+                        "greedy_policy_evidence_missing",
+                        level_id,
+                        "Selected candidates require a greedy_objective policy evaluation.",
+                    )
+                )
+            elif (
+                result.request.difficulty.lower() in {"medium", "hard", "expert"}
+                and greedy.success_count
+            ):
+                issues.append(
+                    ProductionPipelinePolicyIssue(
+                        "greedy_policy_too_successful",
+                        level_id,
+                        "Medium, hard, and expert candidates must have zero successful "
+                        f"greedy-objective runs (observed={greedy.success_count}).",
+                    )
+                )
+
             if quality_result is None or quality_result.puzzle_analysis is None:
                 issues.append(
                     ProductionPipelinePolicyIssue(
@@ -186,6 +253,51 @@ class ProductionPipelinePolicyService:
                 )
             if quality_result is not None and quality_result.puzzle_analysis is not None:
                 analysis = quality_result.puzzle_analysis
+                if (
+                    static_policy_search is not None
+                    and analysis.static_policy_result != static_policy_search
+                ):
+                    issues.append(
+                        ProductionPipelinePolicyIssue(
+                            "static_policy_evidence_mismatch",
+                            level_id,
+                            "Final puzzle analysis must preserve the strategy-stage static-policy proof.",
+                        )
+                    )
+                analysis_greedy = self.analysis_policy_result(
+                    analysis.agent_results,
+                    "greedy_objective",
+                )
+                if analysis_greedy is None:
+                    issues.append(
+                        ProductionPipelinePolicyIssue(
+                            "greedy_policy_evidence_missing",
+                            level_id,
+                            "Final puzzle analysis must preserve greedy_objective evidence.",
+                        )
+                    )
+                elif greedy is not None and analysis_greedy != greedy:
+                    issues.append(
+                        ProductionPipelinePolicyIssue(
+                            "greedy_policy_evidence_mismatch",
+                            level_id,
+                            "Final puzzle analysis must preserve the strategy-stage greedy evaluation.",
+                        )
+                    )
+                if (
+                    analysis_greedy is not None
+                    and result.request.difficulty.lower()
+                    in {"medium", "hard", "expert"}
+                    and analysis_greedy.success_count
+                ):
+                    issues.append(
+                        ProductionPipelinePolicyIssue(
+                            "greedy_policy_too_successful",
+                            level_id,
+                            "Medium, hard, and expert final analysis must record zero "
+                            f"successful greedy-objective runs (observed={analysis_greedy.success_count}).",
+                        )
+                    )
                 meaningful_trace_count, post_state_decision_count = (
                     self.optimal_decision_counts(optimal_trace)
                     if optimal_trace is not None
@@ -317,3 +429,25 @@ class ProductionPipelinePolicyService:
             if transition is not None and transition.changes_state:
                 prior_state_change = True
         return meaningful_count, post_state_count
+
+    @staticmethod
+    def policy_result(
+        policy_evaluation,
+        policy_name: str,
+    ) -> PolicyEvaluationResult | None:
+        if policy_evaluation is None:
+            return None
+        try:
+            return policy_evaluation.evaluation_for(policy_name)
+        except KeyError:
+            return None
+
+    @staticmethod
+    def analysis_policy_result(
+        agent_results: Iterable[PolicyEvaluationResult],
+        policy_name: str,
+    ) -> PolicyEvaluationResult | None:
+        return next(
+            (item for item in agent_results if item.policy_name == policy_name),
+            None,
+        )

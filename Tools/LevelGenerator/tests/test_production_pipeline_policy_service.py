@@ -4,6 +4,7 @@ from dataclasses import replace
 
 import pytest
 
+from app.models.static_policy import StaticPolicySearchResult, StaticPolicySolution
 from app.services.production_pipeline_policy_service import (
     ProductionPipelinePolicyError,
     ProductionPipelinePolicyService,
@@ -23,6 +24,18 @@ def accepted_pipeline_result():
             level_id="level_901",
             seed=731_005,
             difficulty="easy",
+        )
+    )
+
+
+@pytest.fixture(scope="module")
+def accepted_medium_pipeline_result():
+    return _SmokeCandidatePipeline().run(
+        V3CandidatePipelineRequest(
+            candidate_id="level_902:candidate:0000",
+            level_id="level_902",
+            seed=731_006,
+            difficulty="medium",
         )
     )
 
@@ -186,5 +199,71 @@ def test_rejects_optimal_trace_without_a_decision_after_state_change(
     with pytest.raises(
         ProductionPipelinePolicyError,
         match="insufficient_adaptive_decisions",
+    ):
+        ProductionPipelinePolicyService().require((stale,))
+
+
+def test_rejects_stale_final_analysis_with_a_static_policy_witness(
+    accepted_pipeline_result,
+) -> None:
+    stages = list(accepted_pipeline_result.stage_results)
+    quality = stages[5]
+    strategy = stages[2]
+    static = strategy.static_policy_search
+    trace = strategy.strategy_search.canonical_optimal_strategy
+    stale_static = StaticPolicySearchResult(
+        successful_policies=(StaticPolicySolution((), trace),),
+        tested_policy_count=static.tested_policy_count,
+        total_policy_count=static.total_policy_count,
+        exhaustive=True,
+    )
+    stages[5] = replace(
+        quality,
+        puzzle_analysis=replace(
+            quality.puzzle_analysis,
+            static_policy_result=stale_static,
+        ),
+    )
+    stale = V3CandidatePipelineResult(
+        accepted_pipeline_result.request,
+        tuple(stages),
+    )
+
+    with pytest.raises(
+        ProductionPipelinePolicyError,
+        match="static_policy_evidence_mismatch",
+    ):
+        ProductionPipelinePolicyService().require((stale,))
+
+
+def test_rejects_medium_plus_when_final_greedy_evidence_claims_success(
+    accepted_medium_pipeline_result,
+) -> None:
+    stages = list(accepted_medium_pipeline_result.stage_results)
+    quality = stages[5]
+    analysis = quality.puzzle_analysis
+    greedy = analysis.agent_result_for("greedy_objective")
+    successful_greedy = replace(
+        greedy,
+        runs=(replace(greedy.runs[0], succeeded=True, outcome_code="success"),),
+    )
+    stages[5] = replace(
+        quality,
+        puzzle_analysis=replace(
+            analysis,
+            agent_results=tuple(
+                successful_greedy if item.policy_name == "greedy_objective" else item
+                for item in analysis.agent_results
+            ),
+        ),
+    )
+    stale = V3CandidatePipelineResult(
+        accepted_medium_pipeline_result.request,
+        tuple(stages),
+    )
+
+    with pytest.raises(
+        ProductionPipelinePolicyError,
+        match="greedy_policy_(evidence_mismatch|too_successful)",
     ):
         ProductionPipelinePolicyService().require((stale,))

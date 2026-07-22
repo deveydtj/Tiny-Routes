@@ -109,8 +109,8 @@ preflight corpus on conflict and restore it after post-promotion failure.
 - [x] Production generation never outputs a zero-tap or one-tap level.
 - [x] Production generation never outputs a level with fewer than two meaningful route decisions.
 - [x] Every generated level contains at least one adaptive decision that occurs after a checkpoint or route-state change.
-- [ ] No production level can be solved by assigning one permanent outgoing road to every switch before movement begins.
-- [ ] Medium, hard, and expert levels cannot be solved by a greedy “point each upcoming arrow toward the currently highlighted target” strategy.
+- [x] No production level can be solved by assigning one permanent outgoing road to every switch before movement begins.
+- [x] Medium, hard, and expert levels cannot be solved by a greedy “point each upcoming arrow toward the currently highlighted target” strategy.
 - [ ] Equivalent choices, decorative branches, and branches with identical future consequences do not count as decisions.
 
 **2026-07-22 completion record:** The non-compensating production puzzle gate
@@ -131,6 +131,14 @@ transition; stale or reordered evidence fails with
 `insufficient_adaptive_decisions`. The exact-path five-level smoke reports zero
 violations and minimums of two meaningful decisions and one post-state adaptive
 decision across the selected portfolio.
+
+**2026-07-22 completion record:** The final pre-staging campaign policy now
+independently requires an exhaustive strategy-stage static-policy proof with no
+successful permanent switch assignment, then verifies that final puzzle analysis
+preserves that exact proof. It also requires exhaustive `greedy_objective`
+evidence and rejects every medium, hard, or expert selection with any successful
+greedy run, including stale final-analysis evidence that disagrees with the
+strategy stage. Focused regressions prove both fail-closed boundaries.
 
 ### 2.3 Real route choice
 
