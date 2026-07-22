@@ -1,55 +1,103 @@
-# Production Generation Checklist
+# Production V3 Operator Runbook
 
-## Dry Run
+Automatic production generation is unattended: it does not require candidate
+review, Level Editor repair, or per-level playtesting. Human sampling belongs to
+release QA and quality-profile calibration, not to a successful generation run.
 
-- Run a deterministic dry run with the intended start, count, difficulty, template, and seed.
-- Confirm accepted candidates print in the CLI or appear in the GUI.
-- Open the markdown and JSON reports.
-- Review rejection counts, especially duplicate/similarity rejections.
-- Do not commit any dry-run report churn unless the report itself is the artifact under review.
+## One-command generation
 
-## Scratch Folder
+From the repository root, with Python dependencies and Xcode installed:
 
-- Write candidates to temporary level and solution directories.
-- Keep `--no-xcodegen` enabled for scratch output.
-- Confirm each `level_###.json` has a matching `level_###.solution.json`.
-- Open a few scratch levels in the Level Editor before writing production resources.
+```bash
+python Tools/LevelGenerator/generate_production_campaign.py \
+  --start 31 \
+  --count 30 \
+  --difficulty auto \
+  --seed 12345 \
+  --swift-tests
+```
 
-## Production Folder
+Omit `--seed` to have the command choose and report one. The same configuration,
+quality-profile version, seed, worker count, and attempt budget produce the same
+candidate identities, selected logic, solutions, and reports. Record the
+resolved seed from the terminal report.
 
-- Write only after dry-run and scratch review look acceptable.
-- Never commit a generated level without its matching solution file.
-- Use `--overwrite` only when intentionally replacing existing generated files.
-- Keep the generation report with the reviewed batch when useful for audit.
+The command succeeds only after selecting the complete requested count,
+validating staged Python/Swift evidence, and atomically promoting it. It has no
+legacy template, fixed recipe, direct motif, relaxed quality, or manual-approval
+fallback.
 
-## Level Editor Review
+## GUI generation
 
-- Confirm start, package, destination, switches, and dead ends are visually readable.
-- Confirm routes do not overlap or cross in confusing ways.
-- Confirm the intended tap sequence is understandable.
-- Reject levels that look like obvious clones of nearby campaign levels.
+Launch `python Tools/LevelGenerator/launch_gui.py`, enter start level, count,
+difficulty/campaign profile, and optional seed, then choose **Generate Production
+Campaign**. The activity log shows the same planning, candidate-pool, portfolio,
+staging, validation, and promotion stages as the CLI and ends with the terminal
+report path. Do not use legacy generation controls for production output.
 
-## Swift Tests
+## Reports and failure reproduction
 
-- Run Swift solvability tests before production commits when Xcode is available.
-- Treat Python validation as fast local protection, not a replacement for Swift confidence.
-- Investigate any Swift failure before committing generated files.
+The terminal JSON/Markdown report records run/configuration identity, resolved
+seed, quality-profile version/fingerprint, global attempt allocations, selected
+candidate proofs, rejection counts, health metrics, staged hashes, Swift parity,
+and promotion status. Normal rejection churn is expected; incomplete pools,
+anomaly thresholds, stage bypasses, or transaction failures are systemic.
 
-## Simulator Playtest
+Every retained attempt includes a reproducibility bundle. To investigate a
+failure:
 
-- Play each production candidate in the simulator.
-- Confirm the route can complete within the time limit.
-- Confirm tap timing feels fair for the intended difficulty.
-- Confirm dead ends feel intentional rather than misleading JSON mistakes.
+1. Read the terminal status, failure code/stage, constrained slots, and dominant
+   rejection codes.
+2. Preserve the run workspace and reproduction bundle.
+3. Run its `reproduce.sh`; it targets an isolated output tree and restores the
+   original request, seed, quality profile, worker count, and budgets.
+4. Compare stage evidence and content hashes. Never point a reproduction command
+   at production directories.
 
-## Xcode Resource Cleanup
+## Staging, locking, and rollback
 
-- Run XcodeGen or confirm resource references after adding, overwriting, or deleting generated levels.
-- If writing to default production folders, the generator runs XcodeGen unless `--no-xcodegen` is passed.
-- After manual deletion, run `xcodegen generate` so stale `.xcodeproj` resource references are removed.
+All candidate and corpus writes occur in the run workspace. A process-wide
+generation lock protects the promotion boundary. Do not delete a lock unless
+the recorded owner is demonstrably stale. Validation failure yields
+`failed_no_changes`; promotion failure yields `rolled_back` only after restoring
+the original production snapshot. See
+[Transactional Generation](transactional_generation.md).
 
-## Commit
+## Extending the generator
 
-- Include level JSON, solution JSON, and intentional report/doc changes.
-- Exclude scratch output and incidental `last_generation_report.*` churn unless requested.
-- Include the seed, template mode, difficulty, and validation commands in the commit or PR notes.
+- Adding a blueprint archetype: follow
+  [Puzzle Blueprints](puzzle_blueprints.md#adding-an-archetype), then add target,
+  deterministic, exact-strategy, and production-smoke coverage.
+- Adding a motif: follow [Stateful Motifs](stateful_motifs.md#adding-a-motif),
+  including typed contract, invalid-context, solver, and phase-layout tests.
+- Updating quality thresholds: create a higher semantic version under
+  `config/quality_profiles`; protected invariants cannot be weakened. Update
+  blinded-playtest and fixed-seed evidence as described in
+  [Quality Gates](quality_gates.md#updating-quality-profiles).
+
+## Release QA
+
+Run the mandatory wrapper from a clean checkout:
+
+```bash
+python scripts/run_all_checks.py --swift-tests \
+  --production-content \
+  --generator-v3-stress \
+  --transaction-tests
+```
+
+This runs all Python suites, generator smoke/fixed seeds, production corpus
+verification, 100 complete 30-level V3 campaigns, transaction failures, and the
+Swift scheme. It writes `release_summary.json` and `release_summary.md` under
+`artifacts/production-v3-release` unless `--reports-dir` is supplied. The
+summary contains commit/configuration identity, quality profile, test and stress
+totals, campaign completion, parity, corpus metrics, and non-blocking warnings.
+
+The command returns zero only when every gate passes and all four release flags
+are present. A dirty-worktree warning is recorded for traceability; run the
+release signoff from a clean checkout so the commit identity describes the code
+that was tested.
+
+Optional blinded human sampling may be performed after automated gates to
+calibrate a future quality-profile version. It does not select, repair, or
+approve individual generated levels.

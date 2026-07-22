@@ -78,6 +78,19 @@ python scripts/run_all_checks.py --swift-tests \
   --destination 'platform=iOS Simulator,name=iPhone 16 Pro,OS=18.5'
 ```
 
+Run the final production V3 release gate, retaining its JSON and Markdown
+artifact summary under `artifacts/production-v3-release`:
+
+```bash
+python scripts/run_all_checks.py --swift-tests \
+  --production-content \
+  --generator-v3-stress \
+  --transaction-tests
+```
+
+This release form includes the 100-campaign/3,000-level exact-path stress gate
+and returns zero only when every mandatory gate passes.
+
 The combined command also verifies the production corpus and manifest. Retain
 the fixed-seed and corpus reports for release review with:
 

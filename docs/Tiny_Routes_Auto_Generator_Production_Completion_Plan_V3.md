@@ -3333,8 +3333,8 @@ does not enter the legacy generation or manual approval workflow.
 - [x] **AG-128:** Add global attempt budgeting.
 - [x] **AG-129:** Make V3 production default.
 - [x] **AG-130:** Remove weak production fallback.
-- [ ] **AG-131:** Add final architecture/operator documentation.
-- [ ] **AG-132:** Add final release wrapper.
+- [x] **AG-131:** Add final architecture/operator documentation.
+- [x] **AG-132:** Add final release wrapper.
 
 **2026-07-21 AG-115 completion record:** Added deterministic, immutable
 reproduction bundles for production V3 runs and every retained candidate
@@ -3485,6 +3485,27 @@ manual approval. Template, fixed-recipe, direct-motif, legacy, relaxed-playtest,
 and lowered-threshold paths are rejected before production files are staged;
 V3 configuration also rejects tutorial and relaxed playtest modes. Focused
 regressions cover every prohibited path and the exact five-level V3 smoke path.
+
+**2026-07-22 AG-131 completion record:** Added the final production V3
+architecture set covering the six-stage candidate boundary, puzzle blueprints,
+typed stateful motifs, exact strategy proofs, protected quality gates, and
+transactional staging/promotion. Replaced the manual-review production
+checklist with an operator runbook for the shared one-command CLI/GUI flow,
+seeds, reports, reproduction, rollback, extension workflows, calibrated quality
+profiles, and the distinction between unattended generation and release-only
+human sampling. Root and generator READMEs now route developers to the final
+references and accurately describe schema 3 and staged Swift verification.
+
+**2026-07-22 AG-132 completion record:** Extended the root release wrapper with
+the documented production-content, exact-path V3 release-stress, and dedicated
+transaction gates. The default stress release runs 100 complete 30-level
+campaigns with completeness, anti-one-tap, static-policy, and parity failures
+enabled; final release mode requires all mandatory flags and Swift tests. The
+wrapper retains per-suite JUnit evidence plus corpus and stress reports, then
+writes JSON and Markdown summaries containing commit/configuration identity,
+active quality profile, gate/test/stress totals, campaign completion, parity,
+corpus metrics, and non-blocking warnings. Focused tests prove gate wiring,
+release defaults, summary aggregation, and partial-release rejection.
 
 ---
 

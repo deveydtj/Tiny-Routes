@@ -2,24 +2,44 @@
 
 Procedural generation tool for creating Tiny Routes production level JSON and matching solution sidecar files. The generator writes the same shapes used by the Swift runtime and the Python Level Editor, then validates candidates before saving them.
 
-For threshold, timing, layout, pool-size, diversity, and golden-seed guidance, see [Difficulty and Quality Tuning](docs/difficulty_and_quality_tuning.md).
+For the production architecture and operating workflow, start with
+[Production V3 Architecture](docs/production_v3_architecture.md) and the
+[Operator Runbook](docs/production_generation_checklist.md). For threshold,
+timing, layout, pool-size, diversity, and golden-seed guidance, see
+[Difficulty and Quality Tuning](docs/difficulty_and_quality_tuning.md).
 
 ## Level Schema and Migration
 
-New generated production levels must declare schema version 2 and live look-ahead rules:
+New generated production levels declare schema version 3, ordered objectives,
+and live look-ahead rules:
 
 ```json
 {
-  "schemaVersion": 2,
+  "schemaVersion": 3,
   "rules": {
     "switchInteractionMode": "liveLookahead",
     "switchLookaheadSeconds": 1.35,
     "switchTapCooldownSeconds": 0.12
-  }
+  },
+  "objectives": [
+    {
+      "id": "pickup_a",
+      "nodeID": "node_pickup_a",
+      "kind": "pickup",
+      "sequenceIndex": 0,
+      "revealPolicy": "always"
+    }
+  ]
 }
 ```
 
-These fields accompany the normal level fields; a complete example is in `../LevelEditor/docs/current_level_json_shape.md`. Archived files without `schemaVersion` or `rules` retain decode-and-replay compatibility as version 1 with effective defaults of `legacyGlobal`, 1.35 seconds of look-ahead, and a 0.12-second cooldown. The generator never authors legacy mode, and production gates reject it. Invalid explicit numeric values fail validation.
+These fields accompany the normal level fields; a complete objective/state-road
+fixture is in `../../SharedFixtures/RuntimeParity/objective_road_state_progression/level.json`.
+Existing schema-2 package/destination levels remain supported. Archived files
+without `schemaVersion` or `rules` retain decode-and-replay compatibility as
+version 1 with effective defaults of `legacyGlobal`, 1.35 seconds of look-ahead,
+and a 0.12-second cooldown. Production V3 never authors legacy mode, and
+production gates reject it. Invalid explicit numeric values fail validation.
 
 Migrate archived levels individually: add the version 2 fields, replay the timed solution under `liveLookahead`, and only then promote the migrated level and sidecar. A level that cannot pass live replay remains in the archive until its route or solution is revised.
 
@@ -83,6 +103,20 @@ The GUI exposes the same workflow through **Generate Production Campaign**.
 Start level, count, difficulty, seed, and output directories come from the main
 form; stage progress and the final report path appear in the activity log. No
 candidate approval or Level Editor cleanup is part of this action.
+
+Before a release, run the retained all-gates wrapper:
+
+```bash
+python scripts/run_all_checks.py --swift-tests \
+  --production-content \
+  --generator-v3-stress \
+  --transaction-tests
+```
+
+It writes a JSON and Markdown release summary under
+`artifacts/production-v3-release` by default. The release stress portion runs
+100 complete 30-level campaigns; use the nightly one-campaign command below for
+routine iteration.
 
 Production V3 resolves its difficulty targets from the checked-in calibrated
 quality profile under `config/quality_profiles`. Every production report and
@@ -208,7 +242,10 @@ Run:
 python Tools/LevelGenerator/launch_gui.py
 ```
 
-The GUI is a thin wrapper around the same generation and validation services used by the CLI. Use dry-run first, then write to a temporary output folder before writing production levels. The GUI writes the same markdown and JSON reports as the CLI.
+The **Generate Production Campaign** action is a thin wrapper around the same
+transactional service as the production CLI. It stages and validates the full
+portfolio before promotion and writes the same terminal reports. Legacy fixture
+controls remain non-production tools.
 
 Use a Python 3.10+ interpreter with Tkinter enabled.
 
@@ -220,7 +257,9 @@ Use a Python 3.10+ interpreter with Tkinter enabled.
 
 `--seed` makes generation reproducible. Candidate seeds are recorded in the markdown and JSON reports.
 
-`--swift-tests` runs the real Swift solvability tests after files are written. `--no-swift-tests` skips them.
+`--swift-tests` runs real Swift replay against staged files before production
+promotion. Production V3 requires it; legacy fixture commands may expose
+`--no-swift-tests` for local iteration.
 
 ### Runtime Parity Validation
 
@@ -238,7 +277,10 @@ The generator marks runtime parity as required when any of these are present:
 
 Dry runs may skip Swift validation so iteration stays fast. Reports still show the production requirement with fields such as `runtimeValidationRequired`, `runtimeValidationStatus`, `runtimeValidationReason`, `swiftValidationCommand`, `swiftValidationPassed`, `swiftValidationSkippedReason`, `riskyMechanicTags`, and `requiresSwiftRuntimeValidation`. For a dry run that finds a risky candidate, expect `runtimeValidationStatus: skipped_required_for_production`.
 
-Production writes are stricter. If a candidate requires runtime parity and `--swift-tests` is not enabled, the candidate is rejected with `missing_required_swift_validation`. With `--swift-tests`, the candidate is marked pending while files are written, then the generator runs:
+Production writes are stricter. If a candidate requires runtime parity and
+`--swift-tests` is not enabled, the candidate is rejected with
+`missing_required_swift_validation`. With `--swift-tests`, staged files are
+written and the generator runs:
 
 ```bash
 xcodebuild test -project TinyRoutes.xcodeproj -scheme TinyRoutes -destination 'platform=iOS Simulator,name=iPhone 16,OS=18.5' -only-testing:TinyRoutesTests/LevelSolvabilityTests/testRequestedGeneratedLevelsCompleteFromEnvironmentDirectories
@@ -246,9 +288,10 @@ xcodebuild test -project TinyRoutes.xcodeproj -scheme TinyRoutes -destination 'p
 
 The command receives `TINY_ROUTES_VALIDATION_LEVEL_IDS`, `TINY_ROUTES_LEVELS_DIR`, and `TINY_ROUTES_SOLUTIONS_DIR` so Swift replays only the generated level and solution sidecar files for that batch. Swift failures are surfaced as `swift_runtime_parity_failed`, `solution_sidecar_runtime_mismatch`, `switch_tap_runtime_mismatch`, or `package_order_runtime_mismatch` when the xcodebuild output contains enough detail to classify them.
 
-Current limitations:
+Runtime-parity boundaries:
 
-- Swift parity runs after generated files are written because the existing Swift test harness loads level and solution sidecar directories from disk.
+- Swift parity reads generated level and solution files from the staging
+  workspace; production remains unchanged until it passes.
 - Failure attribution is batch-level when xcodebuild fails; inspect the Swift failure details for the exact level.
 - Road-shape parity is covered through RouteEngine movement and switch-direction metadata in reports, not by Swift-rendered pixel inspection.
 - Dry-run reports are advisory for runtime parity; run production generation with `--swift-tests` before committing risky mechanics.
@@ -469,7 +512,10 @@ If Xcode reports missing level JSON inputs after deleting or regenerating only p
 
 If `xcodebuild` is missing, install Xcode or run generation with `--no-swift-tests`, then validate on a Mac with Xcode before committing generated production levels.
 
-## Generated-Level Review Checklist
+## Legacy Fixture and Migration Review
+
+The following checklist is only for legacy fixtures, manual migrations, and
+debugging. It is not part of automatic production V3 generation:
 
 - Dry-run generation works.
 - Write generation works.
@@ -482,7 +528,8 @@ If `xcodebuild` is missing, install Xcode or run generation with `--no-swift-tes
 - Confirm dead ends look intentional.
 - Run Python validation.
 - Run Swift solvability tests when available.
-- Play the level manually in simulator before committing.
+- Optionally play the level manually when the fixture or migration needs human
+  behavior evidence.
 - Commit level JSON and solution JSON together.
 
 ## Developer Workflow
@@ -492,4 +539,8 @@ If `xcodebuild` is missing, install Xcode or run generation with `--no-swift-tes
 - Add or update tests with every service change.
 - Run `python Tools/LevelGenerator/run_all_generator_checks.py` before relying on a production batch.
 
-Good generated levels have readable routes, clear start/package/destination placement, intentional dead ends, difficulty-appropriate decision counts, and a non-placeholder solution sidecar. Confusing levels usually have crossing-heavy routes, clustered important nodes, or tap timing that only works by accident; reject those during review even when validation passes.
+Production V3 enforces readable routes, objective clarity, intentional
+alternatives, difficulty-appropriate decision depth, and robust timing through
+hard gates. If a confusing candidate passes, add a regression and strengthen
+the applicable gate/profile with calibration evidence rather than relying on
+per-level manual rejection.
