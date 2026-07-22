@@ -120,6 +120,12 @@ from .strategy_search import (
 )
 from .puzzle_experience_target import PuzzleExperienceTarget
 from .generated_level import GeneratedLevel
+from .production_run_manifest import (
+    ProductionArtifact,
+    ProductionCandidateRecord,
+    ProductionRunManifest,
+    ProductionTargetSnapshot,
+)
 from .generation_quality import GenerationQualityScore
 from .generation_batch_plan import GenerationBatchPlan, GenerationBatchPlanEntry
 from .generation_result import GenerationResult, SwiftTestSummary
@@ -188,6 +194,10 @@ __all__ = [
     "CandidatePoolSlot",
     "CandidateSlotPool",
     "DifficultyPreset",
+    "ProductionArtifact",
+    "ProductionCandidateRecord",
+    "ProductionRunManifest",
+    "ProductionTargetSnapshot",
     "DecisionProfile",
     "DecisionDependency",
     "DecisionDependencyGraph",

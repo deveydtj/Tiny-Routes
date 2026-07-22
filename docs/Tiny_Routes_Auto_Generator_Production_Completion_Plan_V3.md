@@ -3235,8 +3235,8 @@ is absent so stale visual-only signatures cannot bypass the gate.
 ## Transactional production
 
 - [x] **AG-106:** Add staging workspace.
-- [ ] **AG-107:** Add production run manifest.
-- [ ] **AG-108:** Write selected candidates to staging only.
+- [x] **AG-107:** Add production run manifest.
+- [x] **AG-108:** Write selected candidates to staging only.
 - [ ] **AG-109:** Add complete staged-corpus validation.
 - [ ] **AG-110:** Add atomic promotion.
 - [ ] **AG-111:** Add rollback tests.
@@ -3251,6 +3251,21 @@ seed/config snapshot locations. Workspace creation validates run IDs, refuses
 overwrites, publishes fully initialized trees atomically, cleans failed partial
 initialization, verifies reopened workspaces, and exposes containment checks that
 reject accidental production-target writes.
+
+**2026-07-21 AG-107 completion record:** Added a deterministic production run
+manifest that binds the V3 architecture and seed/config snapshot to the exact
+ordered candidate selection, proof/signature identities, staged artifact hashes,
+intended production destinations, and preflight target hashes. The typed model
+validates run states, candidate/artifact completeness, unique paths and targets,
+safe staging-relative paths, and deterministic JSON round trips.
+
+**2026-07-21 AG-108 completion record:** Added a V3-only staged output service
+that copies the current JSON corpus into an isolated workspace, overlays selected
+level/solution pairs through existing repository writers, renders previews,
+rebuilds the proposed corpus manifest, snapshots untouched production targets,
+and publishes the run manifest only after staging succeeds. Report and validation
+log helpers enforce the same containment boundary; focused staging tests prove
+that production files remain byte-for-byte unchanged.
 
 ## Stress, calibration, and release
 

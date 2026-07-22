@@ -33,6 +33,8 @@ def test_create_workspace_allocates_complete_isolated_tree(tmp_path) -> None:
     )
     assert workspace.proposed_manifest_path.parent == workspace.root
     assert workspace.proposed_manifest_path.exists() is False
+    assert workspace.run_manifest_path.parent == workspace.root
+    assert workspace.run_manifest_path.exists() is False
     assert json.loads(workspace.seed_config_snapshot_path.read_text(encoding="utf-8")) == {
         "configuration": {"count": 5, "mode": "production_v3"},
         "runID": "run-20260721-001",

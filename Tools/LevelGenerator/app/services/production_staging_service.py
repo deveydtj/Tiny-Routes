@@ -28,6 +28,7 @@ class ProductionStagingWorkspace:
     reports_dir: Path
     validation_logs_dir: Path
     proposed_manifest_path: Path
+    run_manifest_path: Path
     seed_config_snapshot_path: Path
 
     def contains(self, path: Path) -> bool:
@@ -52,6 +53,7 @@ class ProductionStagingWorkspace:
             "reportsDirectory": str(self.reports_dir),
             "validationLogsDirectory": str(self.validation_logs_dir),
             "proposedManifestPath": str(self.proposed_manifest_path),
+            "runManifestPath": str(self.run_manifest_path),
             "seedConfigSnapshotPath": str(self.seed_config_snapshot_path),
         }
 
@@ -160,6 +162,7 @@ class ProductionStagingService:
             reports_dir=root / "reports",
             validation_logs_dir=root / "validation_logs",
             proposed_manifest_path=root / "proposed_manifest.json",
+            run_manifest_path=root / "production_run_manifest.json",
             seed_config_snapshot_path=root / "seed_config_snapshot.json",
         )
 
