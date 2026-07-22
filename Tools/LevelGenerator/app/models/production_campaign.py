@@ -100,6 +100,8 @@ class ProductionCampaignResult:
     requested_count: int
     selected_count: int = 0
     report_path: Path | None = None
+    reproducibility_bundle_path: Path | None = None
+    health_report_path: Path | None = None
     workspace_path: Path | None = None
     promoted_paths: tuple[Path, ...] = ()
     failure_reason: str | None = None
@@ -126,6 +128,14 @@ class ProductionCampaignResult:
             "requestedCount": self.requested_count,
             "selectedCount": self.selected_count,
             "reportPath": str(self.report_path) if self.report_path else None,
+            "reproducibilityBundlePath": (
+                str(self.reproducibility_bundle_path)
+                if self.reproducibility_bundle_path
+                else None
+            ),
+            "healthReportPath": (
+                str(self.health_report_path) if self.health_report_path else None
+            ),
             "workspacePath": str(self.workspace_path) if self.workspace_path else None,
             "promotedPaths": [str(path) for path in self.promoted_paths],
             "failureReason": self.failure_reason,

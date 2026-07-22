@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, Mapping
 
 from .generated_level import GeneratedLevel
 
@@ -180,11 +180,13 @@ class CampaignCandidatePoolResult:
     attempts: tuple[CandidatePoolAttempt, ...]
     waves_completed: int
     accepted_pipeline_results: tuple[object, ...] = ()
+    attempt_diagnostics: tuple[Mapping[str, Any], ...] = ()
 
     def __post_init__(self) -> None:
         pools = tuple(self.pools)
         attempts = tuple(self.attempts)
         pipeline_results = tuple(self.accepted_pipeline_results)
+        diagnostics = tuple(self.attempt_diagnostics)
         if not pools:
             raise ValueError("campaign candidate pools cannot be empty")
         if any(not isinstance(pool, CandidateSlotPool) for pool in pools):
@@ -193,9 +195,18 @@ class CampaignCandidatePoolResult:
             raise TypeError("attempts must contain CandidatePoolAttempt values")
         if not isinstance(self.waves_completed, int) or self.waves_completed < 1:
             raise ValueError("waves_completed must be a positive integer")
+        if any(not isinstance(item, Mapping) for item in diagnostics):
+            raise TypeError("attempt_diagnostics must contain mapping values")
+        if diagnostics and len(diagnostics) != len(attempts):
+            raise ValueError("attempt_diagnostics must match the attempt count")
         object.__setattr__(self, "pools", pools)
         object.__setattr__(self, "attempts", attempts)
         object.__setattr__(self, "accepted_pipeline_results", pipeline_results)
+        object.__setattr__(
+            self,
+            "attempt_diagnostics",
+            tuple(dict(item) for item in diagnostics),
+        )
 
     @property
     def complete(self) -> bool:
@@ -237,4 +248,5 @@ class CampaignCandidatePoolResult:
             "constrainedLevelIDs": list(self.constrained_level_ids),
             "pools": [pool.to_report_dict() for pool in self.pools],
             "attempts": [attempt.to_report_dict() for attempt in self.attempts],
+            "attemptDiagnosticCount": len(self.attempt_diagnostics),
         }

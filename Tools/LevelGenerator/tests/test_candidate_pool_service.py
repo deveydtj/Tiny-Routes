@@ -73,6 +73,8 @@ def test_builds_every_campaign_slot_in_deterministic_waves_before_selection() ->
     assert tuple(first.candidate_pools) == ("level_031", "level_032")
     assert all(len(pool) == 2 for pool in first.candidate_pools.values())
     assert first.waves_completed == 3
+    assert len(first.attempt_diagnostics) == len(first.attempts)
+    assert first.attempt_diagnostics[0]["seed"] == first.attempts[0].seed
     assert [attempt.seed for attempt in first.attempts] == [
         attempt.seed for attempt in second.attempts
     ]
@@ -112,3 +114,26 @@ def test_request_requires_several_candidates_per_slot() -> None:
         assert "at least two" in str(error)
     else:
         raise AssertionError("single-candidate campaign pools must be rejected")
+
+
+def test_diagnostic_capture_failure_cannot_change_candidate_acceptance() -> None:
+    class BrokenDiagnostics:
+        def capture_pipeline_result(self, result):
+            raise OSError("diagnostic disk unavailable")
+
+        def capture_pipeline_exception(self, request, error):
+            raise OSError("diagnostic disk unavailable")
+
+    request = _request(slots=(CandidatePoolSlot("level_031", "easy"),))
+    result = CandidatePoolService(
+        _Pipeline(),
+        _SignatureService(),
+        BrokenDiagnostics(),
+    ).build(request)
+
+    assert result.complete
+    assert all(attempt.passed for attempt in result.attempts)
+    assert all(
+        item["diagnosticCaptureError"] == "OSError"
+        for item in result.attempt_diagnostics
+    )

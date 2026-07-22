@@ -11,25 +11,34 @@ from ..models.candidate_pool import (
     CandidateSlotPool,
 )
 from .candidate_signature_service import CandidateSignatureService
+from .reproducibility_bundle_service import ReproducibilityBundleService
 from .v3_candidate_pipeline_coordinator import V3CandidatePipelineRequest
 
 
 class CandidatePoolService:
     """Run complete V3 attempts in bounded waves before portfolio selection.
 
-    Rejected pipeline results are reduced to compact audit records, so callers
-    can increase ``max_attempts_per_slot`` without retaining every large proof
-    artifact in memory. Accepted candidates keep their complete production
-    signatures and are never selected here; campaign optimization is a later
-    boundary.
+    Rejected pipeline results retain deterministic JSON diagnostics rather than
+    live proof graphs. This keeps memory bounded while preserving the evidence
+    required for reproduction bundles and health aggregation. Accepted
+    candidates keep their complete production signatures and are never selected
+    here; campaign optimization is a later boundary.
     """
 
-    def __init__(self, pipeline, signature_service: CandidateSignatureService | None = None) -> None:
+    def __init__(
+        self,
+        pipeline,
+        signature_service: CandidateSignatureService | None = None,
+        reproducibility_bundle_service: ReproducibilityBundleService | None = None,
+    ) -> None:
         runner = getattr(pipeline, "run", None)
         if not callable(runner):
             raise TypeError("pipeline must expose a callable run(request) method")
         self.pipeline = pipeline
         self.signature_service = signature_service or CandidateSignatureService()
+        self.reproducibility_bundle_service = (
+            reproducibility_bundle_service or ReproducibilityBundleService()
+        )
 
     def build(self, request: CandidatePoolRequest) -> CampaignCandidatePoolResult:
         if not isinstance(request, CandidatePoolRequest):
@@ -38,6 +47,7 @@ class CandidatePoolService:
         accepted = {slot.level_id: [] for slot in request.slots}
         attempted = {slot.level_id: 0 for slot in request.slots}
         attempts: list[CandidatePoolAttempt] = []
+        attempt_diagnostics: list[dict] = []
         accepted_pipeline_results: list[object] = []
         wave_index = 0
 
@@ -58,6 +68,7 @@ class CandidatePoolService:
                     attempted[slot.level_id] += 1
                     try:
                         result = self.pipeline.run(pipeline_request)
+                        diagnostic = self._capture_pipeline_result(result, pipeline_request)
                         self._validate_result_identity(result, pipeline_request)
                         passed = bool(getattr(result, "passed", False))
                         terminal_stage = str(
@@ -75,10 +86,14 @@ class CandidatePoolService:
                                 )
                             accepted[slot.level_id].append(candidate)
                             accepted_pipeline_results.append(result)
-                    except Exception:
+                    except Exception as error:
                         passed = False
                         terminal_stage = "pipeline"
                         code = "candidate_pipeline_error"
+                        diagnostic = self._capture_pipeline_exception(
+                            pipeline_request,
+                            error,
+                        )
 
                     attempts.append(
                         CandidatePoolAttempt(
@@ -93,6 +108,7 @@ class CandidatePoolService:
                             code=code,
                         )
                     )
+                    attempt_diagnostics.append(diagnostic)
             wave_index += 1
 
         pools = tuple(
@@ -109,6 +125,7 @@ class CandidatePoolService:
             attempts=tuple(attempts),
             waves_completed=wave_index,
             accepted_pipeline_results=tuple(accepted_pipeline_results),
+            attempt_diagnostics=tuple(attempt_diagnostics),
         )
 
     def expand(
@@ -177,6 +194,7 @@ class CandidatePoolService:
         }
         slot_attempts = {level_id: 0 for level_id in targets}
         attempts = list(result.attempts)
+        attempt_diagnostics = list(result.attempt_diagnostics)
         accepted_pipeline_results = list(result.accepted_pipeline_results)
         wave_index = result.waves_completed
         total_new_attempts = 0
@@ -213,6 +231,10 @@ class CandidatePoolService:
                     total_new_attempts += 1
                     try:
                         pipeline_result = self.pipeline.run(pipeline_request)
+                        diagnostic = self._capture_pipeline_result(
+                            pipeline_result,
+                            pipeline_request,
+                        )
                         self._validate_result_identity(pipeline_result, pipeline_request)
                         passed = bool(getattr(pipeline_result, "passed", False))
                         terminal_stage = str(
@@ -240,10 +262,14 @@ class CandidatePoolService:
                             candidates[level_id].append(candidate)
                             accepted_pipeline_results.append(pipeline_result)
                             additions[level_id] += 1
-                    except Exception:
+                    except Exception as error:
                         passed = False
                         terminal_stage = "pipeline"
                         code = "candidate_pipeline_error"
+                        diagnostic = self._capture_pipeline_exception(
+                            pipeline_request,
+                            error,
+                        )
                     attempts.append(
                         CandidatePoolAttempt(
                             candidate_id=pipeline_request.candidate_id,
@@ -257,6 +283,7 @@ class CandidatePoolService:
                             code=code,
                         )
                     )
+                    attempt_diagnostics.append(diagnostic)
                 if (
                     max_total_attempts is not None
                     and total_new_attempts >= max_total_attempts
@@ -290,6 +317,7 @@ class CandidatePoolService:
             attempts=tuple(attempts),
             waves_completed=wave_index,
             accepted_pipeline_results=tuple(accepted_pipeline_results),
+            attempt_diagnostics=tuple(attempt_diagnostics),
         )
 
     @staticmethod
@@ -324,3 +352,60 @@ class CandidatePoolService:
         result_request = getattr(result, "request", None)
         if result_request != request:
             raise ValueError("pipeline result request identity does not match its attempt")
+
+    def _capture_pipeline_result(
+        self,
+        result: object,
+        request: V3CandidatePipelineRequest,
+    ) -> dict:
+        try:
+            return self.reproducibility_bundle_service.capture_pipeline_result(result)
+        except Exception as error:
+            return self._minimal_diagnostic(
+                request,
+                passed=bool(getattr(result, "passed", False)),
+                terminal_stage=str(getattr(result, "terminal_stage", "pipeline")),
+                code=str(getattr(result, "code", "pipeline_result_invalid")),
+                diagnostic_error=error,
+            )
+
+    def _capture_pipeline_exception(
+        self,
+        request: V3CandidatePipelineRequest,
+        error: Exception,
+    ) -> dict:
+        try:
+            return self.reproducibility_bundle_service.capture_pipeline_exception(
+                request,
+                error,
+            )
+        except Exception as diagnostic_error:
+            return self._minimal_diagnostic(
+                request,
+                passed=False,
+                terminal_stage="pipeline",
+                code="candidate_pipeline_error",
+                diagnostic_error=diagnostic_error,
+            )
+
+    @staticmethod
+    def _minimal_diagnostic(
+        request: V3CandidatePipelineRequest,
+        *,
+        passed: bool,
+        terminal_stage: str,
+        code: str,
+        diagnostic_error: Exception,
+    ) -> dict:
+        return {
+            "candidateID": request.candidate_id,
+            "levelID": request.level_id,
+            "difficulty": request.difficulty,
+            "seed": request.seed,
+            "attemptIndex": request.attempt_index,
+            "passed": passed,
+            "terminalStage": terminal_stage,
+            "code": code,
+            "diagnosticCaptureError": diagnostic_error.__class__.__name__,
+            "stages": [],
+        }

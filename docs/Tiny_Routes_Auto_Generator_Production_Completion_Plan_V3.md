@@ -3317,8 +3317,8 @@ does not enter the legacy generation or manual approval workflow.
 
 ## Stress, calibration, and release
 
-- [ ] **AG-115:** Add reproducibility bundle output.
-- [ ] **AG-116:** Add generator health metrics.
+- [x] **AG-115:** Add reproducibility bundle output.
+- [x] **AG-116:** Add generator health metrics.
 - [ ] **AG-117:** Add anomaly thresholds.
 - [ ] **AG-118:** Add anti-triviality adversarial suite.
 - [ ] **AG-119:** Add positive stateful fixture suite.
@@ -3335,6 +3335,26 @@ does not enter the legacy generation or manual approval workflow.
 - [ ] **AG-130:** Remove weak production fallback.
 - [ ] **AG-131:** Add final architecture/operator documentation.
 - [ ] **AG-132:** Add final release wrapper.
+
+**2026-07-21 AG-115 completion record:** Added deterministic, immutable
+reproduction bundles for production V3 runs and every retained candidate
+attempt. Candidate-pool diagnostics preserve request identity, root and derived
+seeds, complete reached-stage evidence, and stable exception details without
+retaining live rejected proof graphs. Each bundle contains request/config and
+seed snapshots, per-candidate blueprint, composed-graph, solver, rejection,
+layout, and runtime files, content hashes, selected-candidate evidence, and an
+executable `reproduce.sh` command that replays the exact request into an
+isolated output tree. Bundle capture is best-effort observability and cannot
+change candidate acceptance or a completed transaction.
+
+**2026-07-21 AG-116 completion record:** Added schema-versioned generator health
+reports integrated with the production campaign result. Reports aggregate
+pipeline completion, candidate yield, dominant rejection codes, static-policy
+rejection rate, agent success, mean strategic decision metrics, layout repair
+rate, runtime jitter robustness, and selected-portfolio topology, behavior,
+archetype, and mechanic diversity. Metrics are emitted overall and in stable
+difficulty and blueprint-archetype cohorts, retained for successful and failed
+runs, and exposed through the terminal JSON and Markdown report paths.
 
 ---
 

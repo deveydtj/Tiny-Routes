@@ -12,6 +12,19 @@ class _PoolResult:
 
     def __init__(self, candidate) -> None:
         self.candidate = candidate
+        self.attempt_diagnostics = (
+            {
+                "candidateID": f"{candidate.level_id}:candidate:0000",
+                "levelID": candidate.level_id,
+                "difficulty": "hard",
+                "seed": candidate.seed,
+                "attemptIndex": 0,
+                "passed": True,
+                "terminalStage": "quality",
+                "code": "quality_accepted",
+                "stages": [],
+            },
+        )
 
     def pipeline_result_for(self, candidate):
         assert candidate is self.candidate
@@ -117,6 +130,8 @@ def test_complete_campaign_uses_one_transactional_path(tmp_path) -> None:
     assert result.status == "completed"
     assert result.selected_count == result.requested_count == 1
     assert result.report_path.is_file()
+    assert result.reproducibility_bundle_path.is_file()
+    assert result.health_report_path.is_file()
     assert staged.staged
     assert promotion.called
     assert progress == [

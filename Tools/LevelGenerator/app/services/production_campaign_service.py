@@ -17,11 +17,13 @@ from ..repositories.existing_level_repository import ExistingLevelRepository
 from .campaign_portfolio_service import CampaignPortfolioService
 from .candidate_pool_service import CandidatePoolService
 from .difficulty_curve_service import DifficultyCurveService
+from .generator_health_metrics_service import GeneratorHealthMetricsService
 from .production_staged_corpus_validation_service import (
     ProductionStagedCorpusValidationService,
 )
 from .production_staged_output_service import ProductionStagedOutputService
 from .production_staging_service import ProductionStagingService
+from .reproducibility_bundle_service import ReproducibilityBundleService
 from .transactional_promotion_service import TransactionalPromotionService
 
 
@@ -49,6 +51,8 @@ class ProductionCampaignService:
         difficulty_curve_service: DifficultyCurveService | None = None,
         run_id_factory: Callable[[int], str] | None = None,
         seed_factory: Callable[[], int] | None = None,
+        reproducibility_bundle_service: ReproducibilityBundleService | None = None,
+        health_metrics_service: GeneratorHealthMetricsService | None = None,
     ) -> None:
         if candidate_pool_service is None and candidate_pipeline is not None:
             candidate_pool_service = CandidatePoolService(candidate_pipeline)
@@ -69,6 +73,12 @@ class ProductionCampaignService:
         )
         self.run_id_factory = run_id_factory or self._default_run_id
         self.seed_factory = seed_factory or (lambda: secrets.randbits(63))
+        self.reproducibility_bundle_service = (
+            reproducibility_bundle_service or ReproducibilityBundleService()
+        )
+        self.health_metrics_service = (
+            health_metrics_service or GeneratorHealthMetricsService()
+        )
 
     def run(
         self,
@@ -87,6 +97,9 @@ class ProductionCampaignService:
             config_snapshot=config.snapshot(resolved_seed=seed),
         )
         selected_count = 0
+        pool_result = None
+        candidates: tuple[object, ...] = ()
+        selected_pipeline_results: tuple[object, ...] = ()
 
         try:
             self._progress(progress, "planning", "Resolving the campaign plan")
@@ -136,6 +149,7 @@ class ProductionCampaignService:
                 existing_signatures=existing.signatures,
             )
             candidates = tuple(portfolio.candidates)
+            pool_result = portfolio.candidate_pools
             selected_count = len(candidates)
             if selected_count != config.count:
                 raise RuntimeError(
@@ -184,7 +198,14 @@ class ProductionCampaignService:
                     promoted_paths=promotion.promoted_paths,
                     failure_reason=promotion.failure_reason,
                 )
-                result = self._with_report(workspace, result)
+                result = self._with_report(
+                    workspace,
+                    result,
+                    config=config,
+                    pool_result=pool_result,
+                    candidates=candidates,
+                    selected_pipeline_results=selected_pipeline_results,
+                )
                 self._progress(progress, result.status, result.failure_reason or result.status)
                 return result
 
@@ -197,7 +218,14 @@ class ProductionCampaignService:
                 workspace_path=workspace.root,
                 promoted_paths=promotion.promoted_paths,
             )
-            result = self._with_report(workspace, result)
+            result = self._with_report(
+                workspace,
+                result,
+                config=config,
+                pool_result=pool_result,
+                candidates=candidates,
+                selected_pipeline_results=selected_pipeline_results,
+            )
             self._progress(progress, "completed", "Production campaign completed")
             return result
         except Exception as error:
@@ -210,7 +238,14 @@ class ProductionCampaignService:
                 workspace_path=workspace.root,
                 failure_reason=str(error) or error.__class__.__name__,
             )
-            result = self._with_report(workspace, result)
+            result = self._with_report(
+                workspace,
+                result,
+                config=config,
+                pool_result=pool_result,
+                candidates=candidates,
+                selected_pipeline_results=selected_pipeline_results,
+            )
             self._progress(progress, "failed_no_changes", result.failure_reason or "failed")
             return result
 
@@ -235,13 +270,72 @@ class ProductionCampaignService:
         self,
         workspace,
         result: ProductionCampaignResult,
+        *,
+        config: ProductionCampaignConfig,
+        pool_result: object | None,
+        candidates: tuple[object, ...],
+        selected_pipeline_results: tuple[object, ...],
     ) -> ProductionCampaignResult:
+        result = self._with_observability(
+            workspace,
+            result,
+            config=config,
+            pool_result=pool_result,
+            candidates=candidates,
+            selected_pipeline_results=selected_pipeline_results,
+        )
         try:
             return replace(result, report_path=self._write_report(workspace, result))
         except Exception:
             # A report-write failure after successful promotion cannot truthfully
             # turn a completed production transaction into failed_no_changes.
             return result
+
+    def _with_observability(
+        self,
+        workspace,
+        result: ProductionCampaignResult,
+        *,
+        config: ProductionCampaignConfig,
+        pool_result: object | None,
+        candidates: tuple[object, ...],
+        selected_pipeline_results: tuple[object, ...],
+    ) -> ProductionCampaignResult:
+        bundle_path = result.reproducibility_bundle_path
+        health_path = result.health_report_path
+        try:
+            bundle_path = self.reproducibility_bundle_service.write_run_bundle(
+                workspace,
+                root_seed=result.seed,
+                request_configuration=config.snapshot(resolved_seed=result.seed),
+                pool_result=pool_result,
+                selected_pipeline_results=selected_pipeline_results,
+                run_status=result.status,
+                failure_reason=result.failure_reason,
+            )
+        except Exception:
+            pass
+        if pool_result is not None:
+            try:
+                health = self.health_metrics_service.build(
+                    pool_result,
+                    root_seed=result.seed,
+                    selected_candidates=candidates,
+                    run_completed=result.passed,
+                )
+                health_path = self.health_metrics_service.write(
+                    health,
+                    workspace.require_path(
+                        workspace.reports_dir / "generator_health_report.json"
+                    ),
+                )
+            except Exception:
+                pass
+        return replace(
+            result,
+            reproducibility_bundle_path=bundle_path,
+            health_report_path=health_path,
+        )
 
     def _write_report(
         self,
@@ -266,6 +360,12 @@ class ProductionCampaignService:
         )
         if result.failure_reason:
             summary += f"- Failure: {result.failure_reason}\n"
+        if result.reproducibility_bundle_path:
+            summary += (
+                f"- Reproduction bundle: `{result.reproducibility_bundle_path}`\n"
+            )
+        if result.health_report_path:
+            summary += f"- Health report: `{result.health_report_path}`\n"
         self.staged_output_service.write_report(
             workspace,
             "production_campaign_result.md",

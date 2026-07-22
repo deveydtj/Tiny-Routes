@@ -178,6 +178,8 @@ from .production_campaign_service import (
     ProductionCampaignOrchestrationService,
     ProductionCampaignService,
 )
+from .reproducibility_bundle_service import ReproducibilityBundleService
+from .generator_health_metrics_service import GeneratorHealthMetricsService
 
 __all__ = [
     "BoundingBox",
@@ -311,4 +313,6 @@ __all__ = [
     "TransactionalPromotionService",
     "ProductionCampaignOrchestrationService",
     "ProductionCampaignService",
+    "ReproducibilityBundleService",
+    "GeneratorHealthMetricsService",
 ]
