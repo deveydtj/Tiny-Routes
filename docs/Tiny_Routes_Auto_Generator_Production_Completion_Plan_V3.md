@@ -3323,8 +3323,8 @@ does not enter the legacy generation or manual approval workflow.
 - [x] **AG-118:** Add anti-triviality adversarial suite.
 - [x] **AG-119:** Add positive stateful fixture suite.
 - [x] **AG-120:** Add property-based graph suite.
-- [ ] **AG-121:** Add metamorphic suite.
-- [ ] **AG-122:** Add five-level smoke through the exact V3 production orchestration path.
+- [x] **AG-121:** Add metamorphic suite.
+- [x] **AG-122:** Add five-level smoke through the exact V3 production orchestration path.
 - [ ] **AG-123:** Add nightly 30-level V3 campaign with fallback-path detection.
 - [ ] **AG-124:** Add 100-campaign release stress using staging and the exact production path.
 - [ ] **AG-125:** Add blinded playtest export.
@@ -3386,6 +3386,23 @@ objective reference integrity, lossless serialization, bounded exhaustive state
 search, exact solver replay, unique optimum and static-policy rejection,
 production hard-gate compliance, and preservation of strategy behavior after
 deterministic layout repair.
+
+**2026-07-21 AG-121 completion record:** Added the required schema-3
+metamorphic suite. It proves that role-preserving node, edge, and objective ID
+renames and mirrored coordinates leave strategy analysis unchanged; pass-through
+node insertion creates no decision or cost change; unrelated JSON field order is
+semantically inert; and making a locked road always available changes the
+exhaustive static-policy proof in the expected direction.
+
+**2026-07-21 AG-122 completion record:** Added an executable, fixed-seed
+five-level pull-request smoke through the live `ProductionCampaignService`,
+actual campaign candidate-pool service, staging workspace, and locked six-stage
+V3 candidate coordinator shared by the production CLI and GUI. Two complete
+runs must produce identical selected seeds and behavior signatures, five
+behaviorally distinct hard-gate-passing candidates, requested parity-boundary
+evidence, staging-only writes, architecture version 3, and zero template,
+recipe, motif, or legacy fallback usage. Python CI runs the dedicated smoke
+command directly.
 
 ---
 

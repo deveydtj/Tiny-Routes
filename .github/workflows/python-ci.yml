@@ -62,6 +62,9 @@ jobs:
       - name: Run deterministic generator smoke test
         run: python scripts/run_generator_smoke.py
 
+      - name: Run exact V3 five-level production-path smoke test
+        run: python scripts/run_production_v3_smoke.py
+
       - name: Run fixed-seed generator regression suites
         run: >-
           python Tools/LevelGenerator/run_fixed_seed_regressions.py
