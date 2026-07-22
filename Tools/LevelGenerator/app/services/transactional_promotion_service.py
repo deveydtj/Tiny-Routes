@@ -16,6 +16,11 @@ from ..models.production_run_manifest import (
 )
 from ..paths import find_repo_root
 from .level_resource_sync_service import LevelResourceSyncService
+from .production_generation_lock_service import (
+    GenerationLockError,
+    ProductionGenerationLock,
+    ProductionGenerationLockService,
+)
 from .production_staging_service import ProductionStagingWorkspace
 
 
@@ -51,10 +56,18 @@ class TransactionalPromotionService:
         resource_sync_service: LevelResourceSyncService | None = None,
         resource_updater: Callable[[], object] | None = None,
         lightweight_validator: Callable[[ProductionRunManifest], object] | None = None,
+        generation_lock_service: ProductionGenerationLockService | None = None,
+        file_copier: Callable[[Path, Path], object] | None = None,
+        file_replacer: Callable[[Path, Path], object] | None = None,
     ) -> None:
         self.resource_sync_service = resource_sync_service or LevelResourceSyncService()
         self.resource_updater = resource_updater
         self.lightweight_validator = lightweight_validator
+        self.generation_lock_service = (
+            generation_lock_service or ProductionGenerationLockService()
+        )
+        self.file_copier = file_copier or shutil.copy2
+        self.file_replacer = file_replacer or os.replace
 
     def promote(
         self,
@@ -79,7 +92,7 @@ class TransactionalPromotionService:
         resolved_lock = Path(lock_path or self._default_lock_path(manifest)).resolve(
             strict=False
         )
-        lock_fd: int | None = None
+        generation_lock: ProductionGenerationLock | None = None
         backup_root = workspace.require_path(workspace.root / "promotion_backup")
         prepared: dict[Path, Path] = {}
         backups: dict[Path, Path | None] = {}
@@ -87,7 +100,10 @@ class TransactionalPromotionService:
         restored: list[Path] = []
 
         try:
-            lock_fd = self._acquire_lock(resolved_lock, workspace.run_id)
+            generation_lock = self.generation_lock_service.acquire(
+                resolved_lock,
+                workspace.run_id,
+            )
         except Exception as error:
             failed = replace(manifest, status="failed_no_changes")
             failed.write(workspace.run_manifest_path)
@@ -118,7 +134,7 @@ class TransactionalPromotionService:
             for index, target in enumerate(all_mutable_paths):
                 if target.exists():
                     backup = backup_root / f"{index:04d}.backup"
-                    shutil.copy2(target, backup)
+                    self.file_copier(target, backup)
                     backups[target] = backup
                 else:
                     backups[target] = None
@@ -135,11 +151,11 @@ class TransactionalPromotionService:
                 temporary = target.parent / (
                     f".{target.name}.{workspace.run_id}.{secrets.token_hex(6)}.promoting"
                 )
-                shutil.copy2(source, temporary)
                 prepared[target] = temporary
+                self.file_copier(source, temporary)
 
             for target, temporary in prepared.items():
-                os.replace(temporary, target)
+                self.file_replacer(temporary, target)
                 changed.append(target)
 
             self._update_project_resources(project_path, manifest)
@@ -155,7 +171,7 @@ class TransactionalPromotionService:
                 "completed",
                 promoted_paths=tuple(dict.fromkeys(changed)),
             )
-        except Exception as error:
+        except BaseException as error:
             for temporary in prepared.values():
                 if temporary.exists():
                     temporary.unlink()
@@ -168,7 +184,7 @@ class TransactionalPromotionService:
                                 target.unlink()
                         else:
                             target.parent.mkdir(parents=True, exist_ok=True)
-                            shutil.copy2(backup, target)
+                            self.file_copier(backup, target)
                         restored.append(target)
                     except Exception as rollback_error:  # pragma: no cover
                         rollback_errors.append(f"{target}: {rollback_error}")
@@ -181,6 +197,8 @@ class TransactionalPromotionService:
                     shutil.rmtree(backup_root)
                 rolled_back = replace(manifest, status="rolled_back")
                 rolled_back.write(workspace.run_manifest_path)
+                if not isinstance(error, Exception):
+                    raise
                 return TransactionalPromotionResult(
                     workspace.run_id,
                     "rolled_back",
@@ -191,27 +209,22 @@ class TransactionalPromotionService:
 
             failed = replace(manifest, status="failed_no_changes")
             failed.write(workspace.run_manifest_path)
+            if not isinstance(error, Exception):
+                raise
             return TransactionalPromotionResult(
                 workspace.run_id,
                 "failed_no_changes",
                 failure_reason=str(error),
             )
         finally:
-            if lock_fd is not None:
-                os.close(lock_fd)
+            if generation_lock is not None:
                 try:
-                    resolved_lock.unlink()
-                except FileNotFoundError:
+                    generation_lock.release()
+                except GenerationLockError:
+                    # Never remove a lock now owned by another run. The
+                    # promotion result remains authoritative, while the lock
+                    # file preserves evidence for operator recovery.
                     pass
-
-    @staticmethod
-    def _acquire_lock(path: Path, run_id: str) -> int:
-        path.parent.mkdir(parents=True, exist_ok=True)
-        flags = os.O_CREAT | os.O_EXCL | os.O_WRONLY
-        descriptor = os.open(path, flags, 0o600)
-        os.write(descriptor, (run_id + "\n").encode("utf-8"))
-        os.fsync(descriptor)
-        return descriptor
 
     @staticmethod
     def _default_lock_path(manifest: ProductionRunManifest) -> Path:

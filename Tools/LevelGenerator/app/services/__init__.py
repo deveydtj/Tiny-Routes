@@ -157,6 +157,12 @@ from .production_staging_service import (
     ProductionStagingService,
     ProductionStagingWorkspace,
 )
+from .production_generation_lock_service import (
+    GenerationLockError,
+    GenerationLockOwnershipError,
+    ProductionGenerationLock,
+    ProductionGenerationLockService,
+)
 from .production_staged_corpus_validation_service import (
     ProductionStagedCorpusValidationService,
     StagedCorpusValidationIssue,
@@ -288,6 +294,10 @@ __all__ = [
     "ProductionStagedOutputService",
     "ProductionStagingService",
     "ProductionStagingWorkspace",
+    "GenerationLockError",
+    "GenerationLockOwnershipError",
+    "ProductionGenerationLock",
+    "ProductionGenerationLockService",
     "ProductionStagedCorpusValidationService",
     "StagedCorpusValidationIssue",
     "StagedCorpusValidationResult",

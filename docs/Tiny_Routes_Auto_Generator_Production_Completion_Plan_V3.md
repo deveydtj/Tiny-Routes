@@ -3239,8 +3239,8 @@ is absent so stale visual-only signatures cannot bypass the gate.
 - [x] **AG-108:** Write selected candidates to staging only.
 - [x] **AG-109:** Add complete staged-corpus validation.
 - [x] **AG-110:** Add atomic promotion.
-- [ ] **AG-111:** Add rollback tests.
-- [ ] **AG-112:** Add generation lock.
+- [x] **AG-111:** Add rollback tests.
+- [x] **AG-112:** Add generation lock.
 - [ ] **AG-113:** Add final production CLI command.
 - [ ] **AG-114:** Add final one-action GUI flow.
 
@@ -3282,6 +3282,21 @@ artifact validation, and terminal `completed`, `failed_no_changes`, or
 `rolled_back` results. Staged bytes are rehashed immediately before promotion,
 successful backups are removed only after validation, and any failure after the
 backup boundary restores overwritten files and removes newly created targets.
+
+**2026-07-21 AG-111 completion record:** Added the transactional failure suite
+named by the release plan. It proves Python and Swift staged-validation failures
+never reach production; manifest collisions and held locks fail with no changes;
+partial file replacement, staging-copy failure, project-resource failure, and
+process interruption restore all overwritten files, remove newly created files,
+clean temporary artifacts, and retain the correct terminal run status.
+
+**2026-07-21 AG-112 completion record:** Added a dedicated exclusive production
+generation lock with atomic creation, restrictive permissions, deterministic
+owner metadata, actionable contention diagnostics, context-managed release, and
+inode-plus-token ownership verification so one run cannot remove another run's
+lock. Transactional promotion now uses the shared lock service, releases it on
+every success, rejection, rollback, and interruption path, and fails closed when
+a concurrent run owns the production boundary.
 
 ## Stress, calibration, and release
 
