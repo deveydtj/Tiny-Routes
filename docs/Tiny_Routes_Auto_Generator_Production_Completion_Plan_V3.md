@@ -76,8 +76,8 @@ The generator is not complete until every item below is true.
 
 - [x] A single CLI command and a single GUI action can generate a complete production batch.
 - [x] The same seed and configuration produce byte-for-byte equivalent level logic, solution actions, selection results, and reports.
-- [ ] The generator automatically retries failed candidates using new blueprints, compositions, layouts, and road geometry.
-- [ ] The generator never requires a person to choose candidates or repair output.
+- [x] The generator automatically retries failed candidates using new blueprints, compositions, layouts, and road geometry.
+- [x] The generator never requires a person to choose candidates or repair output.
 - [ ] The generator either produces the full requested batch or writes no production changes.
 
 **2026-07-22 completion record:** The dedicated production CLI and GUI action
@@ -86,6 +86,15 @@ and the five-level exact-path smoke proves a complete requested portfolio. Its
 same-seed rerun now compares exact staged level bytes, solution bytes, portfolio
 selection evidence, and candidate-stage report bytes independently before
 declaring the run deterministic.
+
+**2026-07-22 completion record:** Candidate retries now expose independent,
+deterministic seeds for blueprint, composition, layout, and road-geometry
+variants. The exact-path five-level smoke rejects the first complete candidate
+for every slot, proves that all four variant streams change on the automatic
+retry, and still fills and selects the requested portfolio. Production policy
+also rejects selected evidence that permits manual candidate approval or manual
+layout/road repair, while the smoke proves one automatic portfolio selection and
+zero human-intervention requirements.
 
 ### 2.2 No trivial generated levels
 

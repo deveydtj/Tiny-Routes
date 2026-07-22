@@ -37,6 +37,7 @@ def test_accepts_only_the_locked_unrelaxed_v3_path(accepted_pipeline_result) -> 
         (0, "generatorArchitecture", "v2_legacy", "non_v3_stage_architecture"),
         (1, "fallbackUsed", True, "production_fallback_used"),
         (1, "sourceKind", "direct_motif_fixture", "weak_composition_source"),
+        (3, "manualRepairRequired", True, "manual_repair_path"),
         (5, "generationProfile", "playtest_portfolio", "non_production_quality_profile"),
         (5, "qualityThresholdsRelaxed", True, "relaxed_quality_thresholds"),
         (5, "manualApprovalRequired", True, "manual_approval_path"),

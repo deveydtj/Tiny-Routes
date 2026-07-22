@@ -82,6 +82,12 @@ class ProductionV3SmokeEvidence:
     parity_error_count: int
     production_unchanged: bool
     staging_artifact_count: int
+    rejected_candidate_count: int
+    automatic_retry_count: int
+    retry_variant_change_count: int
+    automatic_portfolio_selection: bool
+    manual_approval_required_count: int
+    manual_repair_required_count: int
     level_logic_fingerprint: str
     solution_actions_fingerprint: str
     selection_result_fingerprint: str
@@ -111,6 +117,12 @@ class ProductionV3SmokeEvidence:
             "parityErrorCount": self.parity_error_count,
             "productionUnchanged": self.production_unchanged,
             "stagingArtifactCount": self.staging_artifact_count,
+            "rejectedCandidateCount": self.rejected_candidate_count,
+            "automaticRetryCount": self.automatic_retry_count,
+            "retryVariantChangeCount": self.retry_variant_change_count,
+            "automaticPortfolioSelection": self.automatic_portfolio_selection,
+            "manualApprovalRequiredCount": self.manual_approval_required_count,
+            "manualRepairRequiredCount": self.manual_repair_required_count,
             "levelLogicFingerprint": self.level_logic_fingerprint,
             "solutionActionsFingerprint": self.solution_actions_fingerprint,
             "selectionResultFingerprint": self.selection_result_fingerprint,
@@ -122,7 +134,10 @@ class ProductionV3SmokeEvidence:
 class _SmokeCandidatePipeline:
     """Real six-stage coordinator backed by deterministic stateful fixtures."""
 
-    def __init__(self) -> None:
+    def __init__(self, *, reject_first_attempt: bool = False) -> None:
+        self.reject_first_attempt = reject_first_attempt
+        self.requests: list[object] = []
+        self.results: list[object] = []
         self._blueprints: dict[str, object] = {}
         self._strategy: dict[str, StrategyStageResult] = {}
         self._coordinator = V3CandidatePipelineCoordinator(
@@ -137,12 +152,15 @@ class _SmokeCandidatePipeline:
         )
 
     def run(self, request):
-        return self._coordinator.run(request)
+        self.requests.append(request)
+        result = self._coordinator.run(request)
+        self.results.append(result)
+        return result
 
     def _blueprint(self, request) -> BlueprintStageResult:
         blueprint = PuzzleBlueprintService().generate(
             request.difficulty,
-            request.seed,
+            request.retry_variant_seed("blueprint"),
         )
         self._blueprints[request.candidate_id] = blueprint
         return BlueprintStageResult.accepted(
@@ -157,6 +175,7 @@ class _SmokeCandidatePipeline:
                 "generatorArchitecture": _ARCHITECTURE,
                 "generatorArchitectureVersion": _ARCHITECTURE_VERSION,
                 "fallbackUsed": False,
+                "blueprintVariantSeed": request.retry_variant_seed("blueprint"),
             },
         )
 
@@ -185,6 +204,7 @@ class _SmokeCandidatePipeline:
             "composition",
             execution="production_v3_composition",
             sourceKind="blueprint_composition",
+            compositionVariantSeed=request.retry_variant_seed("composition"),
         )
 
     def _strategy_stage(self, request, _composition) -> StrategyStageResult:
@@ -229,7 +249,13 @@ class _SmokeCandidatePipeline:
         return result
 
     def _layout(self, request, _composition, _strategy) -> CandidateStageResult:
-        return self._accepted_stage(request, "layout", layoutValidated=True)
+        return self._accepted_stage(
+            request,
+            "layout",
+            layoutValidated=True,
+            layoutVariantSeed=request.retry_variant_seed("layout"),
+            manualRepairRequired=False,
+        )
 
     def _runtime(self, request, _layout, _strategy) -> CandidateStageResult:
         return self._accepted_stage(
@@ -238,6 +264,7 @@ class _SmokeCandidatePipeline:
             parityStatus="smoke_fixture_passed",
             swiftParityRequested=True,
             jitterReplayStatus="passed",
+            roadGeometryVariantSeed=request.retry_variant_seed("road_geometry"),
         )
 
     def _quality(self, request, _blueprint, _composition, strategy, _layout, _runtime):
@@ -314,6 +341,29 @@ class _SmokeCandidatePipeline:
             route_interest=0.91,
             estimated_difficulty_band=request.difficulty,
         )
+        report_fields = {
+            "generatorArchitecture": _ARCHITECTURE,
+            "generatorArchitectureVersion": _ARCHITECTURE_VERSION,
+            "fallbackUsed": False,
+            "generationProfile": "production",
+            "qualityThresholdsRelaxed": False,
+            "manualApprovalRequired": False,
+            "antiTrivialityStatus": "passed",
+        }
+        if self.reject_first_attempt and request.attempt_index == 0:
+            return QualityStageResult.rejected(
+                candidate_id=request.candidate_id,
+                level_id=request.level_id,
+                seed=request.seed,
+                difficulty=request.difficulty,
+                rejection_reasons=("retry_variant_smoke_rejection",),
+                generated_level=candidate,
+                puzzle_analysis=analysis,
+                hard_gate=gate,
+                quality_score=score,
+                details="Deterministic smoke rejection proving automatic variant retry.",
+                report_fields=report_fields,
+            )
         return QualityStageResult.accepted(
             candidate_id=request.candidate_id,
             level_id=request.level_id,
@@ -323,15 +373,7 @@ class _SmokeCandidatePipeline:
             puzzle_analysis=analysis,
             hard_gate=gate,
             quality_score=score,
-            report_fields={
-                "generatorArchitecture": _ARCHITECTURE,
-                "generatorArchitectureVersion": _ARCHITECTURE_VERSION,
-                "fallbackUsed": False,
-                "generationProfile": "production",
-                "qualityThresholdsRelaxed": False,
-                "manualApprovalRequired": False,
-                "antiTrivialityStatus": "passed",
-            },
+            report_fields=report_fields,
         )
 
     @staticmethod
@@ -366,11 +408,19 @@ class _SmokeCandidatePipeline:
         level_number = int(request.level_id.rsplit("_", 1)[1])
         return self._with_failure_route_depth(
             level,
-            depth=((level_number - 1) % 30) + 1,
+            depth=((level_number + request.attempt_index - 1) % 30) + 1,
+            layout_variant=request.attempt_index,
+            road_shape_variant=request.attempt_index,
         )
 
     @staticmethod
-    def _with_failure_route_depth(level, *, depth: int):
+    def _with_failure_route_depth(
+        level,
+        *,
+        depth: int,
+        layout_variant: int,
+        road_shape_variant: int,
+    ):
         """Give each campaign slot a behaviorally distinct visible failure route."""
 
         payload = level.to_dict()
@@ -381,6 +431,8 @@ class _SmokeCandidatePipeline:
         original_destination = trap_edge["toNodeID"]
         trap_node = next(node for node in nodes if node["id"] == original_destination)
         trap_edge["toNodeID"] = "variant_trap_0"
+        road_shapes = ("horizontalFirst", "verticalFirst")
+        trap_edge["roadShape"] = road_shapes[road_shape_variant % 2]
 
         for index in range(depth):
             node_id = f"variant_trap_{index}"
@@ -403,8 +455,16 @@ class _SmokeCandidatePipeline:
                     "id": edge_id,
                     "fromNodeID": node_id,
                     "toNodeID": destination,
+                    "roadShape": road_shapes[(road_shape_variant + index) % 2],
                 }
             )
+        # Similarity transforms produce genuinely different serialized layouts
+        # without changing route ordering or local-obviousness classification.
+        scale = 1.0 + layout_variant * 0.05
+        mirror = -1.0 if layout_variant % 2 else 1.0
+        for node in nodes:
+            node["x"] = round(float(node["x"]) * scale * mirror, 4)
+            node["y"] = round(float(node["y"]) * scale, 4)
         return type(level).from_dict(payload)
 
     @staticmethod
@@ -436,7 +496,11 @@ class _SmokeCandidatePipeline:
 
 
 class _SmokePortfolioService:
+    def __init__(self) -> None:
+        self.selection_calls = 0
+
     def select_with_backtracking(self, pool_result, _request, **_kwargs):
+        self.selection_calls += 1
         candidates = tuple(pool.candidates[0] for pool in pool_result.pools)
         signatures = tuple(
             candidate.candidate_signature.structural_behavior_signature
@@ -588,14 +652,15 @@ def _run_once(
     manifest = production / "manifest.json"
     before = _file_snapshot(production)
 
-    pipeline = _SmokeCandidatePipeline()
+    pipeline = _SmokeCandidatePipeline(reject_first_attempt=True)
     pool = CandidatePoolService(pipeline)
+    portfolio = _SmokePortfolioService()
     staged = _SmokeStagedOutputService()
     validation = _SmokeValidationService()
     promotion = _SmokePromotionService()
     service = ProductionCampaignService(
         candidate_pool_service=pool,
-        portfolio_service=_SmokePortfolioService(),
+        portfolio_service=portfolio,
         staged_output_service=staged,
         validation_service=validation,
         promotion_service=promotion,
@@ -608,7 +673,7 @@ def _run_once(
         difficulty=difficulty,
         seed=seed,
         candidates_per_slot=2,
-        max_attempts_per_slot=2,
+        max_attempts_per_slot=3,
         wave_size=1,
         levels_output_dir=levels,
         solutions_output_dir=solutions,
@@ -660,6 +725,37 @@ def _run_once(
         for item in pipeline_results
     )
     parity_error_count = sum(value != "smoke_fixture_passed" for value in parity)
+    rejected_results = tuple(item for item in pipeline.results if not item.passed)
+    requests_by_level: dict[str, list[object]] = {}
+    for request in pipeline.requests:
+        requests_by_level.setdefault(request.level_id, []).append(request)
+    automatic_retry_count = 0
+    retry_variant_change_count = 0
+    for rejected in rejected_results:
+        later = tuple(
+            request
+            for request in requests_by_level[rejected.request.level_id]
+            if request.attempt_index > rejected.request.attempt_index
+        )
+        if not later:
+            continue
+        automatic_retry_count += 1
+        replacement = later[0]
+        if all(
+            rejected.request.retry_variant_seeds[name]
+            != replacement.retry_variant_seeds[name]
+            for name in rejected.request.retry_variant_seeds
+        ):
+            retry_variant_change_count += 1
+    manual_approval_required_count = sum(
+        item.stage_results[5].report_fields.get("manualApprovalRequired") is not False
+        for item in pipeline_results
+    )
+    manual_repair_required_count = sum(
+        item.stage_results[3].report_fields.get("manualRepairRequired") is not False
+        for item in pipeline_results
+    )
+    automatic_portfolio_selection = portfolio.selection_calls == 1
     workspace = result.workspace_path
     assert workspace is not None
     level_logic_fingerprint = _snapshot_fingerprint(
@@ -708,6 +804,12 @@ def _run_once(
         "stages": stages,
         "parity": parity,
         "fallbackCount": fallback_count,
+        "rejectedCandidateCount": len(rejected_results),
+        "automaticRetryCount": automatic_retry_count,
+        "retryVariantChangeCount": retry_variant_change_count,
+        "automaticPortfolioSelection": automatic_portfolio_selection,
+        "manualApprovalRequiredCount": manual_approval_required_count,
+        "manualRepairRequiredCount": manual_repair_required_count,
         "levelLogicFingerprint": level_logic_fingerprint,
         "solutionActionsFingerprint": solution_actions_fingerprint,
         "selectionResultFingerprint": selection_result_fingerprint,
@@ -732,6 +834,12 @@ def _run_once(
             and one_tap_or_less_count == 0
             and static_policy_solvable_count == 0
             and unproven_optimal_count == 0
+            and len(rejected_results) == level_count
+            and automatic_retry_count == level_count
+            and retry_variant_change_count == level_count
+            and automatic_portfolio_selection
+            and manual_approval_required_count == 0
+            and manual_repair_required_count == 0
             and before == after
             and promotion.called
         ),
@@ -755,6 +863,12 @@ def _run_once(
         parity_error_count=parity_error_count,
         production_unchanged=before == after,
         staging_artifact_count=len(staged.selection_paths),
+        rejected_candidate_count=len(rejected_results),
+        automatic_retry_count=automatic_retry_count,
+        retry_variant_change_count=retry_variant_change_count,
+        automatic_portfolio_selection=automatic_portfolio_selection,
+        manual_approval_required_count=manual_approval_required_count,
+        manual_repair_required_count=manual_repair_required_count,
         level_logic_fingerprint=level_logic_fingerprint,
         solution_actions_fingerprint=solution_actions_fingerprint,
         selection_result_fingerprint=selection_result_fingerprint,

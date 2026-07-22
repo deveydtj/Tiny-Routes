@@ -35,6 +35,12 @@ def test_five_level_fixed_seed_smoke_uses_exact_v3_production_path(tmp_path) -> 
     assert evidence.parity_error_count == 0
     assert evidence.production_unchanged
     assert evidence.staging_artifact_count == 1
+    assert evidence.rejected_candidate_count == 5
+    assert evidence.automatic_retry_count == 5
+    assert evidence.retry_variant_change_count == 5
+    assert evidence.automatic_portfolio_selection
+    assert evidence.manual_approval_required_count == 0
+    assert evidence.manual_repair_required_count == 0
     assert len(evidence.level_logic_fingerprint) == 64
     assert len(evidence.solution_actions_fingerprint) == 64
     assert len(evidence.selection_result_fingerprint) == 64

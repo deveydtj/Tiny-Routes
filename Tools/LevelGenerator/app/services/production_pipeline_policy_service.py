@@ -119,6 +119,16 @@ class ProductionPipelinePolicyService:
                     )
                 )
 
+            layout = stages[3].report_fields
+            if layout.get("manualRepairRequired") is not False:
+                issues.append(
+                    ProductionPipelinePolicyIssue(
+                        "manual_repair_path",
+                        level_id,
+                        "Production layout and road geometry cannot require manual repair.",
+                    )
+                )
+
             quality = stages[5].report_fields
             if quality.get("generationProfile") != "production":
                 issues.append(

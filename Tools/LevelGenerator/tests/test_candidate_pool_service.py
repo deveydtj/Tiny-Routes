@@ -83,6 +83,17 @@ def test_builds_every_campaign_slot_in_deterministic_waves_before_selection() ->
         "level_031",
         "level_032",
     ]
+    retried_requests = tuple(
+        request
+        for request in first_pipeline.requests
+        if request.level_id == "level_031" and request.attempt_index in {0, 1}
+    )
+    assert len(retried_requests) == 2
+    assert all(
+        retried_requests[0].retry_variant_seeds[name]
+        != retried_requests[1].retry_variant_seeds[name]
+        for name in retried_requests[0].retry_variant_seeds
+    )
     assert all(
         candidate.candidate_signature is not None
         for pool in first.candidate_pools.values()

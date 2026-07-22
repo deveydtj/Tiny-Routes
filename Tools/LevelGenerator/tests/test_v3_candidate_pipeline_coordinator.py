@@ -211,7 +211,27 @@ def test_coordinator_runs_the_locked_candidate_order_and_returns_the_candidate()
     assert result.passed
     assert result.candidate is not None
     assert result.terminal_stage == "quality"
+    assert result.to_report_dict()["retryVariantSeeds"] == request.retry_variant_seeds
     json.dumps(result.to_report_dict(), sort_keys=True)
+
+
+def test_retry_variant_seeds_are_deterministic_and_stage_specific() -> None:
+    request = _request()
+    repeated = _request()
+    retry = V3CandidatePipelineRequest(
+        candidate_id="policy_evaluation_fixture:102",
+        level_id=request.level_id,
+        seed=request.seed + 1,
+        difficulty=request.difficulty,
+        attempt_index=request.attempt_index + 1,
+    )
+
+    assert request.retry_variant_seeds == repeated.retry_variant_seeds
+    assert len(set(request.retry_variant_seeds.values())) == 4
+    assert all(
+        request.retry_variant_seeds[name] != retry.retry_variant_seeds[name]
+        for name in request.retry_variant_seeds
+    )
 
 
 def test_strategy_rejection_prevents_layout_and_runtime_work() -> None:

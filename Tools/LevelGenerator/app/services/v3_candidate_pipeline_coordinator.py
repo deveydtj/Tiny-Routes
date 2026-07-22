@@ -2,9 +2,10 @@
 
 from __future__ import annotations
 
+import hashlib
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, ClassVar
 
 from ..models.blueprint_stage_result import BlueprintStageResult
 from ..models.generated_level import GeneratedLevel
@@ -23,6 +24,13 @@ class V3CandidatePipelineRequest:
     difficulty: str
     attempt_index: int = 0
 
+    _RETRY_VARIANT_NAMES: ClassVar[tuple[str, ...]] = (
+        "blueprint",
+        "composition",
+        "layout",
+        "road_geometry",
+    )
+
     def __post_init__(self) -> None:
         for field_name in ("candidate_id", "level_id", "difficulty"):
             value = getattr(self, field_name)
@@ -38,6 +46,35 @@ class V3CandidatePipelineRequest:
             or self.attempt_index < 0
         ):
             raise ValueError("attempt_index must be a non-negative integer")
+
+    def retry_variant_seed(self, variant_name: str) -> int:
+        """Return a deterministic, independently named retry-variant seed.
+
+        Candidate attempts already receive distinct root seeds. Naming the four
+        production retry axes here prevents a stage from accidentally reusing a
+        different stage's random stream and gives reports executable evidence
+        that a retry explored more than the rejected candidate verbatim.
+        """
+
+        if variant_name not in self._RETRY_VARIANT_NAMES:
+            raise ValueError(
+                "variant_name must be one of "
+                + ", ".join(self._RETRY_VARIANT_NAMES)
+            )
+        payload = (
+            f"production_v3:{self.level_id}:{self.seed}:{self.attempt_index}:"
+            f"{variant_name}"
+        ).encode("utf-8")
+        return int.from_bytes(hashlib.sha256(payload).digest()[:8], "big") & (
+            (1 << 63) - 1
+        )
+
+    @property
+    def retry_variant_seeds(self) -> dict[str, int]:
+        return {
+            name: self.retry_variant_seed(name)
+            for name in self._RETRY_VARIANT_NAMES
+        }
 
 
 BlueprintStageRunner = Callable[[V3CandidatePipelineRequest], BlueprintStageResult]
@@ -170,6 +207,7 @@ class V3CandidatePipelineResult:
             "seed": self.request.seed,
             "difficulty": self.request.difficulty,
             "attemptIndex": self.request.attempt_index,
+            "retryVariantSeeds": self.request.retry_variant_seeds,
             "passed": self.passed,
             "terminalStage": self.terminal_stage,
             "code": self.code,
