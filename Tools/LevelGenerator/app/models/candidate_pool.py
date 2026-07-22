@@ -179,10 +179,12 @@ class CampaignCandidatePoolResult:
     pools: tuple[CandidateSlotPool, ...]
     attempts: tuple[CandidatePoolAttempt, ...]
     waves_completed: int
+    accepted_pipeline_results: tuple[object, ...] = ()
 
     def __post_init__(self) -> None:
         pools = tuple(self.pools)
         attempts = tuple(self.attempts)
+        pipeline_results = tuple(self.accepted_pipeline_results)
         if not pools:
             raise ValueError("campaign candidate pools cannot be empty")
         if any(not isinstance(pool, CandidateSlotPool) for pool in pools):
@@ -193,6 +195,7 @@ class CampaignCandidatePoolResult:
             raise ValueError("waves_completed must be a positive integer")
         object.__setattr__(self, "pools", pools)
         object.__setattr__(self, "attempts", attempts)
+        object.__setattr__(self, "accepted_pipeline_results", pipeline_results)
 
     @property
     def complete(self) -> bool:
@@ -205,6 +208,27 @@ class CampaignCandidatePoolResult:
     @property
     def constrained_level_ids(self) -> tuple[str, ...]:
         return tuple(pool.slot.level_id for pool in self.pools if not pool.complete)
+
+    def pipeline_result_for(self, candidate: GeneratedLevel) -> object:
+        """Return the proof-bearing pipeline result for an accepted candidate."""
+
+        matches = [
+            result
+            for result in self.accepted_pipeline_results
+            if getattr(result, "candidate", None) is candidate
+            or (
+                getattr(getattr(result, "candidate", None), "level_id", None)
+                == candidate.level_id
+                and getattr(getattr(result, "candidate", None), "seed", None)
+                == candidate.seed
+            )
+        ]
+        if len(matches) != 1:
+            raise ValueError(
+                f"Expected one retained pipeline result for {candidate.level_id}:"
+                f"{candidate.seed}, found {len(matches)}"
+            )
+        return matches[0]
 
     def to_report_dict(self) -> dict[str, Any]:
         return {

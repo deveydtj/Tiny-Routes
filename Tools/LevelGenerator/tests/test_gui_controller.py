@@ -20,6 +20,17 @@ class FakeGenerationService:
         return GenerationResult()
 
 
+class FakeProductionCampaignService:
+    def __init__(self) -> None:
+        self.config = None
+
+    def run(self, config, *, progress=None):
+        self.config = config
+        if progress:
+            progress("planning", "ready")
+        return SimpleNamespace(status="completed", passed=True)
+
+
 def test_controller_passes_generation_config_to_service(tmp_path) -> None:
     service = FakeGenerationService()
     controller = GuiController(generation_service=service)
@@ -37,6 +48,29 @@ def test_controller_invalid_state_raises_user_friendly_error(tmp_path) -> None:
 
     with pytest.raises(ValueError, match="Count must be greater than zero"):
         controller.generate_from_state(state)
+
+
+def test_controller_uses_shared_production_campaign_service(tmp_path) -> None:
+    service = FakeProductionCampaignService()
+    controller = GuiController(
+        generation_service=FakeGenerationService(),
+        production_campaign_service=service,
+    )
+    stages = []
+    state = _state_with_paths(
+        tmp_path,
+        start_level_number="31",
+        difficulty="hard",
+    )
+
+    result = controller.generate_production_from_state(
+        state, progress=lambda stage, message: stages.append(stage)
+    )
+
+    assert result.passed
+    assert service.config.start_level_number == 31
+    assert service.config.run_swift_tests is True
+    assert stages == ["planning"]
 
 
 def test_result_formatter_includes_accepted_level_id() -> None:

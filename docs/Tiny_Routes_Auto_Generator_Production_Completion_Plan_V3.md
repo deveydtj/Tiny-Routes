@@ -3241,8 +3241,8 @@ is absent so stale visual-only signatures cannot bypass the gate.
 - [x] **AG-110:** Add atomic promotion.
 - [x] **AG-111:** Add rollback tests.
 - [x] **AG-112:** Add generation lock.
-- [ ] **AG-113:** Add final production CLI command.
-- [ ] **AG-114:** Add final one-action GUI flow.
+- [x] **AG-113:** Add final production CLI command.
+- [x] **AG-114:** Add final one-action GUI flow.
 
 **2026-07-21 AG-106 completion record:** Added an isolated, per-run production
 staging workspace under the generator scratch root with dedicated levels,
@@ -3297,6 +3297,23 @@ inode-plus-token ownership verification so one run cannot remove another run's
 lock. Transactional promotion now uses the shared lock service, releases it on
 every success, rejection, rollback, and interruption path, and fails closed when
 a concurrent run owns the production boundary.
+
+**2026-07-21 AG-113 completion record:** Added the dedicated
+`generate_production_campaign.py` command and a shared production-campaign
+orchestration service. It locks generation to `production_v3`, resolves the full
+campaign plan, builds proof-bearing candidate pools, selects one complete
+portfolio, writes only to staging, requires staged Python and Swift validation,
+promotes atomically, retains terminal reports, and prints one concise summary.
+Candidate pools now retain the exact accepted pipeline proofs required to verify
+that the selected staged bytes are the candidates that passed every hard gate.
+
+**2026-07-21 AG-114 completion record:** Added a single **Generate Production
+Campaign** GUI action over the same orchestration service used by the final CLI.
+The existing form supplies start level, count, difficulty/campaign profile,
+optional seed, and output targets; the GUI forces mandatory Swift verification,
+reports each pipeline stage without candidate-review pauses, and exposes the
+terminal result and report path. Focused controller and state tests prove the GUI
+does not enter the legacy generation or manual approval workflow.
 
 ## Stress, calibration, and release
 

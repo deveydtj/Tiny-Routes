@@ -3,7 +3,13 @@ from __future__ import annotations
 import pytest
 
 from app.generation_config import GenerationConfig
-from app.gui.gui_state import GuiGenerationState, parse_positive_int, parse_probability, to_generation_config
+from app.gui.gui_state import (
+    GuiGenerationState,
+    parse_positive_int,
+    parse_probability,
+    to_generation_config,
+    to_production_campaign_config,
+)
 
 
 def test_parse_positive_int_accepts_valid_integer() -> None:
@@ -127,6 +133,24 @@ def test_gui_state_carries_generator_architecture_to_config_and_command(tmp_path
         "--generator-architecture",
         "production_v3",
     ]
+
+
+def test_gui_state_builds_strict_production_campaign_config(tmp_path) -> None:
+    config = to_production_campaign_config(
+        _state_with_paths(
+            tmp_path,
+            start_level_number="31",
+            difficulty="hard",
+            seed="42",
+            dry_run=True,
+            run_swift_tests=False,
+        )
+    )
+
+    assert config.start_level_number == 31
+    assert config.seed == 42
+    assert config.run_swift_tests is True
+    assert config.production_manifest_path == tmp_path / "production_manifest.json"
 
 
 def _state_with_paths(tmp_path, **kwargs) -> GuiGenerationState:

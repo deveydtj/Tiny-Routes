@@ -6,6 +6,7 @@ from ..generation_config import GenerationConfig
 from ..models.generation_result import GenerationResult, SwiftTestSummary
 from ..repositories.generated_level_repository import GeneratedLevelRepository
 from ..services.level_generation_service import LevelGenerationService
+from ..services.production_campaign_service import ProductionCampaignService
 from ..services.level_validation_runner_service import (
     ExistingLevelValidationConfig,
     ExistingLevelValidationResult,
@@ -17,16 +18,25 @@ from ..services.candidate_editor_handoff_service import (
     CandidateEditorHandoff,
     CandidateEditorHandoffService,
 )
-from .gui_state import GuiGenerationState, parse_positive_int, to_generation_config
+from .gui_state import (
+    GuiGenerationState,
+    parse_positive_int,
+    to_generation_config,
+    to_production_campaign_config,
+)
 
 
 class GuiController:
     def __init__(
         self,
         generation_service=None,
+        production_campaign_service: ProductionCampaignService | None = None,
         validation_service: LevelValidationRunnerService | None = None,
     ) -> None:
         self.generation_service = generation_service or LevelGenerationService()
+        self.production_campaign_service = (
+            production_campaign_service or ProductionCampaignService()
+        )
         self.validation_service = validation_service or LevelValidationRunnerService()
         self.resource_sync_service = LevelResourceSyncService()
         self.generated_level_repository = GeneratedLevelRepository()
@@ -37,6 +47,10 @@ class GuiController:
     def generate_from_state(self, state: GuiGenerationState) -> GenerationResult:
         config = to_generation_config(state)
         return self.generation_service.generate(config)
+
+    def generate_production_from_state(self, state: GuiGenerationState, *, progress=None):
+        config = to_production_campaign_config(state)
+        return self.production_campaign_service.run(config, progress=progress)
 
     def validate_existing_levels(
         self,
@@ -187,6 +201,20 @@ def format_validation_result(result: ExistingLevelValidationResult) -> str:
         for failure in result.failures:
             lines.append(f"  {failure}")
 
+    return "\n".join(lines)
+
+
+def format_production_campaign_result(result) -> str:
+    lines = [
+        f"Production status: {result.status}",
+        f"Run: {result.run_id}",
+        f"Seed: {result.seed}",
+        f"Levels: {result.selected_count}/{result.requested_count}",
+    ]
+    if result.report_path:
+        lines.append(f"Report: {result.report_path}")
+    if result.failure_reason:
+        lines.append(f"Failure: {result.failure_reason}")
     return "\n".join(lines)
 
 

@@ -126,6 +126,7 @@ from .production_run_manifest import (
     ProductionRunManifest,
     ProductionTargetSnapshot,
 )
+from .production_campaign import ProductionCampaignConfig, ProductionCampaignResult
 from .generation_quality import GenerationQualityScore
 from .generation_batch_plan import GenerationBatchPlan, GenerationBatchPlanEntry
 from .generation_result import GenerationResult, SwiftTestSummary
@@ -198,6 +199,8 @@ __all__ = [
     "ProductionCandidateRecord",
     "ProductionRunManifest",
     "ProductionTargetSnapshot",
+    "ProductionCampaignConfig",
+    "ProductionCampaignResult",
     "DecisionProfile",
     "DecisionDependency",
     "DecisionDependencyGraph",

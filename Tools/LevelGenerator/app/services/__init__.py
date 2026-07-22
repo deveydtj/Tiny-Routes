@@ -174,6 +174,10 @@ from .transactional_promotion_service import (
     TransactionalPromotionResult,
     TransactionalPromotionService,
 )
+from .production_campaign_service import (
+    ProductionCampaignOrchestrationService,
+    ProductionCampaignService,
+)
 
 __all__ = [
     "BoundingBox",
@@ -305,4 +309,6 @@ __all__ = [
     "AtomicPromotionService",
     "TransactionalPromotionResult",
     "TransactionalPromotionService",
+    "ProductionCampaignOrchestrationService",
+    "ProductionCampaignService",
 ]

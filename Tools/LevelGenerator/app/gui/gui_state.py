@@ -15,6 +15,7 @@ from ..generation_config import (
     DEFAULT_GENERATOR_ARCHITECTURE,
     GenerationConfig,
 )
+from ..models.production_campaign import ProductionCampaignConfig
 from ..paths import get_default_levels_directory, get_default_reports_directory, get_default_solutions_directory
 
 
@@ -146,6 +147,46 @@ def to_generation_config(state: GuiGenerationState) -> GenerationConfig:
         candidate_pool_size=candidate_pool_size,
         swift_timeout_seconds=swift_timeout_seconds,
         command_arguments=command_arguments,
+    )
+
+
+def to_production_campaign_config(state: GuiGenerationState) -> ProductionCampaignConfig:
+    """Resolve the production-only subset of the GUI in one strict step."""
+
+    start_level_number = parse_positive_int(
+        state.start_level_number, "Start level number"
+    )
+    count = parse_positive_int(state.count, "Count")
+    seed = _parse_optional_int(state.seed, "Seed")
+    levels_output_dir = _path_or_default(
+        state.levels_output_dir, get_default_levels_directory
+    )
+    solutions_output_dir = _path_or_default(
+        state.solutions_output_dir, get_default_solutions_directory
+    )
+    report_path = _path_or_default(
+        state.report_path,
+        lambda: get_default_reports_directory() / "last_generation_report.md",
+    )
+    return ProductionCampaignConfig(
+        start_level_number=start_level_number,
+        count=count,
+        difficulty=state.difficulty,
+        seed=seed,
+        run_swift_tests=True,
+        swift_timeout_seconds=parse_positive_int(
+            state.swift_timeout_seconds, "Swift timeout seconds"
+        ),
+        candidates_per_slot=max(
+            2,
+            parse_positive_int(state.candidate_pool_size, "Candidate pool size"),
+        ),
+        max_attempts_per_slot=parse_positive_int(
+            state.max_attempts_per_level, "Max attempts per level"
+        ),
+        levels_output_dir=levels_output_dir,
+        solutions_output_dir=solutions_output_dir,
+        production_manifest_path=report_path.parent / "production_manifest.json",
     )
 
 

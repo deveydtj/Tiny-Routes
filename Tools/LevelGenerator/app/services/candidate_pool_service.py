@@ -38,6 +38,7 @@ class CandidatePoolService:
         accepted = {slot.level_id: [] for slot in request.slots}
         attempted = {slot.level_id: 0 for slot in request.slots}
         attempts: list[CandidatePoolAttempt] = []
+        accepted_pipeline_results: list[object] = []
         wave_index = 0
 
         while self._has_runnable_slot(request, accepted, attempted):
@@ -73,6 +74,7 @@ class CandidatePoolService:
                                     "accepted pipeline result did not retain its signature"
                                 )
                             accepted[slot.level_id].append(candidate)
+                            accepted_pipeline_results.append(result)
                     except Exception:
                         passed = False
                         terminal_stage = "pipeline"
@@ -106,6 +108,7 @@ class CandidatePoolService:
             pools=pools,
             attempts=tuple(attempts),
             waves_completed=wave_index,
+            accepted_pipeline_results=tuple(accepted_pipeline_results),
         )
 
     def expand(
@@ -174,6 +177,7 @@ class CandidatePoolService:
         }
         slot_attempts = {level_id: 0 for level_id in targets}
         attempts = list(result.attempts)
+        accepted_pipeline_results = list(result.accepted_pipeline_results)
         wave_index = result.waves_completed
         total_new_attempts = 0
 
@@ -234,6 +238,7 @@ class CandidatePoolService:
                                     "accepted pipeline result did not retain its signature"
                                 )
                             candidates[level_id].append(candidate)
+                            accepted_pipeline_results.append(pipeline_result)
                             additions[level_id] += 1
                     except Exception:
                         passed = False
@@ -284,6 +289,7 @@ class CandidatePoolService:
             pools=tuple(pools),
             attempts=tuple(attempts),
             waves_completed=wave_index,
+            accepted_pipeline_results=tuple(accepted_pipeline_results),
         )
 
     @staticmethod

@@ -24,7 +24,12 @@ from ..generation_config import (
 )
 from ..services.difficulty_service import DifficultyService
 from ..recipes.recipe_family_registry import RecipeFamilyRegistry
-from .gui_controller import GuiController, format_generation_result, format_validation_result
+from .gui_controller import (
+    GuiController,
+    format_generation_result,
+    format_production_campaign_result,
+    format_validation_result,
+)
 from .gui_paths import (
     open_path,
     try_get_default_debug_failures_directory,
@@ -67,6 +72,7 @@ class LevelGeneratorGui:
         self.layout_size_profiles = list(LAYOUT_SIZE_PROFILES)
         self.generator_architectures = list(GENERATOR_ARCHITECTURES)
         self.latest_result = None
+        self.latest_production_result = None
         self.approved_candidates = []
         self.cancel_requested = False
 
@@ -251,13 +257,20 @@ class LevelGeneratorGui:
         for column in range(2):
             frame.grid_columnconfigure(column, weight=1)
 
-        self.generate_button = ttk.Button(frame, text="Generate", command=self._on_generate)
+        self.generate_button = ttk.Button(frame, text="Generate Preview", command=self._on_generate)
         self.generate_button.grid(row=0, column=0, sticky="ew", padx=(0, 4), pady=3)
-        ttk.Button(frame, text="Clear Log", command=self.clear_log).grid(row=0, column=1, sticky="ew", padx=(4, 0), pady=3)
+        self.production_generate_button = ttk.Button(
+            frame,
+            text="Generate Production Campaign",
+            command=self._on_generate_production,
+        )
+        self.production_generate_button.grid(
+            row=0, column=1, sticky="ew", padx=(4, 0), pady=3
+        )
 
         self.open_report_button = ttk.Button(frame, text="Open Report", command=self._on_open_report)
         self.open_report_button.grid(row=1, column=0, sticky="ew", padx=(0, 4), pady=3)
-        ttk.Button(frame, text="Reset", command=self._reset_form).grid(row=1, column=1, sticky="ew", padx=(4, 0), pady=3)
+        ttk.Button(frame, text="Clear Log", command=self.clear_log).grid(row=1, column=1, sticky="ew", padx=(4, 0), pady=3)
 
         self.open_levels_button = ttk.Button(frame, text="Open Levels Folder", command=self._on_open_levels_folder)
         self.open_levels_button.grid(row=2, column=0, sticky="ew", padx=(0, 4), pady=3)
@@ -272,6 +285,9 @@ class LevelGeneratorGui:
             sticky="ew",
             padx=(4, 0),
             pady=3,
+        )
+        ttk.Button(frame, text="Reset", command=self._reset_form).grid(
+            row=4, column=0, columnspan=2, sticky="ew", pady=3
         )
 
     def _build_output_section(self, parent: ttk.Frame) -> None:
@@ -470,6 +486,70 @@ class LevelGeneratorGui:
         self._refresh_open_buttons()
         self._populate_preview_table(result.accepted)
 
+    def _on_generate_production(self) -> None:
+        state = self._current_state()
+        self.production_generate_button.configure(state=tk.DISABLED)
+        self.generate_button.configure(state=tk.DISABLED)
+        self._set_status("Production: planning", "running")
+        self.append_log(
+            "Starting one-action production V3 generation. All files remain in "
+            "staging until Python and Swift validation pass."
+        )
+
+        def progress(stage: str, message: str) -> None:
+            self.root.after(0, lambda: self._show_production_progress(stage, message))
+
+        def worker() -> None:
+            try:
+                result = self.controller.generate_production_from_state(
+                    state,
+                    progress=progress,
+                )
+                summary = format_production_campaign_result(result)
+            except ValueError as exc:
+                message = str(exc)
+                self.root.after(
+                    0,
+                    lambda message=message: self._show_value_error(
+                        message, button=self.production_generate_button
+                    ),
+                )
+                return
+            except Exception as exc:
+                message = exc
+                details = traceback.format_exc()
+                self.root.after(
+                    0,
+                    lambda message=message, details=details: self._show_unexpected_error(
+                        message,
+                        details,
+                        button=self.production_generate_button,
+                    ),
+                )
+                return
+            self.root.after(
+                0, lambda: self._finish_production_generation(result, summary)
+            )
+
+        threading.Thread(target=worker, daemon=True).start()
+
+    def _show_production_progress(self, stage: str, message: str) -> None:
+        self._set_status(f"Production: {stage}", "running")
+        self.append_log(f"[{stage}] {message}")
+
+    def _finish_production_generation(self, result, summary: str) -> None:
+        self.latest_production_result = result
+        self.append_log(summary)
+        color = "passed" if result.passed else "failed"
+        self._set_status(result.status, color)
+        self.accepted_var.set(f"Accepted: {result.selected_count}")
+        self.swift_summary_var.set(
+            "Swift: Passed" if result.passed else "Swift: Failed or not reached"
+        )
+        self.production_generate_button.configure(state=tk.NORMAL)
+        self.generate_button.configure(state=tk.NORMAL)
+        self._refresh_open_buttons()
+
     def _on_validate(self) -> None:
         self.validate_button.configure(state=tk.DISABLED)
         self._set_status("Running validation...", "running")
@@ -530,14 +610,24 @@ class LevelGeneratorGui:
         self.append_log(f"Invalid input: {message}")
         self._set_status("Failed", "failed")
         (button or self.generate_button).configure(state=tk.NORMAL)
+        self.generate_button.configure(state=tk.NORMAL)
 
     def _show_unexpected_error(self, exc: Exception, details: str, *, button=None) -> None:
         messagebox.showerror("Unexpected error", str(exc))
         self.append_log(details)
         self._set_status("Failed", "failed")
         (button or self.generate_button).configure(state=tk.NORMAL)
+        self.generate_button.configure(state=tk.NORMAL)
 
     def _on_open_report(self) -> None:
+        production_report = (
+            self.latest_production_result.report_path
+            if self.latest_production_result is not None
+            else None
+        )
+        if production_report is not None and Path(production_report).exists():
+            self._open_path_with_error(Path(production_report))
+            return
         markdown_path = Path(self.report_path_var.get()).expanduser() if self.report_path_var.get().strip() else None
         json_path = Path(self.json_report_path_var.get()).expanduser() if self.json_report_path_var.get().strip() else None
         target = None
@@ -744,6 +834,7 @@ class LevelGeneratorGui:
         self.accepted_var.set("Accepted: 0")
         self.rejected_var.set("Rejected: 0")
         self.swift_summary_var.set("Swift: Not run")
+        self.latest_production_result = None
         self.append_log("Form reset.")
         self._log_default_path_warning_if_needed()
 
@@ -751,7 +842,14 @@ class LevelGeneratorGui:
         self.command_preview_var.set(build_command_preview(self._current_state()))
 
     def _refresh_open_buttons(self) -> None:
-        report_configured = bool(self.report_path_var.get().strip() or self.json_report_path_var.get().strip())
+        report_configured = bool(
+            self.report_path_var.get().strip()
+            or self.json_report_path_var.get().strip()
+            or (
+                self.latest_production_result is not None
+                and self.latest_production_result.report_path is not None
+            )
+        )
         self.open_report_button.configure(state=tk.NORMAL if report_configured else tk.DISABLED)
 
     def _set_status(self, value: str, color_key: str) -> None:

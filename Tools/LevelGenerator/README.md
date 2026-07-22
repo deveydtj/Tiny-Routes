@@ -53,6 +53,27 @@ Map-inspired generation is optional and intentionally separate. Normal generatio
 
 ## Quick Start
 
+Generate, validate, and atomically promote a complete production V3 campaign:
+
+```bash
+python Tools/LevelGenerator/generate_production_campaign.py \
+  --start 31 \
+  --count 30 \
+  --difficulty auto \
+  --seed 12345 \
+  --swift-tests
+```
+
+This command has no legacy recipe or template fallback. It stages the complete
+portfolio, runs the mandatory Python and Swift checks against those staged
+bytes, and promotes only after every level passes. Its single output line
+includes the terminal status, resolved seed, selected count, and report path.
+
+The GUI exposes the same workflow through **Generate Production Campaign**.
+Start level, count, difficulty, seed, and output directories come from the main
+form; stage progress and the final report path appear in the activity log. No
+candidate approval or Level Editor cleanup is part of this action.
+
 Dry-run one tutorial level:
 
 ```bash
