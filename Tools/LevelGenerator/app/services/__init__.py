@@ -180,6 +180,10 @@ from .production_campaign_service import (
 )
 from .reproducibility_bundle_service import ReproducibilityBundleService
 from .generator_health_metrics_service import GeneratorHealthMetricsService
+from .generator_health_anomaly_service import (
+    GeneratorHealthAnomalyError,
+    GeneratorHealthAnomalyService,
+)
 
 __all__ = [
     "BoundingBox",
@@ -315,4 +319,6 @@ __all__ = [
     "ProductionCampaignService",
     "ReproducibilityBundleService",
     "GeneratorHealthMetricsService",
+    "GeneratorHealthAnomalyError",
+    "GeneratorHealthAnomalyService",
 ]

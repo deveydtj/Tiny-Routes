@@ -108,6 +108,7 @@ def test_health_report_aggregates_required_difficulty_and_archetype_metrics(tmp_
     assert dict(report.overall.mean_decision_metrics)["dependency_depth"] == 3.0
     assert report.overall.layout_repair_rate == 1.0
     assert report.overall.runtime_robustness_rate == 1.0
+    assert report.overall.static_policy_solvable_output_count == 0
     assert tuple(item.key for item in report.by_difficulty) == ("hard",)
     assert tuple(item.key for item in report.by_archetype) == ("return_to_hub",)
     assert report.portfolio_diversity.topology_ratio == 1.0
@@ -120,3 +121,20 @@ def test_health_report_aggregates_required_difficulty_and_archetype_metrics(tmp_
     assert payload["rootSeed"] == 9001
     assert payload["byDifficulty"][0]["candidateYield"] == 0.5
     assert payload["portfolioDiversity"]["aggregateScore"] == 0.875
+
+
+def test_health_report_counts_any_accepted_static_policy_witness() -> None:
+    diagnostic = _accepted_diagnostic()
+    diagnostic["stages"][1]["staticPolicySearch"] = {
+        "successfulPolicyCount": 1,
+        "acceptedForProduction": False,
+    }
+
+    report = GeneratorHealthMetricsService().build(
+        SimpleNamespace(attempt_diagnostics=(diagnostic,)),
+        root_seed=55,
+        run_completed=True,
+    )
+
+    assert report.overall.static_policy_solvable_output_count == 1
+    assert report.by_difficulty[0].static_policy_solvable_output_count == 1

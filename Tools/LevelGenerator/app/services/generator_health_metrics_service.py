@@ -117,6 +117,7 @@ class GeneratorHealthMetricsService:
         layout_repaired = 0
         runtime_reached = 0
         runtime_robust = 0
+        static_policy_solvable_outputs = 0
 
         for item in diagnostics:
             for policy, success_rate in self._agent_performance(item).items():
@@ -137,6 +138,8 @@ class GeneratorHealthMetricsService:
                 runtime_reached += 1
                 if self._runtime_was_robust(runtime):
                     runtime_robust += 1
+            if item.get("passed", False) and self._has_static_policy_solution(item):
+                static_policy_solvable_outputs += 1
 
         return GeneratorHealthSlice(
             key=key,
@@ -157,6 +160,7 @@ class GeneratorHealthMetricsService:
             ),
             layout_repair_rate=self._ratio(layout_repaired, layout_reached),
             runtime_robustness_rate=self._ratio(runtime_robust, runtime_reached),
+            static_policy_solvable_output_count=static_policy_solvable_outputs,
         )
 
     @staticmethod
@@ -275,6 +279,22 @@ class GeneratorHealthMetricsService:
         if isinstance(jitter, Mapping) and isinstance(jitter.get("passed"), bool):
             return bool(jitter["passed"])
         return bool(runtime.get("passed", False))
+
+    def _has_static_policy_solution(self, diagnostic: Mapping[str, Any]) -> bool:
+        strategy = self._stage(diagnostic, "strategy")
+        if strategy is None:
+            return False
+        successful_count = self._deep_value(
+            strategy,
+            ("successfulPolicyCount", "successful_policy_count"),
+        )
+        if self._number(successful_count):
+            return float(successful_count) > 0
+        solvable = self._deep_value(
+            strategy,
+            ("staticPolicySolvable", "static_policy_solvable"),
+        )
+        return solvable is True
 
     @staticmethod
     def _deep_value(value: object, keys: tuple[str, ...]) -> object | None:

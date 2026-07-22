@@ -3319,8 +3319,8 @@ does not enter the legacy generation or manual approval workflow.
 
 - [x] **AG-115:** Add reproducibility bundle output.
 - [x] **AG-116:** Add generator health metrics.
-- [ ] **AG-117:** Add anomaly thresholds.
-- [ ] **AG-118:** Add anti-triviality adversarial suite.
+- [x] **AG-117:** Add anomaly thresholds.
+- [x] **AG-118:** Add anti-triviality adversarial suite.
 - [ ] **AG-119:** Add positive stateful fixture suite.
 - [ ] **AG-120:** Add property-based graph suite.
 - [ ] **AG-121:** Add metamorphic suite.
@@ -3355,6 +3355,22 @@ rate, runtime jitter robustness, and selected-portfolio topology, behavior,
 archetype, and mechanic diversity. Metrics are emitted overall and in stable
 difficulty and blueprint-archetype cohorts, retained for successful and failed
 runs, and exposed through the terminal JSON and Markdown report paths.
+
+**2026-07-21 AG-117 completion record:** Added typed, locked anomaly thresholds
+and a deterministic baseline-aware CI/stress health gate. The gate detects
+dominant rejection spikes, candidate-yield regressions, per-difficulty decision-
+metric drift, rising behavioral duplicates, accepted static-policy-solvable
+output, and incomplete full runs; statistical checks honor a minimum sample size
+while safety violations always fail. Machine-readable evidence, a typed failure,
+and a fail-fast runner API make every anomaly reproducible and actionable.
+
+**2026-07-21 AG-118 completion record:** Added a checked-in, manifest-driven
+anti-triviality suite covering all fourteen required negative patterns: zero/one
+tap paths, independent obvious switches, permanent routing, equivalent and no-op
+branches, fake rejoins/rings, ineffective revisits/state changes, greedy routes,
+non-unique optima, unreadable unlocks, and frame-tight timing. Every fixture runs
+through the production hard-gate service and asserts its intended stable
+rejection code.
 
 ---
 

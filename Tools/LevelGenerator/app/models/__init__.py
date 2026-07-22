@@ -128,8 +128,11 @@ from .production_run_manifest import (
 )
 from .production_campaign import ProductionCampaignConfig, ProductionCampaignResult
 from .generator_health import (
+    GeneratorHealthAnomaly,
+    GeneratorHealthAnomalyReport,
     GeneratorHealthReport,
     GeneratorHealthSlice,
+    GeneratorHealthThresholds,
     PortfolioDiversityMetrics,
 )
 from .generation_quality import GenerationQualityScore
@@ -208,6 +211,9 @@ __all__ = [
     "ProductionCampaignResult",
     "GeneratorHealthReport",
     "GeneratorHealthSlice",
+    "GeneratorHealthThresholds",
+    "GeneratorHealthAnomaly",
+    "GeneratorHealthAnomalyReport",
     "PortfolioDiversityMetrics",
     "DecisionProfile",
     "DecisionDependency",

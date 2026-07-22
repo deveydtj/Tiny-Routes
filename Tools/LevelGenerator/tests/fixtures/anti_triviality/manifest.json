@@ -1,0 +1,89 @@
+{
+  "schemaVersion": 1,
+  "fixtures": [
+    {
+      "id": "zero_tap_path",
+      "difficulty": "easy",
+      "analysis": {"optimalAcceptedTaps": 0},
+      "expectedRejectionCode": "production_one_tap_level"
+    },
+    {
+      "id": "one_tap_path",
+      "difficulty": "easy",
+      "analysis": {"optimalAcceptedTaps": 1},
+      "expectedRejectionCode": "production_one_tap_level"
+    },
+    {
+      "id": "two_independent_obvious_switches",
+      "difficulty": "easy",
+      "evidence": {"localObviousness": "all_obvious"},
+      "expectedRejectionCode": "all_optimal_decisions_locally_obvious"
+    },
+    {
+      "id": "permanent_switch_solution",
+      "difficulty": "easy",
+      "evidence": {"staticPolicy": "solvable"},
+      "expectedRejectionCode": "static_policy_solution_exists"
+    },
+    {
+      "id": "equivalent_branches",
+      "difficulty": "easy",
+      "analysis": {"equivalentChoices": 1},
+      "expectedRejectionCode": "equivalent_choice_present"
+    },
+    {
+      "id": "decorative_dead_end_stubs",
+      "difficulty": "easy",
+      "analysis": {"noOpChoices": 1},
+      "expectedRejectionCode": "equivalent_choice_present"
+    },
+    {
+      "id": "fake_rejoin",
+      "difficulty": "easy",
+      "analysis": {"meaningfulDecisions": 1},
+      "expectedRejectionCode": "insufficient_meaningful_decisions"
+    },
+    {
+      "id": "fake_ring",
+      "difficulty": "easy",
+      "analysis": {"dependencyDepth": 0},
+      "expectedRejectionCode": "insufficient_dependency_depth"
+    },
+    {
+      "id": "revisit_with_unchanged_correct_state",
+      "difficulty": "easy",
+      "analysis": {"adaptiveDecisions": 0, "revisits": 1},
+      "expectedRejectionCode": "insufficient_adaptive_decisions"
+    },
+    {
+      "id": "state_change_without_decision_effect",
+      "difficulty": "easy",
+      "analysis": {"adaptiveDecisions": 0, "stateChanges": 1},
+      "expectedRejectionCode": "state_change_without_player_consequence"
+    },
+    {
+      "id": "greedy_straight_to_objective_route",
+      "difficulty": "medium",
+      "evidence": {"greedySuccessRate": 1.0},
+      "expectedRejectionCode": "greedy_policy_too_successful"
+    },
+    {
+      "id": "multiple_equal_optimal_strategies",
+      "difficulty": "easy",
+      "evidence": {"uniqueOptimal": "multiple_equal_classes"},
+      "expectedRejectionCode": "unique_optimal_not_proven"
+    },
+    {
+      "id": "hidden_unreadable_unlock",
+      "difficulty": "easy",
+      "evidence": {"stateChangeReadable": false},
+      "expectedRejectionCode": "unreadable_state_change"
+    },
+    {
+      "id": "frame_tight_solution",
+      "difficulty": "easy",
+      "evidence": {"runtimeSolutionRobust": false},
+      "expectedRejectionCode": "runtime_solution_not_robust"
+    }
+  ]
+}

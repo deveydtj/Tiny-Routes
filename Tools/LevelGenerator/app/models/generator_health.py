@@ -37,6 +37,7 @@ class GeneratorHealthSlice:
     mean_decision_metrics: tuple[tuple[str, float], ...]
     layout_repair_rate: float
     runtime_robustness_rate: float
+    static_policy_solvable_output_count: int = 0
 
     def __post_init__(self) -> None:
         object.__setattr__(self, "key", _identifier(self.key, "key"))
@@ -52,6 +53,18 @@ class GeneratorHealthSlice:
             raise ValueError("completed_pipeline_count cannot exceed attempt_count")
         if self.accepted_candidate_count > self.attempt_count:
             raise ValueError("accepted_candidate_count cannot exceed attempt_count")
+        if (
+            not isinstance(self.static_policy_solvable_output_count, int)
+            or isinstance(self.static_policy_solvable_output_count, bool)
+            or self.static_policy_solvable_output_count < 0
+        ):
+            raise ValueError(
+                "static_policy_solvable_output_count must be a non-negative integer"
+            )
+        if self.static_policy_solvable_output_count > self.accepted_candidate_count:
+            raise ValueError(
+                "static_policy_solvable_output_count cannot exceed accepted_candidate_count"
+            )
         for field_name in (
             "completion_rate",
             "candidate_yield",
@@ -103,6 +116,9 @@ class GeneratorHealthSlice:
             "meanDecisionMetrics": dict(self.mean_decision_metrics),
             "layoutRepairRate": self.layout_repair_rate,
             "runtimeRobustnessRate": self.runtime_robustness_rate,
+            "staticPolicySolvableOutputCount": (
+                self.static_policy_solvable_output_count
+            ),
         }
 
 
@@ -184,3 +200,153 @@ class GeneratorHealthReport:
             "byArchetype": [item.to_dict() for item in self.by_archetype],
             "portfolioDiversity": self.portfolio_diversity.to_dict(),
         }
+
+
+@dataclass(frozen=True)
+class GeneratorHealthThresholds:
+    """Locked limits used to distinguish churn from systemic regressions."""
+
+    minimum_attempt_count: int = 20
+    maximum_dominant_rejection_share: float = 0.70
+    maximum_dominant_rejection_share_increase: float = 0.20
+    minimum_candidate_yield: float = 0.02
+    maximum_candidate_yield_drop: float = 0.15
+    maximum_decision_metric_drift: float = 0.30
+    maximum_behavior_duplicate_rate: float = 0.25
+    maximum_behavior_duplicate_rate_increase: float = 0.10
+    require_completed_run: bool = True
+
+    def __post_init__(self) -> None:
+        if (
+            not isinstance(self.minimum_attempt_count, int)
+            or isinstance(self.minimum_attempt_count, bool)
+            or self.minimum_attempt_count < 1
+        ):
+            raise ValueError("minimum_attempt_count must be a positive integer")
+        for field_name in (
+            "maximum_dominant_rejection_share",
+            "maximum_dominant_rejection_share_increase",
+            "minimum_candidate_yield",
+            "maximum_candidate_yield_drop",
+            "maximum_decision_metric_drift",
+            "maximum_behavior_duplicate_rate",
+            "maximum_behavior_duplicate_rate_increase",
+        ):
+            object.__setattr__(
+                self,
+                field_name,
+                _rate(getattr(self, field_name), field_name),
+            )
+        if not isinstance(self.require_completed_run, bool):
+            raise ValueError("require_completed_run must be a Boolean")
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "minimumAttemptCount": self.minimum_attempt_count,
+            "maximumDominantRejectionShare": self.maximum_dominant_rejection_share,
+            "maximumDominantRejectionShareIncrease": (
+                self.maximum_dominant_rejection_share_increase
+            ),
+            "minimumCandidateYield": self.minimum_candidate_yield,
+            "maximumCandidateYieldDrop": self.maximum_candidate_yield_drop,
+            "maximumDecisionMetricDrift": self.maximum_decision_metric_drift,
+            "maximumBehaviorDuplicateRate": self.maximum_behavior_duplicate_rate,
+            "maximumBehaviorDuplicateRateIncrease": (
+                self.maximum_behavior_duplicate_rate_increase
+            ),
+            "requireCompletedRun": self.require_completed_run,
+        }
+
+
+@dataclass(frozen=True)
+class GeneratorHealthAnomaly:
+    """One stable CI/stress failure with current and baseline evidence."""
+
+    code: str
+    cohort: str
+    metric: str
+    actual: float
+    required: str
+    baseline: float | None = None
+
+    def __post_init__(self) -> None:
+        for field_name in ("code", "cohort", "metric", "required"):
+            value = getattr(self, field_name)
+            if not isinstance(value, str) or not value.strip():
+                raise ValueError(f"{field_name} cannot be empty")
+            object.__setattr__(self, field_name, value.strip())
+        for field_name in ("actual", "baseline"):
+            value = getattr(self, field_name)
+            if value is None and field_name == "baseline":
+                continue
+            if not isinstance(value, (int, float)) or isinstance(value, bool):
+                raise ValueError(f"{field_name} must be numeric")
+            object.__setattr__(self, field_name, round(float(value), 9))
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "code": self.code,
+            "cohort": self.cohort,
+            "metric": self.metric,
+            "actual": self.actual,
+            "required": self.required,
+            "baseline": self.baseline,
+        }
+
+
+@dataclass(frozen=True)
+class GeneratorHealthAnomalyReport:
+    """Deterministic result consumed by CI and campaign stress runners."""
+
+    current_root_seed: int
+    baseline_root_seed: int | None
+    thresholds: GeneratorHealthThresholds
+    anomalies: tuple[GeneratorHealthAnomaly, ...]
+    schema_version: int = 1
+
+    def __post_init__(self) -> None:
+        for field_name in ("current_root_seed", "baseline_root_seed"):
+            value = getattr(self, field_name)
+            if value is None and field_name == "baseline_root_seed":
+                continue
+            if not isinstance(value, int) or isinstance(value, bool):
+                raise ValueError(f"{field_name} must be an integer")
+        if not isinstance(self.thresholds, GeneratorHealthThresholds):
+            raise TypeError("thresholds must be GeneratorHealthThresholds")
+        anomalies = tuple(self.anomalies)
+        if any(not isinstance(item, GeneratorHealthAnomaly) for item in anomalies):
+            raise TypeError("anomalies must contain GeneratorHealthAnomaly values")
+        if anomalies != tuple(sorted(set(anomalies), key=_anomaly_sort_key)):
+            raise ValueError("anomalies must be sorted and unique")
+        object.__setattr__(self, "anomalies", anomalies)
+        if self.schema_version != 1:
+            raise ValueError("unsupported generator anomaly schema version")
+
+    @property
+    def passed(self) -> bool:
+        return not self.anomalies
+
+    @property
+    def rejection_codes(self) -> tuple[str, ...]:
+        return tuple(item.code for item in self.anomalies)
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "schemaVersion": self.schema_version,
+            "passed": self.passed,
+            "currentRootSeed": self.current_root_seed,
+            "baselineRootSeed": self.baseline_root_seed,
+            "thresholds": self.thresholds.to_dict(),
+            "anomalies": [item.to_dict() for item in self.anomalies],
+        }
+
+
+def _anomaly_sort_key(item: GeneratorHealthAnomaly) -> tuple[Any, ...]:
+    return (
+        item.code,
+        item.cohort,
+        item.metric,
+        item.actual,
+        item.required,
+        float("-inf") if item.baseline is None else item.baseline,
+    )
