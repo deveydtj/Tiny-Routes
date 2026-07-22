@@ -3321,8 +3321,8 @@ does not enter the legacy generation or manual approval workflow.
 - [x] **AG-116:** Add generator health metrics.
 - [x] **AG-117:** Add anomaly thresholds.
 - [x] **AG-118:** Add anti-triviality adversarial suite.
-- [ ] **AG-119:** Add positive stateful fixture suite.
-- [ ] **AG-120:** Add property-based graph suite.
+- [x] **AG-119:** Add positive stateful fixture suite.
+- [x] **AG-120:** Add property-based graph suite.
 - [ ] **AG-121:** Add metamorphic suite.
 - [ ] **AG-122:** Add five-level smoke through the exact V3 production orchestration path.
 - [ ] **AG-123:** Add nightly 30-level V3 campaign with fallback-path detection.
@@ -3371,6 +3371,21 @@ branches, fake rejoins/rings, ineffective revisits/state changes, greedy routes,
 non-unique optima, unreadable unlocks, and frame-tight timing. Every fixture runs
 through the production hard-gate service and asserts its intended stable
 rejection code.
+
+**2026-07-21 AG-119 completion record:** Added a checked-in, manifest-driven
+positive strategic suite covering the eight required stateful patterns: a hub
+revisit, unlocked shortcut, closed return route, three-objective relay,
+recoverable wrong loop, multiple successful routes with one optimum,
+state-dependent ring, and hard multi-hub dependency. Every fixture uses schema-3
+objective-state roads, exact strategy and static-policy proofs, production hard
+gates, declared-mechanic assertions, and exact optimal-trace replay.
+
+**2026-07-21 AG-120 completion record:** Added deterministic property-based
+coverage across 24 varied schema-3 graph seeds. The suite proves graph and
+objective reference integrity, lossless serialization, bounded exhaustive state
+search, exact solver replay, unique optimum and static-policy rejection,
+production hard-gate compliance, and preservation of strategy behavior after
+deterministic layout repair.
 
 ---
 

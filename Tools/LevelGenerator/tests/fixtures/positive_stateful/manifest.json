@@ -1,0 +1,70 @@
+{
+  "schemaVersion": 1,
+  "fixtures": [
+    {
+      "id": "simple_hub_revisit",
+      "difficulty": "easy",
+      "objectiveCount": 2,
+      "hubCount": 1,
+      "minimumHubRevisits": 1,
+      "requiresOpenedAndClosedRoads": true
+    },
+    {
+      "id": "unlock_shortcut",
+      "difficulty": "easy",
+      "objectiveCount": 2,
+      "hubCount": 1,
+      "requiresOpenedAndClosedRoads": true
+    },
+    {
+      "id": "closed_return_route",
+      "difficulty": "easy",
+      "objectiveCount": 2,
+      "hubCount": 1,
+      "requiresOpenedAndClosedRoads": true
+    },
+    {
+      "id": "three_objective_relay",
+      "difficulty": "easy",
+      "objectiveCount": 3,
+      "hubCount": 1,
+      "minimumHubRevisits": 2,
+      "requiresOpenedAndClosedRoads": true
+    },
+    {
+      "id": "recoverable_wrong_loop",
+      "difficulty": "easy",
+      "objectiveCount": 2,
+      "hubCount": 1,
+      "includeOneUseRing": true,
+      "requiresRecoverableRing": true
+    },
+    {
+      "id": "multiple_successful_routes_one_optimum",
+      "difficulty": "easy",
+      "objectiveCount": 2,
+      "hubCount": 1,
+      "requiresAlternateSuccess": true
+    },
+    {
+      "id": "state_dependent_ring",
+      "difficulty": "easy",
+      "objectiveCount": 3,
+      "hubCount": 1,
+      "includeOneUseRing": true,
+      "requiresRecoverableRing": true,
+      "requiresOpenedAndClosedRoads": true
+    },
+    {
+      "id": "hard_multi_hub_dependency",
+      "difficulty": "hard",
+      "objectiveCount": 5,
+      "hubCount": 2,
+      "includeOneUseRing": true,
+      "minimumDecisionHubs": 2,
+      "minimumHubRevisits": 3,
+      "requiresRecoverableRing": true,
+      "requiresOpenedAndClosedRoads": true
+    }
+  ]
+}
