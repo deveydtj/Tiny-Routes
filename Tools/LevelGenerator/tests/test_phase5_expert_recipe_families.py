@@ -118,6 +118,7 @@ def test_phase5_swift_required_policy_for_four_way_and_ring_families(tmp_path) -
 
     result = LevelGenerationService().generate(
         GenerationConfig(
+            generator_architecture="v2_legacy",
             start_level_number=90,
             count=1,
             difficulty="expert",
@@ -140,6 +141,7 @@ def test_phase5_swift_required_policy_for_four_way_and_ring_families(tmp_path) -
 def test_expert_mixed_dry_run_accepts_phase5_topology_mix_and_reports_metadata(tmp_path) -> None:
     result = LevelGenerationService().generate(
         GenerationConfig(
+            generator_architecture="v2_legacy",
             start_level_number=90,
             count=4,
             difficulty="expert",

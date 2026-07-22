@@ -97,6 +97,7 @@ def test_phase4_route_interest_strength_rises_from_medium_to_hard() -> None:
 def test_phase4_large_portrait_is_not_used_in_early_auto_levels(tmp_path) -> None:
     result = LevelGenerationService().generate(
         GenerationConfig(
+            generator_architecture="v2_legacy",
             start_level_number=1,
             count=6,
             difficulty="auto",
@@ -136,6 +137,7 @@ def test_phase4_auto_generation_is_deterministic_with_difficulty_curve_profiles(
 
 def _config(tmp_path, *, difficulty: str) -> GenerationConfig:
     return GenerationConfig(
+        generator_architecture="v2_legacy",
         start_level_number=12,
         count=1,
         difficulty=difficulty,
@@ -170,6 +172,7 @@ def _quality_for_family(family_name: str, difficulty: str, level_number: int, se
 def _auto_batch(tmp_path):
     return LevelGenerationService().generate(
         GenerationConfig(
+            generator_architecture="v2_legacy",
             start_level_number=11,
             count=4,
             difficulty="auto",

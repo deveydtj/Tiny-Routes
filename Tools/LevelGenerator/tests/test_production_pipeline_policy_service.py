@@ -1,0 +1,71 @@
+from __future__ import annotations
+
+from dataclasses import replace
+
+import pytest
+
+from app.services.production_pipeline_policy_service import (
+    ProductionPipelinePolicyError,
+    ProductionPipelinePolicyService,
+)
+from app.services.v3_candidate_pipeline_coordinator import (
+    V3CandidatePipelineRequest,
+    V3CandidatePipelineResult,
+)
+from test_support.production_v3_smoke import _SmokeCandidatePipeline
+
+
+@pytest.fixture(scope="module")
+def accepted_pipeline_result():
+    return _SmokeCandidatePipeline().run(
+        V3CandidatePipelineRequest(
+            candidate_id="level_901:candidate:0000",
+            level_id="level_901",
+            seed=731_005,
+            difficulty="easy",
+        )
+    )
+
+
+def test_accepts_only_the_locked_unrelaxed_v3_path(accepted_pipeline_result) -> None:
+    ProductionPipelinePolicyService().require((accepted_pipeline_result,))
+
+
+@pytest.mark.parametrize(
+    ("stage_index", "field", "value", "code"),
+    [
+        (0, "generatorArchitecture", "v2_legacy", "non_v3_stage_architecture"),
+        (1, "fallbackUsed", True, "production_fallback_used"),
+        (1, "sourceKind", "direct_motif_fixture", "weak_composition_source"),
+        (5, "generationProfile", "playtest_portfolio", "non_production_quality_profile"),
+        (5, "qualityThresholdsRelaxed", True, "relaxed_quality_thresholds"),
+        (5, "manualApprovalRequired", True, "manual_approval_path"),
+    ],
+)
+def test_rejects_every_weak_production_fallback(
+    accepted_pipeline_result,
+    stage_index: int,
+    field: str,
+    value,
+    code: str,
+) -> None:
+    stages = list(accepted_pipeline_result.stage_results)
+    fields = dict(stages[stage_index].report_fields)
+    fields[field] = value
+    stages[stage_index] = replace(stages[stage_index], report_fields=fields)
+    weakened = V3CandidatePipelineResult(
+        accepted_pipeline_result.request,
+        tuple(stages),
+    )
+
+    with pytest.raises(ProductionPipelinePolicyError, match=code):
+        ProductionPipelinePolicyService().require((weakened,))
+
+
+def test_rejects_untyped_or_missing_selected_evidence() -> None:
+    service = ProductionPipelinePolicyService()
+
+    with pytest.raises(ProductionPipelinePolicyError, match="evidence_missing"):
+        service.require(())
+    with pytest.raises(ProductionPipelinePolicyError, match="evidence_invalid"):
+        service.require((object(),))

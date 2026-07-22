@@ -48,9 +48,9 @@ def test_default_gui_state_converts_to_generation_config() -> None:
     assert isinstance(config, GenerationConfig)
     assert config.start_level_number == 12
     assert config.count == 1
-    assert config.difficulty == "tutorial"
-    assert config.generator_architecture == "v2_legacy"
-    assert config.generator_architecture_version == 2
+    assert config.difficulty == "easy"
+    assert config.generator_architecture == "production_v3"
+    assert config.generator_architecture_version == 3
     assert config.template_name == "mixed"
     assert config.recipe_pool_size == 4
     assert config.layouts_per_recipe == 2
@@ -129,7 +129,7 @@ def test_gui_state_carries_generator_architecture_to_config_and_command(tmp_path
         "--count",
         "1",
         "--difficulty",
-        "tutorial",
+        "easy",
         "--generator-architecture",
         "production_v3",
     ]

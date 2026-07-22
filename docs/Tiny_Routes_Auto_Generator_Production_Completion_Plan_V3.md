@@ -3331,8 +3331,8 @@ does not enter the legacy generation or manual approval workflow.
 - [x] **AG-126:** Add calibrated quality-profile versioning.
 - [x] **AG-127:** Add deterministic candidate parallelism.
 - [x] **AG-128:** Add global attempt budgeting.
-- [ ] **AG-129:** Make V3 production default.
-- [ ] **AG-130:** Remove weak production fallback.
+- [x] **AG-129:** Make V3 production default.
+- [x] **AG-130:** Remove weak production fallback.
 - [ ] **AG-131:** Add final architecture/operator documentation.
 - [ ] **AG-132:** Add final release wrapper.
 
@@ -3467,6 +3467,24 @@ maximum, attempts used per slot, remaining budget, and stable reasons for every
 initial allocation and reallocation. CLI configuration and reproduction bundles
 preserve explicit budget overrides, and regression coverage proves the cap,
 constrained-slot reallocation, and portfolio retry accounting.
+
+**2026-07-22 AG-129 completion record:** Made `production_v3` the shared
+automatic-generation default in configuration, CLI, GUI, and stress entry
+points, and changed the GUI's initial difficulty to production-eligible `easy`.
+`v2_legacy` now requires explicit selection, emits a visible non-production
+warning in CLI, GUI, JSON, and Markdown surfaces, and reports its output as
+ineligible for production promotion. Legacy regression and fixture callers now
+declare their compatibility architecture instead of inheriting the production
+default.
+
+**2026-07-22 AG-130 completion record:** Added a fail-closed production pipeline
+policy before staging. Every selected candidate must carry a complete typed
+six-stage V3 result and prove architecture version 3, no fallback use,
+blueprint-driven composition, locked production quality thresholds, and no
+manual approval. Template, fixed-recipe, direct-motif, legacy, relaxed-playtest,
+and lowered-threshold paths are rejected before production files are staged;
+V3 configuration also rejects tutorial and relaxed playtest modes. Focused
+regressions cover every prohibited path and the exact five-level V3 smoke path.
 
 ---
 

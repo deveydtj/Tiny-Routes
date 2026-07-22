@@ -29,7 +29,7 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--mode",
         choices=("v2_legacy", "production_v3"),
-        default="v2_legacy",
+        default="production_v3",
     )
     parser.add_argument("--start", type=int)
     parser.add_argument("--count", type=int, default=20)
@@ -68,6 +68,7 @@ def _run_legacy(args: argparse.Namespace, argv: list[str]) -> int:
         start_level_number=args.start if args.start is not None else 1,
         count=args.count,
         difficulty=args.difficulty,
+        generator_architecture="v2_legacy",
         template_name=args.template,
         seed=args.seed if args.seed is not None else 9001,
         dry_run=True,

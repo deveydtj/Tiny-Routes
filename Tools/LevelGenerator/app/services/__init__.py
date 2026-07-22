@@ -178,6 +178,11 @@ from .production_campaign_service import (
     ProductionCampaignOrchestrationService,
     ProductionCampaignService,
 )
+from .production_pipeline_policy_service import (
+    ProductionPipelinePolicyError,
+    ProductionPipelinePolicyIssue,
+    ProductionPipelinePolicyService,
+)
 from .reproducibility_bundle_service import ReproducibilityBundleService
 from .generator_health_metrics_service import GeneratorHealthMetricsService
 from .generator_health_anomaly_service import (
@@ -322,6 +327,9 @@ __all__ = [
     "TransactionalPromotionService",
     "ProductionCampaignOrchestrationService",
     "ProductionCampaignService",
+    "ProductionPipelinePolicyError",
+    "ProductionPipelinePolicyIssue",
+    "ProductionPipelinePolicyService",
     "ReproducibilityBundleService",
     "GeneratorHealthMetricsService",
     "GeneratorHealthAnomalyError",

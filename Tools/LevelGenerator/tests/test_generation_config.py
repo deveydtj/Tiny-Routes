@@ -1,17 +1,21 @@
 from __future__ import annotations
 
+import pytest
+
 from app.generation_config import GenerationConfig
 
 
-def test_generation_config_defaults_use_recipe_pipeline_breadth() -> None:
+def test_generation_config_defaults_to_production_v3() -> None:
     config = GenerationConfig(
         start_level_number=12,
         count=1,
         difficulty="easy",
     )
 
-    assert config.generator_architecture == "v2_legacy"
-    assert config.generator_architecture_version == 2
+    assert config.generator_architecture == "production_v3"
+    assert config.generator_architecture_version == 3
+    assert config.production_eligible is True
+    assert config.architecture_warning is None
     assert config.recipe_pool_size == 4
     assert config.layouts_per_recipe == 2
     assert config.road_shapes_per_layout == 2
@@ -68,12 +72,28 @@ def test_generation_config_accepts_playtest_portfolio_mode() -> None:
         start_level_number=12,
         count=50,
         difficulty="auto",
+        generator_architecture="v2_legacy",
         playtest_portfolio=True,
         playtest_uniqueness_window=12,
     )
 
     assert config.playtest_portfolio is True
     assert config.playtest_uniqueness_window == 12
+    assert config.production_eligible is False
+    assert "non-production" in config.architecture_warning
+
+
+def test_production_v3_rejects_weak_playtest_and_tutorial_paths() -> None:
+    with pytest.raises(ValueError, match="relaxed playtest portfolio"):
+        GenerationConfig(
+            start_level_number=12,
+            count=1,
+            difficulty="easy",
+            playtest_portfolio=True,
+        )
+
+    with pytest.raises(ValueError, match="tutorial is not a production_v3 difficulty"):
+        GenerationConfig(start_level_number=12, count=1, difficulty="tutorial")
 
 
 def test_generation_config_normalizes_and_validates_architecture() -> None:

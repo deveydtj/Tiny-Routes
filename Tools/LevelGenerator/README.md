@@ -255,9 +255,9 @@ Current limitations:
 
 `--compare-existing` rejects candidates that are too similar to existing level files in the configured output folders. This is enabled by default; use `--no-compare-existing` for scratch experiments.
 
-The generator now exposes an explicit architecture boundary. `v2_legacy` is the default compatibility pipeline: it solves multiple abstract recipes before layout, then tries layout and road-shape variants. `production_v3` is reserved for the V3 blueprint/composition pipeline and currently returns `v3_pipeline_unavailable` without falling back to V2. The retired `legacy-template` and `hybrid` execution modes remain unsupported. The default V2 breadth is 4 recipes, 2 layouts per recipe, 2 road-shape strategies per layout, and 4 valid candidates scored before accepting the best one.
+The generator now exposes an explicit architecture boundary. `production_v3` is the default for automatic generation and must use the transactional production-campaign entry point. `v2_legacy` is an explicit, non-production compatibility/fixture pipeline: it solves abstract recipes before layout, then tries layout and road-shape variants. V2 output is marked ineligible for production promotion. The retired `legacy-template` and `hybrid` execution modes remain unsupported.
 
-Select the boundary with `--generator-architecture v2_legacy` or `--generator-architecture production_v3`. The GUI exposes the same choice. JSON and Markdown reports identify the generator architecture/version independently from output schema versions.
+Select the compatibility boundary explicitly with `--generator-architecture v2_legacy`; the CLI and GUI otherwise default to `production_v3`. Legacy selection emits a non-production warning. Production V3 refuses legacy templates, fixed recipes, direct motif fixtures, relaxed playtest portfolios, lowered quality thresholds, and manual candidate approval. JSON and Markdown reports identify architecture/version and production eligibility independently from output schema versions.
 
 `--layout-orientation` defaults to `portrait_vertical`. This profile asks recipe-first layouts to compose routes for mobile portrait play: the generated map should be taller than wide, the start should sit in the lower portion of the layout, and the destination should sit in the upper portion. Horizontal branches, detours, and side movement are still allowed when the overall composition passes the portrait safety checks.
 
@@ -322,7 +322,7 @@ Debug a rejected candidate by starting with `candidateID`, `seed`, `recipeFamily
 Run a safe stress dry-run into a scratch folder when tuning the curve:
 
 ```bash
-python Tools/LevelGenerator/stress_test_generation.py --start 1 --count 20 --difficulty auto --seed 9001 --output-dir /tmp/tiny-routes-phase4-stress
+python Tools/LevelGenerator/stress_test_generation.py --mode v2_legacy --start 1 --count 20 --difficulty auto --seed 9001 --output-dir /tmp/tiny-routes-phase4-stress
 ```
 
 The stress command forces `dry_run=True`, disables existing-production similarity checks, and writes only scratch reports. It prints and writes `stress_summary.json` with pass/fail rate, accepted difficulty distribution, recipe distribution, topology distribution, map-size distribution, and rejection reasons.

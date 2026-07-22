@@ -93,6 +93,11 @@ class _ExistingRepository:
         return SimpleNamespace(signatures=[])
 
 
+class _AllowPipelinePolicy:
+    def require(self, _pipeline_results):
+        return None
+
+
 def _config(tmp_path) -> ProductionCampaignConfig:
     return ProductionCampaignConfig(
         start_level_number=31,
@@ -122,6 +127,7 @@ def test_complete_campaign_uses_one_transactional_path(tmp_path) -> None:
         promotion_service=promotion,
         existing_level_repository=_ExistingRepository(),
         run_id_factory=lambda seed: f"run-{seed}",
+        pipeline_policy_service=_AllowPipelinePolicy(),
     )
 
     result = service.run(_config(tmp_path), progress=lambda stage, message: progress.append(stage))
@@ -171,6 +177,7 @@ def test_candidate_failure_leaves_production_untouched(tmp_path) -> None:
         promotion_service=promotion,
         existing_level_repository=_ExistingRepository(),
         run_id_factory=lambda seed: f"run-{seed}",
+        pipeline_policy_service=_AllowPipelinePolicy(),
     )
 
     result = service.run(_config(tmp_path))
@@ -192,6 +199,7 @@ def test_report_failure_cannot_relabel_completed_promotion(tmp_path) -> None:
         promotion_service=_PromotionService(),
         existing_level_repository=_ExistingRepository(),
         run_id_factory=lambda seed: f"run-{seed}",
+        pipeline_policy_service=_AllowPipelinePolicy(),
     )
 
     result = service.run(_config(tmp_path))

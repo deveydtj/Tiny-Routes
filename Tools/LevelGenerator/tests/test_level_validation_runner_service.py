@@ -61,6 +61,7 @@ def _validation_config(tmp_path) -> ExistingLevelValidationConfig:
 def _write_level(tmp_path) -> None:
     result = LevelGenerationService().generate(
         GenerationConfig(
+            generator_architecture="v2_legacy",
             start_level_number=12,
             count=1,
             difficulty="tutorial",

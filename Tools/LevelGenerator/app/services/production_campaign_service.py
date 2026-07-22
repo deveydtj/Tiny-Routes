@@ -23,6 +23,7 @@ from .production_staged_corpus_validation_service import (
 )
 from .production_staged_output_service import ProductionStagedOutputService
 from .production_staging_service import ProductionStagingService
+from .production_pipeline_policy_service import ProductionPipelinePolicyService
 from .reproducibility_bundle_service import ReproducibilityBundleService
 from .quality_profile_service import QualityProfileService
 from .transactional_promotion_service import TransactionalPromotionService
@@ -55,6 +56,7 @@ class ProductionCampaignService:
         reproducibility_bundle_service: ReproducibilityBundleService | None = None,
         health_metrics_service: GeneratorHealthMetricsService | None = None,
         quality_profile_service: QualityProfileService | None = None,
+        pipeline_policy_service: ProductionPipelinePolicyService | None = None,
     ) -> None:
         if candidate_pool_service is None and candidate_pipeline is not None:
             candidate_pool_service = CandidatePoolService(candidate_pipeline)
@@ -82,6 +84,9 @@ class ProductionCampaignService:
             health_metrics_service or GeneratorHealthMetricsService()
         )
         self.quality_profile_service = quality_profile_service or QualityProfileService()
+        self.pipeline_policy_service = (
+            pipeline_policy_service or ProductionPipelinePolicyService()
+        )
 
     def run(
         self,
@@ -168,6 +173,7 @@ class ProductionCampaignService:
                 portfolio.candidate_pools.pipeline_result_for(candidate)
                 for candidate in candidates
             )
+            self.pipeline_policy_service.require(selected_pipeline_results)
 
             self._progress(progress, "staging", "Writing the complete corpus to staging")
             self.staged_output_service.write_selected_candidates(

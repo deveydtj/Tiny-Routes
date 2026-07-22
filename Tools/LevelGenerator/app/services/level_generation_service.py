@@ -97,8 +97,9 @@ class LevelGenerationService:
         if config.generator_architecture == "production_v3":
             result = GenerationResult(passed=False)
             result.messages.append(
-                "v3_pipeline_unavailable: production_v3 is isolated from the V2 recipe pipeline; "
-                "the V3 candidate coordinator has not been implemented yet."
+                "production_v3_requires_transactional_entrypoint: use "
+                "generate_production_campaign.py (or Generate Production Campaign in the GUI); "
+                "legacy recipe, template, motif, and relaxed-quality fallback is forbidden."
             )
             self._write_reports(config, result)
             return result

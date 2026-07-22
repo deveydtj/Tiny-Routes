@@ -165,6 +165,7 @@ class _SmokeCandidatePipeline:
             status="accepted",
             report_fields={
                 "generatorArchitecture": _ARCHITECTURE,
+                "generatorArchitectureVersion": _ARCHITECTURE_VERSION,
                 "fallbackUsed": False,
                 **report_fields,
             },
@@ -175,6 +176,7 @@ class _SmokeCandidatePipeline:
             request,
             "composition",
             execution="production_v3_composition",
+            sourceKind="blueprint_composition",
         )
 
     def _strategy_stage(self, request, _composition) -> StrategyStageResult:
@@ -211,6 +213,7 @@ class _SmokeCandidatePipeline:
             search_limit_gate=limits,
             report_fields={
                 "generatorArchitecture": _ARCHITECTURE,
+                "generatorArchitectureVersion": _ARCHITECTURE_VERSION,
                 "fallbackUsed": False,
             },
         )
@@ -314,7 +317,11 @@ class _SmokeCandidatePipeline:
             quality_score=score,
             report_fields={
                 "generatorArchitecture": _ARCHITECTURE,
+                "generatorArchitectureVersion": _ARCHITECTURE_VERSION,
                 "fallbackUsed": False,
+                "generationProfile": "production",
+                "qualityThresholdsRelaxed": False,
+                "manualApprovalRequired": False,
                 "antiTrivialityStatus": "passed",
             },
         )

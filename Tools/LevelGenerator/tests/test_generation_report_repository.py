@@ -16,6 +16,7 @@ from app.templates.single_switch_template import SingleSwitchTemplate
 
 def test_generation_report_repository_writes_markdown_and_json(tmp_path) -> None:
     config = GenerationConfig(
+        generator_architecture="v2_legacy",
         start_level_number=12,
         count=1,
         difficulty="tutorial",
@@ -43,6 +44,10 @@ def test_generation_report_repository_writes_markdown_and_json(tmp_path) -> None
     repository.write_json(config.json_report_path, config, result)
 
     assert "Tiny Routes Generation Report" in config.report_path.read_text(encoding="utf-8")
+    assert "non-production compatibility mode" in config.report_path.read_text(encoding="utf-8")
+    payload = json.loads(config.json_report_path.read_text(encoding="utf-8"))
+    assert payload["productionEligible"] is False
+    assert "non-production compatibility mode" in payload["architectureWarning"]
     assert json.loads(config.json_report_path.read_text(encoding="utf-8"))["difficulty"] == "tutorial"
 
 
@@ -51,6 +56,7 @@ def test_generation_report_repository_writes_candidate_signatures(tmp_path) -> N
     generated = SingleSwitchTemplate().generate("level_012", 12, preset, RandomSource(10))
     generated.candidate_signature = CandidateSignatureService().signature_for(generated)
     config = GenerationConfig(
+        generator_architecture="v2_legacy",
         start_level_number=12,
         count=1,
         difficulty="easy",
@@ -96,6 +102,7 @@ def test_generation_report_option_writes_selected_state_previews(tmp_path) -> No
     preset = DifficultyService().get_preset("easy")
     generated = SingleSwitchTemplate().generate("level_012", 12, preset, RandomSource(10))
     config = GenerationConfig(
+        generator_architecture="v2_legacy",
         start_level_number=12,
         count=1,
         difficulty="easy",
@@ -134,6 +141,7 @@ def test_generation_report_option_writes_selected_state_previews(tmp_path) -> No
 
 def test_generation_report_repository_adds_duplicate_exhaustion_recommendations(tmp_path) -> None:
     config = GenerationConfig(
+        generator_architecture="v2_legacy",
         start_level_number=29,
         count=1,
         difficulty="hard",
@@ -170,6 +178,7 @@ def test_generation_report_repository_adds_duplicate_exhaustion_recommendations(
 def test_generation_report_repository_writes_recipe_metadata(tmp_path) -> None:
     result = LevelGenerationService().generate(
         GenerationConfig(
+            generator_architecture="v2_legacy",
             start_level_number=12,
             count=1,
             difficulty="easy",
@@ -288,6 +297,7 @@ def test_generation_report_repository_writes_recipe_metadata(tmp_path) -> None:
 def test_generation_report_repository_writes_recipe_mechanic_metadata(tmp_path) -> None:
     result = LevelGenerationService().generate(
         GenerationConfig(
+            generator_architecture="v2_legacy",
             start_level_number=44,
             count=1,
             difficulty="expert",
@@ -323,6 +333,7 @@ def test_generation_report_repository_writes_recipe_mechanic_metadata(tmp_path) 
 def test_generation_report_repository_includes_visual_clarity_node_and_edge_ids(tmp_path) -> None:
     generated = _visual_clarity_report_level()
     config = GenerationConfig(
+        generator_architecture="v2_legacy",
         start_level_number=12,
         count=1,
         difficulty="easy",

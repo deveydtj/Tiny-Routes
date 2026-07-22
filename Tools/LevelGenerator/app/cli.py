@@ -44,6 +44,8 @@ def main_generate(argv: list[str] | None = None) -> int:
         return 2
 
     _print_generation_summary(config)
+    if config.architecture_warning:
+        print(f"WARNING: {config.architecture_warning}", file=sys.stderr)
     result = LevelGenerationService().generate(config)
     _print_generation_result(config, result)
     return 0 if result.passed else 1
@@ -89,7 +91,7 @@ def build_generate_parser() -> argparse.ArgumentParser:
         "--generator-architecture",
         choices=GENERATOR_ARCHITECTURES,
         default=DEFAULT_GENERATOR_ARCHITECTURE,
-        help="Generator architecture boundary. Default: v2_legacy.",
+        help="Generator architecture boundary. Default: production_v3; v2_legacy is non-production only.",
     )
     parser.add_argument("--template", default="mixed", choices=template_names, help="Template to use. Default: mixed.")
     parser.add_argument(

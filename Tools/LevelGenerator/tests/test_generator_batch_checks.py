@@ -17,6 +17,7 @@ def test_dry_run_batches_for_each_difficulty_pass_validation(tmp_path) -> None:
     for difficulty in ["tutorial", "easy", "medium", "hard"]:
         result = LevelGenerationService().generate(
             GenerationConfig(
+                generator_architecture="v2_legacy",
                 start_level_number=31,
                 count=2,
                 difficulty=difficulty,
@@ -255,6 +256,7 @@ def test_full_hard_20_dry_run_stress_diversity(tmp_path) -> None:
 def _run_dry_batch(tmp_path, **overrides):
     return LevelGenerationService().generate(
         GenerationConfig(
+            generator_architecture="v2_legacy",
             start_level_number=overrides.pop("start_level_number"),
             count=overrides.pop("count"),
             difficulty=overrides.pop("difficulty"),

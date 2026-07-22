@@ -23,7 +23,7 @@ from ..paths import get_default_levels_directory, get_default_reports_directory,
 class GuiGenerationState:
     start_level_number: str = "12"
     count: str = "1"
-    difficulty: str = "tutorial"
+    difficulty: str = "easy"
     generator_architecture: str = DEFAULT_GENERATOR_ARCHITECTURE
     template_name: str = "mixed"
     recipe_pool_size: str = str(DEFAULT_RECIPE_POOL_SIZE)

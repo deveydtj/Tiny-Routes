@@ -297,7 +297,7 @@ class ProductionStagedOutputService:
         if not isinstance(configuration, dict):
             raise ValueError("seed/config snapshot requires a configuration object")
         architecture = configuration.get("generatorArchitecture") or configuration.get("mode")
-        if architecture not in {None, "production_v3"}:
+        if architecture != "production_v3":
             raise ValueError("staged production output requires production_v3 configuration")
         return payload
 

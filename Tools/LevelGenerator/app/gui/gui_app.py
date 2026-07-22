@@ -19,6 +19,7 @@ from ..generation_config import (
     DEFAULT_VERTICAL_ROUTE_PROBABILITY,
     DEFAULT_GENERATOR_ARCHITECTURE,
     GENERATOR_ARCHITECTURES,
+    LEGACY_GENERATOR_WARNING,
     LAYOUT_ORIENTATION_PREFERENCES,
     LAYOUT_SIZE_PROFILES,
 )
@@ -87,7 +88,7 @@ class LevelGeneratorGui:
     def _create_variables(self) -> None:
         self.start_var = tk.StringVar(value="12")
         self.count_var = tk.StringVar(value="1")
-        self.difficulty_var = tk.StringVar(value="tutorial")
+        self.difficulty_var = tk.StringVar(value="easy")
         self.generator_architecture_var = tk.StringVar(value=DEFAULT_GENERATOR_ARCHITECTURE)
         self.template_var = tk.StringVar(value="mixed")
         self.recipe_pool_var = tk.StringVar(value=str(DEFAULT_RECIPE_POOL_SIZE))
@@ -447,6 +448,8 @@ class LevelGeneratorGui:
 
     def _on_generate(self) -> None:
         state = self._current_state()
+        if state.generator_architecture == "v2_legacy":
+            self.append_log(f"WARNING: {LEGACY_GENERATOR_WARNING}")
         self.cancel_requested = False
         self.generate_button.configure(state=tk.DISABLED)
         self._set_status("Running...", "running")
@@ -802,7 +805,7 @@ class LevelGeneratorGui:
     def _reset_form(self) -> None:
         self.start_var.set("12")
         self.count_var.set("1")
-        self.difficulty_var.set("tutorial")
+        self.difficulty_var.set("easy")
         self.generator_architecture_var.set(DEFAULT_GENERATOR_ARCHITECTURE)
         self.template_var.set("mixed")
         self.recipe_pool_var.set(str(DEFAULT_RECIPE_POOL_SIZE))

@@ -246,6 +246,7 @@ class FixedSeedRegressionService:
                 start_level_number=suite.start_level_number,
                 count=suite.count,
                 difficulty=suite.difficulty,
+                generator_architecture="v2_legacy",
                 template_name=suite.template_name,
                 seed=suite.seed,
                 dry_run=True,

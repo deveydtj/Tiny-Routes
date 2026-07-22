@@ -14,6 +14,8 @@ def test_cli_valid_dry_run(tmp_path, capsys) -> None:
             "1",
             "--difficulty",
             "tutorial",
+            "--generator-architecture",
+            "v2_legacy",
             "--template",
             "straight_delivery",
             "--seed",
@@ -39,7 +41,9 @@ def test_cli_valid_dry_run(tmp_path, capsys) -> None:
     )
 
     assert code == 0
-    assert "Accepted level_012" in capsys.readouterr().out
+    output = capsys.readouterr()
+    assert "Accepted level_012" in output.out
+    assert "v2_legacy is a non-production compatibility mode" in output.err
 
 
 def test_cli_invalid_start_returns_1_from_generation_validation(tmp_path) -> None:
@@ -76,6 +80,8 @@ def test_cli_auto_difficulty_dry_run(tmp_path) -> None:
             "2",
             "--difficulty",
             "auto",
+            "--generator-architecture",
+            "v2_legacy",
             "--template",
             "mixed",
             "--dry-run",
@@ -102,14 +108,14 @@ def test_cli_auto_difficulty_dry_run(tmp_path) -> None:
     assert code == 0
 
 
-def test_cli_defaults_create_recipe_pipeline_config() -> None:
+def test_cli_defaults_to_production_v3() -> None:
     argv = ["--start", "12", "--count", "1", "--difficulty", "easy"]
     args = build_generate_parser().parse_args(argv)
 
     config = _config_from_args(args, argv)
 
-    assert config.generator_architecture == "v2_legacy"
-    assert config.generator_architecture_version == 2
+    assert config.generator_architecture == "production_v3"
+    assert config.generator_architecture_version == 3
     assert config.recipe_pool_size == 4
     assert config.layouts_per_recipe == 2
     assert config.road_shapes_per_layout == 2
@@ -149,7 +155,10 @@ def test_cli_parses_layout_orientation_options() -> None:
 
 
 def test_cli_playtest_mode_disables_existing_similarity_by_default() -> None:
-    argv = ["--start", "1", "--count", "50", "--difficulty", "auto", "--playtest-mode"]
+    argv = [
+        "--start", "1", "--count", "50", "--difficulty", "auto",
+        "--generator-architecture", "v2_legacy", "--playtest-mode",
+    ]
     args = build_generate_parser().parse_args(argv)
 
     config = _config_from_args(args, argv)
@@ -169,6 +178,8 @@ def test_cli_playtest_mode_can_keep_existing_similarity_when_explicit() -> None:
         "50",
         "--difficulty",
         "auto",
+        "--generator-architecture",
+        "v2_legacy",
         "--playtest-mode",
         "--compare-existing",
     ]
@@ -189,6 +200,8 @@ def test_cli_accepts_recipe_architecture_options_for_recipe_generation(tmp_path)
             "1",
             "--difficulty",
             "easy",
+            "--generator-architecture",
+            "v2_legacy",
             "--template",
             "single_switch",
             "--recipe-pool-size",
@@ -289,7 +302,7 @@ def test_cli_production_v3_never_falls_back_to_v2(tmp_path, capsys) -> None:
     )
 
     assert code == 1
-    assert "v3_pipeline_unavailable" in capsys.readouterr().err
+    assert "production_v3_requires_transactional_entrypoint" in capsys.readouterr().err
     payload = json.loads((tmp_path / "report.json").read_text(encoding="utf-8"))
     assert payload["generatorArchitecture"] == "production_v3"
     assert payload["generatorArchitectureVersion"] == 3
@@ -305,6 +318,8 @@ def test_validate_cli_validates_written_files(tmp_path) -> None:
             "1",
             "--difficulty",
             "tutorial",
+            "--generator-architecture",
+            "v2_legacy",
             "--template",
             "straight_delivery",
             "--seed",

@@ -124,6 +124,7 @@ def test_long_detour_gate_path_lengths_and_no_generic_filler(
 def test_report_includes_phase4_family_metadata(tmp_path) -> None:
     result = LevelGenerationService().generate(
         GenerationConfig(
+            generator_architecture="v2_legacy",
             start_level_number=90,
             count=1,
             difficulty="medium",
@@ -168,6 +169,7 @@ def test_mixed_dry_runs_include_phase4_topology_mix_without_writing_levels(
 ) -> None:
     result = LevelGenerationService().generate(
         GenerationConfig(
+            generator_architecture="v2_legacy",
             start_level_number=80,
             count=4,
             difficulty=difficulty_name,

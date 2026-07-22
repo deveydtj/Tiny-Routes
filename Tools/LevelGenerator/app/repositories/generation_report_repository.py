@@ -61,6 +61,8 @@ class GenerationReportRepository:
             "template": config.template_name,
             "generatorArchitecture": config.generator_architecture,
             "generatorArchitectureVersion": config.generator_architecture_version,
+            "productionEligible": config.production_eligible,
+            "architectureWarning": config.architecture_warning,
             "outputSchemaVersions": sorted(
                 {
                     version
@@ -336,6 +338,12 @@ class GenerationReportRepository:
             f"- Generation profile: `{payload['generationProfile']}`",
             f"- Generator architecture: `{payload['generatorArchitecture']}` "
             f"(version `{payload['generatorArchitectureVersion']}`)",
+            f"- Production eligible: `{payload['productionEligible']}`",
+            *(
+                [f"- Warning: {payload['architectureWarning']}"]
+                if payload["architectureWarning"]
+                else []
+            ),
             f"- Output schema versions: `{payload['outputSchemaVersions']}`",
             f"- V2 pipeline mode: `{payload['generationMode']}`",
             f"- Base seed: `{payload['baseSeed']}`",

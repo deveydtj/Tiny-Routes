@@ -139,3 +139,30 @@ def test_report_and_validation_writes_cannot_escape_workspace(tmp_path) -> None:
     assert validation_log.parent == workspace.validation_logs_dir
     with pytest.raises(ValueError, match="single path component"):
         service.write_report(workspace, "../production.json", "bad")
+
+
+@pytest.mark.parametrize(
+    "config_snapshot",
+    [
+        {},
+        {"generatorArchitecture": "v2_legacy"},
+        {"mode": "v2_legacy"},
+    ],
+)
+def test_staged_output_rejects_missing_or_legacy_architecture(
+    tmp_path, config_snapshot
+) -> None:
+    workspace = ProductionStagingService(tmp_path / "staging").create_workspace(
+        "run-legacy",
+        seed=5,
+        config_snapshot=config_snapshot,
+    )
+
+    with pytest.raises(ValueError, match="requires production_v3"):
+        ProductionStagedOutputService().write_selected_candidates(
+            workspace,
+            [_candidate("level_005", 5, 5)],
+            production_levels_dir=tmp_path / "production" / "levels",
+            production_solutions_dir=tmp_path / "production" / "solutions",
+            production_manifest_path=tmp_path / "production" / "manifest.json",
+        )

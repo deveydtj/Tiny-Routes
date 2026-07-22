@@ -242,6 +242,7 @@ def test_phase2_families_still_pass_strict_generator_validation() -> None:
 def _dry_run_auto(base_path):
     return LevelGenerationService().generate(
         GenerationConfig(
+            generator_architecture="v2_legacy",
             start_level_number=20,
             count=3,
             difficulty="medium",

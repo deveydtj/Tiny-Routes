@@ -20,6 +20,7 @@ from app.services.recipe_to_level_builder_service import RecipeToLevelBuilderSer
 
 def _config(tmp_path, **kwargs) -> GenerationConfig:
     return GenerationConfig(
+        generator_architecture="v2_legacy",
         start_level_number=kwargs.pop("start_level_number", 12),
         count=kwargs.pop("count", 1),
         difficulty=kwargs.pop("difficulty", "tutorial"),

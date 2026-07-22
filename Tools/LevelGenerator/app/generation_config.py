@@ -12,7 +12,11 @@ from .paths import (
 LAYOUT_ORIENTATION_PREFERENCES = ("portrait_vertical", "horizontal", "vertical", "mixed", "auto")
 LAYOUT_SIZE_PROFILES = ("difficulty_curve", "standard_portrait", "large_portrait")
 GENERATOR_ARCHITECTURES = ("v2_legacy", "production_v3")
-DEFAULT_GENERATOR_ARCHITECTURE = "v2_legacy"
+DEFAULT_GENERATOR_ARCHITECTURE = "production_v3"
+LEGACY_GENERATOR_WARNING = (
+    "v2_legacy is a non-production compatibility mode. Its output cannot be "
+    "promoted as new production content."
+)
 DEFAULT_RECIPE_POOL_SIZE = 4
 DEFAULT_LAYOUTS_PER_RECIPE = 2
 DEFAULT_ROAD_SHAPES_PER_LAYOUT = 2
@@ -108,6 +112,16 @@ class GenerationConfig:
         if self.generator_architecture not in GENERATOR_ARCHITECTURES:
             valid = ", ".join(GENERATOR_ARCHITECTURES)
             raise ValueError(f"generator_architecture must be one of: {valid}")
+        if self.generator_architecture == "production_v3" and self.playtest_portfolio:
+            raise ValueError(
+                "production_v3 forbids the relaxed playtest portfolio; "
+                "select v2_legacy explicitly for non-production fixture runs"
+            )
+        if self.generator_architecture == "production_v3" and self.difficulty == "tutorial":
+            raise ValueError(
+                "tutorial is not a production_v3 difficulty; select easy or harder, "
+                "or select v2_legacy explicitly for tutorial fixtures"
+            )
         if self.layout_size_profile not in LAYOUT_SIZE_PROFILES:
             valid = ", ".join(LAYOUT_SIZE_PROFILES)
             raise ValueError(f"layout_size_profile must be one of: {valid}")
@@ -127,3 +141,11 @@ class GenerationConfig:
     @property
     def generator_architecture_version(self) -> int:
         return 2 if self.generator_architecture == "v2_legacy" else 3
+
+    @property
+    def production_eligible(self) -> bool:
+        return self.generator_architecture == "production_v3"
+
+    @property
+    def architecture_warning(self) -> str | None:
+        return LEGACY_GENERATOR_WARNING if not self.production_eligible else None
