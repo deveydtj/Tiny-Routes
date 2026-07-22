@@ -138,6 +138,20 @@ from .adaptive_search_breadth_service import (
 )
 from .rejection_feedback_planner_service import RejectionFeedbackPlannerService
 from .candidate_pool_service import CandidatePoolService
+from .candidate_portfolio_selection_service import (
+    CandidatePortfolioSelectionResult,
+    CandidatePortfolioSelectionService,
+    PortfolioConstraintFailure,
+    PortfolioConstraints,
+    PortfolioSelection,
+)
+from .campaign_portfolio_service import (
+    CampaignPortfolioResult,
+    CampaignPortfolioService,
+    PortfolioBacktrackingConfig,
+    PortfolioBacktrackingFailure,
+    PortfolioExpansionRecord,
+)
 
 __all__ = [
     "BoundingBox",
@@ -245,4 +259,14 @@ __all__ = [
     "AdaptiveSearchBreadthService",
     "RejectionFeedbackPlannerService",
     "CandidatePoolService",
+    "CandidatePortfolioSelectionResult",
+    "CandidatePortfolioSelectionService",
+    "PortfolioConstraintFailure",
+    "PortfolioConstraints",
+    "PortfolioSelection",
+    "CampaignPortfolioResult",
+    "CampaignPortfolioService",
+    "PortfolioBacktrackingConfig",
+    "PortfolioBacktrackingFailure",
+    "PortfolioExpansionRecord",
 ]

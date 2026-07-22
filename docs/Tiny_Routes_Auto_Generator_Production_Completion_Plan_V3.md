@@ -3140,8 +3140,8 @@ locked, consumed, objective, and active-switch state from shared schema rules.
 - [x] **AG-100:** Add rejection feedback planner.
 - [x] **AG-101:** Expand candidate signatures.
 - [x] **AG-102:** Add campaign candidate pools.
-- [ ] **AG-103:** Add portfolio optimizer constraints.
-- [ ] **AG-104:** Add targeted portfolio backtracking.
+- [x] **AG-103:** Add portfolio optimizer constraints.
+- [x] **AG-104:** Add targeted portfolio backtracking.
 - [ ] **AG-105:** Add existing-corpus behavior comparison.
 
 **2026-07-21 AG-095 completion record:** Added an immutable, report-compatible
@@ -3205,6 +3205,24 @@ attempts run round-robin in bounded waves, rejected proof artifacts collapse to
 compact audit records, per-slot attempt budgets are enforced, and incomplete
 campaign pools report their exact constrained slots without selecting a partial
 batch.
+
+**2026-07-21 AG-103 completion record:** Upgraded portfolio selection from a
+greedy per-slot pass to a deterministic bounded whole-campaign optimizer that
+retains alternate prefixes and applies hard constraints before scoring. The
+optimizer blocks adjacent blueprint repetition, exact behavior duplication in a
+configured window, objective-count and fatal-outcome streaks, weak medium+
+adaptive-mechanic windows, and repeated expert dependency structures. Ranking
+now covers difficulty fit, mechanic order, blueprint and objective variety,
+dependency progression, recovery balance, layout, runtime pacing, and distance
+from the existing corpus, with stable constraint rejection evidence.
+
+**2026-07-21 AG-104 completion record:** Added budgeted campaign portfolio
+backtracking that identifies the slot where hard selection became impossible,
+requests deterministic new V3 candidates only for that slot, and re-runs the
+unchanged optimizer. Candidate-pool expansion continues attempt indices and
+seeds from the original run, retains every attempt as audit evidence, honors
+per-round and global budgets, fills initial pool shortfalls, and fails with the
+remaining constrained slots instead of relaxing quality or diversity rules.
 
 ## Transactional production
 
