@@ -30,6 +30,7 @@ def test_five_level_fixed_seed_smoke_uses_exact_v3_production_path(tmp_path) -> 
     assert evidence.stage_path_violation_count == 0
     assert evidence.behavior_duplicate_count == 0
     assert evidence.one_tap_or_less_count == 0
+    assert evidence.selected_minimum_accepted_taps >= 2
     assert evidence.static_policy_solvable_count == 0
     assert evidence.unproven_optimal_count == 0
     assert evidence.parity_error_count == 0

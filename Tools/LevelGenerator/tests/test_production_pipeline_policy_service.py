@@ -38,6 +38,7 @@ def test_accepts_only_the_locked_unrelaxed_v3_path(accepted_pipeline_result) -> 
         (1, "fallbackUsed", True, "production_fallback_used"),
         (1, "sourceKind", "direct_motif_fixture", "weak_composition_source"),
         (3, "manualRepairRequired", True, "manual_repair_path"),
+        (5, "antiTrivialityStatus", "failed", "anti_triviality_evidence_missing"),
         (5, "generationProfile", "playtest_portfolio", "non_production_quality_profile"),
         (5, "qualityThresholdsRelaxed", True, "relaxed_quality_thresholds"),
         (5, "manualApprovalRequired", True, "manual_approval_path"),
@@ -70,3 +71,26 @@ def test_rejects_untyped_or_missing_selected_evidence() -> None:
         service.require(())
     with pytest.raises(ProductionPipelinePolicyError, match="evidence_invalid"):
         service.require((object(),))
+
+
+@pytest.mark.parametrize("accepted_taps", (0, 1))
+def test_rejects_stale_selected_evidence_for_zero_or_one_tap_output(
+    accepted_pipeline_result,
+    accepted_taps: int,
+) -> None:
+    stages = list(accepted_pipeline_result.stage_results)
+    quality = stages[5]
+    stages[5] = replace(
+        quality,
+        puzzle_analysis=replace(
+            quality.puzzle_analysis,
+            optimal_accepted_taps=accepted_taps,
+        ),
+    )
+    stale = V3CandidatePipelineResult(
+        accepted_pipeline_result.request,
+        tuple(stages),
+    )
+
+    with pytest.raises(ProductionPipelinePolicyError, match="production_one_tap_level"):
+        ProductionPipelinePolicyService().require((stale,))

@@ -77,6 +77,7 @@ class ProductionV3SmokeEvidence:
     stage_path_violation_count: int
     behavior_duplicate_count: int
     one_tap_or_less_count: int
+    selected_minimum_accepted_taps: int
     static_policy_solvable_count: int
     unproven_optimal_count: int
     parity_error_count: int
@@ -112,6 +113,7 @@ class ProductionV3SmokeEvidence:
             "stagePathViolationCount": self.stage_path_violation_count,
             "behaviorDuplicateCount": self.behavior_duplicate_count,
             "oneTapOrLessCount": self.one_tap_or_less_count,
+            "selectedMinimumAcceptedTaps": self.selected_minimum_accepted_taps,
             "staticPolicySolvableCount": self.static_policy_solvable_count,
             "unprovenOptimalCount": self.unproven_optimal_count,
             "parityErrorCount": self.parity_error_count,
@@ -716,6 +718,7 @@ def _run_once(
         trace = item.stage_results[2].strategy_search.canonical_optimal_strategy
         accepted_tap_counts.append(sum(action.tap_count for action in trace.actions))
     one_tap_or_less_count = sum(value <= 1 for value in accepted_tap_counts)
+    selected_minimum_accepted_taps = min(accepted_tap_counts)
     static_policy_solvable_count = sum(
         item.stage_results[2].static_policy_search.static_policy_solvable
         for item in pipeline_results
@@ -832,6 +835,7 @@ def _run_once(
             and stage_path_violation_count == 0
             and behavior_duplicate_count == 0
             and one_tap_or_less_count == 0
+            and selected_minimum_accepted_taps >= 2
             and static_policy_solvable_count == 0
             and unproven_optimal_count == 0
             and len(rejected_results) == level_count
@@ -858,6 +862,7 @@ def _run_once(
         stage_path_violation_count=stage_path_violation_count,
         behavior_duplicate_count=behavior_duplicate_count,
         one_tap_or_less_count=one_tap_or_less_count,
+        selected_minimum_accepted_taps=selected_minimum_accepted_taps,
         static_policy_solvable_count=static_policy_solvable_count,
         unproven_optimal_count=unproven_optimal_count,
         parity_error_count=parity_error_count,

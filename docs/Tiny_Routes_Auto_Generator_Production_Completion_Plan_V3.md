@@ -78,7 +78,7 @@ The generator is not complete until every item below is true.
 - [x] The same seed and configuration produce byte-for-byte equivalent level logic, solution actions, selection results, and reports.
 - [x] The generator automatically retries failed candidates using new blueprints, compositions, layouts, and road geometry.
 - [x] The generator never requires a person to choose candidates or repair output.
-- [ ] The generator either produces the full requested batch or writes no production changes.
+- [x] The generator either produces the full requested batch or writes no production changes.
 
 **2026-07-22 completion record:** The dedicated production CLI and GUI action
 each invoke the shared transactional `ProductionCampaignService` exactly once,
@@ -96,14 +96,30 @@ also rejects selected evidence that permits manual candidate approval or manual
 layout/road repair, while the smoke proves one automatic portfolio selection and
 zero human-intervention requirements.
 
+**2026-07-22 completion record:** Campaign completeness is checked before any
+selected output reaches staging and again before the typed completed result can
+exist. A new incomplete two-slot campaign regression preserves exact sentinel
+level, solution, and manifest bytes while proving that selection staging and
+promotion are never called. The exact-path fixed-seed smoke independently fills
+all five requested slots, while transactional promotion tests preserve the
+preflight corpus on conflict and restore it after post-promotion failure.
+
 ### 2.2 No trivial generated levels
 
-- [ ] Production generation never outputs a zero-tap or one-tap level.
+- [x] Production generation never outputs a zero-tap or one-tap level.
 - [ ] Production generation never outputs a level with fewer than two meaningful route decisions.
 - [ ] Every generated level contains at least one adaptive decision that occurs after a checkpoint or route-state change.
 - [ ] No production level can be solved by assigning one permanent outgoing road to every switch before movement begins.
 - [ ] Medium, hard, and expert levels cannot be solved by a greedy “point each upcoming arrow toward the currently highlighted target” strategy.
 - [ ] Equivalent choices, decorative branches, and branches with identical future consequences do not count as decisions.
+
+**2026-07-22 completion record:** The non-compensating production puzzle gate
+rejects both zero-tap and one-tap adversarial fixtures with
+`production_one_tap_level`. The final campaign policy now independently rejects
+selected typed evidence whose proven optimum has fewer than two accepted taps,
+even if stale quality evidence claims acceptance, and requires explicit passed
+anti-triviality evidence. The exact-path five-level smoke reports a selected
+minimum of at least two accepted taps and zero selected one-tap-or-less levels.
 
 ### 2.3 Real route choice
 

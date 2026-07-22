@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from dataclasses import replace
 from types import SimpleNamespace
 
 from app.models.production_campaign import ProductionCampaignConfig
@@ -32,16 +33,27 @@ class _PoolResult:
 
 
 class _PoolService:
-    def __init__(self, candidate, *, failure: Exception | None = None) -> None:
+    def __init__(
+        self,
+        candidate,
+        *,
+        failure: Exception | None = None,
+        complete: bool = True,
+    ) -> None:
         self.candidate = candidate
         self.failure = failure
+        self.complete = complete
         self.requests = []
 
     def build(self, request):
         self.requests.append(request)
         if self.failure:
             raise self.failure
-        return _PoolResult(self.candidate)
+        result = _PoolResult(self.candidate)
+        if not self.complete:
+            result.complete = False
+            result.constrained_level_ids = (request.slots[-1].level_id,)
+        return result
 
     def expand(self, *args, **kwargs):  # pragma: no cover - protocol surface
         raise AssertionError("portfolio expansion was not expected")
@@ -187,6 +199,48 @@ def test_candidate_failure_leaves_production_untouched(tmp_path) -> None:
     assert not staged.staged
     assert not promotion.called
     assert result.report_path.is_file()
+
+
+def test_incomplete_campaign_writes_no_production_changes(tmp_path) -> None:
+    candidate = SimpleNamespace(level_id="level_031", seed=7)
+    config = replace(_config(tmp_path), count=2)
+    config.levels_output_dir.mkdir(parents=True)
+    config.solutions_output_dir.mkdir(parents=True)
+    existing_level = config.levels_output_dir / "level_030.json"
+    existing_solution = config.solutions_output_dir / "level_030.solution.json"
+    existing_level.write_bytes(b'{"sentinel":"level"}\n')
+    existing_solution.write_bytes(b'{"sentinel":"solution"}\n')
+    config.production_manifest_path.write_bytes(b'{"sentinel":"manifest"}\n')
+    production_before = {
+        path: path.read_bytes()
+        for path in (existing_level, existing_solution, config.production_manifest_path)
+    }
+    staged = _StagedOutputService()
+    promotion = _PromotionService()
+    service = ProductionCampaignService(
+        candidate_pool_service=_PoolService(candidate, complete=False),
+        portfolio_service=_PortfolioService(),
+        staged_output_service=staged,
+        validation_service=_ValidationService(),
+        promotion_service=promotion,
+        existing_level_repository=_ExistingRepository(),
+        run_id_factory=lambda seed: f"run-{seed}",
+        pipeline_policy_service=_AllowPipelinePolicy(),
+    )
+
+    result = service.run(config)
+
+    assert result.status == "failed_no_changes"
+    assert result.requested_count == 2
+    assert result.selected_count == 0
+    assert "candidate_pool_incomplete" in result.failure_reason
+    assert not staged.staged
+    assert not promotion.called
+    assert {
+        path: path.read_bytes() for path in production_before
+    } == production_before
+    assert tuple(config.levels_output_dir.iterdir()) == (existing_level,)
+    assert tuple(config.solutions_output_dir.iterdir()) == (existing_solution,)
 
 
 def test_report_failure_cannot_relabel_completed_promotion(tmp_path) -> None:

@@ -130,6 +130,43 @@ class ProductionPipelinePolicyService:
                 )
 
             quality = stages[5].report_fields
+            quality_result = result.quality_result
+            if quality_result is None or quality_result.puzzle_analysis is None:
+                issues.append(
+                    ProductionPipelinePolicyIssue(
+                        "production_quality_evidence_missing",
+                        level_id,
+                        "Selected candidates require typed final puzzle analysis.",
+                    )
+                )
+            elif quality_result.puzzle_analysis.optimal_accepted_taps < 2:
+                issues.append(
+                    ProductionPipelinePolicyIssue(
+                        "production_one_tap_level",
+                        level_id,
+                        "Production candidates require at least two proven optimal accepted taps.",
+                    )
+                )
+            if (
+                quality_result is None
+                or quality_result.hard_gate is None
+                or not quality_result.hard_gate.accepted
+            ):
+                issues.append(
+                    ProductionPipelinePolicyIssue(
+                        "production_hard_gate_failed",
+                        level_id,
+                        "Selected candidates require accepted non-compensating hard gates.",
+                    )
+                )
+            if quality.get("antiTrivialityStatus") != "passed":
+                issues.append(
+                    ProductionPipelinePolicyIssue(
+                        "anti_triviality_evidence_missing",
+                        level_id,
+                        "Production quality must explicitly report passed anti-triviality gates.",
+                    )
+                )
             if quality.get("generationProfile") != "production":
                 issues.append(
                     ProductionPipelinePolicyIssue(
