@@ -32,6 +32,7 @@ from app.services import (
     PolicyEvaluationConfig,
     PolicyEvaluationService,
     ProductionCampaignService,
+    ProductionPipelinePolicyService,
     ProductionPuzzleGateService,
     ProductionStagedOutputService,
     PuzzleBlueprintService,
@@ -78,6 +79,10 @@ class ProductionV3SmokeEvidence:
     behavior_duplicate_count: int
     one_tap_or_less_count: int
     selected_minimum_accepted_taps: int
+    fewer_than_two_meaningful_decision_count: int
+    selected_minimum_meaningful_decisions: int
+    missing_post_state_adaptive_decision_count: int
+    selected_minimum_post_state_adaptive_decisions: int
     static_policy_solvable_count: int
     unproven_optimal_count: int
     parity_error_count: int
@@ -114,6 +119,18 @@ class ProductionV3SmokeEvidence:
             "behaviorDuplicateCount": self.behavior_duplicate_count,
             "oneTapOrLessCount": self.one_tap_or_less_count,
             "selectedMinimumAcceptedTaps": self.selected_minimum_accepted_taps,
+            "fewerThanTwoMeaningfulDecisionCount": (
+                self.fewer_than_two_meaningful_decision_count
+            ),
+            "selectedMinimumMeaningfulDecisions": (
+                self.selected_minimum_meaningful_decisions
+            ),
+            "missingPostStateAdaptiveDecisionCount": (
+                self.missing_post_state_adaptive_decision_count
+            ),
+            "selectedMinimumPostStateAdaptiveDecisions": (
+                self.selected_minimum_post_state_adaptive_decisions
+            ),
             "staticPolicySolvableCount": self.static_policy_solvable_count,
             "unprovenOptimalCount": self.unproven_optimal_count,
             "parityErrorCount": self.parity_error_count,
@@ -719,6 +736,24 @@ def _run_once(
         accepted_tap_counts.append(sum(action.tap_count for action in trace.actions))
     one_tap_or_less_count = sum(value <= 1 for value in accepted_tap_counts)
     selected_minimum_accepted_taps = min(accepted_tap_counts)
+    decision_counts = tuple(
+        ProductionPipelinePolicyService.optimal_decision_counts(
+            item.stage_results[2].strategy_search.canonical_optimal_strategy
+        )
+        for item in pipeline_results
+    )
+    meaningful_decision_counts = tuple(value[0] for value in decision_counts)
+    post_state_adaptive_decision_counts = tuple(value[1] for value in decision_counts)
+    fewer_than_two_meaningful_decision_count = sum(
+        value < 2 for value in meaningful_decision_counts
+    )
+    selected_minimum_meaningful_decisions = min(meaningful_decision_counts)
+    missing_post_state_adaptive_decision_count = sum(
+        value < 1 for value in post_state_adaptive_decision_counts
+    )
+    selected_minimum_post_state_adaptive_decisions = min(
+        post_state_adaptive_decision_counts
+    )
     static_policy_solvable_count = sum(
         item.stage_results[2].static_policy_search.static_policy_solvable
         for item in pipeline_results
@@ -813,6 +848,8 @@ def _run_once(
         "automaticPortfolioSelection": automatic_portfolio_selection,
         "manualApprovalRequiredCount": manual_approval_required_count,
         "manualRepairRequiredCount": manual_repair_required_count,
+        "meaningfulDecisionCounts": meaningful_decision_counts,
+        "postStateAdaptiveDecisionCounts": post_state_adaptive_decision_counts,
         "levelLogicFingerprint": level_logic_fingerprint,
         "solutionActionsFingerprint": solution_actions_fingerprint,
         "selectionResultFingerprint": selection_result_fingerprint,
@@ -836,6 +873,10 @@ def _run_once(
             and behavior_duplicate_count == 0
             and one_tap_or_less_count == 0
             and selected_minimum_accepted_taps >= 2
+            and fewer_than_two_meaningful_decision_count == 0
+            and selected_minimum_meaningful_decisions >= 2
+            and missing_post_state_adaptive_decision_count == 0
+            and selected_minimum_post_state_adaptive_decisions >= 1
             and static_policy_solvable_count == 0
             and unproven_optimal_count == 0
             and len(rejected_results) == level_count
@@ -863,6 +904,18 @@ def _run_once(
         behavior_duplicate_count=behavior_duplicate_count,
         one_tap_or_less_count=one_tap_or_less_count,
         selected_minimum_accepted_taps=selected_minimum_accepted_taps,
+        fewer_than_two_meaningful_decision_count=(
+            fewer_than_two_meaningful_decision_count
+        ),
+        selected_minimum_meaningful_decisions=(
+            selected_minimum_meaningful_decisions
+        ),
+        missing_post_state_adaptive_decision_count=(
+            missing_post_state_adaptive_decision_count
+        ),
+        selected_minimum_post_state_adaptive_decisions=(
+            selected_minimum_post_state_adaptive_decisions
+        ),
         static_policy_solvable_count=static_policy_solvable_count,
         unproven_optimal_count=unproven_optimal_count,
         parity_error_count=parity_error_count,

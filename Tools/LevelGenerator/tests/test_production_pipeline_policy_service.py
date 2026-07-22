@@ -94,3 +94,97 @@ def test_rejects_stale_selected_evidence_for_zero_or_one_tap_output(
 
     with pytest.raises(ProductionPipelinePolicyError, match="production_one_tap_level"):
         ProductionPipelinePolicyService().require((stale,))
+
+
+@pytest.mark.parametrize(
+    ("field", "value", "code"),
+    [
+        ("meaningful_decisions", 1, "insufficient_meaningful_decisions"),
+        ("adaptive_decisions", 0, "insufficient_adaptive_decisions"),
+    ],
+)
+def test_rejects_stale_final_decision_counters(
+    accepted_pipeline_result,
+    field: str,
+    value: int,
+    code: str,
+) -> None:
+    stages = list(accepted_pipeline_result.stage_results)
+    quality = stages[5]
+    stages[5] = replace(
+        quality,
+        puzzle_analysis=replace(quality.puzzle_analysis, **{field: value}),
+    )
+    stale = V3CandidatePipelineResult(
+        accepted_pipeline_result.request,
+        tuple(stages),
+    )
+
+    with pytest.raises(ProductionPipelinePolicyError, match=code):
+        ProductionPipelinePolicyService().require((stale,))
+
+
+def test_rejects_optimal_trace_with_fewer_than_two_meaningful_decisions(
+    accepted_pipeline_result,
+) -> None:
+    stages = list(accepted_pipeline_result.stage_results)
+    strategy = stages[2]
+    search = strategy.strategy_search
+    trace = search.canonical_optimal_strategy
+    first_meaningful_index = next(
+        index
+        for index, action in enumerate(trace.actions)
+        if action.meaningful_decision is True
+    )
+    actions = list(trace.actions)
+    actions[first_meaningful_index] = replace(
+        actions[first_meaningful_index],
+        meaningful_decision=False,
+    )
+    stages[2] = replace(
+        strategy,
+        strategy_search=replace(
+            search,
+            canonical_optimal_strategy=replace(trace, actions=tuple(actions)),
+        ),
+    )
+    stale = V3CandidatePipelineResult(
+        accepted_pipeline_result.request,
+        tuple(stages),
+    )
+
+    with pytest.raises(
+        ProductionPipelinePolicyError,
+        match="insufficient_meaningful_decisions",
+    ):
+        ProductionPipelinePolicyService().require((stale,))
+
+
+def test_rejects_optimal_trace_without_a_decision_after_state_change(
+    accepted_pipeline_result,
+) -> None:
+    stages = list(accepted_pipeline_result.stage_results)
+    strategy = stages[2]
+    search = strategy.strategy_search
+    trace = search.canonical_optimal_strategy
+    actions = tuple(
+        replace(action, state_transition=None)
+        for action in trace.actions
+    )
+    stages[2] = replace(
+        strategy,
+        strategy_search=replace(
+            search,
+            canonical_optimal_strategy=replace(trace, actions=actions),
+        ),
+    )
+    stale = V3CandidatePipelineResult(
+        accepted_pipeline_result.request,
+        tuple(stages),
+    )
+
+    with pytest.raises(
+        ProductionPipelinePolicyError,
+        match="insufficient_adaptive_decisions",
+    ):
+        ProductionPipelinePolicyService().require((stale,))

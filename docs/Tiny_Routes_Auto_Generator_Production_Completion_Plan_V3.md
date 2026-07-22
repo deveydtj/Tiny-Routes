@@ -107,8 +107,8 @@ preflight corpus on conflict and restore it after post-promotion failure.
 ### 2.2 No trivial generated levels
 
 - [x] Production generation never outputs a zero-tap or one-tap level.
-- [ ] Production generation never outputs a level with fewer than two meaningful route decisions.
-- [ ] Every generated level contains at least one adaptive decision that occurs after a checkpoint or route-state change.
+- [x] Production generation never outputs a level with fewer than two meaningful route decisions.
+- [x] Every generated level contains at least one adaptive decision that occurs after a checkpoint or route-state change.
 - [ ] No production level can be solved by assigning one permanent outgoing road to every switch before movement begins.
 - [ ] Medium, hard, and expert levels cannot be solved by a greedy “point each upcoming arrow toward the currently highlighted target” strategy.
 - [ ] Equivalent choices, decorative branches, and branches with identical future consequences do not count as decisions.
@@ -120,6 +120,17 @@ selected typed evidence whose proven optimum has fewer than two accepted taps,
 even if stale quality evidence claims acceptance, and requires explicit passed
 anti-triviality evidence. The exact-path five-level smoke reports a selected
 minimum of at least two accepted taps and zero selected one-tap-or-less levels.
+
+**2026-07-22 completion record:** The final pre-staging campaign policy now
+cross-checks each selected candidate's non-compensating quality analysis against
+its canonical optimal proof trace and rejects fewer than two trace-backed
+meaningful decisions with `insufficient_meaningful_decisions`. It also requires
+a validated blueprint state dependency, positive adaptive analysis, and a
+meaningful optimal decision strictly after an earlier objective or route-state
+transition; stale or reordered evidence fails with
+`insufficient_adaptive_decisions`. The exact-path five-level smoke reports zero
+violations and minimums of two meaningful decisions and one post-state adaptive
+decision across the selected portfolio.
 
 ### 2.3 Real route choice
 

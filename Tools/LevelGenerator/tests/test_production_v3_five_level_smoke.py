@@ -31,6 +31,10 @@ def test_five_level_fixed_seed_smoke_uses_exact_v3_production_path(tmp_path) -> 
     assert evidence.behavior_duplicate_count == 0
     assert evidence.one_tap_or_less_count == 0
     assert evidence.selected_minimum_accepted_taps >= 2
+    assert evidence.fewer_than_two_meaningful_decision_count == 0
+    assert evidence.selected_minimum_meaningful_decisions >= 2
+    assert evidence.missing_post_state_adaptive_decision_count == 0
+    assert evidence.selected_minimum_post_state_adaptive_decisions >= 1
     assert evidence.static_policy_solvable_count == 0
     assert evidence.unproven_optimal_count == 0
     assert evidence.parity_error_count == 0
