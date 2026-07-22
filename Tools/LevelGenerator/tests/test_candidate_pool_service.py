@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import threading
 from types import SimpleNamespace
 
 from app.models import CandidatePoolRequest, CandidatePoolSlot
@@ -137,3 +138,88 @@ def test_diagnostic_capture_failure_cannot_change_candidate_acceptance() -> None
         item["diagnosticCaptureError"] == "OSError"
         for item in result.attempt_diagnostics
     )
+
+
+def test_parallel_workers_preserve_serial_candidate_and_report_order() -> None:
+    class ConcurrentPipeline(_Pipeline):
+        def __init__(self) -> None:
+            super().__init__()
+            self.barrier = threading.Barrier(4)
+            self.lock = threading.Lock()
+            self.active = 0
+            self.maximum_active = 0
+
+        def run(self, request):
+            with self.lock:
+                self.active += 1
+                self.maximum_active = max(self.maximum_active, self.active)
+            try:
+                self.barrier.wait(timeout=2)
+                return super().run(request)
+            finally:
+                with self.lock:
+                    self.active -= 1
+
+    parallel_pipeline = ConcurrentPipeline()
+    parallel_request = _request(wave_size=2, max_workers=4)
+    serial_request = _request(wave_size=2, max_workers=1)
+
+    parallel = CandidatePoolService(
+        parallel_pipeline, _SignatureService()
+    ).build(parallel_request)
+    serial = CandidatePoolService(_Pipeline(), _SignatureService()).build(serial_request)
+
+    assert parallel_pipeline.maximum_active == 4
+    assert [item.candidate_id for item in parallel.attempts] == sorted(
+        item.candidate_id for item in parallel.attempts
+    )
+    assert [item.to_report_dict() for item in parallel.attempts] == [
+        item.to_report_dict() for item in serial.attempts
+    ]
+    assert [item["candidateID"] for item in parallel.attempt_diagnostics] == [
+        item.candidate_id for item in parallel.attempts
+    ]
+    assert {
+        level_id: [candidate.seed for candidate in candidates]
+        for level_id, candidates in parallel.candidate_pools.items()
+    } == {
+        level_id: [candidate.seed for candidate in candidates]
+        for level_id, candidates in serial.candidate_pools.items()
+    }
+
+
+def test_global_budget_reallocates_attempts_to_the_constrained_slot_and_reports_it() -> None:
+    pipeline = _Pipeline(
+        {
+            ("level_032", 0),
+            ("level_032", 1),
+            ("level_032", 2),
+            ("level_032", 3),
+            ("level_032", 4),
+        }
+    )
+    request = _request(
+        max_attempts_per_slot=5,
+        global_attempt_budget=5,
+        max_workers=2,
+    )
+
+    result = CandidatePoolService(pipeline, _SignatureService()).build(request)
+
+    assert not result.complete
+    assert result.attempt_budget is not None
+    assert result.attempt_budget.maximum_attempts == 5
+    assert result.attempt_budget.attempts_used == 5
+    assert result.attempt_budget.remaining_attempts == 0
+    assert dict(result.attempt_budget.attempts_per_slot) == {
+        "level_031": 2,
+        "level_032": 3,
+    }
+    assert any(
+        item.level_id == "level_032"
+        and item.reason == "constrained_slot_reallocation"
+        for item in result.attempt_budget.allocation_changes
+    )
+    report = result.to_report_dict()["attemptBudget"]
+    assert report["remainingAttempts"] == 0
+    assert report["attemptsPerSlot"]["level_032"] == 3

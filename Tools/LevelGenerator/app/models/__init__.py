@@ -1,10 +1,12 @@
 from .candidate_signature import CandidateSignature
 from .candidate_pool import (
+    AttemptBudgetAllocation,
     CampaignCandidatePoolResult,
     CandidatePoolAttempt,
     CandidatePoolRequest,
     CandidatePoolSlot,
     CandidateSlotPool,
+    GlobalAttemptBudgetReport,
 )
 from .difficulty_preset import DifficultyPreset
 from .decision_profile import DecisionProfile
@@ -203,11 +205,13 @@ from .search_planning import (
 )
 
 __all__ = [
+    "AttemptBudgetAllocation",
     "CampaignCandidatePoolResult",
     "CandidatePoolAttempt",
     "CandidatePoolRequest",
     "CandidatePoolSlot",
     "CandidateSlotPool",
+    "GlobalAttemptBudgetReport",
     "DifficultyPreset",
     "ProductionArtifact",
     "ProductionCandidateRecord",

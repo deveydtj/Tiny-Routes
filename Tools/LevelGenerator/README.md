@@ -69,6 +69,16 @@ portfolio, runs the mandatory Python and Swift checks against those staged
 bytes, and promotes only after every level passes. Its single output line
 includes the terminal status, resolved seed, selected count, and report path.
 
+Candidate waves preallocate every candidate identity and derived seed before
+running up to four workers, then merge results in candidate-identity order so
+worker completion timing cannot change selection or reports. Override the
+worker count with `--candidate-workers`. One campaign-wide attempt budget covers
+initial pool construction and targeted portfolio retries; by default it is the
+per-level maximum multiplied by the requested count, plus the bounded 24-attempt
+portfolio allowance. Set an explicit cap with `--global-attempt-budget`.
+Candidate-pool reports record attempts used per slot, every allocation reason,
+and the remaining global budget.
+
 The GUI exposes the same workflow through **Generate Production Campaign**.
 Start level, count, difficulty, seed, and output directories come from the main
 form; stage progress and the final report path appear in the activity log. No

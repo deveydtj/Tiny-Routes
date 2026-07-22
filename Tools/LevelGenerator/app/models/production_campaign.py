@@ -26,6 +26,8 @@ class ProductionCampaignConfig:
     candidates_per_slot: int = 4
     max_attempts_per_slot: int = 120
     wave_size: int = 1
+    candidate_workers: int = 4
+    global_attempt_budget: int | None = None
     quality_profile_version: str = CURRENT_QUALITY_PROFILE_VERSION
     levels_output_dir: Path = field(default_factory=get_default_levels_directory)
     solutions_output_dir: Path = field(default_factory=get_default_solutions_directory)
@@ -43,6 +45,7 @@ class ProductionCampaignConfig:
             "candidates_per_slot",
             "max_attempts_per_slot",
             "wave_size",
+            "candidate_workers",
         ):
             value = getattr(self, field_name)
             if not isinstance(value, int) or isinstance(value, bool) or value <= 0:
@@ -52,6 +55,18 @@ class ProductionCampaignConfig:
         if self.max_attempts_per_slot < self.candidates_per_slot:
             raise ValueError(
                 "max_attempts_per_slot cannot be smaller than candidates_per_slot"
+            )
+        if self.global_attempt_budget is not None and (
+            not isinstance(self.global_attempt_budget, int)
+            or isinstance(self.global_attempt_budget, bool)
+            or self.global_attempt_budget <= 0
+        ):
+            raise ValueError("global_attempt_budget must be a positive integer")
+        if self.global_attempt_budget is None:
+            object.__setattr__(
+                self,
+                "global_attempt_budget",
+                self.count * self.max_attempts_per_slot + 24,
             )
         difficulty = self.difficulty.strip().lower()
         if difficulty not in {"auto", "easy", "medium", "hard", "expert"}:
@@ -92,6 +107,8 @@ class ProductionCampaignConfig:
             "candidatesPerSlot": self.candidates_per_slot,
             "maxAttemptsPerSlot": self.max_attempts_per_slot,
             "waveSize": self.wave_size,
+            "candidateWorkers": self.candidate_workers,
+            "globalAttemptBudget": self.global_attempt_budget,
             "qualityProfileVersion": self.quality_profile_version,
             "levelsOutputDirectory": str(self.levels_output_dir.resolve(strict=False)),
             "solutionsOutputDirectory": str(

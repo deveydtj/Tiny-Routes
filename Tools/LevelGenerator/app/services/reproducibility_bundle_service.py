@@ -341,11 +341,17 @@ class ReproducibilityBundleService:
         pool_size = int(configuration.get("candidatesPerSlot", 4))
         attempts = int(configuration.get("maxAttemptsPerSlot", 120))
         wave_size = int(configuration.get("waveSize", 1))
+        candidate_workers = int(configuration.get("candidateWorkers", 4))
+        global_attempt_budget = int(
+            configuration.get("globalAttemptBudget", count * attempts + 24)
+        )
         command = (
             f"python3 {shlex.quote(str(generator))} --start {start} --count {count} "
             f"--difficulty {shlex.quote(difficulty)} --seed {root_seed} "
             f"--candidate-pool-size {pool_size} --max-attempts-per-level {attempts} "
-            f"--wave-size {wave_size} --output-levels \"$BUNDLE_DIR/reproduction/levels\" "
+            f"--wave-size {wave_size} --candidate-workers {candidate_workers} "
+            f"--global-attempt-budget {global_attempt_budget} "
+            f"--output-levels \"$BUNDLE_DIR/reproduction/levels\" "
             f"--output-solutions \"$BUNDLE_DIR/reproduction/solutions\" "
             f"--production-manifest \"$BUNDLE_DIR/reproduction/production_manifest.json\" "
             f"--staging-root \"$BUNDLE_DIR/reproduction/staging\""

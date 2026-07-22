@@ -129,6 +129,8 @@ class ProductionCampaignService:
                 max_attempts_per_slot=config.max_attempts_per_slot,
                 wave_size=config.wave_size,
                 base_seed=seed,
+                max_workers=config.candidate_workers,
+                global_attempt_budget=config.global_attempt_budget,
             )
 
             self._progress(progress, "candidate_pool", "Building candidate pools")

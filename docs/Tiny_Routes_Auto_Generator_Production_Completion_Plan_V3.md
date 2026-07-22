@@ -3329,8 +3329,8 @@ does not enter the legacy generation or manual approval workflow.
 - [x] **AG-124:** Add 100-campaign release stress using staging and the exact production path.
 - [x] **AG-125:** Add blinded playtest export.
 - [x] **AG-126:** Add calibrated quality-profile versioning.
-- [ ] **AG-127:** Add deterministic candidate parallelism.
-- [ ] **AG-128:** Add global attempt budgeting.
+- [x] **AG-127:** Add deterministic candidate parallelism.
+- [x] **AG-128:** Add global attempt budgeting.
 - [ ] **AG-129:** Make V3 production default.
 - [ ] **AG-130:** Remove weak production fallback.
 - [ ] **AG-131:** Add final architecture/operator documentation.
@@ -3447,6 +3447,26 @@ fixed-seed evidence for any tuning change. The same profile now drives
 `DifficultyTargetResolver`; production terminal reports and reproduction
 request snapshots record the active version, with terminal reports also
 recording its fingerprint.
+
+**2026-07-22 AG-127 completion record:** Added bounded concurrent candidate
+waves at the production candidate-pool boundary. Every candidate identity,
+attempt index, and derived seed is allocated in fixed round-robin order before
+workers start; worker completion order cannot affect acceptance, portfolio
+input, retained proof results, diagnostics, or reports because all evidence is
+merged and sorted by deterministic candidate identity. Production CLI and GUI
+runs use the same configurable worker limit, reproduction scripts retain that
+limit, and serial-versus-parallel tests prove byte-equivalent candidate/report
+ordering while exercising four workers concurrently.
+
+**2026-07-22 AG-128 completion record:** Added one campaign-wide attempt budget
+covering initial pool construction and targeted portfolio replenishment. Initial
+capacity is shared fairly in deterministic waves, then unused capacity moves
+only to candidate-shortfall or portfolio-constrained slots without relaxing
+per-slot or quality limits. Candidate-pool reports now include the global
+maximum, attempts used per slot, remaining budget, and stable reasons for every
+initial allocation and reallocation. CLI configuration and reproduction bundles
+preserve explicit budget overrides, and regression coverage proves the cap,
+constrained-slot reallocation, and portfolio retry accounting.
 
 ---
 

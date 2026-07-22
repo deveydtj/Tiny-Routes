@@ -39,6 +39,8 @@ class CandidatePoolRequest:
     max_attempts_per_slot: int
     wave_size: int = 1
     base_seed: int = 0
+    max_workers: int = 1
+    global_attempt_budget: int | None = None
 
     def __post_init__(self) -> None:
         slots = tuple(self.slots)
@@ -55,7 +57,7 @@ class CandidatePoolRequest:
             or self.candidates_per_slot < 2
         ):
             raise ValueError("candidates_per_slot must be at least two")
-        for field_name in ("max_attempts_per_slot", "wave_size"):
+        for field_name in ("max_attempts_per_slot", "wave_size", "max_workers"):
             value = getattr(self, field_name)
             if not isinstance(value, int) or isinstance(value, bool) or value <= 0:
                 raise ValueError(f"{field_name} must be a positive integer")
@@ -65,7 +67,109 @@ class CandidatePoolRequest:
             )
         if not isinstance(self.base_seed, int) or isinstance(self.base_seed, bool):
             raise ValueError("base_seed must be an integer")
+        if self.global_attempt_budget is not None and (
+            not isinstance(self.global_attempt_budget, int)
+            or isinstance(self.global_attempt_budget, bool)
+            or self.global_attempt_budget <= 0
+        ):
+            raise ValueError("global_attempt_budget must be a positive integer")
         object.__setattr__(self, "slots", slots)
+
+    @property
+    def resolved_global_attempt_budget(self) -> int:
+        if self.global_attempt_budget is not None:
+            return self.global_attempt_budget
+        # Preserve the existing targeted portfolio-backtracking allowance while
+        # placing initial generation and later replenishment under one cap.
+        return len(self.slots) * self.max_attempts_per_slot + 24
+
+
+@dataclass(frozen=True)
+class AttemptBudgetAllocation:
+    """Deterministic evidence for one wave's attempt allocation."""
+
+    wave_index: int
+    level_id: str
+    attempts_allocated: int
+    reason: str
+    remaining_budget_after: int
+
+    def __post_init__(self) -> None:
+        object.__setattr__(self, "level_id", _identifier(self.level_id, "level_id"))
+        object.__setattr__(self, "reason", _identifier(self.reason, "reason"))
+        for field_name in (
+            "wave_index",
+            "attempts_allocated",
+            "remaining_budget_after",
+        ):
+            value = getattr(self, field_name)
+            if not isinstance(value, int) or isinstance(value, bool) or value < 0:
+                raise ValueError(f"{field_name} must be a non-negative integer")
+        if self.attempts_allocated == 0:
+            raise ValueError("attempts_allocated must be positive")
+
+    def to_report_dict(self) -> dict[str, Any]:
+        return {
+            "waveIndex": self.wave_index,
+            "levelID": self.level_id,
+            "attemptsAllocated": self.attempts_allocated,
+            "reason": self.reason,
+            "remainingBudgetAfter": self.remaining_budget_after,
+        }
+
+
+@dataclass(frozen=True)
+class GlobalAttemptBudgetReport:
+    """Campaign-wide cap, usage, and deterministic allocation rationale."""
+
+    maximum_attempts: int
+    attempts_used: int
+    attempts_per_slot: tuple[tuple[str, int], ...]
+    allocation_changes: tuple[AttemptBudgetAllocation, ...] = ()
+
+    def __post_init__(self) -> None:
+        for field_name in ("maximum_attempts", "attempts_used"):
+            value = getattr(self, field_name)
+            if not isinstance(value, int) or isinstance(value, bool) or value < 0:
+                raise ValueError(f"{field_name} must be a non-negative integer")
+        if self.maximum_attempts <= 0:
+            raise ValueError("maximum_attempts must be positive")
+        if self.attempts_used > self.maximum_attempts:
+            raise ValueError("attempts_used cannot exceed maximum_attempts")
+        per_slot = tuple(self.attempts_per_slot)
+        if any(
+            not isinstance(level_id, str)
+            or not level_id.strip()
+            or not isinstance(count, int)
+            or isinstance(count, bool)
+            or count < 0
+            for level_id, count in per_slot
+        ):
+            raise ValueError("attempts_per_slot must contain IDs and non-negative counts")
+        if len({level_id for level_id, _ in per_slot}) != len(per_slot):
+            raise ValueError("attempts_per_slot level IDs must be unique")
+        if sum(count for _, count in per_slot) != self.attempts_used:
+            raise ValueError("attempts_per_slot must sum to attempts_used")
+        changes = tuple(self.allocation_changes)
+        if any(not isinstance(item, AttemptBudgetAllocation) for item in changes):
+            raise TypeError("allocation_changes must contain AttemptBudgetAllocation values")
+        object.__setattr__(self, "attempts_per_slot", per_slot)
+        object.__setattr__(self, "allocation_changes", changes)
+
+    @property
+    def remaining_attempts(self) -> int:
+        return self.maximum_attempts - self.attempts_used
+
+    def to_report_dict(self) -> dict[str, Any]:
+        return {
+            "maximumAttempts": self.maximum_attempts,
+            "attemptsUsed": self.attempts_used,
+            "remainingAttempts": self.remaining_attempts,
+            "attemptsPerSlot": dict(self.attempts_per_slot),
+            "allocationChanges": [
+                item.to_report_dict() for item in self.allocation_changes
+            ],
+        }
 
 
 @dataclass(frozen=True)
@@ -181,6 +285,7 @@ class CampaignCandidatePoolResult:
     waves_completed: int
     accepted_pipeline_results: tuple[object, ...] = ()
     attempt_diagnostics: tuple[Mapping[str, Any], ...] = ()
+    attempt_budget: GlobalAttemptBudgetReport | None = None
 
     def __post_init__(self) -> None:
         pools = tuple(self.pools)
@@ -199,6 +304,11 @@ class CampaignCandidatePoolResult:
             raise TypeError("attempt_diagnostics must contain mapping values")
         if diagnostics and len(diagnostics) != len(attempts):
             raise ValueError("attempt_diagnostics must match the attempt count")
+        if self.attempt_budget is not None:
+            if not isinstance(self.attempt_budget, GlobalAttemptBudgetReport):
+                raise TypeError("attempt_budget must be a GlobalAttemptBudgetReport")
+            if self.attempt_budget.attempts_used != len(attempts):
+                raise ValueError("attempt budget usage must match the attempt count")
         object.__setattr__(self, "pools", pools)
         object.__setattr__(self, "attempts", attempts)
         object.__setattr__(self, "accepted_pipeline_results", pipeline_results)
@@ -249,4 +359,7 @@ class CampaignCandidatePoolResult:
             "pools": [pool.to_report_dict() for pool in self.pools],
             "attempts": [attempt.to_report_dict() for attempt in self.attempts],
             "attemptDiagnosticCount": len(self.attempt_diagnostics),
+            "attemptBudget": (
+                self.attempt_budget.to_report_dict() if self.attempt_budget else None
+            ),
         }

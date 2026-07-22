@@ -2,13 +2,16 @@
 
 from __future__ import annotations
 
+from concurrent.futures import ThreadPoolExecutor
 import hashlib
 
 from ..models.candidate_pool import (
+    AttemptBudgetAllocation,
     CampaignCandidatePoolResult,
     CandidatePoolAttempt,
     CandidatePoolRequest,
     CandidateSlotPool,
+    GlobalAttemptBudgetReport,
 )
 from .candidate_signature_service import CandidateSignatureService
 from .reproducibility_bundle_service import ReproducibilityBundleService
@@ -49,66 +52,132 @@ class CandidatePoolService:
         attempts: list[CandidatePoolAttempt] = []
         attempt_diagnostics: list[dict] = []
         accepted_pipeline_results: list[object] = []
+        allocations: list[AttemptBudgetAllocation] = []
         wave_index = 0
+        global_budget = request.resolved_global_attempt_budget
 
-        while self._has_runnable_slot(request, accepted, attempted):
-            for slot in request.slots:
-                if len(accepted[slot.level_id]) >= request.candidates_per_slot:
-                    continue
-                remaining_attempts = (
-                    request.max_attempts_per_slot - attempted[slot.level_id]
-                )
-                for _ in range(min(request.wave_size, remaining_attempts)):
-                    if len(accepted[slot.level_id]) >= request.candidates_per_slot:
+        while (
+            len(attempts) < global_budget
+            and self._has_runnable_slot(request, accepted, attempted)
+        ):
+            active_before = tuple(
+                slot.level_id
+                for slot in request.slots
+                if len(accepted[slot.level_id]) < request.candidates_per_slot
+                and attempted[slot.level_id] < request.max_attempts_per_slot
+            )
+            planned: list[V3CandidatePipelineRequest] = []
+            allocation_counts = {level_id: 0 for level_id in active_before}
+
+            # Allocate in fixed round-robin order before any worker starts. This
+            # prevents a fast worker from consuming budget intended for another
+            # campaign slot and makes every derived seed independent of timing.
+            for _ in range(request.wave_size):
+                for slot in request.slots:
+                    level_id = slot.level_id
+                    if level_id not in allocation_counts:
+                        continue
+                    if len(attempts) + len(planned) >= global_budget:
                         break
-                    attempt_index = attempted[slot.level_id]
-                    pipeline_request = self._pipeline_request(
-                        request, slot.level_id, slot.difficulty, attempt_index
+                    allocated = allocation_counts[level_id]
+                    if len(accepted[level_id]) + allocated >= request.candidates_per_slot:
+                        continue
+                    if attempted[level_id] >= request.max_attempts_per_slot:
+                        continue
+                    attempt_index = attempted[level_id]
+                    planned.append(
+                        self._pipeline_request(
+                            request,
+                            level_id,
+                            slot.difficulty,
+                            attempt_index,
+                        )
                     )
-                    attempted[slot.level_id] += 1
-                    try:
-                        result = self.pipeline.run(pipeline_request)
-                        diagnostic = self._capture_pipeline_result(result, pipeline_request)
-                        self._validate_result_identity(result, pipeline_request)
-                        passed = bool(getattr(result, "passed", False))
-                        terminal_stage = str(
-                            getattr(result, "terminal_stage", "pipeline")
-                        )
-                        code = str(getattr(result, "code", "pipeline_result_invalid"))
-                        if passed:
-                            signature = self.signature_service.signature_for_pipeline_result(
-                                result
-                            )
-                            candidate = getattr(result, "candidate", None)
-                            if candidate is None or candidate.candidate_signature != signature:
-                                raise ValueError(
-                                    "accepted pipeline result did not retain its signature"
-                                )
-                            accepted[slot.level_id].append(candidate)
-                            accepted_pipeline_results.append(result)
-                    except Exception as error:
-                        passed = False
-                        terminal_stage = "pipeline"
-                        code = "candidate_pipeline_error"
-                        diagnostic = self._capture_pipeline_exception(
-                            pipeline_request,
-                            error,
-                        )
+                    attempted[level_id] += 1
+                    allocation_counts[level_id] += 1
+                if len(attempts) + len(planned) >= global_budget:
+                    break
+            if not planned:
+                break
 
-                    attempts.append(
-                        CandidatePoolAttempt(
-                            candidate_id=pipeline_request.candidate_id,
-                            level_id=slot.level_id,
-                            difficulty=slot.difficulty,
-                            seed=pipeline_request.seed,
-                            attempt_index=attempt_index,
+            reason = (
+                "initial_equal_allocation"
+                if wave_index == 0
+                else (
+                    "constrained_slot_reallocation"
+                    if len(active_before) < len(request.slots)
+                    else "candidate_shortfall_retry"
+                )
+            )
+            allocated_so_far = len(attempts)
+            for slot in request.slots:
+                count = allocation_counts.get(slot.level_id, 0)
+                if count:
+                    allocated_so_far += count
+                    allocations.append(
+                        AttemptBudgetAllocation(
                             wave_index=wave_index,
-                            passed=passed,
-                            terminal_stage=terminal_stage,
-                            code=code,
+                            level_id=slot.level_id,
+                            attempts_allocated=count,
+                            reason=reason,
+                            remaining_budget_after=global_budget - allocated_so_far,
                         )
                     )
-                    attempt_diagnostics.append(diagnostic)
+
+            for pipeline_request, result, pipeline_error in self._execute_requests(
+                planned,
+                max_workers=request.max_workers,
+            ):
+                level_id = pipeline_request.level_id
+                difficulty = pipeline_request.difficulty
+                try:
+                    if pipeline_error is not None:
+                        raise pipeline_error
+                    diagnostic = self._capture_pipeline_result(
+                        result, pipeline_request
+                    )
+                    self._validate_result_identity(result, pipeline_request)
+                    passed = bool(getattr(result, "passed", False))
+                    terminal_stage = str(
+                        getattr(result, "terminal_stage", "pipeline")
+                    )
+                    code = str(
+                        getattr(result, "code", "pipeline_result_invalid")
+                    )
+                    if passed:
+                        signature = self.signature_service.signature_for_pipeline_result(
+                            result
+                        )
+                        candidate = getattr(result, "candidate", None)
+                        if candidate is None or candidate.candidate_signature != signature:
+                            raise ValueError(
+                                "accepted pipeline result did not retain its signature"
+                            )
+                        accepted[level_id].append(candidate)
+                        accepted_pipeline_results.append(result)
+                except Exception as error:
+                    passed = False
+                    terminal_stage = "pipeline"
+                    code = "candidate_pipeline_error"
+                    diagnostic = self._capture_pipeline_exception(
+                        pipeline_request,
+                        error,
+                    )
+
+                attempts.append(
+                    CandidatePoolAttempt(
+                        candidate_id=pipeline_request.candidate_id,
+                        level_id=level_id,
+                        difficulty=difficulty,
+                        seed=pipeline_request.seed,
+                        attempt_index=pipeline_request.attempt_index,
+                        wave_index=wave_index,
+                        passed=passed,
+                        terminal_stage=terminal_stage,
+                        code=code,
+                    )
+                )
+                attempt_diagnostics.append(diagnostic)
             wave_index += 1
 
         pools = tuple(
@@ -120,12 +189,23 @@ class CandidatePoolService:
             )
             for slot in request.slots
         )
+        attempts, attempt_diagnostics = self._sort_attempt_evidence(
+            attempts, attempt_diagnostics
+        )
+        accepted_pipeline_results.sort(
+            key=lambda item: getattr(getattr(item, "request", None), "candidate_id", "")
+        )
         return CampaignCandidatePoolResult(
             pools=pools,
             attempts=tuple(attempts),
             waves_completed=wave_index,
             accepted_pipeline_results=tuple(accepted_pipeline_results),
             attempt_diagnostics=tuple(attempt_diagnostics),
+            attempt_budget=self._budget_report(
+                request,
+                attempts,
+                allocations,
+            ),
         )
 
     def expand(
@@ -198,103 +278,134 @@ class CandidatePoolService:
         accepted_pipeline_results = list(result.accepted_pipeline_results)
         wave_index = result.waves_completed
         total_new_attempts = 0
+        global_budget = request.resolved_global_attempt_budget
+        remaining_global_budget = max(0, global_budget - len(attempts))
+        expansion_budget = remaining_global_budget
+        if max_total_attempts is not None:
+            expansion_budget = min(expansion_budget, max_total_attempts)
+        allocations = list(
+            result.attempt_budget.allocation_changes
+            if result.attempt_budget is not None
+            else ()
+        )
 
-        while any(
+        while total_new_attempts < expansion_budget and any(
             additions[level_id] < desired_additions[level_id]
             and slot_attempts[level_id] < max_additional_attempts_per_slot
             for level_id in targets
         ):
-            for slot in request.slots:
-                level_id = slot.level_id
-                if level_id not in additions:
-                    continue
-                if additions[level_id] >= desired_additions[level_id]:
-                    continue
-                remaining = max_additional_attempts_per_slot - slot_attempts[level_id]
-                for _ in range(min(request.wave_size, remaining)):
-                    if additions[level_id] >= desired_additions[level_id]:
+            active = tuple(
+                level_id
+                for level_id in targets
+                if additions[level_id] < desired_additions[level_id]
+                and slot_attempts[level_id] < max_additional_attempts_per_slot
+            )
+            planned: list[V3CandidatePipelineRequest] = []
+            allocation_counts = {level_id: 0 for level_id in active}
+            for _ in range(request.wave_size):
+                for slot in request.slots:
+                    level_id = slot.level_id
+                    if level_id not in allocation_counts:
+                        continue
+                    if total_new_attempts + len(planned) >= expansion_budget:
                         break
-                    if (
-                        max_total_attempts is not None
-                        and total_new_attempts >= max_total_attempts
-                    ):
-                        break
-                    attempt_index = attempted[level_id]
-                    pipeline_request = self._pipeline_request(
-                        request,
-                        level_id,
-                        slot.difficulty,
-                        attempt_index,
+                    allocated = allocation_counts[level_id]
+                    if additions[level_id] + allocated >= desired_additions[level_id]:
+                        continue
+                    if slot_attempts[level_id] >= max_additional_attempts_per_slot:
+                        continue
+                    planned.append(
+                        self._pipeline_request(
+                            request,
+                            level_id,
+                            slot.difficulty,
+                            attempted[level_id],
+                        )
                     )
                     attempted[level_id] += 1
                     slot_attempts[level_id] += 1
-                    total_new_attempts += 1
-                    try:
-                        pipeline_result = self.pipeline.run(pipeline_request)
-                        diagnostic = self._capture_pipeline_result(
-                            pipeline_result,
-                            pipeline_request,
-                        )
-                        self._validate_result_identity(pipeline_result, pipeline_request)
-                        passed = bool(getattr(pipeline_result, "passed", False))
-                        terminal_stage = str(
-                            getattr(pipeline_result, "terminal_stage", "pipeline")
-                        )
-                        code = str(
-                            getattr(
-                                pipeline_result, "code", "pipeline_result_invalid"
-                            )
-                        )
-                        if passed:
-                            signature = (
-                                self.signature_service.signature_for_pipeline_result(
-                                    pipeline_result
-                                )
-                            )
-                            candidate = getattr(pipeline_result, "candidate", None)
-                            if (
-                                candidate is None
-                                or candidate.candidate_signature != signature
-                            ):
-                                raise ValueError(
-                                    "accepted pipeline result did not retain its signature"
-                                )
-                            candidates[level_id].append(candidate)
-                            accepted_pipeline_results.append(pipeline_result)
-                            additions[level_id] += 1
-                    except Exception as error:
-                        passed = False
-                        terminal_stage = "pipeline"
-                        code = "candidate_pipeline_error"
-                        diagnostic = self._capture_pipeline_exception(
-                            pipeline_request,
-                            error,
-                        )
-                    attempts.append(
-                        CandidatePoolAttempt(
-                            candidate_id=pipeline_request.candidate_id,
-                            level_id=level_id,
-                            difficulty=slot.difficulty,
-                            seed=pipeline_request.seed,
-                            attempt_index=attempt_index,
+                    allocation_counts[level_id] += 1
+                if total_new_attempts + len(planned) >= expansion_budget:
+                    break
+            if not planned:
+                break
+
+            allocation_reason = (
+                "candidate_pool_shortfall_reallocation"
+                if any(not original_pools[level_id].complete for level_id in active)
+                else "portfolio_constraint_reallocation"
+            )
+            allocated_so_far = len(attempts)
+            for slot in request.slots:
+                count = allocation_counts.get(slot.level_id, 0)
+                if count:
+                    allocated_so_far += count
+                    allocations.append(
+                        AttemptBudgetAllocation(
                             wave_index=wave_index,
-                            passed=passed,
-                            terminal_stage=terminal_stage,
-                            code=code,
+                            level_id=slot.level_id,
+                            attempts_allocated=count,
+                            reason=allocation_reason,
+                            remaining_budget_after=global_budget - allocated_so_far,
                         )
                     )
-                    attempt_diagnostics.append(diagnostic)
-                if (
-                    max_total_attempts is not None
-                    and total_new_attempts >= max_total_attempts
-                ):
-                    break
-            wave_index += 1
-            if (
-                max_total_attempts is not None
-                and total_new_attempts >= max_total_attempts
+
+            for pipeline_request, pipeline_result, pipeline_error in self._execute_requests(
+                planned,
+                max_workers=request.max_workers,
             ):
-                break
+                level_id = pipeline_request.level_id
+                try:
+                    if pipeline_error is not None:
+                        raise pipeline_error
+                    diagnostic = self._capture_pipeline_result(
+                        pipeline_result,
+                        pipeline_request,
+                    )
+                    self._validate_result_identity(pipeline_result, pipeline_request)
+                    passed = bool(getattr(pipeline_result, "passed", False))
+                    terminal_stage = str(
+                        getattr(pipeline_result, "terminal_stage", "pipeline")
+                    )
+                    code = str(
+                        getattr(pipeline_result, "code", "pipeline_result_invalid")
+                    )
+                    if passed:
+                        signature = self.signature_service.signature_for_pipeline_result(
+                            pipeline_result
+                        )
+                        candidate = getattr(pipeline_result, "candidate", None)
+                        if candidate is None or candidate.candidate_signature != signature:
+                            raise ValueError(
+                                "accepted pipeline result did not retain its signature"
+                            )
+                        candidates[level_id].append(candidate)
+                        accepted_pipeline_results.append(pipeline_result)
+                        additions[level_id] += 1
+                except Exception as error:
+                    passed = False
+                    terminal_stage = "pipeline"
+                    code = "candidate_pipeline_error"
+                    diagnostic = self._capture_pipeline_exception(
+                        pipeline_request,
+                        error,
+                    )
+                attempts.append(
+                    CandidatePoolAttempt(
+                        candidate_id=pipeline_request.candidate_id,
+                        level_id=level_id,
+                        difficulty=pipeline_request.difficulty,
+                        seed=pipeline_request.seed,
+                        attempt_index=pipeline_request.attempt_index,
+                        wave_index=wave_index,
+                        passed=passed,
+                        terminal_stage=terminal_stage,
+                        code=code,
+                    )
+                )
+                attempt_diagnostics.append(diagnostic)
+            total_new_attempts += len(planned)
+            wave_index += 1
 
         pools = []
         for pool in result.pools:
@@ -312,12 +423,81 @@ class CandidatePoolService:
                     attempted_count=attempted[level_id],
                 )
             )
+        attempts, attempt_diagnostics = self._sort_attempt_evidence(
+            attempts, attempt_diagnostics
+        )
+        accepted_pipeline_results.sort(
+            key=lambda item: getattr(getattr(item, "request", None), "candidate_id", "")
+        )
         return CampaignCandidatePoolResult(
             pools=tuple(pools),
             attempts=tuple(attempts),
             waves_completed=wave_index,
             accepted_pipeline_results=tuple(accepted_pipeline_results),
             attempt_diagnostics=tuple(attempt_diagnostics),
+            attempt_budget=self._budget_report(
+                request,
+                attempts,
+                allocations,
+            ),
+        )
+
+    def _execute_requests(
+        self,
+        requests: list[V3CandidatePipelineRequest],
+        *,
+        max_workers: int,
+    ) -> list[tuple[V3CandidatePipelineRequest, object | None, Exception | None]]:
+        """Run a preallocated wave and preserve its deterministic input order."""
+
+        worker_count = min(max_workers, len(requests))
+        if worker_count == 1:
+            return [self._run_pipeline_request(request) for request in requests]
+        with ThreadPoolExecutor(
+            max_workers=worker_count,
+            thread_name_prefix="tiny-routes-candidate",
+        ) as executor:
+            # executor.map yields in input order even when workers finish out of
+            # order, which makes candidate selection and reports reproducible.
+            return list(executor.map(self._run_pipeline_request, requests))
+
+    def _run_pipeline_request(
+        self,
+        request: V3CandidatePipelineRequest,
+    ) -> tuple[V3CandidatePipelineRequest, object | None, Exception | None]:
+        try:
+            return request, self.pipeline.run(request), None
+        except Exception as error:
+            return request, None, error
+
+    @staticmethod
+    def _sort_attempt_evidence(
+        attempts: list[CandidatePoolAttempt],
+        diagnostics: list[dict],
+    ) -> tuple[list[CandidatePoolAttempt], list[dict]]:
+        paired = sorted(
+            zip(attempts, diagnostics, strict=True),
+            key=lambda item: item[0].candidate_id,
+        )
+        return (
+            [attempt for attempt, _ in paired],
+            [diagnostic for _, diagnostic in paired],
+        )
+
+    @staticmethod
+    def _budget_report(
+        request: CandidatePoolRequest,
+        attempts: list[CandidatePoolAttempt],
+        allocations: list[AttemptBudgetAllocation],
+    ) -> GlobalAttemptBudgetReport:
+        counts = {slot.level_id: 0 for slot in request.slots}
+        for attempt in attempts:
+            counts[attempt.level_id] += 1
+        return GlobalAttemptBudgetReport(
+            maximum_attempts=request.resolved_global_attempt_budget,
+            attempts_used=len(attempts),
+            attempts_per_slot=tuple(counts.items()),
+            allocation_changes=tuple(allocations),
         )
 
     @staticmethod

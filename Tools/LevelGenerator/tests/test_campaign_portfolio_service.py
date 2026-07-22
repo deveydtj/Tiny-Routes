@@ -97,6 +97,11 @@ def test_targeted_backtracking_expands_only_the_constrained_slot() -> None:
     assert result.expansions[0].attempts_added == 1
     assert [request.level_id for request in pipeline.requests[4:]] == ["level_032"]
     assert result.candidate_pools.complete
+    budget = result.candidate_pools.attempt_budget
+    assert budget is not None
+    assert dict(budget.attempts_per_slot) == {"level_031": 2, "level_032": 3}
+    assert budget.remaining_attempts == budget.maximum_attempts - 5
+    assert budget.allocation_changes[-1].reason == "portfolio_constraint_reallocation"
 
 
 def test_backtracking_fails_without_relaxing_constraints_after_global_budget() -> None:

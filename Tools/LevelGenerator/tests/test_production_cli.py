@@ -42,6 +42,8 @@ def test_production_cli_builds_locked_v3_request_and_prints_one_summary(tmp_path
             "--seed", "12345",
             "--swift-tests",
             "--quality-profile", "1.0.0",
+            "--candidate-workers", "3",
+            "--global-attempt-budget", "40",
             "--output-levels", str(tmp_path / "levels"),
             "--output-solutions", str(tmp_path / "solutions"),
             "--production-manifest", str(tmp_path / "manifest.json"),
@@ -54,6 +56,8 @@ def test_production_cli_builds_locked_v3_request_and_prints_one_summary(tmp_path
     assert service.config.seed == 12345
     assert service.config.run_swift_tests is True
     assert service.config.quality_profile_version == "1.0.0"
+    assert service.config.candidate_workers == 3
+    assert service.config.global_attempt_budget == 40
     assert capsys.readouterr().out.count("\n") == 1
 
 

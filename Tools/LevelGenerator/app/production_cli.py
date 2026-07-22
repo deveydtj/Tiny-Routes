@@ -56,6 +56,18 @@ def build_production_parser() -> argparse.ArgumentParser:
     parser.add_argument("--max-attempts-per-level", type=int, default=120)
     parser.add_argument("--wave-size", type=int, default=1)
     parser.add_argument(
+        "--candidate-workers",
+        type=int,
+        default=4,
+        help="Maximum number of deterministic candidate workers.",
+    )
+    parser.add_argument(
+        "--global-attempt-budget",
+        type=int,
+        default=None,
+        help="Campaign-wide candidate-attempt cap, including portfolio retries.",
+    )
+    parser.add_argument(
         "--quality-profile",
         default=CURRENT_QUALITY_PROFILE_VERSION,
         help="Versioned calibrated quality profile (default: current).",
@@ -97,6 +109,8 @@ def main_production(
             candidates_per_slot=args.candidate_pool_size,
             max_attempts_per_slot=args.max_attempts_per_level,
             wave_size=args.wave_size,
+            candidate_workers=args.candidate_workers,
+            global_attempt_budget=args.global_attempt_budget,
             quality_profile_version=args.quality_profile,
             levels_output_dir=args.output_levels,
             solutions_output_dir=args.output_solutions,
