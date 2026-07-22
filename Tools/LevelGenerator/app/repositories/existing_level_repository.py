@@ -50,7 +50,11 @@ class ExistingLevelRepository:
             result.warnings.append(f"Existing level comparison skipped missing directory: {levels_path}")
             return result
 
-        if manifest_path is not None and self._manifest_is_fresh(Path(manifest_path), levels_path, solutions_path):
+        if (
+            manifest_path is not None
+            and self._manifest_is_fresh(Path(manifest_path), levels_path, solutions_path)
+            and self._manifest_has_behavior_evidence(Path(manifest_path))
+        ):
             result.manifest_signatures = self._load_manifest_signatures(Path(manifest_path), result)
             if result.manifest_signatures:
                 return result
@@ -109,6 +113,17 @@ class ExistingLevelRepository:
                 latest_resource_mtime = max(latest_resource_mtime, path.stat().st_mtime)
         return manifest_path.stat().st_mtime >= latest_resource_mtime
 
+    def _manifest_has_behavior_evidence(self, manifest_path: Path) -> bool:
+        try:
+            entries = self._read_json_object(manifest_path).get("levels", [])
+            return bool(entries) and all(
+                isinstance(entry, dict)
+                and bool(entry.get("structuralBehaviorSignature"))
+                for entry in entries
+            )
+        except Exception:
+            return False
+
     def _load_manifest_signatures(self, manifest_path: Path, result: ExistingLevelLoadResult) -> list[CandidateSignature]:
         try:
             payload = self._read_json_object(manifest_path)
@@ -162,6 +177,9 @@ class ExistingLevelRepository:
                         ),
                         optimal_strategy_signature=str(entry.get("optimalStrategySignature", "")),
                         road_state_visual_signature=str(entry.get("roadStateVisualSignature", "")),
+                        structural_behavior_signature=str(
+                            entry.get("structuralBehaviorSignature", "")
+                        ),
                     )
                 )
             return signatures

@@ -58,6 +58,49 @@ def test_changing_node_positions_changes_layout_hash() -> None:
     assert service.signature_for(generated).layout_hash != service.signature_for(changed).layout_hash
 
 
+def test_structural_behavior_signature_ignores_ids_and_layout() -> None:
+    preset = DifficultyService().get_preset("easy")
+    generated = SingleSwitchTemplate().generate(
+        "level_012", 12, preset, RandomSource(10)
+    )
+    renamed = deepcopy(generated)
+    node_ids = {
+        node.id: f"renamed_node_{index}"
+        for index, node in enumerate(renamed.level_document.graph.nodes)
+    }
+    edge_ids = {
+        edge.id: f"renamed_edge_{index}"
+        for index, edge in enumerate(renamed.level_document.graph.edges)
+    }
+    for node in renamed.level_document.graph.nodes:
+        node.id = node_ids[node.id]
+        node.x += 50.0
+        node.y -= 25.0
+        node.outgoingEdgeIDs = [edge_ids[edge_id] for edge_id in node.outgoingEdgeIDs]
+    for edge in renamed.level_document.graph.edges:
+        edge.id = edge_ids[edge.id]
+        edge.fromNodeID = node_ids[edge.fromNodeID]
+        edge.toNodeID = node_ids[edge.toNodeID]
+    renamed.level_document.startNodeID = node_ids[renamed.level_document.startNodeID]
+    renamed.level_document.packageNodeID = node_ids[renamed.level_document.packageNodeID]
+    renamed.level_document.destinationNodeID = node_ids[
+        renamed.level_document.destinationNodeID
+    ]
+    for action in renamed.solution.actions:
+        action.tapNodeID = node_ids[action.tapNodeID]
+    service = CandidateSignatureService()
+
+    original_signature = service.signature_for(generated)
+    renamed_signature = service.signature_for(renamed)
+
+    assert original_signature.topology_hash != renamed_signature.topology_hash
+    assert original_signature.layout_hash != renamed_signature.layout_hash
+    assert (
+        original_signature.structural_behavior_signature
+        == renamed_signature.structural_behavior_signature
+    )
+
+
 def test_changing_solution_tap_order_changes_solution_hash() -> None:
     preset = DifficultyService().get_preset("easy")
     generated = PackageGateTemplate().generate("level_012", 12, preset, RandomSource(10))

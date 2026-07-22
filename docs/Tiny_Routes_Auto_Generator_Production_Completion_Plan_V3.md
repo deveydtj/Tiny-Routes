@@ -3142,7 +3142,7 @@ locked, consumed, objective, and active-switch state from shared schema rules.
 - [x] **AG-102:** Add campaign candidate pools.
 - [x] **AG-103:** Add portfolio optimizer constraints.
 - [x] **AG-104:** Add targeted portfolio backtracking.
-- [ ] **AG-105:** Add existing-corpus behavior comparison.
+- [x] **AG-105:** Add existing-corpus behavior comparison.
 
 **2026-07-21 AG-095 completion record:** Added an immutable, report-compatible
 blueprint pipeline boundary that retains the resolved experience target, attempt
@@ -3224,9 +3224,17 @@ seeds from the original run, retains every attempt as audit evidence, honors
 per-round and global budgets, fills initial pool shortfalls, and fails with the
 remaining constrained slots instead of relaxing quality or diversity rules.
 
+**2026-07-21 AG-105 completion record:** Added behavior-first production-corpus
+comparison with a role-normalized structural fingerprint that ignores authored
+IDs, names, and coordinates while retaining objective roles, directed choices,
+road-state rules, and solution tap behavior. Portfolio selection now hard-rejects
+behavioral corpus duplicates, ranks production distance from shared proof
+evidence, and reloads older manifests from source levels when behavior evidence
+is absent so stale visual-only signatures cannot bypass the gate.
+
 ## Transactional production
 
-- [ ] **AG-106:** Add staging workspace.
+- [x] **AG-106:** Add staging workspace.
 - [ ] **AG-107:** Add production run manifest.
 - [ ] **AG-108:** Write selected candidates to staging only.
 - [ ] **AG-109:** Add complete staged-corpus validation.
@@ -3235,6 +3243,14 @@ remaining constrained slots instead of relaxing quality or diversity rules.
 - [ ] **AG-112:** Add generation lock.
 - [ ] **AG-113:** Add final production CLI command.
 - [ ] **AG-114:** Add final one-action GUI flow.
+
+**2026-07-21 AG-106 completion record:** Added an isolated, per-run production
+staging workspace under the generator scratch root with dedicated levels,
+solutions, previews, reports, validation logs, proposed-manifest, and immutable
+seed/config snapshot locations. Workspace creation validates run IDs, refuses
+overwrites, publishes fully initialized trees atomically, cleans failed partial
+initialization, verifies reopened workspaces, and exposes containment checks that
+reject accidental production-target writes.
 
 ## Stress, calibration, and release
 

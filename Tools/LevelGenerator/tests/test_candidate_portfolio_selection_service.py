@@ -153,6 +153,60 @@ def test_identical_v3_behavior_is_a_hard_window_constraint() -> None:
     assert dict(captured.value.reasons)["portfolio_behavior_signature_window"] == 1
 
 
+def test_existing_corpus_behavior_duplicate_is_a_hard_constraint() -> None:
+    existing = _candidate(
+        "level_900",
+        900,
+        "old-topology",
+        "old-layout",
+        structural_behavior_signature="shared-behavior",
+    ).candidate_signature
+    candidate = _candidate(
+        "level_001",
+        1,
+        "new-topology",
+        "new-layout",
+        structural_behavior_signature="shared-behavior",
+    )
+
+    with pytest.raises(PortfolioConstraintFailure) as captured:
+        CandidatePortfolioSelectionService().select(
+            {"level_001": [candidate]},
+            [("level_001", "easy")],
+            existing_signatures=(existing,),
+        )
+
+    assert dict(captured.value.reasons) == {
+        "portfolio_existing_corpus_behavior_duplicate": 1
+    }
+
+
+def test_existing_corpus_layout_match_does_not_override_distinct_behavior() -> None:
+    existing = _candidate(
+        "level_900",
+        900,
+        "same-topology",
+        "same-layout",
+        structural_behavior_signature="old-behavior",
+    ).candidate_signature
+    candidate = _candidate(
+        "level_001",
+        1,
+        "same-topology",
+        "same-layout",
+        structural_behavior_signature="new-behavior",
+    )
+
+    result = CandidatePortfolioSelectionService().select(
+        {"level_001": [candidate]},
+        [("level_001", "easy")],
+        existing_signatures=(existing,),
+    )
+
+    assert result.candidates == [candidate]
+    assert result.selections[0].components["productionDistance"] == 1.0
+
+
 def test_medium_window_requires_multiple_adaptive_mechanic_families() -> None:
     pools = {}
     requested = []

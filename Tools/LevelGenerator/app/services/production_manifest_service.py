@@ -40,6 +40,7 @@ class ProductionManifestService:
                     "successFailureDistribution": list(signature.success_failure_distribution) if signature else [],
                     "optimalStrategySignature": signature.optimal_strategy_signature if signature else "",
                     "roadStateVisualSignature": signature.road_state_visual_signature if signature else "",
+                    "structuralBehaviorSignature": signature.structural_behavior_signature if signature else "",
                 }
             )
         payload = {

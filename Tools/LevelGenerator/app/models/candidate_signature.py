@@ -53,3 +53,4 @@ class CandidateSignature:
     success_failure_distribution: tuple[tuple[str, int], ...] = ()
     optimal_strategy_signature: str = ""
     road_state_visual_signature: str = ""
+    structural_behavior_signature: str = ""

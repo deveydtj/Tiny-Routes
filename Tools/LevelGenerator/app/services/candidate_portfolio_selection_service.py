@@ -5,6 +5,9 @@ from dataclasses import dataclass, field
 from typing import Iterable, Mapping, Sequence
 
 from .candidate_uniqueness_service import CandidateUniquenessService
+from .existing_corpus_behavior_comparison_service import (
+    ExistingCorpusBehaviorComparisonService,
+)
 
 
 @dataclass(frozen=True)
@@ -107,9 +110,13 @@ class CandidatePortfolioSelectionService:
         self,
         uniqueness_service: CandidateUniquenessService | None = None,
         constraints: PortfolioConstraints | None = None,
+        corpus_behavior_service: ExistingCorpusBehaviorComparisonService | None = None,
     ) -> None:
         self.uniqueness_service = uniqueness_service or CandidateUniquenessService()
         self.constraints = constraints or PortfolioConstraints()
+        self.corpus_behavior_service = (
+            corpus_behavior_service or ExistingCorpusBehaviorComparisonService()
+        )
 
     def select(
         self,
@@ -155,6 +162,7 @@ class CandidatePortfolioSelectionService:
                         state,
                         requested_levels,
                         slot_index,
+                        production_signatures,
                     )
                     if code is not None:
                         rejection_counts[code] += 1
@@ -198,8 +206,15 @@ class CandidatePortfolioSelectionService:
         state: _PortfolioState,
         requested_levels: Sequence[tuple[str, str]],
         slot_index: int,
+        production_signatures: Sequence[object] = (),
     ) -> str | None:
         signature = candidate.candidate_signature
+        corpus_result = self.corpus_behavior_service.check_candidate(
+            signature,
+            production_signatures,
+        )
+        if corpus_result.too_similar:
+            return "portfolio_existing_corpus_behavior_duplicate"
         previous = state.signatures
         if previous:
             previous_archetype = previous[-1].blueprint_archetype
@@ -367,7 +382,9 @@ class CandidatePortfolioSelectionService:
             "visualDiversity": self._visual_diversity(signature, selected_signatures),
             "runtimePacing": self._runtime_pacing(signature, selected_signatures),
             "productionDistance": 1.0
-            - self._maximum_similarity(signature, existing_signatures),
+            - self.corpus_behavior_service.maximum_similarity(
+                signature, existing_signatures
+            ),
         }
         # Kept as report evidence for callers that consumed the V2 component.
         components["adjacentVariety"] = self._adjacent_variety(

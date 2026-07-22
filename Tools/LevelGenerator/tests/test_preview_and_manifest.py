@@ -38,3 +38,4 @@ def test_production_manifest_rebuilds_from_level_files(tmp_path) -> None:
     assert payload["levels"][0]["levelID"] == "level_012"
     assert payload["levels"][0]["difficultyEstimate"] == "easy"
     assert payload["levels"][0]["topologyHash"]
+    assert payload["levels"][0]["structuralBehaviorSignature"]

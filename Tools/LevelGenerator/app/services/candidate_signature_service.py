@@ -150,6 +150,9 @@ class CandidateSignatureService:
             ),
             optimal_strategy_signature=self._optimal_strategy_signature(optimal_trace),
             road_state_visual_signature=self._road_state_visual_signature(level),
+            structural_behavior_signature=self._structural_behavior_signature(
+                level, tap_node_ids
+            ),
         )
 
     def signature_for_pipeline_result(self, pipeline_result) -> CandidateSignature:
@@ -468,6 +471,130 @@ class CandidateSignatureService:
                 state_counts[(state, self._edge_direction(edge, positions))] += 1
             snapshots.append(tuple(sorted((state, direction, count) for (state, direction), count in state_counts.items())))
         return self._hash_payload(snapshots)
+
+    def _structural_behavior_signature(
+        self,
+        level_document,
+        tap_node_ids: list[str],
+    ) -> str:
+        """Hash route behavior without names, authored IDs, or coordinates.
+
+        A small Weisfeiler-Lehman refinement gives structurally equivalent route
+        graphs the same fingerprint even when their node and edge IDs or layout
+        differ. Objective roles, directed choices, road-state rules, and the
+        optimal tap pattern remain part of the fingerprint because they change
+        how the puzzle plays.
+        """
+
+        nodes = {node.id: node for node in level_document.graph.nodes}
+        incoming: dict[str, list[object]] = {node_id: [] for node_id in nodes}
+        outgoing: dict[str, list[object]] = {node_id: [] for node_id in nodes}
+        for edge in level_document.graph.edges:
+            if edge.fromNodeID in outgoing:
+                outgoing[edge.fromNodeID].append(edge)
+            if edge.toNodeID in incoming:
+                incoming[edge.toNodeID].append(edge)
+
+        objectives = tuple(
+            sorted(
+                level_document.effective_objectives,
+                key=lambda item: item.sequenceIndex,
+            )
+        )
+        objective_roles = {
+            objective.nodeID: (
+                getattr(objective.kind, "value", str(objective.kind)),
+                objective.sequenceIndex,
+                objective.revealPolicy,
+            )
+            for objective in objectives
+        }
+        objective_indices = {
+            objective.id: objective.sequenceIndex for objective in objectives
+        }
+
+        labels: dict[str, str] = {}
+        for node_id in sorted(nodes):
+            roles = []
+            if node_id == level_document.startNodeID:
+                roles.append(("start", 0, "always"))
+            if node_id in objective_roles:
+                roles.append(objective_roles[node_id])
+            if not outgoing[node_id]:
+                roles.append(("terminal", 0, "always"))
+            labels[node_id] = self._hash_payload(
+                {
+                    "roles": roles,
+                    "incomingDegree": len(incoming[node_id]),
+                    "outgoingDegree": len(outgoing[node_id]),
+                }
+            )
+
+        def edge_rule(edge) -> tuple[object, ...]:
+            rule = level_document.effective_edge_availability_rule(edge)
+            payload = rule.to_dict()
+            for field_name in (
+                "requiredCompletedObjectiveIDs",
+                "forbiddenCompletedObjectiveIDs",
+            ):
+                if field_name in payload:
+                    payload[field_name] = sorted(
+                        objective_indices.get(objective_id, -1)
+                        for objective_id in payload[field_name]
+                    )
+            return tuple(
+                (key, tuple(value) if isinstance(value, list) else value)
+                for key, value in sorted(payload.items())
+            )
+
+        for _ in range(max(1, len(nodes))):
+            refined = {}
+            for node_id in sorted(nodes):
+                refined[node_id] = self._hash_payload(
+                    {
+                        "self": labels[node_id],
+                        "incoming": sorted(
+                            (labels[edge.fromNodeID], edge_rule(edge))
+                            for edge in incoming[node_id]
+                            if edge.fromNodeID in labels
+                        ),
+                        "outgoing": sorted(
+                            (labels[edge.toNodeID], edge_rule(edge))
+                            for edge in outgoing[node_id]
+                            if edge.toNodeID in labels
+                        ),
+                    }
+                )
+            if refined == labels:
+                break
+            labels = refined
+
+        tap_pattern = tuple(
+            labels[node_id] for node_id in tap_node_ids if node_id in labels
+        )
+        return self._hash_payload(
+            {
+                "nodes": sorted(labels.values()),
+                "edges": sorted(
+                    (
+                        labels[edge.fromNodeID],
+                        labels[edge.toNodeID],
+                        edge_rule(edge),
+                    )
+                    for edge in level_document.graph.edges
+                    if edge.fromNodeID in labels and edge.toNodeID in labels
+                ),
+                "objectives": tuple(
+                    (
+                        getattr(objective.kind, "value", str(objective.kind)),
+                        objective.sequenceIndex,
+                        objective.revealPolicy,
+                    )
+                    for objective in objectives
+                ),
+                "tapPattern": tap_pattern,
+            }
+        )
 
     @staticmethod
     def _edge_direction(edge, positions: dict[str, tuple[float, float]]) -> str:

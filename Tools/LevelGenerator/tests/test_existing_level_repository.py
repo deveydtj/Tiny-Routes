@@ -65,3 +65,43 @@ def test_existing_level_repository_uses_fresh_manifest_signatures(tmp_path) -> N
 
     assert result.records == []
     assert result.signatures[0].level_id == "level_012"
+    assert result.signatures[0].structural_behavior_signature
+
+
+def test_existing_level_repository_ignores_manifest_without_behavior_evidence(tmp_path) -> None:
+    preset = DifficultyService().get_preset("easy")
+    generated = SingleSwitchTemplate().generate("level_012", 12, preset, RandomSource(2))
+    writer = GeneratedLevelRepository()
+    levels_dir = tmp_path / "levels"
+    solutions_dir = tmp_path / "solutions"
+    writer.write_level(generated.level_document, levels_dir / "level_012.json", overwrite=False)
+    writer.write_solution(generated.solution, solutions_dir / "level_012.solution.json", overwrite=False)
+    manifest_path = tmp_path / "manifest.json"
+    manifest_path.write_text(
+        json.dumps(
+            {
+                "levels": [
+                    {
+                        "levelID": "level_012",
+                        "nodes": 5,
+                        "edges": 4,
+                        "switches": 1,
+                        "tapCount": 1,
+                        "topologyHash": "old",
+                        "layoutHash": "old",
+                        "solutionHash": "old",
+                    }
+                ]
+            }
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+
+    result = ExistingLevelRepository().load_existing_levels(
+        levels_dir, solutions_dir, manifest_path
+    )
+
+    assert [record.level_id for record in result.records] == ["level_012"]
+    assert result.manifest_signatures == []
+    assert result.signatures[0].structural_behavior_signature != ""

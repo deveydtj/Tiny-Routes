@@ -25,3 +25,7 @@ def get_default_solutions_directory() -> Path:
 
 def get_default_reports_directory() -> Path:
     return find_repo_root() / "docs" / "generated_levels"
+
+
+def get_default_production_staging_directory() -> Path:
+    return find_repo_root() / "Tools" / "LevelGenerator" / ".scratch" / "production_staging"
