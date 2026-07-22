@@ -27,6 +27,12 @@ def test_five_level_fixed_seed_smoke_uses_exact_v3_production_path(tmp_path) -> 
     ) * 5
     assert evidence.parity_statuses == ("smoke_fixture_passed",) * 5
     assert evidence.fallback_count == 0
+    assert evidence.stage_path_violation_count == 0
+    assert evidence.behavior_duplicate_count == 0
+    assert evidence.one_tap_or_less_count == 0
+    assert evidence.static_policy_solvable_count == 0
+    assert evidence.unproven_optimal_count == 0
+    assert evidence.parity_error_count == 0
     assert evidence.production_unchanged
     assert evidence.staging_artifact_count == 1
     json.dumps(evidence.to_dict(), sort_keys=True)

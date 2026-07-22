@@ -1,0 +1,52 @@
+name: Production V3 Release Stress
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: production-v3-release-stress
+  cancel-in-progress: false
+
+jobs:
+  release-stress:
+    name: 100 staged 30-level campaigns
+    runs-on: ubuntu-24.04
+    timeout-minutes: 360
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+          cache-dependency-path: Tools/TinyRoutesCore/pyproject.toml
+
+      - name: Install shared core
+        run: python -m pip install -e Tools/TinyRoutesCore
+
+      - name: Run release stress through exact production orchestration
+        run: >-
+          python Tools/LevelGenerator/stress_test_generation.py
+          --mode production_v3
+          --campaign-count 100
+          --levels-per-campaign 30
+          --seed-range 1-100
+          --require-complete-batches
+          --fail-on-one-tap
+          --fail-on-static-policy
+          --fail-on-parity-error
+          --output-dir "$RUNNER_TEMP/production-v3-release-stress"
+
+      - name: Upload release evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: production-v3-release-stress-evidence
+          path: ${{ runner.temp }}/production-v3-release-stress/stress_summary.json
+          if-no-files-found: error

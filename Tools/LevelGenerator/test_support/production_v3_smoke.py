@@ -33,6 +33,7 @@ from app.services import (
     PolicyEvaluationService,
     ProductionCampaignService,
     ProductionPuzzleGateService,
+    ProductionStagedOutputService,
     PuzzleBlueprintService,
     SearchLimitRejectionService,
     StaticPolicySolverService,
@@ -47,6 +48,7 @@ from test_support.stateful_fixture import StatefulFixtureSpec, build_stateful_fi
 _ARCHITECTURE = "production_v3"
 _ARCHITECTURE_VERSION = 3
 _ROOT_SEED = 731_005
+_START_LEVEL_NUMBER = 901
 _LEVEL_COUNT = 5
 _PATTERNS = (
     (2, 1, False),
@@ -72,6 +74,12 @@ class ProductionV3SmokeEvidence:
     stage_sequences: tuple[tuple[str, ...], ...]
     parity_statuses: tuple[str, ...]
     fallback_count: int
+    stage_path_violation_count: int
+    behavior_duplicate_count: int
+    one_tap_or_less_count: int
+    static_policy_solvable_count: int
+    unproven_optimal_count: int
+    parity_error_count: int
     production_unchanged: bool
     staging_artifact_count: int
     fingerprint: str
@@ -91,6 +99,12 @@ class ProductionV3SmokeEvidence:
             "stageSequences": [list(value) for value in self.stage_sequences],
             "parityStatuses": list(self.parity_statuses),
             "fallbackCount": self.fallback_count,
+            "stagePathViolationCount": self.stage_path_violation_count,
+            "behaviorDuplicateCount": self.behavior_duplicate_count,
+            "oneTapOrLessCount": self.one_tap_or_less_count,
+            "staticPolicySolvableCount": self.static_policy_solvable_count,
+            "unprovenOptimalCount": self.unproven_optimal_count,
+            "parityErrorCount": self.parity_error_count,
             "productionUnchanged": self.production_unchanged,
             "stagingArtifactCount": self.staging_artifact_count,
             "fingerprint": self.fingerprint,
@@ -306,13 +320,24 @@ class _SmokeCandidatePipeline:
         )
 
     @staticmethod
-    def _pattern(level_id: str) -> tuple[int, int, bool]:
+    def _pattern(level_id: str, difficulty: str) -> tuple[int, int, bool]:
         level_number = int(level_id.rsplit("_", 1)[1])
-        return _PATTERNS[(level_number - 901) % len(_PATTERNS)]
+        if difficulty == "easy":
+            return _PATTERNS[(level_number - _START_LEVEL_NUMBER) % len(_PATTERNS)]
+        minimum_objectives = {
+            "medium": 3,
+            "hard": 3,
+            "expert": 4,
+        }[difficulty]
+        return (
+            minimum_objectives,
+            1 + (level_number % 2),
+            level_number % 4 == 0,
+        )
 
     def _level(self, request):
-        objectives, hubs, ring = self._pattern(request.level_id)
-        return build_stateful_fixture(
+        objectives, hubs, ring = self._pattern(request.level_id, request.difficulty)
+        level = build_stateful_fixture(
             StatefulFixtureSpec(
                 fixture_id=request.level_id,
                 difficulty=request.difficulty,
@@ -323,6 +348,49 @@ class _SmokeCandidatePipeline:
                 seed=1,
             )
         )
+        level_number = int(request.level_id.rsplit("_", 1)[1])
+        return self._with_failure_route_depth(
+            level,
+            depth=((level_number - 1) % 30) + 1,
+        )
+
+    @staticmethod
+    def _with_failure_route_depth(level, *, depth: int):
+        """Give each campaign slot a behaviorally distinct visible failure route."""
+
+        payload = level.to_dict()
+        graph = payload["graph"]
+        nodes = graph["nodes"]
+        edges = graph["edges"]
+        trap_edge = next(edge for edge in edges if edge["id"] == "phase_0_trap")
+        original_destination = trap_edge["toNodeID"]
+        trap_node = next(node for node in nodes if node["id"] == original_destination)
+        trap_edge["toNodeID"] = "variant_trap_0"
+
+        for index in range(depth):
+            node_id = f"variant_trap_{index}"
+            edge_id = f"variant_trap_edge_{index}"
+            destination = (
+                original_destination
+                if index == depth - 1
+                else f"variant_trap_{index + 1}"
+            )
+            nodes.append(
+                {
+                    "id": node_id,
+                    "x": float(trap_node["x"]) + (index + 1) * 0.1,
+                    "y": float(trap_node["y"]) + (index + 1) * 0.1,
+                    "outgoingEdgeIDs": [edge_id],
+                }
+            )
+            edges.append(
+                {
+                    "id": edge_id,
+                    "fromNodeID": node_id,
+                    "toNodeID": destination,
+                }
+            )
+        return type(level).from_dict(payload)
 
     @staticmethod
     def _generated_level(request, level, trace) -> GeneratedLevel:
@@ -364,35 +432,19 @@ class _SmokePortfolioService:
         return SimpleNamespace(candidates=candidates, candidate_pools=pool_result)
 
 
-class _SmokeStagedOutputService:
+class _SmokeStagedOutputService(ProductionStagedOutputService):
     def __init__(self) -> None:
+        super().__init__()
         self.selection_paths: list[Path] = []
 
     def write_selected_candidates(self, workspace, candidates, **_kwargs):
-        path = workspace.require_path(workspace.levels_dir / "smoke_selection.json")
-        path.write_text(
-            json.dumps(
-                {
-                    "generatorArchitecture": _ARCHITECTURE,
-                    "generatorArchitectureVersion": _ARCHITECTURE_VERSION,
-                    "candidateIDs": [
-                        f"{candidate.level_id}:{candidate.seed}"
-                        for candidate in candidates
-                    ],
-                },
-                indent=2,
-                sort_keys=True,
-            )
-            + "\n",
-            encoding="utf-8",
+        manifest = super().write_selected_candidates(
+            workspace,
+            candidates,
+            **_kwargs,
         )
-        self.selection_paths.append(path)
-
-    @staticmethod
-    def write_report(workspace, filename, content):
-        path = workspace.require_path(workspace.reports_dir / filename)
-        path.write_text(content, encoding="utf-8")
-        return path
+        self.selection_paths.append(workspace.run_manifest_path)
+        return manifest
 
 
 class _SmokeValidationService:
@@ -401,10 +453,22 @@ class _SmokeValidationService:
 
     def validate(self, workspace, pipeline_results, **kwargs):
         results = tuple(pipeline_results)
+        self.pipeline_results = results
         if kwargs.get("run_swift_tests") is not True:
             raise ValueError("V3 smoke must request Swift parity validation")
-        if not (workspace.levels_dir / "smoke_selection.json").is_file():
+        if not workspace.run_manifest_path.is_file():
             raise ValueError("selected candidates were not staged")
+        if len(tuple(workspace.levels_dir.glob("*.json"))) != len(results):
+            raise ValueError("staged level count does not match selected candidates")
+        if len(tuple(workspace.solutions_dir.glob("*.json"))) != len(results):
+            raise ValueError("staged solution count does not match selected candidates")
+        snapshot = json.loads(
+            workspace.seed_config_snapshot_path.read_text(encoding="utf-8")
+        )["configuration"]
+        if snapshot.get("generatorArchitecture") != _ARCHITECTURE:
+            raise ValueError("staged campaign did not use production_v3")
+        if snapshot.get("generatorArchitectureVersion") != _ARCHITECTURE_VERSION:
+            raise ValueError("staged campaign did not use architecture version 3")
         for result in results:
             stages = tuple(stage.stage for stage in result.stage_results)
             if stages != (
@@ -416,6 +480,23 @@ class _SmokeValidationService:
                 "quality",
             ):
                 raise ValueError("candidate bypassed the locked V3 stage order")
+            if any(
+                stage.report_fields.get("generatorArchitecture") != _ARCHITECTURE
+                for stage in result.stage_results
+            ):
+                raise ValueError("candidate stage left the production_v3 architecture")
+            if (
+                result.stage_results[0].report_fields.get(
+                    "generatorArchitectureVersion"
+                )
+                != _ARCHITECTURE_VERSION
+            ):
+                raise ValueError("candidate is missing architecture version 3")
+            if (
+                result.stage_results[1].report_fields.get("execution")
+                != "production_v3_composition"
+            ):
+                raise ValueError("candidate bypassed V3 composition")
             runtime = result.stage_results[4]
             if runtime.report_fields.get("parityStatus") != "smoke_fixture_passed":
                 raise ValueError("candidate is missing passing parity status")
@@ -426,7 +507,6 @@ class _SmokeValidationService:
                 for stage in result.stage_results
             ):
                 raise ValueError("candidate used a fallback path")
-        self.pipeline_results = results
         return SimpleNamespace(passed=True)
 
 
@@ -458,18 +538,20 @@ def _file_snapshot(root: Path) -> tuple[tuple[str, bytes], ...]:
     )
 
 
-def _run_once(root: Path) -> ProductionV3SmokeEvidence:
+def _run_once(
+    root: Path,
+    *,
+    start_level_number: int = _START_LEVEL_NUMBER,
+    level_count: int = _LEVEL_COUNT,
+    seed: int = _ROOT_SEED,
+    difficulty: str = "easy",
+) -> ProductionV3SmokeEvidence:
     production = root / "production"
     levels = production / "levels"
     solutions = production / "solutions"
     levels.mkdir(parents=True)
     solutions.mkdir(parents=True)
-    (levels / "sentinel.json").write_text('{"scope":"levels"}\n', encoding="utf-8")
-    (solutions / "sentinel.json").write_text(
-        '{"scope":"solutions"}\n', encoding="utf-8"
-    )
     manifest = production / "manifest.json"
-    manifest.write_text('{"scope":"manifest"}\n', encoding="utf-8")
     before = _file_snapshot(production)
 
     pipeline = _SmokeCandidatePipeline()
@@ -484,13 +566,13 @@ def _run_once(root: Path) -> ProductionV3SmokeEvidence:
         validation_service=validation,
         promotion_service=promotion,
         existing_level_repository=_EmptyExistingRepository(),
-        run_id_factory=lambda seed: f"production-v3-smoke-{seed}",
+        run_id_factory=lambda value: f"production-v3-smoke-{value}",
     )
     config = ProductionCampaignConfig(
-        start_level_number=901,
-        count=_LEVEL_COUNT,
-        difficulty="easy",
-        seed=_ROOT_SEED,
+        start_level_number=start_level_number,
+        count=level_count,
+        difficulty=difficulty,
+        seed=seed,
         candidates_per_slot=2,
         max_attempts_per_slot=2,
         wave_size=1,
@@ -520,14 +602,38 @@ def _run_once(root: Path) -> ProductionV3SmokeEvidence:
         for item in pipeline_results
         for stage in item.stage_results
     )
+    expected_stages = (
+        "blueprint",
+        "composition",
+        "strategy",
+        "layout",
+        "runtime",
+        "quality",
+    )
+    stage_path_violation_count = sum(value != expected_stages for value in stages)
+    behavior_duplicate_count = len(signatures) - len(set(signatures))
+    accepted_tap_counts = []
+    for item in pipeline_results:
+        trace = item.stage_results[2].strategy_search.canonical_optimal_strategy
+        accepted_tap_counts.append(sum(action.tap_count for action in trace.actions))
+    one_tap_or_less_count = sum(value <= 1 for value in accepted_tap_counts)
+    static_policy_solvable_count = sum(
+        item.stage_results[2].static_policy_search.static_policy_solvable
+        for item in pipeline_results
+    )
+    unproven_optimal_count = sum(
+        not item.stage_results[2].unique_optimal_proof.accepted
+        for item in pipeline_results
+    )
+    parity_error_count = sum(value != "smoke_fixture_passed" for value in parity)
     fingerprint_payload = {
-        "architecture": config.snapshot(resolved_seed=_ROOT_SEED)[
+        "architecture": config.snapshot(resolved_seed=seed)[
             "generatorArchitecture"
         ],
-        "architectureVersion": config.snapshot(resolved_seed=_ROOT_SEED)[
+        "architectureVersion": config.snapshot(resolved_seed=seed)[
             "generatorArchitectureVersion"
         ],
-        "seed": _ROOT_SEED,
+        "seed": seed,
         "selectedIDs": selected_ids,
         "signatures": signatures,
         "stages": stages,
@@ -544,17 +650,22 @@ def _run_once(root: Path) -> ProductionV3SmokeEvidence:
     return ProductionV3SmokeEvidence(
         passed=(
             result.passed
-            and result.requested_count == result.selected_count == _LEVEL_COUNT
-            and len(signatures) == len(set(signatures)) == _LEVEL_COUNT
-            and all(value == "smoke_fixture_passed" for value in parity)
+            and result.requested_count == result.selected_count == level_count
+            and len(signatures) == len(set(signatures)) == level_count
+            and parity_error_count == 0
             and fallback_count == 0
+            and stage_path_violation_count == 0
+            and behavior_duplicate_count == 0
+            and one_tap_or_less_count == 0
+            and static_policy_solvable_count == 0
+            and unproven_optimal_count == 0
             and before == after
             and promotion.called
         ),
         deterministic=False,
         generator_architecture=_ARCHITECTURE,
         generator_architecture_version=_ARCHITECTURE_VERSION,
-        seed=_ROOT_SEED,
+        seed=seed,
         requested_count=result.requested_count,
         selected_count=result.selected_count,
         selected_candidate_ids=selected_ids,
@@ -563,19 +674,38 @@ def _run_once(root: Path) -> ProductionV3SmokeEvidence:
         stage_sequences=stages,
         parity_statuses=parity,
         fallback_count=fallback_count,
+        stage_path_violation_count=stage_path_violation_count,
+        behavior_duplicate_count=behavior_duplicate_count,
+        one_tap_or_less_count=one_tap_or_less_count,
+        static_policy_solvable_count=static_policy_solvable_count,
+        unproven_optimal_count=unproven_optimal_count,
+        parity_error_count=parity_error_count,
         production_unchanged=before == after,
         staging_artifact_count=len(staged.selection_paths),
         fingerprint=fingerprint,
     )
 
 
-def run_five_level_smoke(root: Path) -> ProductionV3SmokeEvidence:
-    """Run the exact campaign service twice and require identical evidence."""
+def run_campaign_regression(
+    root: Path,
+    *,
+    start_level_number: int,
+    level_count: int,
+    seed: int,
+    difficulty: str,
+) -> ProductionV3SmokeEvidence:
+    """Run one exact-path campaign twice and require identical evidence."""
 
     root = Path(root)
     root.mkdir(parents=True, exist_ok=True)
-    first = _run_once(root / "first")
-    second = _run_once(root / "second")
+    arguments = {
+        "start_level_number": start_level_number,
+        "level_count": level_count,
+        "seed": seed,
+        "difficulty": difficulty,
+    }
+    first = _run_once(root / "first", **arguments)
+    second = _run_once(root / "second", **arguments)
     deterministic = first.fingerprint == second.fingerprint
     return ProductionV3SmokeEvidence(
         **{
@@ -583,4 +713,16 @@ def run_five_level_smoke(root: Path) -> ProductionV3SmokeEvidence:
             "passed": first.passed and second.passed and deterministic,
             "deterministic": deterministic,
         }
+    )
+
+
+def run_five_level_smoke(root: Path) -> ProductionV3SmokeEvidence:
+    """Run the fixed five-level pull-request smoke regression."""
+
+    return run_campaign_regression(
+        root,
+        start_level_number=_START_LEVEL_NUMBER,
+        level_count=_LEVEL_COUNT,
+        seed=_ROOT_SEED,
+        difficulty="easy",
     )

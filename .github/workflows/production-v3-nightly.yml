@@ -1,0 +1,54 @@
+name: Production V3 Nightly Campaign
+
+on:
+  schedule:
+    - cron: "17 8 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: production-v3-nightly
+  cancel-in-progress: true
+
+jobs:
+  campaign-regression:
+    name: Exact-path 30-level campaign
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+          cache-dependency-path: Tools/TinyRoutesCore/pyproject.toml
+
+      - name: Install shared core
+        run: python -m pip install -e Tools/TinyRoutesCore
+
+      - name: Run deterministic staged V3 campaign
+        run: >-
+          python Tools/LevelGenerator/stress_test_generation.py
+          --mode production_v3
+          --campaign-count 1
+          --levels-per-campaign 30
+          --seed 20202
+          --require-complete-batches
+          --fail-on-one-tap
+          --fail-on-static-policy
+          --fail-on-parity-error
+          --output-dir "$RUNNER_TEMP/production-v3-nightly"
+
+      - name: Upload campaign evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: production-v3-nightly-evidence
+          path: ${{ runner.temp }}/production-v3-nightly/stress_summary.json
+          if-no-files-found: error

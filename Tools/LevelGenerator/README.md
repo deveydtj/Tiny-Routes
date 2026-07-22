@@ -289,6 +289,45 @@ python Tools/LevelGenerator/stress_test_generation.py --start 1 --count 20 --dif
 
 The stress command forces `dry_run=True`, disables existing-production similarity checks, and writes only scratch reports. It prints and writes `stress_summary.json` with pass/fail rate, accepted difficulty distribution, recipe distribution, topology distribution, map-size distribution, and rejection reasons.
 
+Use the same entry point in `production_v3` mode for the staged campaign gates.
+Every V3 campaign runs twice through `ProductionCampaignService` and its locked
+six-stage candidate coordinator. The command fails on incomplete or
+non-deterministic batches, a fallback marker or stage bypass, behavior
+duplicates, zero/one-tap output, static-policy solutions, unproven optima,
+parity errors, missing staging evidence, or a production-directory mutation.
+
+```bash
+# Nightly 30-level regression
+python Tools/LevelGenerator/stress_test_generation.py \
+  --mode production_v3 \
+  --campaign-count 1 \
+  --levels-per-campaign 30 \
+  --seed 20202 \
+  --require-complete-batches \
+  --fail-on-one-tap \
+  --fail-on-static-policy \
+  --fail-on-parity-error
+
+# Release gate: 100 complete staged campaigns / 3,000 requested levels
+python Tools/LevelGenerator/stress_test_generation.py \
+  --mode production_v3 \
+  --campaign-count 100 \
+  --levels-per-campaign 30 \
+  --seed-range 1-100 \
+  --require-complete-batches \
+  --fail-on-one-tap \
+  --fail-on-static-policy \
+  --fail-on-parity-error
+```
+
+Both commands write `stress_summary.json` beneath `--output-dir`. The nightly
+workflow uploads that file every day; the manually dispatched release-stress
+workflow retains the 100-campaign evidence as a build artifact. Successful
+campaign workspaces are removed after their hashes and counters are recorded so
+the release run has a bounded scratch footprint. The first failing workspace is
+retained and stops the suite early; use `--retain-campaign-artifacts` only for a
+small diagnostic run when every successful staging workspace is needed.
+
 ### Route-Interest Scoring
 
 Recipe-first generation now includes route-interest scoring so accepted candidates are not chosen only because they validate cleanly. The score rewards small maze-like route decisions:

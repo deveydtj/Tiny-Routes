@@ -3325,8 +3325,8 @@ does not enter the legacy generation or manual approval workflow.
 - [x] **AG-120:** Add property-based graph suite.
 - [x] **AG-121:** Add metamorphic suite.
 - [x] **AG-122:** Add five-level smoke through the exact V3 production orchestration path.
-- [ ] **AG-123:** Add nightly 30-level V3 campaign with fallback-path detection.
-- [ ] **AG-124:** Add 100-campaign release stress using staging and the exact production path.
+- [x] **AG-123:** Add nightly 30-level V3 campaign with fallback-path detection.
+- [x] **AG-124:** Add 100-campaign release stress using staging and the exact production path.
 - [ ] **AG-125:** Add blinded playtest export.
 - [ ] **AG-126:** Add calibrated quality-profile versioning.
 - [ ] **AG-127:** Add deterministic candidate parallelism.
@@ -3403,6 +3403,29 @@ behaviorally distinct hard-gate-passing candidates, requested parity-boundary
 evidence, staging-only writes, architecture version 3, and zero template,
 recipe, motif, or legacy fallback usage. Python CI runs the dedicated smoke
 command directly.
+
+**2026-07-21 AG-123 completion record:** Added a scheduled 30-level V3 campaign
+that runs the live `ProductionCampaignService`, real staging workspace, campaign
+candidate pools, and locked six-stage coordinator twice from the same seed. The
+nightly gate records architecture version and stage order, requires a complete
+deterministic and behaviorally distinct portfolio, and fails on any fallback
+marker, one-tap output, static-policy solution, unproven optimum, parity error,
+missing staging evidence, or production mutation. Focused coverage proves an
+injected fallback marker is rejected, and the checked-in seed completes 30/30
+with all safety counters at zero.
+
+**2026-07-21 AG-124 completion record:** Extended the stress entry point with
+inclusive deterministic seed ranges and a manual release workflow for 100
+complete 30-level V3 campaigns. All 3,000 requested levels use isolated staging
+and the same exact production orchestration as the nightly gate; every campaign
+is deterministically rerun, partial batches are forbidden, and one aggregate
+JSON artifact reports batch completeness, fallback and stage-path use,
+anti-triviality, static-policy and unique-optimal proof status, parity, behavior
+duplicates, staging coverage, and production immutability. The legacy dry-run
+stress interface remains available behind its explicit `v2_legacy` mode.
+Successful campaign workspaces are summarized and removed immediately to bound
+release-run disk use; the first failed campaign stops the suite and retains its
+complete staging and reproduction evidence for diagnosis.
 
 ---
 
