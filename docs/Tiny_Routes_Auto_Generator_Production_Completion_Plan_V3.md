@@ -74,11 +74,18 @@ The generator is not complete until every item below is true.
 
 ### 2.1 One-command generation
 
-- [ ] A single CLI command and a single GUI action can generate a complete production batch.
-- [ ] The same seed and configuration produce byte-for-byte equivalent level logic, solution actions, selection results, and reports.
+- [x] A single CLI command and a single GUI action can generate a complete production batch.
+- [x] The same seed and configuration produce byte-for-byte equivalent level logic, solution actions, selection results, and reports.
 - [ ] The generator automatically retries failed candidates using new blueprints, compositions, layouts, and road geometry.
 - [ ] The generator never requires a person to choose candidates or repair output.
 - [ ] The generator either produces the full requested batch or writes no production changes.
+
+**2026-07-22 completion record:** The dedicated production CLI and GUI action
+each invoke the shared transactional `ProductionCampaignService` exactly once,
+and the five-level exact-path smoke proves a complete requested portfolio. Its
+same-seed rerun now compares exact staged level bytes, solution bytes, portfolio
+selection evidence, and candidate-stage report bytes independently before
+declaring the run deterministic.
 
 ### 2.2 No trivial generated levels
 

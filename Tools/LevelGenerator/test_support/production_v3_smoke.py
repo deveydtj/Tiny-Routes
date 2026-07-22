@@ -82,6 +82,10 @@ class ProductionV3SmokeEvidence:
     parity_error_count: int
     production_unchanged: bool
     staging_artifact_count: int
+    level_logic_fingerprint: str
+    solution_actions_fingerprint: str
+    selection_result_fingerprint: str
+    report_fingerprint: str
     fingerprint: str
 
     def to_dict(self) -> dict[str, object]:
@@ -107,6 +111,10 @@ class ProductionV3SmokeEvidence:
             "parityErrorCount": self.parity_error_count,
             "productionUnchanged": self.production_unchanged,
             "stagingArtifactCount": self.staging_artifact_count,
+            "levelLogicFingerprint": self.level_logic_fingerprint,
+            "solutionActionsFingerprint": self.solution_actions_fingerprint,
+            "selectionResultFingerprint": self.selection_result_fingerprint,
+            "reportFingerprint": self.report_fingerprint,
             "fingerprint": self.fingerprint,
         }
 
@@ -545,6 +553,25 @@ def _file_snapshot(root: Path) -> tuple[tuple[str, bytes], ...]:
     )
 
 
+def _snapshot_fingerprint(snapshot: tuple[tuple[str, bytes], ...]) -> str:
+    """Hash exact named bytes without allowing path/content boundary ambiguity."""
+
+    digest = hashlib.sha256()
+    for name, content in snapshot:
+        encoded_name = name.encode("utf-8")
+        digest.update(len(encoded_name).to_bytes(8, "big"))
+        digest.update(encoded_name)
+        digest.update(len(content).to_bytes(8, "big"))
+        digest.update(content)
+    return digest.hexdigest()
+
+
+def _json_bytes(value: object) -> bytes:
+    return (
+        json.dumps(value, indent=2, sort_keys=True, separators=(",", ": ")) + "\n"
+    ).encode("utf-8")
+
+
 def _run_once(
     root: Path,
     *,
@@ -633,6 +660,41 @@ def _run_once(
         for item in pipeline_results
     )
     parity_error_count = sum(value != "smoke_fixture_passed" for value in parity)
+    workspace = result.workspace_path
+    assert workspace is not None
+    level_logic_fingerprint = _snapshot_fingerprint(
+        _file_snapshot(workspace / "levels")
+    )
+    solution_actions_fingerprint = _snapshot_fingerprint(
+        _file_snapshot(workspace / "solutions")
+    )
+    selection_result_fingerprint = _snapshot_fingerprint(
+        (
+            (
+                "portfolio_selection.json",
+                _json_bytes(
+                    {
+                        "selectedCandidateIDs": selected_ids,
+                        "selectedSeeds": tuple(item.seed for item in candidates),
+                        "behaviorSignatures": signatures,
+                    }
+                ),
+            ),
+        )
+    )
+    report_fingerprint = _snapshot_fingerprint(
+        (
+            (
+                "candidate_stage_reports.json",
+                _json_bytes(
+                    [
+                        [stage.to_report_dict() for stage in item.stage_results]
+                        for item in pipeline_results
+                    ]
+                ),
+            ),
+        )
+    )
     fingerprint_payload = {
         "architecture": config.snapshot(resolved_seed=seed)[
             "generatorArchitecture"
@@ -646,6 +708,10 @@ def _run_once(
         "stages": stages,
         "parity": parity,
         "fallbackCount": fallback_count,
+        "levelLogicFingerprint": level_logic_fingerprint,
+        "solutionActionsFingerprint": solution_actions_fingerprint,
+        "selectionResultFingerprint": selection_result_fingerprint,
+        "reportFingerprint": report_fingerprint,
     }
     fingerprint = hashlib.sha256(
         json.dumps(
@@ -689,6 +755,10 @@ def _run_once(
         parity_error_count=parity_error_count,
         production_unchanged=before == after,
         staging_artifact_count=len(staged.selection_paths),
+        level_logic_fingerprint=level_logic_fingerprint,
+        solution_actions_fingerprint=solution_actions_fingerprint,
+        selection_result_fingerprint=selection_result_fingerprint,
+        report_fingerprint=report_fingerprint,
         fingerprint=fingerprint,
     )
 
@@ -713,7 +783,13 @@ def run_campaign_regression(
     }
     first = _run_once(root / "first", **arguments)
     second = _run_once(root / "second", **arguments)
-    deterministic = first.fingerprint == second.fingerprint
+    deterministic = (
+        first.level_logic_fingerprint == second.level_logic_fingerprint
+        and first.solution_actions_fingerprint == second.solution_actions_fingerprint
+        and first.selection_result_fingerprint == second.selection_result_fingerprint
+        and first.report_fingerprint == second.report_fingerprint
+        and first.fingerprint == second.fingerprint
+    )
     return ProductionV3SmokeEvidence(
         **{
             **first.__dict__,

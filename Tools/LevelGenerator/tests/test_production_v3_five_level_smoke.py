@@ -35,4 +35,8 @@ def test_five_level_fixed_seed_smoke_uses_exact_v3_production_path(tmp_path) -> 
     assert evidence.parity_error_count == 0
     assert evidence.production_unchanged
     assert evidence.staging_artifact_count == 1
+    assert len(evidence.level_logic_fingerprint) == 64
+    assert len(evidence.solution_actions_fingerprint) == 64
+    assert len(evidence.selection_result_fingerprint) == 64
+    assert len(evidence.report_fingerprint) == 64
     json.dumps(evidence.to_dict(), sort_keys=True)

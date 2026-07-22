@@ -23,8 +23,10 @@ class FakeGenerationService:
 class FakeProductionCampaignService:
     def __init__(self) -> None:
         self.config = None
+        self.call_count = 0
 
     def run(self, config, *, progress=None):
+        self.call_count += 1
         self.config = config
         if progress:
             progress("planning", "ready")
@@ -70,6 +72,7 @@ def test_controller_uses_shared_production_campaign_service(tmp_path) -> None:
     assert result.passed
     assert service.config.start_level_number == 31
     assert service.config.run_swift_tests is True
+    assert service.call_count == 1
     assert stages == ["planning"]
 
 

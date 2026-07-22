@@ -8,8 +8,10 @@ class _Service:
     def __init__(self, result) -> None:
         self.result = result
         self.config = None
+        self.call_count = 0
 
     def run(self, config):
+        self.call_count += 1
         self.config = config
         return self.result
 
@@ -58,6 +60,7 @@ def test_production_cli_builds_locked_v3_request_and_prints_one_summary(tmp_path
     assert service.config.quality_profile_version == "1.0.0"
     assert service.config.candidate_workers == 3
     assert service.config.global_attempt_budget == 40
+    assert service.call_count == 1
     assert capsys.readouterr().out.count("\n") == 1
 
 
