@@ -157,6 +157,17 @@ from .production_staging_service import (
     ProductionStagingService,
     ProductionStagingWorkspace,
 )
+from .production_staged_corpus_validation_service import (
+    ProductionStagedCorpusValidationService,
+    StagedCorpusValidationIssue,
+    StagedCorpusValidationResult,
+    StagedCorpusValidationService,
+)
+from .transactional_promotion_service import (
+    AtomicPromotionService,
+    TransactionalPromotionResult,
+    TransactionalPromotionService,
+)
 
 __all__ = [
     "BoundingBox",
@@ -277,4 +288,11 @@ __all__ = [
     "ProductionStagedOutputService",
     "ProductionStagingService",
     "ProductionStagingWorkspace",
+    "ProductionStagedCorpusValidationService",
+    "StagedCorpusValidationIssue",
+    "StagedCorpusValidationResult",
+    "StagedCorpusValidationService",
+    "AtomicPromotionService",
+    "TransactionalPromotionResult",
+    "TransactionalPromotionService",
 ]

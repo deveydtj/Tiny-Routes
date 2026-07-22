@@ -15,6 +15,7 @@ from ..models.production_run_manifest import (
     ProductionRunManifest,
     ProductionTargetSnapshot,
 )
+from ..paths import find_repo_root
 from ..repositories.generated_level_repository import GeneratedLevelRepository
 from .preview_image_service import PreviewImageService
 from .production_manifest_service import ProductionManifestService
@@ -46,6 +47,7 @@ class ProductionStagedOutputService:
         production_levels_dir: Path,
         production_solutions_dir: Path,
         production_manifest_path: Path,
+        production_project_file: Path | None = None,
     ) -> ProductionRunManifest:
         """Stage a full corpus overlay and publish its integrity manifest last."""
 
@@ -68,6 +70,10 @@ class ProductionStagedOutputService:
         production_levels_dir = Path(production_levels_dir).resolve(strict=False)
         production_solutions_dir = Path(production_solutions_dir).resolve(strict=False)
         production_manifest_path = Path(production_manifest_path).resolve(strict=False)
+        production_project_file = Path(
+            production_project_file
+            or find_repo_root() / "TinyRoutes.xcodeproj" / "project.pbxproj"
+        ).resolve(strict=False)
         self._require_clean_workspace(workspace)
         snapshot = self._read_seed_snapshot(workspace)
 
@@ -165,6 +171,11 @@ class ProductionStagedOutputService:
                 )
             )
             target_paths.append(production_manifest_path)
+
+            # The project file is a derived production target. Atomic promotion
+            # may regenerate it after moving resources, so its preflight state
+            # must be protected by the same optimistic-concurrency check.
+            target_paths.append(production_project_file)
 
             snapshot_path = workspace.require_path(workspace.seed_config_snapshot_path)
             artifacts.append(

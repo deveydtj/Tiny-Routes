@@ -3237,8 +3237,8 @@ is absent so stale visual-only signatures cannot bypass the gate.
 - [x] **AG-106:** Add staging workspace.
 - [x] **AG-107:** Add production run manifest.
 - [x] **AG-108:** Write selected candidates to staging only.
-- [ ] **AG-109:** Add complete staged-corpus validation.
-- [ ] **AG-110:** Add atomic promotion.
+- [x] **AG-109:** Add complete staged-corpus validation.
+- [x] **AG-110:** Add atomic promotion.
 - [ ] **AG-111:** Add rollback tests.
 - [ ] **AG-112:** Add generation lock.
 - [ ] **AG-113:** Add final production CLI command.
@@ -3266,6 +3266,22 @@ rebuilds the proposed corpus manifest, snapshots untouched production targets,
 and publishes the run manifest only after staging succeeds. Report and validation
 log helpers enforce the same containment boundary; focused staging tests prove
 that production files remain byte-for-byte unchanged.
+
+**2026-07-21 AG-109 completion record:** Added fail-closed validation of the
+complete staged level and solution corpus plus selected V3 proof evidence. The
+service verifies immutable artifact and config hashes, strict schema/graph/
+objective and solution validation, runtime replay, exhaustive exact and static-
+policy proofs, accepted quality evidence, behavior duplicates, proposed-manifest
+contents, Xcode resource synchronization, and Swift parity against the staged
+directories. Only a fully passing run advances its manifest to `validated`.
+
+**2026-07-21 AG-110 completion record:** Added lock-protected transactional
+promotion with optimistic preflight target checks, complete backups, destination-
+local atomic file replacement, project-resource synchronization, post-promotion
+artifact validation, and terminal `completed`, `failed_no_changes`, or
+`rolled_back` results. Staged bytes are rehashed immediately before promotion,
+successful backups are removed only after validation, and any failure after the
+backup boundary restores overwritten files and removes newly created targets.
 
 ## Stress, calibration, and release
 
