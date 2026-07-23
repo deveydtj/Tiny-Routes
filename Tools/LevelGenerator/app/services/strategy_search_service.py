@@ -17,6 +17,7 @@ from ..models.strategy_search import (
     StrategyTrace,
 )
 from .puzzle_state_transition_service import PuzzleStateTransitionService
+from .decision_consequence_service import DecisionConsequenceService
 from .strategy_equivalence_service import StrategyEquivalenceService
 
 
@@ -48,9 +49,13 @@ class StrategySearchService:
         self,
         transition_service: PuzzleStateTransitionService | None = None,
         equivalence_service: StrategyEquivalenceService | None = None,
+        consequence_service: DecisionConsequenceService | None = None,
     ) -> None:
         self.transition_service = transition_service or PuzzleStateTransitionService()
         self.equivalence_service = equivalence_service or StrategyEquivalenceService()
+        self.consequence_service = consequence_service or DecisionConsequenceService(
+            self.transition_service
+        )
 
     def search(
         self,
@@ -115,6 +120,8 @@ class StrategySearchService:
                 )
                 continue
 
+            consequence_evidence = self.consequence_service.analyze(level, state)
+
             for decision in decisions:
                 transition = self.transition_service.transition(level, state, decision)
                 added_time = transition.route_distance / config.movement_speed
@@ -130,8 +137,13 @@ class StrategySearchService:
                     traversed_edge_ids=transition.traversed_edge_ids,
                     visited_node_ids=transition.visited_node_ids,
                     completed_objective_ids=transition.completed_objective_ids,
-                    meaningful_decision=len(decisions) >= 2,
+                    meaningful_decision=consequence_evidence[
+                        decision.selected_edge_id
+                    ].meaningful,
                     state_transition=self._state_transition(state, transition.state),
+                    consequence_evidence=consequence_evidence[
+                        decision.selected_edge_id
+                    ],
                 )
                 next_actions = (*actions, action)
                 outcome_code = transition.failure_reason or (

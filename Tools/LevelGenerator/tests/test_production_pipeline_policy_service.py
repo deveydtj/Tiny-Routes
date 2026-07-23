@@ -173,6 +173,86 @@ def test_rejects_optimal_trace_with_fewer_than_two_meaningful_decisions(
         ProductionPipelinePolicyService().require((stale,))
 
 
+def test_rejects_meaningful_trace_action_without_consequence_evidence(
+    accepted_pipeline_result,
+) -> None:
+    stages = list(accepted_pipeline_result.stage_results)
+    strategy = stages[2]
+    search = strategy.strategy_search
+    trace = search.canonical_optimal_strategy
+    actions = list(trace.actions)
+    meaningful_index = next(
+        index
+        for index, action in enumerate(actions)
+        if action.meaningful_decision is True
+    )
+    actions[meaningful_index] = replace(
+        actions[meaningful_index],
+        consequence_evidence=None,
+    )
+    stages[2] = replace(
+        strategy,
+        strategy_search=replace(
+            search,
+            canonical_optimal_strategy=replace(trace, actions=tuple(actions)),
+        ),
+    )
+    stale = V3CandidatePipelineResult(
+        accepted_pipeline_result.request,
+        tuple(stages),
+    )
+
+    with pytest.raises(
+        ProductionPipelinePolicyError,
+        match="decision_consequence_evidence_missing",
+    ):
+        ProductionPipelinePolicyService().require((stale,))
+
+
+def test_rejects_trace_with_an_equivalent_choice_class(
+    accepted_pipeline_result,
+) -> None:
+    stages = list(accepted_pipeline_result.stage_results)
+    strategy = stages[2]
+    search = strategy.strategy_search
+    trace = search.canonical_optimal_strategy
+    actions = list(trace.actions)
+    meaningful_index = next(
+        index
+        for index, action in enumerate(actions)
+        if action.meaningful_decision is True
+    )
+    action = actions[meaningful_index]
+    evidence = action.consequence_evidence
+    assert evidence is not None
+    actions[meaningful_index] = replace(
+        action,
+        consequence_evidence=replace(
+            evidence,
+            choice_count=evidence.choice_count + 1,
+            equivalent_choice_count=1,
+            equivalent_selected_edge_ids=("decorative_duplicate",),
+        ),
+    )
+    stages[2] = replace(
+        strategy,
+        strategy_search=replace(
+            search,
+            canonical_optimal_strategy=replace(trace, actions=tuple(actions)),
+        ),
+    )
+    stale = V3CandidatePipelineResult(
+        accepted_pipeline_result.request,
+        tuple(stages),
+    )
+
+    with pytest.raises(
+        ProductionPipelinePolicyError,
+        match="equivalent_choice_present",
+    ):
+        ProductionPipelinePolicyService().require((stale,))
+
+
 def test_rejects_optimal_trace_without_a_decision_after_state_change(
     accepted_pipeline_result,
 ) -> None:

@@ -8,6 +8,18 @@ from enum import Enum
 from .puzzle_state import PuzzleState, PuzzleTerminalOutcome
 
 
+_DECISION_CONSEQUENCE_DIMENSIONS = frozenset(
+    {
+        "future_state",
+        "objective_progress",
+        "route_cost",
+        "risk",
+        "recoverability",
+        "later_switch_requirements",
+    }
+)
+
+
 def _non_negative(value: int | float, field_name: str) -> None:
     if (
         not isinstance(value, (int, float))
@@ -105,6 +117,64 @@ class StrategyStateTransition:
         )
 
 
+@dataclass(frozen=True, order=True)
+class DecisionConsequenceEvidence:
+    """Exact comparison of every selectable road at one decision boundary.
+
+    A choice is meaningful only when the available roads form at least two
+    materially different consequence classes.  Merely having two authored
+    outgoing edges is deliberately insufficient evidence.
+    """
+
+    choice_count: int
+    distinct_consequence_count: int
+    differing_dimensions: tuple[str, ...] = ()
+    equivalent_choice_count: int = 0
+    equivalent_selected_edge_ids: tuple[str, ...] = ()
+    exhaustive: bool = True
+
+    def __post_init__(self) -> None:
+        for field_name in (
+            "choice_count",
+            "distinct_consequence_count",
+            "equivalent_choice_count",
+        ):
+            value = getattr(self, field_name)
+            if not isinstance(value, int) or isinstance(value, bool) or value < 0:
+                raise ValueError(f"{field_name} must be a non-negative integer")
+        if self.distinct_consequence_count > self.choice_count:
+            raise ValueError("distinct consequences cannot exceed available choices")
+        if self.equivalent_choice_count != (
+            self.choice_count - self.distinct_consequence_count
+        ):
+            raise ValueError(
+                "equivalent_choice_count must equal choices minus consequence classes"
+            )
+        dimensions = tuple(sorted(set(self.differing_dimensions)))
+        unknown = set(dimensions).difference(_DECISION_CONSEQUENCE_DIMENSIONS)
+        if unknown:
+            raise ValueError(f"unknown decision consequence dimensions: {sorted(unknown)}")
+        if (self.distinct_consequence_count >= 2) != bool(dimensions):
+            raise ValueError(
+                "differing dimensions must exist exactly when choices have distinct consequences"
+            )
+        edge_ids = tuple(sorted(set(self.equivalent_selected_edge_ids)))
+        if any(not isinstance(value, str) or not value.strip() for value in edge_ids):
+            raise ValueError("equivalent selected edge IDs cannot be empty")
+        if not isinstance(self.exhaustive, bool):
+            raise ValueError("exhaustive must be a Boolean")
+        object.__setattr__(self, "differing_dimensions", dimensions)
+        object.__setattr__(self, "equivalent_selected_edge_ids", edge_ids)
+
+    @property
+    def meaningful(self) -> bool:
+        return bool(
+            self.exhaustive
+            and self.distinct_consequence_count >= 2
+            and self.differing_dimensions
+        )
+
+
 @dataclass(frozen=True)
 class StrategyAction:
     """One selected road and the structural movement caused by that choice."""
@@ -117,6 +187,7 @@ class StrategyAction:
     completed_objective_ids: tuple[str, ...] = ()
     meaningful_decision: bool | None = None
     state_transition: StrategyStateTransition | None = None
+    consequence_evidence: DecisionConsequenceEvidence | None = None
 
     @property
     def signature(self) -> tuple[object, ...]:
@@ -131,6 +202,7 @@ class StrategyAction:
             self.completed_objective_ids,
             self.meaningful_decision,
             self.state_transition.signature if self.state_transition is not None else None,
+            self.consequence_evidence,
         )
 
 

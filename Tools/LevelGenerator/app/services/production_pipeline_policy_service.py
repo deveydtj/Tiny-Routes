@@ -178,6 +178,11 @@ class ProductionPipelinePolicyService:
                         "Selected candidates require a proven canonical optimal trace.",
                     )
                 )
+            else:
+                for code, detail in self.optimal_consequence_issues(optimal_trace):
+                    issues.append(
+                        ProductionPipelinePolicyIssue(code, level_id, detail)
+                    )
 
             if static_policy_search is None:
                 issues.append(
@@ -253,6 +258,17 @@ class ProductionPipelinePolicyService:
                 )
             if quality_result is not None and quality_result.puzzle_analysis is not None:
                 analysis = quality_result.puzzle_analysis
+                if analysis.equivalent_choices or analysis.no_op_choices:
+                    issues.append(
+                        ProductionPipelinePolicyIssue(
+                            "equivalent_choice_present",
+                            level_id,
+                            "Final puzzle analysis must report zero equivalent or "
+                            "no-op choices "
+                            f"(equivalent={analysis.equivalent_choices}, "
+                            f"noOp={analysis.no_op_choices}).",
+                        )
+                    )
                 if (
                     static_policy_search is not None
                     and analysis.static_policy_result != static_policy_search
@@ -421,7 +437,12 @@ class ProductionPipelinePolicyService:
         post_state_count = 0
         prior_state_change = False
         for action in optimal_trace.actions:
-            if action.meaningful_decision is True:
+            evidence = action.consequence_evidence
+            if (
+                action.meaningful_decision is True
+                and evidence is not None
+                and evidence.meaningful
+            ):
                 meaningful_count += 1
                 if prior_state_change:
                     post_state_count += 1
@@ -429,6 +450,52 @@ class ProductionPipelinePolicyService:
             if transition is not None and transition.changes_state:
                 prior_state_change = True
         return meaningful_count, post_state_count
+
+    @staticmethod
+    def optimal_consequence_issues(
+        optimal_trace: StrategyTrace,
+    ) -> tuple[tuple[str, str], ...]:
+        """Fail closed when a trace counter is not backed by exact consequences."""
+
+        issues: list[tuple[str, str]] = []
+        for index, action in enumerate(optimal_trace.actions):
+            evidence = action.consequence_evidence
+            if evidence is None:
+                issues.append(
+                    (
+                        "decision_consequence_evidence_missing",
+                        f"Optimal action {index} at {action.node_id} has no exact "
+                        "choice-consequence comparison.",
+                    )
+                )
+                continue
+            if not evidence.exhaustive:
+                issues.append(
+                    (
+                        "decision_consequence_evidence_incomplete",
+                        f"Optimal action {index} at {action.node_id} has incomplete "
+                        "choice-consequence evidence.",
+                    )
+                )
+            if action.meaningful_decision is not evidence.meaningful:
+                issues.append(
+                    (
+                        "meaningful_decision_evidence_mismatch",
+                        f"Optimal action {index} at {action.node_id} declares "
+                        f"meaningful={action.meaningful_decision}, but its material "
+                        f"consequences prove meaningful={evidence.meaningful}.",
+                    )
+                )
+            if evidence.equivalent_choice_count:
+                issues.append(
+                    (
+                        "equivalent_choice_present",
+                        f"Decision {index} at {action.node_id} contains "
+                        f"{evidence.equivalent_choice_count} redundant choice(s) "
+                        "with identical future consequences.",
+                    )
+                )
+        return tuple(issues)
 
     @staticmethod
     def policy_result(

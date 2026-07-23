@@ -111,7 +111,7 @@ preflight corpus on conflict and restore it after post-promotion failure.
 - [x] Every generated level contains at least one adaptive decision that occurs after a checkpoint or route-state change.
 - [x] No production level can be solved by assigning one permanent outgoing road to every switch before movement begins.
 - [x] Medium, hard, and expert levels cannot be solved by a greedy “point each upcoming arrow toward the currently highlighted target” strategy.
-- [ ] Equivalent choices, decorative branches, and branches with identical future consequences do not count as decisions.
+- [x] Equivalent choices, decorative branches, and branches with identical future consequences do not count as decisions.
 
 **2026-07-22 completion record:** The non-compensating production puzzle gate
 rejects both zero-tap and one-tap adversarial fixtures with
@@ -140,13 +140,31 @@ evidence and rejects every medium, hard, or expert selection with any successful
 greedy run, including stale final-analysis evidence that disagrees with the
 strategy stage. Focused regressions prove both fail-closed boundaries.
 
+**2026-07-22 completion record:** Exact structural search now compares every
+selectable road at each decision boundary and collapses equal decorative
+split/rejoin choices into one consequence class. Trace evidence records redundant
+choice counts, and both the exact decision-profile adapter and final pre-staging
+policy prevent equivalent or no-op branches from contributing to production
+difficulty. Focused regressions prove equal decorative branches are not marked
+meaningful and that injected equivalent-choice evidence fails closed.
+
 ### 2.3 Real route choice
 
-- [ ] A decision counts only when at least two available choices differ in future state, objective progress, route cost, risk, recoverability, or later switch requirements.
+- [x] A decision counts only when at least two available choices differ in future state, objective progress, route cost, risk, recoverability, or later switch requirements.
 - [ ] The correct choice on at least one switch depends on more than the immediately adjacent road.
 - [ ] Harder levels require the player to reason across multiple upcoming intersections or objective phases.
 - [ ] Wrong choices are understandable from the map and are not arbitrary hidden traps.
 - [ ] At least some levels contain multiple successful routes with one unique optimal route, rather than forcing every level to have exactly one successful path.
+
+**2026-07-22 completion record:** `DecisionConsequenceEvidence` is now attached
+to every exact strategy action and proves the available-choice count, distinct
+consequence-class count, differing material dimensions, redundant choices, and
+exhaustiveness. Meaningful-decision flags are derived from this evidence rather
+than outgoing-edge count. The locked production policy independently recomputes
+trace-backed meaningful counts and rejects missing, incomplete, or inconsistent
+evidence before staging. Regressions cover route-cost, failure-risk, and
+recoverability differences alongside the decorative-branch negative case, and
+the exact V3 smoke/anti-triviality suite passes.
 
 ### 2.4 Multi-stop play
 

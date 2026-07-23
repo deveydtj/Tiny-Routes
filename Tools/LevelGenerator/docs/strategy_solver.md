@@ -33,6 +33,15 @@ are understandable and recoverable, provided the declared unique optimum is
 proved. Equivalent branches with identical future consequences are collapsed
 and cannot count toward difficulty.
 
+Every structural action carries `DecisionConsequenceEvidence`. The solver
+compares all roads available at the same boundary across six locked dimensions:
+future route state, objective progress, route cost, failure risk,
+recoverability, and the next switch requirements. At least two distinct
+consequence classes are required before the action is meaningful. The evidence
+also exposes redundant equivalent choices, so a decorative split cannot be
+hidden by a mutable analysis counter. Missing, incomplete, inconsistent, or
+equivalent-choice evidence fails the final production policy before staging.
+
 ## Policy separation
 
 Random, greedy-objective, one-step, two-step, and optimal agents run against the

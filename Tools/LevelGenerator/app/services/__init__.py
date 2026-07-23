@@ -87,6 +87,7 @@ from .puzzle_state_transition_service import (
 )
 from .strategy_search_service import StrategySearchConfig, StrategySearchService
 from .strategy_equivalence_service import StrategyEquivalenceService
+from .decision_consequence_service import DecisionConsequenceService
 from .unique_optimal_proof_service import UniqueOptimalProofService
 from .alternate_success_classification_service import AlternateSuccessClassificationService
 from .failure_recovery_classification_service import FailureRecoveryClassificationService
@@ -265,6 +266,7 @@ __all__ = [
     "StrategySearchConfig",
     "StrategySearchService",
     "StrategyEquivalenceService",
+    "DecisionConsequenceService",
     "UniqueOptimalProofService",
     "AlternateSuccessClassificationService",
     "FailureRecoveryClassificationService",

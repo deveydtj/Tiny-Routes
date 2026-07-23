@@ -139,9 +139,11 @@ class ExactDecisionProfileAdapterService:
             front_loaded_legacy_solution_possible=bool(
                 static_policy_search.successful_policies
             ),
-            # Gameplay-equivalent exact traces are collapsed before this view is
-            # built, so they cannot be counted as meaningful legacy choices.
-            no_op_or_equivalent_choice_count=0,
+            no_op_or_equivalent_choice_count=sum(
+                action.consequence_evidence.equivalent_choice_count
+                for action in actions
+                if action.consequence_evidence is not None
+            ),
         )
 
     @staticmethod
