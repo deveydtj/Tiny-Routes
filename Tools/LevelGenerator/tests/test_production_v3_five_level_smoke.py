@@ -35,6 +35,10 @@ def test_five_level_fixed_seed_smoke_uses_exact_v3_production_path(tmp_path) -> 
     assert evidence.selected_minimum_meaningful_decisions >= 2
     assert evidence.missing_downstream_planning_decision_count == 0
     assert evidence.selected_minimum_downstream_planning_decisions >= 1
+    assert evidence.unreadable_wrong_choice_count == 0
+    assert evidence.selected_minimum_classified_wrong_choices >= 1
+    assert evidence.selected_multiple_success_route_count >= 1
+    assert evidence.alternate_success_proof_error_count == 0
     assert evidence.missing_post_state_adaptive_decision_count == 0
     assert evidence.selected_minimum_post_state_adaptive_decisions >= 1
     assert evidence.static_policy_solvable_count == 0

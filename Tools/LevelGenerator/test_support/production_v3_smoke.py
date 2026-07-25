@@ -83,6 +83,10 @@ class ProductionV3SmokeEvidence:
     selected_minimum_meaningful_decisions: int
     missing_downstream_planning_decision_count: int
     selected_minimum_downstream_planning_decisions: int
+    unreadable_wrong_choice_count: int
+    selected_minimum_classified_wrong_choices: int
+    selected_multiple_success_route_count: int
+    alternate_success_proof_error_count: int
     missing_post_state_adaptive_decision_count: int
     selected_minimum_post_state_adaptive_decisions: int
     static_policy_solvable_count: int
@@ -132,6 +136,16 @@ class ProductionV3SmokeEvidence:
             ),
             "selectedMinimumDownstreamPlanningDecisions": (
                 self.selected_minimum_downstream_planning_decisions
+            ),
+            "unreadableWrongChoiceCount": self.unreadable_wrong_choice_count,
+            "selectedMinimumClassifiedWrongChoices": (
+                self.selected_minimum_classified_wrong_choices
+            ),
+            "selectedMultipleSuccessRouteCount": (
+                self.selected_multiple_success_route_count
+            ),
+            "alternateSuccessProofErrorCount": (
+                self.alternate_success_proof_error_count
             ),
             "missingPostStateAdaptiveDecisionCount": (
                 self.missing_post_state_adaptive_decision_count
@@ -770,6 +784,35 @@ def _run_once(
     selected_minimum_downstream_planning_decisions = min(
         downstream_planning_counts
     )
+    wrong_choice_issue_counts = tuple(
+        len(
+            ProductionPipelinePolicyService.wrong_choice_readability_issues(
+                item.stage_results[2].strategy_search.canonical_optimal_strategy,
+                item.stage_results[2].failure_recovery,
+            )
+        )
+        for item in pipeline_results
+    )
+    unreadable_wrong_choice_count = sum(value > 0 for value in wrong_choice_issue_counts)
+    classified_wrong_choice_counts = tuple(
+        len(item.stage_results[2].failure_recovery.classifications)
+        for item in pipeline_results
+    )
+    selected_minimum_classified_wrong_choices = min(classified_wrong_choice_counts)
+    selected_multiple_success_route_count = sum(
+        bool(item.stage_results[2].alternate_successes.classifications)
+        for item in pipeline_results
+    )
+    alternate_success_proof_error_count = sum(
+        bool(
+            ProductionPipelinePolicyService.alternate_success_issues(
+                item.stage_results[2].strategy_search.canonical_optimal_strategy,
+                item.stage_results[2].alternate_successes,
+                item.stage_results[2].unique_optimal_proof,
+            )
+        )
+        for item in pipeline_results
+    )
     missing_post_state_adaptive_decision_count = sum(
         value < 1 for value in post_state_adaptive_decision_counts
     )
@@ -872,6 +915,9 @@ def _run_once(
         "manualRepairRequiredCount": manual_repair_required_count,
         "meaningfulDecisionCounts": meaningful_decision_counts,
         "downstreamPlanningDecisionCounts": downstream_planning_counts,
+        "classifiedWrongChoiceCounts": classified_wrong_choice_counts,
+        "selectedMultipleSuccessRouteCount": selected_multiple_success_route_count,
+        "alternateSuccessProofErrorCount": alternate_success_proof_error_count,
         "postStateAdaptiveDecisionCounts": post_state_adaptive_decision_counts,
         "levelLogicFingerprint": level_logic_fingerprint,
         "solutionActionsFingerprint": solution_actions_fingerprint,
@@ -900,6 +946,10 @@ def _run_once(
             and selected_minimum_meaningful_decisions >= 2
             and missing_downstream_planning_decision_count == 0
             and selected_minimum_downstream_planning_decisions >= 1
+            and unreadable_wrong_choice_count == 0
+            and selected_minimum_classified_wrong_choices >= 1
+            and selected_multiple_success_route_count >= 1
+            and alternate_success_proof_error_count == 0
             and missing_post_state_adaptive_decision_count == 0
             and selected_minimum_post_state_adaptive_decisions >= 1
             and static_policy_solvable_count == 0
@@ -941,6 +991,14 @@ def _run_once(
         selected_minimum_downstream_planning_decisions=(
             selected_minimum_downstream_planning_decisions
         ),
+        unreadable_wrong_choice_count=unreadable_wrong_choice_count,
+        selected_minimum_classified_wrong_choices=(
+            selected_minimum_classified_wrong_choices
+        ),
+        selected_multiple_success_route_count=(
+            selected_multiple_success_route_count
+        ),
+        alternate_success_proof_error_count=alternate_success_proof_error_count,
         missing_post_state_adaptive_decision_count=(
             missing_post_state_adaptive_decision_count
         ),

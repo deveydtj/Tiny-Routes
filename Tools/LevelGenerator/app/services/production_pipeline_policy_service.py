@@ -8,7 +8,14 @@ from typing import Iterable
 from ..models.blueprint_stage_result import BlueprintStageResult
 from ..models.planning_horizon import PlanningHorizon, PlanningHorizonReport
 from ..models.policy_evaluation import PolicyEvaluationResult
-from ..models.strategy_search import StrategyTrace
+from ..models.strategy_search import (
+    AlternateSuccessKind,
+    AlternateSuccessReport,
+    FailureRecoveryReport,
+    MeaningfulChoiceOutcomeKind,
+    StrategyTrace,
+    UniqueOptimalProof,
+)
 from ..models.strategy_stage_result import StrategyStageResult
 from .v3_candidate_pipeline_coordinator import V3CandidatePipelineResult
 
@@ -48,6 +55,7 @@ class ProductionPipelinePolicyService:
     ) -> tuple[ProductionPipelinePolicyIssue, ...]:
         results = tuple(pipeline_results)
         issues: list[ProductionPipelinePolicyIssue] = []
+        selected_with_alternate_success = 0
         if not results:
             return (
                 ProductionPipelinePolicyIssue(
@@ -163,6 +171,21 @@ class ProductionPipelinePolicyService:
                 if isinstance(strategy_result, StrategyStageResult)
                 else None
             )
+            alternate_successes = (
+                strategy_result.alternate_successes
+                if isinstance(strategy_result, StrategyStageResult)
+                else None
+            )
+            failure_recovery = (
+                strategy_result.failure_recovery
+                if isinstance(strategy_result, StrategyStageResult)
+                else None
+            )
+            unique_optimal_proof = (
+                strategy_result.unique_optimal_proof
+                if isinstance(strategy_result, StrategyStageResult)
+                else None
+            )
             optimal_trace = (
                 strategy_search.canonical_optimal_strategy
                 if strategy_search is not None
@@ -189,6 +212,26 @@ class ProductionPipelinePolicyService:
                     issues.append(
                         ProductionPipelinePolicyIssue(code, level_id, detail)
                     )
+            wrong_choice_issues = self.wrong_choice_readability_issues(
+                optimal_trace,
+                failure_recovery,
+            )
+            for code, detail in wrong_choice_issues:
+                issues.append(
+                    ProductionPipelinePolicyIssue(code, level_id, detail)
+                )
+            alternate_issues = self.alternate_success_issues(
+                optimal_trace,
+                alternate_successes,
+                unique_optimal_proof,
+            )
+            for code, detail in alternate_issues:
+                issues.append(
+                    ProductionPipelinePolicyIssue(code, level_id, detail)
+                )
+            if alternate_successes is not None and not alternate_issues:
+                if alternate_successes.classifications:
+                    selected_with_alternate_success += 1
             if planning_horizon is None:
                 issues.append(
                     ProductionPipelinePolicyIssue(
@@ -306,6 +349,26 @@ class ProductionPipelinePolicyService:
                             "no-op choices "
                             f"(equivalent={analysis.equivalent_choices}, "
                             f"noOp={analysis.no_op_choices}).",
+                        )
+                    )
+                proven_successful_strategy_classes = (
+                    1 + len(alternate_successes.classifications)
+                    if alternate_successes is not None and not alternate_issues
+                    else None
+                )
+                if (
+                    proven_successful_strategy_classes is not None
+                    and analysis.successful_strategy_classes
+                    != proven_successful_strategy_classes
+                ):
+                    issues.append(
+                        ProductionPipelinePolicyIssue(
+                            "successful_strategy_class_evidence_mismatch",
+                            level_id,
+                            "Final puzzle analysis must match the exact canonical "
+                            "and alternate successful strategy classes "
+                            f"(analysis={analysis.successful_strategy_classes}, "
+                            f"proof={proven_successful_strategy_classes}).",
                         )
                     )
                 if (
@@ -489,6 +552,17 @@ class ProductionPipelinePolicyService:
                     )
                 )
 
+        if results and selected_with_alternate_success < 1:
+            issues.append(
+                ProductionPipelinePolicyIssue(
+                    "campaign_alternate_success_route_missing",
+                    "<campaign>",
+                    "At least one selected production level must have multiple "
+                    "gameplay-distinct successful routes and exactly one proven "
+                    "optimal strategy class.",
+                )
+            )
+
         return tuple(sorted(set(issues)))
 
     def require(
@@ -646,6 +720,208 @@ class ProductionPipelinePolicyService:
             if decision.horizon.rank >= PlanningHorizon.TWO_TRANSITIONS.rank:
                 deep_count += 1
         return downstream_count, deep_count
+
+    @staticmethod
+    def wrong_choice_readability_issues(
+        optimal_trace: StrategyTrace | None,
+        failure_recovery: FailureRecoveryReport | None,
+    ) -> tuple[tuple[str, str], ...]:
+        """Require every visible non-optimal consequence to have legible evidence."""
+
+        if optimal_trace is None:
+            return ()
+        if failure_recovery is None:
+            return (
+                (
+                    "wrong_choice_readability_evidence_missing",
+                    "Selected candidates require exhaustive outcome evidence for "
+                    "every non-optimal meaningful choice.",
+                ),
+            )
+        if not failure_recovery.exhaustive:
+            return (
+                (
+                    "wrong_choice_readability_evidence_incomplete",
+                    "Wrong-choice outcome evidence must come from exhaustive search.",
+                ),
+            )
+        canonical = failure_recovery.optimal_strategy_class
+        if (
+            canonical is None
+            or canonical.canonical_trace.exact_signature != optimal_trace.exact_signature
+            or canonical.canonical_trace.cost != optimal_trace.cost
+        ):
+            return (
+                (
+                    "wrong_choice_evidence_mismatch",
+                    "Wrong-choice evidence must identify the canonical optimal trace.",
+                ),
+            )
+
+        meaningful_actions = tuple(
+            action for action in optimal_trace.actions if action.meaningful_decision
+        )
+        issues: list[tuple[str, str]] = []
+        counts_by_ordinal = [0] * len(meaningful_actions)
+        for classification in failure_recovery.classifications:
+            key = classification.key
+            if key.decision_ordinal >= len(meaningful_actions):
+                issues.append(
+                    (
+                        "wrong_choice_evidence_mismatch",
+                        f"Wrong-choice evidence references unknown decision ordinal "
+                        f"{key.decision_ordinal}.",
+                    )
+                )
+                continue
+            action = meaningful_actions[key.decision_ordinal]
+            objective_index = (
+                action.state_transition.objective_index_before
+                if action.state_transition is not None
+                else 0
+            )
+            if (
+                key.node_id != action.node_id
+                or key.objective_index != objective_index
+                or key.selected_edge_id == action.selected_edge_id
+            ):
+                issues.append(
+                    (
+                        "wrong_choice_evidence_mismatch",
+                        f"Wrong-choice evidence {key.node_id}:{key.selected_edge_id} "
+                        "does not match its canonical visible decision context.",
+                    )
+                )
+                continue
+            classified_actions = tuple(
+                item
+                for item in classification.canonical_trace.actions
+                if item.meaningful_decision
+            )
+            if (
+                key.decision_ordinal >= len(classified_actions)
+                or classified_actions[key.decision_ordinal].node_id != key.node_id
+                or classified_actions[key.decision_ordinal].selected_edge_id
+                != key.selected_edge_id
+            ):
+                issues.append(
+                    (
+                        "wrong_choice_evidence_mismatch",
+                        f"Classified trace does not take wrong road "
+                        f"{key.selected_edge_id} at {key.node_id}.",
+                    )
+                )
+                continue
+            counts_by_ordinal[key.decision_ordinal] += 1
+            if classification.kind is MeaningfulChoiceOutcomeKind.STATE_TRAP:
+                issues.append(
+                    (
+                        "arbitrary_hidden_state_trap",
+                        f"Wrong road {key.selected_edge_id} at {key.node_id} creates "
+                        "a hidden state trap instead of a map-understandable outcome.",
+                    )
+                )
+            successful_kind = classification.kind in {
+                MeaningfulChoiceOutcomeKind.RECOVERABLE_DETOUR,
+                MeaningfulChoiceOutcomeKind.SUCCESSFUL_SLOWER_ROUTE,
+                MeaningfulChoiceOutcomeKind.SUCCESSFUL_HIGHER_TAP_ROUTE,
+                MeaningfulChoiceOutcomeKind.SUCCESSFUL_EQUAL_COST_ROUTE,
+            }
+            if classification.canonical_trace.succeeded != successful_kind:
+                issues.append(
+                    (
+                        "wrong_choice_evidence_mismatch",
+                        f"Wrong-choice outcome {classification.kind.value} disagrees "
+                        "with its exact terminal trace.",
+                    )
+                )
+
+        for ordinal, action in enumerate(meaningful_actions):
+            evidence = action.consequence_evidence
+            if evidence is None or not evidence.exhaustive:
+                continue
+            expected = max(0, evidence.distinct_consequence_count - 1)
+            observed = counts_by_ordinal[ordinal]
+            if observed != expected:
+                issues.append(
+                    (
+                        "wrong_choice_evidence_incomplete",
+                        f"Meaningful decision {ordinal} at {action.node_id} requires "
+                        "one classified visible outcome for every non-optimal "
+                        f"consequence (expected={expected}, observed={observed}).",
+                    )
+                )
+        return tuple(issues)
+
+    @staticmethod
+    def alternate_success_issues(
+        optimal_trace: StrategyTrace | None,
+        alternate_successes: AlternateSuccessReport | None,
+        unique_optimal_proof: UniqueOptimalProof | None,
+    ) -> tuple[tuple[str, str], ...]:
+        """Cross-check successful-route evidence against the unique optimum."""
+
+        if optimal_trace is None:
+            return ()
+        if alternate_successes is None:
+            return (
+                (
+                    "alternate_success_evidence_missing",
+                    "Selected candidates require exhaustive successful-strategy "
+                    "classification evidence.",
+                ),
+            )
+        if not alternate_successes.exhaustive:
+            return (
+                (
+                    "alternate_success_evidence_incomplete",
+                    "Successful-strategy classification must come from exhaustive search.",
+                ),
+            )
+        canonical = alternate_successes.optimal_strategy_class
+        if (
+            canonical is None
+            or canonical.canonical_trace.exact_signature != optimal_trace.exact_signature
+            or canonical.canonical_trace.cost != optimal_trace.cost
+        ):
+            return (
+                (
+                    "alternate_success_evidence_mismatch",
+                    "Alternate-success evidence must identify the canonical optimal trace.",
+                ),
+            )
+        if (
+            unique_optimal_proof is None
+            or not unique_optimal_proof.accepted
+            or not unique_optimal_proof.exhaustive
+            or not unique_optimal_proof.is_unique
+            or unique_optimal_proof.optimal_strategy_class is None
+            or unique_optimal_proof.optimal_strategy_class.key != canonical.key
+        ):
+            return (
+                (
+                    "alternate_success_unique_optimum_mismatch",
+                    "Successful alternatives require the same exhaustive unique "
+                    "optimal strategy class used by the production proof.",
+                ),
+            )
+        if any(
+            item.kind is AlternateSuccessKind.EQUAL_COST_ROUTE
+            or item.strategy_class.key == canonical.key
+            or not item.strategy_class.canonical_trace.succeeded
+            or item.strategy_class.canonical_trace.cost <= optimal_trace.cost
+            or item.strategy_class.key.meaningful_decisions
+            == canonical.key.meaningful_decisions
+            for item in alternate_successes.classifications
+        ):
+            return (
+                (
+                    "alternate_success_unique_optimum_mismatch",
+                    "A gameplay-distinct alternate must take a different meaningful "
+                    "route, succeed, and cost more than the proven optimal strategy.",
+                ),
+            )
+        return ()
 
     @staticmethod
     def policy_result(

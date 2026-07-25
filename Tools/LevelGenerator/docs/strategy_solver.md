@@ -33,6 +33,15 @@ are understandable and recoverable, provided the declared unique optimum is
 proved. Equivalent branches with identical future consequences are collapsed
 and cannot count toward difficulty.
 
+The final production boundary cross-checks every non-optimal consequence at
+each meaningful optimal decision against the exhaustive failure/recovery
+report. Each wrong road must belong to the same visible node and objective
+phase, every distinct consequence must be classified, and hidden state traps
+are rejected. A campaign must also contain at least one selected level with a
+gameplay-distinct successful alternate whose cost is worse than the same
+exhaustively proven unique optimum. Final quality counters cannot disagree with
+those exact strategy classes.
+
 Every structural action carries `DecisionConsequenceEvidence`. The solver
 compares all roads available at the same boundary across six locked dimensions:
 future route state, objective progress, route cost, failure risk,

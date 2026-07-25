@@ -6,6 +6,10 @@ import pytest
 
 from app.models.planning_horizon import PlanningHorizon
 from app.models.static_policy import StaticPolicySearchResult, StaticPolicySolution
+from app.models.strategy_search import (
+    AlternateSuccessKind,
+    MeaningfulChoiceOutcomeKind,
+)
 from app.services.production_pipeline_policy_service import (
     ProductionPipelinePolicyError,
     ProductionPipelinePolicyService,
@@ -335,6 +339,178 @@ def test_rejects_level_without_trace_backed_downstream_planning(
     with pytest.raises(
         ProductionPipelinePolicyError,
         match="insufficient_downstream_planning_decisions",
+    ):
+        ProductionPipelinePolicyService().require((stale,))
+
+
+def test_rejects_incomplete_wrong_choice_outcome_evidence(
+    accepted_pipeline_result,
+) -> None:
+    stages = list(accepted_pipeline_result.stage_results)
+    strategy = stages[2]
+    report = strategy.failure_recovery
+    stages[2] = replace(
+        strategy,
+        failure_recovery=replace(
+            report,
+            classifications=report.classifications[1:],
+        ),
+    )
+    stale = V3CandidatePipelineResult(
+        accepted_pipeline_result.request,
+        tuple(stages),
+    )
+
+    with pytest.raises(
+        ProductionPipelinePolicyError,
+        match="wrong_choice_evidence_incomplete",
+    ):
+        ProductionPipelinePolicyService().require((stale,))
+
+
+def test_rejects_wrong_choice_evidence_for_a_different_visible_context(
+    accepted_pipeline_result,
+) -> None:
+    stages = list(accepted_pipeline_result.stage_results)
+    strategy = stages[2]
+    report = strategy.failure_recovery
+    classifications = list(report.classifications)
+    classifications[0] = replace(
+        classifications[0],
+        key=replace(classifications[0].key, node_id="hidden_switch"),
+    )
+    stages[2] = replace(
+        strategy,
+        failure_recovery=replace(
+            report,
+            classifications=tuple(classifications),
+        ),
+    )
+    stale = V3CandidatePipelineResult(
+        accepted_pipeline_result.request,
+        tuple(stages),
+    )
+
+    with pytest.raises(
+        ProductionPipelinePolicyError,
+        match="wrong_choice_evidence_mismatch",
+    ):
+        ProductionPipelinePolicyService().require((stale,))
+
+
+def test_rejects_arbitrary_hidden_state_trap(
+    accepted_pipeline_result,
+) -> None:
+    stages = list(accepted_pipeline_result.stage_results)
+    strategy = stages[2]
+    report = strategy.failure_recovery
+    classifications = list(report.classifications)
+    classifications[0] = replace(
+        classifications[0],
+        kind=MeaningfulChoiceOutcomeKind.STATE_TRAP,
+        rejoins_optimal_route=False,
+    )
+    stages[2] = replace(
+        strategy,
+        failure_recovery=replace(
+            report,
+            classifications=tuple(classifications),
+        ),
+    )
+    stale = V3CandidatePipelineResult(
+        accepted_pipeline_result.request,
+        tuple(stages),
+    )
+
+    with pytest.raises(
+        ProductionPipelinePolicyError,
+        match="arbitrary_hidden_state_trap",
+    ):
+        ProductionPipelinePolicyService().require((stale,))
+
+
+def test_requires_at_least_one_selected_level_with_a_successful_alternate(
+    accepted_pipeline_result,
+) -> None:
+    stages = list(accepted_pipeline_result.stage_results)
+    strategy = stages[2]
+    stages[2] = replace(
+        strategy,
+        alternate_successes=replace(
+            strategy.alternate_successes,
+            classifications=(),
+        ),
+    )
+    quality = stages[5]
+    stages[5] = replace(
+        quality,
+        puzzle_analysis=replace(
+            quality.puzzle_analysis,
+            successful_strategy_classes=1,
+        ),
+    )
+    single_route = V3CandidatePipelineResult(
+        accepted_pipeline_result.request,
+        tuple(stages),
+    )
+
+    with pytest.raises(
+        ProductionPipelinePolicyError,
+        match="campaign_alternate_success_route_missing",
+    ):
+        ProductionPipelinePolicyService().require((single_route,))
+
+
+def test_rejects_equal_cost_alternate_that_breaks_unique_optimal_proof(
+    accepted_pipeline_result,
+) -> None:
+    stages = list(accepted_pipeline_result.stage_results)
+    strategy = stages[2]
+    report = strategy.alternate_successes
+    classifications = list(report.classifications)
+    classifications[0] = replace(
+        classifications[0],
+        kind=AlternateSuccessKind.EQUAL_COST_ROUTE,
+    )
+    stages[2] = replace(
+        strategy,
+        alternate_successes=replace(
+            report,
+            classifications=tuple(classifications),
+        ),
+    )
+    stale = V3CandidatePipelineResult(
+        accepted_pipeline_result.request,
+        tuple(stages),
+    )
+
+    with pytest.raises(
+        ProductionPipelinePolicyError,
+        match="alternate_success_unique_optimum_mismatch",
+    ):
+        ProductionPipelinePolicyService().require((stale,))
+
+
+def test_rejects_stale_successful_strategy_class_count(
+    accepted_pipeline_result,
+) -> None:
+    stages = list(accepted_pipeline_result.stage_results)
+    quality = stages[5]
+    stages[5] = replace(
+        quality,
+        puzzle_analysis=replace(
+            quality.puzzle_analysis,
+            successful_strategy_classes=1,
+        ),
+    )
+    stale = V3CandidatePipelineResult(
+        accepted_pipeline_result.request,
+        tuple(stages),
+    )
+
+    with pytest.raises(
+        ProductionPipelinePolicyError,
+        match="successful_strategy_class_evidence_mismatch",
     ):
         ProductionPipelinePolicyService().require((stale,))
 

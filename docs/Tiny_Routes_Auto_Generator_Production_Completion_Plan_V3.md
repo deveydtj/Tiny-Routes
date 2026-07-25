@@ -153,8 +153,8 @@ meaningful and that injected equivalent-choice evidence fails closed.
 - [x] A decision counts only when at least two available choices differ in future state, objective progress, route cost, risk, recoverability, or later switch requirements.
 - [x] The correct choice on at least one switch depends on more than the immediately adjacent road.
 - [x] Harder levels require the player to reason across multiple upcoming intersections or objective phases.
-- [ ] Wrong choices are understandable from the map and are not arbitrary hidden traps.
-- [ ] At least some levels contain multiple successful routes with one unique optimal route, rather than forcing every level to have exactly one successful path.
+- [x] Wrong choices are understandable from the map and are not arbitrary hidden traps.
+- [x] At least some levels contain multiple successful routes with one unique optimal route, rather than forcing every level to have exactly one successful path.
 
 **2026-07-22 completion record:** `DecisionConsequenceEvidence` is now attached
 to every exact strategy action and proves the available-choice count, distinct
@@ -180,6 +180,20 @@ objective-state, or cross-phase depth. A candidate whose choices require only
 immediate-edge or single-transition reasoning is rejected with
 `insufficient_deep_planning_horizon`; focused production-boundary coverage proves
 the harder-difficulty requirement independently of mutable quality counters.
+
+**2026-07-25 completion record:** The final production boundary now aligns every
+exhaustively classified wrong choice with the canonical visible decision node,
+objective phase, and non-optimal road. Every distinct non-optimal consequence
+must have a classified outcome, hidden state traps fail with
+`arbitrary_hidden_state_trap`, and the exact five-level smoke reports zero
+unreadable wrong choices.
+
+**2026-07-25 completion record:** Campaign selection now requires at least one
+level with a gameplay-distinct successful alternate route tied to the same
+exhaustively proven unique optimum. Equal-cost or canonical duplicates fail
+closed, final successful-strategy counters must match exact class evidence, and
+the exact five-level smoke proves successful alternatives survive production
+selection.
 
 ### 2.4 Multi-stop play
 
