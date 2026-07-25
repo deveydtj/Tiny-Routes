@@ -50,6 +50,13 @@ obviousness; they do not replace the exact proof. Medium and harder production
 candidates must separate from greedy local behavior according to the active
 quality target.
 
+Before staging, the production policy aligns every planning-horizon entry with
+the canonical optimal action. Every selected level must contain a meaningful
+choice whose correct road depends on more than its immediately adjacent edge.
+Medium, hard, and expert selections must additionally contain a meaningful
+choice classified at two-transition, objective-state, or cross-phase depth;
+missing, incomplete, or stale horizon evidence fails closed.
+
 When debugging, start with the strategy stage code, explored-state count,
 termination reason, optimal cost, successful strategy classes, static-policy
 result, and replay trace. Never raise proof budgets or weaken gates silently;

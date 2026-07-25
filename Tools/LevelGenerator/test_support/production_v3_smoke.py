@@ -81,6 +81,8 @@ class ProductionV3SmokeEvidence:
     selected_minimum_accepted_taps: int
     fewer_than_two_meaningful_decision_count: int
     selected_minimum_meaningful_decisions: int
+    missing_downstream_planning_decision_count: int
+    selected_minimum_downstream_planning_decisions: int
     missing_post_state_adaptive_decision_count: int
     selected_minimum_post_state_adaptive_decisions: int
     static_policy_solvable_count: int
@@ -124,6 +126,12 @@ class ProductionV3SmokeEvidence:
             ),
             "selectedMinimumMeaningfulDecisions": (
                 self.selected_minimum_meaningful_decisions
+            ),
+            "missingDownstreamPlanningDecisionCount": (
+                self.missing_downstream_planning_decision_count
+            ),
+            "selectedMinimumDownstreamPlanningDecisions": (
+                self.selected_minimum_downstream_planning_decisions
             ),
             "missingPostStateAdaptiveDecisionCount": (
                 self.missing_post_state_adaptive_decision_count
@@ -748,6 +756,20 @@ def _run_once(
         value < 2 for value in meaningful_decision_counts
     )
     selected_minimum_meaningful_decisions = min(meaningful_decision_counts)
+    planning_counts = tuple(
+        ProductionPipelinePolicyService.optimal_planning_counts(
+            item.stage_results[2].strategy_search.canonical_optimal_strategy,
+            item.stage_results[2].planning_horizon,
+        )
+        for item in pipeline_results
+    )
+    downstream_planning_counts = tuple(value[0] for value in planning_counts)
+    missing_downstream_planning_decision_count = sum(
+        value < 1 for value in downstream_planning_counts
+    )
+    selected_minimum_downstream_planning_decisions = min(
+        downstream_planning_counts
+    )
     missing_post_state_adaptive_decision_count = sum(
         value < 1 for value in post_state_adaptive_decision_counts
     )
@@ -849,6 +871,7 @@ def _run_once(
         "manualApprovalRequiredCount": manual_approval_required_count,
         "manualRepairRequiredCount": manual_repair_required_count,
         "meaningfulDecisionCounts": meaningful_decision_counts,
+        "downstreamPlanningDecisionCounts": downstream_planning_counts,
         "postStateAdaptiveDecisionCounts": post_state_adaptive_decision_counts,
         "levelLogicFingerprint": level_logic_fingerprint,
         "solutionActionsFingerprint": solution_actions_fingerprint,
@@ -875,6 +898,8 @@ def _run_once(
             and selected_minimum_accepted_taps >= 2
             and fewer_than_two_meaningful_decision_count == 0
             and selected_minimum_meaningful_decisions >= 2
+            and missing_downstream_planning_decision_count == 0
+            and selected_minimum_downstream_planning_decisions >= 1
             and missing_post_state_adaptive_decision_count == 0
             and selected_minimum_post_state_adaptive_decisions >= 1
             and static_policy_solvable_count == 0
@@ -909,6 +934,12 @@ def _run_once(
         ),
         selected_minimum_meaningful_decisions=(
             selected_minimum_meaningful_decisions
+        ),
+        missing_downstream_planning_decision_count=(
+            missing_downstream_planning_decision_count
+        ),
+        selected_minimum_downstream_planning_decisions=(
+            selected_minimum_downstream_planning_decisions
         ),
         missing_post_state_adaptive_decision_count=(
             missing_post_state_adaptive_decision_count

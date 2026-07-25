@@ -6,6 +6,7 @@ from dataclasses import dataclass
 from typing import Iterable
 
 from ..models.blueprint_stage_result import BlueprintStageResult
+from ..models.planning_horizon import PlanningHorizon, PlanningHorizonReport
 from ..models.policy_evaluation import PolicyEvaluationResult
 from ..models.strategy_search import StrategyTrace
 from ..models.strategy_stage_result import StrategyStageResult
@@ -157,6 +158,11 @@ class ProductionPipelinePolicyService:
                 if isinstance(strategy_result, StrategyStageResult)
                 else None
             )
+            planning_horizon = (
+                strategy_result.planning_horizon
+                if isinstance(strategy_result, StrategyStageResult)
+                else None
+            )
             optimal_trace = (
                 strategy_search.canonical_optimal_strategy
                 if strategy_search is not None
@@ -182,6 +188,39 @@ class ProductionPipelinePolicyService:
                 for code, detail in self.optimal_consequence_issues(optimal_trace):
                     issues.append(
                         ProductionPipelinePolicyIssue(code, level_id, detail)
+                    )
+            if planning_horizon is None:
+                issues.append(
+                    ProductionPipelinePolicyIssue(
+                        "production_planning_horizon_evidence_missing",
+                        level_id,
+                        "Selected candidates require trace-backed planning-horizon evidence.",
+                    )
+                )
+                downstream_planning_count = None
+                deep_planning_count = None
+            elif optimal_trace is None:
+                downstream_planning_count = None
+                deep_planning_count = None
+            else:
+                planning_issues = self.optimal_planning_horizon_issues(
+                    optimal_trace,
+                    planning_horizon,
+                )
+                for code, detail in planning_issues:
+                    issues.append(
+                        ProductionPipelinePolicyIssue(code, level_id, detail)
+                    )
+                if planning_issues:
+                    downstream_planning_count = None
+                    deep_planning_count = None
+                else:
+                    (
+                        downstream_planning_count,
+                        deep_planning_count,
+                    ) = self.optimal_planning_counts(
+                        optimal_trace,
+                        planning_horizon,
                     )
 
             if static_policy_search is None:
@@ -341,6 +380,47 @@ class ProductionPipelinePolicyService:
                     if blueprint is not None
                     else None
                 )
+                declared_planning_count = (
+                    len(blueprint.planning_decision_ids)
+                    if blueprint is not None
+                    else None
+                )
+                required_planning_count = max(
+                    1,
+                    analysis.planning_decisions,
+                    declared_planning_count or 0,
+                )
+                if (
+                    downstream_planning_count is not None
+                    and downstream_planning_count < required_planning_count
+                ):
+                    issues.append(
+                        ProductionPipelinePolicyIssue(
+                            "insufficient_downstream_planning_decisions",
+                            level_id,
+                            "Production candidates require every claimed planning "
+                            "decision to be backed by a meaningful optimal choice "
+                            "whose correct road depends on more than the immediately "
+                            "adjacent edge "
+                            f"(required={required_planning_count}, "
+                            f"trace={downstream_planning_count}).",
+                        )
+                    )
+                if (
+                    deep_planning_count is not None
+                    and result.request.difficulty.lower()
+                    in {"medium", "hard", "expert"}
+                    and deep_planning_count < 1
+                ):
+                    issues.append(
+                        ProductionPipelinePolicyIssue(
+                            "insufficient_deep_planning_horizon",
+                            level_id,
+                            "Medium, hard, and expert candidates require a meaningful "
+                            "optimal choice that reasons across at least two upcoming "
+                            "decisions or an objective-state phase boundary.",
+                        )
+                    )
                 if (
                     analysis.adaptive_decisions < 1
                     or (
@@ -496,6 +576,76 @@ class ProductionPipelinePolicyService:
                     )
                 )
         return tuple(issues)
+
+    @staticmethod
+    def optimal_planning_horizon_issues(
+        optimal_trace: StrategyTrace,
+        planning_horizon: PlanningHorizonReport,
+    ) -> tuple[tuple[str, str], ...]:
+        """Require horizon evidence to describe the canonical optimum exactly."""
+
+        if not planning_horizon.strategy_proof_exhaustive:
+            return (
+                (
+                    "production_planning_horizon_evidence_incomplete",
+                    "Planning-horizon classification must use an exhaustive "
+                    "strategy proof.",
+                ),
+            )
+        if len(planning_horizon.decisions) != len(optimal_trace.actions):
+            return (
+                (
+                    "planning_horizon_evidence_mismatch",
+                    "Planning-horizon evidence must contain exactly one entry for "
+                    "every canonical optimal action "
+                    f"(report={len(planning_horizon.decisions)}, "
+                    f"trace={len(optimal_trace.actions)}).",
+                ),
+            )
+
+        issues: list[tuple[str, str]] = []
+        for index, (action, decision) in enumerate(
+            zip(optimal_trace.actions, planning_horizon.decisions)
+        ):
+            if (
+                decision.decision_ordinal != index
+                or decision.node_id != action.node_id
+                or decision.optimal_edge_id != action.selected_edge_id
+            ):
+                issues.append(
+                    (
+                        "planning_horizon_evidence_mismatch",
+                        f"Planning-horizon entry {index} does not match canonical "
+                        f"action {action.node_id}:{action.selected_edge_id}.",
+                    )
+                )
+        return tuple(issues)
+
+    @staticmethod
+    def optimal_planning_counts(
+        optimal_trace: StrategyTrace,
+        planning_horizon: PlanningHorizonReport,
+    ) -> tuple[int, int]:
+        """Count meaningful downstream and multi-decision planning evidence."""
+
+        downstream_count = 0
+        deep_count = 0
+        for action, decision in zip(
+            optimal_trace.actions,
+            planning_horizon.decisions,
+        ):
+            evidence = action.consequence_evidence
+            if not (
+                action.meaningful_decision is True
+                and evidence is not None
+                and evidence.meaningful
+            ):
+                continue
+            if decision.horizon.rank >= PlanningHorizon.ONE_TRANSITION.rank:
+                downstream_count += 1
+            if decision.horizon.rank >= PlanningHorizon.TWO_TRANSITIONS.rank:
+                deep_count += 1
+        return downstream_count, deep_count
 
     @staticmethod
     def policy_result(

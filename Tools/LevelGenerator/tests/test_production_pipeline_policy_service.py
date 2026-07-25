@@ -4,6 +4,7 @@ from dataclasses import replace
 
 import pytest
 
+from app.models.planning_horizon import PlanningHorizon
 from app.models.static_policy import StaticPolicySearchResult, StaticPolicySolution
 from app.services.production_pipeline_policy_service import (
     ProductionPipelinePolicyError,
@@ -279,6 +280,98 @@ def test_rejects_optimal_trace_without_a_decision_after_state_change(
     with pytest.raises(
         ProductionPipelinePolicyError,
         match="insufficient_adaptive_decisions",
+    ):
+        ProductionPipelinePolicyService().require((stale,))
+
+
+def test_rejects_planning_horizon_that_does_not_match_the_optimal_trace(
+    accepted_pipeline_result,
+) -> None:
+    stages = list(accepted_pipeline_result.stage_results)
+    strategy = stages[2]
+    report = strategy.planning_horizon
+    decisions = list(report.decisions)
+    decisions[0] = replace(decisions[0], optimal_edge_id="stale_edge")
+    stages[2] = replace(
+        strategy,
+        planning_horizon=replace(report, decisions=tuple(decisions)),
+    )
+    stale = V3CandidatePipelineResult(
+        accepted_pipeline_result.request,
+        tuple(stages),
+    )
+
+    with pytest.raises(
+        ProductionPipelinePolicyError,
+        match="planning_horizon_evidence_mismatch",
+    ):
+        ProductionPipelinePolicyService().require((stale,))
+
+
+def test_rejects_level_without_trace_backed_downstream_planning(
+    accepted_pipeline_result,
+) -> None:
+    stages = list(accepted_pipeline_result.stage_results)
+    strategy = stages[2]
+    report = strategy.planning_horizon
+    stages[2] = replace(
+        strategy,
+        planning_horizon=replace(
+            report,
+            decisions=tuple(
+                replace(
+                    decision,
+                    horizon=PlanningHorizon.IMMEDIATE_EDGE_ONLY,
+                )
+                for decision in report.decisions
+            ),
+        ),
+    )
+    stale = V3CandidatePipelineResult(
+        accepted_pipeline_result.request,
+        tuple(stages),
+    )
+
+    with pytest.raises(
+        ProductionPipelinePolicyError,
+        match="insufficient_downstream_planning_decisions",
+    ):
+        ProductionPipelinePolicyService().require((stale,))
+
+
+def test_rejects_medium_plus_without_multi_decision_or_cross_phase_reasoning(
+    accepted_medium_pipeline_result,
+) -> None:
+    stages = list(accepted_medium_pipeline_result.stage_results)
+    strategy = stages[2]
+    report = strategy.planning_horizon
+    trace = strategy.strategy_search.canonical_optimal_strategy
+    assert trace is not None
+    stages[2] = replace(
+        strategy,
+        planning_horizon=replace(
+            report,
+            decisions=tuple(
+                replace(
+                    decision,
+                    horizon=(
+                        PlanningHorizon.ONE_TRANSITION
+                        if action.meaningful_decision
+                        else PlanningHorizon.IMMEDIATE_EDGE_ONLY
+                    ),
+                )
+                for action, decision in zip(trace.actions, report.decisions)
+            ),
+        ),
+    )
+    stale = V3CandidatePipelineResult(
+        accepted_medium_pipeline_result.request,
+        tuple(stages),
+    )
+
+    with pytest.raises(
+        ProductionPipelinePolicyError,
+        match="insufficient_deep_planning_horizon",
     ):
         ProductionPipelinePolicyService().require((stale,))
 

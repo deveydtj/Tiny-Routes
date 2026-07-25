@@ -151,8 +151,8 @@ meaningful and that injected equivalent-choice evidence fails closed.
 ### 2.3 Real route choice
 
 - [x] A decision counts only when at least two available choices differ in future state, objective progress, route cost, risk, recoverability, or later switch requirements.
-- [ ] The correct choice on at least one switch depends on more than the immediately adjacent road.
-- [ ] Harder levels require the player to reason across multiple upcoming intersections or objective phases.
+- [x] The correct choice on at least one switch depends on more than the immediately adjacent road.
+- [x] Harder levels require the player to reason across multiple upcoming intersections or objective phases.
 - [ ] Wrong choices are understandable from the map and are not arbitrary hidden traps.
 - [ ] At least some levels contain multiple successful routes with one unique optimal route, rather than forcing every level to have exactly one successful path.
 
@@ -165,6 +165,21 @@ trace-backed meaningful counts and rejects missing, incomplete, or inconsistent
 evidence before staging. Regressions cover route-cost, failure-risk, and
 recoverability differences alongside the decorative-branch negative case, and
 the exact V3 smoke/anti-triviality suite passes.
+
+**2026-07-25 completion record:** The final pre-staging campaign policy now
+aligns exhaustive planning-horizon evidence with every canonical optimal action
+and requires every selected level to prove at least one meaningful choice beyond
+the immediately adjacent edge. Claimed blueprint and final-analysis planning
+counts cannot exceed the trace-backed count. The exact-path five-level smoke
+reports zero missing downstream-planning decisions, and focused stale-evidence
+regressions fail closed.
+
+**2026-07-25 completion record:** Medium, hard, and expert selections now require
+at least one meaningful optimal decision classified at two-transition,
+objective-state, or cross-phase depth. A candidate whose choices require only
+immediate-edge or single-transition reasoning is rejected with
+`insufficient_deep_planning_horizon`; focused production-boundary coverage proves
+the harder-difficulty requirement independently of mutable quality counters.
 
 ### 2.4 Multi-stop play
 
