@@ -5,6 +5,7 @@ import pytest
 from app.generation_config import GenerationConfig
 from app.gui.gui_state import (
     GuiGenerationState,
+    build_production_command_preview,
     parse_positive_int,
     parse_probability,
     to_generation_config,
@@ -151,6 +152,70 @@ def test_gui_state_builds_strict_production_campaign_config(tmp_path) -> None:
     assert config.seed == 42
     assert config.run_swift_tests is True
     assert config.production_manifest_path == tmp_path / "production_manifest.json"
+
+
+def test_gui_state_carries_all_production_v3_run_controls(tmp_path) -> None:
+    config = to_production_campaign_config(
+        _state_with_paths(
+            tmp_path,
+            candidate_pool_size="6",
+            max_attempts_per_level="150",
+            candidate_workers="3",
+            wave_size="2",
+            global_attempt_budget="500",
+            quality_profile_version="1.0.0",
+            production_manifest_path=str(tmp_path / "manifest.json"),
+            staging_root=str(tmp_path / "staging"),
+        )
+    )
+
+    assert config.candidates_per_slot == 6
+    assert config.max_attempts_per_slot == 150
+    assert config.candidate_workers == 3
+    assert config.wave_size == 2
+    assert config.global_attempt_budget == 500
+    assert config.quality_profile_version == "1.0.0"
+    assert config.production_manifest_path == tmp_path / "manifest.json"
+    assert config.staging_root == tmp_path / "staging"
+
+
+def test_production_command_preview_uses_transactional_v3_entrypoint(tmp_path) -> None:
+    preview = build_production_command_preview(
+        _state_with_paths(
+            tmp_path,
+            seed="42",
+            candidate_workers="3",
+            global_attempt_budget="80",
+            production_manifest_path=str(tmp_path / "manifest.json"),
+            staging_root=str(tmp_path / "staging"),
+        )
+    )
+
+    assert "generate_production_campaign.py" in preview
+    assert "--swift-tests" in preview
+    assert "--candidate-workers 3" in preview
+    assert "--global-attempt-budget 80" in preview
+    assert "--production-manifest" in preview
+    assert "--generator-architecture" not in preview
+    assert "--template" not in preview
+
+
+def test_production_campaign_rejects_too_small_candidate_pool(tmp_path) -> None:
+    with pytest.raises(ValueError, match="Candidates per level must be at least 2"):
+        to_production_campaign_config(
+            _state_with_paths(tmp_path, candidate_pool_size="1")
+        )
+
+
+def test_production_campaign_rejects_attempts_below_candidate_count(tmp_path) -> None:
+    with pytest.raises(ValueError, match="Max attempts per level must be at least"):
+        to_production_campaign_config(
+            _state_with_paths(
+                tmp_path,
+                candidate_pool_size="5",
+                max_attempts_per_level="4",
+            )
+        )
 
 
 def _state_with_paths(tmp_path, **kwargs) -> GuiGenerationState:

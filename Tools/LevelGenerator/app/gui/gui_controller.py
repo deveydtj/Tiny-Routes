@@ -206,13 +206,28 @@ def format_validation_result(result: ExistingLevelValidationResult) -> str:
 
 def format_production_campaign_result(result) -> str:
     lines = [
-        f"Production status: {result.status}",
+        f"Production V3 status: {result.status}",
         f"Run: {result.run_id}",
         f"Seed: {result.seed}",
         f"Levels: {result.selected_count}/{result.requested_count}",
     ]
+    if result.quality_profile_version:
+        profile = result.quality_profile_version
+        if result.quality_profile_fingerprint:
+            profile += f" ({result.quality_profile_fingerprint[:12]})"
+        lines.append(f"Quality profile: {profile}")
     if result.report_path:
         lines.append(f"Report: {result.report_path}")
+    if result.reproducibility_bundle_path:
+        lines.append(
+            f"Reproduction bundle: {result.reproducibility_bundle_path}"
+        )
+    if result.health_report_path:
+        lines.append(f"Health metrics: {result.health_report_path}")
+    if result.workspace_path:
+        lines.append(f"Workspace: {result.workspace_path}")
+    if result.promoted_paths:
+        lines.append(f"Promoted files: {len(result.promoted_paths)}")
     if result.failure_reason:
         lines.append(f"Failure: {result.failure_reason}")
     return "\n".join(lines)

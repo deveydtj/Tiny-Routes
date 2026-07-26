@@ -5,7 +5,12 @@ import subprocess
 import sys
 from pathlib import Path
 
-from ..paths import get_default_levels_directory, get_default_reports_directory, get_default_solutions_directory
+from ..paths import (
+    get_default_levels_directory,
+    get_default_production_staging_directory,
+    get_default_reports_directory,
+    get_default_solutions_directory,
+)
 
 
 def open_path(path: Path) -> None:
@@ -35,6 +40,16 @@ def try_get_default_markdown_report_path() -> str:
 
 def try_get_default_json_report_path() -> str:
     return _try_default_path(lambda: get_default_reports_directory() / "last_generation_report.json")
+
+
+def try_get_default_production_manifest_path() -> str:
+    return _try_default_path(
+        lambda: get_default_reports_directory() / "production_manifest.json"
+    )
+
+
+def try_get_default_production_staging_directory() -> str:
+    return _try_default_path(get_default_production_staging_directory)
 
 
 def try_get_default_debug_failures_directory() -> str:

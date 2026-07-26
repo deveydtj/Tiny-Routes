@@ -5,7 +5,13 @@ from types import SimpleNamespace
 import pytest
 
 from app.generation_config import GenerationConfig
-from app.gui.gui_controller import GuiController, format_generation_result, parse_level_ids
+from app.gui.gui_controller import (
+    GuiController,
+    format_generation_result,
+    format_production_campaign_result,
+    parse_level_ids,
+)
+from app.models.production_campaign import ProductionCampaignResult
 from app.gui.gui_state import GuiGenerationState
 from app.models.generated_level import GeneratedLevel
 from app.models.generation_result import GenerationResult
@@ -83,6 +89,31 @@ def test_result_formatter_includes_accepted_level_id() -> None:
 
     assert "level_012" in formatted
     assert "template=straight_delivery" in formatted
+
+
+def test_production_result_formatter_surfaces_v3_evidence(tmp_path) -> None:
+    result = ProductionCampaignResult(
+        status="completed",
+        run_id="production-42",
+        seed=42,
+        requested_count=2,
+        selected_count=2,
+        report_path=tmp_path / "report.json",
+        reproducibility_bundle_path=tmp_path / "reproduce",
+        health_report_path=tmp_path / "health.json",
+        workspace_path=tmp_path / "workspace",
+        quality_profile_version="1.0.0",
+        quality_profile_fingerprint="1234567890abcdef",
+        promoted_paths=(tmp_path / "level_031.json",),
+    )
+
+    formatted = format_production_campaign_result(result)
+
+    assert "Production V3 status: completed" in formatted
+    assert "Quality profile: 1.0.0 (1234567890ab)" in formatted
+    assert "Reproduction bundle:" in formatted
+    assert "Health metrics:" in formatted
+    assert "Promoted files: 1" in formatted
 
 
 def test_parse_level_ids_accepts_commas_spaces_and_suffixes() -> None:

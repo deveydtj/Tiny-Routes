@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import tkinter as tk
+from pathlib import Path
 from tkinter import filedialog, ttk
 
 
@@ -47,6 +48,7 @@ def add_path_picker(
     *,
     pick_directory: bool,
     file_extension: str | None = None,
+    save_file: bool = True,
     column: int = 0,
 ) -> ttk.Entry:
     label = ttk.Label(parent, text=label_text)
@@ -55,15 +57,37 @@ def add_path_picker(
     entry.grid(row=row, column=column + 1, sticky="ew", pady=3)
 
     def browse() -> None:
+        current = Path(variable.get()).expanduser() if variable.get().strip() else None
+        initial_directory = None
+        initial_file = None
+        if current is not None:
+            if pick_directory:
+                initial_directory = current if current.is_dir() else current.parent
+            else:
+                initial_directory = current.parent
+                initial_file = current.name
         if pick_directory:
-            selected = filedialog.askdirectory()
+            selected = filedialog.askdirectory(
+                initialdir=str(initial_directory) if initial_directory else None
+            )
         else:
             filetypes = _filetypes_for_extension(file_extension)
-            selected = filedialog.asksaveasfilename(defaultextension=file_extension or "", filetypes=filetypes)
+            options = {
+                "initialdir": str(initial_directory) if initial_directory else None,
+                "initialfile": initial_file,
+                "filetypes": filetypes,
+            }
+            if save_file:
+                selected = filedialog.asksaveasfilename(
+                    defaultextension=file_extension or "",
+                    **options,
+                )
+            else:
+                selected = filedialog.askopenfilename(**options)
         if selected:
             variable.set(selected)
 
-    button = ttk.Button(parent, text="Browse", command=browse)
+    button = ttk.Button(parent, text="Browse…", command=browse)
     button.grid(row=row, column=column + 2, sticky="ew", padx=(8, 0), pady=3)
     parent.grid_columnconfigure(column + 1, weight=1)
     return entry

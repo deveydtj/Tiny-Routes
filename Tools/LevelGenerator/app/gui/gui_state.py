@@ -16,7 +16,13 @@ from ..generation_config import (
     GenerationConfig,
 )
 from ..models.production_campaign import ProductionCampaignConfig
-from ..paths import get_default_levels_directory, get_default_reports_directory, get_default_solutions_directory
+from ..models.quality_profile import CURRENT_QUALITY_PROFILE_VERSION
+from ..paths import (
+    get_default_levels_directory,
+    get_default_production_staging_directory,
+    get_default_reports_directory,
+    get_default_solutions_directory,
+)
 
 
 @dataclass
@@ -47,6 +53,12 @@ class GuiGenerationState:
     max_attempts_per_level: str = str(DEFAULT_MAX_ATTEMPTS_PER_LEVEL)
     candidate_pool_size: str = str(DEFAULT_CANDIDATE_POOL_SIZE)
     swift_timeout_seconds: str = "180"
+    candidate_workers: str = "4"
+    wave_size: str = "1"
+    global_attempt_budget: str = ""
+    quality_profile_version: str = CURRENT_QUALITY_PROFILE_VERSION
+    production_manifest_path: str = ""
+    staging_root: str = ""
 
 
 def parse_positive_int(value: str, field_name: str) -> int:
@@ -73,6 +85,12 @@ def parse_probability(value: str, field_name: str) -> float:
     if parsed < 0.0 or parsed > 1.0:
         raise ValueError(f"{field_name} must be between 0.0 and 1.0.")
     return parsed
+
+
+def parse_optional_positive_int(value: str, field_name: str) -> int | None:
+    if not value.strip():
+        return None
+    return parse_positive_int(value, field_name)
 
 
 def to_generation_config(state: GuiGenerationState) -> GenerationConfig:
@@ -158,16 +176,25 @@ def to_production_campaign_config(state: GuiGenerationState) -> ProductionCampai
     )
     count = parse_positive_int(state.count, "Count")
     seed = _parse_optional_int(state.seed, "Seed")
+    candidates_per_slot = parse_positive_int(
+        state.candidate_pool_size, "Candidates per level"
+    )
+    max_attempts_per_slot = parse_positive_int(
+        state.max_attempts_per_level, "Max attempts per level"
+    )
+    if candidates_per_slot < 2:
+        raise ValueError("Candidates per level must be at least 2.")
+    if max_attempts_per_slot < candidates_per_slot:
+        raise ValueError(
+            "Max attempts per level must be at least the candidates per level."
+        )
     levels_output_dir = _path_or_default(
         state.levels_output_dir, get_default_levels_directory
     )
     solutions_output_dir = _path_or_default(
         state.solutions_output_dir, get_default_solutions_directory
     )
-    report_path = _path_or_default(
-        state.report_path,
-        lambda: get_default_reports_directory() / "last_generation_report.md",
-    )
+    production_manifest_path = _production_manifest_path(state)
     return ProductionCampaignConfig(
         start_level_number=start_level_number,
         count=count,
@@ -177,17 +204,51 @@ def to_production_campaign_config(state: GuiGenerationState) -> ProductionCampai
         swift_timeout_seconds=parse_positive_int(
             state.swift_timeout_seconds, "Swift timeout seconds"
         ),
-        candidates_per_slot=max(
-            2,
-            parse_positive_int(state.candidate_pool_size, "Candidate pool size"),
+        candidates_per_slot=candidates_per_slot,
+        max_attempts_per_slot=max_attempts_per_slot,
+        wave_size=parse_positive_int(state.wave_size, "Wave size"),
+        candidate_workers=parse_positive_int(
+            state.candidate_workers, "Candidate workers"
         ),
-        max_attempts_per_slot=parse_positive_int(
-            state.max_attempts_per_level, "Max attempts per level"
+        global_attempt_budget=parse_optional_positive_int(
+            state.global_attempt_budget, "Global attempt budget"
         ),
+        quality_profile_version=state.quality_profile_version.strip(),
         levels_output_dir=levels_output_dir,
         solutions_output_dir=solutions_output_dir,
-        production_manifest_path=report_path.parent / "production_manifest.json",
+        production_manifest_path=production_manifest_path,
+        staging_root=_path_or_default(
+            state.staging_root, get_default_production_staging_directory
+        ),
     )
+
+
+def build_production_command_preview(state: GuiGenerationState) -> str:
+    args = [
+        "python",
+        "Tools/LevelGenerator/generate_production_campaign.py",
+    ]
+    _append_pair(args, "--start", state.start_level_number)
+    _append_pair(args, "--count", state.count)
+    _append_pair(args, "--difficulty", state.difficulty)
+    _append_pair(args, "--seed", state.seed)
+    args.append("--swift-tests")
+    _append_pair(args, "--swift-timeout-seconds", state.swift_timeout_seconds)
+    _append_pair(args, "--candidate-pool-size", state.candidate_pool_size)
+    _append_pair(
+        args, "--max-attempts-per-level", state.max_attempts_per_level
+    )
+    _append_pair(args, "--wave-size", state.wave_size)
+    _append_pair(args, "--candidate-workers", state.candidate_workers)
+    _append_pair(args, "--global-attempt-budget", state.global_attempt_budget)
+    _append_pair(args, "--quality-profile", state.quality_profile_version)
+    _append_pair(args, "--output-levels", state.levels_output_dir)
+    _append_pair(args, "--output-solutions", state.solutions_output_dir)
+    _append_pair(
+        args, "--production-manifest", state.production_manifest_path
+    )
+    _append_pair(args, "--staging-root", state.staging_root)
+    return " ".join(_quote_command_part(part) for part in args)
 
 
 def build_command_preview(state: GuiGenerationState) -> str:
@@ -236,6 +297,14 @@ def _path_or_default(value: str, default_factory) -> Path:
     if value.strip():
         return Path(value).expanduser()
     return default_factory()
+
+
+def _production_manifest_path(state: GuiGenerationState) -> Path:
+    if state.production_manifest_path.strip():
+        return Path(state.production_manifest_path).expanduser()
+    if state.report_path.strip():
+        return Path(state.report_path).expanduser().parent / "production_manifest.json"
+    return get_default_reports_directory() / "production_manifest.json"
 
 
 def _parse_optional_int(value: str, field_name: str) -> int | None:

@@ -242,10 +242,19 @@ Run:
 python Tools/LevelGenerator/launch_gui.py
 ```
 
-The **Generate Production Campaign** action is a thin wrapper around the same
-transactional service as the production CLI. It stages and validates the full
-portfolio before promotion and writes the same terminal reports. Legacy fixture
-controls remain non-production tools.
+The **Generate** tab is the default and mirrors the transactional Production V3
+request: level range, difficulty, seed, candidate/attempt budgets, deterministic
+worker settings, calibrated quality-profile version, production manifest, and
+staging root. **Generate, validate & promote** shows the planning,
+candidate-pool, portfolio, staging, validation, promotion, and completion
+stages, then links directly to the terminal report, reproduction bundle, health
+metrics, and retained run workspace.
+
+Recipe templates, manual candidate approval, and editor handoff live under the
+clearly marked **Legacy preview** tab. That workflow always uses `v2_legacy` and
+is not production eligible. Existing-corpus validation and the full activity log
+have their own tabs so production generation does not require navigating legacy
+controls.
 
 Use a Python 3.10+ interpreter with Tkinter enabled.
 
