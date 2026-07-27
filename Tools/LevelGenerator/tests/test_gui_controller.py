@@ -47,7 +47,7 @@ def test_controller_passes_generation_config_to_service(tmp_path) -> None:
 
     assert isinstance(result, GenerationResult)
     assert isinstance(service.config, GenerationConfig)
-    assert service.config.start_level_number == 12
+    assert service.config.start_level_number == 1
 
 
 def test_controller_invalid_state_raises_user_friendly_error(tmp_path) -> None:

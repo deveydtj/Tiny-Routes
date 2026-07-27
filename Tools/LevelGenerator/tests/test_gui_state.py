@@ -47,7 +47,7 @@ def test_default_gui_state_converts_to_generation_config() -> None:
     config = to_generation_config(GuiGenerationState())
 
     assert isinstance(config, GenerationConfig)
-    assert config.start_level_number == 12
+    assert config.start_level_number == 1
     assert config.count == 1
     assert config.difficulty == "easy"
     assert config.generator_architecture == "production_v3"
@@ -126,7 +126,7 @@ def test_gui_state_carries_generator_architecture_to_config_and_command(tmp_path
     assert config.generator_architecture_version == 3
     assert config.command_arguments[:8] == [
         "--start",
-        "12",
+        "1",
         "--count",
         "1",
         "--difficulty",
@@ -141,7 +141,6 @@ def test_gui_state_builds_strict_production_campaign_config(tmp_path) -> None:
         _state_with_paths(
             tmp_path,
             start_level_number="31",
-            difficulty="hard",
             seed="42",
             dry_run=True,
             run_swift_tests=False,
@@ -149,6 +148,7 @@ def test_gui_state_builds_strict_production_campaign_config(tmp_path) -> None:
     )
 
     assert config.start_level_number == 31
+    assert config.difficulty == "progressive"
     assert config.seed == 42
     assert config.run_swift_tests is True
     assert config.production_manifest_path == tmp_path / "production_manifest.json"
@@ -193,6 +193,7 @@ def test_production_command_preview_uses_transactional_v3_entrypoint(tmp_path) -
 
     assert "generate_production_campaign.py" in preview
     assert "--swift-tests" in preview
+    assert "--difficulty progressive" in preview
     assert "--candidate-workers 3" in preview
     assert "--global-attempt-budget 80" in preview
     assert "--production-manifest" in preview

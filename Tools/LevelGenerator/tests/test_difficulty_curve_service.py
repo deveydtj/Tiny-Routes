@@ -27,6 +27,20 @@ def test_difficulty_curve_builds_batch_plan_with_weights() -> None:
     assert plan.entries[2].template_weights["multi_switch_order"] > 0
 
 
+def test_production_progressive_curve_gets_harder_without_tutorial() -> None:
+    service = DifficultyCurveService()
+
+    plan = service.build_plan(9, 34, "progressive")
+    difficulties = [entry.difficulty for entry in plan.entries]
+
+    assert difficulties[:2] == ["easy", "easy"]
+    assert difficulties[2:17] == ["medium"] * 15
+    assert difficulties[17:32] == ["hard"] * 15
+    assert difficulties[32:] == ["expert", "expert"]
+    assert "tutorial" not in difficulties
+    assert all(entry.template_weights for entry in plan.entries)
+
+
 def test_difficulty_curve_expert_template_weights() -> None:
     service = DifficultyCurveService()
 

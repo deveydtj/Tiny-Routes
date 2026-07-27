@@ -35,9 +35,9 @@ ProgressCallback = Callable[[str, str], None]
 class ProductionCampaignService:
     """Fill, verify, and atomically promote an entire V3 campaign.
 
-    The candidate pipeline is injected because its six stage handlers are the
-    production architecture boundary.  No legacy level/recipe generator is a
-    permitted fallback when that dependency is unavailable or rejects a run.
+    The application-owned six-stage V3 pipeline is the default architecture
+    boundary. Tests and specialized callers may still inject a pipeline or
+    pool, but no legacy level/recipe generator is a permitted fallback.
     """
 
     def __init__(
@@ -58,6 +58,12 @@ class ProductionCampaignService:
         quality_profile_service: QualityProfileService | None = None,
         pipeline_policy_service: ProductionPipelinePolicyService | None = None,
     ) -> None:
+        if candidate_pool_service is None and candidate_pipeline is None:
+            from .production_candidate_pipeline_service import (
+                ProductionCandidatePipelineService,
+            )
+
+            candidate_pipeline = ProductionCandidatePipelineService()
         if candidate_pool_service is None and candidate_pipeline is not None:
             candidate_pool_service = CandidatePoolService(candidate_pipeline)
         self.candidate_pool_service = candidate_pool_service

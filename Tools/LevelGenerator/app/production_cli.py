@@ -36,8 +36,8 @@ def build_production_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--difficulty",
         required=True,
-        choices=("auto", "easy", "medium", "hard", "expert"),
-        help="Production difficulty or campaign curve.",
+        choices=("progressive", "auto", "easy", "medium", "hard", "expert"),
+        help="Production difficulty or campaign curve (GUI default: progressive).",
     )
     parser.add_argument(
         "--seed",

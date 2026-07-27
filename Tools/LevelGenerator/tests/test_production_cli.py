@@ -40,7 +40,7 @@ def test_production_cli_builds_locked_v3_request_and_prints_one_summary(tmp_path
         [
             "--start", "31",
             "--count", "2",
-            "--difficulty", "auto",
+            "--difficulty", "progressive",
             "--seed", "12345",
             "--swift-tests",
             "--quality-profile", "1.0.0",
@@ -56,6 +56,7 @@ def test_production_cli_builds_locked_v3_request_and_prints_one_summary(tmp_path
 
     assert code == 0
     assert service.config.seed == 12345
+    assert service.config.difficulty == "progressive"
     assert service.config.run_swift_tests is True
     assert service.config.quality_profile_version == "1.0.0"
     assert service.config.candidate_workers == 3

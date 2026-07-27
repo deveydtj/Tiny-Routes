@@ -133,6 +133,13 @@ from .v3_candidate_pipeline_coordinator import (
     V3CandidatePipelineRequest,
     V3CandidatePipelineResult,
 )
+from .production_candidate_pipeline_service import (
+    ProductionCandidatePipelineService,
+    ProductionV3CandidatePipelineService,
+)
+from .production_level_realization_service import (
+    ProductionLevelRealizationService,
+)
 from .adaptive_search_breadth_service import (
     AdaptiveSearchBreadthConfig,
     AdaptiveSearchBreadthService,
@@ -299,6 +306,9 @@ __all__ = [
     "V3CandidatePipelineHandlers",
     "V3CandidatePipelineRequest",
     "V3CandidatePipelineResult",
+    "ProductionCandidatePipelineService",
+    "ProductionV3CandidatePipelineService",
+    "ProductionLevelRealizationService",
     "AdaptiveSearchBreadthConfig",
     "AdaptiveSearchBreadthService",
     "RejectionFeedbackPlannerService",

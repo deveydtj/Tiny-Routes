@@ -27,9 +27,10 @@ from ..paths import (
 
 @dataclass
 class GuiGenerationState:
-    start_level_number: str = "12"
+    start_level_number: str = "1"
     count: str = "1"
     difficulty: str = "easy"
+    production_difficulty: str = "progressive"
     generator_architecture: str = DEFAULT_GENERATOR_ARCHITECTURE
     template_name: str = "mixed"
     recipe_pool_size: str = str(DEFAULT_RECIPE_POOL_SIZE)
@@ -198,7 +199,7 @@ def to_production_campaign_config(state: GuiGenerationState) -> ProductionCampai
     return ProductionCampaignConfig(
         start_level_number=start_level_number,
         count=count,
-        difficulty=state.difficulty,
+        difficulty=state.production_difficulty,
         seed=seed,
         run_swift_tests=True,
         swift_timeout_seconds=parse_positive_int(
@@ -230,7 +231,7 @@ def build_production_command_preview(state: GuiGenerationState) -> str:
     ]
     _append_pair(args, "--start", state.start_level_number)
     _append_pair(args, "--count", state.count)
-    _append_pair(args, "--difficulty", state.difficulty)
+    _append_pair(args, "--difficulty", state.production_difficulty)
     _append_pair(args, "--seed", state.seed)
     args.append("--swift-tests")
     _append_pair(args, "--swift-timeout-seconds", state.swift_timeout_seconds)

@@ -99,10 +99,13 @@ portfolio allowance. Set an explicit cap with `--global-attempt-budget`.
 Candidate-pool reports record attempts used per slot, every allocation reason,
 and the remaining global budget.
 
-The GUI exposes the same workflow through **Generate Production Campaign**.
-Start level, count, difficulty, seed, and output directories come from the main
-form; stage progress and the final report path appear in the activity log. No
-candidate approval or Level Editor cleanup is part of this action.
+The GUI exposes the same workflow through **Generate campaign**. The main form
+only asks for the first level number, number of levels, and an optional seed.
+Difficulty rises automatically with the level number, while puzzle archetypes,
+mechanics, route shapes, and layouts vary within each difficulty band. Output
+paths and runtime tuning live on the **Advanced** tab; stage progress and final
+evidence appear in the activity log. No candidate approval or Level Editor
+cleanup is part of this action.
 
 Before a release, run the retained all-gates wrapper:
 
@@ -242,13 +245,19 @@ Run:
 python Tools/LevelGenerator/launch_gui.py
 ```
 
-The **Generate** tab is the default and mirrors the transactional Production V3
-request: level range, difficulty, seed, candidate/attempt budgets, deterministic
-worker settings, calibrated quality-profile version, production manifest, and
-staging root. **Generate, validate & promote** shows the planning,
-candidate-pool, portfolio, staging, validation, promotion, and completion
-stages, then links directly to the terminal report, reproduction bundle, health
-metrics, and retained run workspace.
+The **Generate** tab is the default and keeps the transactional Production V3
+request intentionally small: first level number, number of levels, and an
+optional reproducibility seed. Difficulty progresses by level number: levels
+1–10 are easy, 11–25 medium, 26–40 hard, and 41 onward expert. Blueprints,
+mechanics, route shapes, and layouts vary automatically within each band.
+**Generate campaign** shows the planning, candidate-pool, portfolio, staging,
+validation, promotion, and completion stages, then links directly to the
+terminal report, reproduction bundle, health metrics, and retained run
+workspace.
+
+Output destinations, candidate and attempt budgets, deterministic worker
+settings, calibrated quality-profile version, production manifest, staging
+root, and the reproducible CLI command are grouped under **Advanced**.
 
 Recipe templates, manual candidate approval, and editor handoff live under the
 clearly marked **Legacy preview** tab. That workflow always uses `v2_legacy` and

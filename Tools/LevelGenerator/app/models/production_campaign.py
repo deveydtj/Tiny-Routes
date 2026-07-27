@@ -69,7 +69,14 @@ class ProductionCampaignConfig:
                 self.count * self.max_attempts_per_slot + 24,
             )
         difficulty = self.difficulty.strip().lower()
-        if difficulty not in {"auto", "easy", "medium", "hard", "expert"}:
+        if difficulty not in {
+            "progressive",
+            "auto",
+            "easy",
+            "medium",
+            "hard",
+            "expert",
+        }:
             raise ValueError(f"Unknown production V3 difficulty: {self.difficulty}")
         if self.seed is not None and (
             not isinstance(self.seed, int) or isinstance(self.seed, bool)

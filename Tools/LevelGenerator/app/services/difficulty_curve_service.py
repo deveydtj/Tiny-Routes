@@ -7,15 +7,24 @@ from ..models.generation_batch_plan import GenerationBatchPlan, GenerationBatchP
 class DifficultyCurveService:
     """Defines mechanic unlocks before timing pressure increases."""
 
-    def build_plan(self, start_level_number: int, count: int, difficulty: str) -> GenerationBatchPlan:
+    def build_plan(
+        self,
+        start_level_number: int,
+        count: int,
+        difficulty: str,
+    ) -> GenerationBatchPlan:
+        normalized_difficulty = difficulty.strip().lower()
         entries = []
         for offset in range(count):
             level_number = start_level_number + offset
-            resolved_difficulty = (
-                self.difficulty_for_level(level_number)
-                if difficulty.strip().lower() == "auto"
-                else difficulty.strip().lower()
-            )
+            if normalized_difficulty == "auto":
+                resolved_difficulty = self.difficulty_for_level(level_number)
+            elif normalized_difficulty == "progressive":
+                resolved_difficulty = self.production_difficulty_for_level(
+                    level_number
+                )
+            else:
+                resolved_difficulty = normalized_difficulty
             entries.append(
                 GenerationBatchPlanEntry(
                     level_number=level_number,
@@ -25,6 +34,17 @@ class DifficultyCurveService:
                 )
             )
         return GenerationBatchPlan(entries=tuple(entries))
+
+    def production_difficulty_for_level(self, level_number: int) -> str:
+        """Return the V3 band for a campaign position, starting safely at easy."""
+
+        if level_number <= 10:
+            return "easy"
+        if level_number <= 25:
+            return "medium"
+        if level_number <= 40:
+            return "hard"
+        return "expert"
 
     def difficulty_for_level(self, level_number: int) -> str:
         if level_number <= 3:

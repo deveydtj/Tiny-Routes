@@ -98,7 +98,6 @@ class LevelGeneratorGui:
         self.root = root
         self.controller = GuiController()
         self.difficulty_names = [*DifficultyService().valid_names, "auto"]
-        self.production_difficulty_names = ["auto", "easy", "medium", "hard", "expert"]
         self.template_names = RecipeFamilyRegistry().valid_family_names()
         self.layout_orientation_preferences = list(LAYOUT_ORIENTATION_PREFERENCES)
         self.layout_size_profiles = list(LAYOUT_SIZE_PROFILES)
@@ -124,7 +123,7 @@ class LevelGeneratorGui:
         self._log_default_path_warning_if_needed()
 
     def _create_variables(self) -> None:
-        self.start_var = tk.StringVar(value="12")
+        self.start_var = tk.StringVar(value="1")
         self.count_var = tk.StringVar(value="1")
         self.difficulty_var = tk.StringVar(value="easy")
         self.generator_architecture_var = tk.StringVar(value="v2_legacy")
@@ -336,37 +335,33 @@ class LevelGeneratorGui:
         production_tab = ttk.Frame(
             self.notebook, style="App.TFrame"
         )
+        advanced_tab = ttk.Frame(
+            self.notebook, style="App.TFrame"
+        )
         legacy_tab = ttk.Frame(
             self.notebook, style="App.TFrame"
         )
         validation_tab = ttk.Frame(
             self.notebook, style="App.TFrame", padding=(4, 12)
         )
-        activity_tab = ttk.Frame(
+        self.activity_tab = ttk.Frame(
             self.notebook, style="App.TFrame", padding=(4, 12)
         )
         self.notebook.add(production_tab, text="Generate")
+        self.notebook.add(advanced_tab, text="Advanced")
         self.notebook.add(legacy_tab, text="Legacy preview")
         self.notebook.add(validation_tab, text="Validate existing")
-        self.notebook.add(activity_tab, text="Activity")
-        self.notebook.bind("<<NotebookTabChanged>>", self._on_tab_changed)
+        self.notebook.add(self.activity_tab, text="Activity")
 
         production_content = self._create_scrollable_content(production_tab)
+        advanced_content = self._create_scrollable_content(advanced_tab)
         legacy_content = self._create_scrollable_content(legacy_tab)
         self._build_production_tab(production_content)
+        self._build_advanced_tab(advanced_content)
         self._build_legacy_tab(legacy_content)
         self._build_validation_tab(validation_tab)
-        self._build_activity_tab(activity_tab)
+        self._build_activity_tab(self.activity_tab)
         self._build_summary_section(self.root)
-
-    def _on_tab_changed(self, _event=None) -> None:
-        if self.notebook.index(self.notebook.select()) != 0:
-            return
-        if self.difficulty_var.get() not in self.production_difficulty_names:
-            self.difficulty_var.set("easy")
-            self.production_stage_detail_var.set(
-                "Production V3 supports easy through expert; difficulty was reset to easy."
-            )
 
     def _create_scrollable_content(self, parent: ttk.Frame) -> ttk.Frame:
         parent.grid_columnconfigure(0, weight=1)
@@ -424,27 +419,19 @@ class LevelGeneratorGui:
         campaign.grid_columnconfigure(1, weight=1)
         campaign.grid_columnconfigure(3, weight=1)
         add_labeled_entry(
-            campaign, "Start level", self.start_var, 0, column=0, width=12
+            campaign, "First level number", self.start_var, 0, column=0, width=12
         )
         add_labeled_entry(
-            campaign, "Level count", self.count_var, 0, column=2, width=12
-        )
-        add_labeled_combobox(
-            campaign,
-            "Difficulty",
-            self.difficulty_var,
-            self.production_difficulty_names,
-            1,
-            column=0,
+            campaign, "Number of levels", self.count_var, 0, column=2, width=12
         )
         add_labeled_entry(
-            campaign, "Seed (optional)", self.seed_var, 1, column=2
+            campaign, "Seed (optional)", self.seed_var, 1, column=0
         )
         ttk.Label(
             campaign,
             text=(
-                "Auto follows the campaign difficulty curve. A seed makes the "
-                "entire selected portfolio reproducible."
+                "Leave the seed blank for a fresh campaign. Enter one only when "
+                "you want to reproduce the exact same mix."
             ),
             style="CardText.TLabel",
             wraplength=450,
@@ -456,23 +443,148 @@ class LevelGeneratorGui:
             pady=(7, 0),
         )
 
+        variety = ttk.Frame(
+            settings, style="Surface.TFrame", padding=(16, 14)
+        )
+        variety.grid(row=1, column=0, sticky="ew", pady=(0, 8))
+        variety.grid_columnconfigure(0, weight=1)
+        ttk.Label(
+            variety, text="Progression and variety are automatic", style="CardTitle.TLabel"
+        ).grid(row=0, column=0, sticky="w")
+        ttk.Label(
+            variety,
+            text=(
+                "Difficulty rises with the level number from easy through "
+                "expert. Within each difficulty, V3 varies the puzzle type, "
+                "mechanics, route shape, and layout—there is nothing else you "
+                "need to choose."
+            ),
+            style="CardText.TLabel",
+            wraplength=500,
+            justify=tk.LEFT,
+        ).grid(row=1, column=0, sticky="ew", pady=(5, 10))
+        ttk.Label(
+            variety,
+            text=(
+                "The first ten production levels are easy, levels 11–25 are "
+                "medium, 26–40 are hard, and level 41 onward is expert."
+            ),
+            style="CardText.TLabel",
+            wraplength=500,
+            justify=tk.LEFT,
+        ).grid(row=2, column=0, sticky="ew")
+        ttk.Button(
+            variety,
+            text="Review advanced settings",
+            style="Quiet.TButton",
+            command=lambda: self.notebook.select(1),
+        ).grid(row=3, column=0, sticky="w", pady=(12, 0))
+
+        run_card = ttk.Frame(
+            parent, style="Surface.TFrame", padding=(18, 16)
+        )
+        run_card.grid(row=0, column=1, sticky="nsew", padx=(8, 0))
+        run_card.grid_columnconfigure(0, weight=1)
+        run_card.grid_rowconfigure(8, weight=1)
+        ttk.Label(
+            run_card, text="Ready to generate", style="CardTitle.TLabel"
+        ).grid(row=0, column=0, sticky="w")
+        ttk.Label(
+            run_card,
+            textvariable=self.production_plan_var,
+            style="CardText.TLabel",
+            wraplength=360,
+            justify=tk.LEFT,
+        ).grid(row=1, column=0, sticky="ew", pady=(5, 12))
+        ttk.Label(
+            run_card,
+            text=(
+                "V3 builds candidates, selects a diverse complete campaign, "
+                "verifies Python + Swift evidence, and promotes everything as "
+                "one safe transaction."
+            ),
+            style="CardText.TLabel",
+            wraplength=360,
+            justify=tk.LEFT,
+        ).grid(row=2, column=0, sticky="ew", pady=(0, 14))
+        self.production_generate_button = ttk.Button(
+            run_card,
+            text="Generate campaign",
+            style="Accent.TButton",
+            command=self._on_generate_production,
+        )
+        self.production_generate_button.grid(row=3, column=0, sticky="ew")
+        ttk.Label(
+            run_card,
+            text="Nothing is written unless the entire campaign passes.",
+            style="CardText.TLabel",
+            wraplength=360,
+        ).grid(row=4, column=0, sticky="w", pady=(7, 18))
+
+        ttk.Label(
+            run_card, textvariable=self.production_stage_var, style="CardTitle.TLabel"
+        ).grid(row=5, column=0, sticky="w")
+        self.production_progress = ttk.Progressbar(
+            run_card,
+            mode="determinate",
+            maximum=len(PRODUCTION_STAGES),
+            style="Production.Horizontal.TProgressbar",
+        )
+        self.production_progress.grid(row=6, column=0, sticky="ew", pady=(8, 7))
+        ttk.Label(
+            run_card,
+            textvariable=self.production_stage_detail_var,
+            style="CardText.TLabel",
+            wraplength=360,
+            justify=tk.LEFT,
+        ).grid(row=7, column=0, sticky="ew")
+        ttk.Label(
+            run_card,
+            textvariable=self.production_stage_list_var,
+            style="CardText.TLabel",
+            justify=tk.LEFT,
+        ).grid(row=8, column=0, sticky="nw", pady=(12, 10))
+
+        evidence = ttk.LabelFrame(run_card, text="Run evidence")
+        evidence.grid(row=9, column=0, sticky="ew", pady=(4, 0))
+        for column in range(2):
+            evidence.grid_columnconfigure(column, weight=1)
+        for index, (key, label) in enumerate(
+            (
+                ("report", "Open report"),
+                ("reproduction", "Reproduction bundle"),
+                ("health", "Health metrics"),
+                ("workspace", "Run workspace"),
+            )
+        ):
+            button = ttk.Button(
+                evidence,
+                text=label,
+                style="Quiet.TButton",
+                command=lambda key=key: self._open_result_artifact(key),
+            )
+            button.grid(
+                row=index // 2,
+                column=index % 2,
+                sticky="ew",
+                padx=(0, 4) if index % 2 == 0 else (4, 0),
+                pady=3,
+            )
+            self._result_buttons[key] = button
+
+    def _build_advanced_tab(self, parent: ttk.Frame) -> None:
+        parent.grid_columnconfigure(0, weight=1, uniform="advanced")
+        parent.grid_columnconfigure(1, weight=1, uniform="advanced")
+
         destinations = ttk.LabelFrame(
-            settings, text="2 · Production destinations", padding=(12, 10)
+            parent, text="Production destinations", padding=(12, 10)
         )
-        destinations.grid(row=1, column=0, sticky="ew", pady=(0, 8))
+        destinations.grid(row=0, column=0, sticky="nsew", padx=(0, 8), pady=(0, 8))
         add_path_picker(
-            destinations,
-            "Levels",
-            self.levels_output_var,
-            0,
-            pick_directory=True,
+            destinations, "Levels", self.levels_output_var, 0, pick_directory=True
         )
         add_path_picker(
-            destinations,
-            "Solutions",
-            self.solutions_output_var,
-            1,
-            pick_directory=True,
+            destinations, "Solutions", self.solutions_output_var, 1, pick_directory=True
         )
         add_path_picker(
             destinations,
@@ -482,11 +594,18 @@ class LevelGeneratorGui:
             pick_directory=False,
             file_extension=".json",
         )
+        add_path_picker(
+            destinations,
+            "Staging",
+            self.staging_root_var,
+            3,
+            pick_directory=True,
+        )
 
         advanced = ttk.LabelFrame(
-            settings, text="3 · Run controls", padding=(12, 10)
+            parent, text="Performance and quality", padding=(12, 10)
         )
-        advanced.grid(row=2, column=0, sticky="ew", pady=(0, 8))
+        advanced.grid(row=0, column=1, sticky="nsew", padx=(8, 0), pady=(0, 8))
         advanced.grid_columnconfigure(1, weight=1)
         advanced.grid_columnconfigure(3, weight=1)
         add_labeled_entry(
@@ -545,19 +664,11 @@ class LevelGeneratorGui:
             3,
             column=0,
         )
-        add_path_picker(
-            advanced,
-            "Staging",
-            self.staging_root_var,
-            4,
-            pick_directory=True,
-            column=0,
-        )
 
         command = ttk.LabelFrame(
-            settings, text="Reproduce this run", padding=(12, 9)
+            parent, text="Reproduce this run", padding=(12, 9)
         )
-        command.grid(row=3, column=0, sticky="ew")
+        command.grid(row=1, column=0, columnspan=2, sticky="ew")
         command.grid_columnconfigure(0, weight=1)
         ttk.Entry(
             command, textvariable=self.command_preview_var, state="readonly"
@@ -570,98 +681,6 @@ class LevelGeneratorGui:
                 self.command_preview_var.get(), "Production command copied."
             ),
         ).grid(row=0, column=1)
-
-        run_card = ttk.Frame(
-            parent, style="Surface.TFrame", padding=(18, 16)
-        )
-        run_card.grid(row=0, column=1, sticky="nsew", padx=(8, 0))
-        run_card.grid_columnconfigure(0, weight=1)
-        run_card.grid_rowconfigure(8, weight=1)
-        ttk.Label(
-            run_card, text="Ready to generate", style="CardTitle.TLabel"
-        ).grid(row=0, column=0, sticky="w")
-        ttk.Label(
-            run_card,
-            textvariable=self.production_plan_var,
-            style="CardText.TLabel",
-            wraplength=360,
-            justify=tk.LEFT,
-        ).grid(row=1, column=0, sticky="ew", pady=(5, 12))
-        ttk.Label(
-            run_card,
-            text=(
-                "V3 automatically builds candidate pools, selects a diverse "
-                "complete portfolio, validates Python + Swift evidence in "
-                "staging, and promotes the batch atomically."
-            ),
-            style="CardText.TLabel",
-            wraplength=360,
-            justify=tk.LEFT,
-        ).grid(row=2, column=0, sticky="ew", pady=(0, 14))
-        self.production_generate_button = ttk.Button(
-            run_card,
-            text="Generate, validate & promote",
-            style="Accent.TButton",
-            command=self._on_generate_production,
-        )
-        self.production_generate_button.grid(row=3, column=0, sticky="ew")
-        ttk.Label(
-            run_card,
-            text="The run finishes transactionally; partial campaigns are never written.",
-            style="CardText.TLabel",
-            wraplength=360,
-        ).grid(row=4, column=0, sticky="w", pady=(7, 18))
-
-        ttk.Label(
-            run_card, textvariable=self.production_stage_var, style="CardTitle.TLabel"
-        ).grid(row=5, column=0, sticky="w")
-        self.production_progress = ttk.Progressbar(
-            run_card,
-            mode="determinate",
-            maximum=len(PRODUCTION_STAGES),
-            style="Production.Horizontal.TProgressbar",
-        )
-        self.production_progress.grid(row=6, column=0, sticky="ew", pady=(8, 7))
-        ttk.Label(
-            run_card,
-            textvariable=self.production_stage_detail_var,
-            style="CardText.TLabel",
-            wraplength=360,
-            justify=tk.LEFT,
-        ).grid(row=7, column=0, sticky="ew")
-        ttk.Label(
-            run_card,
-            textvariable=self.production_stage_list_var,
-            style="CardText.TLabel",
-            justify=tk.LEFT,
-        ).grid(row=8, column=0, sticky="nw", pady=(12, 10))
-
-        evidence = ttk.LabelFrame(run_card, text="Run evidence")
-        evidence.grid(row=9, column=0, sticky="ew", pady=(4, 0))
-        for column in range(2):
-            evidence.grid_columnconfigure(column, weight=1)
-        for index, (key, label) in enumerate(
-            (
-                ("report", "Open report"),
-                ("reproduction", "Reproduction bundle"),
-                ("health", "Health metrics"),
-                ("workspace", "Run workspace"),
-            )
-        ):
-            button = ttk.Button(
-                evidence,
-                text=label,
-                style="Quiet.TButton",
-                command=lambda key=key: self._open_result_artifact(key),
-            )
-            button.grid(
-                row=index // 2,
-                column=index % 2,
-                sticky="ew",
-                padx=(0, 4) if index % 2 == 0 else (4, 0),
-                pady=3,
-            )
-            self._result_buttons[key] = button
 
     def _build_legacy_tab(self, parent: ttk.Frame) -> None:
         parent.grid_columnconfigure(0, weight=1)
@@ -1212,7 +1231,7 @@ class LevelGeneratorGui:
         self.production_generate_button.configure(state=tk.NORMAL)
         self.generate_button.configure(state=tk.NORMAL)
         self._refresh_result_buttons()
-        self.notebook.select(3)
+        self.notebook.select(self.activity_tab)
 
     def _on_validate(self) -> None:
         self.validate_button.configure(state=tk.DISABLED)
@@ -1462,7 +1481,7 @@ class LevelGeneratorGui:
             messagebox.showerror("Could not open path", str(exc))
 
     def _reset_form(self) -> None:
-        self.start_var.set("12")
+        self.start_var.set("1")
         self.count_var.set("1")
         self.difficulty_var.set("easy")
         self.generator_architecture_var.set("v2_legacy")
@@ -1540,9 +1559,10 @@ class LevelGeneratorGui:
         )
         self.production_plan_var.set(
             f"{level_text}\n"
-            f"Difficulty: {state.difficulty} · Quality: {state.quality_profile_version}\n"
+            "Difficulty: progressive by level number (easy → expert)\n"
+            "Puzzle type: varied automatically within each difficulty\n"
             f"Seed: {seed_text}\n"
-            f"Global attempt budget: {budget_text}"
+            f"Quality: {state.quality_profile_version} · Attempt budget: {budget_text}"
         )
 
     def _refresh_result_buttons(self) -> None:
