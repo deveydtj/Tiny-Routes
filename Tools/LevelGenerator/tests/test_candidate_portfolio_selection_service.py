@@ -153,6 +153,32 @@ def test_identical_v3_behavior_is_a_hard_window_constraint() -> None:
     assert dict(captured.value.reasons)["portfolio_behavior_signature_window"] == 1
 
 
+def test_structural_behavior_duplicates_are_rejected_across_the_complete_batch() -> None:
+    pools = {}
+    requested = []
+    for index in range(1, 8):
+        level_id = f"level_{index:03d}"
+        structural_behavior = "duplicate" if index in {1, 7} else f"behavior-{index}"
+        pools[level_id] = [
+            _candidate(
+                level_id,
+                index,
+                f"topology-{index}",
+                f"layout-{index}",
+                structural_behavior_signature=structural_behavior,
+            )
+        ]
+        requested.append((level_id, "easy"))
+
+    with pytest.raises(PortfolioConstraintFailure) as captured:
+        CandidatePortfolioSelectionService().select(pools, requested)
+
+    assert captured.value.constrained_level_ids == ("level_007",)
+    assert dict(captured.value.reasons)[
+        "portfolio_structural_behavior_duplicate"
+    ] == 1
+
+
 def test_existing_corpus_behavior_duplicate_is_a_hard_constraint() -> None:
     existing = _candidate(
         "level_900",

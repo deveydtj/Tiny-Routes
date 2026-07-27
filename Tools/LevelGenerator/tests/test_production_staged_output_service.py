@@ -35,6 +35,10 @@ def test_selected_candidates_overlay_complete_staged_corpus_only(tmp_path) -> No
     selected = _candidate("level_002", 2, 2)
     writer.write_level(existing.level_document, levels / "level_001.json")
     writer.write_solution(existing.solution, solutions / "level_001.solution.json")
+    writer.write_solution(
+        _candidate("level_099", 99, 99).solution,
+        solutions / "level_099.solution.json",
+    )
     sentinel_level = (levels / "level_001.json").read_bytes()
     production_manifest = ProductionManifestService().rebuild(
         levels,
@@ -61,6 +65,7 @@ def test_selected_candidates_overlay_complete_staged_corpus_only(tmp_path) -> No
         "level_002.json",
     ]
     assert (workspace.solutions_dir / "level_002.solution.json").exists()
+    assert (workspace.solutions_dir / "level_099.solution.json").exists()
     assert workspace.proposed_manifest_path.exists()
     assert workspace.run_manifest_path.exists()
     assert (workspace.previews_dir / "level_002.svg").exists()

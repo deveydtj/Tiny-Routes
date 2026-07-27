@@ -435,7 +435,7 @@ class ProductionCandidatePipelineService:
         solution = Solution(
             levelID=request.level_id,
             description="Production V3 generated solution",
-            expectedOutcome="success",
+            expectedOutcome="completed",
             maxTaps=len(runtime.actions),
             requiresWithinTimeLimit=True,
             actions=[

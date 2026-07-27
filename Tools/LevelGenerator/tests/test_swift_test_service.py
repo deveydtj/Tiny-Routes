@@ -81,3 +81,30 @@ def test_swift_test_service_captures_structured_failure_details(tmp_path) -> Non
     assert result.passed is False
     assert "level id: level_099" in result.failure_details
     assert result.environment["TINY_ROUTES_VALIDATION_LEVEL_IDS"] == "level_099"
+
+
+def test_swift_test_service_reports_command_line_tools_without_xcode(tmp_path) -> None:
+    service = SwiftTestService(tmp_path)
+    completed = subprocess.CompletedProcess(
+        args=service.build_command(),
+        returncode=1,
+        stdout="",
+        stderr=(
+            "xcode-select: error: tool 'xcodebuild' requires Xcode, but active "
+            "developer directory '/Library/Developer/CommandLineTools' is a "
+            "command line tools instance"
+        ),
+    )
+
+    with patch(
+        "app.services.swift_test_service.shutil.which",
+        return_value="/usr/bin/xcodebuild",
+    ), patch(
+        "app.services.swift_test_service.subprocess.run",
+        return_value=completed,
+    ):
+        result = service.run()
+
+    assert result.passed is False
+    assert result.failure_reasons == ["xcode_toolchain_unavailable"]
+    assert "full Xcode developer toolchain" in result.summary

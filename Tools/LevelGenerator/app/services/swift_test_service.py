@@ -100,8 +100,20 @@ class SwiftTestService:
             )
 
         passed = completed.returncode == 0
+        toolchain_unavailable = (
+            not passed
+            and _xcode_toolchain_unavailable(completed.stdout, completed.stderr)
+        )
         failure_details = [] if passed else _failure_details(completed.stdout, completed.stderr)
-        failure_reasons = [] if passed else _failure_reasons(completed.stdout, completed.stderr)
+        failure_reasons = (
+            []
+            if passed
+            else (
+                ["xcode_toolchain_unavailable"]
+                if toolchain_unavailable
+                else _failure_reasons(completed.stdout, completed.stderr)
+            )
+        )
         return SwiftTestSummary(
             command=command,
             environment=environment,
@@ -110,7 +122,15 @@ class SwiftTestService:
             summary=(
                 "Swift solvability tests passed."
                 if passed
-                else f"Swift solvability tests failed with exit code {completed.returncode}."
+                else (
+                    "Could not run Swift tests because the full Xcode developer "
+                    "toolchain is not installed or selected."
+                    if toolchain_unavailable
+                    else (
+                        "Swift solvability tests failed with exit code "
+                        f"{completed.returncode}."
+                    )
+                )
             ),
             stdout_tail=_tail(completed.stdout),
             stderr_tail=_tail(completed.stderr),
@@ -173,3 +193,16 @@ def _failure_reasons(stdout: object, stderr: object) -> list[str]:
     if not reasons:
         reasons.append("swift_runtime_parity_failed")
     return list(dict.fromkeys(reasons))
+
+
+def _xcode_toolchain_unavailable(stdout: object, stderr: object) -> bool:
+    text = "\n".join(
+        part for part in [_tail(stdout, 12_000), _tail(stderr, 12_000)] if part
+    ).lower()
+    return (
+        "xcodebuild requires xcode" in text
+        or (
+            "active developer directory" in text
+            and "command line tools instance" in text
+        )
+    )

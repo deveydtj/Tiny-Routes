@@ -216,6 +216,12 @@ class CandidatePortfolioSelectionService:
         if corpus_result.too_similar:
             return "portfolio_existing_corpus_behavior_duplicate"
         previous = state.signatures
+        structural_behavior = signature.structural_behavior_signature
+        if structural_behavior and any(
+            structural_behavior == other.structural_behavior_signature
+            for other in previous
+        ):
+            return "portfolio_structural_behavior_duplicate"
         if previous:
             previous_archetype = previous[-1].blueprint_archetype
             if (

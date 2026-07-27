@@ -38,6 +38,7 @@ def test_default_pipeline_completes_all_six_v3_stages(difficulty: str) -> None:
     )
     assert result.candidate is not None
     assert result.candidate.solution.actions
+    assert result.candidate.solution.expectedOutcome == "completed"
     assert result.candidate.requires_swift_validation is True
     assert ProductionPipelinePolicyService().validate((result,)) == ()
 

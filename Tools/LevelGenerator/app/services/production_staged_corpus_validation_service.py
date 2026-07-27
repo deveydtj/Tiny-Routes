@@ -305,7 +305,10 @@ class ProductionStagedCorpusValidationService:
             path.name[: -len(".solution.json")]: path
             for path in sorted(workspace.solutions_dir.glob("level_*.solution.json"))
         }
-        for level_id in sorted(set(level_paths).symmetric_difference(solution_paths)):
+        # The Swift test bundle deliberately retains solution sidecars for
+        # later, not-yet-shipped campaign levels. A shipped level may never be
+        # missing its sidecar, but a solution-only test resource is valid.
+        for level_id in sorted(set(level_paths).difference(solution_paths)):
             issues.append(
                 StagedCorpusValidationIssue(
                     "staged_level_solution_pair_missing",
