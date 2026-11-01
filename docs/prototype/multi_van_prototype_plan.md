@@ -2,6 +2,8 @@
 
 Status: proposal · Owner: Jake · Last updated: 2026-10-31
 
+Implementation tasks: [multi_van_tasks.md](multi_van_tasks.md)
+
 ## Goal
 
 Find out, with a small playable build, whether this loop is fun:
@@ -33,13 +35,13 @@ Successful casual puzzle games are readable at a glance, calm while you think, g
 | **Plan phase** | Nothing moves and there is no timer. Every switch is tappable. Each van shows a coloured preview line along its current route. |
 | **Go** | All vans start together. Each van leaves after its own `departDelay` (seconds), so starts can be staggered. |
 | Run phase | Vans move at a fixed speed (start at 1.5 grid units/s and tune it). Normal switches are frozen. A **Stop** button returns to the plan phase straight away with the settings kept. |
-| Live switches | A separate kind of switch, introduced in level 8, with its own look (amber ring and lightning badge). Only these can be tapped mid-run, and only when no van is within 0.4 units. A live tap counts as a change. Listed per level in `liveSwitchNodeIDs`. |
+| Live switches | A separate kind of switch, introduced in level 8, with its own look (amber ring and lightning badge). Only these can be tapped mid-run, and only when no driving van is within 0.4 units (straight-line distance to the switch's grid point; tunable, revisit at playtest). A live tap counts as a change. Listed per level in `liveSwitchNodeIDs`. |
 | Win | Every van is parked at its matching house. |
-| Fail: crash | Two vans come within 0.35 units of each other, for example at a merge. |
+| Fail: crash | Two driving vans come within 0.35 units of each other, for example at a merge. Vans still waiting to depart, or already parked, never crash. |
 | Fail: wrong house | A van parks at a house of a different colour. |
 | Fail: stuck | A van reaches a dead end, marked with a barrier. |
 | Retry | **Keeps your switch settings.** One tap goes back to the plan phase with the crash spot still highlighted, so you can fix the plan instead of rebuilding it. |
-| Stars | ★ all delivered · ★★ changes ≤ par + 2 · ★★★ changes ≤ par. "Changes" counts every accepted switch tap, in planning and during the run. |
+| Stars | ★ all delivered · ★★ changes ≤ par + 2 · ★★★ changes ≤ par. "Changes" counts every accepted switch tap, in planning and during the run. Rejected taps don't count. Failed runs get no stars. |
 
 ### Design principle: difficulty comes from vans interacting
 
