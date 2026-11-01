@@ -41,7 +41,7 @@ Successful casual puzzle games are readable at a glance, calm while you think, g
 | Fail: wrong house | A van parks at a house of a different colour. |
 | Fail: stuck | A van reaches a dead end, marked with a barrier. |
 | Retry | **Keeps your switch settings.** One tap goes back to the plan phase with the crash spot still highlighted, so you can fix the plan instead of rebuilding it. |
-| Stars | ★ all delivered · ★★ changes ≤ par + 2 · ★★★ changes ≤ par. "Changes" counts every accepted switch tap, in planning and during the run. Rejected taps don't count. Failed runs get no stars. |
+| Stars | ★ all delivered · ★★ changes ≤ par + 2 · ★★★ changes ≤ par. "Changes" is the number of taps needed to get from the level's starting settings to the plan you pressed Go with, plus accepted live taps during that run. Failed attempts don't cost stars, and rejected taps never count. Failed runs get no stars. |
 
 ### Design principle: difficulty comes from vans interacting
 

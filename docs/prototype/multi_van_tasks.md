@@ -32,14 +32,22 @@ python3 scripts/run_swift_tests.py
 
 ### Shared rule constants
 
-Put every tuning number in one place, `MultiVanTuning` (created in MV-02), so nobody hard-codes them:
+Put every rule number in one place so nobody hard-codes them. There are two kinds, both created in MV-02.
+
+**Tunable values** live in a `MultiVanTuning` **struct** with a `static let default`. The engine takes one in its initialiser (`MultiVanEngine(level:tuning: = .default)`) and reads every tunable value from it, never from a global. This lets the tuning panel (MV-45) change them later without touching finished engine code, and lets tests pin them.
+
+| Property | Default | From the plan |
+|---|---|---|
+| `vanSpeed` | 1.5 grid units/s | Run phase |
+| `crashDistance` | 0.35 units | Fail: crash |
+| `liveSwitchLockRadius` | 0.4 units | Live switches |
+
+**Fixed constants** don't change at runtime, so they go in a `MultiVanConstants` enum:
 
 | Constant | Value | From the plan |
 |---|---|---|
-| `vanSpeed` | 1.5 grid units/s | Run phase |
 | `stepDuration` | 1/120 s | Engine notes |
-| `crashDistance` | 0.35 units | Fail: crash |
-| `liveSwitchLockRadius` | 0.4 units | Live switches |
+| `maxFrameTime` | 0.25 s | MV-08 catch-up policy |
 | `previewEdgeLimit` | 40 roads | Preview lines |
 | `failFreezeDuration` | 0.6 s | Screen flow: Fail |
 | `fastForwardMultiplier` | 2 | Screen flow: Run |
@@ -51,8 +59,9 @@ The plan left these open. They're now settled and also recorded in the plan's ru
 
 1. **Vans waiting to depart don't crash.** Only driving vans are checked for crashes. A van that hasn't departed yet, or has already parked, is skipped. This lets level 6's vans share a start node. (MV-20)
 2. **Rejected taps don't count as changes.** Only accepted taps add to `changeCount`. (MV-07, MV-21)
-3. **Lock radius: default, revisit at playtest.** Nobody has a strong view, so use the simplest rule: the straight-line distance from each **driving** van's position to the switch node's grid point. Waiting and parked vans don't lock a switch, which matches decision 1. Keep the radius in `MultiVanTuning` and on the tuning panel (MV-45) so it's easy to change if players find it unfair. (MV-21)
+3. **Lock radius: default, revisit at playtest.** Nobody has a strong view, so use the simplest rule: the straight-line distance from each **driving** van's position to the switch node's grid point. Waiting and parked vans don't lock a switch, which matches decision 1. Keep the radius in the injected `MultiVanTuning` and on the tuning panel (MV-45) so it's easy to change if players find it unfair. (MV-21)
 4. **No stars on a failed run.** Stars only appear on the win card. (MV-27, MV-39)
+5. **Stars count the winning plan, not the retry history.** `changeCount` is the number of taps needed to get from the level's starting settings to the plan the player pressed Go with, plus accepted live taps during that run. Failed attempts and exploring don't cost stars: tapping a 3-way switch three times brings it back to 0, and "Reset switches" returns the count to 0. (MV-07, MV-10, MV-21)
 
 ---
 
@@ -85,17 +94,17 @@ In `MultiVanLevel.swift`, add `Decodable` types that match the "Level JSON" exam
 - `VanColor` enum: `red`, `blue`, `yellow`, `green`. Give it a `symbol` property (● ▲ ■ ★) and a `displayName`.
 - `MultiVanVan`: `id`, `color`, `startNodeID`, `departDelay` (default `0`).
 - `MultiVanHouse`: `nodeID`, `color`.
-- `MultiVanTuning` enum holding the constants table above.
+- `MultiVanTuning` struct and `MultiVanConstants` enum, as described under "Shared rule constants" above. Give `MultiVanTuning` a `static let default` with the plan's values.
 
 Reuse the existing `RouteGraph` type (`TinyRoutes/Domain/RouteGraph.swift`). Don't create a new graph type.
 
-**Done when:** a unit test decodes a small hand-written JSON string into `MultiVanLevel` and checks every field, including the defaults when `departDelay`, `liveSwitchNodeIDs` and `hint` are left out.
+**Done when:** a unit test decodes a small hand-written JSON string into `MultiVanLevel` and checks every field, including the defaults when `departDelay`, `liveSwitchNodeIDs` and `hint` are left out, and that `MultiVanTuning.default` holds the plan's values.
 
 ---
 
 ### MV-03 · Load prototype levels, and keep them out of the main game
 
-**Level:** Entry · **Depends on:** MV-02
+**Level:** Entry · **Depends on:** MV-04
 
 In `MultiVanLevelRepository.swift`, load every `proto_*.json` from the bundle's `PrototypeLevels` subdirectory, sorted by ID.
 
@@ -103,7 +112,7 @@ Watch out: `LevelRepository.resolveAllLevelURLs` (`TinyRoutes/Infrastructure/Lev
 
 - Use `Bundle.urls(forResourcesWithExtension: "json", subdirectory: "PrototypeLevels")`.
 - Add a test that loads the production level list and asserts no level ID starts with `proto_`.
-- Add a test that the prototype repository returns at least one level (this will pass once MV-04 lands; mark it as expected to grow).
+- Add a test that the prototype repository returns `proto_01` and `proto_02` (from MV-04), in that order.
 
 **Done when:** both tests pass and the production level count is unchanged.
 
@@ -122,7 +131,7 @@ Tips:
 - For level 2, set `initialSwitchEdges` so the switch starts pointing at the barrier.
 - Draw the level on grid paper first. Use the level 7 sketch in the plan as a model.
 
-**Done when:** both files decode through `MultiVanLevelRepository` in a test.
+**Done when:** a test loads each file from the test bundle with `JSONDecoder` and decodes it into `MultiVanLevel`. (The repository comes next, in MV-03.)
 
 ---
 
@@ -164,13 +173,15 @@ Pull the code that turns `RouteGraph` nodes and edges into a `RuntimeRouteGraph`
 
 In `MultiVanEngine.swift`, create a `final class MultiVanEngine` (or `struct`, ask your reviewer) that:
 
+- Takes `init(level: MultiVanLevel, tuning: MultiVanTuning = .default)` and stores the tuning for later tasks.
 - Builds its `RuntimeRouteGraph` from a `MultiVanLevel` with the MV-05 helper, then applies `initialSwitchEdges` to each node's `activeOutgoingEdgeID`. Nodes not listed default to their first outgoing edge.
 - Has `enum Phase { case plan, run, finished }`, starting in `.plan`.
-- Has `tapSwitch(nodeID:) -> SwitchTapResult`, which during `.plan` moves the node to the next exit in `outgoingEdgeIDs` order, wrapping around, and adds 1 to `changeCount`. Nodes with fewer than 2 exits return a rejected result. Rejected taps never add to `changeCount`.
-- Has `resetSwitches()`, which restores `initialSwitchEdges`. Ask whether this should reset `changeCount` (proposed: no).
+- Has `tapSwitch(nodeID:) -> SwitchTapResult`, which during `.plan` moves the node to the next exit in `outgoingEdgeIDs` order, wrapping around. Nodes with fewer than 2 exits return a rejected result.
+- Has `changeCount`, worked out from the settings rather than counted per tap (rule decision 5). For each switch, count the forward taps from its starting exit to its current exit: `(currentIndex - initialIndex + exitCount) % exitCount`. Sum over all switches. Rejected taps can't change it, because they don't change settings.
+- Has `resetSwitches()`, which restores `initialSwitchEdges`, so `changeCount` goes back to 0.
 - Define a new prototype result enum such as `MultiVanTapResult { case accepted, rejectedFrozen, rejectedLocked, notASwitch }`. Don't reuse the production `SwitchTapResult`, which has different meanings.
 
-**Done when:** tests cover cycling a 2-way switch, a 3-way switch wrapping round to the start, change counting, rejecting taps on non-switches, and `resetSwitches`.
+**Done when:** tests cover cycling a 2-way switch, a 3-way switch wrapping round to the start (and `changeCount` returning to 0), `changeCount` across two switches, rejecting taps on non-switches, and `resetSwitches`.
 
 ---
 
@@ -184,18 +195,19 @@ Add van state and movement to the engine:
 
 - `MultiVanVanState`: `id`, `color`, `currentEdgeID?`, `distanceAlongEdge`, `status` (`waiting`, `driving`, `parked`, `crashed`, `stuck`), and a computed `position: RoadPoint`.
 - `go()`: moves from `.plan` to `.run` and sends each van onto its start node's active edge.
-- `advance(by realTime: TimeInterval)`: runs as many fixed 1/120 s steps as fit, moving each driving van `vanSpeed * stepDuration` along its edge.
+- `advance(by realTime: TimeInterval)`: runs as many fixed 1/120 s steps as fit, moving each driving van `tuning.vanSpeed * stepDuration` along its edge.
 - On arrival at a node: a house parks the van; a node with no exits makes it `stuck`; anything else moves it onto that node's **current** active edge.
 
 **Guidance:**
 - Use an accumulator. Add `realTime` to a stored remainder, run `while remainder >= stepDuration { step(); remainder -= stepDuration }`, and keep what's left for next frame. Never step by the frame's `dt` directly, or replays won't match.
-- Clamp the time passed in (for example to 0.25 s) so a paused app or debugger break doesn't run thousands of steps at once.
+- **Catch-up policy:** clamp the time passed in to `MultiVanConstants.maxFrameTime` (0.25 s) before adding it to the remainder, and drop the rest. After a long hitch the game briefly runs slow rather than jumping ahead, and a debugger break can't run thousands of steps at once. Results stay deterministic because they depend only on the number of steps run, never on frame sizes.
+- Compare against the step with a tiny tolerance (`remainder + 1e-9 >= stepDuration`). Otherwise floating-point error means five calls of 0.05 s can run 29 steps instead of 30.
 - When a van reaches the end of an edge part-way through a step, carry the leftover distance onto the next edge. Otherwise vans slow down slightly at every node, and the timing puzzles in levels 7–9 drift.
 - Use `RoadPath.totalLength` and `RoadPath.point(atDistance:)` (`TinyRoutes/Domain/RouteEdge.swift`) for positions. Don't recompute geometry.
 - Read the switch state when the van **arrives** at a node, not when it enters the edge before. Live switches (MV-21) depend on this.
 - Keep the engine free of SwiftUI and timers. The screen calls `advance(by:)` (MV-15), so tests can drive time exactly.
 
-**Done when:** tests show a van on a 3-unit straight road arrives in 2.0 s (±1 step), follows the active edge at a switch, parks at a house, and gets stuck at a dead end. Calling `advance(by: 1.0)` once and `advance(by: 0.1)` ten times must give identical results.
+**Done when:** tests show a van on a 3-unit straight road arrives in 2.0 s (±1 step), follows the active edge at a switch, parks at a house, and gets stuck at a dead end. Calling `advance(by: 0.25)` once and `advance(by: 0.05)` five times must give identical results (both run 30 steps), and `advance(by: 1.0)` must run only 30 steps because of the clamp.
 
 ---
 
@@ -219,9 +231,9 @@ Add `outcome: Outcome?` with `win`, `failWrongHouse(vanID:, houseNodeID:)` and `
 
 - `stop()`: from `.run`, returns to `.plan` with every van back at its start and **switch settings kept as they are now**, including live-switch changes made during the run.
 - `retry()`: from `.finished`, does the same and clears `outcome`. Store the last fail position (`lastFailPoint: RoadPoint?`) so the UI can highlight it. Clear it on the next `go()`.
-- Neither resets `changeCount`.
+- Neither resets the switches, so `changeCount` keeps matching the kept settings. A live tap from the stopped or failed run is now part of the plan, and counts through it (rule decision 5).
 
-**Done when:** tests show settings survive both `stop()` and `retry()`, vans return to their starts, and `lastFailPoint` is set after a stuck fail.
+**Done when:** tests show settings survive both `stop()` and `retry()`, `changeCount` after a retry equals what the kept settings imply, vans return to their starts, and `lastFailPoint` is set after a stuck fail.
 
 ---
 
@@ -311,11 +323,14 @@ In `MultiVanGameplayScreen.swift`, build the screen flow from the plan:
 - After a fail: a simple text card with **Try again**. After a win: a simple card with **Next** and **Replay**. Polished versions come in MV-26 and MV-37.
 
 **Guidance:**
-- Drive the engine with `TimelineView(.animation)`. In its closure, work out `dt` from the previous frame's date and call `engine.advance(by: dt)`. Store the previous date in a reference type, not `@State`, so updating it doesn't trigger another render.
-- Only call `advance` during `.run`. Pause it when the app goes to the background (`scenePhase`).
+- Don't advance the engine from inside a view's `body` or a `TimelineView` closure. Those build the view, so changing state there causes "modifying state during view update" warnings and extra render passes.
+- Instead, write a small `MultiVanFrameDriver` class that owns a `CADisplayLink`. On each tick it works out `dt` from `link.targetTimestamp - lastTimestamp` and calls `engine.advance(by:)`. SwiftUI only observes the engine (mark it `@Observable`) and draws what it sees.
+- Start the driver on `go()` and stop it when the phase leaves `.run`. Also stop it when `scenePhase` isn't `.active`, and reset `lastTimestamp` when restarting so the first frame back isn't one huge `dt`.
+- `CADisplayLink` keeps a strong reference to its target. Call `invalidate()` in the driver's `stop()` and in the screen's `onDisappear`, or use a small weak-proxy target, so the screen can be freed.
+- The driver is also where fast-forward (MV-38) multiplies `dt` and where engine events are drained each frame (MV-31).
 - Keep all game rules in the engine. The screen only maps buttons to `go()`, `stop()`, `retry()` and `resetSwitches()`.
 
-**Done when:** levels 1 and 2 can be played from Go to the win card, and a deliberate fail on level 2 shows Try again, which keeps the switch setting.
+**Done when:** levels 1 and 2 can be played from Go to the win card, a deliberate fail on level 2 shows Try again, which keeps the switch setting, and the Xcode console shows no "modifying state during view update" warnings.
 
 ---
 
@@ -364,11 +379,12 @@ Every level needs a recorded solution that wins with `changeCount == parChanges`
   { "planTaps": ["s1", "s1"], "liveTaps": [{ "atTime": 3.25, "nodeID": "s3" }] }
   ```
 - The runner: apply `planTaps`, call `go()`, then advance in fixed steps, applying each live tap when the run clock passes `atTime`. Stop at an outcome or after 120 s of run time.
-- Assert the outcome is `.win` and `changeCount == parChanges`. Also assert that **not** applying the plan taps doesn't win. If it does, the level has no puzzle.
+- Assert the outcome is `.win` and `changeCount == parChanges`. If `parChanges > 0`, also assert that running with **no** taps doesn't win. If it does, the level has no puzzle. Skip this check for par-0 tutorial levels such as level 1, which are meant to be won by just pressing Go.
+- Always build the engine with `MultiVanTuning.default` here, so a tuning-panel override (MV-45) can never change test results.
 - Look at `TinyRoutesTests/Support/LevelSolutionScript.swift` for how the current game does this. Copy the ideas, not the types, because the rules differ.
 - Live taps will only work after MV-21. Until then, reject scripts with `liveTaps` with a clear "not supported yet" failure.
 
-**Done when:** levels 1–2 have solutions that pass, and a deliberately wrong solution fails with a readable message.
+**Done when:** levels 1–2 have solutions that pass (level 1's is empty), and a deliberately wrong solution fails with a readable message.
 
 ---
 
@@ -400,7 +416,7 @@ Make the engine run all vans together, with each one waiting `departDelay` secon
 **Guidance:**
 - Track a run clock (`runTime`), increased by `stepDuration` each step. A van's status goes from `waiting` to `driving` when `runTime >= departDelay`.
 - In each step, move **every** van first, then check collisions. Checking during the move makes the result depend on van order.
-- Check every pair: `distance(a.position, b.position) < crashDistance`. With at most 4 vans that's 6 checks, so no optimisation is needed.
+- Check every pair: `distance(a.position, b.position) < tuning.crashDistance`. With at most 4 vans that's 6 checks, so no optimisation is needed.
 - Only check pairs where both vans are `driving` (rule decision 1). Add a test where two vans share a start node with different `departDelay`s and don't crash.
 - If two vans arrive at wrong houses or dead ends in the same step, pick the first one by van order in the level file, so results are deterministic.
 - Set `lastFailPoint` to the midpoint of the two vans.
@@ -421,7 +437,7 @@ Make the engine run all vans together, with each one waiting `departDelay` secon
 - Extend the MV-18 runner to apply `liveTaps`.
 
 **Guidance:**
-- Rejected taps never change `changeCount` (rule decision 2). Only `driving` vans lock a live switch, measured as straight-line distance to the node's grid point (rule decision 3). Read the radius from `MultiVanTuning` so the tuning panel can change it.
+- At `go()`, save the plan's `changeCount` as `plannedChangeCount`. During the run, `changeCount` is `plannedChangeCount + acceptedLiveTaps`. Don't recompute it from the settings mid-run, because live taps change the settings. Rejected taps never count (rule decision 2). Only `driving` vans lock a live switch, measured as straight-line distance to the node's grid point (rule decision 3). Read the radius from the engine's injected `tuning`, never a global, so the tuning panel can change it.
 - Work out `lockedSwitchNodeIDs` at the end of each step, after collisions, so it always matches what a tap would do.
 - Edge case worth a test: a van sitting exactly on a live switch node (distance 0) must lock it.
 - Because vans read the switch on arrival (MV-08), a live tap applies to the next van to arrive, which is what levels 8 and 9 need.
@@ -552,9 +568,9 @@ Write "Merge", "Hold the Loop" and "Split" with solution scripts. These are the 
 
 ### MV-30 · Deterministic replay test
 
-**Level:** Entry · **Depends on:** MV-21
+**Level:** Entry · **Depends on:** MV-29
 
-Add a test that runs the same level and taps twice, once with `advance(by: 1/60)` frames and once with uneven frames (for example alternating 0.004 s and 0.03 s), and checks that both runs end with the same outcome, the same `runTime` and the same van positions.
+Add a test that runs the same level and taps twice, once with `advance(by: 1/60)` frames and once with uneven frames (for example alternating 0.004 s and 0.03 s, both inside the 0.25 s clamp), and checks that both runs end with the same outcome, the same `runTime` and the same van positions.
 
 **Done when:** the test passes for levels 7 and 9.
 
@@ -572,11 +588,11 @@ Make the engine report moments the UI should react to, without the engine knowin
 
 **Guidance:**
 - In `MultiVanFeedback.swift`, define `enum MultiVanEvent { case switchTapped, tapRejected(nodeID:), go, delivered(vanID:, comboIndex:), allDelivered, crashed(point:), wrongHouse(vanID:) }`.
-- The engine appends events to a `pendingEvents` array as they happen. The screen reads and clears it once per frame (`drainEvents()`). This is simpler and easier to test than callbacks or Combine.
+- The engine appends events to a `pendingEvents` array as they happen. The frame driver (MV-15) reads and clears it after each `advance` (`drainEvents()`) and hands the events to the feedback layer. Taps happen outside the run loop, so the screen also drains after each tap. This is simpler and easier to test than callbacks or Combine.
 - `comboIndex` counts deliveries in this run (1, 2, 3…). The chime pitch and "×2" text use it.
 - Test that each action produces the right events in the right order.
 
-**Done when:** tests cover every event type, and the screen drains events each frame (even if nothing reacts to them yet).
+**Done when:** tests cover every event type, and events are drained each frame and after each tap (even if nothing reacts to them yet).
 
 ---
 
@@ -665,7 +681,7 @@ Read lock state only from `engine.lockedSwitchNodeIDs`.
 
 **Level:** Entry · **Depends on:** MV-15
 
-Add a hold-to-fast-forward button in the run phase. While held, pass `dt * fastForwardMultiplier` to `engine.advance(by:)`. Because the engine uses fixed steps, results don't change; it just runs twice as many steps per frame.
+Add a hold-to-fast-forward button in the run phase. While held, the frame driver (MV-15) passes `dt * fastForwardMultiplier` to `engine.advance(by:)`. Because the engine uses fixed steps, results don't change; it just runs twice as many steps per frame.
 
 Count how often it's used per level for the playtest log (MV-43).
 
@@ -752,11 +768,13 @@ Add a "Playtest log" row to the prototype level list (Debug only) that shows a p
 
 ### MV-45 · Tuning panel
 
-**Level:** Entry · **Depends on:** MV-15
+**Level:** Entry · **Depends on:** MV-15, MV-16
 
-Add a small Debug-only panel (for example a gear button on the prototype list) to change `vanSpeed`, `crashDistance` and `liveSwitchLockRadius` live, so the team can tune during M4 without rebuilding. Store overrides in `UserDefaults` under a `multiVanPrototype.` prefix, with a "Reset to defaults" button.
+Add a small Debug-only panel (for example a gear button on the prototype list) to change `vanSpeed`, `crashDistance` and `liveSwitchLockRadius`, so the team can tune during M4 without rebuilding. Store overrides in `UserDefaults` under a `multiVanPrototype.` prefix, with a "Reset to defaults" button.
 
-**Done when:** changing speed in the panel changes how fast vans drive on the next Go.
+The engine already takes a `MultiVanTuning` (MV-07), so this task shouldn't need to change engine code. Build a `MultiVanTuning` from the defaults plus any overrides, and pass it in when the level screen creates its engine. If you find yourself editing `MultiVanEngine.swift`, stop and ask.
+
+**Done when:** changing speed in the panel changes how fast vans drive the next time a level opens, and "Reset to defaults" brings back `MultiVanTuning.default`.
 
 ---
 
@@ -801,9 +819,8 @@ Write `docs/prototype/playtest_kit.md` from the plan's "Playtest plan": a checkl
 ## Dependency overview
 
 ```
-M1  MV-01 ─┬─ MV-02 ─┬─ MV-03 ─┬─ MV-17 ─ MV-18 ─ MV-19 (M1 exit)
-           │         │         └─ MV-16
-           │         ├─ MV-04
+M1  MV-01 ─┬─ MV-02 ─┬─ MV-04 ─ MV-03 ─┬─ MV-17 ─ MV-18 ─ MV-19 (M1 exit)
+           │         │                 └─ MV-16
            │         └─ MV-12
            ├─ MV-05 ─ MV-07 ─┬─ MV-08 ─ MV-09 ─ MV-10
            │                 └─ MV-11
@@ -811,7 +828,7 @@ M1  MV-01 ─┬─ MV-02 ─┬─ MV-03 ─┬─ MV-17 ─ MV-18 ─ MV-19 (M
            MV-13 (06, 08, 11, 12) ─ MV-14 ─ MV-15 ─ MV-16
 
 M2  MV-09 ─ MV-20 ─ MV-21 ─┬─ MV-29 (M2 exit) ─ MV-42
-                           ├─ MV-30
+                           │             └─ MV-30
                            └─ MV-31 (M3 events)
     MV-22, MV-23, MV-24, MV-25, MV-26, MV-27, MV-28 can run in parallel once their inputs land.
 
@@ -819,7 +836,7 @@ M3  MV-31 ─┬─ MV-32, MV-33, MV-34, MV-35 ─ MV-36
            └─ MV-43 ─ MV-44
     MV-37, MV-38, MV-39, MV-40, MV-41 can run in parallel.
 
-M4  MV-42 ─ MV-46 ─ MV-48;  MV-45 any time after MV-15;  MV-47 any time.
+M4  MV-42 ─ MV-46 ─ MV-48;  MV-45 any time after MV-15 and MV-16;  MV-47 any time.
 ```
 
 ### Good first tasks
