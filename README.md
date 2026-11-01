@@ -6,14 +6,14 @@ Tiny Routes is a minimalist one-thumb route puzzle game for iPhone. Players guid
 
 ## Concept
 
-Each level is a small abstract city-map puzzle. A glowing delivery dot automatically moves along connected route lines. The player taps intersections to rotate arrows, switches, or gates so the dot reaches the correct destination.
+Each level is a small abstract city-map puzzle. The player taps a dotted road to choose the delivery dot's starting direction, then the dot moves automatically along connected route lines. The player taps intersections to rotate arrows, switches, or gates so the dot reaches the correct destination.
 
 - The player does not directly move the dot
 - The player controls the route
 
 ## Core Gameplay
 
-1. A delivery dot starts moving automatically
+1. Tap a dotted starting road to begin driving; the timer waits for this choice
 2. The player taps switch nodes to rotate or change their direction
 3. The dot follows the direction of the active node
 4. Collect the package, then reach the destination

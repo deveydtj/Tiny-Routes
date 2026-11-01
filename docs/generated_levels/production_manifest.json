@@ -2,1530 +2,3667 @@
   "levels": [
     {
       "levelID": "level_001",
-      "name": "Level 001",
-      "difficultyEstimate": "tutorial",
-      "nodes": 5,
-      "edges": 4,
-      "switches": 0,
-      "tapCount": 0,
+      "name": "Level 1",
+      "difficultyEstimate": "hard",
+      "nodes": 11,
+      "edges": 22,
+      "switches": 9,
+      "tapCount": 1,
       "deadEndCount": 0,
       "template": "existing",
-      "topologyHash": "1a988a48a4777098ee69748f5e23999ad87784954999a9b788f73ed13f1ab4fb",
-      "layoutHash": "752cf6280443287252c153f1b576c29fa3e2c72a1adcfb486369cc0576073b2d",
-      "solutionHash": "4ea3c0ebc6255c80341d0e8ae61b12077ff5424ab11920e2f2d9efdb83540fc1",
+      "topologyHash": "78c7f0be540cd074ca7d994d8f26146c6211d8ee0d51a68ac2bdd44d235c7092",
+      "layoutHash": "d187504e25adfbf022ab4dd60519795d515d7346781738832d3a6fb5a7def704",
+      "solutionHash": "bdba396d4fe9c2c8c015ed48c6796b1ed4fb425597f779ac28191a555733d056",
       "normalizedPositions": [
         [
-          "destination",
-          0.0,
+          "bottom",
+          0.492,
           0.0
         ],
         [
-          "exit_lane",
-          0.4286,
-          0.2432
+          "destination",
+          1.0,
+          0.0
+        ],
+        [
+          "inner_bottom",
+          0.492,
+          0.2385
+        ],
+        [
+          "inner_left",
+          0.264,
+          0.4654
+        ],
+        [
+          "inner_right",
+          0.704,
+          0.4654
+        ],
+        [
+          "inner_top",
+          0.492,
+          0.7
+        ],
+        [
+          "outer_left",
+          0.0,
+          0.4654
+        ],
+        [
+          "outer_right",
+          0.928,
+          0.7615
+        ],
+        [
+          "outer_top",
+          0.492,
+          1.0
         ],
         [
           "package",
-          1.0,
-          0.4865
-        ],
-        [
-          "pickup_lane",
-          0.4286,
-          0.7568
+          0.0,
+          1.0
         ],
         [
           "start",
-          0.4286,
-          1.0
+          0.0,
+          0.0
         ]
-      ]
+      ],
+      "blueprintArchetype": "",
+      "objectiveCount": 2,
+      "objectiveKinds": [
+        "pickup",
+        "destination"
+      ],
+      "dependencyDAGSignature": "",
+      "adaptiveDecisionPattern": [],
+      "stateTransitionPattern": [],
+      "staticPolicyProofSignature": "",
+      "agentPerformanceProfile": [],
+      "revisitPattern": [],
+      "successFailureDistribution": [],
+      "optimalStrategySignature": "",
+      "roadStateVisualSignature": "c08bb1c45add3e33eb9455f4b6907513cb96fbed81ef370d7c94b75c88900489",
+      "structuralBehaviorSignature": "b5291b5980ab64795951160c701d60d10ac5ab931cf1b0c7ae1800fa79204850"
     },
     {
       "levelID": "level_002",
-      "name": "Level 002",
-      "difficultyEstimate": "easy",
-      "nodes": 5,
-      "edges": 4,
-      "switches": 1,
+      "name": "Level 2",
+      "difficultyEstimate": "hard",
+      "nodes": 6,
+      "edges": 12,
+      "switches": 4,
       "tapCount": 1,
-      "deadEndCount": 1,
+      "deadEndCount": 0,
       "template": "existing",
-      "topologyHash": "9e8f40a41c70997ffc7a49b0204390047b57a3540af1c664e25176529768359d",
-      "layoutHash": "2bdda296d9e1d0f55f4067e5f6bed6e08e77a6f36237102bc3cd6974cd2c0cf4",
-      "solutionHash": "fc75f4b5f3bb9135472a90fab328c4c998f47be70f7daecefd5cb995e2771102",
+      "topologyHash": "faf75b42ca4ff03e0fd78859f3b7947738c2818e6aada52cf8a859a7d072d033",
+      "layoutHash": "a24b80902fb72abc81d96e8b24218a325ccee5c438b1ece30391e43709b8797d",
+      "solutionHash": "ecb7f885e4448eb728908f284957905f04c2b779aa3a5e2347e882866f9bf1c4",
       "normalizedPositions": [
         [
-          "choice",
-          1.0,
-          0.7368
-        ],
-        [
-          "dead_end_a",
-          0.875,
-          0.4211
-        ],
-        [
           "destination",
-          0.275,
-          0.0
+          1.0,
+          0.5
+        ],
+        [
+          "left",
+          0.1694,
+          0.5
         ],
         [
           "package",
-          0.525,
-          0.3947
+          0.0,
+          0.5
+        ],
+        [
+          "right",
+          0.621,
+          0.5
         ],
         [
           "start",
-          0.0,
+          0.1694,
+          0.0
+        ],
+        [
+          "top",
+          0.3145,
           1.0
         ]
-      ]
+      ],
+      "blueprintArchetype": "",
+      "objectiveCount": 2,
+      "objectiveKinds": [
+        "pickup",
+        "destination"
+      ],
+      "dependencyDAGSignature": "",
+      "adaptiveDecisionPattern": [],
+      "stateTransitionPattern": [],
+      "staticPolicyProofSignature": "",
+      "agentPerformanceProfile": [],
+      "revisitPattern": [],
+      "successFailureDistribution": [],
+      "optimalStrategySignature": "",
+      "roadStateVisualSignature": "47ca6d46f18f15e701ae10181570505bed0e993df7bba34a021e838861d6ba17",
+      "structuralBehaviorSignature": "e6d5ae1ae6c768820dc3f334e8b5b0f1f2605695921f21c9a26bc31272ae8d25"
     },
     {
       "levelID": "level_003",
-      "name": "Level 003",
-      "difficultyEstimate": "easy",
-      "nodes": 8,
-      "edges": 7,
-      "switches": 2,
-      "tapCount": 2,
-      "deadEndCount": 2,
+      "name": "Level 3",
+      "difficultyEstimate": "tutorial",
+      "nodes": 11,
+      "edges": 21,
+      "switches": 9,
+      "tapCount": 0,
+      "deadEndCount": 0,
       "template": "existing",
-      "topologyHash": "21a24a8ea3756d791a1234576a789fd0a2b5d983eb1db4f779d241d184f83015",
-      "layoutHash": "0986b6a15c32c8ff515801b4b50224293f5dca2b041d42a2fbf5e6369c32d452",
-      "solutionHash": "3055dfa9683814155f6e20ba7497c25a0220096236ca978a004ea1a86474fb15",
+      "topologyHash": "ef354621c6f3207f7f8f81bc174274b7d4f3da3766c603f30670dfb767ef5d63",
+      "layoutHash": "32e3d0dd940740dd262d14eab8d144708b1fa404139d68360e72859d0a4e2cf2",
+      "solutionHash": "4ea3c0ebc6255c80341d0e8ae61b12077ff5424ab11920e2f2d9efdb83540fc1",
       "normalizedPositions": [
         [
-          "delivery_approach",
-          0.1316,
-          0.375
-        ],
-        [
-          "delivery_dead_end",
-          0.9211,
-          0.025
-        ],
-        [
-          "delivery_switch",
-          0.8947,
-          0.275
-        ],
-        [
-          "destination",
-          0.2895,
+          "bottom",
+          0.492,
           0.0
         ],
         [
-          "package",
-          0.4737,
-          0.575
-        ],
-        [
-          "pickup_dead_end",
-          0.9474,
-          0.575
-        ],
-        [
-          "pickup_switch",
+          "destination",
           1.0,
-          0.75
+          0.0
+        ],
+        [
+          "inner_bottom",
+          0.492,
+          0.2385
+        ],
+        [
+          "inner_left",
+          0.264,
+          0.4654
+        ],
+        [
+          "inner_right",
+          0.704,
+          0.4654
+        ],
+        [
+          "inner_top",
+          0.492,
+          0.7
+        ],
+        [
+          "outer_left",
+          0.0,
+          0.4654
+        ],
+        [
+          "outer_right",
+          0.968,
+          0.6692
+        ],
+        [
+          "outer_top",
+          0.492,
+          1.0
+        ],
+        [
+          "package",
+          0.0,
+          1.0
         ],
         [
           "start",
           0.0,
-          1.0
+          0.0
         ]
-      ]
+      ],
+      "blueprintArchetype": "",
+      "objectiveCount": 2,
+      "objectiveKinds": [
+        "pickup",
+        "destination"
+      ],
+      "dependencyDAGSignature": "",
+      "adaptiveDecisionPattern": [],
+      "stateTransitionPattern": [],
+      "staticPolicyProofSignature": "",
+      "agentPerformanceProfile": [],
+      "revisitPattern": [],
+      "successFailureDistribution": [],
+      "optimalStrategySignature": "",
+      "roadStateVisualSignature": "1e62db630418d0ddf63c0eb213c79cb302ab845bf8c1034616ee23126c7b6115",
+      "structuralBehaviorSignature": "ca07ed4152123e0d2f1581fcede9bf4445865c9a313b5ae2c2cf2e2d46a9f862"
     },
     {
       "levelID": "level_004",
-      "name": "Level 004",
-      "difficultyEstimate": "easy",
-      "nodes": 5,
-      "edges": 4,
-      "switches": 1,
+      "name": "Level 4",
+      "difficultyEstimate": "hard",
+      "nodes": 11,
+      "edges": 25,
+      "switches": 9,
       "tapCount": 1,
-      "deadEndCount": 1,
+      "deadEndCount": 0,
       "template": "existing",
-      "topologyHash": "43bcc0ec9572910b4bf21d11603837fc9228240a06bddeb3da0c10f686bbbb3c",
-      "layoutHash": "1dffd85b342a484110acc11940717dfa2bf0ac8773d4674a337f53af4cb3ef1a",
-      "solutionHash": "fc75f4b5f3bb9135472a90fab328c4c998f47be70f7daecefd5cb995e2771102",
+      "topologyHash": "a5ae1154305821c6653cdbb5a669a318f4aa8591d6f6f03ce2fb18a65dfe7103",
+      "layoutHash": "cbb0eb65b258f946cbea0d7320aa1428b07fd9c52014d8cb17539a26b912c8af",
+      "solutionHash": "af3b055dc3563348d78c6ce770648acfce725c4967908530cf0e6d8b935c399e",
       "normalizedPositions": [
         [
-          "choice",
-          0.6471,
-          0.641
-        ],
-        [
-          "destination",
-          0.3529,
+          "bottom",
+          0.492,
           0.0
         ],
         [
-          "package",
-          0.7647,
-          0.3077
+          "destination",
+          1.0,
+          0.0
         ],
         [
-          "start",
+          "inner_bottom",
+          0.492,
+          0.2385
+        ],
+        [
+          "inner_left",
+          0.264,
+          0.4654
+        ],
+        [
+          "inner_right",
+          0.704,
+          0.4654
+        ],
+        [
+          "inner_top",
+          0.492,
+          0.7
+        ],
+        [
+          "outer_left",
+          0.0,
+          0.4654
+        ],
+        [
+          "outer_right",
+          0.968,
+          0.4654
+        ],
+        [
+          "outer_top",
+          0.492,
+          1.0
+        ],
+        [
+          "package",
           0.0,
           1.0
         ],
         [
-          "wrong_dead_end",
-          1.0,
-          0.641
+          "start",
+          0.0,
+          0.0
         ]
-      ]
+      ],
+      "blueprintArchetype": "",
+      "objectiveCount": 2,
+      "objectiveKinds": [
+        "pickup",
+        "destination"
+      ],
+      "dependencyDAGSignature": "",
+      "adaptiveDecisionPattern": [],
+      "stateTransitionPattern": [],
+      "staticPolicyProofSignature": "",
+      "agentPerformanceProfile": [],
+      "revisitPattern": [],
+      "successFailureDistribution": [],
+      "optimalStrategySignature": "",
+      "roadStateVisualSignature": "787cae12966f8df56eddce1a4c9465ac0d7d390f9c35008fb9bc06ab8aa9c708",
+      "structuralBehaviorSignature": "8603afc05ab2c90bb6d859dacd978d1f06c19dad7b9137a6a52ad1bc5540b53b"
     },
     {
       "levelID": "level_005",
       "name": "Level 005",
       "difficultyEstimate": "easy",
-      "nodes": 7,
-      "edges": 6,
+      "nodes": 16,
+      "edges": 18,
       "switches": 2,
       "tapCount": 2,
-      "deadEndCount": 2,
+      "deadEndCount": 1,
       "template": "existing",
-      "topologyHash": "fba035424369606d961b6d6783593f06a9710262c0cd0278d060b04e31489bd0",
-      "layoutHash": "52555336592891d9251944c9277515f8ed016d35a42f27812a1cbeff15fa5f22",
-      "solutionHash": "3055dfa9683814155f6e20ba7497c25a0220096236ca978a004ea1a86474fb15",
+      "topologyHash": "6a001f557f13e677f79f0a44b2222dda14d0b0cf775cacbe0eab64dbac3814d6",
+      "layoutHash": "f273972d5e91073aea41bcbfc01e126801f7764ea0171565bee498519dd89eb5",
+      "solutionHash": "d81f40ad50e34460393d3b82b7d8d009961ea134e4f351ed33b052d3dd3c45ba",
       "normalizedPositions": [
         [
-          "dead_end_a",
-          0.0,
-          0.7778
+          "decision_1",
+          0.5625,
+          0.3214
         ],
         [
-          "dead_end_b",
+          "initial_fatal_dead_end",
+          0.3125,
+          0.3571
+        ],
+        [
+          "objective_entry_0",
+          0.875,
+          0.3214
+        ],
+        [
+          "objective_entry_1",
+          0.25,
+          0.6786
+        ],
+        [
+          "objective_node_0",
           1.0,
-          0.3056
-        ],
-        [
-          "delivery_switch",
-          0.5,
-          0.3056
-        ],
-        [
-          "destination",
-          0.5,
           0.0
         ],
         [
-          "package",
-          0.9231,
-          0.5556
+          "objective_node_1",
+          0.375,
+          1.0
         ],
         [
-          "pickup_switch",
-          0.5,
-          0.7778
+          "shared_hub_0",
+          0.25,
+          0.5
         ],
         [
           "start",
-          0.5,
-          1.0
+          0.125,
+          0.3929
+        ],
+        [
+          "wrong_0_0",
+          0.1562,
+          0.7857
+        ],
+        [
+          "wrong_0_1",
+          0.0,
+          0.7857
+        ],
+        [
+          "wrong_0_2",
+          0.0,
+          0.7143
+        ],
+        [
+          "wrong_0_3",
+          0.0,
+          0.6429
+        ],
+        [
+          "wrong_1_0",
+          0.4688,
+          0.4286
+        ],
+        [
+          "wrong_1_1",
+          0.375,
+          0.4286
+        ],
+        [
+          "wrong_1_2",
+          0.375,
+          0.4036
+        ],
+        [
+          "wrong_1_3",
+          0.375,
+          0.3786
         ]
-      ]
+      ],
+      "blueprintArchetype": "",
+      "objectiveCount": 2,
+      "objectiveKinds": [
+        "pickup",
+        "destination"
+      ],
+      "dependencyDAGSignature": "",
+      "adaptiveDecisionPattern": [],
+      "stateTransitionPattern": [],
+      "staticPolicyProofSignature": "",
+      "agentPerformanceProfile": [],
+      "revisitPattern": [],
+      "successFailureDistribution": [],
+      "optimalStrategySignature": "",
+      "roadStateVisualSignature": "26fe32b4d3f7c0018789c4968b9af2aa344fb2a50f7a53a596c1e9f53bd40eb1",
+      "structuralBehaviorSignature": "0f76eaf5fd72a2563cd5c64e85a1c86b9ecf47b259d2cad2c772a1ae08899323"
     },
     {
       "levelID": "level_006",
       "name": "Level 006",
       "difficultyEstimate": "easy",
-      "nodes": 5,
-      "edges": 4,
-      "switches": 1,
-      "tapCount": 1,
+      "nodes": 18,
+      "edges": 20,
+      "switches": 2,
+      "tapCount": 2,
       "deadEndCount": 1,
       "template": "existing",
-      "topologyHash": "e3cd100d0b08a8ac566c2cf5bfe421b3ff7c45dc51859a05311e21be7be4c1e2",
-      "layoutHash": "8423de01cd927b30f9705f58cf4c9c5fb3b3cabcdba941b3a8578918a89cd730",
-      "solutionHash": "16d6ec44dc4516b7752f007ee49a806cc732159e445b6dc186b4d8788329fcbb",
+      "topologyHash": "66c682a873df492ae86e4117e59e31ecbbb2ead8a2f26d8979735e3ddd56e2c1",
+      "layoutHash": "089a02fc06c9c08a84b4c0eadfccc659b9233e6edfa7a69b0a6e49e240c78bdf",
+      "solutionHash": "d81f40ad50e34460393d3b82b7d8d009961ea134e4f351ed33b052d3dd3c45ba",
       "normalizedPositions": [
         [
-          "dead_end_a",
-          0.32,
-          0.6154
+          "decision_2",
+          0.8293,
+          0.5
         ],
         [
-          "destination",
+          "initial_fatal_dead_end",
+          0.122,
+          0.3571
+        ],
+        [
+          "objective_entry_0",
+          0.2195,
+          0.3214
+        ],
+        [
+          "objective_entry_1",
+          0.0976,
+          0.6786
+        ],
+        [
+          "objective_entry_2",
+          0.9512,
+          0.3214
+        ],
+        [
+          "objective_node_0",
+          0.2683,
+          0.0
+        ],
+        [
+          "objective_node_1",
+          0.1463,
+          1.0
+        ],
+        [
+          "objective_node_2",
           1.0,
           0.0
         ],
         [
-          "gate",
-          0.88,
-          0.641
-        ],
-        [
-          "package",
-          0.44,
-          0.3077
+          "shared_hub_0",
+          0.0976,
+          0.5
         ],
         [
           "start",
+          0.0488,
+          0.3929
+        ],
+        [
+          "wrong_0_0",
+          0.061,
+          0.7857
+        ],
+        [
+          "wrong_0_1",
           0.0,
-          1.0
+          0.7857
+        ],
+        [
+          "wrong_0_2",
+          0.0,
+          0.7143
+        ],
+        [
+          "wrong_0_3",
+          0.0,
+          0.6429
+        ],
+        [
+          "wrong_2_0",
+          0.7927,
+          0.6071
+        ],
+        [
+          "wrong_2_1",
+          0.7561,
+          0.6071
+        ],
+        [
+          "wrong_2_2",
+          0.7561,
+          0.5821
+        ],
+        [
+          "wrong_2_3",
+          0.7561,
+          0.5571
         ]
-      ]
+      ],
+      "blueprintArchetype": "",
+      "objectiveCount": 3,
+      "objectiveKinds": [
+        "pickup",
+        "checkpoint",
+        "destination"
+      ],
+      "dependencyDAGSignature": "",
+      "adaptiveDecisionPattern": [],
+      "stateTransitionPattern": [],
+      "staticPolicyProofSignature": "",
+      "agentPerformanceProfile": [],
+      "revisitPattern": [],
+      "successFailureDistribution": [],
+      "optimalStrategySignature": "",
+      "roadStateVisualSignature": "d05c254745cf5d3f1fa23b113b45f614ab428db57e5f6e25ab12a0c7e1f14589",
+      "structuralBehaviorSignature": "e87e25d58307f298e3597f6893d3ec80da616fca60aed98686cf5879ebee92ff"
     },
     {
       "levelID": "level_007",
       "name": "Level 007",
       "difficultyEstimate": "easy",
-      "nodes": 6,
-      "edges": 5,
+      "nodes": 9,
+      "edges": 10,
       "switches": 1,
-      "tapCount": 1,
+      "tapCount": 2,
       "deadEndCount": 1,
       "template": "existing",
-      "topologyHash": "d2ffab496759e5d73456e6ad553c2aec6824bd5ad50caab66ae1aa453210a2e3",
-      "layoutHash": "e78ebeba84c1ced50c93cb3bcb2472ceee5e9e7b18753085ea1c3d93699af999",
-      "solutionHash": "16d6ec44dc4516b7752f007ee49a806cc732159e445b6dc186b4d8788329fcbb",
+      "topologyHash": "8556e2309f817129962144d7b8f828165067421530b1336402f37940599ad122",
+      "layoutHash": "a395d74a753add14ab6f868299e9adac379cbbfb0bfd85f130ac0e05ca6d3496",
+      "solutionHash": "d81f40ad50e34460393d3b82b7d8d009961ea134e4f351ed33b052d3dd3c45ba",
       "normalizedPositions": [
         [
-          "dead_end_a",
-          1.0,
-          0.7179
+          "initial_fatal_dead_end",
+          0.4545,
+          0.6429
         ],
         [
-          "destination",
-          0.3529,
+          "objective_entry_0",
+          0.8182,
+          0.6786
+        ],
+        [
+          "objective_entry_1",
+          0.3636,
+          0.3214
+        ],
+        [
+          "objective_node_0",
+          1.0,
+          1.0
+        ],
+        [
+          "objective_node_1",
+          0.5455,
           0.0
         ],
         [
-          "detour",
-          0.5294,
-          0.4615
-        ],
-        [
-          "gate",
-          0.6471,
-          0.7179
-        ],
-        [
-          "package",
-          0.7647,
-          0.2308
+          "shared_hub_0",
+          0.3636,
+          0.5
         ],
         [
           "start",
+          0.1818,
+          0.6071
+        ],
+        [
+          "wrong_0_0",
+          0.2273,
+          0.2143
+        ],
+        [
+          "wrong_0_1",
           0.0,
-          1.0
+          0.2143
         ]
-      ]
+      ],
+      "blueprintArchetype": "",
+      "objectiveCount": 2,
+      "objectiveKinds": [
+        "pickup",
+        "destination"
+      ],
+      "dependencyDAGSignature": "",
+      "adaptiveDecisionPattern": [],
+      "stateTransitionPattern": [],
+      "staticPolicyProofSignature": "",
+      "agentPerformanceProfile": [],
+      "revisitPattern": [],
+      "successFailureDistribution": [],
+      "optimalStrategySignature": "",
+      "roadStateVisualSignature": "05a967fe12e0731867065f70b3171f718a45a6f2af7f49307b55b2a56619d6c1",
+      "structuralBehaviorSignature": "39311fe2905100335e132565e897260ca3d40c41192e225c17916f7325af3489"
     },
     {
       "levelID": "level_008",
       "name": "Level 008",
       "difficultyEstimate": "easy",
-      "nodes": 7,
-      "edges": 6,
+      "nodes": 14,
+      "edges": 16,
       "switches": 2,
       "tapCount": 2,
-      "deadEndCount": 2,
+      "deadEndCount": 1,
       "template": "existing",
-      "topologyHash": "40609fccd9d8537746ff98f7a05b828c1fd6f776967b25069024d6424a0630c4",
-      "layoutHash": "61836c7ea28621883ef153577033e15c2b3599e0f4db44c525796a1516c0805e",
-      "solutionHash": "8bfd535e4dc9f378d58a8affb23f9c338ee219942a471ab746b6e915f6227f71",
+      "topologyHash": "b4f0462c52266190de3ebadd3d4ce7d4fa3a69b69af27c04f6fcbeaa1377dded",
+      "layoutHash": "3b36d642f823350e34aa4f925899ec247202e7f6f30916763c9c24068e6a9a45",
+      "solutionHash": "d81f40ad50e34460393d3b82b7d8d009961ea134e4f351ed33b052d3dd3c45ba",
       "normalizedPositions": [
         [
-          "destination",
+          "decision_2",
+          0.8293,
+          0.5
+        ],
+        [
+          "initial_fatal_dead_end",
+          0.122,
+          0.3571
+        ],
+        [
+          "objective_entry_0",
+          0.2195,
+          0.3214
+        ],
+        [
+          "objective_entry_1",
+          0.0976,
+          0.6786
+        ],
+        [
+          "objective_entry_2",
+          0.9512,
+          0.3214
+        ],
+        [
+          "objective_node_0",
+          0.2683,
+          0.0
+        ],
+        [
+          "objective_node_1",
+          0.1463,
+          1.0
+        ],
+        [
+          "objective_node_2",
           1.0,
           0.0
         ],
         [
-          "lower_bypass",
-          0.0,
-          0.7297
-        ],
-        [
-          "lower_dead_end",
-          0.0,
-          0.2162
-        ],
-        [
-          "lower_entry_switch",
-          0.8235,
-          0.7568
-        ],
-        [
-          "lower_finish_switch",
-          0.8235,
-          0.2432
-        ],
-        [
-          "package",
-          0.1765,
-          0.4865
+          "shared_hub_0",
+          0.0976,
+          0.5
         ],
         [
           "start",
-          0.5882,
-          1.0
+          0.0488,
+          0.3929
+        ],
+        [
+          "wrong_0_0",
+          0.061,
+          0.7857
+        ],
+        [
+          "wrong_0_1",
+          0.0,
+          0.7857
+        ],
+        [
+          "wrong_2_0",
+          0.7927,
+          0.6071
+        ],
+        [
+          "wrong_2_1",
+          0.7561,
+          0.6071
         ]
-      ]
+      ],
+      "blueprintArchetype": "",
+      "objectiveCount": 3,
+      "objectiveKinds": [
+        "pickup",
+        "checkpoint",
+        "destination"
+      ],
+      "dependencyDAGSignature": "",
+      "adaptiveDecisionPattern": [],
+      "stateTransitionPattern": [],
+      "staticPolicyProofSignature": "",
+      "agentPerformanceProfile": [],
+      "revisitPattern": [],
+      "successFailureDistribution": [],
+      "optimalStrategySignature": "",
+      "roadStateVisualSignature": "18307189e86eb328f76aef38fc7590bfb7ad515c56516d2f8031794b5ccbad4f",
+      "structuralBehaviorSignature": "f09d3a7e0617083996ddf394c519f2196343483ef50a3f3c7038ea0d543ec722"
     },
     {
       "levelID": "level_009",
       "name": "Level 009",
       "difficultyEstimate": "easy",
-      "nodes": 6,
-      "edges": 5,
-      "switches": 1,
-      "tapCount": 1,
+      "nodes": 10,
+      "edges": 12,
+      "switches": 2,
+      "tapCount": 2,
       "deadEndCount": 1,
       "template": "existing",
-      "topologyHash": "04e44d8c1d0e0ab52bf6c26473d94664c9b1f8183da470f5ec386643cd7cdf69",
-      "layoutHash": "1c64b5f9f0307e39a0cfb5a53149f63273b392b973e98878d54c526da4ceacfe",
-      "solutionHash": "fc75f4b5f3bb9135472a90fab328c4c998f47be70f7daecefd5cb995e2771102",
+      "topologyHash": "64ca2f04cb0afc5ac6cb3a12c9ae962d12423a6b85734fb1133efb4398968f2f",
+      "layoutHash": "f41421a46d1bdc02c7d2f69aa30b54a668a1d71b7eb6cb2f59c57d43320106e6",
+      "solutionHash": "d81f40ad50e34460393d3b82b7d8d009961ea134e4f351ed33b052d3dd3c45ba",
       "normalizedPositions": [
         [
-          "choice",
-          0.88,
-          0.7179
+          "decision_1",
+          0.5,
+          0.3214
         ],
         [
-          "destination",
+          "initial_fatal_dead_end",
+          0.2143,
+          0.3571
+        ],
+        [
+          "objective_entry_0",
+          0.8571,
+          0.3214
+        ],
+        [
+          "objective_entry_1",
+          0.1429,
+          0.6786
+        ],
+        [
+          "objective_node_0",
           1.0,
           0.0
         ],
         [
-          "detour",
-          0.72,
-          0.4615
+          "objective_node_1",
+          0.2857,
+          1.0
         ],
         [
-          "package",
-          0.44,
-          0.2308
-        ],
-        [
-          "shortcut_dead_end",
-          0.32,
-          0.6923
+          "shared_hub_0",
+          0.1429,
+          0.5
         ],
         [
           "start",
           0.0,
-          1.0
+          0.3929
+        ],
+        [
+          "wrong_0_0",
+          0.0357,
+          0.7857
+        ],
+        [
+          "wrong_1_0",
+          0.3929,
+          0.4286
         ]
-      ]
+      ],
+      "blueprintArchetype": "",
+      "objectiveCount": 2,
+      "objectiveKinds": [
+        "pickup",
+        "destination"
+      ],
+      "dependencyDAGSignature": "",
+      "adaptiveDecisionPattern": [],
+      "stateTransitionPattern": [],
+      "staticPolicyProofSignature": "",
+      "agentPerformanceProfile": [],
+      "revisitPattern": [],
+      "successFailureDistribution": [],
+      "optimalStrategySignature": "",
+      "roadStateVisualSignature": "05f1801391008b99d2ce6165e7db827a0cc3951645c56a58de87963527473bde",
+      "structuralBehaviorSignature": "3c10fa9cb6b99b14ef0ccdafb1894887fa28255dfdf376a18eecc98332705ad6"
     },
     {
       "levelID": "level_010",
       "name": "Level 010",
       "difficultyEstimate": "easy",
-      "nodes": 7,
-      "edges": 6,
-      "switches": 2,
+      "nodes": 8,
+      "edges": 9,
+      "switches": 1,
       "tapCount": 2,
-      "deadEndCount": 2,
+      "deadEndCount": 1,
       "template": "existing",
-      "topologyHash": "b6fc1fcdbd9da4a7750c00f836aac344da2132c79c064b7f15e17f9431af4058",
-      "layoutHash": "dccccea323e119ab0b562d24c810a845c39634a76c4384e5f0637502bca8dfbe",
-      "solutionHash": "02f4e4f548c80925c30fb725b14829efab140d39ffeae4303cb128f8fefce5f8",
+      "topologyHash": "d452cbe62680346273812041e612952660fc71f5224a70804c0c97d284f5e4a5",
+      "layoutHash": "5e773b8df1c655b1237225133479fe166ee2a96e5ee0a89ddf831f4732157115",
+      "solutionHash": "d81f40ad50e34460393d3b82b7d8d009961ea134e4f351ed33b052d3dd3c45ba",
       "normalizedPositions": [
         [
-          "destination",
+          "initial_fatal_dead_end",
+          0.3333,
+          0.3571
+        ],
+        [
+          "objective_entry_0",
+          0.7778,
+          0.3214
+        ],
+        [
+          "objective_entry_1",
+          0.2222,
+          0.6786
+        ],
+        [
+          "objective_node_0",
           1.0,
           0.0
         ],
         [
-          "package",
-          0.1765,
-          0.4865
+          "objective_node_1",
+          0.4444,
+          1.0
         ],
         [
-          "short_bypass",
-          0.0,
-          0.7297
-        ],
-        [
-          "short_dead_end",
-          0.0,
-          0.2162
-        ],
-        [
-          "short_entry_switch",
-          0.8235,
-          0.7568
-        ],
-        [
-          "short_finish_switch",
-          0.8235,
-          0.2432
+          "shared_hub_0",
+          0.2222,
+          0.5
         ],
         [
           "start",
-          0.5882,
-          1.0
+          0.0,
+          0.3929
+        ],
+        [
+          "wrong_0_0",
+          0.0556,
+          0.7857
         ]
-      ]
+      ],
+      "blueprintArchetype": "",
+      "objectiveCount": 2,
+      "objectiveKinds": [
+        "pickup",
+        "destination"
+      ],
+      "dependencyDAGSignature": "",
+      "adaptiveDecisionPattern": [],
+      "stateTransitionPattern": [],
+      "staticPolicyProofSignature": "",
+      "agentPerformanceProfile": [],
+      "revisitPattern": [],
+      "successFailureDistribution": [],
+      "optimalStrategySignature": "",
+      "roadStateVisualSignature": "7dec4999d707ca0d6bf6287afdedc57b1c5669a21905e9971b086028844b7f3e",
+      "structuralBehaviorSignature": "22e4b8942eb31beb2e9057e5493a060eea0c016de57498cf1a52b3eb21bc837f"
     },
     {
       "levelID": "level_011",
       "name": "Level 011",
-      "difficultyEstimate": "easy",
-      "nodes": 9,
-      "edges": 9,
-      "switches": 2,
-      "tapCount": 2,
+      "difficultyEstimate": "hard",
+      "nodes": 29,
+      "edges": 33,
+      "switches": 5,
+      "tapCount": 3,
       "deadEndCount": 2,
       "template": "existing",
-      "topologyHash": "02fd7ebc0543b4047cfa1e5c58ce58e492ae3b93ae6a27b7bac14469e6b79a7b",
-      "layoutHash": "d1f82e7277910cdc1a3cd8c8bbe17fe7a0c46ec83a8da1a50a39bd939641edf0",
-      "solutionHash": "84ab43780c1d575aec01a81dadf435f98da8d20cd89850c636f909394e42b0e8",
+      "topologyHash": "b3ad22cd1b64ac26160bc9b733c7b4f0cb32e91c7e1cf206b9df092372a50331",
+      "layoutHash": "f153b39d52b5bda6a12e37df703ef4b86ef8eb657177c2c3d0771948e86611e7",
+      "solutionHash": "a8b3d4775416c51a9e9c3c867056b3fd257e0ef9a506a7831ec66d46954c4f45",
       "normalizedPositions": [
         [
-          "dead_end_a",
+          "decision_3",
+          0.9021,
+          0.5
+        ],
+        [
+          "deep_recovery_detour_0",
           0.0,
-          0.7692
+          0.7143
         ],
         [
-          "dead_end_b",
-          0.2857,
-          0.2051
+          "deep_recovery_switch_0",
+          0.021,
+          0.5
         ],
         [
-          "destination",
-          0.7857,
+          "initial_fatal_dead_end",
+          0.0769,
+          0.3571
+        ],
+        [
+          "objective_entry_0",
+          0.2028,
+          0.3214
+        ],
+        [
+          "objective_entry_1",
+          0.1329,
+          0.6786
+        ],
+        [
+          "objective_entry_2",
+          0.5524,
+          0.3214
+        ],
+        [
+          "objective_entry_3",
+          0.972,
+          0.3214
+        ],
+        [
+          "objective_node_0",
+          0.2308,
           0.0
         ],
         [
-          "hub",
-          0.4286,
-          0.7692
-        ],
-        [
-          "package",
-          1.0,
-          0.5641
-        ],
-        [
-          "package_branch",
-          1.0,
-          0.7692
-        ],
-        [
-          "rejoin",
-          0.4286,
-          0.4103
-        ],
-        [
-          "start",
-          0.4286,
+          "objective_node_1",
+          0.1608,
           1.0
         ],
         [
-          "switch_b",
-          0.7857,
-          0.2051
+          "objective_node_2",
+          0.5804,
+          0.0
+        ],
+        [
+          "objective_node_3",
+          1.0,
+          0.0
+        ],
+        [
+          "planning_dead_end_0",
+          0.2098,
+          0.0714
+        ],
+        [
+          "planning_gate_0",
+          0.1329,
+          0.3214
+        ],
+        [
+          "shared_hub_0",
+          0.0629,
+          0.5
+        ],
+        [
+          "shared_hub_1",
+          0.4825,
+          0.5
+        ],
+        [
+          "start",
+          0.035,
+          0.3929
+        ],
+        [
+          "wrong_0_0",
+          0.042,
+          0.6071
+        ],
+        [
+          "wrong_0_1",
+          0.021,
+          0.6071
+        ],
+        [
+          "wrong_0_2",
+          0.021,
+          0.5821
+        ],
+        [
+          "wrong_0_3",
+          0.021,
+          0.5571
+        ],
+        [
+          "wrong_2_0",
+          0.4615,
+          0.6071
+        ],
+        [
+          "wrong_2_1",
+          0.4406,
+          0.6071
+        ],
+        [
+          "wrong_2_2",
+          0.4406,
+          0.5821
+        ],
+        [
+          "wrong_2_3",
+          0.4406,
+          0.5571
+        ],
+        [
+          "wrong_3_0",
+          0.8811,
+          0.6071
+        ],
+        [
+          "wrong_3_1",
+          0.8601,
+          0.6071
+        ],
+        [
+          "wrong_3_2",
+          0.8601,
+          0.5821
+        ],
+        [
+          "wrong_3_3",
+          0.8601,
+          0.5571
         ]
-      ]
+      ],
+      "blueprintArchetype": "",
+      "objectiveCount": 4,
+      "objectiveKinds": [
+        "pickup",
+        "checkpoint",
+        "checkpoint",
+        "destination"
+      ],
+      "dependencyDAGSignature": "",
+      "adaptiveDecisionPattern": [],
+      "stateTransitionPattern": [],
+      "staticPolicyProofSignature": "",
+      "agentPerformanceProfile": [],
+      "revisitPattern": [],
+      "successFailureDistribution": [],
+      "optimalStrategySignature": "",
+      "roadStateVisualSignature": "b10599fbdcf4874e9a9a42dbf1bc5f06006c960f4d14dab999ac593e45b7732c",
+      "structuralBehaviorSignature": "4a775c1608cb9a443e031386f4a3891f0b469e26d56c4914b2033d73ca49b91c"
     },
     {
       "levelID": "level_012",
       "name": "Level 012",
-      "difficultyEstimate": "easy",
-      "nodes": 9,
-      "edges": 9,
-      "switches": 2,
-      "tapCount": 2,
-      "deadEndCount": 1,
+      "difficultyEstimate": "hard",
+      "nodes": 21,
+      "edges": 25,
+      "switches": 5,
+      "tapCount": 3,
+      "deadEndCount": 2,
       "template": "existing",
-      "topologyHash": "eb2c3b9e834b87b051780ee0e0c5a14775b96deefad61e734cfa2cdefcbedfb5",
-      "layoutHash": "5b41d9fb6d5d615d8324fdcdd868fc53820ecca93d45e7514404b271938245dd",
-      "solutionHash": "e45124c204979bd0a33c56cc0a193617dc0461f268589b30a918a535a575c7f4",
+      "topologyHash": "e0ea87f09856253b1eb7250e66ce8f799acda963aaf965d4cdb1ea8d12689f45",
+      "layoutHash": "72bfbd3c1ad8c99e6a593fbc3b05ebec50fb0e2d2aff986709869238a307cf38",
+      "solutionHash": "4d4d20a9f3f896e0262f8134806639a0d8cecf3137fb23b65af019e184d6ee36",
       "normalizedPositions": [
         [
-          "dead_end_b",
-          0.0,
-          0.25
+          "decision_1",
+          0.2,
+          0.6786
         ],
         [
-          "destination",
-          1.0,
-          0.0
+          "deep_recovery_detour_1",
+          0.125,
+          0.8214
         ],
         [
-          "detour_a",
-          0.8438,
-          0.8
+          "deep_recovery_switch_1",
+          0.125,
+          0.6786
         ],
         [
-          "direct_bypass",
-          0.0,
-          0.6
+          "initial_fatal_dead_end",
+          0.1,
+          0.6429
         ],
         [
-          "package",
-          0.9063,
-          0.55
+          "objective_entry_0",
+          0.45,
+          0.6786
         ],
         [
-          "rejoin",
-          0.4375,
-          0.45
+          "objective_entry_1",
+          0.2,
+          0.3214
         ],
         [
-          "start",
-          0.4375,
+          "objective_entry_2",
+          0.95,
+          0.6786
+        ],
+        [
+          "objective_node_0",
+          0.5,
           1.0
         ],
         [
-          "switch_exit",
-          0.4375,
-          0.25
+          "objective_node_1",
+          0.25,
+          0.0
         ],
         [
-          "switch_gate",
-          0.4375,
-          0.8
+          "objective_node_2",
+          1.0,
+          1.0
+        ],
+        [
+          "planning_dead_end_1",
+          0.4625,
+          0.9286
+        ],
+        [
+          "planning_gate_1",
+          0.325,
+          0.6786
+        ],
+        [
+          "shared_hub_0",
+          0.075,
+          0.5
+        ],
+        [
+          "shared_hub_1",
+          0.825,
+          0.5
+        ],
+        [
+          "start",
+          0.025,
+          0.6071
+        ],
+        [
+          "wrong_0_0",
+          0.0375,
+          0.3929
+        ],
+        [
+          "wrong_0_1",
+          0.0,
+          0.3929
+        ],
+        [
+          "wrong_1_0",
+          0.1625,
+          0.5714
+        ],
+        [
+          "wrong_1_1",
+          0.125,
+          0.5714
+        ],
+        [
+          "wrong_3_0",
+          0.7875,
+          0.3929
+        ],
+        [
+          "wrong_3_1",
+          0.75,
+          0.3929
         ]
-      ]
+      ],
+      "blueprintArchetype": "",
+      "objectiveCount": 3,
+      "objectiveKinds": [
+        "pickup",
+        "checkpoint",
+        "destination"
+      ],
+      "dependencyDAGSignature": "",
+      "adaptiveDecisionPattern": [],
+      "stateTransitionPattern": [],
+      "staticPolicyProofSignature": "",
+      "agentPerformanceProfile": [],
+      "revisitPattern": [],
+      "successFailureDistribution": [],
+      "optimalStrategySignature": "",
+      "roadStateVisualSignature": "91e46ac31ab9b637959ec9399941d620fd46aaa69fa3d2b552eba34e765c6908",
+      "structuralBehaviorSignature": "02da5b825a54d6b530b1444ea385bf93447b4b0fa6b6a13be722d41168a118bc"
     },
     {
       "levelID": "level_013",
       "name": "Level 013",
-      "difficultyEstimate": "easy",
-      "nodes": 9,
-      "edges": 9,
-      "switches": 2,
-      "tapCount": 2,
-      "deadEndCount": 1,
+      "difficultyEstimate": "hard",
+      "nodes": 28,
+      "edges": 33,
+      "switches": 6,
+      "tapCount": 3,
+      "deadEndCount": 2,
       "template": "existing",
-      "topologyHash": "404d3c3faacba42bfa62f40b845f3662d73cac62d43684e5e03defd72c8d0a94",
-      "layoutHash": "ca8555daad415ac130cb53b4d59fcaa199f35bfa89f19ff8c37b4868e033235b",
-      "solutionHash": "22e42c179808931fa9fc276f0338c8e1c297c586c862fac5d9dc5a280aef57e7",
+      "topologyHash": "f98ff6bc41f9085ad104121891494932cf1bb427316ec5e9ababc842aaeac35f",
+      "layoutHash": "baebcae17e77ff87e52437bb7a3063ee498f8a65b375651f64bd4fa4393173da",
+      "solutionHash": "4d4d20a9f3f896e0262f8134806639a0d8cecf3137fb23b65af019e184d6ee36",
       "normalizedPositions": [
         [
-          "dead_end_b",
-          0.2143,
-          0.1316
+          "decision_1",
+          0.2,
+          0.3214
         ],
         [
-          "destination",
+          "decision_3",
+          0.2,
+          0.6786
+        ],
+        [
+          "deep_recovery_detour_1",
+          0.125,
+          0.1786
+        ],
+        [
+          "deep_recovery_switch_1",
+          0.125,
+          0.3214
+        ],
+        [
+          "initial_fatal_dead_end",
+          0.1,
+          0.3571
+        ],
+        [
+          "objective_entry_0",
+          0.45,
+          0.3214
+        ],
+        [
+          "objective_entry_1",
+          0.325,
+          0.6786
+        ],
+        [
+          "objective_entry_2",
+          0.95,
+          0.3214
+        ],
+        [
+          "objective_node_0",
+          0.5,
+          0.0
+        ],
+        [
+          "objective_node_1",
+          0.375,
+          1.0
+        ],
+        [
+          "objective_node_2",
           1.0,
           0.0
         ],
         [
-          "lower_shortcut",
-          0.0,
-          0.6842
+          "planning_dead_end_1",
+          0.4625,
+          0.0714
         ],
         [
-          "package",
-          1.0,
+          "planning_gate_1",
+          0.325,
+          0.3214
+        ],
+        [
+          "shared_hub_0",
+          0.075,
           0.5
         ],
         [
-          "rejoin",
-          0.6071,
-          0.3158
+          "shared_hub_1",
+          0.825,
+          0.5
         ],
         [
           "start",
-          0.6071,
-          1.0
+          0.025,
+          0.3929
         ],
         [
-          "switch_a",
-          0.7857,
-          0.8421
+          "wrong_0_0",
+          0.0375,
+          0.6071
         ],
         [
-          "switch_b",
-          0.7857,
-          0.1579
+          "wrong_0_1",
+          0.0,
+          0.6071
         ],
         [
-          "upper_branch",
-          0.7857,
-          0.6842
+          "wrong_0_2",
+          0.0,
+          0.5696
+        ],
+        [
+          "wrong_1_0",
+          0.1625,
+          0.4286
+        ],
+        [
+          "wrong_1_1",
+          0.125,
+          0.4286
+        ],
+        [
+          "wrong_1_2",
+          0.125,
+          0.3911
+        ],
+        [
+          "wrong_3_0",
+          0.1625,
+          0.5714
+        ],
+        [
+          "wrong_3_1",
+          0.125,
+          0.5714
+        ],
+        [
+          "wrong_3_2",
+          0.125,
+          0.6089
+        ],
+        [
+          "wrong_4_0",
+          0.7875,
+          0.6071
+        ],
+        [
+          "wrong_4_1",
+          0.75,
+          0.6071
+        ],
+        [
+          "wrong_4_2",
+          0.75,
+          0.5696
         ]
-      ]
+      ],
+      "blueprintArchetype": "",
+      "objectiveCount": 3,
+      "objectiveKinds": [
+        "pickup",
+        "checkpoint",
+        "destination"
+      ],
+      "dependencyDAGSignature": "",
+      "adaptiveDecisionPattern": [],
+      "stateTransitionPattern": [],
+      "staticPolicyProofSignature": "",
+      "agentPerformanceProfile": [],
+      "revisitPattern": [],
+      "successFailureDistribution": [],
+      "optimalStrategySignature": "",
+      "roadStateVisualSignature": "fb2f6cb1f82bcdecaefcc5c2c7b9cdf9673c55f583d61c2d4737d344120219ae",
+      "structuralBehaviorSignature": "36e8ff8e320883f392610a8192b16c58cb00445e3d602d738e767397b7ac0aec"
     },
     {
       "levelID": "level_014",
       "name": "Level 014",
-      "difficultyEstimate": "medium",
-      "nodes": 9,
-      "edges": 8,
-      "switches": 3,
+      "difficultyEstimate": "hard",
+      "nodes": 26,
+      "edges": 31,
+      "switches": 6,
       "tapCount": 3,
-      "deadEndCount": 3,
+      "deadEndCount": 2,
       "template": "existing",
-      "topologyHash": "ee49bc2dace77483a60152341a4afdb188d2d0eb7feb7a0e67f69a59869b6903",
-      "layoutHash": "ac1bf9dcffcb89ff29f33dadd6118e5ab0b52f36483a59b37fe514a17009cd4f",
-      "solutionHash": "1312b44fb160cc308b57fbcbc2d9fdda760e0cf1981b34a633e40ccecd421821",
+      "topologyHash": "c076c8a2ec54124f225bee4943d1aa043bb5c900beb6072d78d2925b00e48a1e",
+      "layoutHash": "81e099b4706ddea0959b680b51480fb6027b2fd5e69e3176f4be53b76e10696a",
+      "solutionHash": "4d4d20a9f3f896e0262f8134806639a0d8cecf3137fb23b65af019e184d6ee36",
       "normalizedPositions": [
         [
-          "destination",
-          0.85,
+          "decision_1",
+          0.1143,
+          0.6786
+        ],
+        [
+          "decision_3",
+          0.4714,
+          0.5
+        ],
+        [
+          "decision_4",
+          0.9,
+          0.5
+        ],
+        [
+          "deep_recovery_detour_1",
+          0.0714,
+          0.8214
+        ],
+        [
+          "deep_recovery_switch_1",
+          0.0714,
+          0.6786
+        ],
+        [
+          "initial_fatal_dead_end",
+          0.0571,
+          0.6429
+        ],
+        [
+          "objective_entry_0",
+          0.2571,
+          0.6786
+        ],
+        [
+          "objective_entry_1",
+          0.1143,
+          0.3214
+        ],
+        [
+          "objective_entry_2",
+          0.5429,
+          0.6786
+        ],
+        [
+          "objective_entry_3",
+          0.9714,
+          0.6786
+        ],
+        [
+          "objective_node_0",
+          0.2857,
+          1.0
+        ],
+        [
+          "objective_node_1",
+          0.1429,
           0.0
         ],
         [
-          "double_bypass",
-          0.0,
-          0.7838
+          "objective_node_2",
+          0.5714,
+          1.0
         ],
         [
-          "double_dead_end_a",
-          0.0,
-          0.3784
-        ],
-        [
-          "double_dead_end_b",
+          "objective_node_3",
           1.0,
-          0.1622
+          1.0
         ],
         [
-          "double_entry_switch",
-          0.7,
-          0.8108
+          "planning_dead_end_1",
+          0.2643,
+          0.9286
         ],
         [
-          "double_finish_switch",
-          0.3,
-          0.1892
+          "planning_gate_1",
+          0.1857,
+          0.6786
         ],
         [
-          "double_mid_switch",
-          0.7,
-          0.4054
-        ],
-        [
-          "package",
-          0.15,
-          0.5946
+          "shared_hub_0",
+          0.0429,
+          0.5
         ],
         [
           "start",
-          0.5,
-          1.0
+          0.0143,
+          0.6071
+        ],
+        [
+          "wrong_0_0",
+          0.0214,
+          0.3929
+        ],
+        [
+          "wrong_0_1",
+          0.0,
+          0.3929
+        ],
+        [
+          "wrong_1_0",
+          0.0929,
+          0.5714
+        ],
+        [
+          "wrong_1_1",
+          0.0714,
+          0.5714
+        ],
+        [
+          "wrong_3_0",
+          0.45,
+          0.3929
+        ],
+        [
+          "wrong_3_1",
+          0.4286,
+          0.3929
+        ],
+        [
+          "wrong_4_0",
+          0.8786,
+          0.3929
+        ],
+        [
+          "wrong_4_1",
+          0.8571,
+          0.3929
         ]
-      ]
+      ],
+      "blueprintArchetype": "",
+      "objectiveCount": 4,
+      "objectiveKinds": [
+        "pickup",
+        "checkpoint",
+        "checkpoint",
+        "destination"
+      ],
+      "dependencyDAGSignature": "",
+      "adaptiveDecisionPattern": [],
+      "stateTransitionPattern": [],
+      "staticPolicyProofSignature": "",
+      "agentPerformanceProfile": [],
+      "revisitPattern": [],
+      "successFailureDistribution": [],
+      "optimalStrategySignature": "",
+      "roadStateVisualSignature": "e251d01a2e08b3154a6bbfd9d9535c9f29789cc3c36136dc574d6366138c0a9e",
+      "structuralBehaviorSignature": "6dc3d460e57fcf892c721de52bd797b3389522d392674187513ab3660da1a070"
     },
     {
       "levelID": "level_015",
       "name": "Level 015",
-      "difficultyEstimate": "medium",
-      "nodes": 7,
-      "edges": 7,
-      "switches": 2,
+      "difficultyEstimate": "hard",
+      "nodes": 30,
+      "edges": 35,
+      "switches": 6,
       "tapCount": 3,
-      "deadEndCount": 1,
+      "deadEndCount": 2,
       "template": "existing",
-      "topologyHash": "b0ddc5b0f99bbdd72e70ef828564d9b64b57e4735662f695361a3ee632a6b3d0",
-      "layoutHash": "03448d0b62e9d4998dddb1692448006c88ba84f0e57cd774919c6deb9b8f750e",
-      "solutionHash": "c09ff2660f6f956e9e4be8bd851f45d38a8ef0aceb29bb7412ee6b5604d9d049",
+      "topologyHash": "0af121463b37d521a42f146844a0887421b9ba230e3e3311fe9fe2e1be19a300",
+      "layoutHash": "90b9c1340dc5a6a8f165a96bf4a3cd5001d2d4823f53b410e62fa6da00b07187",
+      "solutionHash": "4d4d20a9f3f896e0262f8134806639a0d8cecf3137fb23b65af019e184d6ee36",
       "normalizedPositions": [
         [
-          "destination",
-          0.1579,
-          0.0
+          "decision_1",
+          0.1143,
+          0.6786
         ],
         [
-          "package",
-          0.2895,
-          0.8506
+          "decision_4",
+          0.9,
+          0.5
         ],
         [
-          "start",
-          0.0,
+          "deep_recovery_detour_1",
+          0.0714,
+          0.8214
+        ],
+        [
+          "deep_recovery_switch_1",
+          0.0714,
+          0.6786
+        ],
+        [
+          "initial_fatal_dead_end",
+          0.0571,
+          0.6429
+        ],
+        [
+          "objective_entry_0",
+          0.2571,
+          0.6786
+        ],
+        [
+          "objective_entry_1",
+          0.1143,
+          0.3214
+        ],
+        [
+          "objective_entry_2",
+          0.5429,
+          0.6786
+        ],
+        [
+          "objective_entry_3",
+          0.9714,
+          0.6786
+        ],
+        [
+          "objective_node_0",
+          0.2857,
           1.0
         ],
         [
-          "upper_alpha_switch",
-          0.1579,
-          0.6667
+          "objective_node_1",
+          0.1429,
+          0.0
         ],
         [
-          "upper_beta_switch",
-          0.8421,
-          0.8506
+          "objective_node_2",
+          0.5714,
+          1.0
         ],
         [
-          "upper_dead_end",
+          "objective_node_3",
           1.0,
-          0.7816
+          1.0
         ],
         [
-          "upper_return",
-          1.0,
-          0.6667
+          "planning_dead_end_1",
+          0.2643,
+          0.9286
+        ],
+        [
+          "planning_gate_1",
+          0.1857,
+          0.6786
+        ],
+        [
+          "shared_hub_0",
+          0.0429,
+          0.5
+        ],
+        [
+          "shared_hub_1",
+          0.4714,
+          0.5
+        ],
+        [
+          "start",
+          0.0143,
+          0.6071
+        ],
+        [
+          "wrong_0_0",
+          0.0214,
+          0.3929
+        ],
+        [
+          "wrong_0_1",
+          0.0,
+          0.3929
+        ],
+        [
+          "wrong_0_2",
+          0.0,
+          0.4304
+        ],
+        [
+          "wrong_1_0",
+          0.0929,
+          0.5714
+        ],
+        [
+          "wrong_1_1",
+          0.0714,
+          0.5714
+        ],
+        [
+          "wrong_1_2",
+          0.0714,
+          0.6089
+        ],
+        [
+          "wrong_3_0",
+          0.45,
+          0.3929
+        ],
+        [
+          "wrong_3_1",
+          0.4286,
+          0.3929
+        ],
+        [
+          "wrong_3_2",
+          0.4286,
+          0.4304
+        ],
+        [
+          "wrong_4_0",
+          0.8786,
+          0.3929
+        ],
+        [
+          "wrong_4_1",
+          0.8571,
+          0.3929
+        ],
+        [
+          "wrong_4_2",
+          0.8571,
+          0.4304
         ]
-      ]
+      ],
+      "blueprintArchetype": "",
+      "objectiveCount": 4,
+      "objectiveKinds": [
+        "pickup",
+        "checkpoint",
+        "checkpoint",
+        "destination"
+      ],
+      "dependencyDAGSignature": "",
+      "adaptiveDecisionPattern": [],
+      "stateTransitionPattern": [],
+      "staticPolicyProofSignature": "",
+      "agentPerformanceProfile": [],
+      "revisitPattern": [],
+      "successFailureDistribution": [],
+      "optimalStrategySignature": "",
+      "roadStateVisualSignature": "c49917dc75d347b50c475ca9aa0330971be1cfacdcd596c60c3def3e525250b2",
+      "structuralBehaviorSignature": "ab1c8274a0a555a0676a24d130493d3dfdc1a3d1320ccbac90b7d402c04ce5a8"
     },
     {
       "levelID": "level_016",
       "name": "Level 016",
-      "difficultyEstimate": "easy",
-      "nodes": 9,
-      "edges": 8,
-      "switches": 2,
-      "tapCount": 2,
+      "difficultyEstimate": "hard",
+      "nodes": 18,
+      "edges": 22,
+      "switches": 5,
+      "tapCount": 3,
       "deadEndCount": 2,
       "template": "existing",
-      "topologyHash": "c115d191f8b1c43ec3c41412ef1f19468c9573e316770613309ae8706e32de70",
-      "layoutHash": "1c23971f490747f0d40ae4ff7a77beca9e2dbdf950e2b978491bf633eb221e84",
-      "solutionHash": "547b0f2b790e4ca8f563651ded750e3701f8828e38c72416af2c405332c4605d",
+      "topologyHash": "0d4c686924f6625e9b07111e7192ea38844a83b57d258f9f1103f935122cc466",
+      "layoutHash": "e7196e8517bacbfc500c203fc87cfdea6084ec1383f33033dbcaf89d0e6b29a6",
+      "solutionHash": "4d4d20a9f3f896e0262f8134806639a0d8cecf3137fb23b65af019e184d6ee36",
       "normalizedPositions": [
         [
-          "choice",
-          0.8235,
-          0.8378
+          "decision_1",
+          0.1795,
+          0.6786
         ],
         [
-          "dead_end_b",
-          0.0,
-          0.1351
+          "decision_3",
+          0.8205,
+          0.5
         ],
         [
-          "destination",
-          1.0,
-          0.0
+          "deep_recovery_detour_1",
+          0.1026,
+          0.8214
         ],
         [
-          "detour_a",
-          0.5882,
-          0.6757
+          "deep_recovery_switch_1",
+          0.1026,
+          0.6786
         ],
         [
-          "detour_b",
-          0.5882,
-          0.3243
+          "initial_fatal_dead_end",
+          0.0769,
+          0.6429
         ],
         [
-          "package",
-          0.1765,
-          0.4865
+          "objective_entry_0",
+          0.4359,
+          0.6786
         ],
         [
-          "shortcut_dead_end",
-          0.0,
-          0.8108
+          "objective_entry_1",
+          0.1795,
+          0.3214
         ],
         [
-          "start",
-          0.5882,
+          "objective_entry_2",
+          0.9487,
+          0.6786
+        ],
+        [
+          "objective_node_0",
+          0.4872,
           1.0
         ],
         [
-          "switch_b",
-          0.8235,
-          0.1622
+          "objective_node_1",
+          0.2308,
+          0.0
+        ],
+        [
+          "objective_node_2",
+          1.0,
+          1.0
+        ],
+        [
+          "planning_dead_end_1",
+          0.4487,
+          0.9286
+        ],
+        [
+          "planning_gate_1",
+          0.3077,
+          0.6786
+        ],
+        [
+          "shared_hub_0",
+          0.0513,
+          0.5
+        ],
+        [
+          "start",
+          0.0,
+          0.6071
+        ],
+        [
+          "wrong_0_0",
+          0.0128,
+          0.3929
+        ],
+        [
+          "wrong_1_0",
+          0.141,
+          0.5714
+        ],
+        [
+          "wrong_3_0",
+          0.7821,
+          0.3929
         ]
-      ]
+      ],
+      "blueprintArchetype": "",
+      "objectiveCount": 3,
+      "objectiveKinds": [
+        "pickup",
+        "checkpoint",
+        "destination"
+      ],
+      "dependencyDAGSignature": "",
+      "adaptiveDecisionPattern": [],
+      "stateTransitionPattern": [],
+      "staticPolicyProofSignature": "",
+      "agentPerformanceProfile": [],
+      "revisitPattern": [],
+      "successFailureDistribution": [],
+      "optimalStrategySignature": "",
+      "roadStateVisualSignature": "36d202b8a09e048c29ee43c4330cd46d6c398864ab8dd6c6d149dd9a1e7283dd",
+      "structuralBehaviorSignature": "29614a915c869a2418a3e4f680063996c75d0d610242597984c25181ab987f30"
     },
     {
       "levelID": "level_017",
       "name": "Level 017",
-      "difficultyEstimate": "medium",
-      "nodes": 7,
-      "edges": 7,
-      "switches": 2,
+      "difficultyEstimate": "hard",
+      "nodes": 24,
+      "edges": 29,
+      "switches": 6,
       "tapCount": 3,
-      "deadEndCount": 1,
+      "deadEndCount": 2,
       "template": "existing",
-      "topologyHash": "18a000471440dcf722ba9a4e38eeec9ebee8aa7d663f135a465417af93ebf773",
-      "layoutHash": "bafc0220e58c54c613b0a6efa91b784b373b7bddf7bf1c6345a79198b5f019a3",
-      "solutionHash": "c6e81a710b6268d3ff8ab8e86ed766dee3543ccd405c54ac78b5710e7d500514",
+      "topologyHash": "6ac807bea40cbb0d732a7546a1c504a420a75a251547885294b708843606eba8",
+      "layoutHash": "29deffa07216fb60e6af901e72f2697f8f4466fcfa4e4b4f786277323a299469",
+      "solutionHash": "4d4d20a9f3f896e0262f8134806639a0d8cecf3137fb23b65af019e184d6ee36",
       "normalizedPositions": [
         [
-          "alpha_switch",
-          0.1579,
-          0.6667
+          "decision_1",
+          0.2,
+          0.6786
         ],
         [
-          "beta_switch",
-          0.8421,
-          0.8506
+          "decision_3",
+          0.2,
+          0.3214
         ],
         [
-          "dead_end_a",
-          1.0,
-          0.7816
+          "deep_recovery_detour_1",
+          0.125,
+          0.8214
         ],
         [
-          "destination",
-          0.1579,
+          "deep_recovery_switch_1",
+          0.125,
+          0.6786
+        ],
+        [
+          "initial_fatal_dead_end",
+          0.1,
+          0.6429
+        ],
+        [
+          "objective_entry_0",
+          0.45,
+          0.6786
+        ],
+        [
+          "objective_entry_1",
+          0.325,
+          0.3214
+        ],
+        [
+          "objective_entry_2",
+          0.95,
+          0.6786
+        ],
+        [
+          "objective_node_0",
+          0.5,
+          1.0
+        ],
+        [
+          "objective_node_1",
+          0.375,
           0.0
         ],
         [
-          "package",
-          0.2895,
-          0.8506
+          "objective_node_2",
+          1.0,
+          1.0
         ],
         [
-          "return_a",
-          1.0,
-          0.6667
+          "planning_dead_end_1",
+          0.4625,
+          0.9286
+        ],
+        [
+          "planning_gate_1",
+          0.325,
+          0.6786
+        ],
+        [
+          "shared_hub_0",
+          0.075,
+          0.5
+        ],
+        [
+          "shared_hub_1",
+          0.825,
+          0.5
         ],
         [
           "start",
+          0.025,
+          0.6071
+        ],
+        [
+          "wrong_0_0",
+          0.0375,
+          0.3929
+        ],
+        [
+          "wrong_0_1",
           0.0,
-          1.0
+          0.3929
+        ],
+        [
+          "wrong_1_0",
+          0.1625,
+          0.5714
+        ],
+        [
+          "wrong_1_1",
+          0.125,
+          0.5714
+        ],
+        [
+          "wrong_3_0",
+          0.1625,
+          0.4286
+        ],
+        [
+          "wrong_3_1",
+          0.125,
+          0.4286
+        ],
+        [
+          "wrong_4_0",
+          0.7875,
+          0.3929
+        ],
+        [
+          "wrong_4_1",
+          0.75,
+          0.3929
         ]
-      ]
+      ],
+      "blueprintArchetype": "",
+      "objectiveCount": 3,
+      "objectiveKinds": [
+        "pickup",
+        "checkpoint",
+        "destination"
+      ],
+      "dependencyDAGSignature": "",
+      "adaptiveDecisionPattern": [],
+      "stateTransitionPattern": [],
+      "staticPolicyProofSignature": "",
+      "agentPerformanceProfile": [],
+      "revisitPattern": [],
+      "successFailureDistribution": [],
+      "optimalStrategySignature": "",
+      "roadStateVisualSignature": "5ca328e145c3b22af40974b3fd02c9021d9142b658b440dc98ec312b44d32562",
+      "structuralBehaviorSignature": "2f057ead0e7360f85188246231f7ceae274595fadb253a973ba7e9263719ece8"
     },
     {
       "levelID": "level_018",
       "name": "Level 018",
-      "difficultyEstimate": "easy",
-      "nodes": 7,
-      "edges": 6,
-      "switches": 2,
-      "tapCount": 2,
+      "difficultyEstimate": "hard",
+      "nodes": 23,
+      "edges": 27,
+      "switches": 5,
+      "tapCount": 3,
       "deadEndCount": 2,
       "template": "existing",
-      "topologyHash": "c3c5c0eec9f5cfb9961998b7e61c17774b42e677c63f30aaa2137e45e2582cd7",
-      "layoutHash": "29f3976cf5a0862f0acfc9f29ad4a9b55e7a13f7951218a3e0ff1bc1fae913f5",
-      "solutionHash": "569856479e9c9c4aebeeb09b946399a845125400bbcd1424aebebd80de3bfb2a",
+      "topologyHash": "b382ec4c6b53925eaa7c8991d483d3d302933ca94ff496c7a57d526fb72fc34e",
+      "layoutHash": "ca7192da532a1696f359ddfb2587ec6433a807e1c0a0ba3af740907ae0a1faa0",
+      "solutionHash": "a8b3d4775416c51a9e9c3c867056b3fd257e0ef9a506a7831ec66d46954c4f45",
       "normalizedPositions": [
         [
-          "destination",
+          "decision_3",
+          0.9021,
+          0.5
+        ],
+        [
+          "deep_recovery_detour_0",
+          0.0,
+          0.7143
+        ],
+        [
+          "deep_recovery_switch_0",
+          0.021,
+          0.5
+        ],
+        [
+          "initial_fatal_dead_end",
+          0.0769,
+          0.3571
+        ],
+        [
+          "objective_entry_0",
+          0.2028,
+          0.3214
+        ],
+        [
+          "objective_entry_1",
+          0.1329,
+          0.6786
+        ],
+        [
+          "objective_entry_2",
+          0.5524,
+          0.3214
+        ],
+        [
+          "objective_entry_3",
+          0.972,
+          0.3214
+        ],
+        [
+          "objective_node_0",
+          0.2308,
+          0.0
+        ],
+        [
+          "objective_node_1",
+          0.1608,
+          1.0
+        ],
+        [
+          "objective_node_2",
+          0.5804,
+          0.0
+        ],
+        [
+          "objective_node_3",
           1.0,
           0.0
         ],
         [
-          "left_bypass",
-          0.0,
-          0.7297
+          "planning_dead_end_0",
+          0.2098,
+          0.0714
         ],
         [
-          "left_dead_end",
-          0.0,
-          0.2162
+          "planning_gate_0",
+          0.1329,
+          0.3214
         ],
         [
-          "left_entry_switch",
-          0.8235,
-          0.7568
+          "shared_hub_0",
+          0.0629,
+          0.5
         ],
         [
-          "left_finish_switch",
-          0.8235,
-          0.2432
-        ],
-        [
-          "package",
-          0.1765,
-          0.4865
+          "shared_hub_1",
+          0.4825,
+          0.5
         ],
         [
           "start",
-          0.5882,
-          1.0
+          0.035,
+          0.3929
+        ],
+        [
+          "wrong_0_0",
+          0.042,
+          0.6071
+        ],
+        [
+          "wrong_0_1",
+          0.021,
+          0.6071
+        ],
+        [
+          "wrong_2_0",
+          0.4615,
+          0.6071
+        ],
+        [
+          "wrong_2_1",
+          0.4406,
+          0.6071
+        ],
+        [
+          "wrong_3_0",
+          0.8811,
+          0.6071
+        ],
+        [
+          "wrong_3_1",
+          0.8601,
+          0.6071
         ]
-      ]
+      ],
+      "blueprintArchetype": "",
+      "objectiveCount": 4,
+      "objectiveKinds": [
+        "pickup",
+        "checkpoint",
+        "checkpoint",
+        "destination"
+      ],
+      "dependencyDAGSignature": "",
+      "adaptiveDecisionPattern": [],
+      "stateTransitionPattern": [],
+      "staticPolicyProofSignature": "",
+      "agentPerformanceProfile": [],
+      "revisitPattern": [],
+      "successFailureDistribution": [],
+      "optimalStrategySignature": "",
+      "roadStateVisualSignature": "2120309dc9500471c272ef2837b4ce88379283bd635288f1e0784acf8aadc8da",
+      "structuralBehaviorSignature": "0b7fd5cd52f392bacb79e1dccfb95be3046f92bf2e8c732b5372c61dd01262bd"
     },
     {
       "levelID": "level_019",
       "name": "Level 019",
-      "difficultyEstimate": "medium",
-      "nodes": 7,
-      "edges": 7,
-      "switches": 2,
+      "difficultyEstimate": "hard",
+      "nodes": 32,
+      "edges": 36,
+      "switches": 5,
       "tapCount": 3,
-      "deadEndCount": 1,
+      "deadEndCount": 2,
       "template": "existing",
-      "topologyHash": "f152647c43002e9d64a1df87475606529913df69c1c598ad698b47fc56192236",
-      "layoutHash": "349c30c304b8748c5da4d96f55c3ed5c6e3ec84731754a375320cef65f9702a4",
-      "solutionHash": "50bb2282fa01bd42101fd591c0fa0e6a3cc8a5e449cb902e6a70711e19545031",
+      "topologyHash": "1aeb6b4a24506418ddb9caa734bb93c6a0730508e492f715b737a44224998f31",
+      "layoutHash": "ac24e7b1e67af24301faee845254ada2d378812af6fa956a83f0a3eb9f3f9a6e",
+      "solutionHash": "a8b3d4775416c51a9e9c3c867056b3fd257e0ef9a506a7831ec66d46954c4f45",
       "normalizedPositions": [
         [
-          "destination",
-          0.1579,
+          "decision_2",
+          0.4825,
+          0.5
+        ],
+        [
+          "decision_3",
+          0.9021,
+          0.5
+        ],
+        [
+          "deep_recovery_detour_0",
+          0.0,
+          0.7143
+        ],
+        [
+          "deep_recovery_switch_0",
+          0.021,
+          0.5
+        ],
+        [
+          "initial_fatal_dead_end",
+          0.0769,
+          0.3571
+        ],
+        [
+          "objective_entry_0",
+          0.2028,
+          0.3214
+        ],
+        [
+          "objective_entry_1",
+          0.1329,
+          0.6786
+        ],
+        [
+          "objective_entry_2",
+          0.5524,
+          0.3214
+        ],
+        [
+          "objective_entry_3",
+          0.972,
+          0.3214
+        ],
+        [
+          "objective_node_0",
+          0.2308,
           0.0
         ],
         [
-          "lower_alpha_switch",
-          0.1579,
-          0.6667
+          "objective_node_1",
+          0.1608,
+          1.0
         ],
         [
-          "lower_beta_switch",
-          0.8421,
-          0.8506
+          "objective_node_2",
+          0.5804,
+          0.0
         ],
         [
-          "lower_dead_end",
+          "objective_node_3",
           1.0,
-          0.7816
+          0.0
         ],
         [
-          "lower_return",
-          1.0,
-          0.6667
+          "planning_dead_end_0",
+          0.2098,
+          0.0714
         ],
         [
-          "package",
-          0.2895,
-          0.8506
+          "planning_gate_0",
+          0.1329,
+          0.3214
+        ],
+        [
+          "shared_hub_0",
+          0.0629,
+          0.5
         ],
         [
           "start",
-          0.0,
-          1.0
+          0.035,
+          0.3929
+        ],
+        [
+          "wrong_0_0",
+          0.042,
+          0.6071
+        ],
+        [
+          "wrong_0_1",
+          0.021,
+          0.6071
+        ],
+        [
+          "wrong_0_2",
+          0.021,
+          0.5884
+        ],
+        [
+          "wrong_0_3",
+          0.021,
+          0.5696
+        ],
+        [
+          "wrong_0_4",
+          0.021,
+          0.5509
+        ],
+        [
+          "wrong_2_0",
+          0.4615,
+          0.6071
+        ],
+        [
+          "wrong_2_1",
+          0.4406,
+          0.6071
+        ],
+        [
+          "wrong_2_2",
+          0.4406,
+          0.5884
+        ],
+        [
+          "wrong_2_3",
+          0.4406,
+          0.5696
+        ],
+        [
+          "wrong_2_4",
+          0.4406,
+          0.5509
+        ],
+        [
+          "wrong_3_0",
+          0.8811,
+          0.6071
+        ],
+        [
+          "wrong_3_1",
+          0.8601,
+          0.6071
+        ],
+        [
+          "wrong_3_2",
+          0.8601,
+          0.5884
+        ],
+        [
+          "wrong_3_3",
+          0.8601,
+          0.5696
+        ],
+        [
+          "wrong_3_4",
+          0.8601,
+          0.5509
         ]
-      ]
+      ],
+      "blueprintArchetype": "",
+      "objectiveCount": 4,
+      "objectiveKinds": [
+        "pickup",
+        "checkpoint",
+        "checkpoint",
+        "destination"
+      ],
+      "dependencyDAGSignature": "",
+      "adaptiveDecisionPattern": [],
+      "stateTransitionPattern": [],
+      "staticPolicyProofSignature": "",
+      "agentPerformanceProfile": [],
+      "revisitPattern": [],
+      "successFailureDistribution": [],
+      "optimalStrategySignature": "",
+      "roadStateVisualSignature": "61129f261533f003e7cb1707e8a91573d60ed814853dea08cb7f1822a4e1fd33",
+      "structuralBehaviorSignature": "9bda185cb04d2b0fb6dedba9c1257dfae963cfe60a58431018e6a079e2ffe5fe"
     },
     {
       "levelID": "level_020",
       "name": "Level 020",
-      "difficultyEstimate": "easy",
-      "nodes": 7,
-      "edges": 6,
-      "switches": 2,
-      "tapCount": 2,
+      "difficultyEstimate": "hard",
+      "nodes": 20,
+      "edges": 23,
+      "switches": 4,
+      "tapCount": 3,
       "deadEndCount": 2,
       "template": "existing",
-      "topologyHash": "fa3d3c7b7a5c1450a21c6c2e882608104130e8844b6e1a0678df732329f1fc88",
-      "layoutHash": "e2c44aa2fa6f6829d7356cc8679edc706a78cb0bb6f811f59ffb345c0ab897c6",
-      "solutionHash": "02457ebc16badb9e6fb0df52f6c4207f545c96d46d546c234a8f9b6e457c74e3",
+      "topologyHash": "ab34f97c6d84901ff3b3a39bbe2bdc0571916772cc36e7054cd5699ffd06931e",
+      "layoutHash": "1ab633a3f50d7d6abac130e7b591cc29cc8789c1c11cc45b36d8c44c12615b66",
+      "solutionHash": "a8b3d4775416c51a9e9c3c867056b3fd257e0ef9a506a7831ec66d46954c4f45",
       "normalizedPositions": [
         [
-          "approach_switch",
-          0.8235,
-          0.7568
-        ],
-        [
-          "bypass",
+          "deep_recovery_detour_0",
           0.0,
-          0.7297
+          0.7143
         ],
         [
-          "dead_end_a",
-          0.0,
-          0.2162
+          "deep_recovery_switch_0",
+          0.0361,
+          0.5
         ],
         [
-          "destination",
+          "initial_fatal_dead_end",
+          0.1325,
+          0.3571
+        ],
+        [
+          "objective_entry_0",
+          0.3494,
+          0.3214
+        ],
+        [
+          "objective_entry_1",
+          0.2289,
+          0.6786
+        ],
+        [
+          "objective_entry_2",
+          0.9518,
+          0.3214
+        ],
+        [
+          "objective_node_0",
+          0.3976,
+          0.0
+        ],
+        [
+          "objective_node_1",
+          0.2771,
+          1.0
+        ],
+        [
+          "objective_node_2",
           1.0,
           0.0
         ],
         [
-          "finish_switch",
-          0.8235,
-          0.2432
+          "planning_dead_end_0",
+          0.3614,
+          0.0714
         ],
         [
-          "package",
-          0.1765,
-          0.4865
+          "planning_gate_0",
+          0.2289,
+          0.3214
+        ],
+        [
+          "shared_hub_0",
+          0.1084,
+          0.5
+        ],
+        [
+          "shared_hub_1",
+          0.8313,
+          0.5
         ],
         [
           "start",
-          0.5882,
-          1.0
+          0.0602,
+          0.3929
+        ],
+        [
+          "wrong_0_0",
+          0.0723,
+          0.6071
+        ],
+        [
+          "wrong_0_1",
+          0.0361,
+          0.6071
+        ],
+        [
+          "wrong_0_2",
+          0.0361,
+          0.5696
+        ],
+        [
+          "wrong_2_0",
+          0.7952,
+          0.6071
+        ],
+        [
+          "wrong_2_1",
+          0.759,
+          0.6071
+        ],
+        [
+          "wrong_2_2",
+          0.759,
+          0.5696
         ]
-      ]
+      ],
+      "blueprintArchetype": "",
+      "objectiveCount": 3,
+      "objectiveKinds": [
+        "pickup",
+        "checkpoint",
+        "destination"
+      ],
+      "dependencyDAGSignature": "",
+      "adaptiveDecisionPattern": [],
+      "stateTransitionPattern": [],
+      "staticPolicyProofSignature": "",
+      "agentPerformanceProfile": [],
+      "revisitPattern": [],
+      "successFailureDistribution": [],
+      "optimalStrategySignature": "",
+      "roadStateVisualSignature": "1d163a6b3af447c3fde4d79217f3c40adad70dcb09c9ba2ef5054e2c895cfa4c",
+      "structuralBehaviorSignature": "286deed6974cd8ea53bd3e92b9c7b7b1869c96b83385b92ffad9df117c442d69"
     },
     {
       "levelID": "level_021",
       "name": "Level 021",
-      "difficultyEstimate": "medium",
-      "nodes": 12,
-      "edges": 12,
-      "switches": 3,
+      "difficultyEstimate": "hard",
+      "nodes": 32,
+      "edges": 37,
+      "switches": 6,
       "tapCount": 3,
       "deadEndCount": 2,
       "template": "existing",
-      "topologyHash": "363dcbebe1a38086d6af0009f3ba64d4d1fc73d510853f5d175a8fb003a147ff",
-      "layoutHash": "0ad618f316f77ee63b718c6797d59d371a8f73dd99324759c4ae8ae077afb33a",
-      "solutionHash": "8962f818da8efdcac0c0270e69ed0787cca7bd773655d035ad66b0d9c6fe2673",
+      "topologyHash": "7738522c00aabd14a2b08b21433ff453014661331468d4b2fb6b80ac29c5a378",
+      "layoutHash": "5d8834a10e07731c621b96cc7e825f623f36c673a1d4e1b54345d67aa9d48c84",
+      "solutionHash": "4d4d20a9f3f896e0262f8134806639a0d8cecf3137fb23b65af019e184d6ee36",
       "normalizedPositions": [
         [
-          "dead_end_b",
-          1.0,
-          0.7581
+          "decision_1",
+          0.2,
+          0.6786
         ],
         [
-          "dead_end_c",
-          0.0,
-          0.2419
+          "decision_3",
+          0.2,
+          0.3214
         ],
         [
-          "destination",
-          0.8667,
-          0.0
+          "decision_4",
+          0.825,
+          0.5
         ],
         [
-          "detour_a",
-          0.7333,
-          0.8065
+          "deep_recovery_detour_1",
+          0.125,
+          0.8214
         ],
         [
-          "direct_bypass",
-          0.0,
-          0.5968
+          "deep_recovery_switch_1",
+          0.125,
+          0.6786
         ],
         [
-          "exit_gate_lane",
-          0.6667,
-          0.1452
+          "initial_fatal_dead_end",
+          0.1,
+          0.6429
         ],
         [
-          "package",
-          0.9333,
-          0.5484
+          "objective_entry_0",
+          0.45,
+          0.6786
         ],
         [
-          "rejoin",
-          0.4,
-          0.4516
+          "objective_entry_1",
+          0.325,
+          0.3214
         ],
         [
-          "start",
-          0.4,
+          "objective_entry_2",
+          0.95,
+          0.6786
+        ],
+        [
+          "objective_node_0",
+          0.5,
           1.0
         ],
         [
-          "switch_exit",
-          0.4,
-          0.2419
+          "objective_node_1",
+          0.375,
+          0.0
         ],
         [
-          "switch_gate",
-          0.4,
-          0.8065
+          "objective_node_2",
+          1.0,
+          1.0
         ],
         [
-          "switch_package",
-          0.7333,
-          0.629
+          "planning_dead_end_1",
+          0.4625,
+          0.9286
+        ],
+        [
+          "planning_gate_1",
+          0.325,
+          0.6786
+        ],
+        [
+          "shared_hub_0",
+          0.075,
+          0.5
+        ],
+        [
+          "start",
+          0.025,
+          0.6071
+        ],
+        [
+          "wrong_0_0",
+          0.0375,
+          0.3929
+        ],
+        [
+          "wrong_0_1",
+          0.0,
+          0.3929
+        ],
+        [
+          "wrong_0_2",
+          0.0,
+          0.4179
+        ],
+        [
+          "wrong_0_3",
+          0.0,
+          0.4429
+        ],
+        [
+          "wrong_1_0",
+          0.1625,
+          0.5714
+        ],
+        [
+          "wrong_1_1",
+          0.125,
+          0.5714
+        ],
+        [
+          "wrong_1_2",
+          0.125,
+          0.5964
+        ],
+        [
+          "wrong_1_3",
+          0.125,
+          0.6214
+        ],
+        [
+          "wrong_3_0",
+          0.1625,
+          0.4286
+        ],
+        [
+          "wrong_3_1",
+          0.125,
+          0.4286
+        ],
+        [
+          "wrong_3_2",
+          0.125,
+          0.4036
+        ],
+        [
+          "wrong_3_3",
+          0.125,
+          0.3786
+        ],
+        [
+          "wrong_4_0",
+          0.7875,
+          0.3929
+        ],
+        [
+          "wrong_4_1",
+          0.75,
+          0.3929
+        ],
+        [
+          "wrong_4_2",
+          0.75,
+          0.4179
+        ],
+        [
+          "wrong_4_3",
+          0.75,
+          0.4429
         ]
-      ]
+      ],
+      "blueprintArchetype": "",
+      "objectiveCount": 3,
+      "objectiveKinds": [
+        "pickup",
+        "checkpoint",
+        "destination"
+      ],
+      "dependencyDAGSignature": "",
+      "adaptiveDecisionPattern": [],
+      "stateTransitionPattern": [],
+      "staticPolicyProofSignature": "",
+      "agentPerformanceProfile": [],
+      "revisitPattern": [],
+      "successFailureDistribution": [],
+      "optimalStrategySignature": "",
+      "roadStateVisualSignature": "8cdd5c2b2090a5f3ae657d1bfdae8b3f01a3367ad4bed4ac102770eaad503587",
+      "structuralBehaviorSignature": "e6140edb9ffc6ca8d1b0ee36fe5688095fd23f8102d4fdc04a0b2385b2043a89"
     },
     {
       "levelID": "level_022",
       "name": "Level 022",
-      "difficultyEstimate": "medium",
-      "nodes": 12,
-      "edges": 12,
-      "switches": 3,
+      "difficultyEstimate": "hard",
+      "nodes": 34,
+      "edges": 39,
+      "switches": 6,
       "tapCount": 3,
       "deadEndCount": 2,
       "template": "existing",
-      "topologyHash": "a7a27ce947cd21d5104996136f229a71e2a7f9dda58bba672b5e0f2723abd7f0",
-      "layoutHash": "72fddbf1312b5a5a0152863db4a0dcbbd46b4791c39421ac532817f932790d0a",
-      "solutionHash": "12c1018d4e4fe6986450211f5d5399e7b6ff76f8a6c888b430dc50bc7cbc117d",
+      "topologyHash": "46ff39271314244d42fb8468670560a552b72e520b6115958d889a05b16d7674",
+      "layoutHash": "9f1117015d4f9daa023400fcdbd5d49bc03dd7f1ecd825f00ea90cb606282ab2",
+      "solutionHash": "4d4d20a9f3f896e0262f8134806639a0d8cecf3137fb23b65af019e184d6ee36",
       "normalizedPositions": [
         [
-          "dead_end_b",
-          0.0857,
-          0.025
+          "decision_1",
+          0.1143,
+          0.6786
         ],
         [
-          "dead_end_c",
-          0.4857,
-          0.1
+          "decision_3",
+          0.4714,
+          0.5
         ],
         [
-          "destination",
-          1.0,
-          0.0
+          "decision_4",
+          0.9,
+          0.5
         ],
         [
-          "early_exit",
-          0.0,
-          0.775
+          "deep_recovery_detour_1",
+          0.0714,
+          0.8214
         ],
         [
-          "exit_choice",
-          0.4,
-          0.35
+          "deep_recovery_switch_1",
+          0.0714,
+          0.6786
         ],
         [
-          "exit_lane",
-          0.7429,
-          0.25
+          "initial_fatal_dead_end",
+          0.0571,
+          0.6429
         ],
         [
-          "package",
-          0.8,
-          0.575
+          "objective_entry_0",
+          0.2571,
+          0.6786
         ],
         [
-          "package_lane",
-          0.8,
-          0.775
+          "objective_entry_1",
+          0.1143,
+          0.3214
         ],
         [
-          "phase_bridge",
-          0.6,
-          0.475
+          "objective_entry_2",
+          0.5429,
+          0.6786
         ],
         [
-          "phase_one_switch",
-          0.4,
-          0.775
+          "objective_entry_3",
+          0.9714,
+          0.6786
         ],
         [
-          "start",
-          0.4,
+          "objective_node_0",
+          0.2857,
           1.0
         ],
         [
-          "switch_final",
-          0.7429,
-          0.1
+          "objective_node_1",
+          0.1429,
+          0.0
+        ],
+        [
+          "objective_node_2",
+          0.5714,
+          1.0
+        ],
+        [
+          "objective_node_3",
+          1.0,
+          1.0
+        ],
+        [
+          "planning_dead_end_1",
+          0.2643,
+          0.9286
+        ],
+        [
+          "planning_gate_1",
+          0.1857,
+          0.6786
+        ],
+        [
+          "shared_hub_0",
+          0.0429,
+          0.5
+        ],
+        [
+          "start",
+          0.0143,
+          0.6071
+        ],
+        [
+          "wrong_0_0",
+          0.0214,
+          0.3929
+        ],
+        [
+          "wrong_0_1",
+          0.0,
+          0.3929
+        ],
+        [
+          "wrong_0_2",
+          0.0,
+          0.4179
+        ],
+        [
+          "wrong_0_3",
+          0.0,
+          0.4429
+        ],
+        [
+          "wrong_1_0",
+          0.0929,
+          0.5714
+        ],
+        [
+          "wrong_1_1",
+          0.0714,
+          0.5714
+        ],
+        [
+          "wrong_1_2",
+          0.0714,
+          0.5964
+        ],
+        [
+          "wrong_1_3",
+          0.0714,
+          0.6214
+        ],
+        [
+          "wrong_3_0",
+          0.45,
+          0.3929
+        ],
+        [
+          "wrong_3_1",
+          0.4286,
+          0.3929
+        ],
+        [
+          "wrong_3_2",
+          0.4286,
+          0.4179
+        ],
+        [
+          "wrong_3_3",
+          0.4286,
+          0.4429
+        ],
+        [
+          "wrong_4_0",
+          0.8786,
+          0.3929
+        ],
+        [
+          "wrong_4_1",
+          0.8571,
+          0.3929
+        ],
+        [
+          "wrong_4_2",
+          0.8571,
+          0.4179
+        ],
+        [
+          "wrong_4_3",
+          0.8571,
+          0.4429
         ]
-      ]
+      ],
+      "blueprintArchetype": "",
+      "objectiveCount": 4,
+      "objectiveKinds": [
+        "pickup",
+        "checkpoint",
+        "checkpoint",
+        "destination"
+      ],
+      "dependencyDAGSignature": "",
+      "adaptiveDecisionPattern": [],
+      "stateTransitionPattern": [],
+      "staticPolicyProofSignature": "",
+      "agentPerformanceProfile": [],
+      "revisitPattern": [],
+      "successFailureDistribution": [],
+      "optimalStrategySignature": "",
+      "roadStateVisualSignature": "b51ff7408105d3f13cf5b5e82c8bb2314bc08d066131ae43d3483cca603ed11d",
+      "structuralBehaviorSignature": "b0df31d5e0c78ee3017a289d5e606aa37071d02c31b9537353b32e387d165802"
     },
     {
       "levelID": "level_023",
       "name": "Level 023",
-      "difficultyEstimate": "medium",
-      "nodes": 12,
-      "edges": 12,
-      "switches": 3,
+      "difficultyEstimate": "hard",
+      "nodes": 16,
+      "edges": 19,
+      "switches": 4,
       "tapCount": 3,
-      "deadEndCount": 3,
+      "deadEndCount": 2,
       "template": "existing",
-      "topologyHash": "f4e1bc6c3e03e2613c287e0e66b8bb953a1d55621eb3bdec0172ea157b7c6f08",
-      "layoutHash": "1a9b28f22a37e73cd04d33ec67787f061818b4d76bb5d5a8298904c8cc2ebcad",
-      "solutionHash": "b7150b308311c79b777e6cc0269645dc0ef6f92df66f1cc63bdbf222a0da8766",
+      "topologyHash": "3c32ae65c88722abcf4222bafb06ce9aa8b5c030b3f46f5160f2b7bf9ba62649",
+      "layoutHash": "15ddc9da3837ca4a20faa843975229836a1e0826c3b9ea42bd2894ff5d93d103",
+      "solutionHash": "a8b3d4775416c51a9e9c3c867056b3fd257e0ef9a506a7831ec66d46954c4f45",
       "normalizedPositions": [
         [
-          "dead_end_a",
+          "deep_recovery_detour_0",
           0.0,
-          0.7692
+          0.7143
         ],
         [
-          "dead_end_b",
-          0.2353,
-          0.2051
+          "deep_recovery_switch_0",
+          0.0361,
+          0.5
         ],
         [
-          "dead_end_c",
-          1.0,
-          0.3333
+          "initial_fatal_dead_end",
+          0.1325,
+          0.3571
         ],
         [
-          "destination",
+          "objective_entry_0",
+          0.3494,
+          0.3214
+        ],
+        [
+          "objective_entry_1",
+          0.2289,
+          0.6786
+        ],
+        [
+          "objective_entry_2",
+          0.9518,
+          0.3214
+        ],
+        [
+          "objective_node_0",
+          0.3976,
+          0.0
+        ],
+        [
+          "objective_node_1",
+          0.2771,
+          1.0
+        ],
+        [
+          "objective_node_2",
           1.0,
           0.0
         ],
         [
-          "hub",
-          0.3529,
-          0.7692
+          "planning_dead_end_0",
+          0.3614,
+          0.0714
         ],
         [
-          "package",
-          0.8235,
-          0.5641
+          "planning_gate_0",
+          0.2289,
+          0.3214
         ],
         [
-          "package_branch",
-          0.8235,
-          0.7692
+          "shared_hub_0",
+          0.1084,
+          0.5
         ],
         [
-          "rejoin",
-          0.3529,
-          0.4103
-        ],
-        [
-          "route_mid",
-          0.8235,
-          0.2051
+          "shared_hub_1",
+          0.8313,
+          0.5
         ],
         [
           "start",
-          0.3529,
-          1.0
+          0.0602,
+          0.3929
         ],
         [
-          "switch_b",
-          0.6471,
-          0.2051
+          "wrong_0_0",
+          0.0723,
+          0.6071
         ],
         [
-          "switch_c",
-          1.0,
-          0.2051
+          "wrong_2_0",
+          0.7952,
+          0.6071
         ]
-      ]
+      ],
+      "blueprintArchetype": "",
+      "objectiveCount": 3,
+      "objectiveKinds": [
+        "pickup",
+        "checkpoint",
+        "destination"
+      ],
+      "dependencyDAGSignature": "",
+      "adaptiveDecisionPattern": [],
+      "stateTransitionPattern": [],
+      "staticPolicyProofSignature": "",
+      "agentPerformanceProfile": [],
+      "revisitPattern": [],
+      "successFailureDistribution": [],
+      "optimalStrategySignature": "",
+      "roadStateVisualSignature": "620397c98b0180f5a6d4796fcb60fd8696f1aac48e72a2105bcaa202263dafee",
+      "structuralBehaviorSignature": "13df1e49004a2505b162808786c27999a90532836918734cd657eb1315ddb83e"
     },
     {
       "levelID": "level_024",
       "name": "Level 024",
-      "difficultyEstimate": "medium",
-      "nodes": 8,
-      "edges": 9,
-      "switches": 2,
+      "difficultyEstimate": "hard",
+      "nodes": 22,
+      "edges": 27,
+      "switches": 6,
       "tapCount": 3,
-      "deadEndCount": 1,
+      "deadEndCount": 2,
       "template": "existing",
-      "topologyHash": "99713a0e99ca8ae77570d6fdbb105c719ffdfe51447d8ca1173934eb7b0c5f31",
-      "layoutHash": "53ea86aeb3b7cf58c152d0243868ff8c10ea0710c07d656afa502b2020ef28e4",
-      "solutionHash": "536385f10248efef6f1e6a982cb461676cfdd0f0bf10d9512092dcf03286eb98",
+      "topologyHash": "a8aa51bace9cc1f1d2bce62d92d472d74fd3edda22e9399bd4bd757d63f9fad7",
+      "layoutHash": "516e67450c6148b3a1af9b56271177f4321f1f0184bdd4bbd80457f7da9fce41",
+      "solutionHash": "4d4d20a9f3f896e0262f8134806639a0d8cecf3137fb23b65af019e184d6ee36",
       "normalizedPositions": [
         [
-          "dead_end_a",
-          1.0,
-          0.4103
+          "decision_1",
+          0.1014,
+          0.3214
         ],
         [
-          "destination",
-          0.9333,
+          "decision_3",
+          0.4638,
+          0.5
+        ],
+        [
+          "decision_4",
+          0.8986,
+          0.5
+        ],
+        [
+          "deep_recovery_detour_1",
+          0.058,
+          0.1786
+        ],
+        [
+          "deep_recovery_switch_1",
+          0.058,
+          0.3214
+        ],
+        [
+          "initial_fatal_dead_end",
+          0.0435,
+          0.3571
+        ],
+        [
+          "objective_entry_0",
+          0.2464,
+          0.3214
+        ],
+        [
+          "objective_entry_1",
+          0.1014,
+          0.6786
+        ],
+        [
+          "objective_entry_2",
+          0.5362,
+          0.3214
+        ],
+        [
+          "objective_entry_3",
+          0.971,
+          0.3214
+        ],
+        [
+          "objective_node_0",
+          0.2754,
           0.0
         ],
         [
-          "gate",
-          0.6,
-          0.1538
+          "objective_node_1",
+          0.1304,
+          1.0
         ],
         [
-          "hub",
-          0.2667,
-          0.8205
+          "objective_node_2",
+          0.5652,
+          0.0
         ],
         [
-          "package",
-          0.0,
-          0.5385
+          "objective_node_3",
+          1.0,
+          0.0
         ],
         [
-          "ring_a",
-          0.9333,
-          0.641
+          "planning_dead_end_1",
+          0.2536,
+          0.0714
         ],
         [
-          "ring_b",
-          0.6,
-          0.4103
+          "planning_gate_1",
+          0.1739,
+          0.3214
+        ],
+        [
+          "shared_hub_0",
+          0.029,
+          0.5
         ],
         [
           "start",
           0.0,
-          1.0
+          0.3929
+        ],
+        [
+          "wrong_0_0",
+          0.0072,
+          0.6071
+        ],
+        [
+          "wrong_1_0",
+          0.0797,
+          0.4286
+        ],
+        [
+          "wrong_3_0",
+          0.442,
+          0.6071
+        ],
+        [
+          "wrong_4_0",
+          0.8768,
+          0.6071
         ]
-      ]
+      ],
+      "blueprintArchetype": "",
+      "objectiveCount": 4,
+      "objectiveKinds": [
+        "pickup",
+        "checkpoint",
+        "checkpoint",
+        "destination"
+      ],
+      "dependencyDAGSignature": "",
+      "adaptiveDecisionPattern": [],
+      "stateTransitionPattern": [],
+      "staticPolicyProofSignature": "",
+      "agentPerformanceProfile": [],
+      "revisitPattern": [],
+      "successFailureDistribution": [],
+      "optimalStrategySignature": "",
+      "roadStateVisualSignature": "71aa555c26e56e53d294e07aee293f789b6f3e575a8d1a8fb15435ef66958cd1",
+      "structuralBehaviorSignature": "065a563902a916e9d1e9fceaa59b8c8589baf1169b4d89f06bc53064523ae85d"
     },
     {
       "levelID": "level_025",
       "name": "Level 025",
-      "difficultyEstimate": "medium",
-      "nodes": 12,
-      "edges": 11,
-      "switches": 3,
+      "difficultyEstimate": "hard",
+      "nodes": 22,
+      "edges": 25,
+      "switches": 4,
       "tapCount": 3,
-      "deadEndCount": 3,
+      "deadEndCount": 2,
       "template": "existing",
-      "topologyHash": "7c2947357f3e096e4ec785a5123dcdf8e10eb8e85ae41669990743220a28e898",
-      "layoutHash": "63c3ea844e3dbb64174ff4d7160f776462940e0c59dbfd51d3f051a8cc26dd9c",
-      "solutionHash": "a6ef2f9f5057d5720c7ceab1f31a1514b2354e4c828167526590c382772ad501",
+      "topologyHash": "98b2978aa770dcbdbe9dc1198132c8df0c70dc2a2c1d52b2772b74af11f55700",
+      "layoutHash": "361e31c141e7558f7388dbf899c8ce974013fdb09a843958266c7d2040cc8ee8",
+      "solutionHash": "a8b3d4775416c51a9e9c3c867056b3fd257e0ef9a506a7831ec66d46954c4f45",
       "normalizedPositions": [
         [
-          "choice",
-          0.4783,
-          0.8596
-        ],
-        [
-          "dead_end_b",
-          1.0,
-          0.6491
-        ],
-        [
-          "dead_end_c",
+          "deep_recovery_detour_0",
           0.0,
-          0.1053
+          0.2857
         ],
         [
-          "destination",
-          0.6087,
-          0.0
+          "deep_recovery_switch_0",
+          0.0361,
+          0.5
         ],
         [
-          "detour_a",
-          0.3478,
-          0.7544
+          "initial_fatal_dead_end",
+          0.1325,
+          0.6429
         ],
         [
-          "detour_b",
-          0.3478,
-          0.386
+          "objective_entry_0",
+          0.3494,
+          0.6786
         ],
         [
-          "package",
-          0.087,
-          0.4912
+          "objective_entry_1",
+          0.2289,
+          0.3214
         ],
         [
-          "rejoin",
-          0.3478,
-          0.2456
+          "objective_entry_2",
+          0.9518,
+          0.6786
         ],
         [
-          "shortcut_dead_end",
-          0.0,
-          0.8421
-        ],
-        [
-          "start",
-          0.3478,
+          "objective_node_0",
+          0.3976,
           1.0
         ],
         [
-          "switch_b",
-          0.4783,
-          0.614
+          "objective_node_1",
+          0.2771,
+          0.0
         ],
         [
-          "switch_c",
-          0.4783,
-          0.1404
+          "objective_node_2",
+          1.0,
+          1.0
+        ],
+        [
+          "planning_dead_end_0",
+          0.3614,
+          0.9286
+        ],
+        [
+          "planning_gate_0",
+          0.2289,
+          0.6786
+        ],
+        [
+          "shared_hub_0",
+          0.1084,
+          0.5
+        ],
+        [
+          "shared_hub_1",
+          0.8313,
+          0.5
+        ],
+        [
+          "start",
+          0.0602,
+          0.6071
+        ],
+        [
+          "wrong_0_0",
+          0.0723,
+          0.3929
+        ],
+        [
+          "wrong_0_1",
+          0.0361,
+          0.3929
+        ],
+        [
+          "wrong_0_2",
+          0.0361,
+          0.4179
+        ],
+        [
+          "wrong_0_3",
+          0.0361,
+          0.4429
+        ],
+        [
+          "wrong_2_0",
+          0.7952,
+          0.3929
+        ],
+        [
+          "wrong_2_1",
+          0.759,
+          0.3929
+        ],
+        [
+          "wrong_2_2",
+          0.759,
+          0.4179
+        ],
+        [
+          "wrong_2_3",
+          0.759,
+          0.4429
         ]
-      ]
+      ],
+      "blueprintArchetype": "",
+      "objectiveCount": 3,
+      "objectiveKinds": [
+        "pickup",
+        "checkpoint",
+        "destination"
+      ],
+      "dependencyDAGSignature": "",
+      "adaptiveDecisionPattern": [],
+      "stateTransitionPattern": [],
+      "staticPolicyProofSignature": "",
+      "agentPerformanceProfile": [],
+      "revisitPattern": [],
+      "successFailureDistribution": [],
+      "optimalStrategySignature": "",
+      "roadStateVisualSignature": "62839fd08ae6646bbcc27cff3fc02da70958b68bb750beab9ed03e615e1c7be3",
+      "structuralBehaviorSignature": "8e9c3dac504515df2bee32bb2ff7dd328f087c955f47e65d65cddade4774bbfa"
     },
     {
       "levelID": "level_026",
       "name": "Level 026",
-      "difficultyEstimate": "medium",
-      "nodes": 11,
-      "edges": 10,
-      "switches": 3,
+      "difficultyEstimate": "hard",
+      "nodes": 31,
+      "edges": 38,
+      "switches": 7,
       "tapCount": 3,
-      "deadEndCount": 3,
+      "deadEndCount": 2,
       "template": "existing",
-      "topologyHash": "e240dafe57e594f7e7a53c86ca751f01011b992fcb0c138c30d0382839df654a",
-      "layoutHash": "b17fced4e775393d075aa593b080e7911f0ea96f34ef1668dcce728249bc23e8",
-      "solutionHash": "56d7db03f7eb0b78f7a6ce365a840d26181a6dd0d4cacdaa2c92c6e244e7c16f",
+      "topologyHash": "383763c9cb6f11617d52c8dec6ceb4b4642237181246ea880e3d529dcf192425",
+      "layoutHash": "0e0e5c8d3c95bcc5a7f3584f0530539e1b5301f02cfa2f3e04a8713d2bd9b4df",
+      "solutionHash": "4d4d20a9f3f896e0262f8134806639a0d8cecf3137fb23b65af019e184d6ee36",
       "normalizedPositions": [
         [
-          "branch_a",
-          0.5294,
-          0.5909
+          "decision_1",
+          0.1143,
+          0.6786
         ],
         [
-          "dead_end_a",
+          "decision_4",
+          0.5429,
+          0.6786
+        ],
+        [
+          "decision_6",
+          0.9,
+          0.5
+        ],
+        [
+          "deep_recovery_detour_1",
+          0.0714,
+          0.8214
+        ],
+        [
+          "deep_recovery_switch_1",
+          0.0714,
+          0.6786
+        ],
+        [
+          "initial_fatal_dead_end",
+          0.0571,
+          0.6429
+        ],
+        [
+          "objective_entry_0",
+          0.2571,
+          0.6786
+        ],
+        [
+          "objective_entry_1",
+          0.1143,
+          0.3214
+        ],
+        [
+          "objective_entry_2",
+          0.6143,
+          0.6786
+        ],
+        [
+          "objective_entry_3",
+          0.5429,
+          0.3214
+        ],
+        [
+          "objective_entry_4",
+          0.9714,
+          0.6786
+        ],
+        [
+          "objective_node_0",
+          0.2857,
+          1.0
+        ],
+        [
+          "objective_node_1",
+          0.1429,
+          0.0
+        ],
+        [
+          "objective_node_2",
+          0.6429,
+          1.0
+        ],
+        [
+          "objective_node_3",
+          0.5714,
+          0.0
+        ],
+        [
+          "objective_node_4",
           1.0,
           1.0
         ],
         [
-          "dead_end_b",
-          0.8235,
-          0.3409
+          "planning_dead_end_1",
+          0.2643,
+          0.9286
         ],
         [
-          "dead_end_c",
-          0.0,
-          0.1364
+          "planning_gate_1",
+          0.1857,
+          0.6786
         ],
         [
-          "destination",
-          0.7353,
-          0.0
+          "shared_hub_0",
+          0.0429,
+          0.5
         ],
         [
-          "package",
-          0.7647,
-          0.2045
-        ],
-        [
-          "rejoin",
-          0.6471,
-          0.4545
+          "shared_hub_1",
+          0.4714,
+          0.5
         ],
         [
           "start",
-          0.3529,
-          0.8409
+          0.0143,
+          0.6071
         ],
         [
-          "switch_a",
-          0.6471,
-          0.7273
+          "wrong_0_0",
+          0.0214,
+          0.3929
         ],
         [
-          "switch_b",
-          0.4118,
-          0.3636
+          "wrong_0_1",
+          0.0,
+          0.3929
         ],
         [
-          "switch_c",
-          0.4118,
-          0.1136
+          "wrong_1_0",
+          0.0929,
+          0.5714
+        ],
+        [
+          "wrong_1_1",
+          0.0714,
+          0.5714
+        ],
+        [
+          "wrong_3_0",
+          0.45,
+          0.3929
+        ],
+        [
+          "wrong_3_1",
+          0.4286,
+          0.3929
+        ],
+        [
+          "wrong_4_0",
+          0.5214,
+          0.5714
+        ],
+        [
+          "wrong_4_1",
+          0.5,
+          0.5714
+        ],
+        [
+          "wrong_6_0",
+          0.8786,
+          0.3929
+        ],
+        [
+          "wrong_6_1",
+          0.8571,
+          0.3929
         ]
-      ]
+      ],
+      "blueprintArchetype": "",
+      "objectiveCount": 5,
+      "objectiveKinds": [
+        "pickup",
+        "checkpoint",
+        "checkpoint",
+        "checkpoint",
+        "destination"
+      ],
+      "dependencyDAGSignature": "",
+      "adaptiveDecisionPattern": [],
+      "stateTransitionPattern": [],
+      "staticPolicyProofSignature": "",
+      "agentPerformanceProfile": [],
+      "revisitPattern": [],
+      "successFailureDistribution": [],
+      "optimalStrategySignature": "",
+      "roadStateVisualSignature": "5e63d44c0673464e9d072ef0447f49278bea2e9c0fd2837689d381b290c8160c",
+      "structuralBehaviorSignature": "9824cdd9168ec28513580081b2195c80f69383ad8b2b9d758aaac534a967f5f9"
     },
     {
       "levelID": "level_027",
       "name": "Level 027",
-      "difficultyEstimate": "medium",
-      "nodes": 11,
-      "edges": 11,
-      "switches": 3,
+      "difficultyEstimate": "hard",
+      "nodes": 32,
+      "edges": 38,
+      "switches": 6,
       "tapCount": 3,
       "deadEndCount": 2,
       "template": "existing",
-      "topologyHash": "7162a7ad77a87cc8a7fd9d49cca95d73adb888d7fcda7d88dad283d450d9a9c9",
-      "layoutHash": "baf4d140363494d7371c153523911d27d72813ea7e65d3b2e6325f59ce4016fe",
-      "solutionHash": "56d7db03f7eb0b78f7a6ce365a840d26181a6dd0d4cacdaa2c92c6e244e7c16f",
+      "topologyHash": "dc7b071487bae77164662975967b2018bcca4f566160ab0fbbc53b8886c4fc02",
+      "layoutHash": "695448de34d8c88931ea1ee059e093abe9bbce6dabce8451fcc6cf5cfb56b789",
+      "solutionHash": "4d4d20a9f3f896e0262f8134806639a0d8cecf3137fb23b65af019e184d6ee36",
       "normalizedPositions": [
         [
-          "dead_end_b",
-          1.0,
-          0.561
+          "decision_1",
+          0.1143,
+          0.3214
         ],
         [
-          "dead_end_c",
-          0.2222,
-          0.0976
+          "decision_5",
+          0.9,
+          0.5
         ],
         [
-          "destination",
-          0.7778,
+          "deep_recovery_detour_1",
+          0.0714,
+          0.1786
+        ],
+        [
+          "deep_recovery_switch_1",
+          0.0714,
+          0.3214
+        ],
+        [
+          "initial_fatal_dead_end",
+          0.0571,
+          0.3571
+        ],
+        [
+          "objective_entry_0",
+          0.2571,
+          0.3214
+        ],
+        [
+          "objective_entry_1",
+          0.1143,
+          0.6786
+        ],
+        [
+          "objective_entry_2",
+          0.5429,
+          0.3214
+        ],
+        [
+          "objective_entry_3",
+          0.5429,
+          0.6786
+        ],
+        [
+          "objective_entry_4",
+          0.9714,
+          0.3214
+        ],
+        [
+          "objective_node_0",
+          0.2857,
           0.0
         ],
         [
-          "lower_shortcut",
-          0.0,
-          0.7073
-        ],
-        [
-          "package",
-          0.7778,
-          0.4146
-        ],
-        [
-          "rejoin",
-          0.4722,
-          0.2683
-        ],
-        [
-          "start",
-          0.4722,
+          "objective_node_1",
+          0.1429,
           1.0
         ],
         [
-          "switch_a",
-          0.6111,
-          0.8537
+          "objective_node_2",
+          0.5714,
+          0.0
         ],
         [
-          "switch_b",
-          0.7778,
-          0.561
+          "objective_node_3",
+          0.5714,
+          1.0
         ],
         [
-          "switch_c",
-          0.6111,
-          0.122
+          "objective_node_4",
+          1.0,
+          0.0
         ],
         [
-          "upper_branch",
-          0.6111,
-          0.7073
+          "planning_dead_end_1",
+          0.2643,
+          0.0714
+        ],
+        [
+          "planning_gate_1",
+          0.1857,
+          0.3214
+        ],
+        [
+          "shared_hub_0",
+          0.0429,
+          0.5
+        ],
+        [
+          "shared_hub_1",
+          0.4714,
+          0.5
+        ],
+        [
+          "start",
+          0.0143,
+          0.3929
+        ],
+        [
+          "wrong_0_0",
+          0.0214,
+          0.6071
+        ],
+        [
+          "wrong_0_1",
+          0.0,
+          0.6071
+        ],
+        [
+          "wrong_0_2",
+          0.0,
+          0.5696
+        ],
+        [
+          "wrong_1_0",
+          0.0929,
+          0.4286
+        ],
+        [
+          "wrong_1_1",
+          0.0714,
+          0.4286
+        ],
+        [
+          "wrong_1_2",
+          0.0714,
+          0.3911
+        ],
+        [
+          "wrong_3_0",
+          0.45,
+          0.6071
+        ],
+        [
+          "wrong_3_1",
+          0.4286,
+          0.6071
+        ],
+        [
+          "wrong_3_2",
+          0.4286,
+          0.5696
+        ],
+        [
+          "wrong_5_0",
+          0.8786,
+          0.6071
+        ],
+        [
+          "wrong_5_1",
+          0.8571,
+          0.6071
+        ],
+        [
+          "wrong_5_2",
+          0.8571,
+          0.5696
         ]
-      ]
+      ],
+      "blueprintArchetype": "",
+      "objectiveCount": 5,
+      "objectiveKinds": [
+        "pickup",
+        "checkpoint",
+        "checkpoint",
+        "checkpoint",
+        "destination"
+      ],
+      "dependencyDAGSignature": "",
+      "adaptiveDecisionPattern": [],
+      "stateTransitionPattern": [],
+      "staticPolicyProofSignature": "",
+      "agentPerformanceProfile": [],
+      "revisitPattern": [],
+      "successFailureDistribution": [],
+      "optimalStrategySignature": "",
+      "roadStateVisualSignature": "24a817d912daca37fd21270da0d21c36376e72aca9a00074a193f63914a64512",
+      "structuralBehaviorSignature": "27d5ccfb328b4be5119dbc78272d5e1ebe5d08554ca31f9ee1d2318320ae1407"
     }
   ],
   "warnings": []

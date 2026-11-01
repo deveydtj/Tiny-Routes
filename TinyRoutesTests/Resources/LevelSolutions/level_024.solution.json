@@ -1,98 +1,21 @@
 {
-  "metadata": {
-    "validationVersion": "verified_runtime_solution_v1",
-    "solutionRoute": [
-      "start",
-      "hub",
-      "ring_a",
-      "ring_b",
-      "hub",
-      "package",
-      "ring_b",
-      "gate",
-      "destination"
-    ],
-    "requiredTapOrder": [
-      "ring_b",
-      "hub",
-      "ring_b"
-    ],
-    "runtimeDecisionTiming": [
-      {
-        "nodeID": "ring_b",
-        "visitIndex": 1,
-        "rotationCount": 1,
-        "windowOpenSeconds": 1.6999999999999997,
-        "windowCloseSeconds": 3.05,
-        "chosenTapSeconds": [
-          1.8199999999999998
-        ],
-        "safetyMarginSeconds": 0.12,
-        "failureReason": null
-      },
-      {
-        "nodeID": "hub",
-        "visitIndex": 1,
-        "rotationCount": 1,
-        "windowOpenSeconds": 3.07,
-        "windowCloseSeconds": 4.35,
-        "chosenTapSeconds": [
-          3.19
-        ],
-        "safetyMarginSeconds": 0.12,
-        "failureReason": null
-      },
-      {
-        "nodeID": "ring_b",
-        "visitIndex": 2,
-        "rotationCount": 1,
-        "windowOpenSeconds": 5.1,
-        "windowCloseSeconds": 6.449999999999999,
-        "chosenTapSeconds": [
-          5.22
-        ],
-        "safetyMarginSeconds": 0.12,
-        "failureReason": null
-      }
-    ],
-    "template": "ring_route",
-    "generatedSeed": 3220785920,
-    "recipeFamily": "ring_route",
-    "recipeVariant": "production_redesign_revisit_phase",
-    "migrationReview": "phase16_live_routing"
-  },
   "levelID": "level_024",
-  "description": "Use the ring to revisit the hub, collect the package, then change the repeated ring switch to reach the exit gate.",
+  "description": "Production V3 generated solution",
   "expectedOutcome": "completed",
   "maxTaps": 3,
   "requiresWithinTimeLimit": true,
   "actions": [
     {
-      "windowOpenSeconds": 1.7,
-      "chosenTapSeconds": 1.82,
-      "windowCloseSeconds": 3.05,
-      "safetyMarginSeconds": 0.12,
-      "expectedEdgeAfterTap": "e_ring_b_hub",
-      "timeSeconds": 1.82,
-      "tapNodeID": "ring_b"
+      "timeSeconds": 0.7,
+      "tapNodeID": "shared_hub_0"
     },
     {
-      "windowOpenSeconds": 3.07,
-      "chosenTapSeconds": 3.19,
-      "windowCloseSeconds": 4.35,
-      "safetyMarginSeconds": 0.12,
-      "expectedEdgeAfterTap": "e_hub_package",
-      "timeSeconds": 3.19,
-      "tapNodeID": "hub"
+      "timeSeconds": 5.41,
+      "tapNodeID": "planning_gate_1"
     },
     {
-      "windowOpenSeconds": 5.1,
-      "chosenTapSeconds": 5.22,
-      "windowCloseSeconds": 6.45,
-      "safetyMarginSeconds": 0.12,
-      "expectedEdgeAfterTap": "e_ring_b_gate",
-      "timeSeconds": 5.22,
-      "tapNodeID": "ring_b"
+      "timeSeconds": 19.6,
+      "tapNodeID": "shared_hub_0"
     }
   ]
 }

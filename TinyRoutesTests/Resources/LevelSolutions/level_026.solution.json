@@ -1,97 +1,21 @@
 {
-  "metadata": {
-    "validationVersion": "verified_runtime_solution_v1",
-    "solutionRoute": [
-      "start",
-      "switch_a",
-      "branch_a",
-      "rejoin",
-      "switch_b",
-      "package",
-      "switch_c",
-      "destination"
-    ],
-    "requiredTapOrder": [
-      "switch_a",
-      "switch_b",
-      "switch_c"
-    ],
-    "runtimeDecisionTiming": [
-      {
-        "nodeID": "switch_a",
-        "visitIndex": 1,
-        "rotationCount": 1,
-        "windowOpenSeconds": 0.0,
-        "windowCloseSeconds": 0.75,
-        "chosenTapSeconds": [
-          0.12
-        ],
-        "safetyMarginSeconds": 0.12,
-        "failureReason": null
-      },
-      {
-        "nodeID": "switch_b",
-        "visitIndex": 1,
-        "rotationCount": 1,
-        "windowOpenSeconds": 1.0,
-        "windowCloseSeconds": 2.35,
-        "chosenTapSeconds": [
-          1.12
-        ],
-        "safetyMarginSeconds": 0.12,
-        "failureReason": null
-      },
-      {
-        "nodeID": "switch_c",
-        "visitIndex": 1,
-        "rotationCount": 1,
-        "windowOpenSeconds": 2.7500000000000004,
-        "windowCloseSeconds": 4.1000000000000005,
-        "chosenTapSeconds": [
-          2.8700000000000006
-        ],
-        "safetyMarginSeconds": 0.12,
-        "failureReason": null
-      }
-    ],
-    "template": "branch_then_rejoin_with_wrong_order",
-    "generatedSeed": 1683862404,
-    "recipeFamily": "branch_then_rejoin_with_wrong_order",
-    "recipeVariant": "branch_then_rejoin_with_wrong_order_alternate",
-    "migrationReview": "phase16_live_routing"
-  },
   "levelID": "level_026",
-  "description": "Follow the generated graph recipe route and rotate each switch before arrival.",
+  "description": "Production V3 generated solution",
   "expectedOutcome": "completed",
   "maxTaps": 3,
   "requiresWithinTimeLimit": true,
   "actions": [
     {
-      "windowOpenSeconds": 0.0,
-      "chosenTapSeconds": 0.12,
-      "windowCloseSeconds": 0.75,
-      "safetyMarginSeconds": 0.12,
-      "expectedEdgeAfterTap": "e_switch_a_branch_a",
-      "timeSeconds": 0.12,
-      "tapNodeID": "switch_a"
+      "timeSeconds": 0.7,
+      "tapNodeID": "shared_hub_0"
     },
     {
-      "windowOpenSeconds": 1.0,
-      "chosenTapSeconds": 1.12,
-      "windowCloseSeconds": 2.35,
-      "safetyMarginSeconds": 0.12,
-      "expectedEdgeAfterTap": "e_switch_b_package",
-      "timeSeconds": 1.12,
-      "tapNodeID": "switch_b"
+      "timeSeconds": 5.41,
+      "tapNodeID": "planning_gate_1"
     },
     {
-      "windowOpenSeconds": 2.75,
-      "chosenTapSeconds": 2.87,
-      "windowCloseSeconds": 4.1,
-      "safetyMarginSeconds": 0.12,
-      "expectedEdgeAfterTap": "e_switch_c_destination",
-      "timeSeconds": 2.87,
-      "tapNodeID": "switch_c"
+      "timeSeconds": 19.6,
+      "tapNodeID": "shared_hub_0"
     }
   ]
 }

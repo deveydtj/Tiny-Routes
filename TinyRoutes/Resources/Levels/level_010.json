@@ -1,109 +1,165 @@
 {
-  "schemaVersion": 2,
+  "schemaVersion": 3,
   "id": "level_010",
   "name": "Level 010",
   "graph": {
     "nodes": [
       {
         "id": "start",
-        "x": 0.0,
-        "y": 0.85,
-        "outgoingEdgeIDs": [
-          "e_start_short_entry_switch"
-        ]
-      },
-      {
-        "id": "short_entry_switch",
-        "x": 0.2,
-        "y": 0.4,
-        "outgoingEdgeIDs": [
-          "e_short_entry_switch_short_bypass",
-          "e_short_entry_switch_package"
-        ]
-      },
-      {
-        "id": "short_bypass",
-        "x": -0.5,
-        "y": 0.35,
-        "outgoingEdgeIDs": []
-      },
-      {
-        "id": "package",
-        "x": -0.35,
-        "y": -0.1,
-        "outgoingEdgeIDs": [
-          "e_package_short_finish_switch"
-        ]
-      },
-      {
-        "id": "short_finish_switch",
-        "x": 0.2,
-        "y": -0.55,
-        "outgoingEdgeIDs": [
-          "e_short_finish_switch_short_dead_end",
-          "e_short_finish_switch_destination"
-        ]
-      },
-      {
-        "id": "short_dead_end",
-        "x": -0.5,
+        "x": -0.8,
         "y": -0.6,
+        "outgoingEdgeIDs": [
+          "start_to_first_decision"
+        ]
+      },
+      {
+        "id": "shared_hub_0",
+        "x": 0.0,
+        "y": -0.0,
+        "outgoingEdgeIDs": [
+          "decision_0_fatal",
+          "decision_0_correct",
+          "decision_1_correct",
+          "decision_0_wrong"
+        ]
+      },
+      {
+        "id": "objective_node_0",
+        "x": 2.8,
+        "y": -2.8,
+        "outgoingEdgeIDs": [
+          "phase_0_return"
+        ]
+      },
+      {
+        "id": "objective_entry_0",
+        "x": 2.0,
+        "y": -1.0,
+        "outgoingEdgeIDs": [
+          "phase_0_objective_finish"
+        ]
+      },
+      {
+        "id": "initial_fatal_dead_end",
+        "x": 0.4,
+        "y": -0.8,
         "outgoingEdgeIDs": []
       },
       {
-        "id": "destination",
-        "x": 0.35,
-        "y": -1.0,
+        "id": "objective_node_1",
+        "x": 0.8,
+        "y": 2.8,
         "outgoingEdgeIDs": []
+      },
+      {
+        "id": "objective_entry_1",
+        "x": 0.0,
+        "y": 1.0,
+        "outgoingEdgeIDs": [
+          "phase_1_objective_finish"
+        ]
+      },
+      {
+        "id": "wrong_0_0",
+        "x": -0.6,
+        "y": 1.6,
+        "outgoingEdgeIDs": [
+          "decision_0_recover"
+        ]
       }
     ],
     "edges": [
       {
-        "id": "e_start_short_entry_switch",
+        "id": "start_to_first_decision",
         "fromNodeID": "start",
-        "toNodeID": "short_entry_switch",
-        "roadShape": "horizontalFirst"
-      },
-      {
-        "id": "e_short_entry_switch_short_bypass",
-        "fromNodeID": "short_entry_switch",
-        "toNodeID": "short_bypass",
-        "roadShape": "horizontalFirst"
-      },
-      {
-        "id": "e_short_entry_switch_package",
-        "fromNodeID": "short_entry_switch",
-        "toNodeID": "package",
+        "toNodeID": "shared_hub_0",
         "roadShape": "verticalFirst"
       },
       {
-        "id": "e_package_short_finish_switch",
-        "fromNodeID": "package",
-        "toNodeID": "short_finish_switch",
+        "id": "phase_0_objective_finish",
+        "fromNodeID": "objective_entry_0",
+        "toNodeID": "objective_node_0",
         "roadShape": "horizontalFirst"
       },
       {
-        "id": "e_short_finish_switch_short_dead_end",
-        "fromNodeID": "short_finish_switch",
-        "toNodeID": "short_dead_end",
+        "id": "decision_0_fatal",
+        "fromNodeID": "shared_hub_0",
+        "toNodeID": "initial_fatal_dead_end",
+        "roadShape": "verticalFirst"
+      },
+      {
+        "id": "decision_0_correct",
+        "fromNodeID": "shared_hub_0",
+        "toNodeID": "objective_entry_0",
+        "roadShape": "horizontalFirst",
+        "availabilityRule": {
+          "minimumObjectiveIndex": 0,
+          "maximumObjectiveIndex": 0
+        }
+      },
+      {
+        "id": "phase_0_return",
+        "fromNodeID": "objective_node_0",
+        "toNodeID": "shared_hub_0",
+        "roadShape": "verticalFirst"
+      },
+      {
+        "id": "phase_1_objective_finish",
+        "fromNodeID": "objective_entry_1",
+        "toNodeID": "objective_node_1",
         "roadShape": "horizontalFirst"
       },
       {
-        "id": "e_short_finish_switch_destination",
-        "fromNodeID": "short_finish_switch",
-        "toNodeID": "destination",
+        "id": "decision_1_correct",
+        "fromNodeID": "shared_hub_0",
+        "toNodeID": "objective_entry_1",
+        "roadShape": "verticalFirst",
+        "availabilityRule": {
+          "minimumObjectiveIndex": 1,
+          "maximumObjectiveIndex": 1
+        }
+      },
+      {
+        "id": "decision_0_wrong",
+        "fromNodeID": "shared_hub_0",
+        "toNodeID": "wrong_0_0",
+        "roadShape": "horizontalFirst",
+        "availabilityRule": {
+          "usageLimit": 1
+        }
+      },
+      {
+        "id": "decision_0_recover",
+        "fromNodeID": "wrong_0_0",
+        "toNodeID": "shared_hub_0",
         "roadShape": "verticalFirst"
       }
     ]
   },
   "startNodeID": "start",
-  "packageNodeID": "package",
-  "destinationNodeID": "destination",
-  "timeLimitSeconds": 30,
+  "packageNodeID": "objective_node_0",
+  "destinationNodeID": "objective_node_1",
+  "timeLimitSeconds": 360,
   "parTaps": 2,
+  "objectives": [
+    {
+      "id": "return_pickup",
+      "nodeID": "objective_node_0",
+      "kind": "pickup",
+      "sequenceIndex": 0,
+      "revealPolicy": "always"
+    },
+    {
+      "id": "destination",
+      "nodeID": "objective_node_1",
+      "kind": "destination",
+      "sequenceIndex": 1,
+      "revealPolicy": "whenActive"
+    }
+  ],
   "rules": {
     "switchInteractionMode": "liveLookahead",
-    "switchLookaheadSeconds": 1.6,
+    "switchLookaheadSeconds": 2.0,
     "switchTapCooldownSeconds": 0.12
   }
 }

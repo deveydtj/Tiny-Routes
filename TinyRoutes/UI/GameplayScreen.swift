@@ -15,6 +15,7 @@ struct GameplayScreen: View {
     @State private var routeEngine: RouteEngine
     @State private var runtimeGraph: RuntimeRouteGraph?
     @State private var deliveryDot: DeliveryDot?
+    @State private var startingEdgeIDs: [String] = []
     @State private var packageNodeID: String = ""
     @State private var destinationNodeID: String = ""
     @State private var hasCollectedPackage: Bool = false
@@ -97,7 +98,11 @@ struct GameplayScreen: View {
                         switchRejectionEventToken: switchRejectionEventToken,
                         upcomingSwitchNodeID: routeEngine.switchEligibilitySnapshot.upcomingNodeID,
                         eligibleSwitchNodeID: routeEngine.eligibleSwitchNodeID,
-                        onNodeTapped: handleNodeTapped
+                        onNodeTapped: handleNodeTapped,
+                        startingEdgeIDs: startingEdgeIDs,
+                        onStartingRoadTapped: handleStartingRoadTapped,
+                        startNodeID: routeEngine.startNodeID,
+                        usesReferenceStyle: ["level_001", "level_002", "level_003", "level_004"].contains(levelID)
                     )
                     .onAppear {
                         finishPreviewIfNeeded(for: runtimeGraph)
@@ -115,6 +120,12 @@ struct GameplayScreen: View {
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .padding(.horizontal, 2)
+            .overlay(alignment: .top) {
+                if !startingEdgeIDs.isEmpty {
+                    TRGameplayTutorialCard(message: "Tap a dotted road to start driving.")
+                        .allowsHitTesting(false)
+                }
+            }
 
             TRGameplayBottomControls(
                 isPaused: isPaused,
@@ -160,7 +171,7 @@ struct GameplayScreen: View {
         do {
             let levelData = try levelRepository.loadLevel(id: levelID)
             try routeEngine.buildGraph(from: levelData)
-            let didStartMovement = routeEngine.startDotMovement()
+            startingEdgeIDs = routeEngine.startingEdgeIDs
 
             runtimeGraph = routeEngine.runtimeGraph
             deliveryDot = routeEngine.deliveryDot
@@ -178,7 +189,7 @@ struct GameplayScreen: View {
             }
             isShowingLevelPreview = shouldPreviewLevel(runtimeGraph: routeEngine.runtimeGraph)
 
-            if !didStartMovement {
+            if startingEdgeIDs.isEmpty {
                 loadErrorMessage = "Level has no active outgoing edge from the start node."
             }
             dispatchLevelOutcomeIfNeeded()
@@ -191,7 +202,7 @@ struct GameplayScreen: View {
         resetViewState()
         loadErrorMessage = nil
 
-        guard routeEngine.restartLevel() else {
+        guard routeEngine.restartLevel(startAutomatically: false) else {
             loadBoard()
             return
         }
@@ -206,16 +217,17 @@ struct GameplayScreen: View {
         completedObjectiveIDs = routeEngine.completedObjectiveIDs
         timeRemaining = routeEngine.timeRemaining
         tapCount = routeEngine.tapCount
+        startingEdgeIDs = routeEngine.startingEdgeIDs
         isShowingLevelPreview = shouldPreviewLevel(runtimeGraph: routeEngine.runtimeGraph)
 
-        if routeEngine.deliveryDot?.currentEdgeID == nil {
+        if startingEdgeIDs.isEmpty {
             loadErrorMessage = "Level has no active outgoing edge from the start node."
         }
         dispatchLevelOutcomeIfNeeded()
     }
 
     private func advanceDot(at frameDate: Date) {
-        guard !isPaused, !isShowingLevelPreview, runtimeGraph != nil else {
+        guard !isPaused, !isShowingLevelPreview, startingEdgeIDs.isEmpty, runtimeGraph != nil else {
             lastFrameDate = nil
             return
         }
@@ -246,7 +258,7 @@ struct GameplayScreen: View {
     }
 
     private func handleNodeTapped(_ nodeID: String) {
-        guard !isPaused, routeEngine.levelOutcome == nil else {
+        guard !isPaused, startingEdgeIDs.isEmpty, nodeID != routeEngine.startNodeID, routeEngine.levelOutcome == nil else {
             return
         }
 
@@ -260,6 +272,15 @@ struct GameplayScreen: View {
             lastRejectedSwitchNodeID = nodeID
             switchRejectionEventToken += 1
         }
+    }
+
+    private func handleStartingRoadTapped(_ edgeID: String) {
+        guard !isPaused, !isShowingLevelPreview,
+              routeEngine.startDotMovement(edgeID: edgeID) else { return }
+        startingEdgeIDs = routeEngine.startingEdgeIDs
+        runtimeGraph = routeEngine.runtimeGraph
+        deliveryDot = routeEngine.deliveryDot
+        lastFrameDate = nil
     }
 
     private func dispatchLevelOutcomeIfNeeded() {
@@ -307,6 +328,7 @@ struct GameplayScreen: View {
     private func resetViewState() {
         previewDismissScheduler.cancel()
         hasCollectedPackage = false
+        startingEdgeIDs = []
         activeObjective = nil
         activeObjectiveIndex = nil
         completedObjectiveIDs = []
@@ -393,6 +415,10 @@ struct RouteBoardView: View {
     let upcomingSwitchNodeID: String?
     let eligibleSwitchNodeID: String?
     let onNodeTapped: (String) -> Void
+    var startingEdgeIDs: [String] = []
+    var onStartingRoadTapped: (String) -> Void = { _ in }
+    var startNodeID: String? = nil
+    var usesReferenceStyle = false
 
     private let boardPadding = TRGameplayStyle.Metrics.boardPadding
     private let switchSpriteSize = TRGameplayStyle.Metrics.switchNodeSize
@@ -411,6 +437,9 @@ struct RouteBoardView: View {
     var body: some View {
         GeometryReader { geometry in
             let cosmeticStyle = TRGameplayCosmeticStyle(loadout: cosmeticLoadout)
+            let usesReferenceRoads = usesReferenceStyle && cosmeticLoadout.routeThemeID == GameplayCosmeticLoadout.default.routeThemeID
+            let roadEdgeColor = usesReferenceRoads ? TRGameplayStyle.Colors.roadEdge : cosmeticStyle.roadEdgeColor
+            let roadFillColor = usesReferenceRoads ? TRGameplayStyle.Colors.roadFill : cosmeticStyle.roadFillColor
             let nodes = runtimeGraph.nodesByID.values.sorted { $0.id < $1.id }
             let edges = runtimeGraph.edgesByID.values.sorted { $0.id < $1.id }
             let deliveryDotWorldPosition = deliveryDot?.runtimePosition(in: runtimeGraph).map {
@@ -440,13 +469,19 @@ struct RouteBoardView: View {
                     .accessibilityHidden(true)
 
                 roadLayer(roadPaths, state: .available, color: cosmeticStyle.roadShadowColor, lineWidth: roadOuterWidth + 3, yOffset: 2)
-                roadLayer(roadPaths, state: .available, color: cosmeticStyle.roadEdgeColor, lineWidth: roadOuterWidth)
-                roadLayer(roadPaths, state: .available, color: cosmeticStyle.roadFillColor, lineWidth: roadInnerWidth)
+                roadLayer(roadPaths, state: .available, color: roadEdgeColor, lineWidth: roadOuterWidth)
+                roadLayer(roadPaths, state: .available, color: roadFillColor, lineWidth: roadInnerWidth)
                 roadLayer(roadPaths, state: .available, color: cosmeticStyle.roadHighlightColor, lineWidth: roadHighlightWidth, yOffset: -3)
                 unavailableRoadLayer(roadPaths)
-                roadHubLayer(roadHubs, color: cosmeticStyle.roadEdgeColor, size: roadOuterWidth * 1.15)
-                roadHubLayer(roadHubs, color: cosmeticStyle.roadFillColor, size: roadInnerWidth * 1.35)
+                roadHubLayer(roadHubs, color: roadEdgeColor, size: roadOuterWidth * 1.15)
+                roadHubLayer(roadHubs, color: roadFillColor, size: roadInnerWidth * 1.35)
                 roadHubLayer(roadHubs, color: cosmeticStyle.roadHighlightColor, size: roadHighlightWidth * 1.15, yOffset: -3)
+
+                ForEach(startingEdgeIDs, id: \.self) { edgeID in
+                    if let edge = runtimeGraph.edgesByID[edgeID] {
+                        startingRoadDots(for: edge, layout: layout)
+                    }
+                }
 
                 ForEach(roadPaths.filter { $0.state != .available }) { roadPath in
                     Image(systemName: roadPath.state == .consumed ? "nosign" : "lock.fill")
@@ -503,6 +538,12 @@ struct RouteBoardView: View {
                         guard LevelPreviewTapPolicy.allowsNodeTap(isShowingPreview: isShowingPreview) else {
                             return
                         }
+                        if !startingEdgeIDs.isEmpty {
+                            if let edgeID = tapTargetResolver.startingEdgeID(at: value.location, edgeIDs: startingEdgeIDs) {
+                                onStartingRoadTapped(edgeID)
+                            }
+                            return
+                        }
                         guard let nodeID = tapTargetResolver.nodeID(at: value.location) else {
                             return
                         }
@@ -510,6 +551,21 @@ struct RouteBoardView: View {
                     }
             )
         }
+    }
+
+    private func startingRoadDots(for edge: RuntimeRouteEdge, layout: BoardLayout) -> some View {
+        Canvas { context, _ in
+            for point in RouteBoardTapTargetResolver.startingDotPoints(for: edge, layout: layout) {
+                let rect = CGRect(x: point.x - 2.5, y: point.y - 2.5, width: 5, height: 5)
+                context.fill(Path(ellipseIn: rect), with: .color(.white))
+            }
+        }
+        .blendMode(.difference)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("Start driving \(RouteBoardTapTargetResolver.startingDirection(for: edge))")
+        .accessibilityAddTraits(.isButton)
+        .accessibilityAction { onStartingRoadTapped(edge.id) }
+        .allowsHitTesting(false)
     }
 
     @ViewBuilder
@@ -572,7 +628,27 @@ struct RouteBoardView: View {
 
     @ViewBuilder
     private func nodeView(for node: RuntimeRouteNode, layout: BoardLayout) -> some View {
-        if let activeObjective, node.id == activeObjective.nodeID {
+        if node.id == startNodeID {
+            EmptyView()
+        } else if usesReferenceStyle, node.id == packageNodeID, !hasCollectedPackage {
+            TRCircularMarkerShell(size: 52) {
+                Text("📦").font(.system(size: 34))
+            }
+            .accessibilityLabel("Package")
+        } else if usesReferenceStyle, node.id == destinationNodeID,
+                  cosmeticLoadout.destinationID == GameplayCosmeticLoadout.default.destinationID {
+            TRCircularMarkerShell(size: 58) {
+                Text("🏠").font(.system(size: 38))
+            }
+            .shadow(color: TRGameplayStyle.Colors.resultGold.opacity(0.55), radius: 14)
+            .overlay {
+                Image(systemName: "mappin")
+                    .font(.system(size: 26, weight: .heavy))
+                    .foregroundStyle(TRGameplayStyle.Colors.resultGold)
+                    .offset(y: -39)
+            }
+            .accessibilityLabel("Delivery house")
+        } else if let activeObjective, node.id == activeObjective.nodeID {
             TRCurrentObjectiveMarkerView(
                 objective: activeObjective,
                 destinationOption: cosmeticLoadout.destination
@@ -1295,6 +1371,38 @@ struct RouteBoardTapTargetResolver {
                 return lhs.distanceSquared < rhs.distanceSquared
             }?
             .nodeID
+    }
+
+    static func startingDirection(for edge: RuntimeRouteEdge) -> String {
+        let tangent = edge.roadPath.tangent(atProgress: 0)
+        if abs(tangent.x) >= abs(tangent.y) { return tangent.x >= 0 ? "right" : "left" }
+        return tangent.y >= 0 ? "up" : "down"
+    }
+
+    static func startingDotPoints(for edge: RuntimeRouteEdge, layout: BoardLayout) -> [CGPoint] {
+        guard let scale = layout.coordinateScale, scale > 0 else { return [] }
+        let end = min(edge.roadPath.totalLength * Double(scale) - 24, 120)
+        guard end >= 30 else { return [] }
+        return stride(from: 30.0, through: end, by: 10).compactMap { distance in
+            layout.point(for: edge.roadPath.point(atDistance: distance / Double(scale)))
+        }
+    }
+
+    func startingEdgeID(at point: CGPoint, edgeIDs: [String]) -> String? {
+        guard let scale = layout.coordinateScale, scale > 0 else { return nil }
+        var closest: (id: String, distance: CGFloat)?
+        for edgeID in edgeIDs {
+            guard let edge = runtimeGraph.edgesByID[edgeID] else { continue }
+            let end = edge.roadPath.totalLength * Double(scale) - 18
+            for distance in stride(from: 28.0, through: end, by: 6) {
+                guard let roadPoint = layout.point(for: edge.roadPath.point(atDistance: distance / Double(scale))) else { continue }
+                let separation = hypot(point.x - roadPoint.x, point.y - roadPoint.y)
+                if separation <= 22, separation < (closest?.distance ?? .infinity) {
+                    closest = (edgeID, separation)
+                }
+            }
+        }
+        return closest?.id
     }
 }
 

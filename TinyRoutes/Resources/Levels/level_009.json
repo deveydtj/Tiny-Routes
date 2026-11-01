@@ -1,96 +1,207 @@
 {
-  "schemaVersion": 2,
+  "schemaVersion": 3,
   "id": "level_009",
   "name": "Level 009",
   "graph": {
     "nodes": [
       {
         "id": "start",
-        "x": -0.9,
-        "y": 0.95,
+        "x": -0.8,
+        "y": -0.6,
         "outgoingEdgeIDs": [
-          "e_start_choice"
+          "start_to_first_decision"
         ]
       },
       {
-        "id": "choice",
-        "x": 0.2,
-        "y": 0.4,
-        "outgoingEdgeIDs": [
-          "e_choice_shortcut_dead_end",
-          "e_choice_detour"
-        ]
-      },
-      {
-        "id": "detour",
+        "id": "shared_hub_0",
         "x": 0.0,
-        "y": -0.1,
+        "y": -0.0,
         "outgoingEdgeIDs": [
-          "e_detour_package"
+          "decision_0_fatal",
+          "decision_0_correct",
+          "decision_2_correct",
+          "decision_0_wrong"
         ]
       },
       {
-        "id": "package",
-        "x": -0.35,
-        "y": -0.55,
-        "outgoingEdgeIDs": [
-          "e_package_destination"
-        ]
-      },
-      {
-        "id": "destination",
-        "x": 0.35,
+        "id": "decision_1",
+        "x": 2.0,
         "y": -1.0,
+        "outgoingEdgeIDs": [
+          "decision_1_correct",
+          "decision_1_wrong"
+        ]
+      },
+      {
+        "id": "objective_node_0",
+        "x": 4.8,
+        "y": -2.8,
+        "outgoingEdgeIDs": [
+          "phase_0_return"
+        ]
+      },
+      {
+        "id": "objective_entry_0",
+        "x": 4.0,
+        "y": -1.0,
+        "outgoingEdgeIDs": [
+          "phase_0_objective_finish"
+        ]
+      },
+      {
+        "id": "initial_fatal_dead_end",
+        "x": 0.4,
+        "y": -0.8,
         "outgoingEdgeIDs": []
       },
       {
-        "id": "shortcut_dead_end",
-        "x": -0.5,
-        "y": 0.35,
+        "id": "wrong_1_0",
+        "x": 1.4,
+        "y": -0.4,
+        "outgoingEdgeIDs": [
+          "decision_1_recover"
+        ]
+      },
+      {
+        "id": "objective_node_1",
+        "x": 0.8,
+        "y": 2.8,
         "outgoingEdgeIDs": []
+      },
+      {
+        "id": "objective_entry_1",
+        "x": 0.0,
+        "y": 1.0,
+        "outgoingEdgeIDs": [
+          "phase_1_objective_finish"
+        ]
+      },
+      {
+        "id": "wrong_0_0",
+        "x": -0.6,
+        "y": 1.6,
+        "outgoingEdgeIDs": [
+          "decision_0_recover"
+        ]
       }
     ],
     "edges": [
       {
-        "id": "e_start_choice",
+        "id": "start_to_first_decision",
         "fromNodeID": "start",
-        "toNodeID": "choice",
-        "roadShape": "horizontalFirst"
-      },
-      {
-        "id": "e_choice_shortcut_dead_end",
-        "fromNodeID": "choice",
-        "toNodeID": "shortcut_dead_end",
-        "roadShape": "horizontalFirst"
-      },
-      {
-        "id": "e_choice_detour",
-        "fromNodeID": "choice",
-        "toNodeID": "detour",
+        "toNodeID": "shared_hub_0",
         "roadShape": "verticalFirst"
       },
       {
-        "id": "e_detour_package",
-        "fromNodeID": "detour",
-        "toNodeID": "package",
+        "id": "phase_0_objective_finish",
+        "fromNodeID": "objective_entry_0",
+        "toNodeID": "objective_node_0",
         "roadShape": "horizontalFirst"
       },
       {
-        "id": "e_package_destination",
-        "fromNodeID": "package",
-        "toNodeID": "destination",
+        "id": "decision_0_fatal",
+        "fromNodeID": "shared_hub_0",
+        "toNodeID": "initial_fatal_dead_end",
+        "roadShape": "verticalFirst"
+      },
+      {
+        "id": "decision_0_correct",
+        "fromNodeID": "shared_hub_0",
+        "toNodeID": "decision_1",
+        "roadShape": "horizontalFirst",
+        "availabilityRule": {
+          "minimumObjectiveIndex": 0,
+          "maximumObjectiveIndex": 0
+        }
+      },
+      {
+        "id": "decision_1_correct",
+        "fromNodeID": "decision_1",
+        "toNodeID": "objective_entry_0",
+        "roadShape": "horizontalFirst",
+        "availabilityRule": {
+          "minimumObjectiveIndex": 0,
+          "maximumObjectiveIndex": 0
+        }
+      },
+      {
+        "id": "decision_1_wrong",
+        "fromNodeID": "decision_1",
+        "toNodeID": "wrong_1_0",
+        "roadShape": "horizontalFirst",
+        "availabilityRule": {
+          "usageLimit": 1
+        }
+      },
+      {
+        "id": "decision_1_recover",
+        "fromNodeID": "wrong_1_0",
+        "toNodeID": "decision_1",
+        "roadShape": "horizontalFirst"
+      },
+      {
+        "id": "phase_0_return",
+        "fromNodeID": "objective_node_0",
+        "toNodeID": "shared_hub_0",
+        "roadShape": "verticalFirst"
+      },
+      {
+        "id": "phase_1_objective_finish",
+        "fromNodeID": "objective_entry_1",
+        "toNodeID": "objective_node_1",
+        "roadShape": "horizontalFirst"
+      },
+      {
+        "id": "decision_2_correct",
+        "fromNodeID": "shared_hub_0",
+        "toNodeID": "objective_entry_1",
+        "roadShape": "verticalFirst",
+        "availabilityRule": {
+          "minimumObjectiveIndex": 1,
+          "maximumObjectiveIndex": 1
+        }
+      },
+      {
+        "id": "decision_0_wrong",
+        "fromNodeID": "shared_hub_0",
+        "toNodeID": "wrong_0_0",
+        "roadShape": "horizontalFirst",
+        "availabilityRule": {
+          "usageLimit": 1
+        }
+      },
+      {
+        "id": "decision_0_recover",
+        "fromNodeID": "wrong_0_0",
+        "toNodeID": "shared_hub_0",
         "roadShape": "verticalFirst"
       }
     ]
   },
   "startNodeID": "start",
-  "packageNodeID": "package",
-  "destinationNodeID": "destination",
-  "timeLimitSeconds": 30,
-  "parTaps": 1,
+  "packageNodeID": "objective_node_0",
+  "destinationNodeID": "objective_node_1",
+  "timeLimitSeconds": 360,
+  "parTaps": 2,
+  "objectives": [
+    {
+      "id": "shortcut_key",
+      "nodeID": "objective_node_0",
+      "kind": "pickup",
+      "sequenceIndex": 0,
+      "revealPolicy": "always"
+    },
+    {
+      "id": "destination",
+      "nodeID": "objective_node_1",
+      "kind": "destination",
+      "sequenceIndex": 1,
+      "revealPolicy": "whenActive"
+    }
+  ],
   "rules": {
     "switchInteractionMode": "liveLookahead",
-    "switchLookaheadSeconds": 1.6,
+    "switchLookaheadSeconds": 2.0,
     "switchTapCooldownSeconds": 0.12
   }
 }

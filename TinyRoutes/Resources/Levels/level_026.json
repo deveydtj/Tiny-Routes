@@ -1,164 +1,581 @@
 {
-  "schemaVersion": 2,
+  "schemaVersion": 3,
   "id": "level_026",
   "name": "Level 026",
   "graph": {
     "nodes": [
       {
         "id": "start",
-        "x": -0.3,
-        "y": 0.85,
-        "outgoingEdgeIDs": [
-          "e_start_switch_a"
-        ]
-      },
-      {
-        "id": "switch_a",
-        "x": 0.2,
+        "x": -0.8,
         "y": 0.6,
         "outgoingEdgeIDs": [
-          "e_switch_a_dead_end_a",
-          "e_switch_a_branch_a"
+          "start_to_first_decision"
         ]
       },
       {
-        "id": "branch_a",
+        "id": "shared_hub_0",
         "x": 0.0,
-        "y": 0.3,
-        "outgoingEdgeIDs": [
-          "e_branch_a_rejoin"
-        ]
-      },
-      {
-        "id": "rejoin",
-        "x": 0.2,
         "y": 0.0,
         "outgoingEdgeIDs": [
-          "e_rejoin_switch_b"
+          "decision_0_fatal",
+          "decision_0_correct",
+          "decision_2_correct",
+          "decision_0_wrong"
         ]
       },
       {
-        "id": "switch_b",
-        "x": -0.2,
-        "y": -0.2,
+        "id": "decision_1",
+        "x": 2.0,
+        "y": 1.0,
         "outgoingEdgeIDs": [
-          "e_switch_b_dead_end_b",
-          "e_switch_b_package"
+          "decision_1_correct",
+          "decision_1_wrong"
         ]
       },
       {
-        "id": "package",
+        "id": "shared_hub_1",
+        "x": 12.0,
+        "y": 0.0,
+        "outgoingEdgeIDs": [
+          "decision_3_correct",
+          "decision_5_correct",
+          "decision_3_wrong"
+        ]
+      },
+      {
+        "id": "decision_4",
+        "x": 14.0,
+        "y": 1.0,
+        "outgoingEdgeIDs": [
+          "decision_4_correct",
+          "decision_4_wrong"
+        ]
+      },
+      {
+        "id": "decision_6",
+        "x": 24.0,
+        "y": 0.0,
+        "outgoingEdgeIDs": [
+          "decision_6_correct",
+          "decision_6_wrong"
+        ]
+      },
+      {
+        "id": "objective_node_0",
+        "x": 6.8,
+        "y": 2.8,
+        "outgoingEdgeIDs": [
+          "phase_0_return"
+        ]
+      },
+      {
+        "id": "objective_entry_0",
+        "x": 6.0,
+        "y": 1.0,
+        "outgoingEdgeIDs": [
+          "phase_0_objective_finish"
+        ]
+      },
+      {
+        "id": "initial_fatal_dead_end",
         "x": 0.4,
-        "y": -0.55,
-        "outgoingEdgeIDs": [
-          "e_package_switch_c"
-        ]
-      },
-      {
-        "id": "switch_c",
-        "x": -0.2,
-        "y": -0.75,
-        "outgoingEdgeIDs": [
-          "e_switch_c_dead_end_c",
-          "e_switch_c_destination"
-        ]
-      },
-      {
-        "id": "destination",
-        "x": 0.35,
-        "y": -1.0,
+        "y": 0.8,
         "outgoingEdgeIDs": []
       },
       {
-        "id": "dead_end_a",
+        "id": "planning_gate_1",
+        "x": 4.0,
+        "y": 1.0,
+        "outgoingEdgeIDs": [
+          "planning_gate_1_wrong",
+          "planning_gate_1_finish"
+        ]
+      },
+      {
+        "id": "planning_dead_end_1",
+        "x": 6.2,
+        "y": 2.4,
+        "outgoingEdgeIDs": []
+      },
+      {
+        "id": "wrong_1_0",
+        "x": 1.4,
+        "y": 0.4,
+        "outgoingEdgeIDs": [
+          "decision_1_wrong_segment_1"
+        ]
+      },
+      {
+        "id": "wrong_1_1",
         "x": 0.8,
-        "y": 1.2,
+        "y": 0.4,
+        "outgoingEdgeIDs": [
+          "decision_1_recover"
+        ]
+      },
+      {
+        "id": "deep_recovery_switch_1",
+        "x": 0.8,
+        "y": 1.0,
+        "outgoingEdgeIDs": [
+          "deep_recovery_1_return",
+          "deep_recovery_1_detour"
+        ]
+      },
+      {
+        "id": "deep_recovery_detour_1",
+        "x": 0.8,
+        "y": 1.8,
+        "outgoingEdgeIDs": [
+          "deep_recovery_1_detour_return"
+        ]
+      },
+      {
+        "id": "objective_node_1",
+        "x": 2.8,
+        "y": -2.8,
+        "outgoingEdgeIDs": [
+          "phase_1_return"
+        ]
+      },
+      {
+        "id": "objective_entry_1",
+        "x": 2.0,
+        "y": -1.0,
+        "outgoingEdgeIDs": [
+          "phase_1_objective_finish"
+        ]
+      },
+      {
+        "id": "wrong_0_0",
+        "x": -0.6,
+        "y": -0.6,
+        "outgoingEdgeIDs": [
+          "decision_0_wrong_segment_1"
+        ]
+      },
+      {
+        "id": "wrong_0_1",
+        "x": -1.2,
+        "y": -0.6,
+        "outgoingEdgeIDs": [
+          "decision_0_recover"
+        ]
+      },
+      {
+        "id": "objective_node_2",
+        "x": 16.8,
+        "y": 2.8,
+        "outgoingEdgeIDs": [
+          "phase_2_return"
+        ]
+      },
+      {
+        "id": "objective_entry_2",
+        "x": 16.0,
+        "y": 1.0,
+        "outgoingEdgeIDs": [
+          "phase_2_objective_finish"
+        ]
+      },
+      {
+        "id": "wrong_4_0",
+        "x": 13.4,
+        "y": 0.4,
+        "outgoingEdgeIDs": [
+          "decision_4_wrong_segment_1"
+        ]
+      },
+      {
+        "id": "wrong_4_1",
+        "x": 12.8,
+        "y": 0.4,
+        "outgoingEdgeIDs": [
+          "decision_4_recover"
+        ]
+      },
+      {
+        "id": "objective_node_3",
+        "x": 14.8,
+        "y": -2.8,
+        "outgoingEdgeIDs": [
+          "phase_3_return"
+        ]
+      },
+      {
+        "id": "objective_entry_3",
+        "x": 14.0,
+        "y": -1.0,
+        "outgoingEdgeIDs": [
+          "phase_3_objective_finish"
+        ]
+      },
+      {
+        "id": "wrong_3_0",
+        "x": 11.4,
+        "y": -0.6,
+        "outgoingEdgeIDs": [
+          "decision_3_wrong_segment_1"
+        ]
+      },
+      {
+        "id": "wrong_3_1",
+        "x": 10.8,
+        "y": -0.6,
+        "outgoingEdgeIDs": [
+          "decision_3_recover"
+        ]
+      },
+      {
+        "id": "objective_node_4",
+        "x": 26.8,
+        "y": 2.8,
         "outgoingEdgeIDs": []
       },
       {
-        "id": "dead_end_b",
-        "x": 0.5,
-        "y": -0.25,
-        "outgoingEdgeIDs": []
+        "id": "objective_entry_4",
+        "x": 26.0,
+        "y": 1.0,
+        "outgoingEdgeIDs": [
+          "phase_4_objective_finish"
+        ]
       },
       {
-        "id": "dead_end_c",
-        "x": -0.9,
-        "y": -0.7,
-        "outgoingEdgeIDs": []
+        "id": "wrong_6_0",
+        "x": 23.4,
+        "y": -0.6,
+        "outgoingEdgeIDs": [
+          "decision_6_wrong_segment_1"
+        ]
+      },
+      {
+        "id": "wrong_6_1",
+        "x": 22.8,
+        "y": -0.6,
+        "outgoingEdgeIDs": [
+          "decision_6_recover"
+        ]
       }
     ],
     "edges": [
       {
-        "id": "e_start_switch_a",
+        "id": "start_to_first_decision",
         "fromNodeID": "start",
-        "toNodeID": "switch_a",
+        "toNodeID": "shared_hub_0",
         "roadShape": "verticalFirst"
       },
       {
-        "id": "e_switch_a_dead_end_a",
-        "fromNodeID": "switch_a",
-        "toNodeID": "dead_end_a",
-        "roadShape": "verticalFirst"
-      },
-      {
-        "id": "e_switch_a_branch_a",
-        "fromNodeID": "switch_a",
-        "toNodeID": "branch_a",
+        "id": "phase_0_objective_finish",
+        "fromNodeID": "objective_entry_0",
+        "toNodeID": "objective_node_0",
         "roadShape": "horizontalFirst"
       },
       {
-        "id": "e_branch_a_rejoin",
-        "fromNodeID": "branch_a",
-        "toNodeID": "rejoin",
+        "id": "decision_0_fatal",
+        "fromNodeID": "shared_hub_0",
+        "toNodeID": "initial_fatal_dead_end",
         "roadShape": "verticalFirst"
       },
       {
-        "id": "e_rejoin_switch_b",
-        "fromNodeID": "rejoin",
-        "toNodeID": "switch_b",
+        "id": "decision_0_correct",
+        "fromNodeID": "shared_hub_0",
+        "toNodeID": "decision_1",
+        "roadShape": "horizontalFirst",
+        "availabilityRule": {
+          "minimumObjectiveIndex": 0,
+          "maximumObjectiveIndex": 0
+        }
+      },
+      {
+        "id": "planning_gate_1_wrong",
+        "fromNodeID": "planning_gate_1",
+        "toNodeID": "planning_dead_end_1",
         "roadShape": "verticalFirst"
       },
       {
-        "id": "e_switch_b_dead_end_b",
-        "fromNodeID": "switch_b",
-        "toNodeID": "dead_end_b",
+        "id": "planning_gate_1_finish",
+        "fromNodeID": "planning_gate_1",
+        "toNodeID": "objective_entry_0",
         "roadShape": "horizontalFirst"
       },
       {
-        "id": "e_switch_b_package",
-        "fromNodeID": "switch_b",
-        "toNodeID": "package",
-        "roadShape": "verticalFirst"
+        "id": "decision_1_correct",
+        "fromNodeID": "decision_1",
+        "toNodeID": "planning_gate_1",
+        "roadShape": "horizontalFirst",
+        "availabilityRule": {
+          "minimumObjectiveIndex": 0,
+          "maximumObjectiveIndex": 0
+        }
       },
       {
-        "id": "e_package_switch_c",
-        "fromNodeID": "package",
-        "toNodeID": "switch_c",
-        "roadShape": "verticalFirst"
+        "id": "decision_1_wrong",
+        "fromNodeID": "decision_1",
+        "toNodeID": "wrong_1_0",
+        "roadShape": "horizontalFirst",
+        "availabilityRule": {
+          "usageLimit": 1
+        }
       },
       {
-        "id": "e_switch_c_dead_end_c",
-        "fromNodeID": "switch_c",
-        "toNodeID": "dead_end_c",
+        "id": "decision_1_wrong_segment_1",
+        "fromNodeID": "wrong_1_0",
+        "toNodeID": "wrong_1_1",
         "roadShape": "horizontalFirst"
       },
       {
-        "id": "e_switch_c_destination",
-        "fromNodeID": "switch_c",
-        "toNodeID": "destination",
+        "id": "decision_1_recover",
+        "fromNodeID": "wrong_1_1",
+        "toNodeID": "deep_recovery_switch_1",
+        "roadShape": "verticalFirst"
+      },
+      {
+        "id": "deep_recovery_1_return",
+        "fromNodeID": "deep_recovery_switch_1",
+        "toNodeID": "decision_1",
+        "roadShape": "horizontalFirst"
+      },
+      {
+        "id": "deep_recovery_1_detour",
+        "fromNodeID": "deep_recovery_switch_1",
+        "toNodeID": "deep_recovery_detour_1",
+        "roadShape": "verticalFirst"
+      },
+      {
+        "id": "deep_recovery_1_detour_return",
+        "fromNodeID": "deep_recovery_detour_1",
+        "toNodeID": "decision_1",
+        "roadShape": "horizontalFirst"
+      },
+      {
+        "id": "phase_0_return",
+        "fromNodeID": "objective_node_0",
+        "toNodeID": "shared_hub_0",
+        "roadShape": "verticalFirst"
+      },
+      {
+        "id": "phase_1_objective_finish",
+        "fromNodeID": "objective_entry_1",
+        "toNodeID": "objective_node_1",
+        "roadShape": "horizontalFirst"
+      },
+      {
+        "id": "decision_2_correct",
+        "fromNodeID": "shared_hub_0",
+        "toNodeID": "objective_entry_1",
+        "roadShape": "verticalFirst",
+        "availabilityRule": {
+          "minimumObjectiveIndex": 1,
+          "maximumObjectiveIndex": 1
+        }
+      },
+      {
+        "id": "decision_0_wrong",
+        "fromNodeID": "shared_hub_0",
+        "toNodeID": "wrong_0_0",
+        "roadShape": "horizontalFirst",
+        "availabilityRule": {
+          "usageLimit": 1
+        }
+      },
+      {
+        "id": "decision_0_wrong_segment_1",
+        "fromNodeID": "wrong_0_0",
+        "toNodeID": "wrong_0_1",
+        "roadShape": "horizontalFirst"
+      },
+      {
+        "id": "decision_0_recover",
+        "fromNodeID": "wrong_0_1",
+        "toNodeID": "shared_hub_0",
+        "roadShape": "verticalFirst"
+      },
+      {
+        "id": "phase_1_return",
+        "fromNodeID": "objective_node_1",
+        "toNodeID": "shared_hub_1",
+        "roadShape": "horizontalFirst"
+      },
+      {
+        "id": "phase_2_objective_finish",
+        "fromNodeID": "objective_entry_2",
+        "toNodeID": "objective_node_2",
+        "roadShape": "horizontalFirst"
+      },
+      {
+        "id": "decision_3_correct",
+        "fromNodeID": "shared_hub_1",
+        "toNodeID": "decision_4",
+        "roadShape": "horizontalFirst",
+        "availabilityRule": {
+          "minimumObjectiveIndex": 2,
+          "maximumObjectiveIndex": 2
+        }
+      },
+      {
+        "id": "decision_4_correct",
+        "fromNodeID": "decision_4",
+        "toNodeID": "objective_entry_2",
+        "roadShape": "horizontalFirst",
+        "availabilityRule": {
+          "minimumObjectiveIndex": 2,
+          "maximumObjectiveIndex": 2
+        }
+      },
+      {
+        "id": "decision_4_wrong",
+        "fromNodeID": "decision_4",
+        "toNodeID": "wrong_4_0",
+        "roadShape": "horizontalFirst",
+        "availabilityRule": {
+          "usageLimit": 1
+        }
+      },
+      {
+        "id": "decision_4_wrong_segment_1",
+        "fromNodeID": "wrong_4_0",
+        "toNodeID": "wrong_4_1",
+        "roadShape": "horizontalFirst"
+      },
+      {
+        "id": "decision_4_recover",
+        "fromNodeID": "wrong_4_1",
+        "toNodeID": "decision_4",
+        "roadShape": "verticalFirst"
+      },
+      {
+        "id": "phase_2_return",
+        "fromNodeID": "objective_node_2",
+        "toNodeID": "shared_hub_1",
+        "roadShape": "verticalFirst"
+      },
+      {
+        "id": "phase_3_objective_finish",
+        "fromNodeID": "objective_entry_3",
+        "toNodeID": "objective_node_3",
+        "roadShape": "horizontalFirst"
+      },
+      {
+        "id": "decision_5_correct",
+        "fromNodeID": "shared_hub_1",
+        "toNodeID": "objective_entry_3",
+        "roadShape": "verticalFirst",
+        "availabilityRule": {
+          "minimumObjectiveIndex": 3,
+          "maximumObjectiveIndex": 3
+        }
+      },
+      {
+        "id": "decision_3_wrong",
+        "fromNodeID": "shared_hub_1",
+        "toNodeID": "wrong_3_0",
+        "roadShape": "horizontalFirst",
+        "availabilityRule": {
+          "usageLimit": 1
+        }
+      },
+      {
+        "id": "decision_3_wrong_segment_1",
+        "fromNodeID": "wrong_3_0",
+        "toNodeID": "wrong_3_1",
+        "roadShape": "horizontalFirst"
+      },
+      {
+        "id": "decision_3_recover",
+        "fromNodeID": "wrong_3_1",
+        "toNodeID": "shared_hub_1",
+        "roadShape": "verticalFirst"
+      },
+      {
+        "id": "phase_3_return",
+        "fromNodeID": "objective_node_3",
+        "toNodeID": "decision_6",
+        "roadShape": "horizontalFirst"
+      },
+      {
+        "id": "phase_4_objective_finish",
+        "fromNodeID": "objective_entry_4",
+        "toNodeID": "objective_node_4",
+        "roadShape": "horizontalFirst"
+      },
+      {
+        "id": "decision_6_correct",
+        "fromNodeID": "decision_6",
+        "toNodeID": "objective_entry_4",
+        "roadShape": "horizontalFirst",
+        "availabilityRule": {
+          "minimumObjectiveIndex": 4,
+          "maximumObjectiveIndex": 4
+        }
+      },
+      {
+        "id": "decision_6_wrong",
+        "fromNodeID": "decision_6",
+        "toNodeID": "wrong_6_0",
+        "roadShape": "horizontalFirst",
+        "availabilityRule": {
+          "usageLimit": 1
+        }
+      },
+      {
+        "id": "decision_6_wrong_segment_1",
+        "fromNodeID": "wrong_6_0",
+        "toNodeID": "wrong_6_1",
+        "roadShape": "horizontalFirst"
+      },
+      {
+        "id": "decision_6_recover",
+        "fromNodeID": "wrong_6_1",
+        "toNodeID": "decision_6",
         "roadShape": "verticalFirst"
       }
     ]
   },
   "startNodeID": "start",
-  "packageNodeID": "package",
-  "destinationNodeID": "destination",
-  "timeLimitSeconds": 30,
-  "parTaps": 3,
+  "packageNodeID": "objective_node_0",
+  "destinationNodeID": "objective_node_4",
+  "timeLimitSeconds": 360,
+  "parTaps": 5,
+  "objectives": [
+    {
+      "id": "route_checkpoint",
+      "nodeID": "objective_node_0",
+      "kind": "pickup",
+      "sequenceIndex": 0,
+      "revealPolicy": "always"
+    },
+    {
+      "id": "checkpoint_1",
+      "nodeID": "objective_node_1",
+      "kind": "checkpoint",
+      "sequenceIndex": 1,
+      "revealPolicy": "whenActive"
+    },
+    {
+      "id": "checkpoint_2",
+      "nodeID": "objective_node_2",
+      "kind": "checkpoint",
+      "sequenceIndex": 2,
+      "revealPolicy": "whenActive"
+    },
+    {
+      "id": "checkpoint_3",
+      "nodeID": "objective_node_3",
+      "kind": "checkpoint",
+      "sequenceIndex": 3,
+      "revealPolicy": "whenActive"
+    },
+    {
+      "id": "destination",
+      "nodeID": "objective_node_4",
+      "kind": "destination",
+      "sequenceIndex": 4,
+      "revealPolicy": "whenActive"
+    }
+  ],
   "rules": {
     "switchInteractionMode": "liveLookahead",
-    "switchLookaheadSeconds": 1.35,
+    "switchLookaheadSeconds": 2.0,
     "switchTapCooldownSeconds": 0.12
   }
 }

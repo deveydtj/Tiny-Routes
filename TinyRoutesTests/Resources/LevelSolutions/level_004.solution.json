@@ -1,49 +1,13 @@
 {
-  "metadata": {
-    "validationVersion": "verified_runtime_solution_v1",
-    "solutionRoute": [
-      "start",
-      "choice",
-      "package",
-      "destination"
-    ],
-    "requiredTapOrder": [
-      "choice"
-    ],
-    "runtimeDecisionTiming": [
-      {
-        "nodeID": "choice",
-        "visitIndex": 1,
-        "rotationCount": 1,
-        "windowOpenSeconds": 0.19999999999999973,
-        "windowCloseSeconds": 1.7999999999999998,
-        "chosenTapSeconds": [
-          0.31999999999999973
-        ],
-        "safetyMarginSeconds": 0.12,
-        "failureReason": null
-      }
-    ],
-    "template": "single_switch_wrong_dead_end",
-    "generatedSeed": 2014853202,
-    "recipeFamily": "single_switch_wrong_dead_end",
-    "recipeVariant": "single_switch_wrong_dead_end_primary",
-    "migrationReview": "phase16_live_routing"
-  },
-  "levelID": "level_004",
-  "description": "Follow the generated graph recipe route and rotate each switch before arrival.",
-  "expectedOutcome": "completed",
-  "maxTaps": 1,
-  "requiresWithinTimeLimit": true,
-  "actions": [
+  "actions" : [
     {
-      "windowOpenSeconds": 0.2,
-      "chosenTapSeconds": 0.32,
-      "windowCloseSeconds": 1.8,
-      "safetyMarginSeconds": 0.12,
-      "expectedEdgeAfterTap": "e_choice_package",
-      "timeSeconds": 0.32,
-      "tapNodeID": "choice"
+      "tapNodeID" : "outer_left",
+      "timeSeconds" : 0.56999999999999995
     }
-  ]
+  ],
+  "description" : "Reference layout: choose the upward starting road, then follow this timed switch route.",
+  "expectedOutcome" : "completed",
+  "levelID" : "level_004",
+  "maxTaps" : 1,
+  "requiresWithinTimeLimit" : true
 }

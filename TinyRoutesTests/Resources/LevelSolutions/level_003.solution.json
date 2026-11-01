@@ -1,44 +1,10 @@
 {
-  "levelID": "level_003",
-  "description": "Route through one highlighted switch before pickup and a second switch afterward.",
-  "expectedOutcome": "completed",
-  "maxTaps": 2,
-  "requiresWithinTimeLimit": true,
-  "actions": [
-    {
-      "timeSeconds": 0.5,
-      "tapNodeID": "pickup_switch",
-      "reason": "Rotate the first highlighted switch toward the package.",
-      "expectedEdgeAfterTap": "e_pickup_switch_package",
-      "expectedRouteNodeAfterTap": "package",
-      "reactionWindowSeconds": 1.85,
-      "switchStateBeforeTap": "e_pickup_switch_dead_end",
-      "switchStateAfterTap": "e_pickup_switch_package"
-    },
-    {
-      "timeSeconds": 5.2,
-      "tapNodeID": "delivery_switch",
-      "reason": "Rotate the later highlighted switch toward the destination.",
-      "expectedEdgeAfterTap": "e_delivery_switch_destination",
-      "expectedRouteNodeAfterTap": "destination",
-      "reactionWindowSeconds": 2.0,
-      "switchStateBeforeTap": "e_delivery_switch_dead_end",
-      "switchStateAfterTap": "e_delivery_switch_destination"
-    }
+  "actions" : [
+
   ],
-  "metadata": {
-    "validationVersion": "solution_sidecar_v1",
-    "solutionRoute": [
-      "start",
-      "pickup_switch",
-      "package",
-      "delivery_approach",
-      "delivery_switch",
-      "destination"
-    ],
-    "requiredTapOrder": ["pickup_switch", "delivery_switch"],
-    "template": "two_stage_switch_tutorial",
-    "recipeFamily": "two_stage_switch_tutorial",
-    "recipeVariant": "pickup_then_delivery"
-  }
+  "description" : "Reference layout: choose the upward starting road, then follow this timed switch route.",
+  "expectedOutcome" : "completed",
+  "levelID" : "level_003",
+  "maxTaps" : 0,
+  "requiresWithinTimeLimit" : true
 }

@@ -43,11 +43,13 @@ from .production_level_realization_service import (
 from .production_pipeline_policy_service import ProductionPipelinePolicyService
 from .production_puzzle_gate_service import ProductionPuzzleGateService
 from .puzzle_blueprint_service import PuzzleBlueprintService
+from .road_geometry_validation_service import RoadGeometryValidationService
 from .runtime_solution_search_service import RuntimeSolutionSearchService
 from .search_limit_rejection_service import SearchLimitRejectionService
 from .static_policy_solver_service import StaticPolicySolverService
 from .strategy_search_service import StrategySearchService
 from .unique_optimal_proof_service import UniqueOptimalProofService
+from .visual_clarity_validation_service import VisualClarityValidationService
 from .v3_candidate_pipeline_coordinator import (
     V3CandidatePipelineCoordinator,
     V3CandidatePipelineHandlers,
@@ -91,6 +93,8 @@ class ProductionCandidatePipelineService:
         self._runtime_search = RuntimeSolutionSearchService()
         self._hard_gate = ProductionPuzzleGateService()
         self._level_validation = LevelValidationService()
+        self._road_geometry = RoadGeometryValidationService()
+        self._visual_clarity = VisualClarityValidationService()
         self._coordinator = V3CandidatePipelineCoordinator(
             V3CandidatePipelineHandlers(
                 blueprint=self._blueprint_stage,
@@ -286,6 +290,25 @@ class ProductionCandidatePipelineService:
                 ),
                 metrics={"errorCount": len(errors)},
             )
+        visual_report = self._visual_clarity.report_for_level(level)
+        geometry_report = self._road_geometry.report_for_level(level)
+        geometry_errors = (*visual_report.errors, *geometry_report.errors)
+        if geometry_errors:
+            first = geometry_errors[0]
+            return self._rejected_stage(
+                request,
+                "layout",
+                first.code,
+                details="; ".join(
+                    f"{issue.code}: {issue.message}"
+                    for issue in geometry_errors[:8]
+                ),
+                metrics={
+                    "visualErrorCount": len(visual_report.errors),
+                    "visualWarningCount": len(visual_report.warnings),
+                    "roadGeometryErrorCount": len(geometry_report.errors),
+                },
+            )
         return self._accepted_stage(
             request,
             "layout",
@@ -296,8 +319,12 @@ class ProductionCandidatePipelineService:
                     message.severity is ValidationSeverity.WARNING
                     for message in validation.messages
                 ),
+                "visualWarningCount": len(visual_report.warnings),
+                "visualClarityScore": visual_report.score,
             },
             layoutValidated=True,
+            visualClarityValidated=True,
+            roadGeometryValidated=True,
             layoutVariantSeed=request.retry_variant_seed("layout"),
             manualRepairRequired=False,
         )

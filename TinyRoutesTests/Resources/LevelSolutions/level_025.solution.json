@@ -1,98 +1,21 @@
 {
-  "metadata": {
-    "validationVersion": "verified_runtime_solution_v1",
-    "solutionRoute": [
-      "start",
-      "choice",
-      "detour_a",
-      "switch_b",
-      "package",
-      "detour_b",
-      "rejoin",
-      "switch_c",
-      "destination"
-    ],
-    "requiredTapOrder": [
-      "choice",
-      "switch_b",
-      "switch_c"
-    ],
-    "runtimeDecisionTiming": [
-      {
-        "nodeID": "choice",
-        "visitIndex": 1,
-        "rotationCount": 1,
-        "windowOpenSeconds": 0.0,
-        "windowCloseSeconds": 0.5499999999999999,
-        "chosenTapSeconds": [
-          0.12
-        ],
-        "safetyMarginSeconds": 0.12,
-        "failureReason": null
-      },
-      {
-        "nodeID": "switch_b",
-        "visitIndex": 1,
-        "rotationCount": 1,
-        "windowOpenSeconds": 0.57,
-        "windowCloseSeconds": 1.5499999999999998,
-        "chosenTapSeconds": [
-          0.69
-        ],
-        "safetyMarginSeconds": 0.12,
-        "failureReason": null
-      },
-      {
-        "nodeID": "switch_c",
-        "visitIndex": 1,
-        "rotationCount": 1,
-        "windowOpenSeconds": 2.4499999999999997,
-        "windowCloseSeconds": 3.8,
-        "chosenTapSeconds": [
-          2.57
-        ],
-        "safetyMarginSeconds": 0.12,
-        "failureReason": null
-      }
-    ],
-    "template": "fake_shortcut",
-    "generatedSeed": 3716325208,
-    "recipeFamily": "fake_shortcut",
-    "recipeVariant": "fake_shortcut_alternate",
-    "migrationReview": "phase16_live_routing"
-  },
   "levelID": "level_025",
-  "description": "Follow the generated graph recipe route and rotate each switch before arrival.",
+  "description": "Production V3 generated solution",
   "expectedOutcome": "completed",
   "maxTaps": 3,
   "requiresWithinTimeLimit": true,
   "actions": [
     {
-      "windowOpenSeconds": 0.0,
-      "chosenTapSeconds": 0.12,
-      "windowCloseSeconds": 0.55,
-      "safetyMarginSeconds": 0.12,
-      "expectedEdgeAfterTap": "e_choice_detour_a",
-      "timeSeconds": 0.12,
-      "tapNodeID": "choice"
+      "timeSeconds": 0.7,
+      "tapNodeID": "shared_hub_0"
     },
     {
-      "windowOpenSeconds": 0.57,
-      "chosenTapSeconds": 0.69,
-      "windowCloseSeconds": 1.55,
-      "safetyMarginSeconds": 0.12,
-      "expectedEdgeAfterTap": "e_switch_b_package",
-      "timeSeconds": 0.69,
-      "tapNodeID": "switch_b"
+      "timeSeconds": 3.4,
+      "tapNodeID": "planning_gate_0"
     },
     {
-      "windowOpenSeconds": 2.45,
-      "chosenTapSeconds": 2.57,
-      "windowCloseSeconds": 3.8,
-      "safetyMarginSeconds": 0.12,
-      "expectedEdgeAfterTap": "e_switch_c_destination",
-      "timeSeconds": 2.57,
-      "tapNodeID": "switch_c"
+      "timeSeconds": 15.6,
+      "tapNodeID": "shared_hub_0"
     }
   ]
 }

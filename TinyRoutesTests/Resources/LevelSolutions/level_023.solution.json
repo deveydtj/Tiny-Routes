@@ -1,98 +1,21 @@
 {
-  "metadata": {
-    "validationVersion": "verified_runtime_solution_v1",
-    "solutionRoute": [
-      "start",
-      "hub",
-      "package_branch",
-      "package",
-      "rejoin",
-      "switch_b",
-      "route_mid",
-      "switch_c",
-      "destination"
-    ],
-    "requiredTapOrder": [
-      "hub",
-      "switch_b",
-      "switch_c"
-    ],
-    "runtimeDecisionTiming": [
-      {
-        "nodeID": "hub",
-        "visitIndex": 1,
-        "rotationCount": 1,
-        "windowOpenSeconds": 0.0,
-        "windowCloseSeconds": 0.45,
-        "chosenTapSeconds": [
-          0.12
-        ],
-        "safetyMarginSeconds": 0.12,
-        "failureReason": null
-      },
-      {
-        "nodeID": "switch_b",
-        "visitIndex": 1,
-        "rotationCount": 1,
-        "windowOpenSeconds": 2.3,
-        "windowCloseSeconds": 3.65,
-        "chosenTapSeconds": [
-          2.42
-        ],
-        "safetyMarginSeconds": 0.12,
-        "failureReason": null
-      },
-      {
-        "nodeID": "switch_c",
-        "visitIndex": 1,
-        "rotationCount": 1,
-        "windowOpenSeconds": 3.67,
-        "windowCloseSeconds": 4.25,
-        "chosenTapSeconds": [
-          3.79
-        ],
-        "safetyMarginSeconds": 0.12,
-        "failureReason": null
-      }
-    ],
-    "template": "hub_choice",
-    "generatedSeed": 2725263793,
-    "recipeFamily": "hub_choice",
-    "recipeVariant": "hub_choice_primary",
-    "migrationReview": "phase16_live_routing"
-  },
   "levelID": "level_023",
-  "description": "Follow the generated graph recipe route and rotate each switch before arrival.",
+  "description": "Production V3 generated solution",
   "expectedOutcome": "completed",
   "maxTaps": 3,
   "requiresWithinTimeLimit": true,
   "actions": [
     {
-      "windowOpenSeconds": 0.0,
-      "chosenTapSeconds": 0.12,
-      "windowCloseSeconds": 0.45,
-      "safetyMarginSeconds": 0.12,
-      "expectedEdgeAfterTap": "e_hub_package_branch",
-      "timeSeconds": 0.12,
-      "tapNodeID": "hub"
+      "timeSeconds": 0.7,
+      "tapNodeID": "shared_hub_0"
     },
     {
-      "windowOpenSeconds": 2.3,
-      "chosenTapSeconds": 2.42,
-      "windowCloseSeconds": 3.65,
-      "safetyMarginSeconds": 0.12,
-      "expectedEdgeAfterTap": "e_switch_b_route_mid",
-      "timeSeconds": 2.42,
-      "tapNodeID": "switch_b"
+      "timeSeconds": 3.4,
+      "tapNodeID": "planning_gate_0"
     },
     {
-      "windowOpenSeconds": 3.67,
-      "chosenTapSeconds": 3.79,
-      "windowCloseSeconds": 4.25,
-      "safetyMarginSeconds": 0.12,
-      "expectedEdgeAfterTap": "e_switch_c_destination",
-      "timeSeconds": 3.79,
-      "tapNodeID": "switch_c"
+      "timeSeconds": 15.6,
+      "tapNodeID": "shared_hub_0"
     }
   ]
 }

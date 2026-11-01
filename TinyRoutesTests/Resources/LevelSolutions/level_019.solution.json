@@ -1,96 +1,21 @@
 {
-  "metadata": {
-    "validationVersion": "verified_runtime_solution_v1",
-    "solutionRoute": [
-      "start",
-      "lower_alpha_switch",
-      "package",
-      "lower_beta_switch",
-      "lower_return",
-      "lower_alpha_switch",
-      "destination"
-    ],
-    "requiredTapOrder": [
-      "lower_alpha_switch",
-      "lower_beta_switch",
-      "lower_alpha_switch"
-    ],
-    "runtimeDecisionTiming": [
-      {
-        "nodeID": "lower_alpha_switch",
-        "visitIndex": 1,
-        "rotationCount": 1,
-        "windowOpenSeconds": 0.3999999999999999,
-        "windowCloseSeconds": 1.75,
-        "chosenTapSeconds": [
-          0.5199999999999999
-        ],
-        "safetyMarginSeconds": 0.12,
-        "failureReason": null
-      },
-      {
-        "nodeID": "lower_beta_switch",
-        "visitIndex": 1,
-        "rotationCount": 1,
-        "windowOpenSeconds": 2.5,
-        "windowCloseSeconds": 3.85,
-        "chosenTapSeconds": [
-          2.62
-        ],
-        "safetyMarginSeconds": 0.12,
-        "failureReason": null
-      },
-      {
-        "nodeID": "lower_alpha_switch",
-        "visitIndex": 2,
-        "rotationCount": 1,
-        "windowOpenSeconds": 5.199999999999999,
-        "windowCloseSeconds": 6.549999999999999,
-        "chosenTapSeconds": [
-          5.319999999999999
-        ],
-        "safetyMarginSeconds": 0.12,
-        "failureReason": null
-      }
-    ],
-    "template": "return_loop",
-    "generatedSeed": 1318574932,
-    "recipeFamily": "return_loop",
-    "recipeVariant": "return_loop_lower",
-    "migrationReview": "phase16_live_routing"
-  },
   "levelID": "level_019",
-  "description": "Follow the generated graph recipe route and rotate each switch before arrival.",
+  "description": "Production V3 generated solution",
   "expectedOutcome": "completed",
   "maxTaps": 3,
   "requiresWithinTimeLimit": true,
   "actions": [
     {
-      "windowOpenSeconds": 0.4,
-      "chosenTapSeconds": 0.52,
-      "windowCloseSeconds": 1.75,
-      "safetyMarginSeconds": 0.12,
-      "expectedEdgeAfterTap": "e_lower_alpha_switch_package",
-      "timeSeconds": 0.52,
-      "tapNodeID": "lower_alpha_switch"
+      "timeSeconds": 0.7,
+      "tapNodeID": "shared_hub_0"
     },
     {
-      "windowOpenSeconds": 2.5,
-      "chosenTapSeconds": 2.62,
-      "windowCloseSeconds": 3.85,
-      "safetyMarginSeconds": 0.12,
-      "expectedEdgeAfterTap": "e_lower_beta_switch_lower_return",
-      "timeSeconds": 2.62,
-      "tapNodeID": "lower_beta_switch"
+      "timeSeconds": 3.4,
+      "tapNodeID": "planning_gate_0"
     },
     {
-      "windowOpenSeconds": 5.2,
-      "chosenTapSeconds": 5.32,
-      "windowCloseSeconds": 6.55,
-      "safetyMarginSeconds": 0.12,
-      "expectedEdgeAfterTap": "e_lower_alpha_switch_destination",
-      "timeSeconds": 5.32,
-      "tapNodeID": "lower_alpha_switch"
+      "timeSeconds": 15.6,
+      "tapNodeID": "shared_hub_0"
     }
   ]
 }

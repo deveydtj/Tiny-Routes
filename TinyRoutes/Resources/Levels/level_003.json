@@ -1,112 +1,260 @@
 {
-  "schemaVersion": 2,
-  "rules": {
-    "switchInteractionMode": "liveLookahead",
-    "switchLookaheadSeconds": 2.0,
-    "switchTapCooldownSeconds": 0.12
-  },
+  "schemaVersion": 3,
   "id": "level_003",
-  "name": "Level 003",
+  "name": "Level 3",
   "graph": {
     "nodes": [
       {
         "id": "start",
-        "x": -1.0,
-        "y": 0.9,
-        "outgoingEdgeIDs": ["e_start_pickup_switch"]
+        "x": 0,
+        "y": 0,
+        "outgoingEdgeIDs": [
+          "start_to_outer_left",
+          "start_to_bottom"
+        ]
       },
       {
-        "id": "pickup_switch",
-        "x": 0.9,
-        "y": 0.4,
-        "outgoingEdgeIDs": ["e_pickup_switch_dead_end", "e_pickup_switch_package"]
-      },
-      {
-        "id": "pickup_dead_end",
-        "x": 0.8,
-        "y": 0.05,
-        "outgoingEdgeIDs": []
+        "id": "outer_left",
+        "x": 0,
+        "y": 1.21,
+        "outgoingEdgeIDs": [
+          "outer_left_to_package",
+          "outer_left_to_start"
+        ]
       },
       {
         "id": "package",
-        "x": -0.1,
-        "y": 0.05,
-        "outgoingEdgeIDs": ["e_package_delivery_approach"]
+        "x": 0,
+        "y": 2.6,
+        "outgoingEdgeIDs": [
+          "package_to_outer_top"
+        ]
       },
       {
-        "id": "delivery_approach",
-        "x": -0.75,
-        "y": -0.35,
-        "outgoingEdgeIDs": ["e_delivery_approach_switch"]
+        "id": "outer_top",
+        "x": 1.23,
+        "y": 2.6,
+        "outgoingEdgeIDs": [
+          "outer_top_to_outer_right",
+          "outer_top_to_package"
+        ]
       },
       {
-        "id": "delivery_switch",
-        "x": 0.7,
-        "y": -0.55,
-        "outgoingEdgeIDs": ["e_delivery_switch_dead_end", "e_delivery_switch_destination"]
-      },
-      {
-        "id": "delivery_dead_end",
-        "x": 0.75,
-        "y": -1.05,
-        "outgoingEdgeIDs": []
+        "id": "outer_right",
+        "x": 2.42,
+        "y": 1.74,
+        "outgoingEdgeIDs": [
+          "outer_right_to_destination",
+          "outer_right_to_outer_top"
+        ]
       },
       {
         "id": "destination",
-        "x": -0.45,
-        "y": -1.1,
+        "x": 2.5,
+        "y": 0,
         "outgoingEdgeIDs": []
+      },
+      {
+        "id": "bottom",
+        "x": 1.23,
+        "y": 0,
+        "outgoingEdgeIDs": [
+          "bottom_to_destination",
+          "bottom_to_inner_bottom",
+          "bottom_to_start"
+        ]
+      },
+      {
+        "id": "inner_bottom",
+        "x": 1.23,
+        "y": 0.62,
+        "outgoingEdgeIDs": [
+          "inner_bottom_to_inner_left",
+          "inner_bottom_to_bottom",
+          "inner_bottom_to_inner_right"
+        ]
+      },
+      {
+        "id": "inner_left",
+        "x": 0.66,
+        "y": 1.21,
+        "outgoingEdgeIDs": [
+          "inner_left_to_inner_top",
+          "inner_left_to_inner_bottom"
+        ]
+      },
+      {
+        "id": "inner_top",
+        "x": 1.23,
+        "y": 1.82,
+        "outgoingEdgeIDs": [
+          "inner_top_to_inner_right",
+          "inner_top_to_inner_left"
+        ]
+      },
+      {
+        "id": "inner_right",
+        "x": 1.76,
+        "y": 1.21,
+        "outgoingEdgeIDs": [
+          "inner_right_to_inner_bottom",
+          "inner_right_to_inner_top"
+        ]
       }
     ],
     "edges": [
       {
-        "id": "e_start_pickup_switch",
+        "id": "start_to_outer_left",
         "fromNodeID": "start",
-        "toNodeID": "pickup_switch",
-        "roadShape": "horizontalFirst"
-      },
-      {
-        "id": "e_pickup_switch_dead_end",
-        "fromNodeID": "pickup_switch",
-        "toNodeID": "pickup_dead_end",
+        "toNodeID": "outer_left",
         "roadShape": "verticalFirst"
       },
       {
-        "id": "e_pickup_switch_package",
-        "fromNodeID": "pickup_switch",
+        "id": "outer_left_to_start",
+        "fromNodeID": "outer_left",
+        "toNodeID": "start",
+        "roadShape": "horizontalFirst"
+      },
+      {
+        "id": "outer_left_to_package",
+        "fromNodeID": "outer_left",
         "toNodeID": "package",
-        "roadShape": "horizontalFirst"
-      },
-      {
-        "id": "e_package_delivery_approach",
-        "fromNodeID": "package",
-        "toNodeID": "delivery_approach",
-        "roadShape": "horizontalFirst"
-      },
-      {
-        "id": "e_delivery_approach_switch",
-        "fromNodeID": "delivery_approach",
-        "toNodeID": "delivery_switch",
-        "roadShape": "horizontalFirst"
-      },
-      {
-        "id": "e_delivery_switch_dead_end",
-        "fromNodeID": "delivery_switch",
-        "toNodeID": "delivery_dead_end",
         "roadShape": "verticalFirst"
       },
       {
-        "id": "e_delivery_switch_destination",
-        "fromNodeID": "delivery_switch",
+        "id": "package_to_outer_top",
+        "fromNodeID": "package",
+        "toNodeID": "outer_top",
+        "roadShape": "horizontalFirst"
+      },
+      {
+        "id": "outer_top_to_package",
+        "fromNodeID": "outer_top",
+        "toNodeID": "package",
+        "roadShape": "verticalFirst"
+      },
+      {
+        "id": "outer_top_to_outer_right",
+        "fromNodeID": "outer_top",
+        "toNodeID": "outer_right",
+        "roadShape": "horizontalFirst"
+      },
+      {
+        "id": "outer_right_to_outer_top",
+        "fromNodeID": "outer_right",
+        "toNodeID": "outer_top",
+        "roadShape": "verticalFirst"
+      },
+      {
+        "id": "start_to_bottom",
+        "fromNodeID": "start",
+        "toNodeID": "bottom",
+        "roadShape": "horizontalFirst"
+      },
+      {
+        "id": "bottom_to_start",
+        "fromNodeID": "bottom",
+        "toNodeID": "start",
+        "roadShape": "verticalFirst"
+      },
+      {
+        "id": "bottom_to_destination",
+        "fromNodeID": "bottom",
         "toNodeID": "destination",
         "roadShape": "horizontalFirst"
+      },
+      {
+        "id": "bottom_to_inner_bottom",
+        "fromNodeID": "bottom",
+        "toNodeID": "inner_bottom",
+        "roadShape": "verticalFirst"
+      },
+      {
+        "id": "inner_bottom_to_bottom",
+        "fromNodeID": "inner_bottom",
+        "toNodeID": "bottom",
+        "roadShape": "horizontalFirst"
+      },
+      {
+        "id": "inner_bottom_to_inner_left",
+        "fromNodeID": "inner_bottom",
+        "toNodeID": "inner_left",
+        "roadShape": "horizontalFirst"
+      },
+      {
+        "id": "inner_left_to_inner_bottom",
+        "fromNodeID": "inner_left",
+        "toNodeID": "inner_bottom",
+        "roadShape": "verticalFirst"
+      },
+      {
+        "id": "inner_left_to_inner_top",
+        "fromNodeID": "inner_left",
+        "toNodeID": "inner_top",
+        "roadShape": "verticalFirst"
+      },
+      {
+        "id": "inner_top_to_inner_left",
+        "fromNodeID": "inner_top",
+        "toNodeID": "inner_left",
+        "roadShape": "horizontalFirst"
+      },
+      {
+        "id": "inner_top_to_inner_right",
+        "fromNodeID": "inner_top",
+        "toNodeID": "inner_right",
+        "roadShape": "horizontalFirst"
+      },
+      {
+        "id": "inner_right_to_inner_top",
+        "fromNodeID": "inner_right",
+        "toNodeID": "inner_top",
+        "roadShape": "verticalFirst"
+      },
+      {
+        "id": "inner_right_to_inner_bottom",
+        "fromNodeID": "inner_right",
+        "toNodeID": "inner_bottom",
+        "roadShape": "verticalFirst"
+      },
+      {
+        "id": "inner_bottom_to_inner_right",
+        "fromNodeID": "inner_bottom",
+        "toNodeID": "inner_right",
+        "roadShape": "horizontalFirst"
+      },
+      {
+        "id": "outer_right_to_destination",
+        "fromNodeID": "outer_right",
+        "toNodeID": "destination",
+        "roadShape": "verticalFirst"
       }
     ]
   },
   "startNodeID": "start",
   "packageNodeID": "package",
   "destinationNodeID": "destination",
-  "timeLimitSeconds": 30,
-  "parTaps": 2,
-  "tutorialMessage": "Tap each highlighted switch: once before pickup, then once more on the way to the flag."
+  "timeLimitSeconds": 75,
+  "parTaps": 0,
+  "objectives": [
+    {
+      "id": "pickup",
+      "nodeID": "package",
+      "kind": "pickup",
+      "sequenceIndex": 0,
+      "revealPolicy": "always"
+    },
+    {
+      "id": "destination",
+      "nodeID": "destination",
+      "kind": "destination",
+      "sequenceIndex": 1,
+      "revealPolicy": "always"
+    }
+  ],
+  "rules": {
+    "switchInteractionMode": "liveLookahead",
+    "switchLookaheadSeconds": 2.0,
+    "switchTapCooldownSeconds": 0.12
+  }
 }

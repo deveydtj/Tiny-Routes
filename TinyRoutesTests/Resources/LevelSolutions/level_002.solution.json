@@ -1,27 +1,13 @@
 {
-  "levelID": "level_002",
-  "description": "Tap the highlighted switch once during its generous tutorial window.",
-  "expectedOutcome": "completed",
-  "maxTaps": 1,
-  "requiresWithinTimeLimit": true,
-  "actions": [
+  "actions" : [
     {
-      "timeSeconds": 0.6,
-      "tapNodeID": "choice",
-      "reason": "Rotate the highlighted switch toward the package.",
-      "expectedEdgeAfterTap": "e_choice_package",
-      "expectedRouteNodeAfterTap": "package",
-      "reactionWindowSeconds": 2.0,
-      "switchStateBeforeTap": "e_choice_dead_end_a",
-      "switchStateAfterTap": "e_choice_package"
+      "tapNodeID" : "right",
+      "timeSeconds" : 4.2000000000000002
     }
   ],
-  "metadata": {
-    "validationVersion": "solution_sidecar_v1",
-    "solutionRoute": ["start", "choice", "package", "destination"],
-    "requiredTapOrder": ["choice"],
-    "template": "single_switch_tutorial",
-    "recipeFamily": "single_switch_tutorial",
-    "recipeVariant": "highlighted_live_switch"
-  }
+  "description" : "Reference layout: choose the upward starting road, then follow this timed switch route.",
+  "expectedOutcome" : "completed",
+  "levelID" : "level_002",
+  "maxTaps" : 1,
+  "requiresWithinTimeLimit" : true
 }

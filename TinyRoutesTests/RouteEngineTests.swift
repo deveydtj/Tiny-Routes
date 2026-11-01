@@ -627,6 +627,36 @@ final class RouteEngineTests: XCTestCase {
         XCTAssertEqual(dot.currentNodeID, "start")
         XCTAssertNil(dot.currentEdgeID)
         XCTAssertEqual(dot.progressAlongEdge, 0)
+        XCTAssertEqual(engine.timeRemaining, 45)
+    }
+
+    func testPlayerChoosesStartingRoadAndRestartCanWaitForAnotherChoice() throws {
+        var level = makeLevelData()
+        level.graph.nodes[0].outgoingEdgeIDs.append("alternate_start")
+        level.graph.edges.append(RouteEdge(id: "alternate_start", fromNodeID: "start", toNodeID: "package"))
+        let engine = RouteEngine()
+        try engine.buildGraph(from: level)
+
+        XCTAssertEqual(engine.startingEdgeIDs, ["e_start_switch", "alternate_start"])
+        engine.updateDot(deltaTime: 100)
+        XCTAssertEqual(engine.elapsedTime, 0)
+        XCTAssertNil(engine.levelOutcome)
+        XCTAssertFalse(engine.startDotMovement(edgeID: "e_switch_package"))
+        XCTAssertNil(engine.deliveryDot?.currentEdgeID)
+        XCTAssertTrue(engine.startDotMovement(edgeID: "alternate_start"))
+        XCTAssertEqual(engine.deliveryDot?.currentEdgeID, "alternate_start")
+        XCTAssertTrue(engine.startingEdgeIDs.isEmpty)
+        XCTAssertEqual(engine.tapCount, 0)
+        XCTAssertFalse(engine.startDotMovement(edgeID: "e_start_switch"))
+
+        engine.updateDot(deltaTime: 0.25)
+        XCTAssertEqual(engine.elapsedTime ?? -1, 0.25, accuracy: 0.0001)
+        XCTAssertTrue(engine.restartLevel(startAutomatically: false))
+        XCTAssertNil(engine.deliveryDot?.currentEdgeID)
+        XCTAssertEqual(engine.startingEdgeIDs.count, 2)
+        engine.updateDot(deltaTime: 100)
+        XCTAssertEqual(engine.elapsedTime, 0)
+        XCTAssertTrue(engine.startDotMovement(edgeID: "e_start_switch"))
     }
 
     func testUpdateDotSnapsToTargetNodeWithoutOvershootingAndContinuesFromNode() throws {
@@ -1322,7 +1352,7 @@ final class RouteEngineTests: XCTestCase {
         XCTAssertEqual(engine.levelOutcome, .failed(reason: .timeExpired))
     }
 
-    func testUpdateDotFailsImmediatelyWhenIdleAndTimeIsConsumed() throws {
+    func testUpdateDotWaitsForStartingRoadEvenPastTheTimeLimit() throws {
         let engine = RouteEngine(dotSpeed: 1)
         let level = makeLevelData()
         let timedLevel = LevelData(
@@ -1340,9 +1370,9 @@ final class RouteEngineTests: XCTestCase {
         // Dot is idle because movement has not started.
         engine.updateDot(deltaTime: 1.1)
 
-        XCTAssertEqual(engine.timeRemaining ?? -1, 0, accuracy: 0.0001)
-        XCTAssertEqual(engine.elapsedTime ?? -1, 1, accuracy: 0.0001)
-        XCTAssertEqual(engine.levelOutcome, .failed(reason: .timeExpired))
+        XCTAssertEqual(engine.timeRemaining ?? -1, 1, accuracy: 0.0001)
+        XCTAssertEqual(engine.elapsedTime ?? -1, 0, accuracy: 0.0001)
+        XCTAssertNil(engine.levelOutcome)
     }
 
     func testUpdateDotReducesTimeRemainingByConsumedFrameTime() throws {

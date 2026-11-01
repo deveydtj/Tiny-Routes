@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import os
 import shutil
 import subprocess
@@ -68,7 +69,11 @@ class SwiftTestService:
                 passed=False,
                 summary="Could not run Swift tests because xcodebuild was not found.",
             )
+        simulator_environment_keys: tuple[str, ...] = ()
         try:
+            simulator_environment_keys = self._configure_simulator_environment(
+                environment
+            )
             completed = subprocess.run(
                 command,
                 cwd=self.repo_root,
@@ -98,8 +103,14 @@ class SwiftTestService:
                 passed=False,
                 summary=f"Could not run Swift tests: {exc}",
             )
+        finally:
+            self._clear_simulator_environment(simulator_environment_keys)
 
-        passed = completed.returncode == 0
+        skipped_external_validation = bool(self.level_ids) and (
+            "No generated level IDs requested for external Swift validation"
+            in f"{completed.stdout}\n{completed.stderr}"
+        )
+        passed = completed.returncode == 0 and not skipped_external_validation
         toolchain_unavailable = (
             not passed
             and _xcode_toolchain_unavailable(completed.stdout, completed.stderr)
@@ -109,9 +120,13 @@ class SwiftTestService:
             []
             if passed
             else (
+                ["swift_external_validation_skipped"]
+                if skipped_external_validation
+                else (
                 ["xcode_toolchain_unavailable"]
                 if toolchain_unavailable
                 else _failure_reasons(completed.stdout, completed.stderr)
+                )
             )
         )
         return SwiftTestSummary(
@@ -123,12 +138,16 @@ class SwiftTestService:
                 "Swift solvability tests passed."
                 if passed
                 else (
+                    "Swift solvability tests skipped the requested generated levels."
+                    if skipped_external_validation
+                    else (
                     "Could not run Swift tests because the full Xcode developer "
                     "toolchain is not installed or selected."
                     if toolchain_unavailable
                     else (
                         "Swift solvability tests failed with exit code "
                         f"{completed.returncode}."
+                    )
                     )
                 )
             ),
@@ -137,6 +156,107 @@ class SwiftTestService:
             failure_details=failure_details,
             failure_reasons=failure_reasons,
         )
+
+    def _configure_simulator_environment(
+        self,
+        environment: dict[str, str],
+    ) -> tuple[str, ...]:
+        """Expose staged paths to XCTest's simulator launch environment."""
+
+        if not environment or shutil.which("xcrun") is None:
+            return ()
+        device_id = self._ios_18_5_iphone_16_device_id()
+        if device_id is None:
+            return ()
+        subprocess.run(
+            ["xcrun", "simctl", "boot", device_id],
+            capture_output=True,
+            text=True,
+            timeout=30,
+            check=False,
+        )
+        booted = subprocess.run(
+            ["xcrun", "simctl", "bootstatus", device_id, "-b"],
+            capture_output=True,
+            text=True,
+            timeout=60,
+            check=False,
+        )
+        if booted.returncode != 0:
+            return ()
+        configured: list[str] = []
+        for key, value in environment.items():
+            result = subprocess.run(
+                [
+                    "xcrun",
+                    "simctl",
+                    "spawn",
+                    device_id,
+                    "launchctl",
+                    "setenv",
+                    key,
+                    value,
+                ],
+                capture_output=True,
+                text=True,
+                timeout=30,
+                check=False,
+            )
+            if result.returncode == 0:
+                configured.append(key)
+        return tuple(configured)
+
+    def _clear_simulator_environment(self, keys: tuple[str, ...]) -> None:
+        if not keys or shutil.which("xcrun") is None:
+            return
+        device_id = self._ios_18_5_iphone_16_device_id()
+        if device_id is None:
+            return
+        for key in keys:
+            subprocess.run(
+                [
+                    "xcrun",
+                    "simctl",
+                    "spawn",
+                    device_id,
+                    "launchctl",
+                    "unsetenv",
+                    key,
+                ],
+                capture_output=True,
+                text=True,
+                timeout=30,
+                check=False,
+            )
+
+    @staticmethod
+    def _ios_18_5_iphone_16_device_id() -> str | None:
+        try:
+            result = subprocess.run(
+                ["xcrun", "simctl", "list", "devices", "available", "--json"],
+                capture_output=True,
+                text=True,
+                timeout=30,
+                check=False,
+            )
+            payload = json.loads(result.stdout) if result.returncode == 0 else {}
+        except (OSError, subprocess.TimeoutExpired, json.JSONDecodeError):
+            return None
+        devices = payload.get("devices", {})
+        if not isinstance(devices, dict):
+            return None
+        for runtime, entries in devices.items():
+            if not str(runtime).endswith("iOS-18-5") or not isinstance(entries, list):
+                continue
+            for entry in entries:
+                if (
+                    isinstance(entry, dict)
+                    and entry.get("name") == "iPhone 16"
+                    and entry.get("isAvailable", True)
+                    and isinstance(entry.get("udid"), str)
+                ):
+                    return entry["udid"]
+        return None
 
 
 def _tail(value: object, limit: int = 4000) -> str:

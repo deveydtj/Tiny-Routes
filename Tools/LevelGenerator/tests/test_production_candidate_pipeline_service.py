@@ -8,8 +8,18 @@ from app.services.production_campaign_service import ProductionCampaignService
 from app.services.production_candidate_pipeline_service import (
     ProductionCandidatePipelineService,
 )
+from app.services.production_level_realization_service import (
+    ProductionLevelRealizationService,
+)
 from app.services.production_pipeline_policy_service import (
     ProductionPipelinePolicyService,
+)
+from app.services.puzzle_blueprint_service import PuzzleBlueprintService
+from app.services.road_geometry_validation_service import (
+    RoadGeometryValidationService,
+)
+from app.services.visual_clarity_validation_service import (
+    VisualClarityValidationService,
 )
 from app.services.v3_candidate_pipeline_coordinator import (
     V3CandidatePipelineRequest,
@@ -62,6 +72,70 @@ def test_default_pipeline_is_deterministic() -> None:
         == second.candidate.level_document.to_dict()
     )
     assert first.candidate.solution.to_dict() == second.candidate.solution.to_dict()
+
+
+@pytest.mark.parametrize("difficulty", ("easy", "medium", "hard", "expert"))
+def test_default_pipeline_rejects_overlapping_roads_and_ambiguous_turns(
+    difficulty: str,
+) -> None:
+    request = V3CandidatePipelineRequest(
+        candidate_id=f"level_001:{difficulty}:readability",
+        level_id="level_001",
+        seed=1,
+        difficulty=difficulty,
+    )
+
+    result = ProductionCandidatePipelineService().run(request)
+
+    assert result.passed
+    assert result.candidate is not None
+    visual = VisualClarityValidationService().report_for_level(
+        result.candidate.level_document
+    )
+    geometry = RoadGeometryValidationService().report_for_level(
+        result.candidate.level_document
+    )
+    assert not visual.has_errors, [issue.code for issue in visual.errors]
+    assert not geometry.has_errors, [issue.code for issue in geometry.errors]
+
+
+@pytest.mark.parametrize(
+    ("difficulty", "seed"),
+    (
+        ("medium", 2),
+        ("easy", 8),
+        ("medium", 8),
+        ("hard", 8),
+        ("expert", 8),
+    ),
+)
+def test_realization_keeps_recovery_lanes_clear(
+    difficulty: str,
+    seed: int,
+) -> None:
+    request = V3CandidatePipelineRequest(
+        candidate_id=f"level_{seed:03d}:{difficulty}:recovery-layout",
+        level_id=f"level_{seed:03d}",
+        seed=seed,
+        difficulty=difficulty,
+        attempt_index=seed % 3,
+    )
+    blueprint = PuzzleBlueprintService().generate(
+        difficulty,
+        request.retry_variant_seed("blueprint"),
+    )
+    level = ProductionLevelRealizationService().realize(
+        level_id=request.level_id,
+        difficulty=difficulty,
+        blueprint=blueprint,
+        seed=request.retry_variant_seed("composition"),
+        attempt_index=request.attempt_index,
+    )
+
+    visual = VisualClarityValidationService().report_for_level(level)
+    geometry = RoadGeometryValidationService().report_for_level(level)
+    assert not visual.has_errors, [issue.code for issue in visual.errors]
+    assert not geometry.has_errors, [issue.code for issue in geometry.errors]
 
 
 def test_campaign_service_constructs_the_default_v3_pool() -> None:

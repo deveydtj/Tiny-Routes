@@ -70,6 +70,26 @@ def test_road_shape_planner_can_separate_two_switch_exits() -> None:
     assert not any(issue.startswith("switch_choices_same_visual_direction") for issue in plan.issues)
 
 
+def test_large_graph_keeps_late_switch_directions_distinct() -> None:
+    positions: dict[str, tuple[float, float]] = {}
+    edges: list[tuple[str, str]] = []
+    for index in range(5):
+        switch = f"switch_{index}"
+        upper = f"upper_{index}"
+        lower = f"lower_{index}"
+        origin_x = index * 20.0
+        positions[switch] = (origin_x, 0.0)
+        positions[upper] = (origin_x + 3.0, 1.0)
+        positions[lower] = (origin_x + 3.0, -1.0)
+        edges.extend(((switch, upper), (switch, lower)))
+
+    plan = RoadShapeService().plan_for_graph(positions, edges)
+
+    for index in range(5):
+        buckets = plan.metadata["switchDirectionBuckets"][f"switch_{index}"]
+        assert len(set(buckets.values())) == 2
+
+
 def test_horizontal_first_and_vertical_first_create_different_l_road_tangents() -> None:
     service = RoadShapeService()
 

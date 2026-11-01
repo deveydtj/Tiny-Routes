@@ -108,3 +108,28 @@ def test_swift_test_service_reports_command_line_tools_without_xcode(tmp_path) -
     assert result.passed is False
     assert result.failure_reasons == ["xcode_toolchain_unavailable"]
     assert "full Xcode developer toolchain" in result.summary
+
+
+def test_swift_test_service_rejects_skipped_external_validation(tmp_path) -> None:
+    service = SwiftTestService(tmp_path, level_ids=("level_099",))
+    completed = subprocess.CompletedProcess(
+        args=service.build_command(),
+        returncode=0,
+        stdout=(
+            "Test skipped - No generated level IDs requested for external "
+            "Swift validation."
+        ),
+        stderr="",
+    )
+
+    with patch(
+        "app.services.swift_test_service.shutil.which",
+        return_value="/usr/bin/xcodebuild",
+    ), patch(
+        "app.services.swift_test_service.subprocess.run",
+        return_value=completed,
+    ):
+        result = service.run()
+
+    assert result.passed is False
+    assert result.failure_reasons == ["swift_external_validation_skipped"]

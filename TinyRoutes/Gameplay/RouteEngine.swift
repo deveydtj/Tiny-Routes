@@ -85,6 +85,19 @@ final class RouteEngine {
     private(set) var objectiveEvents: [RouteObjectiveEvent] = []
     private var remainingTime: TimeInterval?
     private(set) var tapCount: Int = 0
+    private(set) var hasStartedMovement = false
+
+    /// Available roads the player can choose for the first departure.
+    var startingEdgeIDs: [String] {
+        guard !hasStartedMovement, levelOutcome == nil,
+              let runtimeGraph, let deliveryDot,
+              let node = runtimeGraph.nodesByID[deliveryDot.currentNodeID] else { return [] }
+        return runtimeGraph.usableOutgoingEdgeIDs(
+            for: node,
+            completedObjectiveIDs: completedObjectiveIDs,
+            activeObjectiveIndex: activeObjectiveIndex
+        )
+    }
 
     /// Indicates whether the most recent `updateDot(deltaTime:)` call halted at a dead end.
     private(set) var didHaltAtDeadEnd = false
@@ -99,6 +112,7 @@ final class RouteEngine {
     private(set) var deliveryDot: DeliveryDot?
     /// Countdown timer state for the current run, or `nil` before a level is loaded.
     var timeRemaining: TimeInterval? { remainingTime }
+    var startNodeID: String? { loadedLevelData?.startNodeID }
     /// Configured time limit for the current run, or `nil` before a level is loaded.
     var timeLimit: TimeInterval? {
         loadedLevelData.map { max(TimeInterval($0.timeLimitSeconds), 0) }
@@ -163,6 +177,7 @@ final class RouteEngine {
         objectiveEvents = []
         remainingTime = nil
         tapCount = 0
+        hasStartedMovement = false
         activeRules = levelData.effectiveRules
         lastAcceptedSwitchTapTime = nil
         levelOutcome = nil
@@ -303,14 +318,14 @@ final class RouteEngine {
     ///
     /// - Returns: `true` when a previously loaded level was restored; `false` when no level is loaded.
     @discardableResult
-    func restartLevel() -> Bool {
+    func restartLevel(startAutomatically: Bool = true) -> Bool {
         guard let loadedLevelData else {
             return false
         }
 
         do {
             try buildGraph(from: loadedLevelData)
-            _ = startDotMovement()
+            if startAutomatically { _ = startDotMovement() }
             return true
         } catch {
             assertionFailure("RouteEngine failed to restart previously loaded level: \(error)")
@@ -320,9 +335,16 @@ final class RouteEngine {
 
     /// Starts the delivery dot moving along the active edge for its current node, if one exists.
     @discardableResult
-    func startDotMovement() -> Bool {
+    func startDotMovement(edgeID: String? = nil) -> Bool {
         guard var runtimeGraph, var deliveryDot else {
             return false
+        }
+        guard !hasStartedMovement else { return false }
+        if let edgeID {
+            guard startingEdgeIDs.contains(edgeID),
+                  var node = runtimeGraph.nodesByID[deliveryDot.currentNodeID] else { return false }
+            node.activeOutgoingEdgeID = edgeID
+            runtimeGraph.nodesByID[node.id] = node
         }
         if levelOutcome == nil,
            let remainingTime,
@@ -334,6 +356,7 @@ final class RouteEngine {
             return false
         }
         let didStart = beginMovementFromCurrentNode(in: &runtimeGraph, dot: &deliveryDot)
+        hasStartedMovement = didStart
         self.runtimeGraph = runtimeGraph
         self.deliveryDot = deliveryDot
         return didStart
@@ -348,7 +371,7 @@ final class RouteEngine {
     func updateDot(deltaTime: TimeInterval) {
         didHaltAtDeadEnd = false
         didHitUpdateSafetyStepLimit = false
-        guard deltaTime > 0,
+        guard hasStartedMovement, deltaTime > 0,
               var runtimeGraph,
               var deliveryDot else {
             return

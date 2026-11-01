@@ -1,76 +1,162 @@
 {
-  "schemaVersion": 2,
-  "rules": {
-    "switchInteractionMode": "liveLookahead",
-    "switchLookaheadSeconds": 2.0,
-    "switchTapCooldownSeconds": 0.12
-  },
+  "schemaVersion": 3,
   "id": "level_002",
-  "name": "Level 002",
+  "name": "Level 2",
   "graph": {
     "nodes": [
       {
         "id": "start",
-        "x": -1.0,
-        "y": 0.9,
-        "outgoingEdgeIDs": ["e_start_choice"]
-      },
-      {
-        "id": "choice",
-        "x": 1.0,
-        "y": 0.4,
-        "outgoingEdgeIDs": ["e_choice_dead_end_a", "e_choice_package"]
-      },
-      {
-        "id": "dead_end_a",
-        "x": 0.75,
-        "y": -0.2,
-        "outgoingEdgeIDs": []
+        "x": 0.42,
+        "y": 0,
+        "outgoingEdgeIDs": [
+          "start_to_left",
+          "start_to_right"
+        ]
       },
       {
         "id": "package",
-        "x": 0.05,
-        "y": -0.25,
-        "outgoingEdgeIDs": ["e_package_destination"]
+        "x": 0,
+        "y": 1.04,
+        "outgoingEdgeIDs": [
+          "package_to_top"
+        ]
+      },
+      {
+        "id": "left",
+        "x": 0.42,
+        "y": 1.04,
+        "outgoingEdgeIDs": [
+          "left_to_package",
+          "left_to_right",
+          "left_to_start"
+        ]
+      },
+      {
+        "id": "top",
+        "x": 0.78,
+        "y": 2.08,
+        "outgoingEdgeIDs": [
+          "top_to_right",
+          "top_to_package"
+        ]
+      },
+      {
+        "id": "right",
+        "x": 1.54,
+        "y": 1.04,
+        "outgoingEdgeIDs": [
+          "right_to_start",
+          "right_to_destination",
+          "right_to_left",
+          "right_to_top"
+        ]
       },
       {
         "id": "destination",
-        "x": -0.45,
-        "y": -1.0,
+        "x": 2.48,
+        "y": 1.04,
         "outgoingEdgeIDs": []
       }
     ],
     "edges": [
       {
-        "id": "e_start_choice",
+        "id": "start_to_left",
         "fromNodeID": "start",
-        "toNodeID": "choice",
-        "roadShape": "horizontalFirst"
-      },
-      {
-        "id": "e_choice_dead_end_a",
-        "fromNodeID": "choice",
-        "toNodeID": "dead_end_a",
+        "toNodeID": "left",
         "roadShape": "verticalFirst"
       },
       {
-        "id": "e_choice_package",
-        "fromNodeID": "choice",
+        "id": "left_to_start",
+        "fromNodeID": "left",
+        "toNodeID": "start",
+        "roadShape": "horizontalFirst"
+      },
+      {
+        "id": "left_to_package",
+        "fromNodeID": "left",
         "toNodeID": "package",
         "roadShape": "horizontalFirst"
       },
       {
-        "id": "e_package_destination",
+        "id": "package_to_top",
         "fromNodeID": "package",
-        "toNodeID": "destination",
+        "toNodeID": "top",
         "roadShape": "verticalFirst"
+      },
+      {
+        "id": "top_to_package",
+        "fromNodeID": "top",
+        "toNodeID": "package",
+        "roadShape": "horizontalFirst"
+      },
+      {
+        "id": "top_to_right",
+        "fromNodeID": "top",
+        "toNodeID": "right",
+        "roadShape": "horizontalFirst"
+      },
+      {
+        "id": "right_to_top",
+        "fromNodeID": "right",
+        "toNodeID": "top",
+        "roadShape": "verticalFirst"
+      },
+      {
+        "id": "right_to_start",
+        "fromNodeID": "right",
+        "toNodeID": "start",
+        "roadShape": "verticalFirst"
+      },
+      {
+        "id": "start_to_right",
+        "fromNodeID": "start",
+        "toNodeID": "right",
+        "roadShape": "horizontalFirst"
+      },
+      {
+        "id": "left_to_right",
+        "fromNodeID": "left",
+        "toNodeID": "right",
+        "roadShape": "horizontalFirst"
+      },
+      {
+        "id": "right_to_left",
+        "fromNodeID": "right",
+        "toNodeID": "left",
+        "roadShape": "verticalFirst"
+      },
+      {
+        "id": "right_to_destination",
+        "fromNodeID": "right",
+        "toNodeID": "destination",
+        "roadShape": "horizontalFirst"
       }
     ]
   },
   "startNodeID": "start",
   "packageNodeID": "package",
   "destinationNodeID": "destination",
-  "timeLimitSeconds": 30,
+  "timeLimitSeconds": 90,
   "parTaps": 1,
-  "tutorialMessage": "Tap the highlighted blue switch once to point the courier toward the package."
+  "objectives": [
+    {
+      "id": "pickup",
+      "nodeID": "package",
+      "kind": "pickup",
+      "sequenceIndex": 0,
+      "revealPolicy": "always"
+    },
+    {
+      "id": "destination",
+      "nodeID": "destination",
+      "kind": "destination",
+      "sequenceIndex": 1,
+      "revealPolicy": "always"
+    }
+  ],
+  "rules": {
+    "switchInteractionMode": "liveLookahead",
+    "switchLookaheadSeconds": 2.0,
+    "switchTapCooldownSeconds": 0.12
+  }
 }

@@ -143,9 +143,24 @@ class ProductionStagedCorpusValidationService:
         self._validate_proposed_manifest(workspace, staged_levels, issues)
 
         root = Path(repo_root or find_repo_root()).resolve(strict=False)
-        sync_result = self.resource_sync_service.check_project_references(
+        # The project must match the production corpus that existed at
+        # preflight. Staged files are not project resources yet; promotion
+        # copies them first and then runs xcodegen transactionally. Comparing
+        # the project to staging here makes any campaign containing a new file
+        # impossible to promote.
+        production_levels_dir = self._production_parent_for_kind(
+            manifest,
+            "level",
             workspace.levels_dir,
+        )
+        production_solutions_dir = self._production_parent_for_kind(
+            manifest,
+            "solution",
             workspace.solutions_dir,
+        )
+        sync_result = self.resource_sync_service.check_project_references(
+            production_levels_dir,
+            production_solutions_dir,
             project_file=project_file,
         )
         if sync_result.errors:
@@ -236,6 +251,22 @@ class ProductionStagedCorpusValidationService:
             report_path=report_path,
             manifest=manifest,
         )
+
+    @staticmethod
+    def _production_parent_for_kind(
+        manifest: ProductionRunManifest,
+        kind: str,
+        fallback: Path,
+    ) -> Path:
+        artifact = next(
+            (
+                item
+                for item in manifest.artifacts
+                if item.kind == kind and item.production_path is not None
+            ),
+            None,
+        )
+        return Path(artifact.production_path).parent if artifact is not None else fallback
 
     def _validate_artifact_integrity(
         self,

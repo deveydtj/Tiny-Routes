@@ -1,98 +1,21 @@
 {
-  "metadata": {
-    "validationVersion": "verified_runtime_solution_v1",
-    "solutionRoute": [
-      "start",
-      "switch_gate",
-      "detour_a",
-      "switch_package",
-      "package",
-      "rejoin",
-      "switch_exit",
-      "exit_gate_lane",
-      "destination"
-    ],
-    "requiredTapOrder": [
-      "switch_gate",
-      "switch_package",
-      "switch_exit"
-    ],
-    "runtimeDecisionTiming": [
-      {
-        "nodeID": "switch_gate",
-        "visitIndex": 1,
-        "rotationCount": 1,
-        "windowOpenSeconds": 0.0,
-        "windowCloseSeconds": 0.5999999999999999,
-        "chosenTapSeconds": [
-          0.12
-        ],
-        "safetyMarginSeconds": 0.12,
-        "failureReason": null
-      },
-      {
-        "nodeID": "switch_package",
-        "visitIndex": 1,
-        "rotationCount": 1,
-        "windowOpenSeconds": 0.6199999999999999,
-        "windowCloseSeconds": 1.65,
-        "chosenTapSeconds": [
-          0.7399999999999999
-        ],
-        "safetyMarginSeconds": 0.12,
-        "failureReason": null
-      },
-      {
-        "nodeID": "switch_exit",
-        "visitIndex": 1,
-        "rotationCount": 1,
-        "windowOpenSeconds": 2.6,
-        "windowCloseSeconds": 3.95,
-        "chosenTapSeconds": [
-          2.72
-        ],
-        "safetyMarginSeconds": 0.12,
-        "failureReason": null
-      }
-    ],
-    "template": "long_detour_gate",
-    "generatedSeed": 3673204628,
-    "recipeFamily": "long_detour_gate",
-    "recipeVariant": "long_detour_gate_primary",
-    "migrationReview": "phase16_live_routing"
-  },
   "levelID": "level_021",
-  "description": "Follow the generated graph recipe route and rotate each switch before arrival.",
+  "description": "Production V3 generated solution",
   "expectedOutcome": "completed",
   "maxTaps": 3,
   "requiresWithinTimeLimit": true,
   "actions": [
     {
-      "windowOpenSeconds": 0.0,
-      "chosenTapSeconds": 0.12,
-      "windowCloseSeconds": 0.6,
-      "safetyMarginSeconds": 0.12,
-      "expectedEdgeAfterTap": "e_switch_gate_detour_a",
-      "timeSeconds": 0.12,
-      "tapNodeID": "switch_gate"
+      "timeSeconds": 0.7,
+      "tapNodeID": "shared_hub_0"
     },
     {
-      "windowOpenSeconds": 0.62,
-      "chosenTapSeconds": 0.74,
-      "windowCloseSeconds": 1.65,
-      "safetyMarginSeconds": 0.12,
-      "expectedEdgeAfterTap": "e_switch_package_package",
-      "timeSeconds": 0.74,
-      "tapNodeID": "switch_package"
+      "timeSeconds": 5.41,
+      "tapNodeID": "planning_gate_1"
     },
     {
-      "windowOpenSeconds": 2.6,
-      "chosenTapSeconds": 2.72,
-      "windowCloseSeconds": 3.95,
-      "safetyMarginSeconds": 0.12,
-      "expectedEdgeAfterTap": "e_switch_exit_exit_gate_lane",
-      "timeSeconds": 2.72,
-      "tapNodeID": "switch_exit"
+      "timeSeconds": 19.6,
+      "tapNodeID": "shared_hub_0"
     }
   ]
 }

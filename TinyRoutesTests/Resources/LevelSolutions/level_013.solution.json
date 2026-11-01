@@ -1,74 +1,21 @@
 {
-  "metadata": {
-    "validationVersion": "verified_runtime_solution_v1",
-    "solutionRoute": [
-      "start",
-      "switch_a",
-      "upper_branch",
-      "package",
-      "rejoin",
-      "switch_b",
-      "destination"
-    ],
-    "requiredTapOrder": [
-      "switch_a",
-      "switch_b"
-    ],
-    "runtimeDecisionTiming": [
-      {
-        "nodeID": "switch_a",
-        "visitIndex": 1,
-        "rotationCount": 1,
-        "windowOpenSeconds": 0.0,
-        "windowCloseSeconds": 0.5499999999999999,
-        "chosenTapSeconds": [
-          0.12
-        ],
-        "safetyMarginSeconds": 0.12,
-        "failureReason": null
-      },
-      {
-        "nodeID": "switch_b",
-        "visitIndex": 1,
-        "rotationCount": 1,
-        "windowOpenSeconds": 1.6,
-        "windowCloseSeconds": 2.95,
-        "chosenTapSeconds": [
-          1.7200000000000002
-        ],
-        "safetyMarginSeconds": 0.12,
-        "failureReason": null
-      }
-    ],
-    "template": "split_path_rejoin",
-    "generatedSeed": 755610884,
-    "recipeFamily": "split_path_rejoin",
-    "recipeVariant": "split_path_rejoin_alternate",
-    "migrationReview": "phase16_live_routing"
-  },
   "levelID": "level_013",
-  "description": "Follow the generated graph recipe route and rotate each switch before arrival.",
+  "description": "Production V3 generated solution",
   "expectedOutcome": "completed",
-  "maxTaps": 2,
+  "maxTaps": 3,
   "requiresWithinTimeLimit": true,
   "actions": [
     {
-      "windowOpenSeconds": 0.0,
-      "chosenTapSeconds": 0.12,
-      "windowCloseSeconds": 0.55,
-      "safetyMarginSeconds": 0.12,
-      "expectedEdgeAfterTap": "e_switch_a_upper_branch",
-      "timeSeconds": 0.12,
-      "tapNodeID": "switch_a"
+      "timeSeconds": 0.7,
+      "tapNodeID": "shared_hub_0"
     },
     {
-      "windowOpenSeconds": 1.6,
-      "chosenTapSeconds": 1.72,
-      "windowCloseSeconds": 2.95,
-      "safetyMarginSeconds": 0.12,
-      "expectedEdgeAfterTap": "e_switch_b_destination",
-      "timeSeconds": 1.72,
-      "tapNodeID": "switch_b"
+      "timeSeconds": 5.41,
+      "tapNodeID": "planning_gate_1"
+    },
+    {
+      "timeSeconds": 19.6,
+      "tapNodeID": "shared_hub_0"
     }
   ]
 }

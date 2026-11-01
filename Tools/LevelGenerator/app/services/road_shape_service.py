@@ -246,7 +246,17 @@ class RoadShapeService:
             edge: self.pick_for_positions(*positions[edge[0]], *positions[edge[1]])
             for edge in edges
         }
-        assignments = [base]
+        # Optimizing every road shape globally is exponential.  The old large-
+        # graph fallback only varied the first eight switch roads, which meant
+        # later switches kept the naive longest-axis shape and could expose two
+        # choices in the same visual direction.  Resolve every switch locally
+        # first, then use the bounded global search for crossings and flow.
+        clarity_base = self._switch_clarity_base_assignment(
+            positions,
+            edges,
+            base,
+        )
+        assignments = [base, clarity_base]
         if strategy == "all_straight":
             return assignments
 
@@ -275,8 +285,12 @@ class RoadShapeService:
                 )
                 assignments.append(assignment)
             for edge in edges:
-                assignment = dict(base)
-                assignment[edge] = "verticalFirst" if base[edge] == "horizontalFirst" else "horizontalFirst"
+                assignment = dict(clarity_base)
+                assignment[edge] = (
+                    "verticalFirst"
+                    if clarity_base[edge] == "horizontalFirst"
+                    else "horizontalFirst"
+                )
                 assignments.append(assignment)
 
         deduped: dict[tuple[tuple[tuple[str, str], str], ...], dict[tuple[str, str], str]] = {}
@@ -284,6 +298,65 @@ class RoadShapeService:
             key = tuple((edge, assignment[edge]) for edge in edges)
             deduped[key] = assignment
         return list(deduped.values())
+
+    def _switch_clarity_base_assignment(
+        self,
+        positions: dict[str, tuple[float, float]],
+        edges: list[tuple[str, str]],
+        base: dict[tuple[str, str], str],
+    ) -> dict[tuple[str, str], str]:
+        """Choose readable first-segment directions at every switch.
+
+        Switches are independent for first-segment direction, so each can be
+        exhaustively solved without making whole-graph road-shape planning
+        exponential.  The original edge order remains the deterministic tie
+        breaker.
+        """
+
+        assignment = dict(base)
+        for node_id, outgoing_edges in self._outgoing_edges_by_node(edges).items():
+            if not 2 <= len(outgoing_edges) <= 4:
+                continue
+
+            ranked: list[
+                tuple[
+                    int,
+                    float,
+                    float,
+                    int,
+                    tuple[str, ...],
+                ]
+            ] = []
+            for shape_options in product(self._shape_order, repeat=len(outgoing_edges)):
+                report = self.switch_direction_assignment.report_for_switch_positions(
+                    node_id,
+                    positions,
+                    [
+                        (
+                            f"{edge[0]}->{edge[1]}",
+                            edge[1],
+                            road_shape,
+                        )
+                        for edge, road_shape in zip(outgoing_edges, shape_options)
+                    ],
+                )
+                ranked.append(
+                    (
+                        0 if report.ambiguous_switch_detected else 1,
+                        report.quality,
+                        report.minimum_exit_angle_separation_degrees or 0.0,
+                        sum(
+                            road_shape == base[edge]
+                            for edge, road_shape in zip(outgoing_edges, shape_options)
+                        ),
+                        shape_options,
+                    )
+                )
+
+            *_, selected = max(ranked)
+            for edge, road_shape in zip(outgoing_edges, selected):
+                assignment[edge] = road_shape
+        return assignment
 
     def _score_assignment(
         self,
