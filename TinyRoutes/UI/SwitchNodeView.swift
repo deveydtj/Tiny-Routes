@@ -55,6 +55,8 @@ struct SwitchNodeView: View {
     let ringSize: CGFloat
     let optionCount: Int
     let optionAngles: [Double]
+    // Opt in for resolver angles (positive Y points down), preserving existing callers.
+    let optionAnglesUseScreenCoordinates: Bool
     let interactionState: SwitchNodeInteractionState
     let pressEventToken: Int?
     let rejectionEventToken: Int?
@@ -69,6 +71,7 @@ struct SwitchNodeView: View {
         ringSize: CGFloat,
         optionCount: Int = 2,
         optionAngles: [Double] = [],
+        optionAnglesUseScreenCoordinates: Bool = false,
         interactionState: SwitchNodeInteractionState = .inactive,
         pressEventToken: Int? = nil,
         rejectionEventToken: Int? = nil
@@ -78,6 +81,7 @@ struct SwitchNodeView: View {
         self.ringSize = ringSize
         self.optionCount = optionCount
         self.optionAngles = optionAngles
+        self.optionAnglesUseScreenCoordinates = optionAnglesUseScreenCoordinates
         self.interactionState = interactionState
         self.pressEventToken = pressEventToken
         self.rejectionEventToken = rejectionEventToken
@@ -120,7 +124,8 @@ struct SwitchNodeView: View {
                 SwitchOptionNub(
                     angle: angle,
                     radius: max(ringSize * 0.44, 1),
-                    isActive: SwitchOptionIndicatorLayout.anglesMatch(angle, activeDirectionAngle)
+                    isActive: SwitchOptionIndicatorLayout.anglesMatch(angle, activeDirectionAngle),
+                    usesScreenCoordinates: optionAnglesUseScreenCoordinates
                 )
             }
 
@@ -199,15 +204,18 @@ struct SwitchOptionNub: View {
     let angle: Double
     let radius: CGFloat
     let isActive: Bool
+    let usesScreenCoordinates: Bool
+
+    var offset: CGSize {
+        CGSize(width: CGFloat(cos(angle)) * radius,
+               height: CGFloat(sin(angle)) * radius * (usesScreenCoordinates ? 1 : -1))
+    }
 
     var body: some View {
         Circle()
             .fill(isActive ? TRGameplayStyle.Colors.titleNavy.opacity(0.50) : TRGameplayStyle.Colors.markerStroke.opacity(0.26))
             .frame(width: isActive ? 6 : 4, height: isActive ? 6 : 4)
-            .offset(
-                x: CGFloat(cos(angle)) * radius,
-                y: CGFloat(-sin(angle)) * radius
-            )
+            .offset(offset)
             .accessibilityHidden(true)
     }
 }

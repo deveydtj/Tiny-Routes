@@ -18,6 +18,15 @@ targets:
       - path: TinyRoutes
         excludes:
           - Resources/Info.plist
+          - Resources/PrototypeLevels
+          - Resources/PrototypeSounds
+      # Preserve this directory so prototype JSON never lands at the bundle root.
+      - path: TinyRoutes/Resources/PrototypeLevels
+        type: folder
+        buildPhase: resources
+      - path: TinyRoutes/Resources/PrototypeSounds
+        type: folder
+        buildPhase: resources
     resources:
       - TinyRoutes/Resources
     settings:
@@ -34,7 +43,12 @@ targets:
     type: bundle.unit-test
     platform: iOS
     sources:
-      - TinyRoutesTests
+      - path: TinyRoutesTests
+        excludes:
+          - Resources/PrototypeSolutions
+      - path: TinyRoutesTests/Resources/PrototypeSolutions
+        type: folder
+        buildPhase: resources
     dependencies:
       - target: TinyRoutes
     settings:

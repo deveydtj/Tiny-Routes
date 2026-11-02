@@ -1,0 +1,246 @@
+{
+  "id": "proto_11",
+  "name": "Rush",
+  "graph": {
+    "nodes": [
+      {
+        "id": "red_start",
+        "x": 0,
+        "y": 0,
+        "outgoingEdgeIDs": [
+          "red_approach"
+        ]
+      },
+      {
+        "id": "blue_start",
+        "x": 4,
+        "y": 0,
+        "outgoingEdgeIDs": [
+          "blue_approach"
+        ]
+      },
+      {
+        "id": "route_switch",
+        "x": 4,
+        "y": 1,
+        "outgoingEdgeIDs": [
+          "short",
+          "long"
+        ]
+      },
+      {
+        "id": "detour_top",
+        "x": 4,
+        "y": 5,
+        "outgoingEdgeIDs": [
+          "detour_left_road"
+        ]
+      },
+      {
+        "id": "detour_left",
+        "x": 3,
+        "y": 5,
+        "outgoingEdgeIDs": [
+          "detour_down"
+        ]
+      },
+      {
+        "id": "detour_bottom",
+        "x": 3,
+        "y": 3,
+        "outgoingEdgeIDs": [
+          "detour_join"
+        ]
+      },
+      {
+        "id": "merge",
+        "x": 2,
+        "y": 3,
+        "outgoingEdgeIDs": [
+          "shared_stem"
+        ]
+      },
+      {
+        "id": "split_switch",
+        "x": 2,
+        "y": 4,
+        "outgoingEdgeIDs": [
+          "blue_exit",
+          "red_exit"
+        ]
+      },
+      {
+        "id": "yellow_start",
+        "x": 0,
+        "y": 4,
+        "outgoingEdgeIDs": [
+          "yellow_approach"
+        ]
+      },
+      {
+        "id": "yellow_switch",
+        "x": 0,
+        "y": 5,
+        "outgoingEdgeIDs": [
+          "yellow_wrong_house",
+          "yellow_barrier",
+          "yellow_delivery"
+        ]
+      },
+      {
+        "id": "barrier",
+        "x": 1,
+        "y": 4,
+        "outgoingEdgeIDs": []
+      },
+      {
+        "id": "red_house",
+        "x": 0,
+        "y": 6,
+        "outgoingEdgeIDs": []
+      },
+      {
+        "id": "blue_house",
+        "x": 4,
+        "y": 6,
+        "outgoingEdgeIDs": []
+      },
+      {
+        "id": "yellow_house",
+        "x": 1,
+        "y": 5,
+        "outgoingEdgeIDs": []
+      }
+    ],
+    "edges": [
+      {
+        "id": "red_approach",
+        "fromNodeID": "red_start",
+        "toNodeID": "merge",
+        "roadShape": "verticalFirst"
+      },
+      {
+        "id": "blue_approach",
+        "fromNodeID": "blue_start",
+        "toNodeID": "route_switch",
+        "roadShape": "verticalFirst"
+      },
+      {
+        "id": "short",
+        "fromNodeID": "route_switch",
+        "toNodeID": "merge",
+        "roadShape": "horizontalFirst"
+      },
+      {
+        "id": "long",
+        "fromNodeID": "route_switch",
+        "toNodeID": "detour_top",
+        "roadShape": "verticalFirst"
+      },
+      {
+        "id": "detour_left_road",
+        "fromNodeID": "detour_top",
+        "toNodeID": "detour_left",
+        "roadShape": "horizontalFirst"
+      },
+      {
+        "id": "detour_down",
+        "fromNodeID": "detour_left",
+        "toNodeID": "detour_bottom",
+        "roadShape": "verticalFirst"
+      },
+      {
+        "id": "detour_join",
+        "fromNodeID": "detour_bottom",
+        "toNodeID": "merge",
+        "roadShape": "horizontalFirst"
+      },
+      {
+        "id": "shared_stem",
+        "fromNodeID": "merge",
+        "toNodeID": "split_switch",
+        "roadShape": "verticalFirst"
+      },
+      {
+        "id": "blue_exit",
+        "fromNodeID": "split_switch",
+        "toNodeID": "blue_house",
+        "roadShape": "horizontalFirst"
+      },
+      {
+        "id": "red_exit",
+        "fromNodeID": "split_switch",
+        "toNodeID": "red_house",
+        "roadShape": "verticalFirst"
+      },
+      {
+        "id": "yellow_approach",
+        "fromNodeID": "yellow_start",
+        "toNodeID": "yellow_switch",
+        "roadShape": "verticalFirst"
+      },
+      {
+        "id": "yellow_wrong_house",
+        "fromNodeID": "yellow_switch",
+        "toNodeID": "red_house",
+        "roadShape": "verticalFirst"
+      },
+      {
+        "id": "yellow_barrier",
+        "fromNodeID": "yellow_switch",
+        "toNodeID": "barrier",
+        "roadShape": "verticalFirst"
+      },
+      {
+        "id": "yellow_delivery",
+        "fromNodeID": "yellow_switch",
+        "toNodeID": "yellow_house",
+        "roadShape": "horizontalFirst"
+      }
+    ]
+  },
+  "vans": [
+    {
+      "id": "red",
+      "color": "red",
+      "startNodeID": "red_start",
+      "departDelay": 0
+    },
+    {
+      "id": "blue",
+      "color": "blue",
+      "startNodeID": "blue_start",
+      "departDelay": 0
+    },
+    {
+      "id": "yellow",
+      "color": "yellow",
+      "startNodeID": "yellow_start",
+      "departDelay": 0
+    }
+  ],
+  "houses": [
+    {
+      "nodeID": "red_house",
+      "color": "red"
+    },
+    {
+      "nodeID": "blue_house",
+      "color": "blue"
+    },
+    {
+      "nodeID": "yellow_house",
+      "color": "yellow"
+    }
+  ],
+  "initialSwitchEdges": {
+    "route_switch": "short",
+    "yellow_switch": "yellow_wrong_house",
+    "split_switch": "blue_exit"
+  },
+  "parChanges": 3,
+  "liveSwitchNodeIDs": [
+    "split_switch"
+  ],
+  "hint": "Send Blue the long way. Set the ⚡ switch for Red, then flip it for Blue. Match Yellow too."
+}

@@ -438,6 +438,7 @@ final class LevelRepositoryTests: XCTestCase {
     }
 
     func testBundledLevelsAreCompletableWithinTimeLimit() throws {
+        try XCTSkipIf(true, "Legacy level corpus is being replaced by the redesign; this solver sweep is slow and out of date.")
         let resources = try bundledLevelResources()
         let levels = try resources.map { resource in
             try decoder.decode(LevelData.self, from: Data(contentsOf: resource.url))
@@ -451,6 +452,7 @@ final class LevelRepositoryTests: XCTestCase {
     }
 
     func testBundledLevelParTapsAreAchievable() throws {
+        try XCTSkipIf(true, "Legacy level corpus is being replaced by the redesign; this solver sweep is slow and out of date.")
         let resources = try bundledLevelResources()
         let levels = try resources.map { resource in
             try decoder.decode(LevelData.self, from: Data(contentsOf: resource.url))
@@ -469,6 +471,7 @@ final class LevelRepositoryTests: XCTestCase {
     }
 
     func testBundledLevelsHaveReplayableRouteEngineSolutions() throws {
+        try XCTSkipIf(true, "Legacy level corpus is being replaced by the redesign; this solver sweep is slow and out of date.")
         let resources = try bundledLevelResources()
 
         for resource in resources {

@@ -738,12 +738,12 @@ struct RouteBoardView: View {
         layout: BoardLayout
     ) -> Path? {
         if let transition = deliveryDot?.transition {
-            return roadPath(for: transition.roadPath, layout: layout)
+            return RoadPathRenderer.path(for: transition.roadPath, layout: layout)
         }
 
         if let currentEdgeID = deliveryDot?.currentEdgeID,
            let edge = runtimeGraph.edgesByID[currentEdgeID] {
-            return roadPath(for: edge, layout: layout)
+            return RoadPathRenderer.path(for: edge, layout: layout)
         }
 
         return nil
@@ -770,7 +770,7 @@ struct RouteBoardView: View {
             )
             return RenderedRoadPath(
                 id: "edge-\(edge.id)",
-                path: roadPath(for: visibleRoadPath, layout: layout),
+                path: RoadPathRenderer.path(for: visibleRoadPath, layout: layout),
                 state: presentation.state,
                 badgePoint: layout.point(for: visibleRoadPath.point(atProgress: 0.5)) ?? .zero,
                 accessibilityLabel: presentation.accessibilityLabel
@@ -871,7 +871,7 @@ struct RouteBoardView: View {
                     )
                     paths.append(RenderedRoadPath(
                         id: "connector-\(incomingEdge.id)-\(outgoingEdge.id)",
-                        path: roadPath(for: connector.roadPath, layout: layout),
+                        path: RoadPathRenderer.path(for: connector.roadPath, layout: layout),
                         state: .available,
                         badgePoint: .zero,
                         accessibilityLabel: "Road connector available"
@@ -885,59 +885,6 @@ struct RouteBoardView: View {
             startTrimDistanceByEdgeID: startTrimDistanceByEdgeID,
             endTrimDistanceByEdgeID: endTrimDistanceByEdgeID
         )
-    }
-
-    private func roadPath(for edge: RuntimeRouteEdge, layout: BoardLayout) -> Path {
-        roadPath(for: edge.roadPath, layout: layout)
-    }
-
-    private func roadPath(for roadPath: RoadPath, layout: BoardLayout) -> Path {
-        Path { path in
-            guard let firstSegment = roadPath.segments.first,
-                  let startPoint = layout.point(for: firstSegment.start) else {
-                return
-            }
-
-            path.move(to: startPoint)
-            for segment in roadPath.segments {
-                switch segment.kind {
-                case .straight:
-                    if let endPoint = layout.point(for: segment.end) {
-                        path.addLine(to: endPoint)
-                    }
-                case .quarterTurn:
-                    guard let center = segment.center,
-                          let centerPoint = layout.point(for: center),
-                          let scale = layout.coordinateScale else {
-                        if let endPoint = layout.point(for: segment.end) {
-                            path.addLine(to: endPoint)
-                        }
-                        continue
-                    }
-
-                    path.addArc(
-                        center: centerPoint,
-                        radius: CGFloat(segment.radius) * scale,
-                        startAngle: .radians(-segment.startAngle),
-                        endAngle: .radians(-(segment.startAngle + segment.signedAngleDelta)),
-                        clockwise: segment.signedAngleDelta > 0
-                    )
-                case .smoothTurn:
-                    guard let endPoint = layout.point(for: segment.end),
-                          let control1 = segment.control1,
-                          let control2 = segment.control2,
-                          let controlPoint1 = layout.point(for: control1),
-                          let controlPoint2 = layout.point(for: control2) else {
-                        if let endPoint = layout.point(for: segment.end) {
-                            path.addLine(to: endPoint)
-                        }
-                        continue
-                    }
-
-                    path.addCurve(to: endPoint, control1: controlPoint1, control2: controlPoint2)
-                }
-            }
-        }
     }
 
 }

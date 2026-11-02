@@ -1,0 +1,195 @@
+{
+  "id": "proto_10",
+  "name": "Three's Company",
+  "graph": {
+    "nodes": [
+      {
+        "id": "red_start",
+        "x": 0,
+        "y": 0,
+        "outgoingEdgeIDs": [
+          "red_approach"
+        ]
+      },
+      {
+        "id": "red_switch",
+        "x": 0,
+        "y": 3,
+        "outgoingEdgeIDs": [
+          "red_wrong",
+          "red_delivery"
+        ]
+      },
+      {
+        "id": "red_trap",
+        "x": 1,
+        "y": 3,
+        "outgoingEdgeIDs": [
+          "red_trap_road"
+        ]
+      },
+      {
+        "id": "blue_start",
+        "x": 2,
+        "y": 0,
+        "outgoingEdgeIDs": [
+          "blue_approach"
+        ]
+      },
+      {
+        "id": "blue_switch",
+        "x": 2,
+        "y": 4,
+        "outgoingEdgeIDs": [
+          "blue_wrong",
+          "blue_delivery"
+        ]
+      },
+      {
+        "id": "yellow_start",
+        "x": 4,
+        "y": 0,
+        "outgoingEdgeIDs": [
+          "yellow_approach"
+        ]
+      },
+      {
+        "id": "yellow_switch",
+        "x": 4,
+        "y": 2,
+        "outgoingEdgeIDs": [
+          "yellow_wrong",
+          "yellow_delivery"
+        ]
+      },
+      {
+        "id": "barrier",
+        "x": 3,
+        "y": 2,
+        "outgoingEdgeIDs": []
+      },
+      {
+        "id": "red_house",
+        "x": 0,
+        "y": 6,
+        "outgoingEdgeIDs": []
+      },
+      {
+        "id": "blue_house",
+        "x": 2,
+        "y": 6,
+        "outgoingEdgeIDs": []
+      },
+      {
+        "id": "yellow_house",
+        "x": 4,
+        "y": 6,
+        "outgoingEdgeIDs": []
+      }
+    ],
+    "edges": [
+      {
+        "id": "red_approach",
+        "fromNodeID": "red_start",
+        "toNodeID": "red_switch",
+        "roadShape": "verticalFirst"
+      },
+      {
+        "id": "red_wrong",
+        "fromNodeID": "red_switch",
+        "toNodeID": "red_trap",
+        "roadShape": "horizontalFirst"
+      },
+      {
+        "id": "red_trap_road",
+        "fromNodeID": "red_trap",
+        "toNodeID": "blue_house",
+        "roadShape": "verticalFirst"
+      },
+      {
+        "id": "red_delivery",
+        "fromNodeID": "red_switch",
+        "toNodeID": "red_house",
+        "roadShape": "verticalFirst"
+      },
+      {
+        "id": "blue_approach",
+        "fromNodeID": "blue_start",
+        "toNodeID": "blue_switch",
+        "roadShape": "verticalFirst"
+      },
+      {
+        "id": "blue_wrong",
+        "fromNodeID": "blue_switch",
+        "toNodeID": "red_house",
+        "roadShape": "horizontalFirst"
+      },
+      {
+        "id": "blue_delivery",
+        "fromNodeID": "blue_switch",
+        "toNodeID": "blue_house",
+        "roadShape": "verticalFirst"
+      },
+      {
+        "id": "yellow_approach",
+        "fromNodeID": "yellow_start",
+        "toNodeID": "yellow_switch",
+        "roadShape": "verticalFirst"
+      },
+      {
+        "id": "yellow_wrong",
+        "fromNodeID": "yellow_switch",
+        "toNodeID": "barrier",
+        "roadShape": "horizontalFirst"
+      },
+      {
+        "id": "yellow_delivery",
+        "fromNodeID": "yellow_switch",
+        "toNodeID": "yellow_house",
+        "roadShape": "verticalFirst"
+      }
+    ]
+  },
+  "vans": [
+    {
+      "id": "red",
+      "color": "red",
+      "startNodeID": "red_start",
+      "departDelay": 0
+    },
+    {
+      "id": "blue",
+      "color": "blue",
+      "startNodeID": "blue_start",
+      "departDelay": 0
+    },
+    {
+      "id": "yellow",
+      "color": "yellow",
+      "startNodeID": "yellow_start",
+      "departDelay": 0
+    }
+  ],
+  "houses": [
+    {
+      "nodeID": "red_house",
+      "color": "red"
+    },
+    {
+      "nodeID": "blue_house",
+      "color": "blue"
+    },
+    {
+      "nodeID": "yellow_house",
+      "color": "yellow"
+    }
+  ],
+  "initialSwitchEdges": {
+    "red_switch": "red_wrong",
+    "blue_switch": "blue_wrong",
+    "yellow_switch": "yellow_wrong"
+  },
+  "parChanges": 3,
+  "liveSwitchNodeIDs": [],
+  "hint": "Three vans, three routes. Match every colour before you press Go."
+}

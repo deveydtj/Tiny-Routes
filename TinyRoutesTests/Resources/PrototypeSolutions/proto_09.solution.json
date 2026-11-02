@@ -1,0 +1,11 @@
+{
+  "planTaps": [
+    "entry_switch"
+  ],
+  "liveTaps": [
+    {
+      "atTime": 2.25,
+      "nodeID": "switch"
+    }
+  ]
+}

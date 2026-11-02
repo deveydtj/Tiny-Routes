@@ -1,0 +1,8 @@
+{
+  "planTaps": [
+    "red_switch",
+    "blue_switch",
+    "yellow_switch"
+  ],
+  "liveTaps": []
+}

@@ -54,6 +54,48 @@ struct RuntimeRouteGraph {
         self.edgeUsageCounts = edgeUsageCounts
     }
 
+    /// Builds geometry and edge rules without initializing gameplay or switch state.
+    static func make(
+        from graph: RouteGraph,
+        availabilityRule: (RouteEdge) -> EdgeAvailabilityRule?
+    ) throws -> RuntimeRouteGraph {
+        var nodesByID: [String: RuntimeRouteNode] = [:]
+        for node in graph.nodes {
+            nodesByID[node.id] = RuntimeRouteNode(
+                id: node.id,
+                x: node.x,
+                y: node.y,
+                outgoingEdgeIDs: node.outgoingEdgeIDs,
+                activeOutgoingEdgeID: nil
+            )
+        }
+
+        var edgesByID: [String: RuntimeRouteEdge] = [:]
+        for edge in graph.edges {
+            guard let fromNode = nodesByID[edge.fromNodeID] else {
+                throw RouteEngineError.edgeReferencesUnknownNode(edgeID: edge.id, nodeID: edge.fromNodeID)
+            }
+            guard let toNode = nodesByID[edge.toNodeID] else {
+                throw RouteEngineError.edgeReferencesUnknownNode(edgeID: edge.id, nodeID: edge.toNodeID)
+            }
+
+            edgesByID[edge.id] = RuntimeRouteEdge(
+                id: edge.id,
+                fromNodeID: edge.fromNodeID,
+                toNodeID: edge.toNodeID,
+                roadPath: RoadPath.make(
+                    from: RoadPoint(x: fromNode.x, y: fromNode.y),
+                    to: RoadPoint(x: toNode.x, y: toNode.y),
+                    shape: edge.roadShape
+                ),
+                availability: edge.availability,
+                availabilityRule: availabilityRule(edge)
+            )
+        }
+
+        return RuntimeRouteGraph(nodesByID: nodesByID, edgesByID: edgesByID)
+    }
+
     func validOutgoingEdgeIDs(for node: RuntimeRouteNode) -> [String] {
         node.outgoingEdgeIDs.filter { edgeID in
             guard let edge = edgesByID[edgeID] else {

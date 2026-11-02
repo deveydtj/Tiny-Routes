@@ -129,4 +129,14 @@ final class SwitchNodeViewTests: XCTestCase {
     func testSwitchOptionIndicatorLayoutClampsUnsupportedOptionCounts() {
         XCTAssertEqual(SwitchOptionIndicatorLayout.angles(optionCount: 5, optionAngles: []).count, 4)
     }
+
+    func testPrototypeExitStubsUseScreenDirectionsAndPreserveLegacyProjection() {
+        for (angle, expectedY) in [(-Double.pi / 2, -14.0), (Double.pi / 2, 14.0)] {
+            let prototype = SwitchOptionNub(angle: angle, radius: 14, isActive: false, usesScreenCoordinates: true)
+            let legacy = SwitchOptionNub(angle: angle, radius: 14, isActive: false, usesScreenCoordinates: false)
+            XCTAssertEqual(prototype.offset.width, 0, accuracy: 1e-9)
+            XCTAssertEqual(prototype.offset.height, expectedY, accuracy: 1e-9)
+            XCTAssertEqual(legacy.offset.height, -expectedY, accuracy: 1e-9)
+        }
+    }
 }

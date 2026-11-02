@@ -3,7 +3,12 @@ import SwiftUI
 /// The home / main menu screen.
 struct HomeScreen: View {
     let onPlayTapped: () -> Void
+    var settingsService: UserSettingsService? = nil
     let onDailyRouteTapped: (() -> Void)? = nil
+
+    #if DEBUG
+    @State private var showsPrototype = false
+    #endif
 
     var body: some View {
         VStack(spacing: 24) {
@@ -31,6 +36,18 @@ struct HomeScreen: View {
                 )
                 .disabled(onDailyRouteTapped == nil)
                 .accessibilityHint(onDailyRouteTapped == nil ? Text("Coming soon") : Text(""))
+
+                #if DEBUG
+                TRMenuButton(
+                    title: "Prototype",
+                    systemImage: "hammer.fill",
+                    spriteName: nil,
+                    variant: .settings,
+                    size: .secondary
+                ) {
+                    showsPrototype = true
+                }
+                #endif
             }
             .frame(maxWidth: 340)
 
@@ -38,6 +55,13 @@ struct HomeScreen: View {
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .padding(.horizontal, 16)
+        #if DEBUG
+        .fullScreenCover(isPresented: $showsPrototype) {
+            if let settingsService {
+                MultiVanPrototypeScreen(settingsService: settingsService)
+            }
+        }
+        #endif
     }
 }
 

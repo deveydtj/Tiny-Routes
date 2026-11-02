@@ -11,19 +11,23 @@ struct TRResultActionButton: View {
     let systemImage: String?
     let badgeText: String?
     let variant: Variant
+    let supportsDynamicType: Bool
     let action: () -> Void
+    @ScaledMetric(relativeTo: .title3) private var textScale = 1.0
 
     init(
         title: String,
         systemImage: String? = nil,
         badgeText: String? = nil,
         variant: Variant,
+        supportsDynamicType: Bool = false,
         action: @escaping () -> Void
     ) {
         self.title = title
         self.systemImage = systemImage
         self.badgeText = badgeText
         self.variant = variant
+        self.supportsDynamicType = supportsDynamicType
         self.action = action
     }
 
@@ -37,9 +41,10 @@ struct TRResultActionButton: View {
                 }
 
                 Text(title)
-                    .font(.system(size: fontSize, weight: .black, design: .rounded))
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.72)
+                    .font(.system(size: fontSize * (supportsDynamicType ? textScale : 1), weight: .black, design: .rounded))
+                    .lineLimit(supportsDynamicType ? nil : 1)
+                    .minimumScaleFactor(supportsDynamicType ? 1 : 0.72)
+                    .fixedSize(horizontal: false, vertical: supportsDynamicType)
 
                 if let badgeText {
                     Text(badgeText)
@@ -55,7 +60,8 @@ struct TRResultActionButton: View {
                 }
             }
             .frame(maxWidth: .infinity)
-            .frame(height: height)
+            .frame(height: supportsDynamicType ? nil : height)
+            .frame(minHeight: height)
             .padding(.horizontal, 14)
             .contentShape(RoundedRectangle(cornerRadius: cornerRadius, style: .continuous))
         }

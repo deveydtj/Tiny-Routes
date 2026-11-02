@@ -1,0 +1,24 @@
+{
+  "id": "proto_04",
+  "name": "Roundabout",
+  "graph": {
+    "nodes": [
+      { "id": "red_start", "x": 2, "y": 0, "outgoingEdgeIDs": ["to_switch"] },
+      { "id": "switch", "x": 2, "y": 3, "outgoingEdgeIDs": ["to_right_barrier", "to_top_barrier", "to_house"] },
+      { "id": "right_barrier", "x": 4, "y": 3, "outgoingEdgeIDs": [] },
+      { "id": "top_barrier", "x": 2, "y": 6, "outgoingEdgeIDs": [] },
+      { "id": "red_house", "x": 0, "y": 3, "outgoingEdgeIDs": [] }
+    ],
+    "edges": [
+      { "id": "to_switch", "fromNodeID": "red_start", "toNodeID": "switch", "roadShape": "verticalFirst" },
+      { "id": "to_right_barrier", "fromNodeID": "switch", "toNodeID": "right_barrier", "roadShape": "horizontalFirst" },
+      { "id": "to_top_barrier", "fromNodeID": "switch", "toNodeID": "top_barrier", "roadShape": "verticalFirst" },
+      { "id": "to_house", "fromNodeID": "switch", "toNodeID": "red_house", "roadShape": "horizontalFirst" }
+    ]
+  },
+  "vans": [{ "id": "red", "color": "red", "startNodeID": "red_start", "departDelay": 0 }],
+  "houses": [{ "nodeID": "red_house", "color": "red" }],
+  "initialSwitchEdges": { "switch": "to_right_barrier" },
+  "parChanges": 2,
+  "liveSwitchNodeIDs": []
+}

@@ -61,7 +61,8 @@ struct ContentView: View {
 
                 case .mainMenu:
                     HomeScreen(
-                        onPlayTapped: coordinator.openLevelSelect
+                        onPlayTapped: coordinator.openLevelSelect,
+                        settingsService: settingsService
                     )
 
                 case .levelSelect:

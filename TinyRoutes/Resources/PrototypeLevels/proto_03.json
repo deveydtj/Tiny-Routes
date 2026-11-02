@@ -1,0 +1,27 @@
+{
+  "id": "proto_03",
+  "name": "Two Turns",
+  "graph": {
+    "nodes": [
+      { "id": "red_start", "x": 2, "y": 0, "outgoingEdgeIDs": ["to_loop_switch"] },
+      { "id": "loop_switch", "x": 2, "y": 2, "outgoingEdgeIDs": ["to_loop_corner", "to_house_switch"] },
+      { "id": "loop_corner", "x": 0, "y": 4, "outgoingEdgeIDs": ["loop_return"] },
+      { "id": "house_switch", "x": 4, "y": 2, "outgoingEdgeIDs": ["to_barrier", "to_house"] },
+      { "id": "barrier", "x": 4, "y": 0, "outgoingEdgeIDs": [] },
+      { "id": "red_house", "x": 4, "y": 6, "outgoingEdgeIDs": [] }
+    ],
+    "edges": [
+      { "id": "to_loop_switch", "fromNodeID": "red_start", "toNodeID": "loop_switch", "roadShape": "verticalFirst" },
+      { "id": "to_loop_corner", "fromNodeID": "loop_switch", "toNodeID": "loop_corner", "roadShape": "horizontalFirst" },
+      { "id": "loop_return", "fromNodeID": "loop_corner", "toNodeID": "loop_switch", "roadShape": "horizontalFirst" },
+      { "id": "to_house_switch", "fromNodeID": "loop_switch", "toNodeID": "house_switch", "roadShape": "horizontalFirst" },
+      { "id": "to_barrier", "fromNodeID": "house_switch", "toNodeID": "barrier", "roadShape": "verticalFirst" },
+      { "id": "to_house", "fromNodeID": "house_switch", "toNodeID": "red_house", "roadShape": "verticalFirst" }
+    ]
+  },
+  "vans": [{ "id": "red", "color": "red", "startNodeID": "red_start", "departDelay": 0 }],
+  "houses": [{ "nodeID": "red_house", "color": "red" }],
+  "initialSwitchEdges": { "loop_switch": "to_loop_corner", "house_switch": "to_barrier" },
+  "parChanges": 2,
+  "liveSwitchNodeIDs": []
+}

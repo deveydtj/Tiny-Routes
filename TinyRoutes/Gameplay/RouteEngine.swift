@@ -208,41 +208,9 @@ final class RouteEngine {
 
         initializeObjectiveProgression(from: levelData)
 
-        var nodesByID: [String: RuntimeRouteNode] = [:]
-        for node in graph.nodes {
-            nodesByID[node.id] = RuntimeRouteNode(
-                id: node.id,
-                x: node.x,
-                y: node.y,
-                outgoingEdgeIDs: node.outgoingEdgeIDs,
-                activeOutgoingEdgeID: nil
-            )
+        var runtimeGraph = try RuntimeRouteGraph.make(from: graph) { edge in
+            levelData.effectiveAvailabilityRule(for: edge)
         }
-
-        var edgesByID: [String: RuntimeRouteEdge] = [:]
-        for edge in graph.edges {
-            guard let fromNode = nodesByID[edge.fromNodeID] else {
-                throw RouteEngineError.edgeReferencesUnknownNode(edgeID: edge.id, nodeID: edge.fromNodeID)
-            }
-            guard let toNode = nodesByID[edge.toNodeID] else {
-                throw RouteEngineError.edgeReferencesUnknownNode(edgeID: edge.id, nodeID: edge.toNodeID)
-            }
-
-            edgesByID[edge.id] = RuntimeRouteEdge(
-                id: edge.id,
-                fromNodeID: edge.fromNodeID,
-                toNodeID: edge.toNodeID,
-                roadPath: RoadPath.make(
-                    from: RoadPoint(x: fromNode.x, y: fromNode.y),
-                    to: RoadPoint(x: toNode.x, y: toNode.y),
-                    shape: edge.roadShape
-                ),
-                availability: edge.availability,
-                availabilityRule: levelData.effectiveAvailabilityRule(for: edge)
-            )
-        }
-
-        var runtimeGraph = RuntimeRouteGraph(nodesByID: nodesByID, edgesByID: edgesByID)
         let usesLegacyRoadStates = (levelData.schemaVersion ?? 1) < 3 || objectives.isEmpty
         let validationRoadStates: [(completed: Set<String>, activeIndex: Int, package: Bool?)]
         if usesLegacyRoadStates {
