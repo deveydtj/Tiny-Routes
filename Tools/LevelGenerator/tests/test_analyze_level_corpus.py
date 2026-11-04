@@ -5,7 +5,15 @@ import subprocess
 import sys
 from pathlib import Path
 
+import pytest
+
 from app.paths import find_repo_root
+
+# The single-dot level corpus was retired from the app; these tests audit it.
+requires_retired_corpus = pytest.mark.skipif(
+    not (Path(__file__).resolve().parents[3] / "TinyRoutes/Resources/Levels").is_dir(),
+    reason="single-dot production corpus retired",
+)
 
 
 SCRIPT = find_repo_root() / "Tools" / "LevelGenerator" / "analyze_level_corpus.py"
@@ -28,6 +36,7 @@ def test_analyzer_fails_cleanly_when_sidecar_is_missing(tmp_path: Path) -> None:
     assert "Missing solution sidecar for level_001" in result.stderr
 
 
+@requires_retired_corpus
 def test_production_analyzer_output_is_deterministic(tmp_path: Path) -> None:
     root = find_repo_root()
     command = [sys.executable, str(SCRIPT),

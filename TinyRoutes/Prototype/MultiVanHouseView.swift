@@ -51,8 +51,16 @@ struct MultiVanHouseView: View {
         .frame(width: side, height: side)
         .shadow(color: .black.opacity(0.15), radius: side * 0.025, y: side * 0.035)
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel("\(color.displayName) \(color.accessibilitySymbolName) house")
-        .accessibilityValue(isDelivered ? "Delivered" : "Awaiting delivery")
+        .accessibilityLabel(Self.accessibilityLabel(color: color))
+        .accessibilityValue(Self.accessibilityValue(isDelivered: isDelivered))
+    }
+
+    static func accessibilityLabel(color: VanColor) -> String {
+        "\(color.displayName) \(color.accessibilitySymbolName) house"
+    }
+
+    static func accessibilityValue(isDelivered: Bool) -> String {
+        isDelivered ? "Delivered" : "Awaiting delivery"
     }
 }
 

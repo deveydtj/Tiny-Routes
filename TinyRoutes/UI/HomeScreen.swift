@@ -6,8 +6,18 @@ struct HomeScreen: View {
     var settingsService: UserSettingsService? = nil
     let onDailyRouteTapped: (() -> Void)? = nil
 
-    #if DEBUG
+    #if MULTIVAN_INTERNAL
+    @AppStorage("multiVanPrototype.enabled") private var prototypeEnabled = false
+    #endif
+    #if DEBUG || MULTIVAN_INTERNAL
     @State private var showsPrototype = false
+    private var canOpenPrototype: Bool {
+        #if DEBUG
+        true
+        #else
+        prototypeEnabled
+        #endif
+    }
     #endif
 
     var body: some View {
@@ -37,15 +47,17 @@ struct HomeScreen: View {
                 .disabled(onDailyRouteTapped == nil)
                 .accessibilityHint(onDailyRouteTapped == nil ? Text("Coming soon") : Text(""))
 
-                #if DEBUG
-                TRMenuButton(
-                    title: "Prototype",
-                    systemImage: "hammer.fill",
-                    spriteName: nil,
-                    variant: .settings,
-                    size: .secondary
-                ) {
-                    showsPrototype = true
+                #if DEBUG || MULTIVAN_INTERNAL
+                if canOpenPrototype {
+                    TRMenuButton(
+                        title: "Prototype",
+                        systemImage: "hammer.fill",
+                        spriteName: nil,
+                        variant: .settings,
+                        size: .secondary
+                    ) {
+                        showsPrototype = true
+                    }
                 }
                 #endif
             }
@@ -55,11 +67,15 @@ struct HomeScreen: View {
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .padding(.horizontal, 16)
-        #if DEBUG
+        #if DEBUG || MULTIVAN_INTERNAL
         .fullScreenCover(isPresented: $showsPrototype) {
             if let settingsService {
                 MultiVanPrototypeScreen(settingsService: settingsService)
             }
+        }
+        // Profiling launches go straight to the prototype; see MultiVanAutoplay.
+        .onAppear {
+            if MultiVanAutoplay.launchConfiguration != nil { showsPrototype = true }
         }
         #endif
     }

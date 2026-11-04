@@ -7,6 +7,12 @@ import pytest
 
 from tiny_routes_core import LevelRules, SwitchInteractionMode
 
+# The single-dot level corpus was retired from the app; these tests audit it.
+requires_retired_corpus = pytest.mark.skipif(
+    not (Path(__file__).resolve().parents[3] / "TinyRoutes/Resources/Levels").is_dir(),
+    reason="single-dot production corpus retired",
+)
+
 
 REPOSITORY_ROOT = Path(__file__).resolve().parents[3]
 
@@ -48,6 +54,7 @@ def test_unknown_mode_is_rejected_with_a_stable_message() -> None:
         LevelRules.from_dict({"switchInteractionMode": "futureMode"})
 
 
+@requires_retired_corpus
 def test_every_production_level_rules_document_decodes() -> None:
     levels = sorted((REPOSITORY_ROOT / "TinyRoutes/Resources/Levels").glob("*.json"))
     assert levels

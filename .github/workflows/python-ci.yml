@@ -70,21 +70,11 @@ jobs:
           python Tools/LevelGenerator/run_fixed_seed_regressions.py
           --json-output "$RUNNER_TEMP/fixed_seed_regressions.json"
 
-      - name: Validate production corpus structure and solutions
-        working-directory: Tools/LevelGenerator
-        run: |
-          python verify_production_corpus.py \
-            --no-swift-tests \
-            --json-output "$RUNNER_TEMP/production_corpus_verification.json" \
-            --markdown-output "$RUNNER_TEMP/production_corpus_verification.md"
-
       - name: Upload corpus verification report
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: production-corpus-verification
           path: |
-            ${{ runner.temp }}/production_corpus_verification.json
-            ${{ runner.temp }}/production_corpus_verification.md
             ${{ runner.temp }}/fixed_seed_regressions.json
           if-no-files-found: ignore

@@ -6,64 +6,6 @@ import XCTest
 
 final class SwitchNodeViewTests: XCTestCase {
     @MainActor
-    func testReferenceBoardsFitAndRenderBeforeDrivingStarts() throws {
-        let levels = try TestLevelCatalog().loadAllProductionLevels().prefix(4)
-        XCTAssertEqual(levels.map(\.timeLimitSeconds), [60, 90, 75, 75])
-        for level in levels {
-            let engine = RouteEngine()
-            try engine.buildGraph(from: level)
-            let graph = try XCTUnwrap(engine.runtimeGraph)
-            let size = CGSize(width: 390, height: 540)
-            let layout = BoardLayout.make(for: graph, in: size, padding: 64, cameraMode: .follow(nil))
-            XCTAssertFalse(layout.cameraPlan?.isTrackingEnabled ?? false, "\(level.id) should show the entire board")
-            let board = RouteBoardView(
-                runtimeGraph: graph, deliveryDot: engine.deliveryDot,
-                packageNodeID: level.packageNodeID, destinationNodeID: level.destinationNodeID,
-                hasCollectedPackage: false, activeObjective: engine.activeObjective,
-                activeObjectiveIndex: engine.activeObjectiveIndex,
-                cosmeticLoadout: .default, isShowingPreview: false,
-                pressedSwitchNodeID: nil, switchPressEventToken: 0,
-                rejectedSwitchNodeID: nil, switchRejectionEventToken: 0,
-                upcomingSwitchNodeID: nil, eligibleSwitchNodeID: nil, onNodeTapped: { _ in },
-                startingEdgeIDs: engine.startingEdgeIDs, startNodeID: level.startNodeID,
-                usesReferenceStyle: true
-            ).frame(width: size.width, height: size.height).background(Color(red: 0.88, green: 0.95, blue: 0.98))
-            let host = UIHostingController(rootView: board)
-            let window = UIWindow(frame: CGRect(origin: .zero, size: size))
-            window.rootViewController = host
-            window.makeKeyAndVisible()
-            host.view.layoutIfNeeded()
-            let image = UIGraphicsImageRenderer(size: size).image { _ in
-                host.view.drawHierarchy(in: host.view.bounds, afterScreenUpdates: true)
-            }
-            let attachment = XCTAttachment(image: image)
-            attachment.name = "\(level.id)-starting-roads"
-            attachment.lifetime = .keepAlways
-            add(attachment)
-            window.isHidden = true
-        }
-    }
-
-    func testStartingRoadDotsAndTapTargetsFollowEachAvailableDeparture() throws {
-        let level = try XCTUnwrap(TestLevelCatalog().loadAllProductionLevels().first { $0.id == "level_001" })
-        let engine = RouteEngine()
-        try engine.buildGraph(from: level)
-        let graph = try XCTUnwrap(engine.runtimeGraph)
-        let layout = BoardLayout.make(for: Array(graph.nodesByID.values), in: CGSize(width: 390, height: 540), padding: 64)
-        let resolver = RouteBoardTapTargetResolver(runtimeGraph: graph, layout: layout)
-        XCTAssertEqual(engine.startingEdgeIDs.count, 2)
-        for edgeID in engine.startingEdgeIDs {
-            let edge = try XCTUnwrap(graph.edgesByID[edgeID])
-            let dots = RouteBoardTapTargetResolver.startingDotPoints(for: edge, layout: layout)
-            XCTAssertGreaterThan(dots.count, 1)
-            XCTAssertEqual(resolver.startingEdgeID(at: try XCTUnwrap(dots.last), edgeIDs: engine.startingEdgeIDs), edgeID)
-        }
-        XCTAssertNil(resolver.startingEdgeID(at: CGPoint(x: 0, y: 0), edgeIDs: engine.startingEdgeIDs))
-        XCTAssertNil(resolver.startingEdgeID(at: try XCTUnwrap(layout.pointsByNodeID["start"]), edgeIDs: engine.startingEdgeIDs))
-        XCTAssertTrue(engine.startDotMovement(edgeID: "start_to_bottom"))
-        XCTAssertNil(resolver.startingEdgeID(at: CGPoint(x: 100, y: 100), edgeIDs: engine.startingEdgeIDs))
-    }
-
     func testInteractionStatesHaveDistinctAccessibilityValues() {
         let values = Set([
             SwitchNodeInteractionState.inactive.accessibilityValue,

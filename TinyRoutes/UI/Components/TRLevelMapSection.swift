@@ -1,7 +1,7 @@
 import SwiftUI
 
 struct TRLevelMapSection: View {
-    let levels: [LevelData]
+    let levels: [MultiVanLevel]
     let progressService: ProgressService
     let onLevelSelected: (String) -> Void
 
@@ -85,25 +85,12 @@ struct TRLevelMapSection: View {
 }
 
 #Preview("Level Map Section") {
-    let levels = (1...11).map { number in
-        LevelData(
-            id: "level_\(String(format: "%03d", number))",
-            name: "Level \(number)",
-            graph: RouteGraph(),
-            startNodeID: "start",
-            packageNodeID: "package",
-            destinationNodeID: "destination",
-            timeLimitSeconds: 60,
-            parTaps: 6
-        )
-    }
-
     ZStack {
         Color(red: 0.78, green: 0.90, blue: 0.96)
             .ignoresSafeArea()
 
         TRLevelMapSection(
-            levels: levels,
+            levels: (try? MultiVanLevelRepository().loadAllLevels()) ?? [],
             progressService: ProgressService(),
             onLevelSelected: { _ in }
         )

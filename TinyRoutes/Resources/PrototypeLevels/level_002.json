@@ -1,0 +1,22 @@
+{
+  "id": "level_002",
+  "name": "Pick a Lane",
+  "graph": {
+    "nodes": [
+      { "id": "red_start", "x": 0, "y": 0, "outgoingEdgeIDs": ["to_switch"] },
+      { "id": "switch", "x": 0, "y": 3, "outgoingEdgeIDs": ["to_barrier", "to_house"] },
+      { "id": "barrier", "x": 0, "y": 6, "outgoingEdgeIDs": [] },
+      { "id": "red_house", "x": 4, "y": 3, "outgoingEdgeIDs": [] }
+    ],
+    "edges": [
+      { "id": "to_switch", "fromNodeID": "red_start", "toNodeID": "switch", "roadShape": "verticalFirst" },
+      { "id": "to_barrier", "fromNodeID": "switch", "toNodeID": "barrier", "roadShape": "verticalFirst" },
+      { "id": "to_house", "fromNodeID": "switch", "toNodeID": "red_house", "roadShape": "horizontalFirst" }
+    ]
+  },
+  "vans": [{ "id": "red", "color": "red", "startNodeID": "red_start", "departDelay": 0 }],
+  "houses": [{ "nodeID": "red_house", "color": "red" }],
+  "initialSwitchEdges": { "switch": "to_barrier" },
+  "parChanges": 1,
+  "liveSwitchNodeIDs": []
+}

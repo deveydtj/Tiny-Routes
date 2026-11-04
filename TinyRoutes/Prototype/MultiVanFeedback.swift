@@ -103,6 +103,7 @@ struct MultiVanSwitchAppearance {
 
     var showsLock: Bool { !isAvailable }
     var opacity: Double { !isLive && !isAvailable ? 0.5 : 1 }
+    var dialTint: MultiVanSwitchDialView.Tint { isLive ? .live : isAvailable ? .ready : .locked }
     static func accessibilityLabel(node: RuntimeRouteNode, gridRows: Int) -> String {
         // Authored nodes have grid coordinates, but no user-facing names.
         // Rows read from the top, matching the board's inverted Y projection.
@@ -238,7 +239,7 @@ struct MultiVanCelebration {
             guard !reduceMotion,
                   let van = engine.vans.first(where: { $0.id == vanID }),
                   let house = engine.level.houses.first(where: {
-                      $0.color == van.color && MultiVanBoardView.isDelivered(
+                      $0.color == van.color && MultiVanBoardRules.isDelivered(
                           $0, vans: [van], graph: engine.runtimeGraph
                       )
                   }) else { return }

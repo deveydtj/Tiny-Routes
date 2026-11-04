@@ -1,0 +1,46 @@
+{
+  "id": "level_008",
+  "name": "Hold the Loop",
+  "graph": {
+    "nodes": [
+      { "id": "red_start", "x": 0, "y": 0, "outgoingEdgeIDs": ["red_approach"] },
+      { "id": "entry_switch", "x": 0, "y": 1, "outgoingEdgeIDs": ["wrong_entry", "enter_loop"] },
+      { "id": "barrier", "x": 1, "y": 0, "outgoingEdgeIDs": [] },
+      { "id": "loop_left", "x": 0, "y": 3, "outgoingEdgeIDs": ["loop_top"] },
+      { "id": "loop_switch", "x": 2, "y": 3, "outgoingEdgeIDs": ["hold", "release"] },
+      { "id": "loop_bottom", "x": 2, "y": 1, "outgoingEdgeIDs": ["loop_return"] },
+      { "id": "blue_start", "x": 4, "y": 0, "outgoingEdgeIDs": ["blue_approach"] },
+      { "id": "merge", "x": 2, "y": 4, "outgoingEdgeIDs": ["blue_exit"] },
+      { "id": "red_house", "x": 0, "y": 6, "outgoingEdgeIDs": [] },
+      { "id": "blue_house", "x": 4, "y": 6, "outgoingEdgeIDs": [] }
+    ],
+    "edges": [
+      { "id": "red_approach", "fromNodeID": "red_start", "toNodeID": "entry_switch", "roadShape": "verticalFirst" },
+      { "id": "wrong_entry", "fromNodeID": "entry_switch", "toNodeID": "barrier", "roadShape": "horizontalFirst" },
+      { "id": "enter_loop", "fromNodeID": "entry_switch", "toNodeID": "loop_left", "roadShape": "verticalFirst" },
+      { "id": "loop_top", "fromNodeID": "loop_left", "toNodeID": "loop_switch", "roadShape": "horizontalFirst" },
+      { "id": "hold", "fromNodeID": "loop_switch", "toNodeID": "loop_bottom", "roadShape": "verticalFirst" },
+      { "id": "release", "fromNodeID": "loop_switch", "toNodeID": "red_house", "roadShape": "verticalFirst" },
+      { "id": "loop_return", "fromNodeID": "loop_bottom", "toNodeID": "entry_switch", "roadShape": "horizontalFirst" },
+      { "id": "blue_approach", "fromNodeID": "blue_start", "toNodeID": "merge", "roadShape": "verticalFirst" },
+      { "id": "blue_exit", "fromNodeID": "merge", "toNodeID": "blue_house", "roadShape": "verticalFirst" }
+    ]
+  },
+  "vans": [
+    { "id": "red", "color": "red", "startNodeID": "red_start", "departDelay": 0},
+    { "id": "blue", "color": "blue", "startNodeID": "blue_start", "departDelay": 0}
+  ],
+  "houses": [
+    { "nodeID": "red_house", "color": "red" },
+    { "nodeID": "blue_house", "color": "blue" }
+  ],
+  "initialSwitchEdges": {
+    "entry_switch": "wrong_entry",
+    "loop_switch": "hold"
+  },
+  "parChanges": 2,
+  "liveSwitchNodeIDs": [
+    "loop_switch"
+  ],
+  "hint": "Hold Red in the loop until Blue clears, then tap the ⚡ switch."
+}

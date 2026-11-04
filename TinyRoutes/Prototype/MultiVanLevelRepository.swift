@@ -12,7 +12,7 @@ struct MultiVanLevelRepository {
     func loadAllLevels() throws -> [MultiVanLevel] {
         let urls = bundle.urls(forResourcesWithExtension: "json", subdirectory: "PrototypeLevels") ?? []
         let decoder = JSONDecoder()
-        return try urls.filter { $0.lastPathComponent.hasPrefix("proto_") }.map { url in
+        return try urls.filter { $0.lastPathComponent.hasPrefix("level_") }.map { url in
             let id = url.deletingPathExtension().lastPathComponent
             let data: Data
             do {

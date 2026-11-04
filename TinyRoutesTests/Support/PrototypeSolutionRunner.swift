@@ -4,7 +4,10 @@ import Foundation
 enum PrototypeSolutionRunner {
     /// Every invocation starts from authored settings, using production defaults.
     /// Return the actual engine so tests can inspect deliveries and deterministic state.
-    static func run(level: MultiVanLevel, script: PrototypeSolutionScript) throws -> MultiVanEngine {
+    /// `onStep` sees the engine after each tap and each simulation step, as a board would.
+    static func run(
+        level: MultiVanLevel, script: PrototypeSolutionScript, onStep: (MultiVanEngine) -> Void = { _ in }
+    ) throws -> MultiVanEngine {
         for (index, tap) in script.liveTaps.enumerated() {
             guard tap.atTime.isFinite, tap.atTime >= 0 else {
                 throw PrototypeSolutionError("\(level.id): liveTaps[\(index)] node \(tap.nodeID), atTime \(tap.atTime): invalid timestamp")
@@ -26,8 +29,10 @@ enum PrototypeSolutionRunner {
             guard result == .accepted else {
                 throw PrototypeSolutionError("\(level.id): planTaps[\(index)] node \(nodeID) rejected: \(result)")
             }
+            onStep(engine)
         }
         engine.go()
+        onStep(engine)
         // Count steps rather than accumulating floating-point frame deltas.
         let stepDuration = engine.tuning.stepDuration
         let maxSteps = Int((120 / stepDuration).rounded(.down))
@@ -44,6 +49,7 @@ enum PrototypeSolutionRunner {
                 nextTap += 1
             }
             engine.advance(by: stepDuration)
+            onStep(engine)
         }
         guard engine.outcome != nil else {
             throw PrototypeSolutionError("\(level.id): timed out after 120 seconds; \(diagnostics(engine))")

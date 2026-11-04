@@ -428,7 +428,7 @@ final class DomainModelsTests: XCTestCase {
         let profile = PlayerProfile.defaultValue
         let cosmetic = CosmeticItem(id: "trail_basic", type: .trail)
 
-        XCTAssertTrue(profile.unlockedLevelIDs.contains("level_001"))
+        XCTAssertTrue(profile.unlockedLevelIDs.contains(PlayerProfile.firstLevelID))
         XCTAssertEqual(profile.coinTotal, 0)
         XCTAssertTrue(profile.ownedCosmeticIDs.contains("themeOceanDrive"))
         XCTAssertTrue(profile.ownedCosmeticIDs.contains("dotCourierBlue"))

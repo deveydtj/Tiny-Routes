@@ -40,6 +40,31 @@ final class SaveDataRepositoryTests: XCTestCase {
         XCTAssertEqual(repository.load(), profile.normalized())
     }
 
+    func testSchemaTwoSaveDropsRetiredLevelProgressButKeepsEverythingElse() throws {
+        var legacy = PlayerProfile(
+            playerName: "Tester",
+            unlockedLevelIDs: ["level_001", "level_002"],
+            completedLevelIDs: ["level_001"],
+            bestStarsByLevelID: ["level_001": 3],
+            coinTotal: 125,
+            fastestCompletionTimeByLevelID: ["level_001": 12],
+            claimedLevelRewardKeys: ["levelComplete:level_001", "unrelatedReward"]
+        )
+        legacy.schemaVersion = 2
+        defaults.set(try JSONEncoder().encode(legacy), forKey: "playerProfile.v1")
+
+        let profile = repository.load()
+
+        XCTAssertEqual(profile.schemaVersion, PlayerProfile.currentSchemaVersion)
+        XCTAssertEqual(profile.unlockedLevelIDs, [PlayerProfile.firstLevelID])
+        XCTAssertTrue(profile.completedLevelIDs.isEmpty)
+        XCTAssertTrue(profile.bestStarsByLevelID.isEmpty)
+        XCTAssertTrue(profile.fastestCompletionTimeByLevelID.isEmpty)
+        XCTAssertEqual(profile.claimedLevelRewardKeys, ["unrelatedReward"])
+        XCTAssertEqual(profile.playerName, "Tester")
+        XCTAssertEqual(profile.coinTotal, 125)
+    }
+
     func testCorruptPayloadFallsBackToDefaultProfile() {
         defaults.set(Data("not-json".utf8), forKey: "playerProfile.v1")
 

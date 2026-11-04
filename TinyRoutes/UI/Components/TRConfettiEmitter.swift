@@ -5,6 +5,8 @@ import UIKit
 enum TRConfettiMode {
     case success
     case failure
+    /// Mounted but quiet, so a later success burst finds SpriteKit already set up.
+    case idle
 }
 
 struct TRConfettiEmitter: View {
@@ -121,6 +123,9 @@ private struct TRConfettiSpriteView: UIViewRepresentable {
             }
 
             scene?.size = effectiveSize(viewBoundsSize: view.bounds.size)
+            // Nothing else ever draws, so only a burst runs the view's frames.
+            view.isPaused = mode != .success || reduceMotion
+            if mode == .idle { TRConfettiScene.preloadResources() }
             startIfPossible()
         }
 

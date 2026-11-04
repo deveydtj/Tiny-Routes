@@ -5,11 +5,19 @@ import subprocess
 import sys
 from pathlib import Path
 
+import pytest
+
 from app.paths import find_repo_root
 from migrate_levels_to_live_routing import (
     MIGRATION_CATEGORY_DEFINITIONS,
     MigrationCategory,
     recommend_migration,
+)
+
+# The single-dot level corpus was retired from the app; these tests audit it.
+requires_retired_corpus = pytest.mark.skipif(
+    not (Path(__file__).resolve().parents[3] / "TinyRoutes/Resources/Levels").is_dir(),
+    reason="single-dot production corpus retired",
 )
 
 
@@ -82,6 +90,7 @@ def test_analyzer_fails_cleanly_when_sidecar_is_missing(tmp_path: Path) -> None:
     assert "Missing solution sidecar for level_001" in result.stderr
 
 
+@requires_retired_corpus
 def test_production_report_is_deterministic_and_complete(tmp_path: Path) -> None:
     root = find_repo_root()
     first_json = tmp_path / "first.json"

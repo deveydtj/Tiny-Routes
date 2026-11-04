@@ -85,52 +85,6 @@ final class LevelSimulationHarnessTests: XCTestCase {
         )
     }
 
-    func testRunCompletesLevel001WithProductionScript() throws {
-        let level = try XCTUnwrap(
-            TestLevelCatalog().loadAllProductionLevels().first(where: { $0.id == "level_001" })
-        )
-        let script = try LevelSolutionRepository().loadScript(levelID: "level_001")
-        let harness = LevelSimulationHarness(limits: .productionSolvability)
-
-        let result = try harness.run(level: level, script: script)
-
-        XCTAssertEqual(result.levelID, "level_001")
-        XCTAssertEqual(result.outcome, .completed)
-        XCTAssertLessThanOrEqual(result.tapCount, script.maxTaps)
-        XCTAssertEqual(result.finalNodeID, level.destinationNodeID)
-        XCTAssertTrue(result.didCollectPackage)
-        XCTAssertEqual(result.executedActions.count, script.actions.count)
-        XCTAssertGreaterThan(result.stepCount, 0)
-        XCTAssertEqual(result.noProgressStepCount, 0)
-        XCTAssertLessThanOrEqual(result.elapsedTime, TimeInterval(level.timeLimitSeconds))
-    }
-
-    func testRunThrowsWhenMaxStepCountIsExceeded() throws {
-        let level = try XCTUnwrap(
-            TestLevelCatalog().loadAllProductionLevels().first(where: { $0.id == "level_001" })
-        )
-        let script = try LevelSolutionRepository().loadScript(levelID: "level_001")
-        let harness = LevelSimulationHarness(
-            engineFactory: { RouteEngine(dotSpeed: 1) },
-            frameStep: 1.0 / 60.0,
-            limits: LevelSimulationLimits(
-                maxStepCount: 1,
-                maxSimulatedTimeSeconds: nil,
-                maxNoProgressStepCount: 10
-            )
-        )
-
-        XCTAssertThrowsError(try harness.run(level: level, script: script)) { error in
-            guard case let LevelSimulationHarnessError.exceededMaxStepCount(diagnostics) = error else {
-                XCTFail("Expected exceededMaxStepCount, got \(error)")
-                return
-            }
-            XCTAssertEqual(diagnostics.levelID, "level_001")
-            XCTAssertEqual(diagnostics.stepCount, 1)
-            XCTAssertFalse(diagnostics.phase.isEmpty)
-        }
-    }
-
     func testRunThrowsWhenActionTimeIsNegative() {
         let level = makeSwitchLevel()
         let script = LevelSolutionScript(
@@ -179,21 +133,6 @@ final class LevelSimulationHarnessTests: XCTestCase {
             XCTAssertEqual(nodeID, "switch")
             XCTAssertFalse(timeSeconds.isFinite)
         }
-    }
-
-    func testRunCanStillCompleteLevel001WithProductionLimits() throws {
-        let level = try XCTUnwrap(
-            TestLevelCatalog().loadAllProductionLevels().first(where: { $0.id == "level_001" })
-        )
-        let script = try LevelSolutionRepository().loadScript(levelID: "level_001")
-        let harness = LevelSimulationHarness(limits: .productionSolvability)
-
-        let result = try harness.run(level: level, script: script)
-
-        XCTAssertEqual(result.outcome, .completed)
-        XCTAssertEqual(result.finalNodeID, "destination")
-        XCTAssertTrue(result.didCollectPackage)
-        XCTAssertGreaterThan(result.stepCount, 0)
     }
 
     func testRunReturnsTimeExpiredForSmallCycleInsteadOfHanging() throws {

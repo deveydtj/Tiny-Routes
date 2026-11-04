@@ -3,6 +3,7 @@ import Foundation
 /// Prototype-local JSON Lines. One `attempt` row per planning/run attempt, plus
 /// `quit_at_level` markers when the prototype closes or backgrounds (also from
 /// the list). MV-44 can read fileURL; no completed history is retained in memory.
+/// Schema 2 adds the board on screen, so playtests can compare the two boards.
 /// Owned by the prototype session and called only at action/dispatch boundaries.
 final class MultiVanPlaytestLog {
     enum Action: String, Codable {
@@ -10,6 +11,7 @@ final class MultiVanPlaytestLog {
         case switchTap = "switch_tap", speedChanged = "speed_changed"
         case delivered, collision, wrongHouse = "wrong_house", allDelivered = "all_delivered"
         case completed, abandoned
+        case boardChanged = "board_changed"
     }
 
     struct Event: Codable, Equatable {
@@ -25,11 +27,13 @@ final class MultiVanPlaytestLog {
         var selectedEdgeID: String? = nil
         var speedMultiplier: Double? = nil
         var vanID: String? = nil
+        /// Set on `go` and `board_changed`: the board on screen afterwards.
+        var boardStyle: String? = nil
     }
 
     struct Attempt: Codable, Equatable {
         var recordType = "attempt"
-        var schemaVersion = 1
+        var schemaVersion = 2
         let sessionID: UUID
         let levelSessionID: UUID
         let levelID: String
@@ -54,15 +58,19 @@ final class MultiVanPlaytestLog {
         var finalSwitchEdges: [String: String] = [:]
         var events: [Event] = []
         var omittedEventCount = 0
+        /// The board on screen when the attempt began; nil in schema 1 rows.
+        var boardStyle: String? = nil
     }
 
     struct Quit: Encodable {
         let recordType = "quit_at_level"
-        let schemaVersion = 1
+        let schemaVersion = 2
         let sessionID: UUID
         let levelID: String?
         let timestamp: Date
         let reason: String
+        /// The board the player left on.
+        let boardStyle: String?
     }
 
     let sessionID = UUID() // New for each opening, never a device/player ID.
@@ -79,6 +87,8 @@ final class MultiVanPlaytestLog {
     private var planningSince: Double?
     private var acceleratingSince: (real: Double, simulation: Double)?
     private var suspended = false
+    /// The board on screen. It outlives attempts and levels, as the board does.
+    private var board: MultiVanBoardStyle?
     private(set) var lastAttempt: Attempt?
 
     init(fileURL: URL = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
@@ -110,6 +120,7 @@ final class MultiVanPlaytestLog {
         current = Attempt(sessionID: sessionID, levelSessionID: levelSessionID,
                           levelID: engine.level.id, attemptNumber: number, timestamp: wallTime(),
                           initialSimulationTime: engine.runTime, par: engine.level.parChanges)
+        current?.boardStyle = board?.rawValue
         record(action, engine: engine)
     }
 
@@ -117,7 +128,25 @@ final class MultiVanPlaytestLog {
         guard matches(engine), engine.phase == .plan else { return }
         if let planningSince { current?.planRealSeconds += max(0, uptime() - planningSince) }
         planningSince = nil
-        record(.go, engine: engine)
+        var entry = event(.go, engine: engine)
+        entry.boardStyle = board?.rawValue
+        append(entry)
+    }
+
+    /// Called whenever the switcher shows a board, including the first. An attempt
+    /// that began before any board appeared takes this one as its starting board.
+    func boardShown(_ style: MultiVanBoardStyle, engine: MultiVanEngine) {
+        let previous = board
+        board = style
+        guard matches(engine) else { return }
+        guard current?.boardStyle != nil else {
+            current?.boardStyle = style.rawValue
+            return
+        }
+        guard style != previous else { return }
+        var entry = event(.boardChanged, engine: engine)
+        entry.boardStyle = style.rawValue
+        append(entry)
     }
 
     /// Observe the authoritative result AFTER the existing single engine tap.
@@ -199,7 +228,8 @@ final class MultiVanPlaytestLog {
     func quit(engine: MultiVanEngine?, reason: String) {
         guard !suspended else { return }
         if let engine { leaveLevel(engine, reason: reason) }
-        store.append(Quit(sessionID: sessionID, levelID: lastLevelID, timestamp: wallTime(), reason: reason))
+        store.append(Quit(sessionID: sessionID, levelID: lastLevelID, timestamp: wallTime(), reason: reason,
+                          boardStyle: board?.rawValue))
         suspended = true
     }
 
@@ -245,6 +275,20 @@ final class MultiVanPlaytestLog {
         }
     }
 
+    /// How players did on one board. A level's time to first Go counts only when
+    /// its first attempt reached Go on the board it started on.
+    struct BoardSummary: Identifiable {
+        let id: String
+        var attempts = 0
+        var wins = 0
+        var secondsToFirstGo: [Double] = []
+        var medianSecondsToFirstGo: Double? {
+            guard !secondsToFirstGo.isEmpty else { return nil }
+            let sorted = secondsToFirstGo.sorted(), middle = sorted.count / 2
+            return sorted.count.isMultiple(of: 2) ? (sorted[middle - 1] + sorted[middle]) / 2 : sorted[middle]
+        }
+    }
+
     /// Ownership keeps the attachment alive until the activity controller has
     /// gone away, including cancellation. Cleanup uses the existing file queue.
     final class Export: Identifiable {
@@ -268,6 +312,16 @@ final class MultiVanPlaytestLog {
         return try await withCheckedThrowingContinuation { continuation in
             store.queue.async { [store] in
                 continuation.resume(with: Result { try Self.summaries(in: store.readForExport()) })
+            }
+        }
+    }
+
+    /// Attempts from before schema 2 have no board and are left out.
+    func boardSummary() async throws -> [BoardSummary] {
+        await flush()
+        return try await withCheckedThrowingContinuation { continuation in
+            store.queue.async { [store] in
+                continuation.resume(with: Result { try Self.boardSummaries(in: store.readForExport()) })
             }
         }
     }
@@ -300,23 +354,45 @@ final class MultiVanPlaytestLog {
         return export
     }
 
-    private static func summaries(in data: Data) throws -> [LevelSummary] {
+    private static func attempts(in data: Data) throws -> [Attempt] {
         struct Kind: Decodable { let recordType: String }
         let decoder = JSONDecoder()
         decoder.dateDecodingStrategy = .iso8601
-        var levels: [String: LevelSummary] = [:]
         do {
-            for line in data.split(separator: 0x0A) {
-                guard try decoder.decode(Kind.self, from: Data(line)).recordType == "attempt" else { continue }
-                let attempt = try decoder.decode(Attempt.self, from: Data(line))
-                var summary = levels[attempt.levelID] ?? LevelSummary(id: attempt.levelID)
-                summary.attempts += 1
-                summary.totalChangesMinusPar += attempt.changesMinusPar
-                if let reason = attempt.failReason { summary.failReasons[reason, default: 0] += 1 }
-                levels[attempt.levelID] = summary
+            return try data.split(separator: 0x0A).compactMap { line in
+                guard try decoder.decode(Kind.self, from: Data(line)).recordType == "attempt" else { return nil }
+                return try decoder.decode(Attempt.self, from: Data(line))
             }
         } catch { throw ExportError.unreadable }
+    }
+
+    private static func summaries(in data: Data) throws -> [LevelSummary] {
+        var levels: [String: LevelSummary] = [:]
+        for attempt in try attempts(in: data) {
+            var summary = levels[attempt.levelID] ?? LevelSummary(id: attempt.levelID)
+            summary.attempts += 1
+            summary.totalChangesMinusPar += attempt.changesMinusPar
+            if let reason = attempt.failReason { summary.failReasons[reason, default: 0] += 1 }
+            levels[attempt.levelID] = summary
+        }
         return levels.values.sorted { $0.id < $1.id }
+    }
+
+    private static func boardSummaries(in data: Data) throws -> [BoardSummary] {
+        var boards: [String: BoardSummary] = [:]
+        for attempt in try attempts(in: data) {
+            guard let style = attempt.boardStyle else { continue }
+            var summary = boards[style] ?? BoardSummary(id: style)
+            summary.attempts += 1
+            if attempt.outcome == "success" { summary.wins += 1 }
+            let beforeGo = attempt.events.prefix { $0.action != .go }
+            if attempt.attemptNumber == 1, beforeGo.count < attempt.events.count,
+               !beforeGo.contains(where: { $0.action == .boardChanged }) {
+                summary.secondsToFirstGo.append(attempt.planRealSeconds)
+            }
+            boards[style] = summary
+        }
+        return boards.values.sorted { $0.id < $1.id }
     }
 
     private func matches(_ engine: MultiVanEngine) -> Bool {

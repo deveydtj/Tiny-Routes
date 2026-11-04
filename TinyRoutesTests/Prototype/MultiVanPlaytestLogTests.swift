@@ -45,7 +45,7 @@ final class MultiVanPlaytestLogTests: XCTestCase {
         URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent()
     }
 
-    private func engine(_ id: String = "proto_09") throws -> MultiVanEngine {
+    private func engine(_ id: String = "level_009") throws -> MultiVanEngine {
         let url = root.appendingPathComponent("TinyRoutes/Resources/PrototypeLevels/\(id).json")
         return try MultiVanEngine(level: JSONDecoder().decode(MultiVanLevel.self, from: Data(contentsOf: url)))
     }
@@ -106,7 +106,7 @@ final class MultiVanPlaytestLogTests: XCTestCase {
     }
 
     func testStopAndRetryAttemptsHaveDistinctBoundariesAndKeepSettings() throws {
-        let rig = try Rig(), run = try engine("proto_07")
+        let rig = try Rig(), run = try engine("level_007")
         rig.log.open(run)
         go(run, rig.log)
         run.advance(by: 0.5)
@@ -155,10 +155,10 @@ final class MultiVanPlaytestLogTests: XCTestCase {
     }
 
     func testWrongHouseAndStuckAreDistinctAndNotTimeoutGuesses() throws {
-        for (id, reason) in [("proto_09", "wrong_house"), ("proto_02", "stuck")] {
+        for (id, reason) in [("level_009", "wrong_house"), ("level_002", "stuck")] {
             let rig = try Rig(), run = try engine(id)
             rig.log.open(run)
-            if id == "proto_09" { XCTAssertEqual(tap(run, rig.log, "entry_switch"), .accepted) }
+            if id == "level_009" { XCTAssertEqual(tap(run, rig.log, "entry_switch"), .accepted) }
             go(run, rig.log)
             run.advance(by: 30)
             process(run, rig.log)
@@ -245,18 +245,18 @@ final class MultiVanPlaytestLogTests: XCTestCase {
     }
 
     func testLevelIsolationReopenNumbersAndStaleCallbacks() throws {
-        let rig = try Rig(), a = try engine("proto_07"), b = try engine("proto_09")
+        let rig = try Rig(), a = try engine("level_007"), b = try engine("level_009")
         rig.log.open(a)
         rig.log.leaveLevel(a, reason: "level_changed")
         rig.log.open(b)
         rig.log.switchTapped(a, nodeID: "route_switch", result: .accepted)
         rig.log.leaveLevel(b, reason: "level_list")
-        let reopened = try engine("proto_07")
+        let reopened = try engine("level_007")
         rig.log.open(reopened)
         rig.log.leaveLevel(a, reason: "stale") // Same level ID, different engine.
         rig.log.leaveLevel(reopened, reason: "level_list")
         let rows = try rig.attempts()
-        XCTAssertEqual(rows.map(\.levelID), ["proto_07", "proto_09", "proto_07"])
+        XCTAssertEqual(rows.map(\.levelID), ["level_007", "level_009", "level_007"])
         XCTAssertEqual(rows.map(\.attemptNumber), [1, 1, 2])
         XCTAssertEqual(Set(rows.map(\.levelSessionID)).count, 3)
         XCTAssertTrue(rows.allSatisfy { !$0.events.contains { $0.action == .switchTap } })
@@ -265,7 +265,7 @@ final class MultiVanPlaytestLogTests: XCTestCase {
     func testSessionNavigationRetainsThreeLevelRecordsAndQuitFromList() throws {
         let rig = try Rig()
         var session = MultiVanPrototypeSession(playtestLog: rig.log)
-        let levels = try [engine("proto_01").level, engine("proto_02").level, engine("proto_03").level]
+        let levels = try [engine("level_001").level, engine("level_002").level, engine("level_003").level]
         try session.open(levels[0])
         try session.next(in: levels)
         try session.next(in: levels)
@@ -276,7 +276,7 @@ final class MultiVanPlaytestLogTests: XCTestCase {
         XCTAssertEqual(rows.map(\.attemptNumber), [1, 1, 1])
         XCTAssertEqual(rows.map(\.endReason), ["level_changed", "level_changed", "level_list"])
         XCTAssertEqual(Set(rows.map(\.sessionID)), [rig.log.sessionID])
-        XCTAssertEqual(try rig.rows().last?["levelID"] as? String, "proto_03")
+        XCTAssertEqual(try rig.rows().last?["levelID"] as? String, "level_003")
         XCTAssertNil(session.engine)
     }
 
@@ -304,7 +304,7 @@ final class MultiVanPlaytestLogTests: XCTestCase {
         XCTAssertEqual(rows.count, 2)
         XCTAssertNotEqual(rows[0]["sessionID"] as? String, rows[1]["sessionID"] as? String)
         XCTAssertEqual(rows[0]["timestamp"] as? String, "2027-01-15T08:00:00Z")
-        XCTAssertEqual(rows[0]["schemaVersion"] as? Int, 1)
+        XCTAssertEqual(rows[0]["schemaVersion"] as? Int, 2)
         let keys = Set(rows[0].keys)
         XCTAssertTrue(keys.isDisjoint(with: ["name", "email", "deviceID", "location", "advertisingID"]))
         let bad = MultiVanPlaytestLog(fileURL: rig.directory.appendingPathComponent("missing/log.jsonl"))
@@ -317,7 +317,7 @@ final class MultiVanPlaytestLogTests: XCTestCase {
 
     func testAllTwelveAuthoredSolutionsWinAtParAndMatchUnloggedEngineExactly() throws {
         for number in 1...12 {
-            let id = String(format: "proto_%02d", number)
+            let id = String(format: "level_%03d", number)
             let rig = try Rig(), run = try engine(id)
             let url = root.appendingPathComponent("TinyRoutesTests/Resources/PrototypeSolutions/\(id).solution.json")
             let script = try JSONDecoder().decode(PrototypeSolutionScript.self, from: Data(contentsOf: url))
@@ -362,7 +362,7 @@ final class MultiVanPlaytestLogTests: XCTestCase {
     }
 
     func testMergeCollisionThenCorrectionAreSeparateFailureAndSuccess() throws {
-        let rig = try Rig(), run = try engine("proto_07")
+        let rig = try Rig(), run = try engine("level_007")
         rig.log.open(run)
         go(run, rig.log)
         run.advance(by: 30)
@@ -382,7 +382,7 @@ final class MultiVanPlaytestLogTests: XCTestCase {
     }
 
     func testBatchedDeliveryOrderAndCompletionArePreserved() throws {
-        let rig = try Rig(), run = try engine("proto_10")
+        let rig = try Rig(), run = try engine("level_010")
         rig.log.open(run)
         for node in ["red_switch", "blue_switch", "yellow_switch"] { _ = tap(run, rig.log, node) }
         go(run, rig.log)
@@ -401,14 +401,14 @@ final class MultiVanPlaytestLogTests: XCTestCase {
 
     func testUIIntegrationUsesActionBoundariesAndSingleFeedbackDrain() throws {
         let screen = try String(contentsOf: root.appendingPathComponent("TinyRoutes/Prototype/MultiVanGameplayScreen.swift"))
-        let board = try String(contentsOf: root.appendingPathComponent("TinyRoutes/Prototype/MultiVanBoardView.swift"))
+        let button = try String(contentsOf: root.appendingPathComponent("TinyRoutes/Prototype/MultiVanSwitchButton.swift"))
         let logger = try String(contentsOf: root.appendingPathComponent("TinyRoutes/Prototype/MultiVanPlaytestLog.swift"))
         XCTAssertEqual(screen.components(separatedBy: "drainEvents: engine.drainEvents").count - 1, 1)
         XCTAssertFalse(logger.contains(".drainEvents("))
-        XCTAssertEqual(board.components(separatedBy: "engine.tapSwitch(nodeID: node.id)").count - 1, 1)
-        XCTAssertTrue(board.contains("let result = engine.tapSwitch(nodeID: node.id)\n                            onSwitchTapped?(node.id, result)\n                            onEventsProduced?()"))
+        XCTAssertEqual(button.components(separatedBy: "engine.tapSwitch(nodeID: control.nodeID)").count - 1, 1)
+        XCTAssertTrue(button.contains("let result = engine.tapSwitch(nodeID: control.nodeID)\n        onSwitchTapped?(control.nodeID, result)\n        onEventsProduced?()"))
         XCTAssertEqual(screen.components(separatedBy: "playtestLog?.switchTapped(").count - 1, 1)
-        XCTAssertTrue(screen.contains("playtestLog?.go(engine)\n                    engine.go()"))
+        XCTAssertTrue(screen.contains("playtestLog?.go(engine)\n        engine.go()"))
         XCTAssertTrue(screen.contains("playtestLog?.stop(engine)"))
         XCTAssertTrue(screen.contains("playtestLog?.completed(engine)"))
         XCTAssertTrue(screen.contains(".onChange(of: voiceOverEnabled) { _, _ in\n            frameDriver.reset()\n            playtestLog?.speedChanged(false, engine: engine)"))
@@ -566,7 +566,7 @@ final class MultiVanPlaytestLogTests: XCTestCase {
     }
 
     func testPerLevelSummaryExcludesQuitMarkersAndMatchesRecordedAttempts() async throws {
-        let rig = try Rig(), run = try engine("proto_07"), other = try engine("proto_01")
+        let rig = try Rig(), run = try engine("level_007"), other = try engine("level_001")
         rig.log.open(run)
         for number in 1...2 {
             go(run, rig.log)
@@ -578,7 +578,7 @@ final class MultiVanPlaytestLogTests: XCTestCase {
         rig.log.leaveLevel(other, reason: "test")
         rig.log.quit(engine: nil, reason: "test")
         let summaries = try await rig.log.summary()
-        XCTAssertEqual(summaries.map(\.id), ["proto_01", "proto_07"])
+        XCTAssertEqual(summaries.map(\.id), ["level_001", "level_007"])
         XCTAssertEqual(summaries.map(\.attempts), [1, 2])
         XCTAssertEqual(summaries.map(\.mostCommonFailReason), ["None", "collision"])
         let attempts = try rig.attempts()
@@ -590,15 +590,100 @@ final class MultiVanPlaytestLogTests: XCTestCase {
         XCTAssertEqual(try rig.rows().count, 4)
     }
 
-    func testShareUIIsDebugOnlyAccessibleAndOutsideGameplay() throws {
+    func testBoardIsStampedOnAttemptsGoAndQuitAndChangesAreEvents() throws {
+        let rig = try Rig(), run = try engine()
+        // The prototype opens a level before its board appears.
+        rig.log.open(run)
+        rig.log.boardShown(.diorama, engine: run)
+        rig.log.boardShown(.diorama, engine: run)
+        XCTAssertEqual(tap(run, rig.log, "entry_switch"), .accepted)
+        rig.log.boardShown(.flat, engine: run)
+        go(run, rig.log)
+        rig.log.stop(run)
+        let first = try XCTUnwrap(rig.log.lastAttempt)
+        XCTAssertEqual(first.boardStyle, "diorama")
+        XCTAssertEqual(first.events.map(\.action), [.levelStarted, .switchTap, .boardChanged, .go, .stop])
+        XCTAssertEqual(first.events.map(\.boardStyle), [nil, nil, "flat", "flat", nil])
+        run.stop()
+        rig.log.begin(run, action: .planningStarted)
+        rig.log.quit(engine: run, reason: "test")
+        XCTAssertEqual(rig.log.lastAttempt?.boardStyle, "flat")
+        let quit = try XCTUnwrap(try rig.rows().last)
+        XCTAssertEqual(quit["recordType"] as? String, "quit_at_level")
+        XCTAssertEqual(quit["boardStyle"] as? String, "flat")
+        XCTAssertEqual(quit["schemaVersion"] as? Int, 2)
+    }
+
+    func testBoardSummaryTimesFirstGoOnTheStartingBoardOnly() async throws {
+        let rig = try Rig()
+        func play(_ id: String, on style: MultiVanBoardStyle, planFor seconds: Double, switchingTo other: MultiVanBoardStyle? = nil) throws {
+            let run = try engine(id)
+            rig.log.boardShown(style, engine: run)
+            rig.log.open(run)
+            rig.clock.now += seconds
+            if let other { rig.log.boardShown(other, engine: run) }
+            go(run, rig.log)
+            run.advance(by: 0.5)
+            process(run, rig.log)
+            // A second attempt never counts as a first Go.
+            rig.log.stop(run)
+            run.stop()
+            rig.log.begin(run, action: .planningStarted)
+            rig.clock.now += 1
+            go(run, rig.log)
+            rig.log.leaveLevel(run, reason: "test")
+        }
+        try play("level_001", on: .diorama, planFor: 12)
+        try play("level_007", on: .diorama, planFor: 20)
+        try play("level_009", on: .diorama, planFor: 4)
+        try play("level_002", on: .diorama, planFor: 50, switchingTo: .flat)
+        try play("level_003", on: .flat, planFor: 5)
+        // A schema 1 row has no board and is left out.
+        let unboarded = MultiVanPlaytestLog(fileURL: rig.log.fileURL)
+        let old = try engine("level_004")
+        unboarded.open(old)
+        unboarded.leaveLevel(old, reason: "test")
+        await unboarded.flush()
+        let boards = try await rig.log.boardSummary()
+        XCTAssertEqual(boards.map(\.id), ["diorama", "flat"])
+        XCTAssertEqual(boards.map(\.attempts), [7, 3])
+        XCTAssertEqual(boards[0].secondsToFirstGo, [12, 20, 4])
+        XCTAssertEqual(boards[0].medianSecondsToFirstGo, 12)
+        XCTAssertEqual(boards[1].secondsToFirstGo, [5])
+        XCTAssertEqual(boards[1].medianSecondsToFirstGo, 5)
+        XCTAssertEqual(MultiVanPlaytestLog.BoardSummary(id: "x", secondsToFirstGo: [4, 1, 3, 9]).medianSecondsToFirstGo, 3.5)
+        XCTAssertNil(MultiVanPlaytestLog.BoardSummary(id: "x").medianSecondsToFirstGo)
+        let levels = try await rig.log.summary()
+        XCTAssertEqual(levels.map(\.attempts).reduce(0, +), 11)
+    }
+
+    func testShareUIIsInternalOnlyAccessibleAndOutsideGameplay() throws {
         let source = try String(contentsOf: root.appendingPathComponent("TinyRoutes/Prototype/MultiVanPrototypeScreen.swift"))
         let gameplay = try String(contentsOf: root.appendingPathComponent("TinyRoutes/Prototype/MultiVanGameplayScreen.swift"))
-        XCTAssertTrue(source.hasPrefix("#if DEBUG\n"))
+        XCTAssertTrue(source.hasPrefix("#if DEBUG || MULTIVAN_INTERNAL\n"))
         XCTAssertTrue(source.contains("Label(\"Playtest log\", systemImage: \"doc.text\")"))
         XCTAssertTrue(source.contains(".accessibilityLabel(\"Share Playtest Log\")"))
         XCTAssertTrue(source.contains(".disabled(isLoading || isPreparing || export != nil)"))
         XCTAssertTrue(source.contains("UIActivityViewController(activityItems: [export.fileURL], applicationActivities: nil)"))
         XCTAssertFalse(gameplay.contains("prepareExport"))
         XCTAssertFalse(gameplay.contains("UIActivityViewController"))
+    }
+
+    func testDistributionEntryRequiresInternalBuildAndSettingsOptIn() throws {
+        let home = try String(contentsOf: root.appendingPathComponent("TinyRoutes/UI/HomeScreen.swift"))
+        let settings = try String(contentsOf: root.appendingPathComponent("TinyRoutes/UI/SettingsScreen.swift"))
+        let project = try String(contentsOf: root.appendingPathComponent("project.yml"))
+        XCTAssertTrue(home.contains("#if DEBUG || MULTIVAN_INTERNAL"))
+        XCTAssertTrue(home.contains("if canOpenPrototype {"))
+        XCTAssertTrue(home.contains("#if DEBUG\n        true\n        #else\n        prototypeEnabled"))
+        for source in [home, settings] {
+            XCTAssertTrue(source.contains("#if MULTIVAN_INTERNAL\n    @AppStorage(\"multiVanPrototype.enabled\") private var prototypeEnabled = false"))
+        }
+        XCTAssertTrue(settings.contains("#if MULTIVAN_INTERNAL\n            TRSettingsToggleRow("))
+        XCTAssertTrue(project.contains("InternalTestFlight: release"))
+        XCTAssertTrue(project.contains("SWIFT_ACTIVE_COMPILATION_CONDITIONS: \"$(inherited) MULTIVAN_INTERNAL\""))
+        let screen = try String(contentsOf: root.appendingPathComponent("TinyRoutes/Prototype/MultiVanPrototypeScreen.swift"))
+        XCTAssertTrue(screen.contains("#if DEBUG\nprivate struct MultiVanTuningScreen"))
+        XCTAssertTrue(screen.contains("#else\n        let nextEngine = try MultiVanEngine(level: level, tuning: .default)"))
     }
 }

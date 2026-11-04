@@ -1,0 +1,31 @@
+{
+  "id": "level_006",
+  "name": "Convoy",
+  "graph": {
+    "nodes": [
+      { "id": "blue_start", "x": 2, "y": 0, "outgoingEdgeIDs": ["blue_lead"] },
+      { "id": "start", "x": 2, "y": 1, "outgoingEdgeIDs": ["approach"] },
+      { "id": "switch", "x": 2, "y": 4, "outgoingEdgeIDs": ["red_exit", "blue_exit"] },
+      { "id": "red_house", "x": 0, "y": 4, "outgoingEdgeIDs": [] },
+      { "id": "blue_house", "x": 4, "y": 4, "outgoingEdgeIDs": [] }
+    ],
+    "edges": [
+      { "id": "blue_lead", "fromNodeID": "blue_start", "toNodeID": "start", "roadShape": "verticalFirst" },
+      { "id": "approach", "fromNodeID": "start", "toNodeID": "switch", "roadShape": "verticalFirst" },
+      { "id": "red_exit", "fromNodeID": "switch", "toNodeID": "red_house", "roadShape": "horizontalFirst" },
+      { "id": "blue_exit", "fromNodeID": "switch", "toNodeID": "blue_house", "roadShape": "horizontalFirst" }
+    ]
+  },
+  "vans": [
+    { "id": "red", "color": "red", "startNodeID": "start", "departDelay": 0 },
+    { "id": "blue", "color": "blue", "startNodeID": "blue_start", "departDelay": 0.83 }
+  ],
+  "houses": [
+    { "nodeID": "red_house", "color": "red" },
+    { "nodeID": "blue_house", "color": "blue" }
+  ],
+  "initialSwitchEdges": { "switch": "red_exit" },
+  "parChanges": 1,
+  "liveSwitchNodeIDs": ["switch"],
+  "hint": "Let Red pass, then tap the ⚡ switch for Blue."
+}

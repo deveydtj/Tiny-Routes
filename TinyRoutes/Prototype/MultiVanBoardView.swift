@@ -13,7 +13,6 @@ struct MultiVanBoardView: View {
     var onCrashEffectCompleted: (UUID) -> Void = { _ in }
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var previewDrawings: [MultiVanPreviewDrawing] = []
-    static let switchHitSize: CGFloat = 44
 
     private struct PreviewKey: Equatable {
         let engineID: ObjectIdentifier
@@ -32,12 +31,12 @@ struct MultiVanBoardView: View {
         GeometryReader { geometry in
             let layout = Self.boardLayout(level: engine.level, size: geometry.size)
             ZStack(alignment: .topLeading) {
-                boardCanvas(graph: graph, layout: layout)
+                boardCanvas(graph: graph, vans: vans, layout: layout)
                 if let scale = layout.coordinateScale, scale > 0 {
-                    ForEach(Self.barrierNodes(in: graph, houses: engine.level.houses), id: \.id) { node in
+                    ForEach(MultiVanBoardRules.barrierNodes(in: graph, houses: engine.level.houses), id: \.id) { node in
                         if let point = layout.pointsByNodeID[node.id] {
                             MultiVanBarrierView(width: min(32, scale * 0.65))
-                                .rotationEffect(Self.barrierHeading(at: node, in: graph))
+                                .rotationEffect(MultiVanBoardRules.barrierHeading(at: node, in: graph))
                                 .position(point)
                                 .allowsHitTesting(false)
                         }
@@ -46,7 +45,7 @@ struct MultiVanBoardView: View {
                         if let point = layout.pointsByNodeID[house.nodeID] {
                             MultiVanHouseView(
                                 color: house.color,
-                                isDelivered: Self.isDelivered(house, vans: vans, graph: graph),
+                                isDelivered: MultiVanBoardRules.isDelivered(house, vans: vans, graph: graph),
                                 side: min(40, scale * 0.8)
                             )
                             .keyframeAnimator(
@@ -75,8 +74,10 @@ struct MultiVanBoardView: View {
                             status: van.status, reaction: personality.reactions[van.id],
                             reducesExtraAnimations: !animatesDeliveries,
                             isDelivered: engine.level.houses.contains {
-                                Self.isDelivered($0, vans: [van], graph: graph)
-                            }
+                                MultiVanBoardRules.isDelivered($0, vans: [van], graph: graph)
+                            },
+                            turnSignal: engine.phase == .run ? MultiVanVanView.turnSignal(for: van, graph: graph) : nil,
+                            signalIsLit: MultiVanVanView.signalIsLit(for: van, graph: graph, speed: engine.tuning.vanSpeed)
                         )
                             .rotationEffect(MultiVanVanView.heading(
                                 for: van,
@@ -95,61 +96,21 @@ struct MultiVanBoardView: View {
                         .allowsHitTesting(false)
                         .accessibilityHidden(true)
                 }
-                ForEach(Self.switchNodes(in: graph), id: \.id) { node in
-                    if let point = layout.pointsByNodeID[node.id],
-                       let edgeID = node.activeOutgoingEdgeID,
-                       let edge = graph.edgesByID[edgeID] {
-                        let angle = SwitchArrowDirectionResolver.directionAngle(for: edge, from: node, in: graph)
-                        let appearance = MultiVanSwitchAppearance(
-                            engine: engine, nodeID: node.id,
-                            systemReduceMotion: reduceMotion, reducesExtraAnimations: reducesExtraAnimations
-                        )
-                        Button {
-                            let result = engine.tapSwitch(nodeID: node.id)
-                            onSwitchTapped?(node.id, result)
-                            onEventsProduced?()
-                        } label: {
-                            SwitchNodeView(
-                                activeDirectionAngle: angle,
-                                spriteSize: Self.switchHitSize,
-                                ringSize: 32,
-                                optionCount: node.outgoingEdgeIDs.count,
-                                optionAngles: node.outgoingEdgeIDs.compactMap { graph.edgesByID[$0] }.map {
-                                    SwitchArrowDirectionResolver.directionAngle(for: $0, from: node, in: graph)
-                                },
-                                optionAnglesUseScreenCoordinates: true,
-                                interactionState: .eligible
-                            )
-                            .animation(animatesDeliveries ? .spring(response: 0.24, dampingFraction: 0.8) : nil, value: angle)
-                            .opacity(appearance.opacity)
-                            .overlay {
-                                MultiVanSwitchIndicators(
-                                    appearance: appearance,
-                                    rejectionToken: switchFeedback.rejectionTokens[node.id],
-                                    reduceMotion: !animatesDeliveries
-                                )
-                                .allowsHitTesting(false)
-                                .accessibilityHidden(true)
-                            }
-                            .keyframeAnimator(initialValue: 0.0, trigger: switchFeedback.rejectionTokens[node.id]) { content, progress in
-                                content.offset(x: animatesDeliveries ? MultiVanCrashEffects.shakeOffset(progress: progress) * 0.75 : 0)
-                            } keyframes: { _ in
-                                MoveKeyframe(0.0)
-                                LinearKeyframe(1.0, duration: 0.32)
-                            }
-                            .frame(width: Self.switchHitSize, height: Self.switchHitSize)
-                            .contentShape(Rectangle())
-                        }
-                        .buttonStyle(.plain)
-                        .accessibilityElement(children: .ignore)
-                        .accessibilityLabel(MultiVanSwitchAppearance.accessibilityLabel(node: node, gridRows: engine.tuning.gridRows))
-                        .accessibilityValue(appearance.routeAccessibilityValue(
-                            direction: SwitchOptionIndicatorLayout.cardinalDirectionLabel(for: angle),
-                            exitCount: node.outgoingEdgeIDs.count
-                        ))
-                        .accessibilityHint(appearance.accessibilityHint)
-                        .position(point)
-                    }
+                ForEach(Self.switchPlacements(
+                    controls: MultiVanSwitchControl.controls(
+                        engine: engine, graph: graph,
+                        systemReduceMotion: reduceMotion, reducesExtraAnimations: reducesExtraAnimations
+                    ),
+                    layout: layout, size: geometry.size
+                )) { placement in
+                    MultiVanSwitchButton(
+                        control: placement.control, engine: engine,
+                        onSwitchTapped: onSwitchTapped, onEventsProduced: onEventsProduced,
+                        rejectionToken: switchFeedback.rejectionTokens[placement.control.nodeID],
+                        animates: animatesDeliveries,
+                        hitShape: placement.hitShape
+                    )
+                    .position(placement.point)
                 }
                 if !reduceMotion && !reducesExtraAnimations {
                     if let impact = crashEffects.impact,
@@ -180,53 +141,27 @@ struct MultiVanBoardView: View {
         .background { MultiVanBoardBackground() }
     }
 
-    static func switchNodes(in graph: RuntimeRouteGraph) -> [RuntimeRouteNode] {
-        graph.nodesByID.values.filter { (2...4).contains($0.outgoingEdgeIDs.count) }
-            .sorted { $0.id < $1.id }
-    }
-
-    static func isDelivered(
-        _ house: MultiVanHouse, vans: [MultiVanVanState], graph: RuntimeRouteGraph
-    ) -> Bool {
-        guard let node = graph.nodesByID[house.nodeID] else { return false }
-        // Wrong-house arrivals are also parked; both colour and destination must match.
-        return vans.contains { van in
-            guard van.status == .parked, van.color == house.color else { return false }
-            if let edgeID = van.currentEdgeID {
-                return graph.edgesByID[edgeID]?.toNodeID == house.nodeID
-            }
-            // Also support a van authored directly on its house with no incoming edge.
-            return van.position == RoadPoint(x: node.x, y: node.y)
-        }
-    }
-
-    static func barrierNodes(in graph: RuntimeRouteGraph, houses: [MultiVanHouse]) -> [RuntimeRouteNode] {
-        let houseNodeIDs = Set(houses.map(\.nodeID))
-        return graph.nodesByID.values
-            .filter { $0.outgoingEdgeIDs.isEmpty && !houseNodeIDs.contains($0.id) }
-            .sorted { $0.id < $1.id }
-    }
-
-    static func barrierHeading(at node: RuntimeRouteNode, in graph: RuntimeRouteGraph) -> Angle {
-        // Stable choice if an authored dead end has several incoming roads.
-        let road = graph.edgesByID.values.filter { $0.toNodeID == node.id }
-            .min { $0.id < $1.id }?.roadPath
-        return MultiVanVanView.heading(
-            for: road?.tangent(atDistance: road?.totalLength ?? 0) ?? RoadVector(x: 0, y: 1)
-        )
-    }
-
     static func boardLayout(level: MultiVanLevel, size: CGSize) -> BoardLayout {
         // Reserve half a hit target even when the grid is scaled below 44pt per unit.
         // Both layers use this MV-12 projection in the full Canvas coordinate space.
-        MultiVanBoardLayout.make(
-            level: level,
-            in: CGRect(origin: .zero, size: size).insetBy(dx: switchHitSize / 2, dy: switchHitSize / 2)
+        let inset = MultiVanSwitchButton.hitSize / 2
+        return MultiVanBoardLayout.make(
+            level: level, in: CGRect(origin: .zero, size: size).insetBy(dx: inset, dy: inset)
+        )
+    }
+
+    /// The switch buttons at their layout points.
+    static func switchPlacements(
+        controls: [MultiVanSwitchControl], layout: BoardLayout, size: CGSize
+    ) -> [MultiVanSwitchPlacement] {
+        MultiVanSwitchPlacement.make(
+            controls.compactMap { control in layout.pointsByNodeID[control.nodeID].map { (control, $0) } },
+            bounds: CGRect(origin: .zero, size: size)
         )
     }
 
     private func boardCanvas(
-        graph: RuntimeRouteGraph, layout: BoardLayout
+        graph: RuntimeRouteGraph, vans: [MultiVanVanState], layout: BoardLayout
     ) -> some View {
         Canvas { context, _ in
             guard let scale = layout.coordinateScale, scale > 0 else { return }
@@ -240,19 +175,38 @@ struct MultiVanBoardView: View {
             }
 
             // Preview order matches authored van order, including delayed departures.
-            for drawing in previewDrawings {
-                context.stroke(
-                    drawing.path,
-                    with: .color(drawing.color.boardColor),
-                    style: StrokeStyle(lineWidth: min(4, scale * 0.065), lineCap: .round, dash: [6, 5])
-                )
-                if let point = drawing.endpoint {
+            for (index, drawing) in previewDrawings.enumerated() {
+                let van = index < vans.count ? vans[index] : nil
+                let shading = GraphicsContext.Shading.color(drawing.color.boardColor)
+                let style = StrokeStyle(lineWidth: min(4, scale * 0.065), lineCap: .round, dash: [6, 5])
+                switch van?.status {
+                case .waiting, nil:
+                    context.stroke(drawing.path, with: shading, style: style)
+                case .driving:
+                    // Like a sat-nav: road behind the van is no longer part of its route.
+                    if let van, let edgeID = drawing.leadEdgeID, van.currentEdgeID == edgeID,
+                       let length = graph.edgesByID[edgeID]?.roadPath.totalLength, length > 0 {
+                        var trimmed = style
+                        // Phase keeps the dashes fixed to the road while the line shortens.
+                        trimmed.dashPhase = CGFloat(van.distanceAlongEdge) * scale
+                        context.stroke(
+                            drawing.leadPath.trimmedPath(from: min(1, van.distanceAlongEdge / length), to: 1),
+                            with: shading, style: trimmed
+                        )
+                    }
+                    // Drawings rebuild a frame after the van changes road; until then
+                    // the stale lead road is behind it, so only the rest is drawn.
+                    context.stroke(drawing.trailingPath, with: shading, style: style)
+                case .parked, .crashed, .stuck:
+                    continue
+                }
+                if let point = drawing.endpoint, let marker = drawing.marker {
                     let clearance = max(18, scale * 0.32 + 6)
                     // Small two-column stacks keep shared endpoints' glyphs distinct.
-                    let dx = drawing.indicatorSlot.map { $0.isMultiple(of: 2) ? CGFloat(-10) : 10 } ?? clearance
-                    let dy = -clearance - CGFloat((drawing.indicatorSlot ?? 0) / 2) * 26
+                    let dx = marker.column.map { CGFloat($0) * 10 } ?? clearance
+                    let dy = -clearance - CGFloat(marker.row) * 26
                     context.draw(
-                        Text(drawing.ending == .matchingHouse ? "✓" : "✗")
+                        Text(marker.glyph)
                             .font(.system(size: max(12, min(16, scale * 0.2)), weight: .bold))
                             .foregroundColor(drawing.color.boardColor),
                         at: CGPoint(x: point.x + dx, y: point.y + dy)
@@ -330,9 +284,11 @@ private struct MultiVanImpactPuff: View {
     }
 }
 
-private struct MultiVanDeliveryPopup: View {
+struct MultiVanDeliveryPopup: View {
     let delivery: MultiVanCelebration.Delivery
     let side: CGFloat
+    /// False on the diorama, which throws a real parcel.
+    var showsParcel = true
     let onComplete: () -> Void
 
     var body: some View {
@@ -341,29 +297,34 @@ private struct MultiVanDeliveryPopup: View {
             .frame(width: side, height: side)
             .keyframeAnimator(initialValue: 0.0, repeating: false) { content, progress in
                 content.overlay {
+                    // Solid, so it reads over roads, lawn and the diorama alike
+                    // (white on this green is 5:1).
                     Text(delivery.label)
                         .font(.system(.subheadline, design: .rounded, weight: .heavy))
-                        .foregroundStyle(Color(red: 0.10, green: 0.34, blue: 0.22))
+                        .foregroundStyle(.white)
                         .padding(.horizontal, 9)
                         .padding(.vertical, 4)
-                        .background(.regularMaterial, in: Capsule())
+                        .background(Color(red: 0.11, green: 0.50, blue: 0.27), in: Capsule())
                         .overlay { Capsule().strokeBorder(.white, lineWidth: 1.5) }
+                        .shadow(color: .black.opacity(0.25), radius: 3, y: 1)
                         .fixedSize()
                         .offset(y: -side * 0.8 - 14 * progress)
                         .opacity(min(1, (1 - progress) * 2))
                 }
                 .overlay {
                     // A tiny parcel pops beside the door, below the score label.
-                    RoundedRectangle(cornerRadius: 2)
-                        .fill(Color(red: 0.76, green: 0.49, blue: 0.25))
-                        .overlay {
-                            Rectangle()
-                                .fill(Color(red: 1, green: 0.85, blue: 0.57))
-                                .frame(width: 2)
-                        }
-                        .frame(width: 10, height: 8)
-                        .scaleEffect(sin(progress * .pi))
-                        .offset(x: side * 0.5 * (1 - progress), y: side * 0.4)
+                    if showsParcel {
+                        RoundedRectangle(cornerRadius: 2)
+                            .fill(Color(red: 0.76, green: 0.49, blue: 0.25))
+                            .overlay {
+                                Rectangle()
+                                    .fill(Color(red: 1, green: 0.85, blue: 0.57))
+                                    .frame(width: 2)
+                            }
+                            .frame(width: 10, height: 8)
+                            .scaleEffect(sin(progress * .pi))
+                            .offset(x: side * 0.5 * (1 - progress), y: side * 0.4)
+                    }
                 }
             } keyframes: { _ in
                 LinearKeyframe(1, duration: 0.55)
@@ -421,12 +382,12 @@ extension VanColor {
 struct MultiVanBoardView_Previews: PreviewProvider {
     static var previews: some View {
         Group {
-            board(levelID: "proto_01").previewDisplayName("Level 1 — Go!")
-            board(levelID: "proto_02").previewDisplayName("Level 2 — Pick a Lane")
-            board(levelID: "proto_05").previewDisplayName("Level 5 — Two colours")
-            board(levelID: "proto_07").previewDisplayName("Level 7 — Merge")
-            board(levelID: "proto_08").previewDisplayName("Level 8 — Loop")
-            board(levelID: "proto_09").previewDisplayName("Level 9 — Live switch")
+            board(levelID: "level_001").previewDisplayName("Level 1 — Go!")
+            board(levelID: "level_002").previewDisplayName("Level 2 — Pick a Lane")
+            board(levelID: "level_005").previewDisplayName("Level 5 — Two colours")
+            board(levelID: "level_007").previewDisplayName("Level 7 — Merge")
+            board(levelID: "level_008").previewDisplayName("Level 8 — Loop")
+            board(levelID: "level_009").previewDisplayName("Level 9 — Live switch")
         }
         .previewLayout(.fixed(width: 320, height: 440))
     }
@@ -458,50 +419,3 @@ struct MultiVanBoardView_Previews: PreviewProvider {
     }
 }
 #endif
-
-/// All decoration stays inside the existing 44-point target, clear of the route arrow.
-private struct MultiVanSwitchIndicators: View {
-    let appearance: MultiVanSwitchAppearance
-    let rejectionToken: UUID?
-    let reduceMotion: Bool
-
-    var body: some View {
-        ZStack {
-            if appearance.isLive {
-                Circle()
-                    .strokeBorder(Color.orange, style: StrokeStyle(
-                        lineWidth: appearance.showsLock ? 3 : 2,
-                        dash: appearance.showsLock ? [3, 2] : []
-                    ))
-                    .frame(width: 38, height: 38)
-                    .phaseAnimator(appearance.pulses ? [false, true] : [false]) { content, phase in
-                        content.opacity(phase ? 0.55 : 1)
-                    } animation: { _ in appearance.pulses ? .easeInOut(duration: 0.9) : nil }
-                badge("bolt.fill", color: .orange)
-                    .offset(x: -13, y: -13)
-            }
-            if appearance.showsLock {
-                badge("lock.fill", color: .primary)
-                    .keyframeAnimator(initialValue: 1.0, trigger: rejectionToken) { content, opacity in
-                        content.opacity(reduceMotion ? 1 : opacity)
-                    } keyframes: { _ in
-                        MoveKeyframe(1.0)
-                        LinearKeyframe(0.25, duration: 0.08)
-                        LinearKeyframe(1.0, duration: 0.08)
-                        LinearKeyframe(0.25, duration: 0.08)
-                        LinearKeyframe(1.0, duration: 0.08)
-                    }
-                    .offset(x: 13, y: -13)
-            }
-        }
-        .frame(width: MultiVanBoardView.switchHitSize, height: MultiVanBoardView.switchHitSize)
-    }
-
-    private func badge(_ symbol: String, color: Color) -> some View {
-        Image(systemName: symbol)
-            .font(.system(size: 9, weight: .heavy))
-            .foregroundStyle(color)
-            .frame(width: 14, height: 14)
-            .background(.white, in: Circle())
-    }
-}

@@ -17,6 +17,7 @@ struct MultiVanVanState {
     let color: VanColor
     fileprivate(set) var distanceAlongEdge = 0.0
     fileprivate(set) var status: Status = .waiting
+    fileprivate(set) var previousEdgeID: String?
     fileprivate var edge: RuntimeRouteEdge?
     fileprivate let startPosition: RoadPoint
 
@@ -82,8 +83,9 @@ final class MultiVanEngine {
         self.level = level
         self.tuning = tuning
         runtimeGraph = try RuntimeRouteGraph.make(from: level.graph) { $0.availabilityRule }
-        resetSwitches()
+        // Vans first: previews are traced from each van's state.
         resetVans()
+        resetSwitches()
     }
 
     func go() {
@@ -102,7 +104,8 @@ final class MultiVanEngine {
             }
         }
         if let failure { finish(with: failure.0, failPoint: failure.1) }
-        checkForWin()
+        checkForWin(vans)
+        updatePreviewRoutes()
     }
 
     func stop() {
@@ -121,6 +124,7 @@ final class MultiVanEngine {
         remainder = 0
         completedSteps = 0
         phase = .plan
+        updatePreviewRoutes()
     }
 
     func advance(by realTime: TimeInterval) {
@@ -129,10 +133,27 @@ final class MultiVanEngine {
               tuning.vanSpeed.isFinite, tuning.vanSpeed >= 0,
               (remainder + realTime).isFinite else { return }
 
+        // Step on local copies and publish once per call: observed-property
+        // access on every step dominated simulation cost.
+        var vans = self.vans
+        var completedSteps = self.completedSteps
         // Preserve all elapsed time; frame-delta clamping belongs to the UI.
-        remainder += realTime
+        var remainder = self.remainder + realTime
+        defer {
+            if completedSteps != self.completedSteps {
+                // Previews only change when a van reaches a new road or leaves the board.
+                let routeChanged = !zip(self.vans, vans).allSatisfy {
+                    $0.currentEdgeID == $1.currentEdgeID && $0.status == $1.status
+                }
+                self.vans = vans
+                self.completedSteps = completedSteps
+                if routeChanged { updatePreviewRoutes() }
+            }
+            self.remainder = remainder
+        }
         let tolerance = min(1e-9, tuning.stepDuration * 1e-7)
         while phase == .run, remainder + tolerance >= tuning.stepDuration {
+            let runTime = Double(completedSteps) * tuning.stepDuration
             // All vans share this step's start time. Non-grid delays round up to
             // the next step boundary; no van receives distance before departure.
             var failure: (Outcome, RoadPoint)?
@@ -154,8 +175,8 @@ final class MultiVanEngine {
             if let failure {
                 finish(with: failure.0, failPoint: failure.1)
             } else {
-                checkForCrash()
-                checkForWin()
+                checkForCrash(&vans)
+                checkForWin(vans)
             }
             completedSteps += 1
             // A tiny negative remainder preserves timing debt from the tolerance.
@@ -180,13 +201,13 @@ final class MultiVanEngine {
         phase = .finished
     }
 
-    private func checkForWin() {
+    private func checkForWin(_ vans: [MultiVanVanState]) {
         if !vans.isEmpty, vans.allSatisfy({ $0.status == .parked }) {
             finish(with: .win)
         }
     }
 
-    private func checkForCrash() {
+    private func checkForCrash(_ vans: inout [MultiVanVanState]) {
         for first in vans.indices where vans[first].status == .driving {
             for second in (first + 1)..<vans.count where vans[second].status == .driving {
                 let a = vans[first].position
@@ -231,6 +252,7 @@ final class MultiVanEngine {
             van.status = .stuck
             return .failStuck(vanID: van.id, nodeID: nodeID)
         }
+        van.previousEdgeID = van.currentEdgeID
         van.edge = edge
         van.distanceAlongEdge = 0
         van.status = .driving
@@ -323,14 +345,26 @@ final class MultiVanEngine {
         updatePreviewRoutes()
     }
 
+    /// Each preview starts where its van is now: road already driven drops away,
+    /// and a parked, crashed or stuck van has no line at all.
     private func updatePreviewRoutes() {
-        previewRoutes = level.vans.map {
-            MultiVanRoutePreview.trace(
-                van: $0,
-                graph: runtimeGraph,
-                houses: level.houses,
-                edgeLimit: tuning.previewEdgeLimit
-            )
+        previewRoutes = zip(level.vans, vans).map { van, state in
+            switch state.status {
+            case .driving:
+                guard let edge = state.edge else { return .init(edgeIDs: [], ending: .offRoad) }
+                return MultiVanRoutePreview.trace(
+                    from: edge.toNodeID, color: van.color, after: [edge.id],
+                    graph: runtimeGraph, houses: level.houses,
+                    edgeLimit: tuning.previewEdgeLimit
+                )
+            case .waiting:
+                return MultiVanRoutePreview.trace(
+                    van: van, graph: runtimeGraph, houses: level.houses,
+                    edgeLimit: tuning.previewEdgeLimit
+                )
+            case .parked, .crashed, .stuck:
+                return MultiVanPreviewRoute(edgeIDs: [], ending: .offRoad)
+            }
         }
     }
 }

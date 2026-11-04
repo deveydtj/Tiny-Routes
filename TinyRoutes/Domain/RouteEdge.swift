@@ -147,8 +147,33 @@ struct RoadSegment: Equatable {
     let radius: Double
     let startAngle: Double
     let signedAngleDelta: Double
+    /// Measured once: smooth turns sample the curve, and positions are read every frame.
+    private(set) var length = 0.0
 
-    var length: Double {
+    init(
+        kind: RoadSegmentKind,
+        start: RoadPoint,
+        end: RoadPoint,
+        center: RoadPoint?,
+        control1: RoadPoint?,
+        control2: RoadPoint?,
+        radius: Double,
+        startAngle: Double,
+        signedAngleDelta: Double
+    ) {
+        self.kind = kind
+        self.start = start
+        self.end = end
+        self.center = center
+        self.control1 = control1
+        self.control2 = control2
+        self.radius = radius
+        self.startAngle = startAngle
+        self.signedAngleDelta = signedAngleDelta
+        self.length = measuredLength()
+    }
+
+    private func measuredLength() -> Double {
         switch kind {
         case .straight:
             return hypot(end.x - start.x, end.y - start.y)
@@ -391,6 +416,7 @@ struct RoadPath: Equatable {
     static let standardTurnRadius: Double = 0.18
 
     let segments: [RoadSegment]
+    let totalLength: Double
 
     struct PerpendicularConnector: Equatable {
         let roadPath: RoadPath
@@ -398,8 +424,9 @@ struct RoadPath: Equatable {
         let exitDistanceAlongOutgoingPath: Double
     }
 
-    var totalLength: Double {
-        segments.reduce(0) { $0 + $1.length }
+    init(segments: [RoadSegment]) {
+        self.segments = segments
+        self.totalLength = segments.reduce(0) { $0 + $1.length }
     }
 
     static func make(from start: RoadPoint, to end: RoadPoint, shape: RoadShape? = nil) -> RoadPath {

@@ -1,5 +1,9 @@
 import CoreGraphics
 import XCTest
+#if canImport(UIKit)
+import SwiftUI
+import UIKit
+#endif
 @testable import TinyRoutes
 
 final class MultiVanHouseAndBarrierTests: XCTestCase {
@@ -30,7 +34,7 @@ final class MultiVanHouseAndBarrierTests: XCTestCase {
             let engine = try engine(vanColor: color, houseColor: color)
             let house = try XCTUnwrap(engine.level.houses.first)
             func delivered() -> Bool {
-                MultiVanBoardView.isDelivered(house, vans: engine.vans, graph: engine.runtimeGraph)
+                MultiVanBoardRules.isDelivered(house, vans: engine.vans, graph: engine.runtimeGraph)
             }
             XCTAssertFalse(delivered())
             engine.go()
@@ -39,7 +43,7 @@ final class MultiVanHouseAndBarrierTests: XCTestCase {
             for _ in 0..<20 { engine.advance(by: 0.25) }
             XCTAssertEqual(engine.outcome, .win)
             XCTAssertTrue(delivered())
-            XCTAssertFalse(MultiVanBoardView.isDelivered(
+            XCTAssertFalse(MultiVanBoardRules.isDelivered(
                 MultiVanHouse(nodeID: "dead", color: color), vans: engine.vans, graph: engine.runtimeGraph
             ))
             engine.retry()
@@ -53,7 +57,7 @@ final class MultiVanHouseAndBarrierTests: XCTestCase {
         for _ in 0..<20 { engine.advance(by: 0.25) }
         XCTAssertEqual(engine.vans.first?.status, .parked)
         XCTAssertEqual(engine.outcome, .failWrongHouse(vanID: "van", houseNodeID: "house"))
-        XCTAssertFalse(MultiVanBoardView.isDelivered(
+        XCTAssertFalse(MultiVanBoardRules.isDelivered(
             engine.level.houses[0], vans: engine.vans, graph: engine.runtimeGraph
         ))
     }
@@ -61,10 +65,10 @@ final class MultiVanHouseAndBarrierTests: XCTestCase {
     func testMarkersUseMV12NodesAndBarrierClosesOnlyNonHouseDeadEnd() throws {
         let engine = try engine(vanColor: .red, houseColor: .red)
         let graph = engine.runtimeGraph
-        let barriers = MultiVanBoardView.barrierNodes(in: graph, houses: engine.level.houses)
+        let barriers = MultiVanBoardRules.barrierNodes(in: graph, houses: engine.level.houses)
         XCTAssertEqual(barriers.map(\.id), ["dead"])
         let node = try XCTUnwrap(barriers.first)
-        let angle = MultiVanBoardView.barrierHeading(at: node, in: graph).radians
+        let angle = MultiVanBoardRules.barrierHeading(at: node, in: graph).radians
         // A road travelling right needs a vertical cap after MV-12's Y projection.
         XCTAssertEqual(angle, .pi / 2, accuracy: 1e-9)
         for size in [CGSize(width: 320, height: 400), CGSize(width: 430, height: 660)] {
@@ -158,6 +162,187 @@ final class MultiVanVanHeadingTests: XCTestCase {
         check()
         engine.retry()
         check()
+    }
+}
+
+final class MultiVanTurnSignalTests: XCTestCase {
+#if canImport(UIKit)
+    @MainActor
+    func testTurningVanFlashesItsFrontAndRearLamps() throws {
+        func render(lit: Bool) throws -> UIImage {
+            let renderer = ImageRenderer(content:
+                MultiVanVanView(color: .red, length: 28, status: .driving,
+                                reducesExtraAnimations: true,
+                                turnSignal: .right, signalIsLit: lit)
+                    .padding(12).background(Color(white: 0.93))
+            )
+            renderer.scale = 3
+            return try XCTUnwrap(renderer.uiImage)
+        }
+        let on = try render(lit: true)
+        let off = try render(lit: false)
+        for (name, image) in [("Blinker on", on), ("Blinker off", off)] {
+            let attachment = XCTAttachment(image: image)
+            attachment.name = name
+            attachment.lifetime = .keepAlways
+            add(attachment)
+        }
+        // The lamp centers belong to the headlights/taillights, not separate corner dots.
+        func pixel(_ image: UIImage, x: Double, y: Double) throws -> [UInt8] {
+            let cgImage = try XCTUnwrap(image.cgImage)
+            let data = try XCTUnwrap(cgImage.dataProvider?.data)
+            let bytes = try XCTUnwrap(CFDataGetBytePtr(data))
+            let index = Int(y * 3) * cgImage.bytesPerRow + Int(x * 3) * 4
+            return Array(UnsafeBufferPointer(start: bytes + index, count: 3))
+        }
+        for end in [-1.0, 1.0] {
+            let x = 12 + 28 * 0.75 / 2 + 28 * 0.17
+            let y = 12 + 28 / 2 + 28 * 0.4 * end
+            let change = zip(try pixel(on, x: x, y: y), try pixel(off, x: x, y: y))
+                .reduce(0) { $0 + abs(Int($1.0) - Int($1.1)) }
+            XCTAssertGreaterThan(change, 60, "Both front and rear lamps must visibly flash")
+        }
+    }
+#endif
+
+    private func engine(
+        start: RoadPoint = RoadPoint(x: 0, y: -2), end: RoadPoint,
+        junction: Bool = true, merge: Bool = false, reverseRoads: Bool = false
+    ) throws -> MultiVanEngine {
+        var nodes = [
+            RouteNode(id: "start", x: start.x, y: start.y, outgoingEdgeIDs: ["approach"]),
+            RouteNode(id: "junction", x: 0, y: 0, outgoingEdgeIDs: ["exit"]),
+            RouteNode(id: "house", x: end.x, y: end.y, outgoingEdgeIDs: [])
+        ]
+        var edges = [
+            RouteEdge(id: "approach", fromNodeID: "start", toNodeID: "junction"),
+            RouteEdge(id: "exit", fromNodeID: "junction", toNodeID: "house")
+        ]
+        if junction {
+            nodes.append(RouteNode(id: "other", x: -end.x, y: -end.y,
+                                   outgoingEdgeIDs: merge ? ["other"] : []))
+            edges.append(RouteEdge(id: "other", fromNodeID: merge ? "other" : "junction",
+                                   toNodeID: merge ? "junction" : "other"))
+            if !merge { nodes[1].outgoingEdgeIDs.append("other") }
+        }
+        if reverseRoads {
+            nodes[1].outgoingEdgeIDs.append("reverseApproach")
+            nodes[2].outgoingEdgeIDs.append("reverseExit")
+            edges += [RouteEdge(id: "reverseApproach", fromNodeID: "junction", toNodeID: "start"),
+                      RouteEdge(id: "reverseExit", fromNodeID: "house", toNodeID: "junction")]
+        }
+        let graph = RouteGraph(nodes: nodes, edges: edges)
+        let json: [String: Any] = [
+            "id": "signals", "name": "Signals",
+            "graph": try JSONSerialization.jsonObject(with: JSONEncoder().encode(graph)),
+            "vans": [["id": "van", "color": "red", "startNodeID": "start"]],
+            "houses": [["nodeID": "house", "color": "red"]],
+            "initialSwitchEdges": [:], "parChanges": 0, "liveSwitchNodeIDs": ["junction"]
+        ]
+        var tuning = MultiVanTuning.default
+        tuning.vanSpeed = 1
+        tuning.liveSwitchLockRadius = 0
+        return try MultiVanEngine(level: JSONDecoder().decode(
+            MultiVanLevel.self, from: JSONSerialization.data(withJSONObject: json)
+        ), tuning: tuning)
+    }
+
+    private func signal(_ engine: MultiVanEngine) -> MultiVanVanView.TurnSignal? {
+        MultiVanVanView.turnSignal(for: engine.vans[0], graph: engine.runtimeGraph)
+    }
+
+    func testLevelTwoRedVanSignalsRightBeforeAndThroughItsIntersection() throws {
+        let level = try XCTUnwrap(MultiVanLevelRepository().loadAllLevels().first { $0.id == "level_002" })
+        let engine = try MultiVanEngine(level: level)
+        XCTAssertEqual(engine.tapSwitch(nodeID: "switch"), .accepted)
+        engine.go()
+        var flashes = 0
+        var wasLit = false
+        var sawDepartureFlash = false
+        var sawDepartureOff = false
+        for _ in 0..<150 {
+            engine.advance(by: 0.025)
+            guard let turn = signal(engine) else { wasLit = false; continue }
+            XCTAssertEqual(turn, .right)
+            let lit = MultiVanVanView.signalIsLit(for: engine.vans[0], graph: engine.runtimeGraph,
+                                                speed: engine.tuning.vanSpeed)
+            if lit && !wasLit { flashes += 1 }
+            wasLit = lit
+            if engine.vans[0].currentEdgeID == "to_house" {
+                sawDepartureFlash = sawDepartureFlash || lit
+                sawDepartureOff = sawDepartureOff || !lit
+            }
+        }
+        XCTAssertGreaterThanOrEqual(flashes, 2, "The driver should see repeated flashes for level two's turn")
+        XCTAssertTrue(sawDepartureFlash)
+        XCTAssertTrue(sawDepartureOff, "The lamps must keep blinking through the turn")
+        XCTAssertNil(signal(engine), "Cancel after the van clears the intersection")
+    }
+
+    func testLeftAndRightSignalsApproachCrossAndClearJunctionFromEveryHeading() throws {
+        for direction in [RoadPoint(x: 0, y: 1), RoadPoint(x: 1, y: 0),
+                          RoadPoint(x: 0, y: -1), RoadPoint(x: -1, y: 0)] {
+            for side in [MultiVanVanView.TurnSignal.left, .right] {
+                let sign = side == .left ? 1.0 : -1.0
+                let engine = try engine(
+                    start: RoadPoint(x: -2 * direction.x, y: -2 * direction.y),
+                    end: RoadPoint(x: -2 * direction.y * sign, y: 2 * direction.x * sign)
+                )
+                XCTAssertNil(signal(engine))
+                engine.go()
+                engine.advance(by: 0.25)
+                XCTAssertNil(signal(engine), "Do not signal far from a junction")
+                engine.advance(by: 1.05)
+                XCTAssertEqual(signal(engine), side)
+                engine.advance(by: 0.75)
+                XCTAssertEqual(engine.vans[0].currentEdgeID, "exit")
+                XCTAssertEqual(signal(engine), side, "Keep signalling through the turn")
+                engine.advance(by: 0.65)
+                XCTAssertNil(signal(engine), "Cancel after clearing the junction")
+                engine.advance(by: 2)
+                XCTAssertEqual(engine.outcome, .win)
+                XCTAssertNil(signal(engine))
+                engine.retry()
+                XCTAssertNil(signal(engine))
+            }
+        }
+    }
+
+    func testBendsStraightCrossingsAndUTurnsDoNotSignal() throws {
+        let engines = [
+            try engine(end: RoadPoint(x: -2, y: 0), junction: false),
+            try engine(end: RoadPoint(x: -2, y: 0), junction: false, reverseRoads: true),
+            try engine(end: RoadPoint(x: 0, y: 2)),
+            try engine(end: RoadPoint(x: 0, y: -2)),
+            // A bend inside an edge is quiet even when that edge leads to a junction.
+            try engine(start: RoadPoint(x: -2, y: -2), end: RoadPoint(x: 0, y: 2))
+        ]
+        for engine in engines {
+            engine.go()
+            for _ in 0..<600 {
+                XCTAssertNil(signal(engine))
+                engine.advance(by: 1.0 / 60)
+            }
+        }
+    }
+
+    func testMergeSignalsAndLiveRouteChangesUseTheActualExitAndStopResetsHistory() throws {
+        let merge = try engine(end: RoadPoint(x: -2, y: 0), merge: true)
+        merge.go()
+        merge.advance(by: 1.3)
+        XCTAssertEqual(signal(merge), .left)
+
+        let engine = try engine(end: RoadPoint(x: -2, y: 0))
+        engine.go()
+        engine.advance(by: 1.3)
+        XCTAssertEqual(signal(engine), .left)
+        XCTAssertEqual(engine.tapSwitch(nodeID: "junction"), .accepted)
+        XCTAssertEqual(signal(engine), .right)
+        engine.advance(by: 0.75)
+        XCTAssertEqual(signal(engine), .right)
+        engine.stop()
+        XCTAssertNil(signal(engine))
+        XCTAssertNil(engine.vans[0].previousEdgeID)
     }
 }
 
@@ -264,7 +449,7 @@ final class MultiVanBoardLayoutTests: XCTestCase {
 
     func testSwitchOverlaySharesMV12ProjectionAndKeepsFullHitTargetsInsideBoard() throws {
         let level = try level(nodes: grid)
-        let hitSize = MultiVanBoardView.switchHitSize
+        let hitSize = MultiVanSwitchButton.hitSize
         XCTAssertGreaterThanOrEqual(hitSize, 44)
         for size in [CGSize(width: 320, height: 400), CGSize(width: 430, height: 660),
                      CGSize(width: 180, height: 240), CGSize(width: 700, height: 300)] {
@@ -394,6 +579,35 @@ final class MultiVanPreviewDrawingTests: XCTestCase {
         XCTAssertNotEqual(before[0].endpoint, after[0].endpoint)
         XCTAssertNotEqual(before[0].path, after[0].path)
         XCTAssertNil(engine.lastFailPoint)
+    }
+
+    func testMarkersStackInTwoColumnsWhenRoutesEndTogether() throws {
+        let engine = try fixture()
+        let routes = engine.previewRoutes
+        let markers = MultiVanPreviewMarker.make(routes: routes, vans: engine.level.vans, graph: engine.runtimeGraph)
+        XCTAssertEqual(markers.map { $0?.nodeID }, Array(repeating: "end", count: 4))
+        XCTAssertEqual(markers.map { $0?.glyph }, ["✓", "✗", "✗", "✗"])
+        XCTAssertEqual(markers.map { $0?.stackSlot }, [0, 1, 2, 3])
+        XCTAssertEqual(markers.map { $0?.column }, [-1, 1, -1, 1])
+        XCTAssertEqual(markers.map { $0?.row }, [0, 0, 1, 1])
+        let drawings = MultiVanPreviewDrawing.make(routes: routes, vans: engine.level.vans,
+                                                   graph: engine.runtimeGraph, layout: layout)
+        XCTAssertEqual(drawings.map(\.marker), markers)
+
+        // A lone end sits unpaired; a van with no line left gets no marker and leaves the stack.
+        let alone = try fixture(1)
+        let single = try XCTUnwrap(MultiVanPreviewMarker.make(
+            routes: alone.previewRoutes, vans: alone.level.vans, graph: alone.runtimeGraph)[0])
+        XCTAssertNil(single.stackSlot)
+        XCTAssertNil(single.column)
+        XCTAssertEqual(single.row, 0)
+        let pair = try fixture(2)
+        let mixed = MultiVanPreviewMarker.make(
+            routes: [MultiVanPreviewRoute(edgeIDs: ["a", "b"], ending: .offRoad), pair.previewRoutes[1]],
+            vans: pair.level.vans, graph: pair.runtimeGraph)
+        XCTAssertNil(mixed[0])
+        XCTAssertEqual(mixed[1]?.nodeID, "end")
+        XCTAssertNil(mixed[1]?.stackSlot)
     }
 
     func testZeroLengthRoadAndTerminalStartAndLoopEndpoint() throws {

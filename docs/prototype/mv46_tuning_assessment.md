@@ -11,6 +11,15 @@ each idea comes across remain unverified. This is engineering readiness for
 MV-47, not completion of a two-person playtest or the source plan's broader
 five-person playtest. MV-46's team-agreement acceptance condition remains open.
 
+Later playtest feedback identified a readability defect in Rush: Blue's detour
+overlapped the road into its house, implying a straight connection that the
+directed graph did not allow. Rush now keeps the detour below the house roads
+and merges at (2, 2). Its par remains 3; the recorded live tap is now 4.95 s.
+At default tuning the winning switch window is [4.216667, 5.075000), and the
+level finishes at 7.95 s. The tables and hashes below record the earlier layout;
+current geometry, timing and parameter comparisons are checked in
+`PrototypeSolutionTests`.
+
 ## Evidence and method
 
 Baseline measurements preceded repository edits. All twelve scripts ran through
@@ -172,7 +181,7 @@ Effective `(speed, crash distance, lock radius)` configurations were:
 - Smaller-lock comparison **(1.5, 0.35, 0.3)**; all other values unchanged.
 
 Every trial used the unchanged authored `initialSwitchEdges`, recorded plan taps
-and recorded live timestamps from the matching `proto_NN.solution.json`.
+and recorded live timestamps from the matching `level_NNN.solution.json` (then named `proto_NN`).
 All 36 intended runs won at authored par. Defaults were restored before the
 next comparison. Crash distance was not varied: winning routes have at least
 0.65 units of clearance above its threshold, and no evidence suggests its rule

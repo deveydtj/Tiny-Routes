@@ -5,24 +5,20 @@ final class ProfileSummaryService {
     private let progressService: ProgressService
     private let economyService: EconomyService
     private let cosmeticService: CosmeticService
-    private let levelRepository: LevelRepository
 
     init(
         repository: SaveDataRepository = SaveDataRepository(),
         progressService: ProgressService? = nil,
         economyService: EconomyService? = nil,
-        cosmeticService: CosmeticService? = nil,
-        levelRepository: LevelRepository = LevelRepository()
+        cosmeticService: CosmeticService? = nil
     ) {
         self.repository = repository
         self.progressService = progressService ?? ProgressService(repository: repository)
         self.economyService = economyService ?? EconomyService(repository: repository)
         self.cosmeticService = cosmeticService ?? CosmeticService(repository: repository, economyService: self.economyService)
-        self.levelRepository = levelRepository
     }
 
     func makeSummary() -> TRProfileSummary {
-        _ = levelRepository
         let profile = repository.load()
         let totalStars = progressService.totalStars()
         let completedLevelCount = progressService.completedLevelCount()

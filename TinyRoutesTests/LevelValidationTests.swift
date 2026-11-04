@@ -265,33 +265,6 @@ final class LevelValidationTests: XCTestCase {
         )
     }
 
-    func testProductionLevelsPassValidation() throws {
-        let levels = try TestLevelCatalog().loadAllProductionLevels()
-        XCTAssertFalse(levels.isEmpty, "Expected bundled production level files named level_###.json")
-
-        let validator = LevelValidator()
-        var failures: [String] = []
-
-        for level in levels {
-            let errorIssues = validator
-                .validate(level: level)
-                .filter { $0.severity == .error }
-
-            if !errorIssues.isEmpty {
-                let issueDescriptions = errorIssues
-                    .map(\.message)
-                    .sorted()
-                    .joined(separator: "\n  ")
-                failures.append("\(level.id):\n  \(issueDescriptions)")
-            }
-        }
-
-        XCTAssertTrue(
-            failures.isEmpty,
-            "Production levels failed validation:\n\(failures.joined(separator: "\n"))"
-        )
-    }
-
     private func decodeBrokenLevelFixture(named fixtureName: String) throws -> LevelData {
         let fixtureURL = URL(fileURLWithPath: #filePath)
             .deletingLastPathComponent()

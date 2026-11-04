@@ -28,8 +28,10 @@ struct MultiVanBarrierView: View {
             }
             .frame(width: width, height: height)
             .shadow(color: .black.opacity(0.2), radius: width * 0.02, y: width * 0.03)
-            .accessibilityLabel("Dead end barrier")
+            .accessibilityLabel(Self.accessibilityLabel)
     }
+
+    static let accessibilityLabel = "Dead end barrier"
 }
 
 #if DEBUG

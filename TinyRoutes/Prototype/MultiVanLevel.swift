@@ -37,7 +37,7 @@ struct MultiVanLevel: Decodable {
     }
 }
 
-enum VanColor: String, Decodable {
+enum VanColor: String, Decodable, CaseIterable {
     case red, blue, yellow, green
 
     var symbol: String {

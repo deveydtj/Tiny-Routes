@@ -2,7 +2,9 @@ import Foundation
 
 /// Stores local player progression, currency, cosmetics, and entitlement state.
 struct PlayerProfile: Codable, Equatable {
-    static let currentSchemaVersion = 2
+    /// Version 3 replaced the original 27 levels with the multi-van levels.
+    static let currentSchemaVersion = 3
+    static let firstLevelID = "level_001"
 
     static let defaultOwnedCosmeticIDs: Set<String> = [
         "themeClassic",
@@ -51,7 +53,7 @@ struct PlayerProfile: Codable, Equatable {
         playerName: String = "Player One",
         createdAt: Date = Date(),
         lastUpdatedAt: Date = Date(),
-        unlockedLevelIDs: Set<String> = ["level_001"],
+        unlockedLevelIDs: Set<String> = [PlayerProfile.firstLevelID],
         completedLevelIDs: Set<String> = [],
         bestStarsByLevelID: [String: Int] = [:],
         coinTotal: Int = 0,
@@ -90,6 +92,15 @@ struct PlayerProfile: Codable, Equatable {
         var profile = self
         let defaultProfile = PlayerProfile.defaultValue
 
+        if profile.schemaVersion < 3 {
+            // The new levels reuse the retired levels' IDs, so none of their
+            // progress or claimed completion rewards may carry over.
+            profile.unlockedLevelIDs = defaultProfile.unlockedLevelIDs
+            profile.completedLevelIDs = []
+            profile.bestStarsByLevelID = [:]
+            profile.fastestCompletionTimeByLevelID = [:]
+            profile.claimedLevelRewardKeys = profile.claimedLevelRewardKeys.filter { !$0.hasPrefix("levelComplete:") }
+        }
         profile.schemaVersion = max(profile.schemaVersion, PlayerProfile.currentSchemaVersion)
         if profile.playerName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
             profile.playerName = defaultProfile.playerName

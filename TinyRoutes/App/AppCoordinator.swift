@@ -20,7 +20,7 @@ final class AppCoordinator: ObservableObject {
             .profile
         case .settings:
             nil
-        case .boot, .gameplay, .pause, .levelComplete, .levelFailed:
+        case .boot, .gameplay:
             nil
         }
     }
@@ -37,52 +37,8 @@ final class AppCoordinator: ObservableObject {
         state = .gameplay(levelID: levelID)
     }
 
-    func pauseGameplay() {
-        guard case let .gameplay(levelID) = state else { return }
-        state = .pause(levelID: levelID)
-    }
-
-    func resumeGameplay() {
-        guard case let .pause(levelID) = state else { return }
-        state = .gameplay(levelID: levelID)
-    }
-
-    func restartGameplay() {
-        switch state {
-        case let .gameplay(levelID),
-             let .pause(levelID),
-             let .levelComplete(levelID, _, _, _),
-             let .levelFailed(levelID, _, _, _, _):
-            state = .gameplay(levelID: levelID)
-        default:
-            break
-        }
-    }
-
-    func exitGameplayToMenu() {
-        backToMainMenu()
-    }
-
     func exitGameplayToLevels() {
         openLevelSelect()
-    }
-
-    func completeLevel(elapsedTime: TimeInterval, tapCount: Int) {
-        switch state {
-        case let .gameplay(levelID), let .pause(levelID):
-            state = .levelComplete(levelID: levelID, elapsedTime: elapsedTime, tapCount: tapCount, presentationID: UUID())
-        default:
-            break
-        }
-    }
-
-    func failLevel(reason: LevelFailureReason, elapsedTime: TimeInterval, tapCount: Int) {
-        switch state {
-        case let .gameplay(levelID), let .pause(levelID):
-            state = .levelFailed(levelID: levelID, reason: reason, elapsedTime: elapsedTime, tapCount: tapCount, presentationID: UUID())
-        default:
-            break
-        }
     }
 
     func openShop() {
@@ -99,7 +55,7 @@ final class AppCoordinator: ObservableObject {
             settingsReturnState = state
         case .settings:
             break
-        case .boot, .gameplay, .pause, .levelComplete, .levelFailed:
+        case .boot, .gameplay:
             settingsReturnState = .mainMenu
         }
 

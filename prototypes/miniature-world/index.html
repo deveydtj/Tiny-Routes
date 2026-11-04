@@ -1,0 +1,1577 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Tiny Routes Diorama</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lilita+One&family=Nunito:wght@600;800;900&display=swap">
+<style>
+/* Layout: one full-bleed WebGL diorama; paper-sticker HUD pinned to the top and bottom edges, board framed between them. */
+:root {
+  --ink: #2d2b40;
+  --ink-soft: #6c6880;
+  --paper: #fffdf7;
+  --paper-edge: #eadfc8;
+  --go: #ee5a47;
+  --go-deep: #b23a2b;
+  --stop: #3b3a55;
+  --stop-deep: #23223a;
+  --gold: #f2b632;
+  --sky: #cfe8f3;
+  --display: "Lilita One", "Arial Rounded MT Bold", ui-rounded, system-ui, sans-serif;
+  --body: "Nunito", ui-rounded, system-ui, -apple-system, sans-serif;
+  color-scheme: light;
+}
+html, body { height: 100%; }
+body {
+  margin: 0; overflow: hidden; background: var(--sky); color: var(--ink);
+  font-family: var(--body); font-weight: 600;
+  -webkit-user-select: none; user-select: none; touch-action: none;
+  -webkit-tap-highlight-color: transparent;
+}
+#world { position: fixed; inset: 0; width: 100%; height: 100%; display: block; cursor: grab; }
+#world.dragging { cursor: grabbing; }
+#world.over-switch { cursor: pointer; }
+
+.sticker {
+  background: var(--paper); border-radius: 16px;
+  box-shadow: 0 0 0 3px #fff, 0 2px 0 4px var(--paper-edge), 0 12px 26px rgba(45, 43, 64, .22);
+}
+
+.hud-top {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 2;
+  display: flex; justify-content: space-between; align-items: flex-start; gap: 12px;
+  padding-top: calc(14px + env(safe-area-inset-top, 0px));
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  pointer-events: none;
+}
+.level-card { padding: 9px 16px 11px; transform: rotate(-1.5deg); min-width: 0; }
+.eyebrow { display: block; font: 900 11px/1 var(--body); letter-spacing: .14em; text-transform: uppercase; color: var(--ink-soft); }
+.level-card h1 { margin: 5px 0 0; font: 400 clamp(22px, 5.4vw, 30px)/1 var(--display); letter-spacing: .01em; text-wrap: balance; }
+.score-card { padding: 9px 14px 10px; transform: rotate(1.2deg); text-align: right; }
+.flips { display: flex; align-items: baseline; justify-content: flex-end; gap: 6px; font-variant-numeric: tabular-nums; }
+.flips b { font: 400 30px/1 var(--display); }
+.flips small { font: 800 12px/1.2 var(--body); color: var(--ink-soft); }
+.stars { margin-top: 3px; font-size: 20px; letter-spacing: 2px; line-height: 1; }
+.stars span { color: #ddd3bf; transition: color .25s, transform .25s; display: inline-block; }
+.stars span.on { color: var(--gold); text-shadow: 0 1px 0 #c98e12; }
+
+.toast {
+  position: fixed; left: 50%; z-index: 3; bottom: calc(108px + env(safe-area-inset-bottom, 0px));
+  transform: translateX(-50%) rotate(-1deg); padding: 12px 20px 14px; text-align: center;
+  max-width: min(340px, calc(100vw - 48px));
+  animation: pop .45s cubic-bezier(.2, 1.6, .4, 1) both;
+}
+.toast strong { display: block; font: 400 26px/1.05 var(--display); }
+.toast span { display: block; margin-top: 4px; font-size: 14px; color: var(--ink-soft); }
+.toast .gold { color: var(--gold); letter-spacing: 1px; }
+body.has-toast .hint { visibility: hidden; }
+.toast.win strong { color: #2f8a4a; }
+.toast.fail strong { color: var(--go-deep); }
+@keyframes pop { from { transform: translateX(-50%) rotate(-1deg) scale(.6); opacity: 0; } }
+
+.hud-bottom {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 2;
+  display: grid; grid-template-columns: 1fr auto 1fr; align-items: end; gap: 10px 12px;
+  padding-bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  pointer-events: none;
+}
+.hud-bottom > * { pointer-events: auto; }
+.hint {
+  grid-column: 1 / -1; justify-self: center; margin: 0 0 4px; padding: 8px 14px;
+  max-width: min(460px, 100%); font-size: 14px; line-height: 1.35; text-align: center; text-wrap: balance;
+  transform: rotate(-.6deg);
+}
+.hint em { font-style: normal; font-weight: 900; }
+.left-tools { justify-self: start; display: flex; flex-direction: column; gap: 6px; align-items: flex-start; }
+.right-tools { justify-self: end; display: flex; flex-direction: column; gap: 8px; align-items: flex-end; }
+.tool-label { font: 900 10px/1 var(--body); letter-spacing: .14em; text-transform: uppercase; color: var(--ink); opacity: .7; padding-left: 4px; }
+
+button { font: inherit; color: inherit; border: 0; cursor: pointer; }
+button:focus-visible { outline: 3px solid var(--ink); outline-offset: 3px; }
+.seg { display: flex; padding: 4px; gap: 4px; border-radius: 14px; }
+.seg button { padding: 8px 12px; border-radius: 10px; background: transparent; font: 400 18px/1 var(--display); color: var(--ink-soft); font-variant-numeric: tabular-nums; }
+.seg button[aria-pressed="true"] { background: var(--ink); color: #fff; }
+.chip { padding: 9px 13px; border-radius: 12px; font: 800 13px/1 var(--body); white-space: nowrap; }
+.chip[aria-pressed="false"] { color: var(--ink-soft); }
+.chip:disabled { opacity: .45; cursor: default; }
+.chip .dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 6px; background: #2f8a4a; vertical-align: 1px; }
+.chip[aria-pressed="false"] .dot { background: #c9bfae; }
+
+.go {
+  width: 124px; height: 66px; border-radius: 22px; background: var(--go); color: #fff;
+  font: 400 32px/1 var(--display); letter-spacing: .02em; text-shadow: 0 2px 0 rgba(0, 0, 0, .18);
+  box-shadow: 0 0 0 3px #fff, 0 7px 0 3px var(--go-deep), 0 16px 26px rgba(45, 43, 64, .3);
+  transition: transform .08s, box-shadow .08s, background .2s;
+}
+.go:active { transform: translateY(5px); box-shadow: 0 0 0 3px #fff, 0 2px 0 3px var(--go-deep), 0 8px 16px rgba(45, 43, 64, .3); }
+.go.stop { background: var(--stop); box-shadow: 0 0 0 3px #fff, 0 7px 0 3px var(--stop-deep), 0 16px 26px rgba(45, 43, 64, .3); }
+.go.stop:active { box-shadow: 0 0 0 3px #fff, 0 2px 0 3px var(--stop-deep), 0 8px 16px rgba(45, 43, 64, .3); }
+
+#loading {
+  position: fixed; inset: 0; z-index: 5; display: grid; place-items: center;
+  background: var(--sky); font: 400 24px/1.2 var(--display); color: var(--ink); text-align: center; padding-inline: 24px;
+  transition: opacity .6s;
+}
+#loading.gone { opacity: 0; pointer-events: none; }
+
+@media (max-width: 520px) {
+  .go { width: 104px; height: 60px; font-size: 28px; }
+  .chip { padding: 8px 10px; font-size: 12px; }
+  .seg button { padding: 7px 10px; font-size: 16px; }
+  .hint { font-size: 13px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .toast { animation: none; }
+  .go, .stars span { transition: none; }
+}
+</style>
+
+</head>
+<body>
+<canvas id="world" aria-label="Miniature diorama of the delivery puzzle board"></canvas>
+
+<header class="hud-top">
+  <div class="level-card sticker">
+    <span class="eyebrow" id="levelNo">Level 05</span>
+    <h1 id="levelName">Two Colours</h1>
+  </div>
+  <div class="score-card sticker" aria-live="polite">
+    <div class="flips"><b id="flips">0</b><small>switch flips<br>par <span id="par">2</span></small></div>
+    <div class="stars" id="stars" aria-label="Star rating"><span>★</span><span>★</span><span>★</span></div>
+  </div>
+</header>
+
+<div class="toast sticker" id="toast" role="status" hidden><strong id="toastTitle"></strong><span id="toastBody"></span></div>
+
+<footer class="hud-bottom">
+  <p class="hint sticker" id="hint"></p>
+  <div class="left-tools">
+    <span class="tool-label">Level</span>
+    <div class="seg sticker" role="group" aria-label="Choose level">
+      <button type="button" id="lvl0" data-level="0" aria-pressed="true">05</button>
+      <button type="button" id="lvl1" data-level="1" aria-pressed="false">10</button>
+    </div>
+  </div>
+  <button type="button" class="go" id="goBtn">Go</button>
+  <div class="right-tools">
+    <button type="button" class="chip sticker" id="resetBtn">Reset switches</button>
+    <button type="button" class="chip sticker" id="tiltBtn" aria-pressed="true"><span class="dot"></span>Tilt-shift</button>
+  </div>
+</footer>
+
+<div id="loading">Unpacking the diorama…</div>
+
+<script type="importmap">
+{ "imports": {
+  "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+  "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+} }
+</script>
+<script type="module">
+import * as THREE from 'three';
+import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
+import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
+import { ShaderPass } from 'three/addons/postprocessing/ShaderPass.js';
+import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
+import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
+
+// ---------------------------------------------------------------------------
+// Levels: copied verbatim (graph, vans, houses, switches) from
+// TinyRoutes/Resources/PrototypeLevels/level_005.json and level_010.json.
+// Grid is 5 x 7 (x 0..4, y 0..6), y grows up the screen, like MultiVanBoardLayout.
+// ---------------------------------------------------------------------------
+const N = (id, x, y, out = []) => ({ id, x, y, outgoingEdgeIDs: out });
+const E = (id, from, to, shape) => ({ id, fromNodeID: from, toNodeID: to, roadShape: shape });
+const LEVELS = [
+  {
+    id: 'level_005', number: 5, name: 'Two Colours',
+    graph: {
+      nodes: [
+        N('red_start', 1, 0, ['red_approach']), N('blue_start', 3, 6, ['blue_approach']),
+        N('red_switch', 1, 3, ['red_to_blue', 'red_to_red']), N('blue_switch', 3, 5, ['blue_to_red', 'blue_to_blue']),
+        N('red_house', 4, 3), N('blue_house', 0, 5),
+      ],
+      edges: [
+        E('red_approach', 'red_start', 'red_switch', 'verticalFirst'),
+        E('blue_approach', 'blue_start', 'blue_switch', 'verticalFirst'),
+        E('red_to_blue', 'red_switch', 'blue_house', 'verticalFirst'),
+        E('red_to_red', 'red_switch', 'red_house', 'horizontalFirst'),
+        E('blue_to_red', 'blue_switch', 'red_house', 'verticalFirst'),
+        E('blue_to_blue', 'blue_switch', 'blue_house', 'horizontalFirst'),
+      ],
+    },
+    vans: [{ id: 'red', color: 'red', startNodeID: 'red_start', departDelay: 0 }, { id: 'blue', color: 'blue', startNodeID: 'blue_start', departDelay: 0 }],
+    houses: [{ nodeID: 'red_house', color: 'red' }, { nodeID: 'blue_house', color: 'blue' }],
+    initialSwitchEdges: { red_switch: 'red_to_blue', blue_switch: 'blue_to_red' },
+    parChanges: 2, liveSwitchNodeIDs: [],
+    hint: 'Both switches start pointing at the wrong house. Tap each one so every van’s dotted trail ends at its own colour, then press <em>Go</em>.',
+  },
+  {
+    id: 'level_010', number: 10, name: 'Three’s Company',
+    graph: {
+      nodes: [
+        N('red_start', 0, 0, ['red_approach']), N('red_switch', 0, 3, ['red_wrong', 'red_delivery']), N('red_trap', 1, 3, ['red_trap_road']),
+        N('blue_start', 2, 0, ['blue_approach']), N('blue_switch', 2, 4, ['blue_wrong', 'blue_delivery']),
+        N('yellow_start', 4, 0, ['yellow_approach']), N('yellow_switch', 4, 2, ['yellow_wrong', 'yellow_delivery']),
+        N('barrier', 3, 2), N('red_house', 0, 6), N('blue_house', 2, 6), N('yellow_house', 4, 6),
+      ],
+      edges: [
+        E('red_approach', 'red_start', 'red_switch', 'verticalFirst'),
+        E('red_wrong', 'red_switch', 'red_trap', 'horizontalFirst'),
+        E('red_trap_road', 'red_trap', 'blue_house', 'verticalFirst'),
+        E('red_delivery', 'red_switch', 'red_house', 'verticalFirst'),
+        E('blue_approach', 'blue_start', 'blue_switch', 'verticalFirst'),
+        E('blue_wrong', 'blue_switch', 'red_house', 'horizontalFirst'),
+        E('blue_delivery', 'blue_switch', 'blue_house', 'verticalFirst'),
+        E('yellow_approach', 'yellow_start', 'yellow_switch', 'verticalFirst'),
+        E('yellow_wrong', 'yellow_switch', 'barrier', 'horizontalFirst'),
+        E('yellow_delivery', 'yellow_switch', 'yellow_house', 'verticalFirst'),
+      ],
+    },
+    vans: [
+      { id: 'red', color: 'red', startNodeID: 'red_start', departDelay: 0 },
+      { id: 'blue', color: 'blue', startNodeID: 'blue_start', departDelay: 0 },
+      { id: 'yellow', color: 'yellow', startNodeID: 'yellow_start', departDelay: 0 },
+    ],
+    houses: [{ nodeID: 'red_house', color: 'red' }, { nodeID: 'blue_house', color: 'blue' }, { nodeID: 'yellow_house', color: 'yellow' }],
+    initialSwitchEdges: { red_switch: 'red_wrong', blue_switch: 'blue_wrong', yellow_switch: 'yellow_wrong' },
+    parChanges: 3, liveSwitchNodeIDs: [],
+    hint: 'Three vans, three routes. Match every colour before you press <em>Go</em>.',
+  },
+];
+
+const VAN_COLORS = {
+  red: { body: '#ec5b4b', deep: '#b8392c', symbol: 'circle' },
+  blue: { body: '#4a86e8', deep: '#2c5db5', symbol: 'triangle' },
+  yellow: { body: '#f6c234', deep: '#c8921a', symbol: 'square' },
+  green: { body: '#4cb862', deep: '#2f8742', symbol: 'star' },
+};
+
+// Engine tuning mirrors MultiVanTuning.default.
+const TUNING = { vanSpeed: 1.5, stepDuration: 1 / 120, crashDistance: 0.35, liveSwitchLockRadius: 0.4, previewEdgeLimit: 40, turnRadius: 0.18 };
+
+// ---------------------------------------------------------------------------
+// Road paths: same construction as RoadPath.make (straight, or one quarter
+// turn of radius 0.18), sampled into an arc-length polyline.
+// ---------------------------------------------------------------------------
+class Polyline {
+  constructor(points) {
+    this.pts = points;
+    this.cum = [0];
+    for (let i = 1; i < points.length; i++) {
+      this.cum.push(this.cum[i - 1] + Math.hypot(points[i].x - points[i - 1].x, points[i].y - points[i - 1].y));
+    }
+    this.length = this.cum[this.cum.length - 1];
+  }
+  locate(d) {
+    d = Math.max(0, Math.min(d, this.length));
+    let lo = 0, hi = this.cum.length - 1;
+    while (hi - lo > 1) { const mid = (lo + hi) >> 1; if (this.cum[mid] <= d) lo = mid; else hi = mid; }
+    const span = this.cum[hi] - this.cum[lo];
+    return { i: lo, t: span > 0 ? (d - this.cum[lo]) / span : 0 };
+  }
+  point(d) {
+    const { i, t } = this.locate(d); const a = this.pts[i], b = this.pts[Math.min(i + 1, this.pts.length - 1)];
+    return { x: a.x + (b.x - a.x) * t, y: a.y + (b.y - a.y) * t };
+  }
+  tangent(d) {
+    const { i } = this.locate(Math.min(d, this.length - 1e-6));
+    const a = this.pts[i], b = this.pts[Math.min(i + 1, this.pts.length - 1)];
+    const m = Math.hypot(b.x - a.x, b.y - a.y) || 1;
+    return { x: (b.x - a.x) / m, y: (b.y - a.y) / m };
+  }
+}
+
+function makeRoadPath(start, end, shape) {
+  const dx = end.x - start.x, dy = end.y - start.y;
+  if (dx === 0 || dy === 0) return new Polyline([start, end]);
+  const r = Math.min(TUNING.turnRadius, Math.abs(dx) / 2, Math.abs(dy) / 2);
+  const xd = Math.sign(dx), yd = Math.sign(dy);
+  let arcStart, arcEnd, center;
+  if ((shape || 'horizontalFirst') === 'horizontalFirst') {
+    arcStart = { x: end.x - xd * r, y: start.y };
+    arcEnd = { x: end.x, y: start.y + yd * r };
+    center = { x: arcStart.x, y: arcEnd.y };
+  } else {
+    arcStart = { x: start.x, y: end.y - yd * r };
+    arcEnd = { x: start.x + xd * r, y: end.y };
+    center = { x: arcEnd.x, y: arcStart.y };
+  }
+  const pts = [start];
+  const ax = arcStart.x - center.x, ay = arcStart.y - center.y, bx = arcEnd.x - center.x, by = arcEnd.y - center.y;
+  for (let k = 0; k <= 12; k++) {
+    const a = (k / 12) * Math.PI / 2;
+    pts.push({ x: center.x + ax * Math.cos(a) + bx * Math.sin(a), y: center.y + ay * Math.cos(a) + by * Math.sin(a) });
+  }
+  pts.push(end);
+  return new Polyline(pts);
+}
+
+// ---------------------------------------------------------------------------
+// Engine: a port of MultiVanEngine's plan / run / finished rules.
+// ---------------------------------------------------------------------------
+function starRating(changes, par) { return changes <= par ? 3 : changes <= par + 2 ? 2 : 1; }
+
+class Engine {
+  constructor(level) {
+    this.level = level;
+    this.nodes = new Map(level.graph.nodes.map(n => [n.id, { ...n, active: null }]));
+    this.edges = new Map(level.graph.edges.map(e => {
+      const a = this.nodes.get(e.fromNodeID), b = this.nodes.get(e.toNodeID);
+      return [e.id, { ...e, path: makeRoadPath(a, b, e.roadShape) }];
+    }));
+    this.houses = new Map(level.houses.map(h => [h.nodeID, h]));
+    this.events = [];
+    this.phase = 'plan';
+    this.outcome = null;
+    this.resetSwitches();
+    this.resetVans();
+  }
+  isSwitch(node) { return node && node.outgoingEdgeIDs.length >= 2 && node.outgoingEdgeIDs.length <= 4; }
+  get switchNodes() { return [...this.nodes.values()].filter(n => this.isSwitch(n)); }
+  get barrierNodes() { return [...this.nodes.values()].filter(n => n.outgoingEdgeIDs.length === 0 && !this.houses.has(n.id)); }
+
+  resetSwitches() {
+    for (const n of this.nodes.values()) {
+      const init = this.level.initialSwitchEdges[n.id];
+      n.active = init && n.outgoingEdgeIDs.includes(init) ? init : (n.outgoingEdgeIDs[0] ?? null);
+    }
+  }
+  resetVans() {
+    this.time = 0; this.remainder = 0; this.combo = 0;
+    this.vans = this.level.vans.map(v => {
+      const n = this.nodes.get(v.startNodeID);
+      return { id: v.id, color: v.color, startNodeID: v.startNodeID, delay: v.departDelay || 0, status: 'waiting', edge: null, d: 0, start: { x: n.x, y: n.y }, odometer: 0 };
+    });
+  }
+  vanPosition(v) { return v.edge ? v.edge.path.point(v.d) : v.start; }
+  vanHeading(v) {
+    if (v.edge) return v.edge.path.tangent(v.d);
+    const n = this.nodes.get(v.startNodeID); const e = n && this.edges.get(n.active);
+    return e ? e.path.tangent(0) : { x: 0, y: 1 };
+  }
+
+  get changeCount() {
+    let count = 0;
+    for (const n of this.nodes.values()) {
+      if (!this.isSwitch(n)) continue;
+      const cur = n.outgoingEdgeIDs.indexOf(n.active);
+      const init = Math.max(0, n.outgoingEdgeIDs.indexOf(this.level.initialSwitchEdges[n.id]));
+      const k = n.outgoingEdgeIDs.length;
+      count += (cur - init + k) % k;
+    }
+    return count;
+  }
+
+  lockedSwitches() {
+    const locked = new Set();
+    if (this.phase !== 'run') return locked;
+    for (const n of this.switchNodes) {
+      if (!this.level.liveSwitchNodeIDs.includes(n.id)) { locked.add(n.id); continue; }
+      if (this.vans.some(v => v.status === 'driving' && Math.hypot(this.vanPosition(v).x - n.x, this.vanPosition(v).y - n.y) <= TUNING.liveSwitchLockRadius)) locked.add(n.id);
+    }
+    return locked;
+  }
+
+  tap(nodeID) {
+    const n = this.nodes.get(nodeID);
+    if (!this.isSwitch(n)) return 'notASwitch';
+    let result = 'accepted';
+    if (this.phase === 'run') {
+      if (!this.level.liveSwitchNodeIDs.includes(nodeID)) result = 'rejectedFrozen';
+      else if (this.lockedSwitches().has(nodeID)) result = 'rejectedLocked';
+    } else if (this.phase !== 'plan') result = 'rejectedFrozen';
+    if (result === 'accepted') {
+      const i = n.outgoingEdgeIDs.indexOf(n.active);
+      n.active = n.outgoingEdgeIDs[(i + 1) % n.outgoingEdgeIDs.length];
+      this.events.push({ type: 'switch', nodeID });
+    } else this.events.push({ type: 'reject', nodeID });
+    return result;
+  }
+
+  go() {
+    if (this.phase !== 'plan') return;
+    this.resetVans(); this.outcome = null; this.phase = 'run';
+    this.events.push({ type: 'go' });
+    let failure = null;
+    this.vans.forEach(v => { if (v.delay <= 0) { const f = this.depart(v, v.startNodeID); if (f && !failure) failure = [f, this.vanPosition(v)]; } });
+    if (failure) this.finish(failure[0], failure[1]);
+    this.checkWin();
+  }
+  stop() { if (this.phase === 'run') { this.resetVans(); this.phase = 'plan'; this.events.push({ type: 'reset' }); } }
+  retry() { if (this.phase === 'finished') { this.resetVans(); this.phase = 'plan'; this.outcome = null; this.events.push({ type: 'reset' }); } }
+
+  advance(dt) {
+    if (this.phase !== 'run' || !(dt > 0)) return;
+    this.remainder += dt;
+    const step = TUNING.stepDuration;
+    while (this.phase === 'run' && this.remainder + 1e-9 >= step) {
+      let failure = null;
+      for (const v of this.vans) {
+        let f = null;
+        if (v.status === 'waiting' && this.time >= v.delay) f = this.depart(v, v.startNodeID);
+        const m = this.move(v, TUNING.vanSpeed * step);
+        if (m) f = m;
+        if (f && !failure) failure = [f, this.vanPosition(v)];
+      }
+      if (failure) this.finish(failure[0], failure[1]);
+      else { this.checkCrash(); this.checkWin(); }
+      this.time += step; this.remainder -= step;
+    }
+  }
+
+  depart(v, nodeID) {
+    const house = this.houses.get(nodeID);
+    if (house) {
+      v.status = 'parked';
+      if (house.color !== v.color) return { type: 'wrongHouse', vanID: v.id, nodeID };
+      this.combo += 1;
+      this.events.push({ type: 'delivered', vanID: v.id, nodeID, combo: this.combo });
+      return null;
+    }
+    const n = this.nodes.get(nodeID); const e = n && this.edges.get(n.active);
+    if (!e || e.fromNodeID !== nodeID) { v.status = 'stuck'; return { type: 'stuck', vanID: v.id, nodeID }; }
+    v.edge = e; v.d = 0; v.status = 'driving';
+    return null;
+  }
+  move(v, dist) {
+    let guard = 0;
+    while (v.status === 'driving' && v.edge && guard++ < 50) {
+      const remaining = Math.max(0, v.edge.path.length - v.d);
+      if (remaining - dist > 1e-12) { v.d += dist; v.odometer += dist; return null; }
+      v.d = v.edge.path.length; v.odometer += remaining;
+      const leftover = Math.max(0, dist - remaining);
+      const f = this.depart(v, v.edge.toNodeID);
+      if (f) return f;
+      dist = leftover;
+    }
+    return null;
+  }
+  checkCrash() {
+    const driving = this.vans.filter(v => v.status === 'driving');
+    for (let i = 0; i < driving.length; i++) for (let j = i + 1; j < driving.length; j++) {
+      const a = this.vanPosition(driving[i]), b = this.vanPosition(driving[j]);
+      if (Math.hypot(a.x - b.x, a.y - b.y) < TUNING.crashDistance) {
+        driving[i].status = driving[j].status = 'crashed';
+        const point = { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 };
+        this.finish({ type: 'crash', vanIDs: [driving[i].id, driving[j].id], point }, point);
+        return;
+      }
+    }
+  }
+  checkWin() { if (this.vans.length && this.vans.every(v => v.status === 'parked')) this.finish({ type: 'win' }); }
+  finish(outcome, point) {
+    if (this.phase !== 'run') return;
+    this.outcome = outcome; this.failPoint = point || null; this.phase = 'finished';
+    this.events.push({ type: 'finish', outcome, point });
+  }
+
+  // Mirrors MultiVanRoutePreview.trace from each van's current state.
+  previews() {
+    return this.vans.map(v => {
+      let nodeID, edges = [];
+      if (v.status === 'waiting') nodeID = v.startNodeID;
+      else if (v.status === 'driving') { nodeID = v.edge.toNodeID; edges = [v.edge.id]; }
+      else return { edges: [], ending: 'offRoad', from: 0 };
+      for (;;) {
+        const house = this.houses.get(nodeID);
+        if (house) return { edges, ending: house.color === v.color ? 'match' : 'wrong', endNode: nodeID, from: v.status === 'driving' ? v.d : 0 };
+        const n = this.nodes.get(nodeID); const e = n && this.edges.get(n.active);
+        if (!e || e.fromNodeID !== nodeID) return { edges, ending: 'deadEnd', endNode: nodeID, from: v.status === 'driving' ? v.d : 0 };
+        if (edges.length >= TUNING.previewEdgeLimit) return { edges, ending: 'loop', endNode: nodeID, from: 0 };
+        edges.push(e.id); nodeID = e.toNodeID;
+      }
+    });
+  }
+  drain() { const e = this.events; this.events = []; return e; }
+}
+
+// ---------------------------------------------------------------------------
+// World constants and grid <-> world mapping.
+// ---------------------------------------------------------------------------
+const SLAB_W = 6.6, SLAB_D = 8.6, SLAB_R = 0.42;   // the diorama table, in grid units
+const PPU = 180;                                     // ground texture pixels per grid unit
+const toWorld = (gx, gy) => ({ x: gx - 2, z: 3 - gy });
+const toCanvas = (gx, gy) => ({ x: (gx - 2 + SLAB_W / 2) * PPU, y: (3 - gy + SLAB_D / 2) * PPU });
+
+function mulberry32(seed) {
+  return function () {
+    seed |= 0; seed = seed + 0x6D2B79F5 | 0;
+    let t = Math.imul(seed ^ seed >>> 15, 1 | seed);
+    t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+    return ((t ^ t >>> 14) >>> 0) / 4294967296;
+  };
+}
+function makeCanvas(w, h) { const c = document.createElement('canvas'); c.width = w; c.height = h; return c; }
+function toTexture(canvas, { repeat = false } = {}) {
+  const t = new THREE.CanvasTexture(canvas);
+  t.colorSpace = THREE.SRGBColorSpace;
+  t.anisotropy = 8;
+  if (repeat) t.wrapS = t.wrapT = THREE.RepeatWrapping;
+  return t;
+}
+function roundRectPath(ctx, x, y, w, h, r) {
+  ctx.beginPath();
+  ctx.moveTo(x + r, y); ctx.arcTo(x + w, y, x + w, y + h, r); ctx.arcTo(x + w, y + h, x, y + h, r);
+  ctx.arcTo(x, y + h, x, y, r); ctx.arcTo(x, y, x + w, y, r); ctx.closePath();
+}
+
+// Paper grain shared by every printed surface.
+const GRAIN = (() => {
+  const c = makeCanvas(160, 160), g = c.getContext('2d'), rnd = mulberry32(7);
+  const img = g.createImageData(160, 160);
+  for (let i = 0; i < img.data.length; i += 4) {
+    const v = 128 + (rnd() - 0.5) * 120;
+    img.data[i] = img.data[i + 1] = img.data[i + 2] = v; img.data[i + 3] = 255;
+  }
+  g.putImageData(img, 0, 0);
+  // a few paper fibres
+  g.strokeStyle = 'rgba(255,255,255,.35)'; g.lineWidth = 0.7;
+  for (let i = 0; i < 40; i++) { g.beginPath(); const x = rnd() * 160, y = rnd() * 160; g.moveTo(x, y); g.quadraticCurveTo(x + rnd() * 14 - 7, y + rnd() * 14 - 7, x + rnd() * 20 - 10, y + rnd() * 20 - 10); g.stroke(); }
+  return c;
+})();
+function addGrain(ctx, w, h, alpha = 0.08) {
+  ctx.save();
+  ctx.globalCompositeOperation = 'source-atop'; ctx.globalAlpha = alpha;
+  ctx.fillStyle = ctx.createPattern(GRAIN, 'repeat'); ctx.fillRect(0, 0, w, h);
+  ctx.restore();
+}
+
+// Grain texture for the soil strata and painted props (tinted by material colour).
+const grainTexture = (() => {
+  const c = makeCanvas(256, 256), g = c.getContext('2d'), rnd = mulberry32(11);
+  g.fillStyle = '#fff'; g.fillRect(0, 0, 256, 256);
+  for (let i = 0; i < 2600; i++) { g.fillStyle = `rgba(0,0,0,${0.03 + rnd() * 0.07})`; g.beginPath(); g.arc(rnd() * 256, rnd() * 256, 0.6 + rnd() * 2.2, 0, 7); g.fill(); }
+  for (let i = 0; i < 18; i++) { g.fillStyle = 'rgba(0,0,0,.05)'; g.fillRect(0, rnd() * 256, 256, 1 + rnd() * 3); }
+  return toTexture(c, { repeat: true });
+})();
+
+// ---------------------------------------------------------------------------
+// Paper cutouts: art is drawn, then given a white die-cut border and a plain
+// kraft back, like a Paper Mario standee.
+// ---------------------------------------------------------------------------
+function sticker(w, h, draw, border = 7) {
+  const art = makeCanvas(w, h); draw(art.getContext('2d'), w, h);
+  const sil = makeCanvas(w, h), s = sil.getContext('2d');
+  s.drawImage(art, 0, 0); s.globalCompositeOperation = 'source-in'; s.fillStyle = '#fff'; s.fillRect(0, 0, w, h);
+  const front = makeCanvas(w, h), f = front.getContext('2d');
+  for (let k = 0; k < 20; k++) { const a = (k / 20) * Math.PI * 2; f.drawImage(sil, Math.cos(a) * border, Math.sin(a) * border); }
+  f.drawImage(art, 0, 0);
+  addGrain(f, w, h, 0.09);
+  const back = makeCanvas(w, h), b = back.getContext('2d');
+  b.drawImage(front, 0, 0); b.globalCompositeOperation = 'source-in'; b.fillStyle = '#e2d2b4'; b.fillRect(0, 0, w, h);
+  b.globalCompositeOperation = 'source-over'; addGrain(b, w, h, 0.12);
+  return { front: toTexture(front), back: toTexture(back), aspect: w / h };
+}
+
+function circle(ctx, x, y, r, fill) { ctx.fillStyle = fill; ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fill(); }
+
+const CUTOUTS = {
+  roundTree(palette) {
+    return sticker(256, 320, (g, w, h) => {
+      g.fillStyle = '#8a5a3c'; roundRectPath(g, w / 2 - 13, h * 0.5, 26, h * 0.46 - 8, 8); g.fill();
+      g.fillStyle = '#6f452c'; g.fillRect(w / 2 + 3, h * 0.52, 10, h * 0.42 - 8);
+      circle(g, w / 2, h * 0.38, w * 0.36, palette[0]);
+      circle(g, w / 2 - 34, h * 0.45, w * 0.2, palette[0]);
+      circle(g, w / 2 + 38, h * 0.44, w * 0.19, palette[0]);
+      circle(g, w / 2 - 12, h * 0.32, w * 0.27, palette[1]);
+      circle(g, w / 2 - 34, h * 0.27, w * 0.11, palette[2]);
+      circle(g, w / 2 + 22, h * 0.22, w * 0.07, palette[2]);
+    });
+  },
+  pineTree() {
+    return sticker(220, 340, (g, w, h) => {
+      g.fillStyle = '#7d5135'; g.fillRect(w / 2 - 11, h * 0.74, 22, h * 0.24 - 6);
+      const tiers = [[0.56, 0.86, 0.42], [0.36, 0.64, 0.34], [0.12, 0.42, 0.26]];
+      for (const [top, base, half] of tiers) {
+        g.fillStyle = '#3f8a5a';
+        g.beginPath(); g.moveTo(w / 2, h * top); g.lineTo(w / 2 + w * half, h * base); g.lineTo(w / 2 - w * half, h * base); g.closePath(); g.fill();
+        g.fillStyle = '#5aa872';
+        g.beginPath(); g.moveTo(w / 2, h * top); g.lineTo(w / 2 + w * half, h * base); g.lineTo(w / 2 + w * half * 0.2, h * base); g.closePath(); g.fill();
+      }
+    });
+  },
+  bush(flower) {
+    return sticker(220, 150, (g, w, h) => {
+      circle(g, w * 0.3, h * 0.6, h * 0.32, '#5ea44d'); circle(g, w * 0.7, h * 0.6, h * 0.3, '#5ea44d');
+      circle(g, w * 0.5, h * 0.45, h * 0.38, '#73b95a'); circle(g, w * 0.42, h * 0.36, h * 0.16, '#94cf73');
+      g.fillStyle = '#5ea44d'; g.fillRect(w * 0.3, h * 0.6, w * 0.4, h * 0.3);
+      const rnd = mulberry32(flower.length * 31);
+      for (let i = 0; i < 7; i++) circle(g, w * (0.25 + rnd() * 0.5), h * (0.3 + rnd() * 0.45), 6, flower);
+    });
+  },
+  cloud() {
+    return sticker(420, 200, (g, w, h) => {
+      const puffs = [[0.25, 0.6, 0.22], [0.45, 0.45, 0.3], [0.68, 0.52, 0.25], [0.83, 0.65, 0.15], [0.14, 0.7, 0.12]];
+      for (const [x, y, r] of puffs) circle(g, w * x, h * y, h * r * 1.3, '#dfe9f2');
+      for (const [x, y, r] of puffs) circle(g, w * x - 4, h * y - 8, h * r * 1.18, '#ffffff');
+      g.fillStyle = '#dfe9f2'; g.fillRect(w * 0.14, h * 0.7, w * 0.7, h * 0.14);
+    }, 0);
+  },
+  barrier() {
+    return sticker(300, 200, (g, w, h) => {
+      g.fillStyle = '#5d5a6e'; g.fillRect(w * 0.18, h * 0.3, 14, h * 0.62); g.fillRect(w * 0.82 - 14, h * 0.3, 14, h * 0.62);
+      g.save(); roundRectPath(g, w * 0.08, h * 0.28, w * 0.84, h * 0.3, 10); g.clip();
+      g.fillStyle = '#fff'; g.fillRect(0, 0, w, h);
+      g.fillStyle = '#e8473b';
+      for (let x = -h; x < w + h; x += 46) { g.beginPath(); g.moveTo(x, h * 0.6); g.lineTo(x + 23, h * 0.6); g.lineTo(x + 23 + h * 0.34, h * 0.25); g.lineTo(x + h * 0.34, h * 0.25); g.fill(); }
+      g.restore();
+      circle(g, w * 0.5, h * 0.17, 17, '#f6a623'); circle(g, w * 0.5 - 4, h * 0.17 - 5, 7, '#ffe08a');
+    });
+  },
+  person(shirt, seed) {
+    return sticker(120, 260, (g, w, h) => {
+      const rnd = mulberry32(seed), skin = ['#f1c7a0', '#d39a6a', '#8d5a3b'][Math.floor(rnd() * 3)];
+      g.fillStyle = '#3d3b52'; g.fillRect(w / 2 - 17, h * 0.62, 14, h * 0.32); g.fillRect(w / 2 + 3, h * 0.62, 14, h * 0.32);
+      g.fillStyle = shirt; roundRectPath(g, w / 2 - 26, h * 0.3, 52, h * 0.38, 18); g.fill();
+      circle(g, w / 2, h * 0.2, 25, skin);
+      g.fillStyle = ['#3a2a22', '#e0b04a', '#6b3b2a'][Math.floor(rnd() * 3)];
+      g.beginPath(); g.arc(w / 2, h * 0.18, 26, Math.PI, 0); g.fill();
+    });
+  },
+};
+
+function drawSymbol(g, kind, x, y, r, fill) {
+  g.fillStyle = fill; g.beginPath();
+  if (kind === 'circle') g.arc(x, y, r, 0, Math.PI * 2);
+  else if (kind === 'square') { const s = r * 1.65; roundRectPath(g, x - s / 2, y - s / 2, s, s, r * 0.18); }
+  else if (kind === 'triangle') { g.moveTo(x, y - r * 1.05); g.lineTo(x + r * 1.08, y + r * 0.8); g.lineTo(x - r * 1.08, y + r * 0.8); g.closePath(); }
+  else { for (let i = 0; i < 10; i++) { const a = -Math.PI / 2 + i * Math.PI / 5, rr = i % 2 ? r * 0.48 : r * 1.1; g.lineTo(x + Math.cos(a) * rr, y + Math.sin(a) * rr); } g.closePath(); }
+  g.fill();
+}
+
+function symbolTexture(color) {
+  const c = makeCanvas(128, 128), g = c.getContext('2d'), info = VAN_COLORS[color];
+  circle(g, 64, 64, 60, '#ffffff');
+  drawSymbol(g, info.symbol, 64, 67, 34, info.deep);
+  return toTexture(c);
+}
+
+function houseFrontTexture(color) {
+  const c = makeCanvas(320, 240), g = c.getContext('2d'), info = VAN_COLORS[color];
+  g.fillStyle = '#fbf3e3'; g.fillRect(0, 0, 320, 240);
+  g.fillStyle = 'rgba(120,90,60,.08)'; for (let y = 16; y < 240; y += 22) g.fillRect(0, y, 320, 3);
+  // windows
+  for (const x of [40, 222]) {
+    g.fillStyle = '#ffffff'; roundRectPath(g, x, 70, 60, 64, 8); g.fill();
+    g.fillStyle = '#9fd0ea'; roundRectPath(g, x + 7, 77, 46, 50, 5); g.fill();
+    g.fillStyle = '#ffffff'; g.fillRect(x + 28, 77, 4, 50); g.fillRect(x + 7, 100, 46, 4);
+    g.fillStyle = info.body; g.fillRect(x - 6, 140, 72, 12);
+  }
+  // door
+  g.fillStyle = info.deep; roundRectPath(g, 126, 112, 68, 128, 30); g.fill();
+  g.fillStyle = 'rgba(255,255,255,.18)'; roundRectPath(g, 136, 124, 48, 50, 20); g.fill();
+  circle(g, 182, 182, 6, '#ffd867');
+  // colour/shape plaque so houses read without colour vision
+  circle(g, 160, 54, 40, '#ffffff'); circle(g, 160, 54, 34, info.body);
+  drawSymbol(g, info.symbol, 160, 57, 19, '#ffffff');
+  addGrain(g, 320, 240, 0.08);
+  return toTexture(c);
+}
+function houseSideTexture() {
+  const c = makeCanvas(256, 240), g = c.getContext('2d');
+  g.fillStyle = '#f3e8d3'; g.fillRect(0, 0, 256, 240);
+  g.fillStyle = 'rgba(120,90,60,.08)'; for (let y = 16; y < 240; y += 22) g.fillRect(0, y, 256, 3);
+  g.fillStyle = '#ffffff'; roundRectPath(g, 98, 80, 60, 64, 8); g.fill();
+  g.fillStyle = '#8cc3e0'; roundRectPath(g, 105, 87, 46, 50, 5); g.fill();
+  addGrain(g, 256, 240, 0.08);
+  return toTexture(c);
+}
+
+function badgeTexture(kind) {
+  const c = makeCanvas(128, 128), g = c.getContext('2d');
+  circle(g, 64, 64, 60, '#ffffff');
+  circle(g, 64, 64, 50, kind === 'ok' ? '#3fa35a' : '#e2483a');
+  g.strokeStyle = '#fff'; g.lineWidth = 13; g.lineCap = 'round'; g.lineJoin = 'round'; g.beginPath();
+  if (kind === 'ok') { g.moveTo(40, 66); g.lineTo(57, 83); g.lineTo(88, 48); }
+  else { g.moveTo(45, 45); g.lineTo(83, 83); g.moveTo(83, 45); g.lineTo(45, 83); }
+  g.stroke();
+  return toTexture(c);
+}
+
+function skyTexture() {
+  const c = makeCanvas(8, 512), g = c.getContext('2d'), grad = g.createLinearGradient(0, 0, 0, 512);
+  grad.addColorStop(0, '#9fd0ea'); grad.addColorStop(0.55, '#d6edf2'); grad.addColorStop(1, '#f7e7d2');
+  g.fillStyle = grad; g.fillRect(0, 0, 8, 512);
+  return toTexture(c);
+}
+
+function blobTexture() {
+  const c = makeCanvas(128, 128), g = c.getContext('2d'), grad = g.createRadialGradient(64, 64, 4, 64, 64, 62);
+  grad.addColorStop(0, 'rgba(20,30,20,.55)'); grad.addColorStop(0.6, 'rgba(20,30,20,.22)'); grad.addColorStop(1, 'rgba(20,30,20,0)');
+  g.fillStyle = grad; g.fillRect(0, 0, 128, 128);
+  const t = new THREE.CanvasTexture(c); return t;
+}
+
+// ---------------------------------------------------------------------------
+// Renderer, camera, light: a sunny tabletop under a soft studio sky.
+// ---------------------------------------------------------------------------
+const canvasEl = document.getElementById('world');
+const renderer = new THREE.WebGLRenderer({ canvas: canvasEl, antialias: false, powerPreference: 'high-performance' });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.05;
+renderer.outputColorSpace = THREE.SRGBColorSpace;
+
+const scene = new THREE.Scene();
+scene.background = skyTexture();
+const camera = new THREE.PerspectiveCamera(30, 1, 0.5, 200);
+
+scene.add(new THREE.HemisphereLight('#e6f4ff', '#a3b98a', 0.95));
+const sun = new THREE.DirectionalLight('#fff0d6', 3.4);
+sun.position.set(-5.2, 8.2, 3.6);
+sun.castShadow = true;
+sun.shadow.mapSize.set(2048, 2048);
+Object.assign(sun.shadow.camera, { left: -6.5, right: 6.5, top: 7, bottom: -7, near: 1, far: 30 });
+sun.shadow.bias = -0.0005; sun.shadow.normalBias = 0.025;
+scene.add(sun, sun.target);
+const fill = new THREE.DirectionalLight('#cfe0ff', 0.45); fill.position.set(5, 4, -6); scene.add(fill);
+
+const paperMat = (color, extra = {}) => new THREE.MeshStandardMaterial({ color, roughness: 0.88, metalness: 0, ...extra });
+const toyMat = (color) => new THREE.MeshStandardMaterial({ color, roughness: 0.42, metalness: 0 });
+const shadowCasting = (o) => { o.traverse(m => { if (m.isMesh) { m.castShadow = true; m.receiveShadow = true; } }); return o; };
+
+// ---------------------------------------------------------------------------
+// The slab: a die-cut slice of lawn with soil strata, floating over its shadow.
+// ---------------------------------------------------------------------------
+function roundedRectShape(w, d, r) {
+  const s = new THREE.Shape(), x = -w / 2, y = -d / 2;
+  s.moveTo(x + r, y); s.lineTo(x + w - r, y); s.absarc(x + w - r, y + r, r, -Math.PI / 2, 0);
+  s.lineTo(x + w, y + d - r); s.absarc(x + w - r, y + d - r, r, 0, Math.PI / 2);
+  s.lineTo(x + r, y + d); s.absarc(x + r, y + d - r, r, Math.PI / 2, Math.PI);
+  s.lineTo(x, y + r); s.absarc(x + r, y + r, r, Math.PI, Math.PI * 1.5);
+  return s;
+}
+function slabLayer(inset, y0, h, materials) {
+  const g = new THREE.ExtrudeGeometry(roundedRectShape(SLAB_W - inset * 2, SLAB_D - inset * 2, SLAB_R - inset * 0.5), { depth: h, bevelEnabled: false, curveSegments: 12 });
+  g.rotateX(-Math.PI / 2);
+  const m = new THREE.Mesh(g, materials); m.position.y = y0; m.receiveShadow = true; m.castShadow = true;
+  return m;
+}
+const groundMat = new THREE.MeshStandardMaterial({ color: '#ffffff', roughness: 0.95 });
+const slab = new THREE.Group();
+{
+  const grassSide = paperMat('#7db457', { map: grainTexture });
+  slab.add(slabLayer(0, -0.16, 0.16, [groundMat, grassSide]));
+  const soil = paperMat('#a26e48', { map: grainTexture });
+  slab.add(slabLayer(0.05, -0.6, 0.44, [soil, soil]));
+  const deep = paperMat('#7b5339', { map: grainTexture });
+  slab.add(slabLayer(0.11, -0.96, 0.36, [deep, deep]));
+  // pebbles pressed into the soil walls
+  const rnd = mulberry32(3), pebbleGeo = new THREE.IcosahedronGeometry(1, 0);
+  const pebbleMats = ['#c9b8a2', '#9c8b78', '#e0d3bf'].map(c => paperMat(c, { flatShading: true }));
+  for (let i = 0; i < 46; i++) {
+    const side = Math.floor(rnd() * 4), t = rnd() - 0.5, inset = 0.03 + rnd() * 0.06, y = -0.25 - rnd() * 0.62;
+    const p = new THREE.Mesh(pebbleGeo, pebbleMats[i % 3]);
+    const s = 0.035 + rnd() * 0.05; p.scale.set(s * 1.3, s, s);
+    const hw = SLAB_W / 2 - inset, hd = SLAB_D / 2 - inset;
+    if (side === 0) p.position.set(t * (SLAB_W - 1), y, hd); else if (side === 1) p.position.set(t * (SLAB_W - 1), y, -hd);
+    else if (side === 2) p.position.set(hw, y, t * (SLAB_D - 1)); else p.position.set(-hw, y, t * (SLAB_D - 1));
+    p.rotation.set(rnd() * 3, rnd() * 3, rnd() * 3); p.castShadow = true;
+    slab.add(p);
+  }
+}
+scene.add(slab);
+const floorShadow = new THREE.Mesh(new THREE.PlaneGeometry(SLAB_W * 1.5, SLAB_D * 1.35), new THREE.MeshBasicMaterial({ map: blobTexture(), transparent: true, opacity: 0.55, depthWrite: false }));
+floorShadow.rotation.x = -Math.PI / 2; floorShadow.position.set(0.5, -2.2, -0.4);
+scene.add(floorShadow);
+
+// Paper clouds drifting behind the table.
+const clouds = [];
+{
+  const cut = CUTOUTS.cloud();
+  [[-2.8, 2.4, -5.6, 1.5], [1.6, 3.0, -6.4, 1.9], [4.6, 2.1, -4.6, 1.2], [-5.4, 1.6, -3.4, 1.1]].forEach(([x, y, z, s], i) => {
+    const c = standee(cut, s * 0.55); c.position.set(x, y, z); c.userData.speed = 0.06 + i * 0.015; c.userData.baseY = y;
+    c.traverse(m => { if (m.isMesh) m.castShadow = false; });
+    scene.add(c); clouds.push(c);
+  });
+}
+
+// A standee is a paper cutout: printed front, kraft back, rooted at its base.
+function standee(cut, height) {
+  const w = height * cut.aspect;
+  const geo = new THREE.PlaneGeometry(w, height); geo.translate(0, height / 2, 0);
+  const front = new THREE.Mesh(geo, new THREE.MeshStandardMaterial({ map: cut.front, alphaTest: 0.5, roughness: 0.9, side: THREE.FrontSide }));
+  const back = new THREE.Mesh(geo, new THREE.MeshStandardMaterial({ map: cut.back, alphaTest: 0.5, roughness: 0.95, side: THREE.BackSide }));
+  const g = new THREE.Group(); g.add(front, back);
+  return shadowCasting(g);
+}
+
+// ---------------------------------------------------------------------------
+// Builders for the board pieces.
+// ---------------------------------------------------------------------------
+const houseSideTex = houseSideTexture();
+const symbolTex = Object.fromEntries(Object.keys(VAN_COLORS).map(c => [c, symbolTexture(c)]));
+const badgeTex = { ok: badgeTexture('ok'), bad: badgeTexture('bad') };
+
+function makeHouse(color) {
+  const info = VAN_COLORS[color], g = new THREE.Group(), body = new THREE.Group();
+  const w = 0.62, dep = 0.5, wallH = 0.34;
+  const side = paperMat('#ffffff', { map: houseSideTex }), plain = paperMat('#f3e8d3');
+  const walls = new THREE.Mesh(new THREE.BoxGeometry(w, wallH, dep), [side, side, plain, plain, paperMat('#ffffff', { map: houseFrontTexture(color) }), side]);
+  walls.position.y = wallH / 2;
+  const tri = new THREE.Shape(); const a = w / 2 + 0.06, rh = 0.27;
+  tri.moveTo(-a, 0); tri.lineTo(a, 0); tri.lineTo(0, rh); tri.closePath();
+  const roofGeo = new THREE.ExtrudeGeometry(tri, { depth: dep + 0.1, bevelEnabled: false }); roofGeo.translate(0, 0, -(dep + 0.1) / 2);
+  const roof = new THREE.Mesh(roofGeo, [paperMat('#f6ecd8'), paperMat(info.body, { flatShading: true, map: grainTexture })]);
+  roof.position.y = wallH;
+  const chimney = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.2, 0.08), paperMat('#c76a4e', { map: grainTexture }));
+  chimney.position.set(w * 0.24, wallH + 0.2, -0.08);
+  const step = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.03, 0.08), paperMat('#e3d5bb')); step.position.set(0, 0.015, dep / 2 + 0.04);
+  body.add(walls, roof, chimney, step);
+  g.add(shadowCasting(body));
+  g.userData = { body, chimneyTop: new THREE.Vector3(w * 0.24, wallH + 0.32, -0.08) };
+  return g;
+}
+
+function makeVan(color) {
+  const info = VAN_COLORS[color], g = new THREE.Group(), chassis = new THREE.Group();
+  const body = new THREE.Mesh(new RoundedBoxGeometry(0.27, 0.19, 0.44, 3, 0.05), toyMat(info.body)); body.position.y = 0.16;
+  const skirt = new THREE.Mesh(new RoundedBoxGeometry(0.28, 0.05, 0.45, 2, 0.02), toyMat(info.deep)); skirt.position.y = 0.085;
+  const glass = toyMat('#2c3a55');
+  const windshield = new THREE.Mesh(new RoundedBoxGeometry(0.24, 0.08, 0.06, 2, 0.02), glass); windshield.position.set(0, 0.2, 0.2);
+  const sideWin = new THREE.Mesh(new THREE.BoxGeometry(0.276, 0.06, 0.12), glass); sideWin.position.set(0, 0.205, 0.11);
+  const roof = new THREE.Mesh(new RoundedBoxGeometry(0.21, 0.03, 0.3, 2, 0.012), toyMat('#fbf7ee')); roof.position.set(0, 0.26, -0.03);
+  const decal = new THREE.Mesh(new THREE.PlaneGeometry(0.15, 0.15), new THREE.MeshStandardMaterial({ map: symbolTex[color], transparent: true, roughness: 0.6 }));
+  decal.rotation.x = -Math.PI / 2; decal.position.set(0, 0.277, -0.03);
+  const lampMat = new THREE.MeshStandardMaterial({ color: '#fff6c8', emissive: '#ffe58a', emissiveIntensity: 0.6 });
+  for (const x of [-0.085, 0.085]) {
+    const lamp = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.03, 0.02), lampMat); lamp.position.set(x, 0.13, 0.222); chassis.add(lamp);
+    const tail = new THREE.Mesh(new THREE.BoxGeometry(0.045, 0.03, 0.02), toyMat('#d33b30')); tail.position.set(x, 0.13, -0.222); chassis.add(tail);
+  }
+  chassis.add(body, skirt, windshield, sideWin, roof, decal);
+  const wheels = [];
+  const tire = toyMat('#2a2933'), hub = toyMat('#e9e4da');
+  const tireGeo = new THREE.CylinderGeometry(0.056, 0.056, 0.045, 16); tireGeo.rotateZ(Math.PI / 2);
+  const hubGeo = new THREE.CylinderGeometry(0.024, 0.024, 0.05, 10); hubGeo.rotateZ(Math.PI / 2);
+  for (const [x, z] of [[-0.13, 0.14], [0.13, 0.14], [-0.13, -0.14], [0.13, -0.14]]) {
+    const wh = new THREE.Group(); wh.add(new THREE.Mesh(tireGeo, tire), new THREE.Mesh(hubGeo, hub)); wh.position.set(x, 0.056, z);
+    wheels.push(wh); g.add(wh);
+  }
+  const blob = new THREE.Mesh(new THREE.PlaneGeometry(0.46, 0.62), new THREE.MeshBasicMaterial({ map: blobShadowTex, transparent: true, depthWrite: false, opacity: 0.8 }));
+  blob.rotation.x = -Math.PI / 2; blob.position.y = 0.006;
+  g.add(shadowCasting(chassis), blob);
+  wheels.forEach(shadowCasting);
+  g.userData = { chassis, wheels };
+  return g;
+}
+const blobShadowTex = blobTexture();
+
+function arrowGeometry() {
+  const s = new THREE.Shape();
+  s.moveTo(-0.13, -0.042); s.lineTo(0.03, -0.042); s.lineTo(0.03, -0.1); s.lineTo(0.17, 0); s.lineTo(0.03, 0.1); s.lineTo(0.03, 0.042); s.lineTo(-0.13, 0.042); s.closePath();
+  const g = new THREE.ExtrudeGeometry(s, { depth: 0.035, bevelEnabled: true, bevelThickness: 0.008, bevelSize: 0.008, bevelSegments: 2 });
+  g.rotateX(-Math.PI / 2);
+  return g;
+}
+const ARROW_GEO = arrowGeometry();
+
+function makeSwitchDial(optionAngles) {
+  const g = new THREE.Group(), lift = new THREE.Group();
+  const base = new THREE.Mesh(new THREE.CylinderGeometry(0.27, 0.295, 0.05, 48), paperMat('#fffaf0'));
+  base.position.y = 0.025;
+  const inner = new THREE.Mesh(new THREE.CylinderGeometry(0.225, 0.225, 0.012, 48), paperMat('#f0e3c8')); inner.position.y = 0.056;
+  lift.add(base, inner);
+  for (const a of optionAngles) {
+    const dot = new THREE.Mesh(new THREE.CylinderGeometry(0.026, 0.026, 0.016, 12), paperMat('#c3b392'));
+    dot.position.set(Math.cos(a) * 0.235, 0.058, -Math.sin(a) * 0.235); lift.add(dot);
+  }
+  const pivot = new THREE.Group(); pivot.position.y = 0.064;
+  const arrowMat = paperMat('#3b3a55');
+  const arrow = new THREE.Mesh(ARROW_GEO, arrowMat); pivot.add(arrow); lift.add(pivot);
+  const hit = new THREE.Mesh(new THREE.CylinderGeometry(0.44, 0.44, 0.6, 16), new THREE.MeshBasicMaterial({ visible: false }));
+  hit.position.y = 0.2;
+  g.add(shadowCasting(lift), hit);
+  g.userData = { lift, pivot, arrowMat, baseMat: base.material, hit };
+  return g;
+}
+
+function makeCone() {
+  const g = new THREE.Group();
+  const cone = new THREE.Mesh(new THREE.ConeGeometry(0.05, 0.13, 18), toyMat('#f58a2c')); cone.position.y = 0.075;
+  const band = new THREE.Mesh(new THREE.CylinderGeometry(0.031, 0.037, 0.022, 18), toyMat('#ffffff')); band.position.y = 0.08;
+  const foot = new THREE.Mesh(new THREE.BoxGeometry(0.11, 0.014, 0.11), toyMat('#e0701d')); foot.position.y = 0.007;
+  g.add(cone, band, foot);
+  return shadowCasting(g);
+}
+
+// ---------------------------------------------------------------------------
+// Level build: paints the lawn and roads, then places the pieces and scenery.
+// ---------------------------------------------------------------------------
+const TREE_PALETTES = [['#5fae4e', '#7cc35c', '#a8dc7c'], ['#4f9b55', '#69b667', '#97d186'], ['#93b941', '#b3d052', '#d8e77e']];
+const FLOWERS = ['#ffffff', '#ffd75e', '#ff9fb4', '#c9a8ff', '#ff8a5c'];
+const SHIRTS = ['#ff8a5c', '#5ab3c9', '#e2a8ff', '#ffd75e'];
+const CUT_CACHE = {
+  trees: TREE_PALETTES.map(p => CUTOUTS.roundTree(p)), pine: CUTOUTS.pineTree(),
+  bushes: FLOWERS.slice(1, 4).map(f => CUTOUTS.bush(f)), barrier: CUTOUTS.barrier(),
+  people: SHIRTS.map((s, i) => CUTOUTS.person(s, i * 17 + 3)),
+};
+
+function analyseLevel(engine) {
+  const roadSamples = [];
+  for (const e of engine.edges.values()) for (let d = 0; d <= e.path.length; d += 0.05) roadSamples.push(e.path.point(d));
+  const incoming = (nodeID) => [...engine.edges.values()].find(e => e.toNodeID === nodeID);
+  const houses = engine.level.houses.map(h => {
+    const node = engine.nodes.get(h.nodeID), e = incoming(h.nodeID);
+    const heading = e ? e.path.tangent(e.path.length) : { x: 0, y: 1 };
+    return { ...h, node, heading, center: { x: node.x + heading.x * 0.54, y: node.y + heading.y * 0.54 } };
+  });
+  const barriers = engine.barrierNodes.map(node => {
+    const e = incoming(node.id); return { node, heading: e ? e.path.tangent(e.path.length) : { x: 1, y: 0 } };
+  });
+  const starts = engine.level.vans.map(v => {
+    const node = engine.nodes.get(v.startNodeID), e = engine.edges.get(node.active);
+    return { van: v, node, heading: e ? e.path.tangent(0) : { x: 0, y: 1 } };
+  });
+  // Everything scenery must keep clear of, as [point, radius].
+  const keepOut = [
+    ...roadSamples.map(p => [p, 0.34]),
+    ...houses.map(h => [h.center, 0.62]), ...houses.map(h => [h.node, 0.36]),
+    ...engine.switchNodes.map(n => [n, 0.42]), ...starts.map(s => [s.node, 0.42]), ...barriers.map(b => [b.node, 0.45]),
+  ];
+  return { roadSamples, houses, barriers, starts, keepOut };
+}
+
+function clearance(p, keepOut) {
+  let best = Infinity;
+  for (const [q, r] of keepOut) best = Math.min(best, Math.hypot(p.x - q.x, p.y - q.y) - r);
+  return best;
+}
+
+function placeScenery(info, seed) {
+  const rnd = mulberry32(seed), items = [], keepOut = [...info.keepOut];
+  const inSlab = (p, m) => p.x > -1.3 + m && p.x < 5.3 - m && p.y > -1.3 + m && p.y < 7.3 - m;
+  // Tall pieces must not hide road behind them (further up the screen).
+  const sightlineClear = (p, reach) => [0.15, 0.35, 0.55, 0.75, 0.95].filter(k => k <= reach).every(k => clearance({ x: p.x, y: p.y + k }, info.keepOut) > 0.02);
+
+  // One pond in the roomiest open patch.
+  let pond = null;
+  for (let i = 0; i < 400; i++) {
+    const p = { x: -1 + rnd() * 6, y: -0.8 + rnd() * 7.6 };
+    if (!inSlab(p, 0.7)) continue;
+    const c = clearance(p, keepOut);
+    if (c > 0.55 && (!pond || c > pond.c)) pond = { ...p, c };
+  }
+  if (pond) { pond.rx = Math.min(0.62, pond.c * 0.9); pond.ry = pond.rx * 0.68; keepOut.push([pond, pond.rx + 0.15]); }
+
+  // Trees grow in groves, the way a model maker would plant them.
+  const groves = [];
+  for (let i = 0; i < 600 && groves.length < 9; i++) {
+    const p = { x: -1.1 + rnd() * 6.2, y: -0.3 + rnd() * 7.5 };
+    if (inSlab(p, 0.3) && clearance(p, keepOut) > 0.25 && groves.every(g => Math.hypot(g.x - p.x, g.y - p.y) > 1.1)) groves.push(p);
+  }
+  const gauss = () => (rnd() + rnd() + rnd() - 1.5) * 0.55;
+  const tries = 1600;
+  for (let i = 0; i < tries; i++) {
+    const grove = groves.length && rnd() < 0.7 ? groves[Math.floor(rnd() * groves.length)] : null;
+    const p = grove ? { x: grove.x + gauss(), y: grove.y + gauss() } : { x: -1.2 + rnd() * 6.4, y: -1.2 + rnd() * 8.4 };
+    if (!inSlab(p, 0.22)) continue;
+    const front = p.y < -0.45, c = clearance(p, keepOut);
+    const near = items.some(it => Math.hypot(it.x - p.x, it.y - p.y) < (it.kind === 'flowers' ? 0.22 : 0.36));
+    if (near) continue;
+    const roll = rnd();
+    if (!front && c > 0.12 && items.filter(t => t.kind === 'tree').length < 34 && (grove ? roll < 0.85 : roll < 0.2)) {
+      const h = 0.6 + rnd() * 0.38;
+      if (!sightlineClear(p, h * 0.95)) continue;
+      items.push({ kind: 'tree', ...p, h, variant: rnd() < 0.28 ? 'pine' : Math.floor(rnd() * 3) });
+    } else if (c > 0.06 && items.filter(t => t.kind === 'bush').length < 18 && roll < 0.75) {
+      if (!sightlineClear(p, 0.2)) continue;
+      items.push({ kind: 'bush', ...p, h: 0.17 + rnd() * 0.08, variant: Math.floor(rnd() * 3) });
+    } else if (c > -0.05 && items.filter(t => t.kind === 'flowers').length < 34) {
+      items.push({ kind: 'flowers', ...p, color: FLOWERS[Math.floor(rnd() * FLOWERS.length)] });
+    }
+  }
+  // A few residents chatting near their front doors.
+  info.houses.forEach((h, i) => {
+    const side = { x: -h.heading.y, y: h.heading.x }, s = i % 2 ? 1 : -1;
+    const p = { x: h.node.x + side.x * 0.48 * s - h.heading.x * 0.05, y: h.node.y + side.y * 0.48 * s - h.heading.y * 0.05 };
+    if (clearance(p, info.keepOut.filter(([, r]) => r < 0.4)) > -0.05 && inSlab(p, 0.15)) items.push({ kind: 'person', ...p, variant: i % SHIRTS.length });
+  });
+  return { items, pond };
+}
+
+function paintGround(engine, info, scenery) {
+  const W = Math.round(SLAB_W * PPU), H = Math.round(SLAB_D * PPU);
+  const c = makeCanvas(W, H), g = c.getContext('2d'), rnd = mulberry32(engine.level.number * 97);
+  // lawn
+  g.fillStyle = '#8fc766'; g.fillRect(0, 0, W, H);
+  for (let y = 0; y < H; y += PPU * 0.5) { g.fillStyle = (y / (PPU * 0.5)) % 2 ? 'rgba(255,255,255,.05)' : 'rgba(40,80,20,.035)'; g.fillRect(0, y, W, PPU * 0.5); }
+  for (let i = 0; i < 16000; i++) {
+    g.fillStyle = ['#7fb85a', '#9fd474', '#86c060', '#a9da7f'][i % 4];
+    g.globalAlpha = 0.35 + rnd() * 0.4; g.beginPath(); g.arc(rnd() * W, rnd() * H, 0.8 + rnd() * 2.2, 0, 7); g.fill();
+  }
+  g.globalAlpha = 1; g.strokeStyle = 'rgba(60,110,40,.35)'; g.lineWidth = 1.6;
+  for (let i = 0; i < 900; i++) { const x = rnd() * W, y = rnd() * H; g.beginPath(); g.moveTo(x - 3, y - 5); g.lineTo(x, y); g.lineTo(x + 3, y - 6); g.stroke(); }
+
+  // soft contact shadows baked under scenery
+  const ao = (gx, gy, r, a) => { const p = toCanvas(gx, gy), gr = g.createRadialGradient(p.x, p.y, 0, p.x, p.y, r * PPU); gr.addColorStop(0, `rgba(30,60,20,${a})`); gr.addColorStop(1, 'rgba(30,60,20,0)'); g.fillStyle = gr; g.fillRect(p.x - r * PPU, p.y - r * PPU, r * PPU * 2, r * PPU * 2); };
+  for (const it of scenery.items) if (it.kind === 'tree') ao(it.x, it.y, 0.26, 0.35); else if (it.kind === 'bush') ao(it.x, it.y, 0.18, 0.28);
+  info.houses.forEach(h => ao(h.center.x, h.center.y, 0.55, 0.4));
+
+  // pond
+  if (scenery.pond) {
+    const p = toCanvas(scenery.pond.x, scenery.pond.y), rx = scenery.pond.rx * PPU, ry = scenery.pond.ry * PPU;
+    g.fillStyle = '#e8d9b5'; g.beginPath(); g.ellipse(p.x, p.y, rx + 12, ry + 12, 0.2, 0, 7); g.fill();
+    g.fillStyle = '#5fb2da'; g.beginPath(); g.ellipse(p.x, p.y, rx, ry, 0.2, 0, 7); g.fill();
+    g.fillStyle = '#86cbe8'; g.beginPath(); g.ellipse(p.x - rx * 0.15, p.y - ry * 0.2, rx * 0.7, ry * 0.55, 0.2, 0, 7); g.fill();
+    g.fillStyle = '#5ea44d'; for (let i = 0; i < 3; i++) { circle(g, p.x + (rnd() - 0.5) * rx, p.y + (rnd() - 0.5) * ry, 9, '#5ea44d'); }
+  }
+
+  // flower beds
+  for (const it of scenery.items) if (it.kind === 'flowers') {
+    const p = toCanvas(it.x, it.y);
+    for (let k = 0; k < 9; k++) {
+      const x = p.x + (rnd() - 0.5) * 34, y = p.y + (rnd() - 0.5) * 26;
+      circle(g, x, y + 2, 4.5, 'rgba(40,80,20,.25)'); circle(g, x, y, 4.5, it.color); circle(g, x, y, 1.6, '#f3b437');
+    }
+  }
+
+  // roads on their own layer so the curb casts one shadow over the lawn
+  const r = makeCanvas(W, H), rg = r.getContext('2d');
+  const strokeAll = (width, color) => {
+    rg.strokeStyle = color; rg.lineWidth = width * PPU; rg.lineCap = 'round'; rg.lineJoin = 'round';
+    for (const e of engine.edges.values()) { rg.beginPath(); e.path.pts.forEach((q, i) => { const p = toCanvas(q.x, q.y); i ? rg.lineTo(p.x, p.y) : rg.moveTo(p.x, p.y); }); rg.stroke(); }
+  };
+  const pad = (gx, gy, radius, color) => { const p = toCanvas(gx, gy); circle(rg, p.x, p.y, radius * PPU, color); };
+  const plazas = engine.switchNodes;
+  strokeAll(0.47, '#efe6d2'); plazas.forEach(n => pad(n.x, n.y, 0.34, '#efe6d2'));
+  // driveways to each front door
+  info.houses.forEach(h => {
+    const a = toCanvas(h.node.x, h.node.y), b = toCanvas(h.node.x + h.heading.x * 0.2, h.node.y + h.heading.y * 0.2);
+    rg.strokeStyle = '#e4d4b4'; rg.lineWidth = 0.4 * PPU; rg.lineCap = 'round'; rg.beginPath(); rg.moveTo(a.x, a.y); rg.lineTo(b.x, b.y); rg.stroke();
+  });
+  strokeAll(0.335, '#ffffff'); plazas.forEach(n => pad(n.x, n.y, 0.3, '#ffffff'));
+  strokeAll(0.3, '#626779'); plazas.forEach(n => pad(n.x, n.y, 0.285, '#626779'));
+  // depot bays under each van's starting spot
+  info.starts.forEach(s => {
+    const p = toCanvas(s.node.x, s.node.y), ang = Math.atan2(-s.heading.y, s.heading.x);
+    rg.save(); rg.translate(p.x, p.y); rg.rotate(ang);
+    rg.fillStyle = '#6f7486'; roundRectPath(rg, -0.36 * PPU, -0.2 * PPU, 0.62 * PPU, 0.4 * PPU, 10); rg.fill();
+    rg.strokeStyle = '#ffffff'; rg.lineWidth = 3; rg.setLineDash([9, 7]); roundRectPath(rg, -0.34 * PPU, -0.18 * PPU, 0.58 * PPU, 0.36 * PPU, 8); rg.stroke(); rg.setLineDash([]);
+    rg.fillStyle = VAN_COLORS[s.van.color].body; rg.fillRect(-0.34 * PPU, -0.18 * PPU, 0.07 * PPU, 0.36 * PPU);
+    rg.restore();
+  });
+  // hatched stop markings at roadblocks
+  info.barriers.forEach(b => {
+    const p = toCanvas(b.node.x, b.node.y), ang = Math.atan2(-b.heading.y, b.heading.x);
+    rg.save(); rg.translate(p.x, p.y); rg.rotate(ang);
+    rg.fillStyle = '#ffffff'; for (let k = -2; k <= 2; k++) rg.fillRect(-0.06 * PPU, k * 0.055 * PPU - 3, 0.12 * PPU, 6);
+    rg.restore();
+  });
+  addGrain(rg, W, H, 0.16);
+  g.save(); g.shadowColor = 'rgba(25,45,15,.38)'; g.shadowBlur = 0.05 * PPU; g.shadowOffsetX = -0.012 * PPU; g.shadowOffsetY = 0.02 * PPU; g.drawImage(r, 0, 0); g.restore();
+
+  addGrain(g, W, H, 0.05);
+  const tex = toTexture(c);
+  tex.repeat.set(1 / SLAB_W, 1 / SLAB_D); tex.offset.set(0.5, 0.5);
+  return tex;
+}
+
+let board = null;   // everything that belongs to the current level
+
+function buildLevel(index) {
+  if (board) scene.remove(board.group);
+  const level = LEVELS[index], engine = new Engine(level), info = analyseLevel(engine);
+  const scenery = placeScenery(info, level.number * 1013 + 7);
+  if (groundMat.map) groundMat.map.dispose();
+  groundMat.map = paintGround(engine, info, scenery); groundMat.needsUpdate = true;
+
+  const group = new THREE.Group(); scene.add(group);
+  const at = (o, gx, gy, y = 0) => { const w = toWorld(gx, gy); o.position.set(w.x, y, w.z); return o; };
+  const sway = [];
+
+  for (const it of scenery.items) {
+    if (it.kind === 'tree') {
+      const t = standee(it.variant === 'pine' ? CUT_CACHE.pine : CUT_CACHE.trees[it.variant], it.h);
+      t.rotation.y = (Math.sin(it.x * 12.9 + it.y * 78.2) * 0.35); t.userData.phase = it.x * 3 + it.y;
+      group.add(at(t, it.x, it.y)); sway.push(t);
+    } else if (it.kind === 'bush') {
+      const b = standee(CUT_CACHE.bushes[it.variant], it.h); b.rotation.y = Math.sin(it.x * 4.1) * 0.3; group.add(at(b, it.x, it.y));
+    } else if (it.kind === 'person') {
+      const p = standee(CUT_CACHE.people[it.variant], 0.2); p.userData.phase = it.x * 5; group.add(at(p, it.x, it.y)); sway.push(p);
+    }
+  }
+  if (scenery.pond) {
+    const water = new THREE.Mesh(new THREE.CircleGeometry(1, 40), new THREE.MeshStandardMaterial({ color: '#8fd3ef', roughness: 0.08, metalness: 0.1, transparent: true, opacity: 0.55 }));
+    water.rotation.x = -Math.PI / 2; water.rotation.z = 0.2; water.scale.set(scenery.pond.rx * 0.95, scenery.pond.ry * 0.95, 1);
+    group.add(at(water, scenery.pond.x, scenery.pond.y, 0.006));
+  }
+
+  const houses = new Map();
+  for (const h of info.houses) {
+    const house = makeHouse(h.color), w = { x: h.heading.x, z: -h.heading.y };
+    house.rotation.y = Math.atan2(-w.x, -w.z); house.scale.setScalar(1.28);
+    group.add(at(house, h.center.x, h.center.y)); houses.set(h.nodeID, house);
+  }
+  for (const b of info.barriers) {
+    const s = standee(CUT_CACHE.barrier, 0.3); group.add(at(s, b.node.x + b.heading.x * 0.06, b.node.y + b.heading.y * 0.06));
+    const side = { x: -b.heading.y, y: b.heading.x };
+    for (const k of [-1, 1]) group.add(at(makeCone(), b.node.x + side.x * 0.27 * k + b.heading.x * 0.1, b.node.y + side.y * 0.27 * k + b.heading.y * 0.1));
+  }
+
+  const switches = new Map();
+  for (const n of engine.switchNodes) {
+    const angles = n.outgoingEdgeIDs.map(id => { const t = engine.edges.get(id).path.tangent(0); return Math.atan2(t.y, t.x); });
+    const dial = makeSwitchDial(angles); dial.userData.nodeID = n.id; dial.userData.hit.userData.nodeID = n.id;
+    const cur = angles[n.outgoingEdgeIDs.indexOf(n.active)];
+    dial.userData.angles = angles; dial.userData.angle = cur; dial.userData.target = cur; dial.userData.vel = 0;
+    dial.userData.pivot.rotation.y = cur; dial.userData.bounce = 0; dial.userData.shake = 0;
+    dial.scale.setScalar(1.12); group.add(at(dial, n.x, n.y)); switches.set(n.id, dial);
+  }
+
+  const vans = new Map();
+  for (const v of engine.vans) { const m = makeVan(v.color); m.scale.setScalar(1.15); group.add(m); vans.set(v.id, m); m.userData.hop = 0; m.userData.spin = 0; }
+
+  // route trail dots, one instanced set per van
+  const trails = engine.vans.map((v, i) => {
+    const mesh = new THREE.InstancedMesh(new THREE.CylinderGeometry(0.03, 0.03, 0.014, 12), paperMat(VAN_COLORS[v.color].body, { roughness: 0.6 }), 400);
+    mesh.count = 0; mesh.frustumCulled = false; mesh.castShadow = false; mesh.receiveShadow = false; group.add(mesh);
+    const badge = new THREE.Sprite(new THREE.SpriteMaterial({ map: badgeTex.ok, depthTest: true })); badge.scale.set(0.2, 0.2, 1); badge.visible = false; group.add(badge);
+    return { mesh, badge, offset: (i - (engine.vans.length - 1) / 2) * 0.07 };
+  });
+
+  board = { index, level, engine, info, group, houses, switches, vans, trails, sway, effects: [] };
+  syncHud(); showHint(level.hint); hideToast();
+}
+
+// ---------------------------------------------------------------------------
+// Tilt-shift: a separable blur that grows with distance from a horizontal
+// focus band, plus a little saturation and vignette, like a miniature photo.
+// ---------------------------------------------------------------------------
+const TiltShiftShader = {
+  uniforms: {
+    tDiffuse: { value: null }, dir: { value: new THREE.Vector2(1, 0) }, res: { value: new THREE.Vector2(1, 1) },
+    focus: { value: 0.5 }, band: { value: 0.12 }, ramp: { value: 0.3 }, strength: { value: 2.0 }, grade: { value: 0 },
+  },
+  vertexShader: 'varying vec2 vUv; void main(){ vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }',
+  fragmentShader: `
+    uniform sampler2D tDiffuse; uniform vec2 dir; uniform vec2 res; uniform float focus, band, ramp, strength, grade;
+    varying vec2 vUv;
+    void main() {
+      float d = abs(vUv.y - focus);
+      float amt = smoothstep(band, band + ramp, d) * strength;
+      vec4 sum = vec4(0.0); float wsum = 0.0;
+      for (int i = -7; i <= 7; i++) {
+        float fi = float(i); float w = exp(-fi * fi / 24.0);
+        sum += texture2D(tDiffuse, vUv + dir * fi * amt / res) * w; wsum += w;
+      }
+      vec4 c = sum / wsum;
+      if (grade > 0.5) {
+        float l = dot(c.rgb, vec3(0.2126, 0.7152, 0.0722));
+        c.rgb = mix(vec3(l), c.rgb, 1.3);
+        vec2 q = vUv - 0.5; c.rgb *= 1.0 - dot(q, q) * 0.42;
+      }
+      gl_FragColor = c;
+    }`,
+};
+const composer = new EffectComposer(renderer, new THREE.WebGLRenderTarget(1, 1, { type: THREE.HalfFloatType, samples: 4 }));
+composer.addPass(new RenderPass(scene, camera));
+const tiltH = new ShaderPass(TiltShiftShader), tiltV = new ShaderPass(TiltShiftShader);
+tiltV.uniforms.dir.value.set(0, 1); tiltV.uniforms.grade.value = 1;
+composer.addPass(tiltH); composer.addPass(tiltV); composer.addPass(new OutputPass());
+let tiltOn = true;
+function setTilt(on) {
+  tiltOn = on;
+  const s = on ? 3.1 * renderer.getPixelRatio() : 0;
+  tiltH.uniforms.strength.value = tiltV.uniforms.strength.value = s;
+  const btn = document.getElementById('tiltBtn'); btn.setAttribute('aria-pressed', String(on));
+}
+
+// ---------------------------------------------------------------------------
+// Camera: looking down at the table like a tilt-shift photographer on a
+// balcony. Drag to swing around it; the shot re-frames between the HUD bars.
+// ---------------------------------------------------------------------------
+const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+const REST = { yaw: -0.24, pitch: 0.8 };
+const view = { yaw: REST.yaw, pitch: REST.pitch, yawGoal: REST.yaw, pitchGoal: REST.pitch, dist: 20, shake: 0 };
+const TARGET = new THREE.Vector3(0, -0.15, 0.1);
+const FIT_POINTS = [];
+for (const x of [-SLAB_W / 2, SLAB_W / 2]) for (const z of [-SLAB_D / 2, SLAB_D / 2]) FIT_POINTS.push(new THREE.Vector3(x, 0.45, z), new THREE.Vector3(x, -0.96, z));
+
+function placeCamera(yaw, pitch, dist) {
+  camera.position.set(
+    TARGET.x + Math.sin(yaw) * Math.cos(pitch) * dist,
+    TARGET.y + Math.sin(pitch) * dist,
+    TARGET.z + Math.cos(yaw) * Math.cos(pitch) * dist,
+  );
+  camera.lookAt(TARGET); camera.updateMatrixWorld();
+}
+let hudBox = { top: 0, bottom: 0 };
+function frame() {
+  const w = window.innerWidth, h = window.innerHeight;
+  renderer.setSize(w, h, false); composer.setSize(w, h);
+  const res = new THREE.Vector2(w * renderer.getPixelRatio(), h * renderer.getPixelRatio());
+  tiltH.uniforms.res.value.copy(res); tiltV.uniforms.res.value.copy(res);
+  const top = document.querySelector('.hud-top').getBoundingClientRect().bottom + 6;
+  const bottom = h - document.getElementById('hint').getBoundingClientRect().top + 6;
+  hudBox = { top, bottom };
+  camera.aspect = w / h;
+  // Fit the table at the resting angle: binary-search the distance, then
+  // re-centre its projected bounds between the HUD bars and search again.
+  const limTop = 1 - (2 * top) / h, limBottom = -1 + (2 * bottom) / h;
+  let offY = (bottom - top) / 2, hi = 80;
+  for (let pass = 0; pass < 3; pass++) {
+    camera.setViewOffset(w, h, 0, offY, w, h); camera.updateProjectionMatrix();
+    let lo = 4; hi = 80;
+    for (let i = 0; i < 26; i++) {
+      const mid = (lo + hi) / 2; placeCamera(REST.yaw, REST.pitch, mid);
+      const fits = FIT_POINTS.every(p => { const q = p.clone().project(camera); return Math.abs(q.x) <= 0.97 && q.y <= limTop && q.y >= limBottom; });
+      if (fits) hi = mid; else lo = mid;
+    }
+    placeCamera(REST.yaw, REST.pitch, hi);
+    const ys = FIT_POINTS.map(p => p.clone().project(camera).y);
+    offY += ((limTop + limBottom) / 2 - (Math.max(...ys) + Math.min(...ys)) / 2) * h / 2;
+  }
+  view.dist = hi;
+  setTilt(tiltOn);
+}
+
+function updateCamera(t) {
+  const k = reduceMotion ? 1 : 0.12;
+  view.yaw += (view.yawGoal - view.yaw) * k; view.pitch += (view.pitchGoal - view.pitch) * k;
+  const idle = reduceMotion ? 0 : Math.sin(t * 0.21) * 0.025;
+  placeCamera(view.yaw + idle, view.pitch, view.dist);
+  if (view.shake > 0) {
+    camera.position.x += (Math.random() - 0.5) * view.shake * 0.12; camera.position.y += (Math.random() - 0.5) * view.shake * 0.12;
+    view.shake = Math.max(0, view.shake - 0.04);
+  }
+  // keep the focus band on the middle of the board
+  const c = new THREE.Vector3(0, 0, 0.2).project(camera);
+  tiltH.uniforms.focus.value = tiltV.uniforms.focus.value = c.y * 0.5 + 0.5;
+}
+
+const raycaster = new THREE.Raycaster(), pointer = new THREE.Vector2();
+function switchAt(clientX, clientY) {
+  if (!board) return null;
+  pointer.set((clientX / window.innerWidth) * 2 - 1, -(clientY / window.innerHeight) * 2 + 1);
+  raycaster.setFromCamera(pointer, camera);
+  const hits = raycaster.intersectObjects([...board.switches.values()].map(s => s.userData.hit), false);
+  return hits.length ? hits[0].object.userData.nodeID : null;
+}
+let drag = null;
+canvasEl.addEventListener('pointerdown', e => {
+  drag = { x: e.clientX, y: e.clientY, yaw: view.yawGoal, pitch: view.pitchGoal, moved: false, id: e.pointerId };
+  canvasEl.setPointerCapture(e.pointerId);
+});
+canvasEl.addEventListener('pointermove', e => {
+  if (drag && drag.id === e.pointerId) {
+    const dx = e.clientX - drag.x, dy = e.clientY - drag.y;
+    if (!drag.moved && Math.hypot(dx, dy) > 7) { drag.moved = true; canvasEl.classList.add('dragging'); }
+    if (drag.moved) {
+      view.yawGoal = THREE.MathUtils.clamp(drag.yaw - dx * 0.006, -0.85, 0.85);
+      view.pitchGoal = THREE.MathUtils.clamp(drag.pitch + dy * 0.004, 0.45, 1.3);
+    }
+  } else if (e.pointerType === 'mouse') {
+    canvasEl.classList.toggle('over-switch', !!switchAt(e.clientX, e.clientY));
+  }
+});
+const endDrag = e => {
+  if (!drag || drag.id !== e.pointerId) return;
+  if (!drag.moved && e.type === 'pointerup') { const id = switchAt(e.clientX, e.clientY); if (id) tapSwitch(id); }
+  canvasEl.classList.remove('dragging'); drag = null;
+};
+canvasEl.addEventListener('pointerup', endDrag);
+canvasEl.addEventListener('pointercancel', endDrag);
+canvasEl.addEventListener('dblclick', () => { view.yawGoal = REST.yaw; view.pitchGoal = REST.pitch; });
+
+// ---------------------------------------------------------------------------
+// Little effects: paper confetti, cotton-wool puffs, a parcel toss.
+// ---------------------------------------------------------------------------
+const confettiGeo = new THREE.PlaneGeometry(0.05, 0.032);
+const confettiMats = new Map();
+const confettiMat = c => { if (!confettiMats.has(c)) confettiMats.set(c, new THREE.MeshStandardMaterial({ color: c, roughness: 0.8, side: THREE.DoubleSide })); return confettiMats.get(c); };
+const puffGeo = new THREE.IcosahedronGeometry(1, 1);
+const parcelMat = [paperMat('#c99a63', { map: grainTexture }), paperMat('#c99a63'), paperMat('#e9d9b5'), paperMat('#c99a63'), paperMat('#c99a63'), paperMat('#c99a63')];
+
+function addEffect(obj, update) { board.group.add(obj); board.effects.push({ obj, update, age: 0 }); }
+function spawnConfetti(pos, colors, count, spread = 1) {
+  if (reduceMotion) count = Math.ceil(count / 4);
+  for (let i = 0; i < count; i++) {
+    const m = new THREE.Mesh(confettiGeo, confettiMat(colors[i % colors.length])); m.castShadow = true;
+    m.position.copy(pos);
+    const v = new THREE.Vector3((Math.random() - 0.5) * 2.2 * spread, 1.6 + Math.random() * 1.8, (Math.random() - 0.5) * 2.2 * spread);
+    const spin = new THREE.Vector3(Math.random() * 12, Math.random() * 12, Math.random() * 12);
+    m.rotation.set(Math.random() * 6, Math.random() * 6, Math.random() * 6);
+    addEffect(m, (dt, fx) => {
+      if (m.position.y > 0.012) {
+        v.y -= 6.5 * dt; v.multiplyScalar(1 - 1.6 * dt);
+        m.position.addScaledVector(v, dt); m.rotation.x += spin.x * dt; m.rotation.y += spin.y * dt;
+        if (m.position.y <= 0.012) { m.position.y = 0.012; m.rotation.set(-Math.PI / 2, 0, Math.random() * 6); }
+      }
+      return fx.age < 3.2;
+    });
+  }
+}
+function spawnPuff(pos, size = 1, count = 6, opacity = 0.95) {
+  for (let i = 0; i < count; i++) {
+    const mat = new THREE.MeshStandardMaterial({ color: '#ffffff', roughness: 1, flatShading: true, transparent: true, opacity });
+    const m = new THREE.Mesh(puffGeo, mat); m.userData.ownMat = true;
+    const dir = new THREE.Vector3(Math.cos(i * 2.4), 0.6 + Math.random() * 0.5, Math.sin(i * 2.4)).multiplyScalar(0.35 * size);
+    m.position.copy(pos); m.scale.setScalar(0.04 * size);
+    addEffect(m, (dt, fx) => {
+      const k = fx.age / 0.9;
+      m.position.addScaledVector(dir, dt * (1 - k));
+      m.scale.setScalar((0.04 + 0.11 * Math.sqrt(k)) * size);
+      mat.opacity = opacity * (1 - k);
+      return k < 1;
+    });
+  }
+}
+function spawnSmoke(pos) {
+  const mat = new THREE.MeshStandardMaterial({ color: '#ffffff', roughness: 1, flatShading: true, transparent: true, opacity: 0.75 });
+  const m = new THREE.Mesh(puffGeo, mat); m.userData.ownMat = true; m.position.copy(pos); m.scale.setScalar(0.03);
+  const drift = (Math.random() - 0.3) * 0.12;
+  addEffect(m, (dt, fx) => {
+    const k = fx.age / 3;
+    m.position.y += dt * 0.16; m.position.x += dt * drift;
+    m.scale.setScalar(0.03 + k * 0.07); mat.opacity = 0.75 * (1 - k);
+    return k < 1;
+  });
+}
+function spawnParcel(from, to, onLand) {
+  const m = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.08, 0.1), parcelMat); m.castShadow = true; m.userData.ownGeo = true;
+  m.position.copy(from);
+  addEffect(m, (dt, fx) => {
+    const k = Math.min(1, fx.age / 0.5);
+    m.position.lerpVectors(from, to, k); m.position.y += Math.sin(k * Math.PI) * 0.45;
+    m.rotation.y = k * 4; m.rotation.x = k * 2;
+    if (k >= 1) { onLand(); return false; }
+    return true;
+  });
+}
+
+// ---------------------------------------------------------------------------
+// HUD
+// ---------------------------------------------------------------------------
+const $ = id => document.getElementById(id);
+const name = id => id.charAt(0).toUpperCase() + id.slice(1);
+let hudKey = '';
+function syncHud() {
+  const e = board.engine, flips = e.changeCount, stars = starRating(flips, e.level.parChanges);
+  const key = [board.index, e.phase, flips, e.outcome?.type].join('|');
+  if (key === hudKey) return; hudKey = key;
+  $('levelNo').textContent = `Level ${String(e.level.number).padStart(2, '0')}`;
+  $('levelName').textContent = e.level.name;
+  $('flips').textContent = flips; $('par').textContent = e.level.parChanges;
+  [...$('stars').children].forEach((s, i) => s.classList.toggle('on', i < stars));
+  $('stars').setAttribute('aria-label', `${stars} of 3 stars if you go now`);
+  const go = $('goBtn');
+  go.textContent = e.phase === 'plan' ? 'Go' : e.phase === 'run' ? 'Stop' : e.outcome?.type === 'win' ? 'Again' : 'Retry';
+  go.classList.toggle('stop', e.phase === 'run');
+  $('resetBtn').disabled = e.phase !== 'plan' || flips === 0;
+  document.querySelectorAll('.seg button').forEach(b => b.setAttribute('aria-pressed', String(Number(b.dataset.level) === board.index)));
+}
+function showHint(html) { $('hint').innerHTML = `${html}<br><span style="opacity:.7">Drag the table to look around · double-click to straighten it.</span>`; }
+let toastTimer = 0;
+function showToast(kind, title, body, stars = 0) {
+  const t = $('toast'); t.className = `toast sticker ${kind}`; $('toastTitle').textContent = title; $('toastBody').textContent = body;
+  if (stars) { const s = document.createElement('b'); s.className = 'gold'; s.textContent = '★'.repeat(stars) + '☆'.repeat(3 - stars) + '  '; $('toastBody').prepend(s); }
+  document.body.classList.add('has-toast');
+  t.hidden = false; t.style.animation = 'none'; void t.offsetWidth; t.style.animation = '';
+  clearTimeout(toastTimer);
+}
+function hideToast() { $('toast').hidden = true; document.body.classList.remove('has-toast'); }
+
+function tapSwitch(nodeID) {
+  const e = board.engine;
+  if (e.phase === 'finished') e.retry();
+  e.tap(nodeID);
+}
+$('goBtn').addEventListener('click', () => {
+  const e = board.engine;
+  if (e.phase === 'plan') e.go(); else if (e.phase === 'run') e.stop(); else e.retry();
+});
+$('resetBtn').addEventListener('click', () => { const e = board.engine; if (e.phase === 'plan') { e.resetSwitches(); board.switches.forEach(d => { d.userData.bounce = 1; }); } });
+$('tiltBtn').addEventListener('click', () => setTilt(!tiltOn));
+document.querySelectorAll('.seg button').forEach(b => b.addEventListener('click', () => { const i = Number(b.dataset.level); if (!board || i !== board.index) { hudKey = ''; buildLevel(i); } }));
+window.addEventListener('keydown', e => { if (e.key === ' ' && document.activeElement === document.body) { e.preventDefault(); $('goBtn').click(); } });
+
+// ---------------------------------------------------------------------------
+// Frame loop
+// ---------------------------------------------------------------------------
+const dummy = new THREE.Object3D();
+const angleDiff = (a, b) => { let d = (a - b) % (Math.PI * 2); if (d > Math.PI) d -= Math.PI * 2; if (d < -Math.PI) d += Math.PI * 2; return d; };
+const vanWorld = (v, y = 0) => { const p = board.engine.vanPosition(v), w = toWorld(p.x, p.y); return new THREE.Vector3(w.x, y, w.z); };
+
+function handleEvents(events) {
+  const e = board.engine;
+  for (const ev of events) {
+    if (ev.type === 'switch') board.switches.get(ev.nodeID).userData.bounce = 1;
+    else if (ev.type === 'reject') board.switches.get(ev.nodeID).userData.shake = 1;
+    else if (ev.type === 'go') {
+      hideToast();
+      e.vans.forEach(v => { const h = e.vanHeading(v), p = vanWorld(v, 0.08); p.x -= h.x * 0.26; p.z += h.y * 0.26; spawnPuff(p, 0.6, 3, 0.8); });
+    } else if (ev.type === 'reset') hideToast();
+    else if (ev.type === 'delivered') {
+      const v = e.vans.find(x => x.id === ev.vanID), house = board.houses.get(ev.nodeID), van = board.vans.get(ev.vanID);
+      van.userData.hop = 1;
+      const door = new THREE.Vector3(0, 0.1, 0.32).applyMatrix4(house.matrixWorld);
+      spawnParcel(vanWorld(v, 0.3), door, () => {
+        house.userData.bounce = 1;
+        spawnConfetti(door.clone().setY(0.45), [VAN_COLORS[v.color].body, '#ffffff', '#ffd75e'], 26, 0.7);
+      });
+    } else if (ev.type === 'finish') {
+      const o = ev.outcome, vanName = id => name(id);
+      if (o.type === 'win') {
+        const flips = e.changeCount, stars = starRating(flips, e.level.parChanges);
+        setTimeout(() => spawnConfetti(new THREE.Vector3(0, 1.4, 0), Object.values(VAN_COLORS).map(c => c.body).concat('#ffffff'), 90, 2.2), 450);
+        showToast('win', 'All delivered!', `${flips} flip${flips === 1 ? '' : 's'}, par ${e.level.parChanges}`, stars);
+      } else if (o.type === 'crash') {
+        const w = toWorld(o.point.x, o.point.y);
+        spawnPuff(new THREE.Vector3(w.x, 0.15, w.z), 2.2, 10); view.shake = reduceMotion ? 0 : 1;
+        o.vanIDs.forEach((id, i) => { board.vans.get(id).userData.spin = i ? 1 : -1; });
+        showToast('fail', 'Crash!', `${vanName(o.vanIDs[0])} and ${vanName(o.vanIDs[1])} met on the road. Change a switch and retry.`);
+      } else if (o.type === 'wrongHouse') {
+        const house = board.houses.get(o.nodeID); house.userData.shake = 1;
+        const owner = e.houses.get(o.nodeID).color;
+        showToast('fail', 'Wrong house', `${vanName(o.vanID)} parked at ${name(owner)}’s house.`);
+      } else if (o.type === 'stuck') {
+        board.vans.get(o.vanID).userData.spin = 0.4;
+        const v = e.vans.find(x => x.id === o.vanID); spawnPuff(vanWorld(v, 0.12), 1, 5);
+        showToast('fail', 'Road closed', `${vanName(o.vanID)} ran into the roadblock.`);
+      }
+    }
+  }
+}
+
+function updateVans(dt, t) {
+  const e = board.engine;
+  for (const v of e.vans) {
+    const m = board.vans.get(v.id), ud = m.userData, h = e.vanHeading(v), p = vanWorld(v);
+    m.position.copy(p);
+    const yaw = Math.atan2(h.x, -h.y);
+    const turn = ud.lastYaw === undefined ? 0 : angleDiff(yaw, ud.lastYaw) / Math.max(dt, 1e-3);
+    ud.lastYaw = yaw; ud.lean = (ud.lean || 0) + (THREE.MathUtils.clamp(-turn * 0.035, -0.18, 0.18) - (ud.lean || 0)) * Math.min(1, dt * 10);
+    m.rotation.y = yaw;
+    ud.hop = Math.max(0, ud.hop - dt * 2.2);
+    const hopY = Math.sin(ud.hop * Math.PI) * 0.12;
+    const rumble = v.status === 'driving' ? Math.abs(Math.sin(v.odometer * 30)) * 0.007 : v.status === 'waiting' && e.phase === 'plan' ? Math.sin(t * 34 + v.start.x) * 0.0015 : 0;
+    ud.chassis.position.y = rumble + hopY;
+    ud.chassis.rotation.z = ud.lean;
+    ud.chassis.rotation.x = v.status === 'driving' ? -0.02 : 0;
+    if (v.status === 'crashed' || v.status === 'stuck') {
+      ud.spinAmt = Math.min(1, (ud.spinAmt || 0) + dt * 3);
+      ud.chassis.rotation.z = ud.spin * 0.35 * ud.spinAmt; m.rotation.y = yaw + ud.spin * 0.6 * ud.spinAmt;
+    } else ud.spinAmt = 0;
+    ud.wheels.forEach(w => { w.rotation.x = v.odometer / 0.056; });
+  }
+}
+
+function updateSwitches(dt, t) {
+  const e = board.engine, locked = e.lockedSwitches();
+  for (const [id, dial] of board.switches) {
+    const ud = dial.userData, n = e.nodes.get(id);
+    ud.target = ud.angles[n.outgoingEdgeIDs.indexOf(n.active)];
+    const diff = angleDiff(ud.target, ud.angle);
+    ud.vel += (diff * 150 - ud.vel * 15) * dt; ud.angle += ud.vel * dt;
+    if (reduceMotion) { ud.angle = ud.target; ud.vel = 0; }
+    ud.pivot.rotation.y = ud.angle;
+    ud.bounce = Math.max(0, ud.bounce - dt * 3); ud.shake = Math.max(0, ud.shake - dt * 3);
+    const b = Math.sin(ud.bounce * Math.PI);
+    ud.lift.position.y = b * 0.06; ud.lift.scale.set(1 + b * 0.08, 1 - b * 0.15, 1 + b * 0.08);
+    ud.lift.position.x = Math.sin(ud.shake * 40) * ud.shake * 0.03;
+    const idle = e.phase === 'plan' && !reduceMotion ? 1 + Math.sin(t * 3.2 + n.x * 2 + n.y) * 0.05 : 1;
+    ud.pivot.scale.setScalar(idle);
+    ud.arrowMat.color.set(locked.has(id) ? '#aaa395' : '#3b3a55');
+  }
+}
+
+function updateTrails(t) {
+  const e = board.engine, previews = e.previews();
+  previews.forEach((pv, i) => {
+    const tr = board.trails[i], m = tr.mesh;
+    if (pv.ending === 'offRoad' || e.phase === 'finished') { m.count = 0; tr.badge.visible = false; return; }
+    let total = 0;
+    const segs = pv.edges.map((id, k) => { const ed = e.edges.get(id), from = k === 0 ? pv.from : 0, s = { ed, from, len: ed.path.length - from, start: total }; total += s.len; return s; });
+    const spacing = 0.13, phase = reduceMotion ? 0 : (t * 0.32) % spacing;
+    let n = 0, si = 0;
+    for (let s = 0.27 + phase; s < total - 0.04 && n < 400; s += spacing) {
+      while (si < segs.length - 1 && s > segs[si].start + segs[si].len) si++;
+      const seg = segs[si], d = seg.from + (s - seg.start), p = seg.ed.path.point(d), tg = seg.ed.path.tangent(d);
+      const w = toWorld(p.x - tg.y * tr.offset, p.y + tg.x * tr.offset);
+      dummy.position.set(w.x, 0.012, w.z); dummy.scale.setScalar(1); dummy.updateMatrix(); m.setMatrixAt(n++, dummy.matrix);
+    }
+    m.count = n; m.instanceMatrix.needsUpdate = true;
+    const end = e.nodes.get(pv.endNode), house = board.houses.get(pv.endNode);
+    tr.badge.material.map = pv.ending === 'match' ? badgeTex.ok : badgeTex.bad;
+    if (house) tr.badge.position.set(house.position.x + tr.offset * 2.6, 0.92 + Math.sin(t * 2.5 + i) * 0.03, house.position.z);
+    else { const w = toWorld(end.x, end.y); tr.badge.position.set(w.x + tr.offset * 2.6, 0.5 + Math.sin(t * 2.5 + i) * 0.03, w.z); }
+    tr.badge.visible = true;
+  });
+}
+
+function updateScenery(dt, t) {
+  for (const s of board.sway) s.rotation.z = reduceMotion ? 0 : Math.sin(t * 1.3 + s.userData.phase) * 0.035;
+  for (const house of board.houses.values()) {
+    const ud = house.userData;
+    ud.bounce = Math.max(0, (ud.bounce || 0) - dt * 2.4); ud.shake = Math.max(0, (ud.shake || 0) - dt * 2);
+    const b = Math.sin((ud.bounce || 0) * Math.PI);
+    ud.body.scale.set(1 + b * 0.08, 1 - b * 0.12 + Math.max(0, Math.sin(ud.bounce * Math.PI * 2)) * 0.06, 1 + b * 0.08);
+    ud.body.rotation.z = Math.sin(ud.shake * 30) * ud.shake * 0.06;
+    ud.smoke = (ud.smoke || Math.random() * 2) - dt;
+    if (ud.smoke <= 0 && !reduceMotion) { ud.smoke = 1.3; spawnSmoke(ud.chimneyTop.clone().applyMatrix4(house.matrixWorld)); }
+  }
+  board.effects = board.effects.filter(fx => {
+    fx.age += dt;
+    const keep = fx.update(dt, fx);
+    if (!keep) { board.group.remove(fx.obj); if (fx.obj.userData.ownMat) fx.obj.material.dispose(); if (fx.obj.userData.ownGeo) fx.obj.geometry.dispose(); }
+    return keep;
+  });
+}
+
+let last = performance.now(), firstFrame = true;
+function tick(now) {
+  const dt = Math.min(0.1, (now - last) / 1000), t = now / 1000; last = now;
+  if (board) {
+    board.engine.advance(dt);
+    handleEvents(board.engine.drain());
+    updateVans(dt, t); updateSwitches(dt, t); updateTrails(t); updateScenery(dt, t);
+    syncHud();
+  }
+  for (const c of clouds) {
+    c.position.x += c.userData.speed * dt; if (c.position.x > 8) c.position.x = -8;
+    c.position.y = c.userData.baseY + Math.sin(t * 0.5 + c.userData.speed * 40) * 0.05;
+  }
+  updateCamera(t);
+  composer.render();
+  if (firstFrame) { firstFrame = false; window.__dioramaReady = true; $('loading').classList.add('gone'); }
+  requestAnimationFrame(tick);
+}
+
+function start(data = {}) {
+  buildLevel(Number.isInteger(data.level) ? data.level : 0);
+  tiltOn = data.tilt !== false;
+  frame();
+  requestAnimationFrame(tick);
+}
+window.addEventListener('resize', frame);
+// Handle for poking at the prototype from the console.
+window.__diorama = { get board() { return board; }, tapSwitch };
+window.claude?.hot?.snapshot?.(() => ({ level: board?.index ?? 0, tilt: tiltOn }));
+try {
+  window.claude?.hot?.ready ? window.claude.hot.ready(start) : start(window.claude?.hot?.data ?? {});
+} catch (err) {
+  $('loading').textContent = 'The diorama could not start: ' + err.message;
+  console.error(err);
+}
+</script>
+<script>
+  setTimeout(function () {
+    if (!window.__dioramaReady) {
+      var l = document.getElementById('loading');
+      if (l) l.textContent = 'Still loading the 3D engine. If this stays, check your connection and reload. WebGL is required.';
+    }
+  }, 9000);
+</script>
+
+</body>
+</html>

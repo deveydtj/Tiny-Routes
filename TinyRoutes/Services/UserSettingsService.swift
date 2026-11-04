@@ -59,6 +59,14 @@ final class UserSettingsService: ObservableObject {
         }
     }
 
+    func setBoardStyle(_ boardStyle: MultiVanBoardStyle) {
+        update { $0.boardStyle = boardStyle }
+    }
+
+    func setUsesFlatBoardInLowPowerMode(_ usesFlatBoard: Bool) {
+        update { $0.usesFlatBoardInLowPowerMode = usesFlatBoard }
+    }
+
     func resetToDefaults() {
         settings = repository.resetToDefaults()
     }

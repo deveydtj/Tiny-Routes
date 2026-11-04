@@ -124,8 +124,16 @@ final class TRConfettiScene: SKScene {
         return true
     }
 
+    /// The authored emitter, read from its file once. Each burst plays a copy.
+    private static let authoredEmitter = SKEmitterNode(fileNamed: "LevelCompleteConfetti")
+
+    /// Reads the emitter file and loads its texture ahead of the first burst.
+    static func preloadResources() {
+        authoredEmitter?.particleTexture?.preload {}
+    }
+
     private func makeBestAvailableEmitter(selectedConfettiOption: ShopCosmeticOption) -> SKEmitterNode? {
-        if let emitter = SKEmitterNode(fileNamed: "LevelCompleteConfetti") {
+        if let emitter = Self.authoredEmitter?.copy() as? SKEmitterNode {
             configureEmitter(emitter, selectedConfettiOption: selectedConfettiOption)
             return emitter
         }

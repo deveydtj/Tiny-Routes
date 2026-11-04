@@ -4,7 +4,7 @@
 
 Tiny Routes is a minimalist one-thumb route puzzle game for iPhone. Players guide a tiny delivery dot through compact route-map puzzles by tapping intersections, rotating direction arrows, collecting packages, and reaching the destination before time runs out.
 
-> **Current direction:** the game is being reworked around a "set the switches, then press Go" multi-van puzzle. See the [multi-van prototype plan](docs/prototype/multi_van_prototype_plan.md). The sections below describe the current single-dot build until that prototype is playtested.
+> **Current direction:** the game is now the "set the switches, then press Go" multi-van puzzle. Home → Play → Levels opens its 12 levels (`TinyRoutes/Resources/PrototypeLevels`); the original 27 single-dot levels have been removed. See the [multi-van prototype plan](docs/prototype/multi_van_prototype_plan.md). Sections below that describe the single-dot game, its generator and editor are historical until that code is retired.
 
 ## Concept
 
@@ -129,6 +129,17 @@ from either tool and from any working directory:
 ```bash
 python -m pip install -e Tools/TinyRoutesCore
 ```
+
+## TestFlight upload
+
+Double-click `Build TestFlight.command` in Finder, or run
+`./Build\ TestFlight.command` from the repository root. It uses the Apple account
+in Xcode Settings → Accounts to archive `MultiVanInternal`, verify its packaged
+resources, and upload for **internal TestFlight testing only**. Xcode manages the
+upload build number. Logs and archives stay in the ignored `.local/testflight/`
+directory. After Apple processes the build, check App Store Connect → Tiny Routes
+→ TestFlight. In the app, enable Settings → About → Multi-Van Prototype, then
+open Home → Prototype.
 
 ## Git publishing
 

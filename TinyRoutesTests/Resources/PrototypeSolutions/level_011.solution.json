@@ -1,0 +1,14 @@
+{
+  "planTaps": [
+    "route_switch",
+    "yellow_switch",
+    "yellow_switch",
+    "split_switch"
+  ],
+  "liveTaps": [
+    {
+      "atTime": 4.95,
+      "nodeID": "split_switch"
+    }
+  ]
+}

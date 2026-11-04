@@ -102,15 +102,15 @@ final class MultiVanLevelTests: XCTestCase {
             .deletingLastPathComponent().deletingLastPathComponent()
             .appendingPathComponent("TinyRoutes/Resources/PrototypeLevels")
         let urls = try FileManager.default.contentsOfDirectory(at: directory, includingPropertiesForKeys: nil)
-            .filter { $0.pathExtension == "json" && $0.lastPathComponent.hasPrefix("proto_") }
+            .filter { $0.pathExtension == "json" && $0.lastPathComponent.hasPrefix("level_") }
             .sorted { $0.lastPathComponent < $1.lastPathComponent }
-        XCTAssertEqual(urls.map(\.lastPathComponent), (1...12).map { String(format: "proto_%02d.json", $0) })
-        XCTAssertTrue(urls.contains { $0.lastPathComponent == "proto_01.json" }, "proto_01: Go! is missing")
-        XCTAssertTrue(urls.contains { $0.lastPathComponent == "proto_02.json" }, "proto_02: Pick a Lane is missing")
-        XCTAssertTrue(urls.contains { $0.lastPathComponent == "proto_03.json" }, "proto_03: Two Turns is missing")
-        XCTAssertTrue(urls.contains { $0.lastPathComponent == "proto_04.json" }, "proto_04: Roundabout is missing")
-        XCTAssertTrue(urls.contains { $0.lastPathComponent == "proto_05.json" }, "proto_05: Two Colours is missing")
-        XCTAssertTrue(urls.contains { $0.lastPathComponent == "proto_06.json" }, "proto_06: Convoy is missing")
+        XCTAssertEqual(urls.map(\.lastPathComponent), (1...12).map { String(format: "level_%03d.json", $0) })
+        XCTAssertTrue(urls.contains { $0.lastPathComponent == "level_001.json" }, "level_001: Go! is missing")
+        XCTAssertTrue(urls.contains { $0.lastPathComponent == "level_002.json" }, "level_002: Pick a Lane is missing")
+        XCTAssertTrue(urls.contains { $0.lastPathComponent == "level_003.json" }, "level_003: Two Turns is missing")
+        XCTAssertTrue(urls.contains { $0.lastPathComponent == "level_004.json" }, "level_004: Roundabout is missing")
+        XCTAssertTrue(urls.contains { $0.lastPathComponent == "level_005.json" }, "level_005: Two Colours is missing")
+        XCTAssertTrue(urls.contains { $0.lastPathComponent == "level_006.json" }, "level_006: Convoy is missing")
         // Load separately: a malformed file must not hide failures in subsequent levels.
         for url in urls {
             do {
@@ -144,7 +144,7 @@ final class MultiVanLevelTests: XCTestCase {
 
     private func fixture(graph: RouteGraph, overrides: [String: Any] = [:]) throws -> MultiVanLevel {
         var json: [String: Any] = [
-            "id": "proto_fixture", "name": "Validation fixture",
+            "id": "level_fixture", "name": "Validation fixture",
             "graph": try JSONSerialization.jsonObject(with: JSONEncoder().encode(graph)),
             "vans": [["id": "red", "color": "red", "startNodeID": "start"]],
             "houses": [["nodeID": "house", "color": "red"]],
@@ -201,8 +201,8 @@ final class MultiVanLevelTests: XCTestCase {
             var graph = fixtureGraph()
             mutate(&graph)
             let issues = validationIssues(in: try fixture(graph: graph))
-            XCTAssertTrue(issues.contains { $0.hasPrefix("proto_fixture: \(expected)") },
-                          "Expected proto_fixture: \(expected); got \(issues)")
+            XCTAssertTrue(issues.contains { $0.hasPrefix("level_fixture: \(expected)") },
+                          "Expected level_fixture: \(expected); got \(issues)")
         }
     }
 
@@ -222,21 +222,21 @@ final class MultiVanLevelTests: XCTestCase {
         ]
         for (expected, overrides) in cases {
             let issues = validationIssues(in: try fixture(graph: fixtureGraph(), overrides: overrides))
-            XCTAssertTrue(issues.contains("proto_fixture: \(expected)"),
-                          "Expected proto_fixture: \(expected); got \(issues)")
+            XCTAssertTrue(issues.contains("level_fixture: \(expected)"),
+                          "Expected level_fixture: \(expected); got \(issues)")
         }
     }
 
     func testInvalidJSONReportsLevelFilenameAndDecodingCause() throws {
         for json in ["{", "{}"] {
-            let bundle = try makeBundle(files: ["PrototypeLevels/proto_broken.json": Data(json.utf8)])
+            let bundle = try makeBundle(files: ["PrototypeLevels/level_broken.json": Data(json.utf8)])
             XCTAssertThrowsError(try MultiVanLevelRepository(bundle: bundle).loadAllLevels()) { error in
                 guard case let LevelRepositoryError.decodingFailed(id, underlying) = error else {
-                    return XCTFail("proto_broken: expected decodingFailed, got \(error)")
+                    return XCTFail("level_broken: expected decodingFailed, got \(error)")
                 }
-                XCTAssertEqual(id, "proto_broken", "Malformed prototype diagnostic lost its filename")
-                XCTAssertTrue(error.localizedDescription.contains("proto_broken"), "Diagnostic lost proto_broken: \(error)")
-                XCTAssertTrue(underlying is DecodingError, "proto_broken: missing JSON decoding cause: \(error)")
+                XCTAssertEqual(id, "level_broken", "Malformed prototype diagnostic lost its filename")
+                XCTAssertTrue(error.localizedDescription.contains("level_broken"), "Diagnostic lost level_broken: \(error)")
+                XCTAssertTrue(underlying is DecodingError, "level_broken: missing JSON decoding cause: \(error)")
             }
         }
     }

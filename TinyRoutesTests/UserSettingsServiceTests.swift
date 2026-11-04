@@ -17,6 +17,8 @@ final class UserSettingsServiceTests: XCTestCase {
         XCTAssertFalse(settings.isDailyReminderEnabled)
         XCTAssertEqual(settings.dailyReminderHour, 18)
         XCTAssertEqual(settings.dailyReminderMinute, 0)
+        XCTAssertEqual(settings.boardStyle, .flat)
+        XCTAssertTrue(settings.usesFlatBoardInLowPowerMode)
     }
 
     func testUserSettingsNormalizationClampsInvalidValues() {
@@ -59,6 +61,8 @@ final class UserSettingsServiceTests: XCTestCase {
         service.setConfirmsBeforeRestarting(true)
         service.setDailyReminderEnabled(true)
         service.setDailyReminderTime(hour: 7, minute: 45)
+        service.setBoardStyle(.diorama)
+        service.setUsesFlatBoardInLowPowerMode(false)
 
         let loadedSettings = repository.load()
         XCTAssertFalse(loadedSettings.isMusicEnabled)
@@ -73,6 +77,8 @@ final class UserSettingsServiceTests: XCTestCase {
         XCTAssertTrue(loadedSettings.isDailyReminderEnabled)
         XCTAssertEqual(loadedSettings.dailyReminderHour, 7)
         XCTAssertEqual(loadedSettings.dailyReminderMinute, 45)
+        XCTAssertEqual(loadedSettings.boardStyle, .diorama)
+        XCTAssertFalse(loadedSettings.usesFlatBoardInLowPowerMode)
     }
 
     @MainActor

@@ -13,6 +13,8 @@ struct UserSettings: Codable, Equatable {
     var isDailyReminderEnabled: Bool
     var dailyReminderHour: Int
     var dailyReminderMinute: Int
+    var boardStyle: MultiVanBoardStyle
+    var usesFlatBoardInLowPowerMode: Bool
 
     static let defaultValue = UserSettings()
 
@@ -28,7 +30,10 @@ struct UserSettings: Codable, Equatable {
         confirmsBeforeRestarting: Bool = false,
         isDailyReminderEnabled: Bool = false,
         dailyReminderHour: Int = 18,
-        dailyReminderMinute: Int = 0
+        dailyReminderMinute: Int = 0,
+        // 2D until the MW-10 playtests choose the default to ship.
+        boardStyle: MultiVanBoardStyle = .flat,
+        usesFlatBoardInLowPowerMode: Bool = true
     ) {
         self.isMusicEnabled = isMusicEnabled
         self.musicVolume = Self.clampedVolume(musicVolume, fallback: 0.75)
@@ -42,6 +47,8 @@ struct UserSettings: Codable, Equatable {
         self.isDailyReminderEnabled = isDailyReminderEnabled
         self.dailyReminderHour = Self.clamped(dailyReminderHour, to: 0...23)
         self.dailyReminderMinute = Self.clamped(dailyReminderMinute, to: 0...59)
+        self.boardStyle = boardStyle
+        self.usesFlatBoardInLowPowerMode = usesFlatBoardInLowPowerMode
     }
 
     func normalized() -> UserSettings {
@@ -57,7 +64,9 @@ struct UserSettings: Codable, Equatable {
             confirmsBeforeRestarting: confirmsBeforeRestarting,
             isDailyReminderEnabled: isDailyReminderEnabled,
             dailyReminderHour: dailyReminderHour,
-            dailyReminderMinute: dailyReminderMinute
+            dailyReminderMinute: dailyReminderMinute,
+            boardStyle: boardStyle,
+            usesFlatBoardInLowPowerMode: usesFlatBoardInLowPowerMode
         )
     }
 
@@ -68,5 +77,39 @@ struct UserSettings: Codable, Equatable {
 
     private static func clamped(_ value: Int, to range: ClosedRange<Int>) -> Int {
         min(max(value, range.lowerBound), range.upperBound)
+    }
+}
+
+extension UserSettings {
+    /// Missing keys take their defaults, so settings saved before a field existed
+    /// still load instead of resetting everything.
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        let defaults = UserSettings.defaultValue
+        self.init(
+            isMusicEnabled: try container.decodeIfPresent(Bool.self, forKey: .isMusicEnabled) ?? defaults.isMusicEnabled,
+            musicVolume: try container.decodeIfPresent(Double.self, forKey: .musicVolume) ?? defaults.musicVolume,
+            areSoundEffectsEnabled: try container.decodeIfPresent(Bool.self, forKey: .areSoundEffectsEnabled)
+                ?? defaults.areSoundEffectsEnabled,
+            soundEffectsVolume: try container.decodeIfPresent(Double.self, forKey: .soundEffectsVolume)
+                ?? defaults.soundEffectsVolume,
+            areHapticsEnabled: try container.decodeIfPresent(Bool.self, forKey: .areHapticsEnabled) ?? defaults.areHapticsEnabled,
+            showsTutorialTips: try container.decodeIfPresent(Bool.self, forKey: .showsTutorialTips) ?? defaults.showsTutorialTips,
+            showsRouteHints: try container.decodeIfPresent(Bool.self, forKey: .showsRouteHints) ?? defaults.showsRouteHints,
+            reducesExtraAnimations: try container.decodeIfPresent(Bool.self, forKey: .reducesExtraAnimations)
+                ?? defaults.reducesExtraAnimations,
+            confirmsBeforeRestarting: try container.decodeIfPresent(Bool.self, forKey: .confirmsBeforeRestarting)
+                ?? defaults.confirmsBeforeRestarting,
+            isDailyReminderEnabled: try container.decodeIfPresent(Bool.self, forKey: .isDailyReminderEnabled)
+                ?? defaults.isDailyReminderEnabled,
+            dailyReminderHour: try container.decodeIfPresent(Int.self, forKey: .dailyReminderHour) ?? defaults.dailyReminderHour,
+            dailyReminderMinute: try container.decodeIfPresent(Int.self, forKey: .dailyReminderMinute)
+                ?? defaults.dailyReminderMinute,
+            // A style this build doesn't know, from a newer TestFlight build, falls back
+            // to the default rather than discarding every other setting.
+            boardStyle: (try? container.decodeIfPresent(MultiVanBoardStyle.self, forKey: .boardStyle)) ?? defaults.boardStyle,
+            usesFlatBoardInLowPowerMode: try container.decodeIfPresent(Bool.self, forKey: .usesFlatBoardInLowPowerMode)
+                ?? defaults.usesFlatBoardInLowPowerMode
+        )
     }
 }

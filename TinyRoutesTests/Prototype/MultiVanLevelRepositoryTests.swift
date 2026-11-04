@@ -6,7 +6,7 @@ final class MultiVanLevelRepositoryTests: XCTestCase {
         let resources = URL(fileURLWithPath: #filePath).deletingLastPathComponent()
             .deletingLastPathComponent().deletingLastPathComponent()
             .appendingPathComponent("TinyRoutes/Resources/PrototypeLevels")
-        return try Dictionary(uniqueKeysWithValues: ["proto_01", "proto_02", "proto_03", "proto_04", "proto_05", "proto_06", "proto_07", "proto_08", "proto_09", "proto_10", "proto_11", "proto_12"].map { id in
+        return try Dictionary(uniqueKeysWithValues: ["level_001", "level_002", "level_003", "level_004", "level_005", "level_006", "level_007", "level_008", "level_009", "level_010", "level_011", "level_012"].map { id in
             ("PrototypeLevels/\(id).json", try String(contentsOf: resources.appendingPathComponent("\(id).json"), encoding: .utf8))
         })
     }
@@ -17,7 +17,7 @@ final class MultiVanLevelRepositoryTests: XCTestCase {
             _ = try JSONDecoder().decode(MultiVanLevel.self, from: Data(json.utf8))
         }
         let levels = try MultiVanLevelRepository(bundle: makeBundle(files: files)).loadAllLevels()
-        XCTAssertEqual(levels.map(\.id), ["proto_01", "proto_02", "proto_03", "proto_04", "proto_05", "proto_06", "proto_07", "proto_08", "proto_09", "proto_10", "proto_11", "proto_12"])
+        XCTAssertEqual(levels.map(\.id), ["level_001", "level_002", "level_003", "level_004", "level_005", "level_006", "level_007", "level_008", "level_009", "level_010", "level_011", "level_012"])
         XCTAssertEqual(levels.map(\.name), ["Go!", "Pick a Lane", "Two Turns", "Roundabout", "Two Colours", "Convoy", "Merge", "Hold the Loop", "Split", "Three's Company", "Rush", "Big Delivery"])
         XCTAssertEqual(levels.map(\.parChanges), [0, 1, 2, 2, 2, 1, 1, 2, 2, 3, 3, 5])
         for level in levels {
@@ -35,11 +35,11 @@ final class MultiVanLevelRepositoryTests: XCTestCase {
                 XCTAssertEqual(edge.availability, .always)
                 XCTAssertNil(edge.availabilityRule)
             }
-            XCTAssertEqual(level.vans.count, level.id < "proto_05" ? 1 : (level.id < "proto_10" ? 2 : (level.id == "proto_12" ? 4 : 3)))
+            XCTAssertEqual(level.vans.count, level.id < "level_005" ? 1 : (level.id < "level_010" ? 2 : (level.id == "level_012" ? 4 : 3)))
             XCTAssertEqual(level.houses.count, level.vans.count)
             for van in level.vans {
                 XCTAssertTrue(nodeIDs.contains(van.startNodeID))
-                XCTAssertEqual(van.departDelay, level.id == "proto_06" && van.color == .blue ? 1.5 : 0)
+                XCTAssertEqual(van.departDelay, level.id == "level_006" && van.color == .blue ? 0.83 : 0)
                 XCTAssertTrue(level.houses.contains { $0.color == van.color })
             }
             for house in level.houses {
@@ -49,10 +49,10 @@ final class MultiVanLevelRepositoryTests: XCTestCase {
             let switches = level.graph.nodes.filter { $0.outgoingEdgeIDs.count > 1 }
             XCTAssertEqual(Set(level.initialSwitchEdges.keys), Set(switches.map(\.id)))
             for node in switches {
-                XCTAssertEqual(node.outgoingEdgeIDs.count, (level.id == "proto_04" || (level.id == "proto_11" && node.id == "yellow_switch") || (level.id == "proto_12" && node.id == "route_switch")) ? 3 : 2)
+                XCTAssertEqual(node.outgoingEdgeIDs.count, (level.id == "level_004" || (level.id == "level_011" && node.id == "yellow_switch") || (level.id == "level_012" && node.id == "route_switch")) ? 3 : 2)
                 XCTAssertTrue(node.outgoingEdgeIDs.contains(try XCTUnwrap(level.initialSwitchEdges[node.id])))
             }
-            let liveSwitches = ["proto_06": ["switch"], "proto_08": ["loop_switch"], "proto_09": ["switch"], "proto_11": ["split_switch"], "proto_12": ["split_switch"]]
+            let liveSwitches = ["level_006": ["switch"], "level_008": ["loop_switch"], "level_009": ["switch"], "level_011": ["split_switch"], "level_012": ["split_switch"]]
             XCTAssertEqual(level.liveSwitchNodeIDs, liveSwitches[level.id] ?? [])
         }
 
@@ -111,30 +111,30 @@ final class MultiVanLevelRepositoryTests: XCTestCase {
     }
 
     func testLoadsPrototypeJSON() throws {
-        let bundle = try makeBundle(files: ["PrototypeLevels/proto_fixture.json": levelJSON(id: "proto_test")])
+        let bundle = try makeBundle(files: ["PrototypeLevels/level_fixture.json": levelJSON(id: "level_test")])
         let level = try XCTUnwrap(MultiVanLevelRepository(bundle: bundle).loadAllLevels().first)
-        XCTAssertEqual(level.id, "proto_test")
+        XCTAssertEqual(level.id, "level_test")
         XCTAssertEqual(level.vans.first?.color, .blue)
         XCTAssertEqual(level.parChanges, 2)
     }
 
     func testSortsByDecodedIDRatherThanFilename() throws {
         let bundle = try makeBundle(files: [
-            "PrototypeLevels/proto_a.json": levelJSON(id: "proto_02"),
-            "PrototypeLevels/proto_z.json": levelJSON(id: "proto_01")
+            "PrototypeLevels/level_a.json": levelJSON(id: "level_002"),
+            "PrototypeLevels/level_z.json": levelJSON(id: "level_001")
         ])
-        XCTAssertEqual(try MultiVanLevelRepository(bundle: bundle).loadAllLevels().map(\.id), ["proto_01", "proto_02"])
+        XCTAssertEqual(try MultiVanLevelRepository(bundle: bundle).loadAllLevels().map(\.id), ["level_001", "level_002"])
     }
 
     func testIgnoresOtherNamesExtensionsAndDirectories() throws {
         let bundle = try makeBundle(files: [
-            "PrototypeLevels/proto_valid.json": levelJSON(id: "proto_valid"),
+            "PrototypeLevels/level_valid.json": levelJSON(id: "level_valid"),
             "PrototypeLevels/other.json": "malformed",
-            "PrototypeLevels/proto_other.txt": "malformed",
-            "proto_root.json": "malformed",
-            "Levels/proto_wrong_directory.json": "malformed"
+            "PrototypeLevels/level_other.txt": "malformed",
+            "level_root.json": "malformed",
+            "Levels/level_wrong_directory.json": "malformed"
         ])
-        XCTAssertEqual(try MultiVanLevelRepository(bundle: bundle).loadAllLevels().map(\.id), ["proto_valid"])
+        XCTAssertEqual(try MultiVanLevelRepository(bundle: bundle).loadAllLevels().map(\.id), ["level_valid"])
     }
 
     func testMissingPrototypeDirectoryReturnsEmpty() throws {
@@ -147,50 +147,23 @@ final class MultiVanLevelRepositoryTests: XCTestCase {
     }
 
     func testMalformedPrototypeReportsFilenameAndDecodingError() throws {
-        let bundle = try makeBundle(files: ["PrototypeLevels/proto_broken.json": "{"])
+        let bundle = try makeBundle(files: ["PrototypeLevels/level_broken.json": "{"])
         XCTAssertThrowsError(try MultiVanLevelRepository(bundle: bundle).loadAllLevels()) { error in
             guard case let LevelRepositoryError.decodingFailed(id, underlying) = error else {
                 return XCTFail("Expected decodingFailed, got \(error)")
             }
-            XCTAssertEqual(id, "proto_broken")
+            XCTAssertEqual(id, "level_broken")
             XCTAssertTrue(underlying is DecodingError)
         }
     }
 
-    func testProductionLevelsExcludePrototypeDirectoryAndKeepShippedCount() throws {
-        let resources = URL(fileURLWithPath: #filePath).deletingLastPathComponent()
-            .deletingLastPathComponent().deletingLastPathComponent()
-            .appendingPathComponent("TinyRoutes/Resources/Levels")
-        let urls = try FileManager.default.contentsOfDirectory(at: resources, includingPropertiesForKeys: nil)
-            .filter { $0.pathExtension == "json" }
-        XCTAssertFalse(urls.isEmpty)
-        var files = try authoredFiles()
-        for url in urls {
-            files["Levels/\(url.lastPathComponent)"] = try String(contentsOf: url, encoding: .utf8)
-        }
-        let bundle = try makeBundle(files: files)
-        let levels = try LevelRepository(bundle: bundle).loadAllLevels()
-        XCTAssertEqual(levels.count, urls.count)
-        XCTAssertFalse(levels.contains { $0.id.hasPrefix("proto_") })
-        XCTAssertEqual(try MultiVanLevelRepository(bundle: bundle).loadAllLevels().map(\.id), ["proto_01", "proto_02", "proto_03", "proto_04", "proto_05", "proto_06", "proto_07", "proto_08", "proto_09", "proto_10", "proto_11", "proto_12"])
-    }
-
-    func testProductionAppBundleContainsNoPrototypeIDs() throws {
-        let levels = try LevelRepository(bundle: .main).loadAllLevels()
-        guard !levels.isEmpty else {
-            throw XCTSkip("Requires the iOS app bundle; isolated Foundation tests do not verify app packaging.")
-        }
-        XCTAssertFalse(levels.contains { $0.id.hasPrefix("proto_") })
-    }
-
     func testAppBundleContainsAuthoredPrototypeLevelsInOrder() throws {
-        guard !(try LevelRepository(bundle: .main).loadAllLevels()).isEmpty else {
+        guard !(try MultiVanLevelRepository(bundle: .main).loadAllLevels()).isEmpty else {
             throw XCTSkip("Requires the iOS app bundle; isolated Foundation tests do not verify app packaging.")
         }
-        XCTAssertEqual(try MultiVanLevelRepository(bundle: .main).loadAllLevels().map(\.id), ["proto_01", "proto_02", "proto_03", "proto_04", "proto_05", "proto_06", "proto_07", "proto_08", "proto_09", "proto_10", "proto_11", "proto_12"])
+        XCTAssertEqual(try MultiVanLevelRepository(bundle: .main).loadAllLevels().map(\.id), ["level_001", "level_002", "level_003", "level_004", "level_005", "level_006", "level_007", "level_008", "level_009", "level_010", "level_011", "level_012"])
         for number in 1...12 {
-            XCTAssertNil(Bundle.main.url(forResource: String(format: "proto_%02d", number), withExtension: "json"))
+            XCTAssertNil(Bundle.main.url(forResource: String(format: "level_%03d", number), withExtension: "json"))
         }
-
     }
 }

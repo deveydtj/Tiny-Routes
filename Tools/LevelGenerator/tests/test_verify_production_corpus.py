@@ -3,10 +3,18 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+import pytest
+
 from app.paths import find_repo_root
 from app.services.production_manifest_service import ProductionManifestService
 from migrate_levels_to_live_routing import analyze_level
 from verify_production_corpus import verify
+
+# The single-dot level corpus was retired from the app; these tests audit it.
+requires_retired_corpus = pytest.mark.skipif(
+    not (Path(__file__).resolve().parents[3] / "TinyRoutes/Resources/Levels").is_dir(),
+    reason="single-dot production corpus retired",
+)
 
 
 def test_committed_production_corpus_passes_every_non_swift_gate() -> None:
@@ -40,6 +48,7 @@ def test_committed_production_corpus_passes_every_non_swift_gate() -> None:
     assert all(item["modelRoundTripPassed"] for item in report["levels"])
 
 
+@requires_retired_corpus
 def test_production_gate_rejects_a_sidecar_level_id_mismatch(tmp_path: Path) -> None:
     root = find_repo_root()
     levels = tmp_path / "Resources" / "Levels"
@@ -65,6 +74,7 @@ def test_production_gate_rejects_a_sidecar_level_id_mismatch(tmp_path: Path) -> 
     assert "sidecar:level_id_mismatch" in report["levels"][0]["issues"]
 
 
+@requires_retired_corpus
 def test_production_gate_rejects_duplicate_manifest_entries_and_debug_resources(tmp_path: Path) -> None:
     root = find_repo_root()
     resources = tmp_path / "Resources"
@@ -129,6 +139,7 @@ def test_zero_time_preconfiguration_fails_the_corpus_gate(tmp_path: Path) -> Non
     assert "python_replay:tap_before_activation_window" in report["levels"][0]["issues"]
 
 
+@requires_retired_corpus
 def test_redesigned_levels_have_phase_and_revisit_evidence() -> None:
     root = find_repo_root()
 

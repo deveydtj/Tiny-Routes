@@ -1,0 +1,33 @@
+{
+  "id": "level_005",
+  "name": "Two Colours",
+  "graph": {
+    "nodes": [
+      { "id": "red_start", "x": 1, "y": 0, "outgoingEdgeIDs": ["red_approach"] },
+      { "id": "blue_start", "x": 3, "y": 6, "outgoingEdgeIDs": ["blue_approach"] },
+      { "id": "red_switch", "x": 1, "y": 3, "outgoingEdgeIDs": ["red_to_blue", "red_to_red"] },
+      { "id": "blue_switch", "x": 3, "y": 5, "outgoingEdgeIDs": ["blue_to_red", "blue_to_blue"] },
+      { "id": "red_house", "x": 4, "y": 3, "outgoingEdgeIDs": [] },
+      { "id": "blue_house", "x": 0, "y": 5, "outgoingEdgeIDs": [] }
+    ],
+    "edges": [
+      { "id": "red_approach", "fromNodeID": "red_start", "toNodeID": "red_switch", "roadShape": "verticalFirst" },
+      { "id": "blue_approach", "fromNodeID": "blue_start", "toNodeID": "blue_switch", "roadShape": "verticalFirst" },
+      { "id": "red_to_blue", "fromNodeID": "red_switch", "toNodeID": "blue_house", "roadShape": "verticalFirst" },
+      { "id": "red_to_red", "fromNodeID": "red_switch", "toNodeID": "red_house", "roadShape": "horizontalFirst" },
+      { "id": "blue_to_red", "fromNodeID": "blue_switch", "toNodeID": "red_house", "roadShape": "verticalFirst" },
+      { "id": "blue_to_blue", "fromNodeID": "blue_switch", "toNodeID": "blue_house", "roadShape": "horizontalFirst" }
+    ]
+  },
+  "vans": [
+    { "id": "red", "color": "red", "startNodeID": "red_start", "departDelay": 0 },
+    { "id": "blue", "color": "blue", "startNodeID": "blue_start", "departDelay": 0 }
+  ],
+  "houses": [
+    { "nodeID": "red_house", "color": "red" },
+    { "nodeID": "blue_house", "color": "blue" }
+  ],
+  "initialSwitchEdges": { "red_switch": "red_to_blue", "blue_switch": "blue_to_red" },
+  "parChanges": 2,
+  "liveSwitchNodeIDs": []
+}

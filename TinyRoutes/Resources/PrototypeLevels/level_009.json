@@ -1,0 +1,40 @@
+{
+  "id": "level_009",
+  "name": "Split",
+  "graph": {
+    "nodes": [
+      { "id": "red_start", "x": 2, "y": 1, "outgoingEdgeIDs": ["red_approach"] },
+      { "id": "blue_start", "x": 4, "y": 0, "outgoingEdgeIDs": ["blue_start_road"] },
+      { "id": "entry_switch", "x": 4, "y": 1, "outgoingEdgeIDs": ["wrong_entry", "blue_approach"] },
+      { "id": "barrier", "x": 3, "y": 1, "outgoingEdgeIDs": [] },
+      { "id": "switch", "x": 2, "y": 3, "outgoingEdgeIDs": ["red_exit", "blue_exit"] },
+      { "id": "red_house", "x": 0, "y": 3, "outgoingEdgeIDs": [] },
+      { "id": "blue_house", "x": 2, "y": 6, "outgoingEdgeIDs": [] }
+    ],
+    "edges": [
+      { "id": "red_approach", "fromNodeID": "red_start", "toNodeID": "switch", "roadShape": "verticalFirst" },
+      { "id": "blue_start_road", "fromNodeID": "blue_start", "toNodeID": "entry_switch", "roadShape": "verticalFirst" },
+      { "id": "wrong_entry", "fromNodeID": "entry_switch", "toNodeID": "barrier", "roadShape": "horizontalFirst" },
+      { "id": "blue_approach", "fromNodeID": "entry_switch", "toNodeID": "switch", "roadShape": "verticalFirst" },
+      { "id": "red_exit", "fromNodeID": "switch", "toNodeID": "red_house", "roadShape": "horizontalFirst" },
+      { "id": "blue_exit", "fromNodeID": "switch", "toNodeID": "blue_house", "roadShape": "verticalFirst" }
+    ]
+  },
+  "vans": [
+    { "id": "red", "color": "red", "startNodeID": "red_start", "departDelay": 0},
+    { "id": "blue", "color": "blue", "startNodeID": "blue_start", "departDelay": 0}
+  ],
+  "houses": [
+    { "nodeID": "red_house", "color": "red" },
+    { "nodeID": "blue_house", "color": "blue" }
+  ],
+  "initialSwitchEdges": {
+    "entry_switch": "wrong_entry",
+    "switch": "red_exit"
+  },
+  "parChanges": 2,
+  "liveSwitchNodeIDs": [
+    "switch"
+  ],
+  "hint": "Let Red take the left exit, then tap the ⚡ switch for Blue."
+}

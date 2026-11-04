@@ -2,6 +2,14 @@ import SwiftUI
 
 // MARK: - Serpentine Layout Helper
 
+/// Anything the level map can lay out; only the ID is needed.
+protocol TRLevelMapItem {
+    var id: String { get }
+}
+
+extension MultiVanLevel: TRLevelMapItem {}
+extension LevelData: TRLevelMapItem {}
+
 /// Describes the computed visual position of a single level tile on the selection map.
 struct TRLevelTilePosition {
     let levelID: String
@@ -21,7 +29,7 @@ struct TRSerpentineLayout {
     var columns: Int = 4
 
     /// Returns the tile positions for `levels` in input order.
-    func positions(for levels: [LevelData]) -> [TRLevelTilePosition] {
+    func positions(for levels: [some TRLevelMapItem]) -> [TRLevelTilePosition] {
         precondition(columns > 0, "columns must be greater than 0")
         return levels.enumerated().map { index, level in
             let row = index / columns
@@ -39,7 +47,7 @@ struct TRSerpentineLayout {
         }
     }
 
-    private func levelNumber(for level: LevelData, fallback: Int) -> Int {
+    private func levelNumber(for level: some TRLevelMapItem, fallback: Int) -> Int {
         guard let suffix = level.id.split(separator: "_").last,
               let parsed = Int(suffix) else {
             return fallback
@@ -54,7 +62,7 @@ struct TRLevelProgressSnapshot {
     let completedLevelIDs: Set<String>
     let firstIncompleteIndex: Int
 
-    init(levels: [LevelData], progressService: ProgressService) {
+    init(levels: [some TRLevelMapItem], progressService: ProgressService) {
         var starsByLevelID: [String: Int] = [:]
         starsByLevelID.reserveCapacity(levels.count)
 
@@ -88,7 +96,7 @@ struct TRLevelProgressSnapshot {
 
 /// Level selection screen.
 struct LevelSelectScreen: View {
-    let levels: [LevelData]
+    let levels: [MultiVanLevel]
     let coinTotal: Int
     let currentStreakDays: Int
     let onLevelSelected: (String) -> Void
@@ -97,7 +105,7 @@ struct LevelSelectScreen: View {
     private let progressService: ProgressService
 
     init(
-        levels: [LevelData],
+        levels: [MultiVanLevel],
         coinTotal: Int = 1_250,
         currentStreakDays: Int = 0,
         onLevelSelected: @escaping (String) -> Void,
@@ -112,6 +120,11 @@ struct LevelSelectScreen: View {
         self.onSettingsTapped = onSettingsTapped
         self.onAddCurrencyTapped = onAddCurrencyTapped
         self.progressService = progressService
+    }
+
+    /// Counts only the current levels so stars saved for retired levels never show.
+    private var totalStars: Int {
+        levels.reduce(0) { $0 + progressService.bestStars(for: $1.id) }
     }
 
     var body: some View {
@@ -139,7 +152,7 @@ struct LevelSelectScreen: View {
                     onLevelSelected: onLevelSelected
                 )
 
-                TRStarCollectorPlaceholderCard(totalStars: progressService.totalStars())
+                TRStarCollectorPlaceholderCard(totalStars: totalStars)
                     .padding(.bottom, 12)
             }
             .padding(.horizontal, 20)
@@ -163,28 +176,7 @@ struct LevelSelectScreen: View {
 struct LevelSelectScreen_Previews: PreviewProvider {
     static var previews: some View {
         LevelSelectScreen(
-            levels: [
-                LevelData(
-                    id: "level_001",
-                    name: "First Dispatch",
-                    graph: RouteGraph(),
-                    startNodeID: "start",
-                    packageNodeID: "package",
-                    destinationNodeID: "destination",
-                    timeLimitSeconds: 45,
-                    parTaps: 6
-                ),
-                LevelData(
-                    id: "level_002",
-                    name: "Loop Pickup",
-                    graph: RouteGraph(),
-                    startNodeID: "start",
-                    packageNodeID: "package",
-                    destinationNodeID: "destination",
-                    timeLimitSeconds: 55,
-                    parTaps: 2
-                )
-            ],
+            levels: (try? MultiVanLevelRepository().loadAllLevels()) ?? [],
             onLevelSelected: { _ in }
         )
     }

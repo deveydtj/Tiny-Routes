@@ -8,7 +8,7 @@ struct ContentView: View {
     @State private var profileRevision = 0
 
     private let saveDataRepository: SaveDataRepository
-    private let levelRepository: LevelRepository
+    private let levelRepository: MultiVanLevelRepository
     private let progressService: ProgressService
     private let economyService: EconomyService
     private let cosmeticService: CosmeticService
@@ -18,7 +18,7 @@ struct ContentView: View {
 
     init() {
         let repository = SaveDataRepository()
-        let levelRepository = LevelRepository()
+        let levelRepository = MultiVanLevelRepository()
         let progressService = ProgressService(repository: repository)
         let economyService = EconomyService(repository: repository)
         let cosmeticService = CosmeticService(
@@ -40,16 +40,20 @@ struct ContentView: View {
             repository: repository,
             progressService: progressService,
             economyService: economyService,
-            cosmeticService: cosmeticService,
-            levelRepository: levelRepository
+            cosmeticService: cosmeticService
         )
     }
 
     var body: some View {
         ZStack {
-            SpriteImage(name: "background")
-                .scaledToFill()
-                .ignoresSafeArea()
+            // A level paints its own backdrop. The menu art fills past the safe
+            // area, which sizes this stack to the whole screen and would put a
+            // level's Levels button under the clock.
+            if !isGameplayVisible {
+                SpriteImage(name: "background")
+                    .scaledToFill()
+                    .ignoresSafeArea()
+            }
 
             Group {
                 switch coordinator.state {
@@ -68,70 +72,8 @@ struct ContentView: View {
                 case .levelSelect:
                     levelSelectView
 
-                case let .gameplay(levelID), let .pause(levelID):
-                    gameplayView(levelID: levelID, isPaused: coordinator.state.isPaused)
-
-                case let .levelComplete(levelID, elapsedTime, tapCount, presentationID):
-                    let nextLevelID = nextLevelID(after: levelID)
-                    let cosmeticLoadout = cosmeticService.gameplayLoadout()
-                    ResultScreen(
-                        levelID: levelID,
-                        result: .completed,
-                        presentationID: presentationID,
-                        elapsedTime: elapsedTime,
-                        tapCount: tapCount,
-                        failureReason: nil,
-                        canAdvanceToNextLevel: nextLevelID != nil,
-                        cosmeticLoadout: cosmeticLoadout,
-                        onRestartTapped: coordinator.restartGameplay,
-                        onNextLevelTapped: {
-                            guard let nextLevelID else { return }
-                            startGameplayIfUnlocked(levelID: nextLevelID)
-                        },
-                        onExitTapped: coordinator.exitGameplayToMenu,
-                        onBackToLevelsTapped: coordinator.exitGameplayToLevels,
-                        onHomeTapped: coordinator.backToMainMenu,
-                        onShareTapped: {},
-                        onProfileChanged: handleProfileChanged,
-                        nextLevelID: nextLevelID,
-                        levelRepository: levelRepository,
-                        progressService: progressService,
-                        economyService: economyService,
-                        saveDataRepository: saveDataRepository
-                    )
-
-                case let .levelFailed(levelID, reason, elapsedTime, tapCount, presentationID):
-                    let nextLevelID = nextLevelID(after: levelID)
-                    let cosmeticLoadout = cosmeticService.gameplayLoadout()
-                    ResultScreen(
-                        levelID: levelID,
-                        result: .failed,
-                        presentationID: presentationID,
-                        elapsedTime: elapsedTime,
-                        tapCount: tapCount,
-                        failureReason: reason,
-                        canAdvanceToNextLevel: nextLevelID.map(progressService.isLevelUnlocked) ?? false,
-                        cosmeticLoadout: cosmeticLoadout,
-                        onRestartTapped: coordinator.restartGameplay,
-                        onNextLevelTapped: {
-                            guard let nextLevelID else { return }
-                            startGameplayIfUnlocked(levelID: nextLevelID)
-                        },
-                        onExitTapped: coordinator.exitGameplayToMenu,
-                        onBackToLevelsTapped: coordinator.exitGameplayToLevels,
-                        onHomeTapped: coordinator.backToMainMenu,
-                        onShareTapped: {},
-                        onUseHintTapped: {},
-                        onSkipLevelTapped: {
-                            guard let nextLevelID else { return }
-                            startGameplayIfUnlocked(levelID: nextLevelID)
-                        },
-                        nextLevelID: nextLevelID,
-                        levelRepository: levelRepository,
-                        progressService: progressService,
-                        economyService: economyService,
-                        saveDataRepository: saveDataRepository
-                    )
+                case let .gameplay(levelID):
+                    gameplayView(levelID: levelID)
 
                 case .shop:
                     ShopScreen(
@@ -200,11 +142,16 @@ struct ContentView: View {
 
     private var isFullBleedScreenVisible: Bool {
         switch coordinator.state {
-        case .levelSelect, .shop, .profile, .settings, .levelComplete, .levelFailed:
+        case .levelSelect, .gameplay, .shop, .profile, .settings:
             return true
         default:
             return false
         }
+    }
+
+    private var isGameplayVisible: Bool {
+        if case .gameplay = coordinator.state { return true }
+        return false
     }
 
     private var isStandardMenuHeaderScreenVisible: Bool {
@@ -217,18 +164,24 @@ struct ContentView: View {
     }
 
     @ViewBuilder
-    private func gameplayView(levelID: String, isPaused: Bool) -> some View {
-        let cosmeticLoadout = cosmeticService.gameplayLoadout()
-        let _ = profileRevision
-        GameplayScreen(
-            levelID: levelID,
-            isPaused: isPaused,
-            cosmeticLoadout: cosmeticLoadout,
-            onPauseResumeTapped: isPaused ? coordinator.resumeGameplay : coordinator.pauseGameplay,
-            onCompleteTapped: coordinator.completeLevel,
-            onFailTapped: coordinator.failLevel,
-            onExitTapped: coordinator.exitGameplayToMenu
-        )
+    private func gameplayView(levelID: String) -> some View {
+        if let levels = try? loadSortedLevels(),
+           let level = levels.first(where: { $0.id == levelID }) {
+            LevelPlayScreen(
+                level: level,
+                nextLevelID: nextLevelID(after: levelID),
+                settingsService: settingsService,
+                progressService: progressService,
+                economyService: economyService,
+                onNextLevel: startGameplayIfUnlocked,
+                onBackToLevels: coordinator.exitGameplayToLevels,
+                onProfileChanged: handleProfileChanged
+            )
+            // A fresh identity per level gives each one a fresh engine.
+            .id(levelID)
+        } else {
+            unavailableLevelsView(message: "This level could not be loaded.")
+        }
     }
 
     @ViewBuilder
@@ -290,8 +243,8 @@ struct ContentView: View {
         profileRevision += 1
     }
 
-    private func loadSortedLevels() throws -> [LevelData] {
-        try levelRepository.loadAllLevels().sorted { $0.id < $1.id }
+    private func loadSortedLevels() throws -> [MultiVanLevel] {
+        try levelRepository.loadAllLevels()
     }
 
     private func unavailableLevelsView(message: String) -> some View {
@@ -307,17 +260,8 @@ struct ContentView: View {
     }
 }
 
-private extension AppState {
-    var isPaused: Bool {
-        if case .pause = self {
-            return true
-        }
-        return false
-    }
-}
-
 private enum LevelSelectState {
-    case loaded([LevelData])
+    case loaded([MultiVanLevel])
     case empty
     case failed(String)
 }

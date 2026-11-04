@@ -105,7 +105,7 @@ final class TRBottomNavigationBarTests: XCTestCase {
     @MainActor
     func testCloseSettingsFallsBackToMainMenuWhenOpenedFromInvalidState() {
         let coordinator = AppCoordinator()
-        coordinator.startGameplay(levelID: "level_001")
+        coordinator.startGameplay(levelID: PlayerProfile.firstLevelID)
 
         coordinator.openSettings()
         coordinator.closeSettings()
@@ -118,17 +118,7 @@ final class TRBottomNavigationBarTests: XCTestCase {
         let coordinator = AppCoordinator()
         XCTAssertNil(coordinator.selectedBottomTab)
 
-        coordinator.startGameplay(levelID: "level_001")
-        XCTAssertNil(coordinator.selectedBottomTab)
-
-        coordinator.pauseGameplay()
-        XCTAssertNil(coordinator.selectedBottomTab)
-
-        coordinator.completeLevel(elapsedTime: 12, tapCount: 3)
-        XCTAssertNil(coordinator.selectedBottomTab)
-
-        coordinator.restartGameplay()
-        coordinator.failLevel(reason: .timeExpired, elapsedTime: 45, tapCount: 5)
+        coordinator.startGameplay(levelID: PlayerProfile.firstLevelID)
         XCTAssertNil(coordinator.selectedBottomTab)
 
         coordinator.openSettings()
@@ -136,21 +126,13 @@ final class TRBottomNavigationBarTests: XCTestCase {
     }
 
     @MainActor
-    func testCompletedRunsReceiveFreshPresentationIDs() {
+    func testExitingGameplayReturnsToLevelMap() {
         let coordinator = AppCoordinator()
+        coordinator.startGameplay(levelID: PlayerProfile.firstLevelID)
 
-        coordinator.startGameplay(levelID: "level_001")
-        coordinator.completeLevel(elapsedTime: 12, tapCount: 3)
-        guard case let .levelComplete(_, _, _, firstPresentationID) = coordinator.state else {
-            return XCTFail("Expected completed level state")
-        }
+        coordinator.exitGameplayToLevels()
 
-        coordinator.restartGameplay()
-        coordinator.completeLevel(elapsedTime: 12, tapCount: 3)
-        guard case let .levelComplete(_, _, _, secondPresentationID) = coordinator.state else {
-            return XCTFail("Expected completed level state")
-        }
-
-        XCTAssertNotEqual(firstPresentationID, secondPresentationID)
+        XCTAssertEqual(coordinator.state, .levelSelect)
+        XCTAssertEqual(coordinator.selectedBottomTab, .levels)
     }
 }

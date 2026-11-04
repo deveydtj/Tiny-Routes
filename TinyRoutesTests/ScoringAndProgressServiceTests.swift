@@ -121,7 +121,7 @@ final class ScoringAndProgressServiceTests: XCTestCase {
 
         let profile = repository.load()
         XCTAssertEqual(profile.bestStarsByLevelID, [:])
-        XCTAssertEqual(profile.unlockedLevelIDs, Set(["level_001"]))
+        XCTAssertEqual(profile.unlockedLevelIDs, Set([PlayerProfile.firstLevelID]))
         XCTAssertEqual(profile.coinTotal, 250)
         XCTAssertTrue(profile.ownedCosmeticIDs.contains("themeForestPath"))
     }

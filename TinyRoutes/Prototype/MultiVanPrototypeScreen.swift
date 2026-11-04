@@ -1,4 +1,4 @@
-#if DEBUG
+#if DEBUG || MULTIVAN_INTERNAL
 import SwiftUI
 import UIKit
 
@@ -7,8 +7,14 @@ struct MultiVanPrototypeScreen: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.scenePhase) private var scenePhase
     @State private var levels: [MultiVanLevel] = []
-    @State private var session = MultiVanPrototypeSession()
+    // Autoplay's robot attempts go to their own log, away from playtesters'.
+    @State private var session = MultiVanAutoplay.launchConfiguration == nil
+        ? MultiVanPrototypeSession()
+        : MultiVanPrototypeSession(playtestLog: MultiVanPlaytestLog(
+            fileURL: FileManager.default.temporaryDirectory.appendingPathComponent("multi_van_autoplay.jsonl")))
+    #if DEBUG
     @State private var tuning = MultiVanPrototypeTuning().tuning
+    #endif
     @State private var errorMessage: String?
 
     var body: some View {
@@ -16,22 +22,34 @@ struct MultiVanPrototypeScreen: View {
             Group {
                 if let engine = session.engine {
                     VStack(spacing: 0) {
+                        #if DEBUG
                         Text(MultiVanPrototypeTuning.isDefault(engine.tuning) ? "Default tuning" : "Experimental tuning")
                             .font(.caption.bold())
                             .padding(.vertical, 4)
+                        #else
+                        Text("Default tuning · Speed 1.50 · Collision 0.35 · Lock 0.40")
+                            .font(.caption.bold())
+                            .multilineTextAlignment(.center)
+                            .padding(.vertical, 4)
+                        #endif
                         MultiVanGameplayScreen(engine: engine, settingsService: settingsService, onNext: {
                             perform { try session.next(in: levels) }
-                        }, playtestLog: session.playtestLog)
+                        }, playtestLog: session.playtestLog, autoplay: MultiVanAutoplay.launchConfiguration)
                     }
                     // Reset all view-local state as well as the engine on Next.
                     .id(ObjectIdentifier(engine))
                 } else {
                     List {
+                        #if DEBUG
                         NavigationLink {
                             MultiVanTuningScreen(store: session.tuningOverrides, tuning: $tuning)
                         } label: {
                             Label(MultiVanPrototypeTuning.isDefault(tuning) ? "Tuning · Defaults" : "Tuning · Experimental", systemImage: "gearshape")
                         }
+                        #else
+                        Text("Default tuning · Speed 1.50 · Collision 0.35 · Lock 0.40")
+                            .font(.caption)
+                        #endif
                         NavigationLink {
                             MultiVanPlaytestLogScreen(log: session.playtestLog)
                         } label: {
@@ -48,6 +66,7 @@ struct MultiVanPrototypeScreen: View {
                             } label: {
                                 VStack(alignment: .leading) {
                                     Text(level.name)
+                                        .font(.headline)
                                     Text(level.id)
                                         .font(.caption)
                                         .foregroundStyle(.secondary)
@@ -77,8 +96,22 @@ struct MultiVanPrototypeScreen: View {
                 }
             }
         }
+        // The presenting menu uses black text; native prototype screens must
+        // adapt their labels and controls to the device's appearance instead.
+        .foregroundColor(.primary)
+        .tint(.blue)
         .task {
             perform { levels = try MultiVanLevelRepository().loadAllLevels() }
+            if let autoplay = MultiVanAutoplay.launchConfiguration {
+                guard let level = levels.first(where: { $0.id == autoplay.levelID }) else {
+                    errorMessage = "Autoplay level \(autoplay.levelID) isn't in this build."
+                    return
+                }
+                // A profiling run outlasts the auto-lock.
+                UIApplication.shared.isIdleTimerDisabled = true
+                MultiVanPerformanceMeter.shared?.start()
+                perform { try session.open(level) }
+            }
         }
         .onChange(of: scenePhase) { _, phase in
             if phase == .background {
@@ -89,6 +122,7 @@ struct MultiVanPrototypeScreen: View {
         }
         .onDisappear {
             session.playtestLog.quit(engine: session.engine, reason: "prototype_dismissed")
+            UIApplication.shared.isIdleTimerDisabled = false
         }
     }
 
@@ -103,6 +137,7 @@ struct MultiVanPrototypeScreen: View {
     }
 }
 
+#if DEBUG
 private struct MultiVanTuningScreen: View {
     let store: MultiVanPrototypeTuning
     @Binding var tuning: MultiVanTuning
@@ -147,14 +182,15 @@ private struct MultiVanTuningScreen: View {
                 Text("Experimental tuning is not included in the playtest log. Record the configuration separately when comparing playtests.")
             }
         }
-        .tint(TRGameplayStyle.Colors.titleNavy)
         .navigationTitle("Prototype tuning")
     }
 }
+#endif
 
 private struct MultiVanPlaytestLogScreen: View {
     let log: MultiVanPlaytestLog
     @State private var summaries: [MultiVanPlaytestLog.LevelSummary] = []
+    @State private var boards: [MultiVanPlaytestLog.BoardSummary] = []
     @State private var summaryMessage: String?
     @State private var isLoading = true
     @State private var isPreparing = false
@@ -179,6 +215,23 @@ private struct MultiVanPlaytestLogScreen: View {
             } footer: {
                 Text("Logs stay on this iPhone until you choose to share them. The attachment is a JSON Lines (.jsonl) file.")
             }
+            if !boards.isEmpty {
+                Section {
+                    ForEach(boards) { board in
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text(board.id == MultiVanBoardStyle.diorama.rawValue ? "3D Diorama" : "2D Map").font(.headline)
+                            Text("Attempts: \(board.attempts), wins: \(board.wins)")
+                            if let median = board.medianSecondsToFirstGo {
+                                Text("Median time to first Go: \(median, specifier: "%.1f") s over \(board.secondsToFirstGo.count) levels")
+                            }
+                        }
+                    }
+                } header: {
+                    Text("Per-board summary")
+                } footer: {
+                    Text("Time to first Go counts a level's first attempt when the board didn't change before Go. Levels differ, so compare boards on the same levels using the shared log.")
+                }
+            }
             Section("Per-level summary") {
                 if let summaryMessage { Text(summaryMessage) }
                 ForEach(summaries) { summary in
@@ -197,8 +250,10 @@ private struct MultiVanPlaytestLogScreen: View {
             defer { isLoading = false }
             do {
                 let result = try await log.summary()
+                let boardResult = try await log.boardSummary()
                 try Task.checkCancellation()
                 summaries = result
+                boards = boardResult
                 summaryMessage = result.isEmpty ? "No level attempts recorded yet." : nil
             } catch is CancellationError {
                 return
@@ -266,15 +321,25 @@ private struct MultiVanPlaytestActivitySheet: UIViewControllerRepresentable {
 struct MultiVanPrototypeSession {
     private(set) var engine: MultiVanEngine?
     let playtestLog: MultiVanPlaytestLog
+    #if DEBUG
     let tuningOverrides: MultiVanPrototypeTuning
 
     init(playtestLog: MultiVanPlaytestLog = MultiVanPlaytestLog(), tuningOverrides: MultiVanPrototypeTuning = MultiVanPrototypeTuning()) {
         self.playtestLog = playtestLog
         self.tuningOverrides = tuningOverrides
     }
+    #else
+    init(playtestLog: MultiVanPlaytestLog = MultiVanPlaytestLog()) {
+        self.playtestLog = playtestLog
+    }
+    #endif
 
     mutating func open(_ level: MultiVanLevel) throws {
+        #if DEBUG
         let nextEngine = try MultiVanEngine(level: level, tuning: tuningOverrides.tuning)
+        #else
+        let nextEngine = try MultiVanEngine(level: level, tuning: .default)
+        #endif
         if let engine { playtestLog.leaveLevel(engine, reason: "level_changed") }
         engine = nextEngine
         playtestLog.open(nextEngine)

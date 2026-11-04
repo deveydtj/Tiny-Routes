@@ -58,27 +58,18 @@ enum RoadPathRenderer {
 /// Derived drawing data only; routes and their endings still come from the engine.
 struct MultiVanPreviewDrawing {
     let path: Path
+    /// `path` split at the end of its first road, so a driving van can trim the
+    /// part of that road it has already covered without rebuilding the rest.
+    let leadEdgeID: String?
+    let leadPath: Path
+    let trailingPath: Path
     let endpoint: CGPoint?
     let color: VanColor
     let ending: MultiVanPreviewEnding
-    let indicatorSlot: Int?
+    let marker: MultiVanPreviewMarker?
 
     static func laneOffsets(routes: [MultiVanPreviewRoute]) -> [[String: CGFloat]] {
-        var users: [String: [Int]] = [:]
-        for (index, route) in routes.enumerated() {
-            // A looping route occupies one lane, however often it visits the edge.
-            for edgeID in Set(route.edgeIDs) {
-                users[edgeID, default: []].append(index)
-            }
-        }
-        var offsets = Array(repeating: [String: CGFloat](), count: routes.count)
-        for (edgeID, indices) in users {
-            // Indices were appended in authored van order, never dictionary order.
-            for (lane, index) in indices.enumerated() {
-                offsets[index][edgeID] = (CGFloat(lane) - CGFloat(indices.count - 1) / 2) * 4
-            }
-        }
-        return offsets
+        MultiVanPreviewLanes.make(routes: routes).map { $0.mapValues { CGFloat($0) * 4 } }
     }
 
     static func offsetPoint(
@@ -127,18 +118,20 @@ struct MultiVanPreviewDrawing {
         graph: RuntimeRouteGraph, layout: BoardLayout
     ) -> [Self] {
         let offsets = laneOffsets(routes: routes)
-        let terminalIDs = zip(vans, routes).map { van, route in
-            route.edgeIDs.last.flatMap { graph.edgesByID[$0]?.toNodeID } ?? van.startNodeID
-        }
+        let markers = MultiVanPreviewMarker.make(routes: routes, vans: vans, graph: graph)
         return zip(vans, routes).enumerated().map { index, pair in
             let (van, route) = pair
             var path = Path()
-            var endpoint = layout.pointsByNodeID[van.startNodeID]
-            for edgeID in route.edgeIDs {
+            var leadPath = Path()
+            var trailingPath = Path()
+            var endpoint = route.ending == .offRoad ? nil : layout.pointsByNodeID[van.startNodeID]
+            for (position, edgeID) in route.edgeIDs.enumerated() {
                 guard let edge = graph.edgesByID[edgeID] else { continue }
                 let offset = offsets[index][edgeID] ?? 0
                 // Each edge starts a new subpath: no diagonal joins between lanes.
-                path.addPath(offsetPath(for: edge.roadPath, offset: offset, layout: layout))
+                let edgePath = offsetPath(for: edge.roadPath, offset: offset, layout: layout)
+                path.addPath(edgePath)
+                if position == 0 { leadPath = edgePath } else { trailingPath.addPath(edgePath) }
                 if !edge.roadPath.segments.isEmpty {
                     endpoint = offsetPoint(on: edge.roadPath, at: edge.roadPath.totalLength,
                                            offset: offset, layout: layout)
@@ -146,9 +139,9 @@ struct MultiVanPreviewDrawing {
                     endpoint = layout.pointsByNodeID[edge.toNodeID]
                 }
             }
-            let peers = terminalIDs.indices.filter { terminalIDs[$0] == terminalIDs[index] }
-            return Self(path: path, endpoint: endpoint, color: van.color, ending: route.ending,
-                        indicatorSlot: peers.count > 1 ? peers.firstIndex(of: index) : nil)
+            return Self(path: path, leadEdgeID: route.edgeIDs.first, leadPath: leadPath,
+                        trailingPath: trailingPath, endpoint: endpoint, color: van.color,
+                        ending: route.ending, marker: markers[index])
         }
     }
 }

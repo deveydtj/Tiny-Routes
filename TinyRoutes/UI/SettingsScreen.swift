@@ -18,6 +18,9 @@ struct SettingsScreen: View {
     let onProfileChanged: () -> Void
 
     @State private var activeAlert: SettingsAlert?
+    #if MULTIVAN_INTERNAL
+    @AppStorage("multiVanPrototype.enabled") private var prototypeEnabled = false
+    #endif
 
     init(
         settingsService: UserSettingsService,
@@ -210,8 +213,50 @@ struct SettingsScreen: View {
                 isOn: settings.confirmsBeforeRestarting,
                 onChanged: settingsService.setConfirmsBeforeRestarting
             )
+
+            #if DEBUG || MULTIVAN_INTERNAL
+            // Internal, like the prototype itself, until the MW-10 playtests pass.
+            boardStyleRow
+
+            if settings.boardStyle == .diorama {
+                TRSettingsToggleRow(
+                    title: "Use 2D in Low Power Mode",
+                    subtitle: "Save battery with the flat map",
+                    iconSystemName: "battery.25percent",
+                    isOn: settings.usesFlatBoardInLowPowerMode,
+                    onChanged: settingsService.setUsesFlatBoardInLowPowerMode
+                )
+            }
+            #endif
         }
     }
+
+    #if DEBUG || MULTIVAN_INTERNAL
+    private var boardStyleRow: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            HStack(spacing: 12) {
+                TRSettingsIconCircle(
+                    systemName: "map.fill",
+                    tint: TRGameplayStyle.Colors.primaryBlue
+                )
+
+                TRSettingsTextBlock(title: "Board Style", subtitle: "How the multi-van prototype draws its board")
+            }
+            .accessibilityElement(children: .combine)
+
+            Picker("Board Style", selection: Binding(
+                get: { settings.boardStyle },
+                set: settingsService.setBoardStyle
+            )) {
+                Text("3D Diorama").tag(MultiVanBoardStyle.diorama)
+                Text("2D Map").tag(MultiVanBoardStyle.flat)
+            }
+            .pickerStyle(.segmented)
+        }
+        .frame(maxWidth: .infinity, minHeight: 54, alignment: .leading)
+        .padding(.vertical, 4)
+    }
+    #endif
 
     private var notificationsSection: some View {
         TRSettingsSectionCard(
@@ -348,6 +393,15 @@ struct SettingsScreen: View {
                 title: "Build Configuration",
                 value: "Debug",
                 iconSystemName: "hammer.fill"
+            )
+            #endif
+            #if MULTIVAN_INTERNAL
+            TRSettingsToggleRow(
+                title: "Multi-Van Prototype",
+                subtitle: "Internal playtest · default tuning",
+                iconSystemName: "hammer.fill",
+                isOn: prototypeEnabled,
+                onChanged: { prototypeEnabled = $0 }
             )
             #endif
         }
