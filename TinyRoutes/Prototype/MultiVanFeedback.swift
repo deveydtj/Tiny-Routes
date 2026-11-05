@@ -32,6 +32,10 @@ enum MultiVanFeedback {
 struct MultiVanWinPresentation {
     static let starInterval = 0.22
     static let settleDuration = 0.24
+    /// The card waits for the win's confetti to land, so it doesn't hide the
+    /// shower: the diorama's burst starts 0.45 s in and its highest-thrown paper
+    /// is down about 1.37 s later.
+    static let confettiHold = 1.85
 
     private(set) var id: UUID?
     private(set) var rating = 0

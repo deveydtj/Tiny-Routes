@@ -34,6 +34,8 @@ struct MultiVanGameplayScreen: View {
     @State private var boardFrame: CGRect?
     @State private var hudBottom: CGFloat = 0
     @State private var controlsTop: CGFloat = 0
+    /// The board the switcher has on screen, for the HUD's 2D/3D button.
+    @State private var shownBoard: MultiVanBoardStyle?
 
     private static let backdrop = Color(red: 0.88, green: 0.94, blue: 0.97)
 
@@ -128,6 +130,10 @@ struct MultiVanGameplayScreen: View {
             switchFeedback.reset()
         }
         .task(id: FailureDelayKey(engine: ObjectIdentifier(engine), outcome: engine.outcome, phase: engine.phase)) {
+            guard engine.phase == .finished, engine.outcome == .win else { return }
+            if !reducesExtraAnimations {
+                do { try await Task.sleep(for: .seconds(MultiVanWinPresentation.confettiHold)) } catch { return }
+            }
             guard let token = winPresentation.begin(engine: engine, reduceMotion: reducesExtraAnimations) else { return }
             guard !winPresentation.showsActions else { return }
             // Presentation time is independent of the frame driver's simulation multiplier.
@@ -239,9 +245,12 @@ struct MultiVanGameplayScreen: View {
     private func boardSwitcher(covered: MultiVanDioramaCamera.Covered, isFullScreen: Bool) -> some View {
         MultiVanBoardSwitcher(
             engine: engine, settings: boardSettings, reducesMotion: reducesExtraAnimations,
-            onBoardShown: { playtestLog?.boardShown($0, engine: engine) }
-        ) { style in
-            board(style, covered: covered, isFullScreen: isFullScreen)
+            onBoardShown: { style in
+                shownBoard = style
+                playtestLog?.boardShown(style, engine: engine)
+            }
+        ) { style, morph in
+            board(style, morph: morph, covered: covered, isFullScreen: isFullScreen)
         }
         .accessibilityHidden(presentedFailure != nil || engine.outcome == .win)
     }
@@ -257,8 +266,10 @@ struct MultiVanGameplayScreen: View {
             }
 
             if engine.outcome == .win {
+                // Up under the HUD, clear of the shower thrown from the middle of the board.
                 winCard
                     .padding(16)
+                    .frame(maxHeight: .infinity, alignment: .top)
                     .zIndex(1)
             }
         }
@@ -267,7 +278,9 @@ struct MultiVanGameplayScreen: View {
     private static let idleConfettiID = UUID()
 
     @ViewBuilder
-    private func board(_ style: MultiVanBoardStyle, covered: MultiVanDioramaCamera.Covered, isFullScreen: Bool) -> some View {
+    private func board(
+        _ style: MultiVanBoardStyle, morph: MultiVanBoardMorph, covered: MultiVanDioramaCamera.Covered, isFullScreen: Bool
+    ) -> some View {
         let onSwitchTapped: (String, MultiVanTapResult) -> Void = switchTapped
         let shakesBoard = crashEffects.impact != nil && !reducesExtraAnimations
         switch style {
@@ -317,7 +330,10 @@ struct MultiVanGameplayScreen: View {
                 switchFeedback: switchFeedback,
                 onCrashEffectCompleted: { crashEffects.complete($0) },
                 covered: covered,
-                cornerRadius: isFullScreen ? 0 : 20
+                cornerRadius: isFullScreen ? 0 : 20,
+                morph: morph,
+                // The flat board's own side padding, so the morph lands on it.
+                flatSideInset: isFullScreen ? 16 : 0
             )
         }
     }
@@ -369,8 +385,39 @@ struct MultiVanGameplayScreen: View {
             .frame(maxWidth: .infinity, alignment: .leading)
             .background { TRGlassCardBackground(cornerRadius: 22) }
             .accessibilityElement(children: .contain)
+
+            #if DEBUG || MULTIVAN_INTERNAL
+            // Internal, like the Settings picker, until the MW-10 playtests pass.
+            boardStyleButton
+            #endif
         }
     }
+
+    #if DEBUG || MULTIVAN_INTERNAL
+    /// Swaps between the flat map and the 3D table; the switcher animates one into
+    /// the other. It sets the same preference as Settings, so the choice sticks.
+    private var boardStyleButton: some View {
+        let isDiorama = shownBoard == .diorama
+        return TRResultIconButton(
+            systemImage: isDiorama ? "map.fill" : "cube.fill",
+            label: isDiorama ? "Show 2D map" : "Show 3D diorama",
+            action: toggleBoardStyle
+        )
+        .accessibilityHint(isDiorama ? "Lay the board flat" : "Tilt the board up into a 3D table")
+        // Autoplay pins its own board.
+        .disabled(autoplay != nil)
+    }
+
+    private func toggleBoardStyle() {
+        let next: MultiVanBoardStyle = shownBoard == .diorama ? .flat : .diorama
+        // Asking for 3D in Low Power Mode is the player's answer to the 2D fallback.
+        if next == .diorama, ProcessInfo.processInfo.isLowPowerModeEnabled,
+           settingsService.settings.usesFlatBoardInLowPowerMode {
+            settingsService.setUsesFlatBoardInLowPowerMode(false)
+        }
+        settingsService.setBoardStyle(next)
+    }
+    #endif
 
     /// The switch changes so far against par; orange once over it.
     private var changesBadge: some View {

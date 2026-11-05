@@ -20,6 +20,11 @@ struct MultiVanDioramaBoardView: View {
     var covered = MultiVanDioramaCamera.Covered()
     /// Rounds the board into a window; a full-screen board passes 0.
     var cornerRadius: CGFloat = 20
+    /// Whether the table tilts up out of the flat board or lies down into it.
+    var morph = MultiVanBoardMorph.none
+    /// Points between the flat board and the view's sides, so the overhead view
+    /// lays the lawn where the flat board drew it.
+    var flatSideInset: CGFloat = 0
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     /// Where the player left the table, and the drag or pinch still under their fingers.
     @State private var orbit = MultiVanDioramaOrbit.resting
@@ -33,17 +38,38 @@ struct MultiVanDioramaBoardView: View {
         let anchor: CGPoint
     }
     @State private var framing: Framing?
+    /// How far the camera has come down to the flat board's overhead view: 1 is
+    /// straight down, 0 is the table. Nil until the morph first sets it.
+    @State private var flatness: Double?
 
-    /// The camera fitted to the board at the resting angle. Fitting is a search,
-    /// so it runs when the size changes rather than on every engine frame.
+    /// How long the table takes to lie down before the flat board replaces it.
+    static let foldDuration = 0.55
+    /// The flat board fades out over the overhead view first, then the table tilts up.
+    private static let unfoldDelay = 0.2
+    private static let unfoldDuration = 1.1
+
+    /// The camera fitted to the board at the resting angle, and looking straight
+    /// down over the flat board. Fitting is a search, so it runs when the size
+    /// changes rather than on every engine frame.
     private struct Framing: Equatable {
         let view: FramedView
         let camera: MultiVanDioramaCamera
+        let overhead: MultiVanDioramaCamera
+
+        init(_ view: FramedView) {
+            self.view = view
+            camera = .framed(in: view.size, covered: view.covered)
+            overhead = .overhead(
+                in: view.size, covered: view.covered,
+                sideInset: Double(view.flatSideInset), edgeInset: Double(MultiVanSwitchButton.hitSize / 2)
+            )
+        }
     }
 
     private struct FramedView: Equatable {
         let size: CGSize
         let covered: MultiVanDioramaCamera.Covered
+        let flatSideInset: CGFloat
     }
 
     var body: some View {
@@ -59,15 +85,25 @@ struct MultiVanDioramaBoardView: View {
         let card = RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
         GeometryReader { geometry in
             let size = geometry.size
-            let view = FramedView(size: size, covered: covered)
-            let framed = framing.flatMap { $0.view == view ? $0.camera : nil } ?? .framed(in: size, covered: covered)
+            let view = FramedView(size: size, covered: covered, flatSideInset: flatSideInset)
+            let fitted = framing.flatMap { $0.view == view ? $0 : nil } ?? Framing(view)
             let live = pinch.map { orbit.pinched(by: $0.magnification, anchor: $0.anchor, in: size) } ?? orbit
-            MultiVanDioramaOrbiting(orbit: live.dragged(by: dragIsPinch ? .zero : dragTranslation)) { orbit in
-                table(state: state, cues: cues, camera: framed.orbited(orbit), size: size)
+            MultiVanDioramaFlattening(flatness: flatness ?? (morph == .fromFlat && state.animates ? 1 : 0)) { flatness in
+                MultiVanDioramaOrbiting(orbit: live.dragged(by: dragIsPinch ? .zero : dragTranslation)) { orbit in
+                    let camera = fitted.camera.orbited(orbit)
+                    table(state: state, cues: cues, camera: flatness > 0 ? camera.blended(to: fitted.overhead, by: flatness) : camera, size: size)
+                }
             }
             .onChange(of: view, initial: true) { _, view in
-                framing = Framing(view: view, camera: .framed(in: view.size, covered: view.covered))
+                framing = Framing(view)
             }
+        }
+        .onChange(of: morph, initial: true) { _, morph in
+            let lyingDown = morph == .toFlat
+            let animation: Animation? = !state.animates ? nil
+                : lyingDown ? .easeInOut(duration: Self.foldDuration)
+                : .smooth(duration: Self.unfoldDuration).delay(Self.unfoldDelay)
+            withAnimation(animation) { flatness = lyingDown ? 1 : 0 }
         }
         // The scene paints its own sky, so the board reads as a window onto the
         // table, or fills the screen; nothing outside it takes taps.
@@ -237,6 +273,22 @@ struct MultiVanDioramaBoardView: View {
             },
             bounds: CGRect(origin: .zero, size: size)
         )
+    }
+}
+
+/// Hands its content each step of the morph SwiftUI animates through, so the
+/// camera tilts between the table and the flat board's overhead view frame by frame.
+private struct MultiVanDioramaFlattening<Content: View>: View, Animatable {
+    var flatness: Double
+    @ViewBuilder let content: (Double) -> Content
+
+    var animatableData: Double {
+        get { flatness }
+        set { flatness = newValue }
+    }
+
+    var body: some View {
+        content(flatness)
     }
 }
 

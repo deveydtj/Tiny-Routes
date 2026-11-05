@@ -17,6 +17,8 @@ final class MultiVanDioramaScene {
         static let vignetting: CGFloat = 0.2
         static let sunIntensity: CGFloat = 1500
         static let skyIntensity: CGFloat = 0.5
+        /// How much of a cloud stays where it passes in front of the board.
+        static let cloudOverBoardOpacity = 0.03
         /// Badges float above the roof of a house, or above the lawn elsewhere.
         static let houseBadgeHeight = 0.95
         static let badgeHeight = 0.5
@@ -653,17 +655,41 @@ final class MultiVanDioramaScene {
 
     // MARK: - Clouds
 
-    /// Where each cloud floats and how wide it is. The lens looks down on the slab,
-    /// so clouds sit below its rim, and behind it where they peek over the far edge.
+    /// Where each cloud floats and how wide it is: above the table, around its rim,
+    /// so each drifts in and out over the board's edge.
     private static let cloudLayout: [(position: SIMD3<Float>, width: Float)] = [
-        (SIMD3(-5.4, -2.6, 2.4), 2.6),
-        (SIMD3(4.9, -3.1, 1.2), 2.2),
-        (SIMD3(-0.8, -3.6, 6.4), 3.0),
-        (SIMD3(5.6, -1.4, -4.2), 2.4),
-        (SIMD3(-5.8, -1.8, -3.6), 2.0),
-        (SIMD3(1.6, -1.2, -7.4), 3.2),
-        (SIMD3(-3.2, -0.9, -8.2), 2.2),
+        (SIMD3(-4.6, 2.2, 2.6), 2.4),
+        (SIMD3(4.4, 3.0, 1.0), 2.2),
+        (SIMD3(0.6, 3.4, 5.2), 2.8),
+        (SIMD3(4.8, 2.4, -3.8), 2.4),
+        (SIMD3(-4.8, 2.0, -3.2), 2.0),
+        (SIMD3(1.4, 1.6, -6.4), 3.0),
+        (SIMD3(-2.8, 2.8, -6.8), 2.2),
     ]
+
+    /// Fades a cloud wherever it stands between the lens and the board: each
+    /// fragment follows the ray from the eye down to the lawn's plane. The cloud
+    /// thins as that ray nears the slab and is all but gone over it, so it never
+    /// hides a piece.
+    private static let cloudFade = """
+        #pragma arguments
+        float overBoardOpacity;
+        float boardHalfWidth;
+        float boardHalfDepth;
+        float boardFeather;
+        #pragma body
+        float3 world = (scn_frame.inverseViewTransform * float4(_surface.position, 1.0)).xyz;
+        float3 eye = (scn_frame.inverseViewTransform * float4(0.0, 0.0, 0.0, 1.0)).xyz;
+        float3 ray = world - eye;
+        float fade = 1.0;
+        if (ray.y < -0.0001) {
+            float2 hit = eye.xz + ray.xz * (-eye.y / ray.y);
+            float2 outside = abs(hit) - float2(boardHalfWidth, boardHalfDepth);
+            float edge = max(outside.x, outside.y);
+            fade = mix(overBoardOpacity, 1.0, smoothstep(0.0, boardFeather, edge));
+        }
+        _output.color *= fade;
+        """
 
     private static let cloudDriftKey = "drift"
 
@@ -677,6 +703,19 @@ final class MultiVanDioramaScene {
         // The sky lights them more than the sun does, so their shade stays soft.
         material.emission.contents = UIColor(dioramaHex: 0xF2F4F8)
         material.emission.intensity = 0.35
+        // Drawn after the table, blended over it, and kept out of the depth buffer
+        // so the depth of field still focuses on the board beneath a veil.
+        material.blendMode = .alpha
+        // Only a not-quite-opaque material is blended; the modifier does the rest.
+        material.transparency = 0.99
+        material.writesToDepthBuffer = false
+        material.shaderModifiers = [.fragment: cloudFade]
+        // Metal takes the arguments as floats.
+        material.setValue(Float(Look.cloudOverBoardOpacity), forKey: "overBoardOpacity")
+        // The rim's soil walls hang below the lawn, so the fade reaches past its edge.
+        material.setValue(Float(MultiVanDioramaGeometry.slabWidth / 2 + 0.2), forKey: "boardHalfWidth")
+        material.setValue(Float(MultiVanDioramaGeometry.slabDepth / 2 + 0.4), forKey: "boardHalfDepth")
+        material.setValue(Float(1.2), forKey: "boardFeather")
         puff.materials = [material]
         return cloudLayout.map { layout in
             let body = SCNNode()
@@ -693,10 +732,13 @@ final class MultiVanDioramaScene {
                 body.addChildNode(ball)
             }
             let cloud = body.flattenedClone()
+            // Flattening copies the material without its shader modifier.
+            cloud.geometry?.materials = [material]
             cloud.simdScale = SIMD3(repeating: layout.width / 1.6)
             cloud.simdPosition = layout.position
             cloud.simdEulerAngles.y = Float(MultiVanDioramaCamera.restingYaw + (random.next() - 0.5) * 0.6)
             cloud.castsShadow = false
+            cloud.renderingOrder = 10
             return cloud
         }
     }
@@ -707,13 +749,15 @@ final class MultiVanDioramaScene {
             cloud.removeAction(forKey: Self.cloudDriftKey)
             cloud.simdPosition = layout.position
             guard animates else { continue }
-            let reach = 0.35 + Double(index % 3) * 0.12
-            let duration = 9 + Double(index % 4) * 2.5
+            // Towards the middle of the table, far enough to cross its edge.
+            let reach = (1.1 + Double(index % 3) * 0.3) * (layout.position.x > 0 ? -1 : 1)
+            let duration = 16 + Double(index % 4) * 4
             let out = SCNAction.moveBy(x: CGFloat(reach), y: 0, z: 0, duration: duration)
             out.timingMode = .easeInEaseOut
             let back = out.reversed()
-            let loop = SCNAction.repeatForever(.sequence(index.isMultiple(of: 2) ? [out, back] : [back, out]))
-            cloud.runAction(loop, forKey: Self.cloudDriftKey)
+            // Clouds set off at different times, so they don't breathe in step.
+            let loop = SCNAction.repeatForever(.sequence([out, back]))
+            cloud.runAction(.sequence([.wait(duration: Double(index) * 2.3), loop]), forKey: Self.cloudDriftKey)
         }
     }
 

@@ -170,10 +170,43 @@ struct MultiVanDioramaCamera: Equatable {
         return camera
     }
 
+    /// Looking straight down, as near as a camera with world up can: the 2D board's view.
+    static let overheadPitch = Double.pi / 2 - 0.01
+
+    /// A camera looking straight down that lays the lawn's grid where the flat board
+    /// draws it in a view of `size`: inside `sideInset` points at the left and right,
+    /// and inside `edgeInset` points past `covered` at the top and bottom.
+    static func overhead(in size: CGSize, covered: Covered, sideInset: Double, edgeInset: Double) -> Self {
+        let columns = Double(MultiVanTuning.default.gridColumns), rows = Double(MultiVanTuning.default.gridRows)
+        // The flat board leaves half a grid unit round its outermost nodes.
+        let corners = [(-0.5, -0.5), (columns - 0.5, -0.5), (-0.5, rows - 0.5), (columns - 0.5, rows - 0.5)]
+            .map { MultiVanDioramaGeometry.world(gridX: $0.0, gridY: $0.1) }
+        // `frame` takes one inset for every side, so the covered strips make up the difference.
+        let inset = sideInset + edgeInset
+        let covered = Covered(top: max(0, covered.top - sideInset), bottom: max(0, covered.bottom - sideInset))
+        var camera = Self()
+        camera.frame(corners, in: size, inset: inset, covered: covered, yaw: 0, pitch: overheadPitch)
+        return camera
+    }
+
+    /// Part way from this camera to `other`: `progress` 0 is this one, 1 is `other`.
+    func blended(to other: Self, by progress: Double) -> Self {
+        var camera = self
+        camera.yaw += (other.yaw - yaw) * progress
+        camera.pitch += (other.pitch - pitch) * progress
+        camera.distance += (other.distance - distance) * progress
+        camera.pan += (other.pan - pan) * progress
+        return camera
+    }
+
     /// Moves the camera in or out until `points` just fit inside `size` less `inset`
     /// points on every side and the `covered` strips, centring them in what is left
-    /// at the resting angle. Leaves the camera as it was for an empty size.
-    mutating func frame(_ points: [SIMD3<Double>], in size: CGSize, inset: Double, covered: Covered = Covered()) {
+    /// at `yaw` and `pitch`, the resting angle unless told otherwise. Leaves the
+    /// camera as it was for an empty size.
+    mutating func frame(
+        _ points: [SIMD3<Double>], in size: CGSize, inset: Double, covered: Covered = Covered(),
+        yaw: Double = restingYaw, pitch: Double = restingPitch
+    ) {
         let width = Double(size.width), height = Double(size.height)
         let covered = covered.fitted(toHeight: height)
         let open = height - covered.top - covered.bottom
@@ -182,8 +215,8 @@ struct MultiVanDioramaCamera: Equatable {
         // The open band's middle and half-extents, in normalised device coordinates.
         let target = SIMD2(0, (covered.bottom - covered.top) / height)
         let limit = SIMD2(1 - 2 * inset / width, (open - 2 * inset) / height)
-        yaw = Self.restingYaw
-        pitch = Self.restingPitch
+        self.yaw = yaw
+        self.pitch = pitch
         pan = .zero
         // Fit, re-centre, and fit again; three re-centrings settle well inside a pixel.
         // The last pass only fits, so the result always fits.

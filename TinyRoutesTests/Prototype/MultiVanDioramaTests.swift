@@ -181,6 +181,50 @@ final class MultiVanDioramaTests: XCTestCase {
         XCTAssertEqual(MultiVanDioramaCamera.framed(in: size, covered: .init()), MultiVanDioramaCamera.framed(in: size))
     }
 
+    func testOverheadViewLaysTheLawnWhereTheFlatBoardDrawsIt() throws {
+        let level = try XCTUnwrap(MultiVanLevelRepository().loadAllLevels().first { $0.id == "level_012" })
+        // Full screen under a HUD and controls, as wide and as tall as the band
+        // allows; and a stacked board with nothing covered.
+        let cases: [(CGSize, MultiVanDioramaCamera.Covered, Double)] = [
+            (CGSize(width: 393, height: 852), .init(top: 230, bottom: 120), 16),
+            (CGSize(width: 393, height: 600), .init(top: 150, bottom: 110), 16),
+            (CGSize(width: 360, height: 460), .init(), 0),
+        ]
+        for (size, covered, sideInset) in cases {
+            let camera = MultiVanDioramaCamera.overhead(
+                in: size, covered: covered, sideInset: sideInset, edgeInset: Double(MultiVanSwitchButton.hitSize / 2)
+            )
+            // The gameplay screen pads the flat board by the covered strips and the side inset.
+            let rect = CGRect(
+                x: sideInset, y: covered.top,
+                width: size.width - 2 * sideInset, height: size.height - covered.top - covered.bottom
+            )
+            let layout = MultiVanBoardView.boardLayout(level: level, size: rect.size)
+            for node in level.graph.nodes {
+                let flat = try XCTUnwrap(layout.pointsByNodeID[node.id])
+                let overhead = try XCTUnwrap(camera.viewPoint(for: MultiVanDioramaGeometry.world(gridX: node.x, gridY: node.y), in: size))
+                let label = "\(size) \(node.id)"
+                XCTAssertEqual(overhead.x, flat.x + rect.minX, accuracy: 2, label)
+                XCTAssertEqual(overhead.y, flat.y + rect.minY, accuracy: 2, label)
+            }
+        }
+    }
+
+    func testBlendingCamerasRunsFromOneToTheOther() {
+        let size = CGSize(width: 393, height: 852)
+        let table = MultiVanDioramaCamera.framed(in: size)
+        let overhead = MultiVanDioramaCamera.overhead(in: size, covered: .init(), sideInset: 16, edgeInset: 22)
+        XCTAssertEqual(table.blended(to: overhead, by: 0), table)
+        let end = table.blended(to: overhead, by: 1)
+        XCTAssertEqual(end.pitch, overhead.pitch, accuracy: 1e-12)
+        XCTAssertEqual(end.yaw, overhead.yaw, accuracy: 1e-12)
+        XCTAssertEqual(end.distance, overhead.distance, accuracy: 1e-9)
+        XCTAssertEqual(end.position.x, overhead.position.x, accuracy: 1e-9)
+        XCTAssertEqual(end.position.z, overhead.position.z, accuracy: 1e-9)
+        let middle = table.blended(to: overhead, by: 0.5)
+        XCTAssertEqual(middle.pitch, (table.pitch + overhead.pitch) / 2, accuracy: 1e-12)
+    }
+
     func testFramingAnEmptyViewLeavesTheCameraAlone() {
         var camera = MultiVanDioramaCamera()
         camera.frame(MultiVanDioramaGeometry.fitPoints, in: .zero, inset: 10)
