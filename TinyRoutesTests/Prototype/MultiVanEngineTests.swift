@@ -3010,7 +3010,7 @@ final class MultiVanAccessibilityTests: XCTestCase {
 
     func testControlsAndFastForwardUseExistingActions() throws {
         let screen = try source("TinyRoutes/Prototype/MultiVanGameplayScreen.swift")
-        for title in ["GO", "Stop", "Try again", "Replay", "Next", "Reset switches", "Fast-forward"] {
+        for title in ["Go", "Stop", "Try again", "Replay", "Next", "Reset switches", "Fast-forward"] {
             XCTAssertTrue(screen.contains("\"\(title)\""), title)
         }
         XCTAssertTrue(screen.contains(".accessibilityAction { setFastForwarding(!frameDriver.isFastForwarding) }"))

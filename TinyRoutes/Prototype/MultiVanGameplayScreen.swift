@@ -34,6 +34,8 @@ struct MultiVanGameplayScreen: View {
     @State private var boardFrame: CGRect?
     @State private var hudBottom: CGFloat = 0
     @State private var controlsTop: CGFloat = 0
+    /// The banner reaches down to the middle of the level card.
+    @State private var levelCardHeight: CGFloat = 0
     /// The board the switcher has on screen, for the HUD's 2D/3D button.
     @State private var shownBoard: MultiVanBoardStyle?
 
@@ -192,14 +194,22 @@ struct MultiVanGameplayScreen: View {
                 .onGeometryChange(for: CGRect.self) { $0.frame(in: .global) } action: { boardFrame = $0 }
 
             VStack(spacing: 12) {
-                hud
+                hud(isDecorated: true)
                     .accessibilityHidden(presentedFailure != nil)
                     .onGeometryChange(for: CGFloat.self) { $0.frame(in: .global).maxY } action: { hudBottom = $0 }
                 // Empty space here takes no touches, so drags reach the board.
                 resultCards
                     .frame(maxHeight: .infinity)
                 controlBar
-                    .onGeometryChange(for: CGFloat.self) { $0.frame(in: .global).minY } action: { controlsTop = $0 }
+                    .background(alignment: .top) {
+                        // Out past the screen's sides and bottom edge.
+                        MultiVanHUDHills()
+                            .padding(.top, -MultiVanHUDHills.rise)
+                            .padding(.horizontal, -16)
+                            .padding(.bottom, -200)
+                    }
+                    // The table stays clear of the hills too.
+                    .onGeometryChange(for: CGFloat.self) { $0.frame(in: .global).minY - MultiVanHUDHills.rise } action: { controlsTop = $0 }
             }
             .padding(.horizontal, 16)
             .padding(.vertical, 8)
@@ -211,7 +221,7 @@ struct MultiVanGameplayScreen: View {
         GeometryReader { geometry in
             ScrollView {
                 VStack(spacing: 12) {
-                    hud
+                    hud(isDecorated: false)
                         .accessibilityHidden(presentedFailure != nil)
 
                     // Results sit over the board, so the board keeps one size from planning
@@ -338,59 +348,163 @@ struct MultiVanGameplayScreen: View {
         }
     }
 
-    private var hud: some View {
-        HStack(alignment: .top, spacing: 10) {
+    /// The banner and the level card. Full screen, the banner paints the top of
+    /// the screen and reaches halfway down the card.
+    private func hud(isDecorated: Bool) -> some View {
+        VStack(spacing: 10) {
+            if isDecorated || showsTopBar {
+                topBar(showsLogo: isDecorated)
+            }
+            levelCard
+                .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { levelCardHeight = $0 }
+        }
+        .background(alignment: .bottom) {
+            if isDecorated {
+                // Out past the screen's sides and up under the status bar.
+                MultiVanHUDBanner()
+                    .padding(.bottom, levelCardHeight / 2)
+                    .padding(.horizontal, -16)
+                    .padding(.top, -200)
+            }
+        }
+    }
+
+    private var showsTopBar: Bool {
+        #if DEBUG || MULTIVAN_INTERNAL
+        true
+        #else
+        onBack != nil
+        #endif
+    }
+
+    /// Back on the left, the wordmark in the middle, and the internal 2D/3D
+    /// button on the right; empty slots keep the wordmark centred.
+    private func topBar(showsLogo: Bool) -> some View {
+        HStack(spacing: 10) {
             if let onBack {
-                TRResultIconButton(systemImage: "chevron.left", label: "Levels", action: onBack)
+                Button(action: onBack) { circleIcon("chevron.left", tint: TRGameplayStyle.Colors.titleNavy) }
+                    .buttonStyle(.multiVanHUDCircle)
+                    .accessibilityLabel("Levels")
                     .accessibilityHint("Return to the level map")
+            } else {
+                Self.emptyCircleSlot
+            }
+
+            Spacer(minLength: 0)
+            if showsLogo { MultiVanHUDLogo() }
+            Spacer(minLength: 0)
+
+            #if DEBUG || MULTIVAN_INTERNAL
+            // Internal, like the Settings picker, until the MW-10 playtests pass.
+            boardStyleButton
+            #else
+            Self.emptyCircleSlot
+            #endif
+        }
+    }
+
+    private static let circleSize: CGFloat = 46
+    private static var emptyCircleSlot: some View {
+        Color.clear
+            .frame(width: circleSize, height: circleSize + MultiVanHUDButtonStyle.lipDepth)
+            .accessibilityHidden(true)
+    }
+
+    private func circleIcon(_ systemImage: String, tint: Color = TRGameplayStyle.Colors.primaryBlue) -> some View {
+        Image(systemName: systemImage)
+            .font(.system(size: 19, weight: .black, design: .rounded))
+            .foregroundStyle(tint)
+            .frame(width: Self.circleSize, height: Self.circleSize)
+    }
+
+    /// The level's number and name, its deliveries and the changes so far. The
+    /// banner's one-line layout when it fits, otherwise the name over the deliveries.
+    private var levelCard: some View {
+        ViewThatFits(in: .horizontal) {
+            HStack(alignment: .center, spacing: 10) {
+                levelTitle
+                    .fixedSize()
+                Capsule()
+                    .fill(MultiVanHUDStyle.creamLip.opacity(0.7))
+                    .frame(width: 2, height: 40)
+                    .accessibilityHidden(true)
+                // One column of deliveries for up to three vans, two above that.
+                let columns = engine.level.vans.count <= 3 ? 1 : 2
+                Grid(alignment: .leading, horizontalSpacing: 6, verticalSpacing: 6) {
+                    ForEach(Array(stride(from: 0, to: engine.level.vans.count, by: columns)), id: \.self) { start in
+                        GridRow {
+                            ForEach(engine.level.vans[start..<min(start + columns, engine.level.vans.count)], id: \.id) { van in
+                                vanChip(van, isCompact: true)
+                            }
+                        }
+                    }
+                }
+                Spacer(minLength: 0)
+                changesBadge
             }
 
             VStack(alignment: .leading, spacing: 10) {
                 HStack(alignment: .center, spacing: 8) {
-                    Text(engine.level.name)
-                        .font(.system(.title3, design: .rounded, weight: .heavy))
-                        .foregroundStyle(TRGameplayStyle.Colors.titleNavy)
-                        .fixedSize(horizontal: false, vertical: true)
+                    levelTitle
                         .frame(maxWidth: .infinity, alignment: .leading)
-                        .accessibilityAddTraits(.isHeader)
-                        .accessibilityFocused($accessibilityFocus, equals: .levelTitle)
                     changesBadge
                 }
 
                 LazyVGrid(columns: [GridItem(.adaptive(minimum: dynamicTypeSize.isAccessibilitySize ? 240 : 110), alignment: .leading)], alignment: .leading) {
                     ForEach(engine.level.vans, id: \.id) { van in
-                        HStack(spacing: 5) {
-                            Text("\(van.color.symbol) →")
-                            if let house = engine.level.houses.first(where: { $0.color == van.color }) {
-                                Image(systemName: "house.fill")
-                                Text(house.color.symbol)
-                            }
-                        }
-                        .font(.system(.subheadline, design: .rounded, weight: .heavy))
-                        .foregroundStyle(van.color.boardColor)
-                        .padding(.horizontal, 10)
-                        .padding(.vertical, 6)
-                        .background {
-                            Capsule()
-                                .fill(van.color.boardColor.opacity(0.12))
-                                .overlay { Capsule().stroke(van.color.boardColor.opacity(0.22), lineWidth: 1) }
-                        }
-                        .accessibilityElement(children: .ignore)
-                        .accessibilityLabel("\(van.color.displayName) \(van.color.accessibilitySymbolName) van to \(van.color.displayName.lowercased()) \(van.color.accessibilitySymbolName) house")
+                        vanChip(van)
                     }
                 }
                 // Levels still carry their `hint`; the HUD leaves it out for now.
             }
-            .padding(14)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .background { TRGlassCardBackground(cornerRadius: 22) }
-            .accessibilityElement(children: .contain)
-
-            #if DEBUG || MULTIVAN_INTERNAL
-            // Internal, like the Settings picker, until the MW-10 playtests pass.
-            boardStyleButton
-            #endif
         }
+        .padding(.horizontal, 14)
+        .padding(.vertical, 12)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background { MultiVanHUDCardBackground(cornerRadius: 26) }
+        .accessibilityElement(children: .contain)
+    }
+
+    private var levelTitle: some View {
+        VStack(alignment: .leading, spacing: 1) {
+            if let levelNumber {
+                Text("Level \(levelNumber)")
+                    .font(.system(.footnote, design: .rounded, weight: .bold))
+                    .foregroundStyle(TRGameplayStyle.Colors.secondaryText)
+            }
+            Text(engine.level.name)
+                .font(.system(.title3, design: .rounded, weight: .heavy))
+                .foregroundStyle(TRGameplayStyle.Colors.titleNavy)
+                .fixedSize(horizontal: false, vertical: true)
+                .accessibilityAddTraits(.isHeader)
+                .accessibilityFocused($accessibilityFocus, equals: .levelTitle)
+        }
+    }
+
+    /// The number the level map shows on this level's tile.
+    private var levelNumber: Int? {
+        engine.level.id.split(separator: "_").last.flatMap { Int($0) }
+    }
+
+    private func vanChip(_ van: MultiVanVan, isCompact: Bool = false) -> some View {
+        HStack(spacing: isCompact ? 4 : 5) {
+            Text("\(van.color.symbol) →")
+            if let house = engine.level.houses.first(where: { $0.color == van.color }) {
+                Image(systemName: "house.fill")
+                Text(house.color.symbol)
+            }
+        }
+        .font(.system(isCompact ? .footnote : .subheadline, design: .rounded, weight: .heavy))
+        .foregroundStyle(van.color.boardColor)
+        .padding(.horizontal, isCompact ? 8 : 10)
+        .padding(.vertical, isCompact ? 5 : 6)
+        .background {
+            Capsule()
+                .fill(van.color.boardColor.opacity(0.12))
+                .overlay { Capsule().stroke(van.color.boardColor.opacity(0.22), lineWidth: 1) }
+        }
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("\(van.color.displayName) \(van.color.accessibilitySymbolName) van to \(van.color.displayName.lowercased()) \(van.color.accessibilitySymbolName) house")
     }
 
     #if DEBUG || MULTIVAN_INTERNAL
@@ -398,14 +512,12 @@ struct MultiVanGameplayScreen: View {
     /// the other. It sets the same preference as Settings, so the choice sticks.
     private var boardStyleButton: some View {
         let isDiorama = shownBoard == .diorama
-        return TRResultIconButton(
-            systemImage: isDiorama ? "map.fill" : "cube.fill",
-            label: isDiorama ? "Show 2D map" : "Show 3D diorama",
-            action: toggleBoardStyle
-        )
-        .accessibilityHint(isDiorama ? "Lay the board flat" : "Tilt the board up into a 3D table")
-        // Autoplay pins its own board.
-        .disabled(autoplay != nil)
+        return Button(action: toggleBoardStyle) { circleIcon(isDiorama ? "map.fill" : "cube.fill") }
+            .buttonStyle(.multiVanHUDCircle)
+            .accessibilityLabel(isDiorama ? "Show 2D map" : "Show 3D diorama")
+            .accessibilityHint(isDiorama ? "Lay the board flat" : "Tilt the board up into a 3D table")
+            // Autoplay pins its own board.
+            .disabled(autoplay != nil)
     }
 
     private func toggleBoardStyle() {
@@ -435,19 +547,23 @@ struct MultiVanGameplayScreen: View {
         }
         .font(.system(.headline, design: .rounded, weight: .heavy))
         .foregroundStyle(tint)
-        .padding(.horizontal, 11)
-        .padding(.vertical, 6)
-        .background { Capsule().fill(tint.opacity(0.12)) }
+        .padding(.horizontal, 12)
+        .padding(.vertical, 7)
+        .background {
+            Capsule()
+                .fill(tint.opacity(0.12))
+                .overlay { Capsule().stroke(tint.opacity(0.20), lineWidth: 1) }
+        }
         .animation(reducesExtraAnimations ? nil : .easeOut(duration: 0.18), value: isOverPar)
         .accessibilityElement(children: .ignore)
         .accessibilityLabel("Changes \(engine.changeCount), par \(engine.level.parChanges)")
     }
 
-    /// The controls in a card of their own, floating over the board.
+    /// The controls in a cream tray of their own, floating over the board.
     private var controlBar: some View {
         controls
-            .padding(10)
-            .background { TRGlassCardBackground(cornerRadius: 24) }
+            .padding(12)
+            .background { MultiVanHUDCardBackground(cornerRadius: 30) }
     }
 
     /// Every phase's buttons share one footprint and the same two places: going
@@ -458,10 +574,9 @@ struct MultiVanGameplayScreen: View {
         return ZStack {
             controlRow(isShown: engine.phase == .plan) {
                 controlLayout {
-                    secondaryButton("Reset switches", action: resetSwitches)
+                    secondaryButton("Reset switches", systemImage: "arrow.clockwise", action: resetSwitches)
                         .accessibilityHint("Restore the level's initial switch selections")
-                    primaryButton("GO", action: go)
-                        .accessibilityLabel("Go")
+                    primaryButton("Go", systemImage: "play.fill", action: go)
                         .accessibilityHint("Start all vans on the selected routes")
                 }
             }
@@ -491,7 +606,7 @@ struct MultiVanGameplayScreen: View {
 
     private var runControls: some View {
         controlLayout {
-            secondaryButton("Stop") {
+            secondaryButton("Stop", systemImage: "stop.fill") {
                 winPresentation.reset()
                 celebration.reset()
                 personality.reset()
@@ -508,7 +623,7 @@ struct MultiVanGameplayScreen: View {
             Button {} label: {
                 controlLabel(frameDriver.isFastForwarding ? "2× active" : (voiceOverEnabled ? "2× speed" : "Hold 2×"), systemImage: "forward.fill")
             }
-            .buttonStyle(MultiVanControlButtonStyle(
+            .buttonStyle(MultiVanHUDButtonStyle(
                 isProminent: true,
                 tint: frameDriver.isFastForwarding ? TRGameplayStyle.Colors.orangeAccent : TRGameplayStyle.Colors.primaryBlue
             ))
@@ -558,7 +673,7 @@ struct MultiVanGameplayScreen: View {
         .padding(18)
         .frame(maxWidth: 380)
         .frame(maxWidth: .infinity)
-        .background { TRGlassCardBackground() }
+        .background { MultiVanHUDCardBackground() }
         .accessibilityElement(children: .contain)
         .opacity(winPresentation.id == nil ? 0 : 1)
         .animation(reducesExtraAnimations ? nil : .easeOut(duration: 0.18), value: winPresentation.id)
@@ -575,7 +690,7 @@ struct MultiVanGameplayScreen: View {
             .accessibilityFocused($accessibilityFocus, equals: .failure)
         .padding(16)
         .frame(maxWidth: 340)
-        .background { TRGlassCardBackground(cornerRadius: 20) }
+        .background { MultiVanHUDCardBackground(cornerRadius: 20) }
         .accessibilityElement(children: .contain)
     }
 
@@ -597,26 +712,29 @@ struct MultiVanGameplayScreen: View {
     }
 
     /// Every control is at least this tall, whatever the phase.
-    private static let controlHeight: CGFloat = 50
+    private static let controlHeight: CGFloat = 60
 
     private func primaryButton(_ title: String, systemImage: String? = nil, action: @escaping () -> Void) -> some View {
         Button(action: action) {
             controlLabel(title, systemImage: systemImage)
         }
-        .buttonStyle(MultiVanControlButtonStyle(isProminent: true))
+        .buttonStyle(MultiVanHUDButtonStyle(isProminent: true))
     }
 
+    /// Narrow beside the primary button, with its icon over its title.
     private func secondaryButton(_ title: String, systemImage: String? = nil, action: @escaping () -> Void) -> some View {
         Button(action: action) {
-            controlLabel(title, systemImage: systemImage)
+            controlLabel(title, systemImage: systemImage, isStacked: true)
         }
-        .buttonStyle(MultiVanControlButtonStyle(isProminent: false))
+        .buttonStyle(MultiVanHUDButtonStyle())
+        .frame(maxWidth: dynamicTypeSize.isAccessibilitySize ? .infinity : 124)
     }
 
-    private func controlLabel(_ title: String, systemImage: String?) -> some View {
+    private func controlLabel(_ title: String, systemImage: String?, isStacked: Bool = false) -> some View {
         Group {
             if let systemImage {
                 Label(title, systemImage: systemImage)
+                    .labelStyle(MultiVanControlLabelStyle(isStacked: isStacked))
             } else {
                 Text(title)
             }
@@ -721,44 +839,28 @@ struct MultiVanGameplayScreen: View {
     }
 }
 
-/// The menus' glossy buttons, at the gameplay controls' size: a tinted gradient
-/// for going on, white for going back.
-private struct MultiVanControlButtonStyle: ButtonStyle {
-    let isProminent: Bool
-    var tint = TRGameplayStyle.Colors.primaryBlue
-    @Environment(\.isEnabled) private var isEnabled
+/// The primary buttons' big icon and title side by side; the secondary ones'
+/// blue icon over a smaller title.
+private struct MultiVanControlLabelStyle: LabelStyle {
+    let isStacked: Bool
 
     func makeBody(configuration: Configuration) -> some View {
-        let shape = RoundedRectangle(cornerRadius: 16, style: .continuous)
-        return configuration.label
-            .padding(.horizontal, 12)
-            .foregroundStyle(isProminent ? Color.white : TRGameplayStyle.Colors.titleNavy)
-            .background {
-                shape
-                    .fill(isProminent
-                        ? AnyShapeStyle(tint)
-                        : AnyShapeStyle(LinearGradient(colors: [.white, Color(red: 0.94, green: 0.97, blue: 1.00)], startPoint: .top, endPoint: .bottom)))
-                    .overlay(alignment: .top) {
-                        shape
-                            .fill(.white.opacity(isProminent ? 0.28 : 0.6))
-                            .frame(height: 22)
-                            .blur(radius: 8)
-                            .offset(y: -11)
-                            .clipShape(shape)
-                    }
-                    .overlay { shape.stroke(.white.opacity(isProminent ? 0.38 : 0.8), lineWidth: 1) }
-                    .overlay {
-                        if !isProminent { shape.stroke(TRGameplayStyle.Colors.markerStroke.opacity(0.5), lineWidth: 1).padding(1) }
-                    }
-                    .shadow(
-                        color: (isProminent ? tint : Color(red: 0.50, green: 0.62, blue: 0.74)).opacity(isProminent ? 0.30 : 0.18),
-                        radius: configuration.isPressed ? 4 : 8, x: 0, y: configuration.isPressed ? 2 : 5
-                    )
+        if isStacked {
+            VStack(spacing: 2) {
+                configuration.icon
+                    .font(.system(.title3, design: .rounded, weight: .heavy))
+                    .foregroundStyle(TRGameplayStyle.Colors.primaryBlue)
+                configuration.title
+                    .font(.system(.subheadline, design: .rounded, weight: .bold))
             }
-            .contentShape(shape)
-            .opacity(isEnabled ? 1 : 0.55)
-            .scaleEffect(configuration.isPressed ? 0.97 : 1)
-            .animation(.spring(response: 0.2, dampingFraction: 0.72), value: configuration.isPressed)
+            .padding(.vertical, 6)
+        } else {
+            HStack(spacing: 10) {
+                configuration.icon
+                configuration.title
+            }
+            .font(.system(.title2, design: .rounded, weight: .heavy))
+        }
     }
 }
 

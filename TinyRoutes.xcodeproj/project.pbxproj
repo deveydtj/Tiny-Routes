@@ -249,6 +249,7 @@
 		F47ED91FDE86BB5A9D017415 /* TRGameplayStyleTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF0CC4388F71CE3B90CBBC80 /* TRGameplayStyleTests.swift */; };
 		F5DA1B86E6BE1D9BDC8DD91D /* EconomyService.swift in Sources */ = {isa = PBXBuildFile; fileRef = DBDF4ED66B8042607FFD6F27 /* EconomyService.swift */; };
 		F9316D9A30EA4723E4CB5BAA /* CosmeticItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 465CFC8159B3613A970FE259 /* CosmeticItem.swift */; };
+		F9417711AE9C96CD013EF0D6 /* MultiVanHUDChrome.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2B49920C99BBC769ACECE54 /* MultiVanHUDChrome.swift */; };
 		F99E28CEDCB085C9B1AE040D /* non_positive_time_limit.json in Resources */ = {isa = PBXBuildFile; fileRef = A7C0CABC6909C07C15C6120D /* non_positive_time_limit.json */; };
 		F99EFBD47A7850B4907B78E8 /* MultiVanPlaytestLogTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 53951ADEE46B714D667930E0 /* MultiVanPlaytestLogTests.swift */; };
 		FABC539B70856A6A7E43AC14 /* UserSettingsServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B1F71A0D96F6EE65FC18B50 /* UserSettingsServiceTests.swift */; };
@@ -508,6 +509,7 @@
 		F1D3AFDBE64E9F34E3B2DC56 /* PrototypeSolutionScript.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PrototypeSolutionScript.swift; sourceTree = "<group>"; };
 		F1FB4EDBBFEBB26B3ABF9A9F /* TRResultActionButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TRResultActionButton.swift; sourceTree = "<group>"; };
 		F268635BC9A0004613EA68F4 /* TRShopCosmeticOptionCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TRShopCosmeticOptionCard.swift; sourceTree = "<group>"; };
+		F2B49920C99BBC769ACECE54 /* MultiVanHUDChrome.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MultiVanHUDChrome.swift; sourceTree = "<group>"; };
 		F3254B656FA1479A1C6CEB71 /* ScoreResult.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScoreResult.swift; sourceTree = "<group>"; };
 		F3D1FDEDE1681E031CF0E9C4 /* MultiVanBoardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MultiVanBoardView.swift; sourceTree = "<group>"; };
 		F4B5563951A5AF431C6F303C /* UserSettingsRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserSettingsRepository.swift; sourceTree = "<group>"; };
@@ -844,6 +846,7 @@
 				9D377447E91FFA14AAF73DAA /* MultiVanFeedback.swift */,
 				BF92971427A3625518B9B08F /* MultiVanGameplayScreen.swift */,
 				D3B5321242E60439528476F8 /* MultiVanHouseView.swift */,
+				F2B49920C99BBC769ACECE54 /* MultiVanHUDChrome.swift */,
 				5B08096B6623C38C2F65FB2A /* MultiVanLevel.swift */,
 				E85098EDE231C9F46CC3980D /* MultiVanLevelRepository.swift */,
 				8C10A99572FBC039617970A4 /* MultiVanPerformanceMeter.swift */,
@@ -942,7 +945,7 @@
 			path = TinyRoutesTests;
 			sourceTree = "<group>";
 		};
-		"TEMP_CA41283D-5E41-48C7-88ED-7846642E27E7" /* Resources */ = {
+		"TEMP_AC48BF05-159A-4CCC-95D2-13B67D64606C" /* Resources */ = {
 			isa = PBXGroup;
 			children = (
 			);
@@ -1127,6 +1130,7 @@
 				54EFBB5FC18B9E1745AD0705 /* MultiVanEngine.swift in Sources */,
 				8355D80C00C53B2312F1457B /* MultiVanFeedback.swift in Sources */,
 				703678187432C8604CFD24D9 /* MultiVanGameplayScreen.swift in Sources */,
+				F9417711AE9C96CD013EF0D6 /* MultiVanHUDChrome.swift in Sources */,
 				6CF5522E29C71BEC1E99ABD9 /* MultiVanHouseView.swift in Sources */,
 				30D08CD19704232DBE9982D8 /* MultiVanLevel.swift in Sources */,
 				FDFD81D64CF0FAB733FFBBD9 /* MultiVanLevelRepository.swift in Sources */,
