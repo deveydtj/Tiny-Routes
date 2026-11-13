@@ -139,6 +139,7 @@
 		780FD4BA60B0CABAD0FD093C /* LevelSimulationHarnessTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 835A241F13DC0ED0992A689F /* LevelSimulationHarnessTests.swift */; };
 		78DC686E7D4786F3690662B1 /* TRProfileCollectionCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = F530A81C06F27BE9DD7B319D /* TRProfileCollectionCard.swift */; };
 		7A0FAFCCB481398D3B44FDF6 /* MultiVanDioramaGeometry.swift in Sources */ = {isa = PBXBuildFile; fileRef = 65AAC10E1159602CE6707DC3 /* MultiVanDioramaGeometry.swift */; };
+		76187805E9A9F9E11C9D089B /* MultiVanDioramaGestureLayer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 63E2F84325D2B1B444B0B185 /* MultiVanDioramaGestureLayer.swift */; };
 		7A3B1263E583C1668B781B0C /* LevelRepositoryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B064034548F2A810BA3D12F6 /* LevelRepositoryTests.swift */; };
 		7ACC6C245639F0DBF8169F3A /* TRSettingsToggleRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41E5D61ED2A0DE43F01D9F13 /* TRSettingsToggleRow.swift */; };
 		7E046318A25C147961C3A41D /* LevelSimulationHarness.swift in Sources */ = {isa = PBXBuildFile; fileRef = F139BB6512B7A9A897A0D611 /* LevelSimulationHarness.swift */; };
@@ -412,6 +413,7 @@
 		6407AEC46DFBDB62CFAB65F2 /* TinyRoutesTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = TinyRoutesTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		657B3F5915B3BFD8DC6E8820 /* ProfileAchievement.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileAchievement.swift; sourceTree = "<group>"; };
 		65AAC10E1159602CE6707DC3 /* MultiVanDioramaGeometry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MultiVanDioramaGeometry.swift; sourceTree = "<group>"; };
+		63E2F84325D2B1B444B0B185 /* MultiVanDioramaGestureLayer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MultiVanDioramaGestureLayer.swift; sourceTree = "<group>"; };
 		6B00251FF3EEBFB1F34BE33E /* TRVillageMotion.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TRVillageMotion.swift; sourceTree = "<group>"; };
 		6C596DA5340849D282DD6B4E /* TRGameplayCosmeticStyle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TRGameplayCosmeticStyle.swift; sourceTree = "<group>"; };
 		6F0507FE7912D807DF6A39BE /* GameplayCosmeticLoadoutTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameplayCosmeticLoadoutTests.swift; sourceTree = "<group>"; };
@@ -936,6 +938,7 @@
 				0770D7CF12C1ACFFD8135E45 /* MultiVanDioramaBoardView.swift */,
 				029C9DD95C8B5A6944834187 /* MultiVanDioramaEffects.swift */,
 				65AAC10E1159602CE6707DC3 /* MultiVanDioramaGeometry.swift */,
+				63E2F84325D2B1B444B0B185 /* MultiVanDioramaGestureLayer.swift */,
 				0728AF239DD99FE36CC316BA /* MultiVanDioramaLawn.swift */,
 				091A518002F37AB5BFA91E98 /* MultiVanDioramaPieces.swift */,
 				749D2AFC9AD1D71C7572255B /* MultiVanDioramaScene.swift */,
@@ -1231,6 +1234,7 @@
 				837CCD0973B0A09BF305DE55 /* MultiVanDioramaBoardView.swift in Sources */,
 				6136C35EC860F426E7973042 /* MultiVanDioramaEffects.swift in Sources */,
 				7A0FAFCCB481398D3B44FDF6 /* MultiVanDioramaGeometry.swift in Sources */,
+				76187805E9A9F9E11C9D089B /* MultiVanDioramaGestureLayer.swift in Sources */,
 				F168C5E211F4B343C5DA830A /* MultiVanDioramaLawn.swift in Sources */,
 				47D0C31E39850139968E0D77 /* MultiVanDioramaPieces.swift in Sources */,
 				5D7EE69D964BAD1E8F204210 /* MultiVanDioramaScene.swift in Sources */,

@@ -122,6 +122,55 @@ final class MultiVanDioramaTests: XCTestCase {
         XCTAssertEqual(centred.dragged(by: CGSize(width: 40, height: 0)).zoom, 2)
     }
 
+    func testPansKeepTheSpotUnderTheFingerWithinTheFramedView() {
+        let size = CGSize(width: 360, height: 460)
+        let framed = MultiVanDioramaCamera.framed(in: size)
+        let rest = MultiVanDioramaOrbit.resting
+
+        // Nothing to pan to at the full view.
+        XCTAssertFalse(rest.isZoomedIn)
+        XCTAssertEqual(rest.panned(by: CGSize(width: 80, height: -60), in: size), rest)
+
+        // Zoomed in, the board follows the finger.
+        let zoomed = rest.pinched(by: 2, anchor: CGPoint(x: 0.5, y: 0.5), in: size)
+        XCTAssertTrue(zoomed.isZoomedIn)
+        let drag = CGSize(width: 40, height: -30)
+        let panned = zoomed.panned(by: drag, in: size)
+        XCTAssertEqual(panned.zoom, zoomed.zoom)
+        let spot = MultiVanDioramaGeometry.world(gridX: 2, gridY: 3)
+        if let start = framed.orbited(zoomed).viewPoint(for: spot, in: size),
+           let end = framed.orbited(panned).viewPoint(for: spot, in: size) {
+            XCTAssertEqual(end.x - start.x, drag.width, accuracy: 3)
+            XCTAssertEqual(end.y - start.y, drag.height, accuracy: 3)
+        } else {
+            XCTFail("spot behind the lens")
+        }
+
+        // Panning back returns exactly; a long drag stops at the framed view's edge.
+        let back = panned.panned(by: CGSize(width: -drag.width, height: -drag.height), in: size)
+        XCTAssertEqual(back.zoomCentre.x, zoomed.zoomCentre.x, accuracy: 1e-12)
+        XCTAssertEqual(back.zoomCentre.y, zoomed.zoomCentre.y, accuracy: 1e-12)
+        let far = zoomed.panned(by: CGSize(width: -5000, height: 5000), in: size)
+        let reach = 1 - 1 / zoomed.zoom
+        XCTAssertEqual(far.zoomCentre.x, reach * Double(size.width / size.height), accuracy: 1e-9)
+        XCTAssertEqual(far.zoomCentre.y, reach, accuracy: 1e-9)
+    }
+
+    func testTwistsAndTiltsTurnTheTableWithinThePrototypesLimits() {
+        let rest = MultiVanDioramaOrbit.resting
+        XCTAssertEqual(rest.twisted(by: 0.2).yaw, rest.yaw + 0.2, accuracy: 1e-12)
+        XCTAssertEqual(rest.twisted(by: 0.2).pitch, rest.pitch)
+        XCTAssertEqual(rest.twisted(by: 10).yaw, MultiVanDioramaOrbit.yawRange.upperBound)
+        XCTAssertEqual(rest.tilted(by: -50).pitch, rest.pitch - 0.2, accuracy: 1e-12)
+        XCTAssertEqual(rest.tilted(by: -50).yaw, rest.yaw)
+        XCTAssertEqual(rest.tilted(by: -1000).pitch, MultiVanDioramaOrbit.pitchRange.lowerBound)
+
+        // Neither changes the zoom or where it looks.
+        let zoomed = rest.pinched(by: 2, anchor: CGPoint(x: 0.3, y: 0.6), in: CGSize(width: 360, height: 460))
+        XCTAssertEqual(zoomed.twisted(by: 0.3).zoomCentre, zoomed.zoomCentre)
+        XCTAssertEqual(zoomed.tilted(by: 30).zoom, zoomed.zoom)
+    }
+
     /// The buttons are placed by the renderer-free camera, so it has to agree with
     /// SceneKit's own lens and camera node about where every grid point lands.
     @MainActor

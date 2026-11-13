@@ -242,9 +242,11 @@ struct MultiVanDioramaCamera: Equatable {
     }
 }
 
-/// Which way the player has turned the table and how close they have leant in. A
-/// drag orbits the camera around the board, within limits that keep the lawn in
-/// view; a pinch zooms towards the fingers; a double tap straightens it.
+/// Which way the player has turned the table and how close they have leant in.
+/// Gestures follow Maps: zoomed in, one finger pans; at the full view it orbits
+/// the camera around the board, within limits that keep the lawn in view. Two
+/// fingers pinch towards themselves, pan, twist and tilt; a double tap
+/// straightens it. `MultiVanDioramaGestureLayer` reads the fingers.
 struct MultiVanDioramaOrbit: Equatable {
     /// Radians per point of drag, and the limits, from the HTML prototype.
     static let yawPerPoint = 0.006
@@ -284,13 +286,49 @@ struct MultiVanDioramaOrbit: Equatable {
         let spot = zoomCentre + finger / zoom
         var orbit = self
         orbit.zoom = (zoom * Double(magnification)).clamped(to: Self.zoomRange)
-        let reach = 1 - 1 / orbit.zoom
-        let centre = spot - finger / orbit.zoom
-        orbit.zoomCentre = SIMD2(
+        orbit.zoomCentre = Self.clampedCentre(spot - finger / orbit.zoom, zoom: orbit.zoom, aspect: aspect)
+        return orbit
+    }
+
+    /// Whether there is anywhere to pan to. At no zoom the framed view already
+    /// shows the whole table.
+    var isZoomedIn: Bool { zoom > Self.zoomRange.lowerBound + 1e-3 }
+
+    /// Slid by a drag of `translation` points so the table follows the finger, as
+    /// a map does. It stops where the zoomed view meets the framed view's edge.
+    func panned(by translation: CGSize, in size: CGSize) -> Self {
+        let width = Double(size.width), height = Double(size.height)
+        guard width > 0, height > 0, translation.width.isFinite, translation.height.isFinite else { return self }
+        // A point is 2 / height of the framed view's half-heights, and `zoom`
+        // times less of the zoomed one.
+        let shift = SIMD2(-Double(translation.width), Double(translation.height)) * 2 / (height * zoom)
+        var orbit = self
+        orbit.zoomCentre = Self.clampedCentre(zoomCentre + shift, zoom: zoom, aspect: width / height)
+        return orbit
+    }
+
+    /// Turned by a two-finger twist of `radians`, clockwise on screen as UIKit
+    /// measures it, so the table turns with the fingers.
+    func twisted(by radians: Double) -> Self {
+        guard radians.isFinite else { return self }
+        var orbit = self
+        orbit.yaw = (yaw + radians).clamped(to: Self.yawRange)
+        return orbit
+    }
+
+    /// Tilted by two fingers sliding `points` down together: up leans towards
+    /// the horizon, down looks from overhead, as in Maps.
+    func tilted(by points: CGFloat) -> Self {
+        dragged(by: CGSize(width: 0, height: points))
+    }
+
+    /// Keeps a zoomed view of `zoom` inside the framed one.
+    private static func clampedCentre(_ centre: SIMD2<Double>, zoom: Double, aspect: Double) -> SIMD2<Double> {
+        let reach = max(0, 1 - 1 / zoom)
+        return SIMD2(
             centre.x.clamped(to: -reach * aspect...reach * aspect),
             centre.y.clamped(to: -reach...reach)
         )
-        return orbit
     }
 }
 

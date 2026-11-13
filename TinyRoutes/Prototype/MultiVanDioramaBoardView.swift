@@ -30,17 +30,9 @@ struct MultiVanDioramaBoardView: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.multiVanDioramaPreload) private var preload
     @Environment(\.multiVanCosmetics) private var cosmetics
-    /// Where the player left the table, and the drag or pinch still under their fingers.
+    /// Where the player has turned, tilted, zoomed and panned the table; the
+    /// gesture layer writes it as their fingers move.
     @State private var orbit = MultiVanDioramaOrbit.resting
-    @GestureState private var dragTranslation = CGSize.zero
-    @GestureState private var pinch: Pinch?
-    /// A pinch's fingers also drag; that drag doesn't turn the table.
-    @State private var dragIsPinch = false
-
-    private struct Pinch: Equatable {
-        let magnification: CGFloat
-        let anchor: CGPoint
-    }
     @State private var framing: Framing?
     /// How far the camera has come down to the flat board's overhead view: 1 is
     /// straight down, 0 is the table. Nil until the morph first sets it.
@@ -91,9 +83,8 @@ struct MultiVanDioramaBoardView: View {
             let size = geometry.size
             let view = FramedView(size: size, covered: covered, flatSideInset: flatSideInset)
             let fitted = framing.flatMap { $0.view == view ? $0 : nil } ?? Framing(view)
-            let live = pinch.map { orbit.pinched(by: $0.magnification, anchor: $0.anchor, in: size) } ?? orbit
             MultiVanDioramaFlattening(flatness: flatness ?? (morph == .fromFlat && state.animates ? 1 : 0)) { flatness in
-                MultiVanDioramaOrbiting(orbit: live.dragged(by: dragIsPinch ? .zero : dragTranslation)) { orbit in
+                MultiVanDioramaOrbiting(orbit: orbit) { orbit in
                     let camera = fitted.camera.orbited(orbit)
                     table(state: state, cues: cues, camera: flatness > 0 ? camera.blended(to: fitted.overhead, by: flatness) : camera, size: size)
                 }
@@ -131,46 +122,10 @@ struct MultiVanDioramaBoardView: View {
         return ZStack(alignment: .topLeading) {
             MultiVanDioramaSceneView(level: engine.level, state: state, cues: cues, camera: camera, preload: preload, cosmetics: cosmetics)
                 .accessibilityHidden(true)
-            // Drags anywhere off a switch turn the table, pinches zoom it, and a
-            // double tap straightens it.
-            Color.clear
-                .contentShape(Rectangle())
-                .gesture(
-                    DragGesture(minimumDistance: 7)
-                        .updating($dragTranslation) { value, translation, _ in translation = value.translation }
-                        .onEnded { value in
-                            if !dragIsPinch { orbit = orbit.dragged(by: value.translation) }
-                            dragIsPinch = false
-                        }
-                        .simultaneously(with:
-                            MagnifyGesture()
-                                .updating($pinch) { value, pinch, _ in
-                                    pinch = Pinch(magnification: value.magnification, anchor: CGPoint(x: value.startAnchor.x, y: value.startAnchor.y))
-                                }
-                                .onChanged { _ in dragIsPinch = true }
-                                .onEnded { value in
-                                    orbit = orbit.pinched(
-                                        by: value.magnification, anchor: CGPoint(x: value.startAnchor.x, y: value.startAnchor.y), in: size
-                                    )
-                                    if dragTranslation == .zero { dragIsPinch = false }
-                                }
-                        )
-                )
-                .simultaneousGesture(
-                    TapGesture(count: 2).exclusively(before: TapGesture())
-                        .onEnded { tap in
-                            switch tap {
-                            case .first:
-                                if orbit == .resting {
-                                    onMissedTap?()
-                                } else {
-                                    withAnimation(animates ? .smooth(duration: 0.45) : nil) { orbit = .resting }
-                                }
-                            case .second:
-                                onMissedTap?()
-                            }
-                        }
-                )
+            // Touches anywhere off a switch move the camera the way Maps does:
+            // pan, pinch, twist and tilt; a double tap straightens the table.
+            // Taps that move nothing tell the tutorial the player missed.
+            MultiVanDioramaGestureLayer(orbit: $orbit, animates: animates, onMissedTap: onMissedTap)
                 .accessibilityHidden(true)
             // VoiceOver finds the pieces the scene draws where it draws them.
             ForEach(Self.landmarks(engine: engine, graph: state.graph, camera: camera, size: size)) { landmark in
