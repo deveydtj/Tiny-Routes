@@ -1,0 +1,191 @@
+{
+  "id": "experiment_pair_b",
+  "name": "Either Way Round",
+  "scenerySeed": 62,
+  "schemaVersion": 2,
+  "biome": "depot",
+  "graph": {
+    "nodes": [
+      {
+        "id": "start",
+        "x": 2,
+        "y": 0,
+        "outgoingEdgeIDs": [
+          "approach"
+        ]
+      },
+      {
+        "id": "fork",
+        "x": 2,
+        "y": 1,
+        "outgoingEdgeIDs": [
+          "to_west",
+          "to_east"
+        ]
+      },
+      {
+        "id": "west_parcel",
+        "x": 0,
+        "y": 3,
+        "outgoingEdgeIDs": [
+          "west_on"
+        ]
+      },
+      {
+        "id": "west_switch",
+        "x": 0,
+        "y": 4,
+        "outgoingEdgeIDs": [
+          "west_home",
+          "west_to_east"
+        ]
+      },
+      {
+        "id": "across",
+        "x": 1,
+        "y": 4,
+        "outgoingEdgeIDs": [
+          "across_east"
+        ]
+      },
+      {
+        "id": "east_parcel",
+        "x": 4,
+        "y": 2,
+        "outgoingEdgeIDs": [
+          "east_on"
+        ]
+      },
+      {
+        "id": "east_switch",
+        "x": 4,
+        "y": 3,
+        "outgoingEdgeIDs": [
+          "east_home",
+          "east_to_west"
+        ]
+      },
+      {
+        "id": "join",
+        "x": 2,
+        "y": 6,
+        "outgoingEdgeIDs": [
+          "home"
+        ]
+      },
+      {
+        "id": "house",
+        "x": 2,
+        "y": 5,
+        "outgoingEdgeIDs": []
+      }
+    ],
+    "edges": [
+      {
+        "id": "approach",
+        "fromNodeID": "start",
+        "toNodeID": "fork",
+        "roadShape": "verticalFirst"
+      },
+      {
+        "id": "to_west",
+        "fromNodeID": "fork",
+        "toNodeID": "west_parcel",
+        "roadShape": "horizontalFirst"
+      },
+      {
+        "id": "to_east",
+        "fromNodeID": "fork",
+        "toNodeID": "east_parcel",
+        "roadShape": "horizontalFirst"
+      },
+      {
+        "id": "west_on",
+        "fromNodeID": "west_parcel",
+        "toNodeID": "west_switch",
+        "roadShape": "verticalFirst"
+      },
+      {
+        "id": "east_on",
+        "fromNodeID": "east_parcel",
+        "toNodeID": "east_switch",
+        "roadShape": "verticalFirst"
+      },
+      {
+        "id": "west_home",
+        "fromNodeID": "west_switch",
+        "toNodeID": "join",
+        "roadShape": "verticalFirst"
+      },
+      {
+        "id": "west_to_east",
+        "fromNodeID": "west_switch",
+        "toNodeID": "across",
+        "roadShape": "verticalFirst"
+      },
+      {
+        "id": "across_east",
+        "fromNodeID": "across",
+        "toNodeID": "east_parcel",
+        "roadShape": "verticalFirst"
+      },
+      {
+        "id": "east_home",
+        "fromNodeID": "east_switch",
+        "toNodeID": "join",
+        "roadShape": "verticalFirst"
+      },
+      {
+        "id": "east_to_west",
+        "fromNodeID": "east_switch",
+        "toNodeID": "west_parcel",
+        "roadShape": "horizontalFirst"
+      },
+      {
+        "id": "home",
+        "fromNodeID": "join",
+        "toNodeID": "house",
+        "roadShape": "verticalFirst"
+      }
+    ]
+  },
+  "vans": [
+    {
+      "id": "red",
+      "color": "red",
+      "startNodeID": "start",
+      "departDelay": 0
+    }
+  ],
+  "houses": [
+    {
+      "nodeID": "house",
+      "color": "red"
+    }
+  ],
+  "packages": [
+    {
+      "id": "west",
+      "nodeID": "west_parcel",
+      "ownerVanID": "red"
+    },
+    {
+      "id": "east",
+      "nodeID": "east_parcel",
+      "ownerVanID": "red"
+    }
+  ],
+  "initialSwitchEdges": {
+    "fork": "to_west",
+    "west_switch": "west_home",
+    "east_switch": "east_home"
+  },
+  "parChanges": 2,
+  "liveSwitchNodeIDs": [],
+  "hint": "Either parcel can come first. After the first one, send Red across to the other before it heads home.",
+  "hintFocusNodeIDs": [
+    "fork",
+    "west_switch",
+    "east_switch"
+  ]
+}

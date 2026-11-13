@@ -1,79 +1,83 @@
 import SwiftUI
 
+/// A green tick on a cream ring, for what's earned or in use.
 struct TRProfileCheckBadge: View {
     var size: CGFloat = 22
 
     var body: some View {
-        ZStack {
-            Circle()
-                .fill(TRGameplayStyle.Colors.successGreen)
-                .overlay {
-                    Circle()
-                        .stroke(.white, lineWidth: 2)
-                }
-
-            Image(systemName: "checkmark")
-                .font(.system(size: size * 0.46, weight: .black))
-                .foregroundStyle(.white)
-        }
-        .frame(width: size, height: size)
-        .shadow(color: TRGameplayStyle.Colors.successGreen.opacity(0.24), radius: 4, x: 0, y: 2)
-        .accessibilityHidden(true)
+        Image(systemName: "checkmark")
+            .font(.system(size: size * 0.46, weight: .bold))
+            .foregroundStyle(.white)
+            .frame(width: size, height: size)
+            .background {
+                Circle()
+                    .fill(MultiVanHUDStyle.pine)
+                    .overlay { Circle().strokeBorder(TRVillagePalette.cream, lineWidth: 2) }
+                    .background { Circle().fill(MultiVanHUDStyle.pineDark).offset(y: 2) }
+            }
+            .accessibilityHidden(true)
     }
 }
 
+/// A stat's symbol on a round coloured badge.
 struct TRProfileStatIcon: View {
     let systemImage: String
     let color: Color
     var size: CGFloat = 44
 
     var body: some View {
-        ZStack {
-            Circle()
-                .fill(color.opacity(0.15))
-
-            Image(systemName: systemImage)
-                .font(.system(size: size * 0.46, weight: .black))
-                .foregroundStyle(color)
-        }
-        .frame(width: size, height: size)
-        .accessibilityHidden(true)
+        TRCozyIconBadge(systemName: systemImage, tint: color, size: size)
     }
 }
 
+/// An achievement's symbol on a rounded tile: coloured once earned, sunken and
+/// faded until then.
 struct TRProfileAchievementIcon: View {
     let achievement: ProfileAchievement
     var size: CGFloat = 56
 
     var body: some View {
-        ZStack {
-            RoundedRectangle(cornerRadius: size * 0.32, style: .continuous)
-                .fill(achievement.accent.color.opacity(0.16))
-
-            Image(systemName: achievement.systemImage)
-                .font(.system(size: size * 0.44, weight: .black))
-                .foregroundStyle(achievement.accent.color)
-        }
-        .frame(width: size, height: size)
-        .accessibilityHidden(true)
+        let shape = RoundedRectangle(cornerRadius: size * 0.3, style: .continuous)
+        Image(systemName: achievement.systemImage)
+            .font(.system(size: size * 0.42, weight: .semibold))
+            .foregroundStyle(achievement.isUnlocked ? TRVillagePalette.cream : TRVillagePalette.slate.opacity(0.7))
+            .frame(width: size, height: size)
+            .background {
+                if achievement.isUnlocked {
+                    shape
+                        .fill(achievement.accent.color)
+                        .overlay { shape.fill(LinearGradient(colors: [.white.opacity(0.22), .clear], startPoint: .top, endPoint: .center)) }
+                        .background { shape.fill(achievement.accent.color).overlay { shape.fill(.black.opacity(0.25)) }.offset(y: 3) }
+                } else {
+                    shape
+                        .fill(TRVillagePalette.creamDeep)
+                        .overlay { shape.strokeBorder(TRVillagePalette.creamLip, style: StrokeStyle(lineWidth: 1.5, dash: [4, 3])) }
+                }
+            }
+            .padding(.bottom, 3)
+            .accessibilityHidden(true)
     }
 }
 
+/// A collection's symbol on a rounded coloured tile.
 struct TRProfileCollectionIcon: View {
     let selection: ProfileCollectionSelection
     var size: CGFloat = 54
 
     var body: some View {
-        ZStack {
-            RoundedRectangle(cornerRadius: size * 0.30, style: .continuous)
-                .fill(selection.accent.color.opacity(0.16))
-
-            Image(systemName: selection.systemImage)
-                .font(.system(size: size * 0.42, weight: .black))
-                .foregroundStyle(selection.accent.color)
-        }
-        .frame(width: size, height: size)
-        .accessibilityHidden(true)
+        let shape = RoundedRectangle(cornerRadius: size * 0.3, style: .continuous)
+        Image(systemName: selection.systemImage)
+            .font(.system(size: size * 0.42, weight: .semibold))
+            .foregroundStyle(TRVillagePalette.cream)
+            .frame(width: size, height: size)
+            .background {
+                shape
+                    .fill(selection.accent.color)
+                    .overlay { shape.fill(LinearGradient(colors: [.white.opacity(0.22), .clear], startPoint: .top, endPoint: .center)) }
+                    .background { shape.fill(selection.accent.color).overlay { shape.fill(.black.opacity(0.25)) }.offset(y: 3) }
+            }
+            .padding(.bottom, 3)
+            .accessibilityHidden(true)
     }
 }
 
@@ -86,8 +90,8 @@ struct TRProfileAvatarIcon: View {
                 .fill(
                     LinearGradient(
                         colors: [
-                            Color(red: 0.13, green: 0.61, blue: 0.99),
-                            Color(red: 0.05, green: 0.42, blue: 0.88)
+                            Color(hex: 0x2E7C82),
+                            TRVillagePalette.teal
                         ],
                         startPoint: .topLeading,
                         endPoint: .bottomTrailing
@@ -95,24 +99,25 @@ struct TRProfileAvatarIcon: View {
                 )
                 .overlay {
                     Circle()
-                        .stroke(.white.opacity(0.86), lineWidth: size * 0.06)
+                        .strokeBorder(TRVillagePalette.cream, lineWidth: size * 0.06)
                 }
+                .background { Circle().fill(TRVillagePalette.tealDark).offset(y: size * 0.05) }
 
             Image(systemName: "mappin")
-                .font(.system(size: size * 0.58, weight: .black))
-                .foregroundStyle(.white.opacity(0.28))
+                .font(.system(size: size * 0.58, weight: .bold))
+                .foregroundStyle(TRVillagePalette.mint.opacity(0.3))
                 .offset(y: -size * 0.03)
 
             HStack(spacing: size * 0.16) {
                 Circle()
                 Circle()
             }
-            .foregroundStyle(.white)
+            .foregroundStyle(TRVillagePalette.cream)
             .frame(width: size * 0.36, height: size * 0.08)
             .offset(y: -size * 0.08)
 
             Capsule()
-                .stroke(.white, lineWidth: size * 0.035)
+                .stroke(TRVillagePalette.cream, lineWidth: size * 0.035)
                 .frame(width: size * 0.30, height: size * 0.16)
                 .offset(y: size * 0.12)
 
@@ -121,13 +126,13 @@ struct TRProfileAvatarIcon: View {
                 .frame(width: size * 0.34, height: size * 0.34)
                 .background {
                     Circle()
-                        .fill(.white.opacity(0.94))
+                        .fill(TRVillagePalette.cream)
                         .frame(width: size * 0.40, height: size * 0.40)
                 }
                 .offset(x: size * 0.32, y: size * 0.30)
         }
         .frame(width: size, height: size)
-        .shadow(color: Color(red: 0.04, green: 0.30, blue: 0.70).opacity(0.22), radius: 10, x: 0, y: 6)
+        .shadow(color: TRVillagePalette.ink.opacity(0.22), radius: 8, x: 0, y: 6)
         .accessibilityHidden(true)
     }
 }
@@ -138,10 +143,10 @@ struct TRProfileRewardChestIcon: View {
     var body: some View {
         ZStack {
             RoundedRectangle(cornerRadius: size * 0.22, style: .continuous)
-                .fill(Color(red: 1.00, green: 0.81, blue: 0.27))
+                .fill(TRVillagePalette.roofs[1])
 
             RoundedRectangle(cornerRadius: size * 0.10, style: .continuous)
-                .fill(Color(red: 0.98, green: 0.55, blue: 0.16))
+                .fill(Color(hex: 0xC8862F))
                 .frame(width: size * 0.72, height: size * 0.34)
                 .offset(y: size * 0.10)
 
@@ -150,7 +155,7 @@ struct TRProfileRewardChestIcon: View {
                 .frame(width: size * 0.12, height: size * 0.64)
 
             Image(systemName: "star.fill")
-                .font(.system(size: size * 0.24, weight: .black))
+                .font(.system(size: size * 0.24, weight: .bold))
                 .foregroundStyle(.white)
                 .offset(y: size * 0.10)
         }
@@ -163,13 +168,13 @@ extension ProfileAchievementAccent {
     var color: Color {
         switch self {
         case .gold:
-            TRGameplayStyle.Colors.resultGold
+            Color(hex: 0xE3A51C)
         case .blue:
-            TRGameplayStyle.Colors.primaryBlue
+            TRVillagePalette.blue
         case .purple:
-            Color(red: 0.55, green: 0.33, blue: 0.95)
+            Color(hex: 0x8A6FD1)
         case .orange:
-            TRGameplayStyle.Colors.orangeAccent
+            TRVillagePalette.roofs[0]
         }
     }
 }
@@ -178,11 +183,11 @@ extension ProfileCollectionAccent {
     var color: Color {
         switch self {
         case .theme:
-            Color(red: 0.08, green: 0.62, blue: 0.82)
+            TRVillagePalette.teal
         case .trail:
-            Color(red: 0.48, green: 0.43, blue: 0.90)
+            Color(hex: 0x8A6FD1)
         case .destination:
-            TRGameplayStyle.Colors.successGreen
+            MultiVanHUDStyle.pine
         }
     }
 }
@@ -191,7 +196,7 @@ extension ProfileCollectionAccent {
     VStack(spacing: 18) {
         TRProfileAvatarIcon()
         HStack {
-            TRProfileStatIcon(systemImage: "star.fill", color: TRGameplayStyle.Colors.resultGold)
+            TRProfileStatIcon(systemImage: "star.fill", color: TRVillagePalette.gold)
             TRProfileAchievementIcon(achievement: TRProfileSummary.conceptPreview.achievements[0])
             TRProfileCollectionIcon(selection: ProfileCollectionSelection.conceptDefaults[0])
             TRProfileRewardChestIcon()
@@ -199,5 +204,5 @@ extension ProfileCollectionAccent {
         }
     }
     .padding(24)
-    .background(Color(red: 0.86, green: 0.94, blue: 0.98))
+    .background(TRVillageSky())
 }

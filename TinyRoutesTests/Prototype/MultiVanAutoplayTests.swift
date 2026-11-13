@@ -30,13 +30,13 @@ final class MultiVanAutoplayTests: XCTestCase {
         XCTAssertEqual(autoplay.planSeconds, 4)
         XCTAssertEqual(autoplay.resultSeconds, 4)
         let timed = try XCTUnwrap(MultiVanAutoplay.configuration(
-            from: #"{"levelID": "level_012", "board": "diorama", "planSeconds": 2, "liveTaps": [{"atTime": 5.25, "nodeID": "split_switch"}]}"#
+            from: #"{"levelID": "level_014", "board": "diorama", "planSeconds": 2, "liveTaps": [{"atTime": 5.25, "nodeID": "split_switch"}]}"#
         ))
         XCTAssertEqual(timed.planSeconds, 2)
         XCTAssertEqual(timed.liveTaps, [.init(atTime: 5.25, nodeID: "split_switch")])
         XCTAssertNil(MultiVanAutoplay.configuration(from: nil))
-        XCTAssertNil(MultiVanAutoplay.configuration(from: "level_012"))
-        XCTAssertNil(MultiVanAutoplay.configuration(from: #"{"levelID": "level_012", "board": "hologram"}"#))
+        XCTAssertNil(MultiVanAutoplay.configuration(from: "level_014"))
+        XCTAssertNil(MultiVanAutoplay.configuration(from: #"{"levelID": "level_014", "board": "hologram"}"#))
         let json = #"{"levelID": "level_005", "board": "flat"}"#
         XCTAssertEqual(MultiVanAutoplay.configuration(arguments: ["TinyRoutes", "-MultiVanAutoplay", json]), autoplay)
         XCTAssertNil(MultiVanAutoplay.configuration(arguments: ["TinyRoutes", "-MultiVanAutoplay"]))
@@ -81,7 +81,7 @@ final class MultiVanAutoplayTests: XCTestCase {
     }
 
     func testEverySolutionWinsAtParOnEveryLoopAtSixtyAndThirtyFramesASecond() throws {
-        for number in 1...12 {
+        for number in 1...14 {
             let id = String(format: "level_%03d", number)
             let autoplay = try autoplay(id)
             let par = try level(id).parChanges
@@ -98,8 +98,8 @@ final class MultiVanAutoplayTests: XCTestCase {
     }
 
     func testPlanTapsSpreadAcrossThePlanBeforeGo() throws {
-        let autoplay = MultiVanAutoplay(levelID: "level_012", board: .flat, planTaps: ["a", "b", "c"], planSeconds: 4)
-        let engine = try MultiVanEngine(level: level("level_012"))
+        let autoplay = MultiVanAutoplay(levelID: "level_014", board: .flat, planTaps: ["a", "b", "c"], planSeconds: 4)
+        let engine = try MultiVanEngine(level: level("level_014"))
         let driver = MultiVanAutoplayDriver(autoplay)
         var presses: [(Double, MultiVanAutoplayDriver.Press)] = []
         for tick in 0...40 { // Go repeats until the engine leaves the plan.

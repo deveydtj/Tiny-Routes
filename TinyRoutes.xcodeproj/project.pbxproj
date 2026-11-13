@@ -23,6 +23,7 @@
 		110FC923AFF4CD17418BF5E2 /* MultiVanPerformanceMeter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8C10A99572FBC039617970A4 /* MultiVanPerformanceMeter.swift */; };
 		115613DA07053A34DB94DB55 /* TRGameplayCosmeticStyle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6C596DA5340849D282DD6B4E /* TRGameplayCosmeticStyle.swift */; };
 		11C816241E92A32BBEC27B84 /* TestLevelCatalog.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD5279438CA33DB0C19A1CA9 /* TestLevelCatalog.swift */; };
+		12DF846BD4B0F89F1653F31B /* TRVillageMotion.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6B00251FF3EEBFB1F34BE33E /* TRVillageMotion.swift */; };
 		14FCB5CB64F8567388A6F1D3 /* PrototypeSolutionRunner.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1E8C158DE5F4578B5030F0D7 /* PrototypeSolutionRunner.swift */; };
 		150DBD81C8AEFD1F39237EB8 /* empty_level_name.json in Resources */ = {isa = PBXBuildFile; fileRef = F78EA1989721A7F131ADD7E4 /* empty_level_name.json */; };
 		16CD52A3C4F1D5C7E9760F3C /* TRGlassCardBackground.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8E20545F7B3660F4E6D38269 /* TRGlassCardBackground.swift */; };
@@ -31,17 +32,20 @@
 		1984FCF46DF7EB2A6A94D285 /* play_filled.png in Resources */ = {isa = PBXBuildFile; fileRef = 60559547CC7D9A98DC0AECE1 /* play_filled.png */; };
 		19AD8824549D9BD5B60427BD /* PurchaseService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 86A6858B9DF28FFF58B64B89 /* PurchaseService.swift */; };
 		1A74946BF4B6AAC5D061ED0B /* edge_unknown_from_node.json in Resources */ = {isa = PBXBuildFile; fileRef = 8DE971EFF9E8C68D65CA2A87 /* edge_unknown_from_node.json */; };
+		1ADF74934F6F3701A89299BA /* MultiVanExperimentsScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = DDD30F978289EAAA039BA399 /* MultiVanExperimentsScreen.swift */; };
 		1D77ABB28D05F7095A6A0A8F /* TRMenuTitleLogo.swift in Sources */ = {isa = PBXBuildFile; fileRef = E7C302D265D14AEEDD88BB21 /* TRMenuTitleLogo.swift */; };
 		1E5EF5942943E0DF60C12C62 /* LevelValidationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB3E5CC6778A7FA5607D9B52 /* LevelValidationTests.swift */; };
 		1F039950763EE9F4AFCEA19D /* AnalyticsAdapter.swift in Sources */ = {isa = PBXBuildFile; fileRef = BBF9A119C53A9804C693368D /* AnalyticsAdapter.swift */; };
 		20C3785F47268256ABD3B92B /* UserSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = E02F44145D432403FF64D95B /* UserSettings.swift */; };
 		218778074225436AE65683EB /* MultiVanAutoplayTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01517A9275C1225761178ECD /* MultiVanAutoplayTests.swift */; };
+		22501B426ACBB377A629577A /* TRVillageRoadTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 61ED17B76BA3FAEB37418DB2 /* TRVillageRoadTests.swift */; };
 		2455CB9ECC694065D4C15C4C /* SaveDataRepositoryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAE4354ADF7FBB27382D141A /* SaveDataRepositoryTests.swift */; };
 		24DE186D45143F87CD249688 /* TRResultCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = E874F6DEAE742EF2728616FF /* TRResultCard.swift */; };
 		25E2CB8489BBDE3010BB2057 /* TRResultRouteStrip.swift in Sources */ = {isa = PBXBuildFile; fileRef = DC7506DFBF3B06D1BE0ADBE2 /* TRResultRouteStrip.swift */; };
 		2642190DBD1F2E50EAEEA4FE /* GameTimeFormatter.swift in Sources */ = {isa = PBXBuildFile; fileRef = DAE6F8D4B8727D20DEC3BCB7 /* GameTimeFormatter.swift */; };
 		26C375B98C7A8AF7D90A08A3 /* TREdgeSwipeBackPolicyTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B173E23EEAFF9C95FCC8F786 /* TREdgeSwipeBackPolicyTests.swift */; };
 		26CA64E5162D5D762A4548BE /* GameplayScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = B18B1BD2DCEA7552CE9DBD3B /* GameplayScreen.swift */; };
+		27B1DC94C894C8F1212EB252 /* MultiVanTutorial.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7E6B526FA7BEE9DBEB14E5C2 /* MultiVanTutorial.swift */; };
 		281585D5293A755E7C081590 /* PrototypeSolutions in Resources */ = {isa = PBXBuildFile; fileRef = 1170CBB295798A262EF08DD3 /* PrototypeSolutions */; };
 		285F89C6DBFF294EB4D8D160 /* TRMapBackgroundView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC3781828CCF0BB8E4B08BB1 /* TRMapBackgroundView.swift */; };
 		29BE029930880B2786B69EA4 /* TRShopIconViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = C63499908293A2DBC881A1CE /* TRShopIconViews.swift */; };
@@ -51,15 +55,19 @@
 		2D4E31D7460E797CF0596E4C /* TRTinyRoutesLogo.swift in Sources */ = {isa = PBXBuildFile; fileRef = 63F32ABE2ED4121568C097D2 /* TRTinyRoutesLogo.swift */; };
 		2E42E7F119C443CF26B7E091 /* level_028_style_switch_arrow_mismatch.solution.json in Resources */ = {isa = PBXBuildFile; fileRef = E6628B11A0491754E8D41DA1 /* level_028_style_switch_arrow_mismatch.solution.json */; };
 		2E5C97F498E8D1F38D59CDB0 /* TRShopCosmeticGrid.swift in Sources */ = {isa = PBXBuildFile; fileRef = C24FC74DD7D0CB43B370434C /* TRShopCosmeticGrid.swift */; };
+		2E672C911ED58AB12E6AA0A3 /* TRVillageRoad.swift in Sources */ = {isa = PBXBuildFile; fileRef = 926E3CD9F90CFEA2127562FD /* TRVillageRoad.swift */; };
 		2F14A3CF9DE45529EE7BB9D9 /* GameplayCosmeticLoadout.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8DFE5D9480972F04F714A31C /* GameplayCosmeticLoadout.swift */; };
 		2F3E9ECE9E4E2875D8190406 /* SwitchTapResult.swift in Sources */ = {isa = PBXBuildFile; fileRef = 208B48F64134FDDA7C65B14D /* SwitchTapResult.swift */; };
 		2F9C56F6D6C6AAA5D678B953 /* MultiVanLevelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C48DCC55F0F69F382ECE7B89 /* MultiVanLevelTests.swift */; };
+		300C83531418939865C374AB /* TRCozySkyBackground.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A1F12D81521B5A5655C3B12 /* TRCozySkyBackground.swift */; };
 		30D08CD19704232DBE9982D8 /* MultiVanLevel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5B08096B6623C38C2F65FB2A /* MultiVanLevel.swift */; };
 		339A213A09887FD13046BC45 /* TRProfileRewardProgressCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = AFA7A302DFA9D1DB6E867866 /* TRProfileRewardProgressCard.swift */; };
+		364F4534576F96920A73F5C1 /* MultiVanExperimentBoardTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9C12F3F3C72F318C777AAF76 /* MultiVanExperimentBoardTests.swift */; };
 		36E6C713306E7C41176B1393 /* ScoreResult.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3254B656FA1479A1C6CEB71 /* ScoreResult.swift */; };
 		37070AEAAE1484C0E57688FA /* UserSettingsRepositoryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1CACEEDC98C14DD3B2EEA468 /* UserSettingsRepositoryTests.swift */; };
 		3769946EEAD62C8750590B19 /* MultiVanEngineTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B3192372BD60AC6E84EF12FB /* MultiVanEngineTests.swift */; };
 		385837680DC7205A88DECFD0 /* MultiVanDioramaSync.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5B9AA7EC7352500E4E7C8614 /* MultiVanDioramaSync.swift */; };
+		392D7BAF1758190975A3B4F5 /* MultiVanDeliberatePlayTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4CBBD300A399AE7C01FE78D7 /* MultiVanDeliberatePlayTests.swift */; };
 		3A6026DA9B0747F7AF393338 /* TRGameplayHUD.swift in Sources */ = {isa = PBXBuildFile; fileRef = 361B29040D703572B02D178A /* TRGameplayHUD.swift */; };
 		3B673AEA85BF8C45782FFEFE /* MultiVanPerformanceMeterTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7C8BBBDD9550039E379D32EB /* MultiVanPerformanceMeterTests.swift */; };
 		3BA316346FA55C1EDDC6BA18 /* RouteEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1AFDFE57C38D02CBE7CAADA9 /* RouteEngine.swift */; };
@@ -83,6 +91,8 @@
 		4FEBE1E3843A33FD3478A68B /* README.md in Resources */ = {isa = PBXBuildFile; fileRef = 9285EF0CD4BC02DAE0FF59D6 /* README.md */; };
 		51801EDE031AE0ED60BB0426 /* TRSettingsHeader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2D01AA2A2675EA2460D25786 /* TRSettingsHeader.swift */; };
 		5252A517CC9259BCBD509B89 /* TRLevelPathView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 438D5D7E05204727C907504D /* TRLevelPathView.swift */; };
+		52C7DED7CF909335244C38F7 /* MultiVanLevelRules.swift in Sources */ = {isa = PBXBuildFile; fileRef = 577460EA20363D6E3860263C /* MultiVanLevelRules.swift */; };
+		533574D0A2632B21B38AD708 /* TRCurvedLevelMapTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0F706AB3554999D2E40D636E /* TRCurvedLevelMapTests.swift */; };
 		54A79673924A643EF0F84A46 /* ProfileSummaryServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FFFA3FD891B9AC2E831450D4 /* ProfileSummaryServiceTests.swift */; };
 		54EFBB5FC18B9E1745AD0705 /* MultiVanEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D8DB95B4F93553409E996F3 /* MultiVanEngine.swift */; };
 		5632FE71E21E6D784DC4B56B /* MultiVanDioramaTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FED2A7BE6D078C065523B358 /* MultiVanDioramaTests.swift */; };
@@ -92,6 +102,7 @@
 		57C00116975B921DEF53787D /* duplicate_outgoing_edge_ids.json in Resources */ = {isa = PBXBuildFile; fileRef = 1B37E002D44DA1C3F01C3745 /* duplicate_outgoing_edge_ids.json */; };
 		5C1E48E7F514D551B80D2A85 /* TRDeliveryDotView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8B6D699A9C78F07EBC037154 /* TRDeliveryDotView.swift */; };
 		5D7EE69D964BAD1E8F204210 /* MultiVanDioramaScene.swift in Sources */ = {isa = PBXBuildFile; fileRef = 749D2AFC9AD1D71C7572255B /* MultiVanDioramaScene.swift */; };
+		5DCFB933695115BF0CA8F3A0 /* TRCurvedLevelMapScene.swift in Sources */ = {isa = PBXBuildFile; fileRef = 893CFF9EBE3317CCAFB9B25E /* TRCurvedLevelMapScene.swift */; };
 		5DE1AF8154192E20F6B21635 /* SwitchEligibilityService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8B3916C50972D3AF0D04D6F2 /* SwitchEligibilityService.swift */; };
 		5E08B8510B3C510D1A21D772 /* RuntimeParityFixtureTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 12715AF576F6D636BAA3117C /* RuntimeParityFixtureTests.swift */; };
 		5E587FEABFB885FC43134C9F /* LevelSolvabilityTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 22D8DF6A90587055693BBE35 /* LevelSolvabilityTests.swift */; };
@@ -100,9 +111,11 @@
 		6183D550112AC3B41FAF244A /* TRResultStarRatingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 72FB462BAFD9B1EA776A0BC6 /* TRResultStarRatingView.swift */; };
 		61C40BB8F783021352E29D57 /* confetti_particle.png in Resources */ = {isa = PBXBuildFile; fileRef = F533862E5024A25364F7DC05 /* confetti_particle.png */; };
 		621ED935A7EE610A4D52289E /* TRBottomNavigationItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5F33C1856997830DC8E92C5B /* TRBottomNavigationItem.swift */; };
+		62EE6FC9EA5BD7BE83046FE5 /* TRLevelMapLawn.swift in Sources */ = {isa = PBXBuildFile; fileRef = AD5637CEC252B0BD5E2BAFF6 /* TRLevelMapLawn.swift */; };
 		636BBC7808EE071670F28783 /* ProfileAchievement.swift in Sources */ = {isa = PBXBuildFile; fileRef = 657B3F5915B3BFD8DC6E8820 /* ProfileAchievement.swift */; };
 		6469CA5CFED64DB97C5FAB78 /* MultiVanDioramaSceneView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 424DB3A33844F9979A921908 /* MultiVanDioramaSceneView.swift */; };
 		647FC0BF1CD92C14876B9E8D /* RouteGraph.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B6634FCA043D2B99D10F4BD /* RouteGraph.swift */; };
+		68B8F09DABC920BDE4C5341F /* MultiVanSignal.swift in Sources */ = {isa = PBXBuildFile; fileRef = 47BC485BDA5E7B1AA0F54180 /* MultiVanSignal.swift */; };
 		6B9FD616702BBCDEA08D16E1 /* LevelHumanPlayabilityRules.swift in Sources */ = {isa = PBXBuildFile; fileRef = DC7EF436B12024897B51A9AC /* LevelHumanPlayabilityRules.swift */; };
 		6BFCB365D4E4B5CC5D187E17 /* MultiVanSwitchButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6187FAD2E50E89F7D252C3CD /* MultiVanSwitchButton.swift */; };
 		6C19A92B9F105B496A8D86B0 /* TRResultSummaryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 11AB4806C5C7E3100BE7283A /* TRResultSummaryTests.swift */; };
@@ -114,6 +127,7 @@
 		6F9F55451A0CF391FDC63BC7 /* gold_coin.png in Resources */ = {isa = PBXBuildFile; fileRef = DFE6BF59DFA0338A86D55CE0 /* gold_coin.png */; };
 		703678187432C8604CFD24D9 /* MultiVanGameplayScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF92971427A3625518B9B08F /* MultiVanGameplayScreen.swift */; };
 		706108028015D0EE47E484B0 /* LevelSolvabilityResultTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF4FA0FA2AD0CCC297CE1E14 /* LevelSolvabilityResultTests.swift */; };
+		7136A31F75E5C6F787208064 /* TRLevelMapDioramaView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A728F7BBE2F5349E2D935B23 /* TRLevelMapDioramaView.swift */; };
 		72895692D2A58D6E8BDF73DF /* EconomyServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C327FACFC5CAE3AEA90BCF1A /* EconomyServiceTests.swift */; };
 		735774BF443CC30AAE1B6CC5 /* SwitchEligibilityServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A28B9CBE5A4624F8B8D75B7 /* SwitchEligibilityServiceTests.swift */; };
 		73B9A7F7B281A5F33D9D91F7 /* TRShopRoutePreviewView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9D6C15F716688976FE0FC98A /* TRShopRoutePreviewView.swift */; };
@@ -130,6 +144,7 @@
 		7E046318A25C147961C3A41D /* LevelSimulationHarness.swift in Sources */ = {isa = PBXBuildFile; fileRef = F139BB6512B7A9A897A0D611 /* LevelSimulationHarness.swift */; };
 		7E3638194B0B8FEF28AE422F /* MultiVanRoutePreview.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA8E4F739945A7DFF001B19C /* MultiVanRoutePreview.swift */; };
 		7E8CEEBE4488E0235F1A5BC1 /* DailyBonusServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4AD6F0A9895119A8845EDFCF /* DailyBonusServiceTests.swift */; };
+		80063435C9914383140585A4 /* MultiVanSignalTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 840D0019F654AA37133F6AA5 /* MultiVanSignalTests.swift */; };
 		81ACE7EA1A2CDFC43E63905F /* TRLevelMapSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8ED84D89056B1286C23FE145 /* TRLevelMapSection.swift */; };
 		821EDF223A81645B4E3DF399 /* shop_bag.png in Resources */ = {isa = PBXBuildFile; fileRef = 8490DEADA9A1FC3AB3F8F0E2 /* shop_bag.png */; };
 		8355D80C00C53B2312F1457B /* MultiVanFeedback.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9D377447E91FFA14AAF73DAA /* MultiVanFeedback.swift */; };
@@ -138,15 +153,18 @@
 		84F3A1A4C912645C82AEDD2A /* LevelRuntimeState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 499A3741695801E77DD300A2 /* LevelRuntimeState.swift */; };
 		85166CEF373B960B7E9B9479 /* LevelSolutionRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C686C27E2616FEDD8ADDFFB /* LevelSolutionRepository.swift */; };
 		85227B7747FB4B175683C85F /* ShopCatalogServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 744787CA332B418079A6AA2E /* ShopCatalogServiceTests.swift */; };
-		87DED3FBA1212223B26C4AF9 /* MultiVanPrototypeScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3AED21977EEFAD49E71C5F6D /* MultiVanPrototypeScreen.swift */; };
+		8617346B9C605CD902D8C93C /* TRCozyMenuChrome.swift in Sources */ = {isa = PBXBuildFile; fileRef = FCEB074606C55C9565675D30 /* TRCozyMenuChrome.swift */; };
 		8B994393C094F886AC68F095 /* LevelPlayScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = F59A04875B3DCDFA621D5DBB /* LevelPlayScreen.swift */; };
+		8D1AC57EB65BC4A449639345 /* MultiVanCargoTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A513874B7CEB4CD4B19F78B4 /* MultiVanCargoTests.swift */; };
+		8DC24AD479F799D6DEC032DA /* MultiVanTutorialTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E5E79F172CB240DFFB2CA139 /* MultiVanTutorialTests.swift */; };
 		8F7D01504DDF30EA83929D74 /* TRDeliveryDotViewTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = BCAE6FF35E76DFDBADE30054 /* TRDeliveryDotViewTests.swift */; };
+		8FA09232A0798665F4133C37 /* MultiVanTestBoards.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D64B296B07E9DBFE3CE578E /* MultiVanTestBoards.swift */; };
 		906B1ED9BC4833E969362B53 /* star_calendar.png in Resources */ = {isa = PBXBuildFile; fileRef = CEF11510ADC144F44FA76A14 /* star_calendar.png */; };
 		90C9CFF145F57B0F5EDA37F2 /* TRShopSectionHeader.swift in Sources */ = {isa = PBXBuildFile; fileRef = F76D2EBA9A7513B255BB85FD /* TRShopSectionHeader.swift */; };
 		90FB242DCE51BE7D683C2A6F /* locked_pin.png in Resources */ = {isa = PBXBuildFile; fileRef = 46F20A76B944EE7DFFA58556 /* locked_pin.png */; };
+		916755EF6D40482A9360736E /* TRLevelMapScenery.swift in Sources */ = {isa = PBXBuildFile; fileRef = E3B3695A56CB2CFBF90D43FF /* TRLevelMapScenery.swift */; };
 		91CDAB6734C4F7252D08DEEC /* DomainModelsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D66F47942EBD89088355D80 /* DomainModelsTests.swift */; };
 		91D7C28E1C015CE379FEC0BB /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 293C6852900343064629F978 /* PrivacyInfo.xcprivacy */; };
-		93BD9E0F787B3818FB9E3070 /* MultiVanPlaytestLog.swift in Sources */ = {isa = PBXBuildFile; fileRef = C8260565D0E82C9FA536DF7A /* MultiVanPlaytestLog.swift */; };
 		96796A7EE4E7C1C1316A7033 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 016927DB2C8F95C37C0EFE86 /* Assets.xcassets */; };
 		96E07378C0A906A448E56B7F /* PrototypeSolutionScript.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1D3AFDBE64E9F34E3B2DC56 /* PrototypeSolutionScript.swift */; };
 		99A08ECC3B8474D6D80007C2 /* TRShopRouteThemePreviewCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 06ECC2E70A22D81A946D4C1B /* TRShopRouteThemePreviewCard.swift */; };
@@ -154,6 +172,7 @@
 		9B2F0910007BFD002F35C210 /* TRSettingsSliderRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8ADAC4DC85D57DA6B3A5D421 /* TRSettingsSliderRow.swift */; };
 		9F10A1BA8AEDADEFB8626118 /* ShopCatalogService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9032EFCCDA0E554BE40C5C88 /* ShopCatalogService.swift */; };
 		9F49027A4106ECFE52D3D3ED /* LevelSelectLayoutTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F9806F0EE479DCBB7FAB93AA /* LevelSelectLayoutTests.swift */; };
+		9F5603F1D930A75E61D7A5FA /* TRLevelMapLayoutTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 86F2F290D5EA5A9969510787 /* TRLevelMapLayoutTests.swift */; };
 		9F585C08C323DBE195D289F0 /* LevelSelectProgressSnapshotTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 42717106079D5B20D6601180 /* LevelSelectProgressSnapshotTests.swift */; };
 		A0E778D7B18192EDCE0ECDB7 /* NodeSwitchController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C944525464AD16A3C4C0A32B /* NodeSwitchController.swift */; };
 		A16B99D8861444B3769E81E0 /* MultiVanSwitchDialView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C717057F0F2E3F99C14521A7 /* MultiVanSwitchDialView.swift */; };
@@ -164,16 +183,20 @@
 		A663BC94DC78F2D4CD7937A1 /* TRShopGoodiesStrip.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84BBA7B3E656CE02C02D1372 /* TRShopGoodiesStrip.swift */; };
 		A66817DF09A53BC6DB3FB2A0 /* TRDeliveryTrailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1884FA3191EADB5F9673AA3 /* TRDeliveryTrailView.swift */; };
 		A822ABC94700E53C3FA00693 /* unreachable_package.json in Resources */ = {isa = PBXBuildFile; fileRef = 499046D6B8C66B0CEE6D741B /* unreachable_package.json */; };
+		A8AE9CDEBF4F03DA30C7C666 /* MultiVanCargo.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9FA7CAF84F14EC923FAB88E8 /* MultiVanCargo.swift */; };
+		A8C78C36F1AC00123CE28452 /* TRCurvedLevelMapLens.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9CA1EBB080890DE672416CCF /* TRCurvedLevelMapLens.swift */; };
 		A93ECDAE01DB6DD54E1D161E /* PrototypeSolutionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAF32575B828F8158961DCF /* PrototypeSolutionTests.swift */; };
 		A96831092F654FB2C2E29F01 /* CollisionResolver.swift in Sources */ = {isa = PBXBuildFile; fileRef = BC6EE6C24F31FD317FA05E82 /* CollisionResolver.swift */; };
 		AB0759BEE3EA837542F127ED /* duplicate_edge_ids.json in Resources */ = {isa = PBXBuildFile; fileRef = 95B2F8932D75E47B4D25751E /* duplicate_edge_ids.json */; };
 		AB50103C2414AC2398E81F2B /* TRLevelPathViewTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DB36FE885CC3E6CCDEBA0658 /* TRLevelPathViewTests.swift */; };
 		AB966FA2AE3CE4A1A3BDF464 /* TRConfettiScene.swift in Sources */ = {isa = PBXBuildFile; fileRef = 059373775DF13674AF281937 /* TRConfettiScene.swift */; };
+		AC7B80FC38FE6EB200EDA7F9 /* MultiVanContentPackTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E9149BEDF7DC1AD6D3E0C257 /* MultiVanContentPackTests.swift */; };
 		AD07F3F05B219359C0515673 /* UserSettingsService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 293BD2DAB243128D22D1B218 /* UserSettingsService.swift */; };
 		ADC024DBB7DB99A2E24112ED /* MultiVanVanView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 732CBD1A5D26C23F7511C863 /* MultiVanVanView.swift */; };
 		AEC42CD55B2D055E6563153F /* shipping_box.png in Resources */ = {isa = PBXBuildFile; fileRef = 94FE558681431822BF195CA5 /* shipping_box.png */; };
 		AEC7D15955CC2A53B38450DD /* DailyBonusService.swift in Sources */ = {isa = PBXBuildFile; fileRef = D3775B6DDA2F25C7A97B8F0A /* DailyBonusService.swift */; };
 		AED39BA29CD71944381046F2 /* CosmeticServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 259121C00369C962168CC422 /* CosmeticServiceTests.swift */; };
+		B01FEABCEAAE4ED4F53E5793 /* MultiVanCosmetics.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5F74451C53722867E7A84922 /* MultiVanCosmetics.swift */; };
 		B02CA16809F74B2AE6B7FD8E /* MultiVanBoardSwitcher.swift in Sources */ = {isa = PBXBuildFile; fileRef = E84ABF920E259543AD20DD8F /* MultiVanBoardSwitcher.swift */; };
 		B04CE8E658635B9547A61051 /* GameplayLevelNumberFormatterTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = ACDA7906BE080836E0D26027 /* GameplayLevelNumberFormatterTests.swift */; };
 		B04EF4A680C930534A0A7924 /* TinyRoutesApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A994D21F5163CDF8D5285EA /* TinyRoutesApp.swift */; };
@@ -187,6 +210,8 @@
 		B4E29B80D3CF1E5337937760 /* TRResultStatusBadge.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D03B5545201A332F81999C9 /* TRResultStatusBadge.swift */; };
 		B73BE04DA45F79CAE6666794 /* blue_orb.png in Resources */ = {isa = PBXBuildFile; fileRef = 36D0F2D5B2BEDB9890D1635B /* blue_orb.png */; };
 		B8EC3890CA3E8C0634FFC292 /* missing_outgoing_edge_id.json in Resources */ = {isa = PBXBuildFile; fileRef = CA6A9A236B9BA0E70733849E /* missing_outgoing_edge_id.json */; };
+		B9B818487C6A2B86BF0F63BC /* MultiVanAssistance.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8E14E14F7868F76EAFBB7B33 /* MultiVanAssistance.swift */; };
+		BA01986AE571F4E9161B31ED /* MultiVanCosmeticsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 42E5C15DCCF7904B84ECBDC3 /* MultiVanCosmeticsTests.swift */; };
 		BA998626984C896C5C49BA37 /* ShopCatalogItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 402F8052D1AC0F0719E01453 /* ShopCatalogItem.swift */; };
 		BCC410810E3AA3FAE6A2D301 /* duplicate_node_ids.json in Resources */ = {isa = PBXBuildFile; fileRef = C0646091BF269C70E31623CF /* duplicate_node_ids.json */; };
 		BD0DF0D327100566238E104F /* SaveDataRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = 99BBFAA66BFB910BC1BEA096 /* SaveDataRepository.swift */; };
@@ -195,10 +220,14 @@
 		BF95452732DEF68606CFFD9B /* MultiVanDioramaSceneryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8E764605B373697DBAA80A02 /* MultiVanDioramaSceneryTests.swift */; };
 		C085B5C854E7515D89718CCB /* LevelRules.swift in Sources */ = {isa = PBXBuildFile; fileRef = D5C1AA635E545DFA55B49CC5 /* LevelRules.swift */; };
 		C111F8E9A2C4324849D21DC7 /* TRShopPinnedBalanceBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 37998A41F8C42D44D8EE6B1C /* TRShopPinnedBalanceBar.swift */; };
+		C1BBF4095E055DCFC15BB0E6 /* TRShopBoardPreview.swift in Sources */ = {isa = PBXBuildFile; fileRef = B921390FE5C0BC91F507B986 /* TRShopBoardPreview.swift */; };
 		C1FBA17F552AA5D241DD06EE /* MultiVanBoardParityTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 85540DF19940935D159D1D94 /* MultiVanBoardParityTests.swift */; };
 		C32E88E9AF95F6C6C9818063 /* TRShopCosmeticOptionCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = F268635BC9A0004613EA68F4 /* TRShopCosmeticOptionCard.swift */; };
+		C60F6D70BBDFCB0BD8513EBE /* PrototypeSolutions in Resources */ = {isa = PBXBuildFile; fileRef = 1170CBB295798A262EF08DD3 /* PrototypeSolutions */; };
 		C61908F46D67D6B0C2C43DC1 /* TRDestinationMarkerViewTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA159D82008BBEE377BE7CDA /* TRDestinationMarkerViewTests.swift */; };
+		C646968FD3E97D39C5466885 /* TRVillageLevelMapView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BC5292F326AA69273F43227B /* TRVillageLevelMapView.swift */; };
 		C6C879E35B0A45FD1A8699A7 /* TRGameplayStyle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 34077F31F2E9880064B46C36 /* TRGameplayStyle.swift */; };
+		C7B223C9FF9435E6F5846389 /* TRCurvedWorld.swift in Sources */ = {isa = PBXBuildFile; fileRef = 626688F4C4DF233DBB5705BD /* TRCurvedWorld.swift */; };
 		CA56286BEB85DA883559E80A /* ShopScreenTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5F86B1A2F3EEB483AEE1DB3 /* ShopScreenTests.swift */; };
 		CB682E3A5073FD1E5B1A7D8E /* LevelSelectScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8423A86EB968231672776BCD /* LevelSelectScreen.swift */; };
 		CE004A72F0F151745BD9A85B /* TRDeliveryTrailViewTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 29CCDB5DCEA604E7F0496B48 /* TRDeliveryTrailViewTests.swift */; };
@@ -211,7 +240,9 @@
 		D48E40D1A48B39E7BC66C715 /* PrototypeSounds in Resources */ = {isa = PBXBuildFile; fileRef = 13CD5760D3957C795664DCAD /* PrototypeSounds */; };
 		D5A4F115640A504358FEB96E /* LevelSolutionScriptTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA046EE210E3C1613BAE5CFB /* LevelSolutionScriptTests.swift */; };
 		D5B4DD78E155F0062DD3595B /* TRProfileAchievementPreviewCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = E105DE6F4E058FC27220DA8C /* TRProfileAchievementPreviewCard.swift */; };
+		DBCAED143A6EC8748106A61C /* TRLevelMapScene.swift in Sources */ = {isa = PBXBuildFile; fileRef = 289BAADA31B1300FE7560656 /* TRLevelMapScene.swift */; };
 		DC06050B45C3A03A989C7076 /* TREdgeSwipeBackPolicy.swift in Sources */ = {isa = PBXBuildFile; fileRef = 15436B0F0DF69D32AE1BFFC8 /* TREdgeSwipeBackPolicy.swift */; };
+		DD051666460809E821CBAAE6 /* TRCurvedLevelMapView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F05D15CA83AC810D2B7B53FA /* TRCurvedLevelMapView.swift */; };
 		DD81FFE534F7E1C21C545A43 /* unreachable_destination_from_package.json in Resources */ = {isa = PBXBuildFile; fileRef = 0F881EF170BA7806FA70D13F /* unreachable_destination_from_package.json */; };
 		DDDE294585E1F234335F9E82 /* missing_package_node.json in Resources */ = {isa = PBXBuildFile; fileRef = 2529D5D1E0B42C1EF442262D /* missing_package_node.json */; };
 		DEE827EB9BC09C3A3DBB10D9 /* empty_level_id.json in Resources */ = {isa = PBXBuildFile; fileRef = D4C9913C4A5B8AD0D63E024D /* empty_level_id.json */; };
@@ -226,12 +257,14 @@
 		E4A5B0BBABD72DAE24399369 /* TRShopFeaturedCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9270D46D1A770A624E55E2F9 /* TRShopFeaturedCard.swift */; };
 		E504B1810CB921FC0811DA8B /* negative_par_taps.json in Resources */ = {isa = PBXBuildFile; fileRef = 58C5DDA73FDF03A33CDC5BAA /* negative_par_taps.json */; };
 		E53265452A081C93250A8DB5 /* missing_destination_node.json in Resources */ = {isa = PBXBuildFile; fileRef = 7A2B8C3AC8E24A49492D5A97 /* missing_destination_node.json */; };
+		E55A677E15FF567F9AC78F3B /* MultiVanCargoViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 25CAEA7E41E2B9BC11B1D73E /* MultiVanCargoViews.swift */; };
 		E60DCF645C9796E84DF67097 /* GameplayCosmeticLoadoutTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6F0507FE7912D807DF6A39BE /* GameplayCosmeticLoadoutTests.swift */; };
 		E6AA81C9990F8364F66970D4 /* TRProfileActionButtons.swift in Sources */ = {isa = PBXBuildFile; fileRef = EED2692EFA7D34A03E5F840E /* TRProfileActionButtons.swift */; };
 		E7E9E38DC9513394E5F9B680 /* HomeScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1ED10221512DC80E25D258A7 /* HomeScreen.swift */; };
 		E82B3DBA8A1DA33DE092B359 /* ProfileCollectionSelection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 92F93BEAB8BCF1B8EA9C4E95 /* ProfileCollectionSelection.swift */; };
 		E8B9C8A25B0A06738009CDB2 /* ScoringService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6154D6AD36449F8760CCAEFF /* ScoringService.swift */; };
 		E8D44C7479C5D499E15E00EC /* TRDestinationMarkerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1D5824298090FADAB8A6259 /* TRDestinationMarkerView.swift */; };
+		E943EF1FFAD60ADDD4CEED04 /* TRVillageArt.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3EFD56316A14460E5208E584 /* TRVillageArt.swift */; };
 		E98F524CF7F5A2E7CED59352 /* TRCircularMarkerShell.swift in Sources */ = {isa = PBXBuildFile; fileRef = E8702E9ED3F38B1A8D2CDE67 /* TRCircularMarkerShell.swift */; };
 		E9DD21F09646BA5AE01322D3 /* MultiVanDioramaScenery.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0C8E8DFF873F8EE85BEF4C96 /* MultiVanDioramaScenery.swift */; };
 		EA9B7F55F71D49403ACEF18A /* RouteObjective.swift in Sources */ = {isa = PBXBuildFile; fileRef = 901C7D08C5BBDBDCEE026D21 /* RouteObjective.swift */; };
@@ -251,12 +284,12 @@
 		F9316D9A30EA4723E4CB5BAA /* CosmeticItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 465CFC8159B3613A970FE259 /* CosmeticItem.swift */; };
 		F9417711AE9C96CD013EF0D6 /* MultiVanHUDChrome.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2B49920C99BBC769ACECE54 /* MultiVanHUDChrome.swift */; };
 		F99E28CEDCB085C9B1AE040D /* non_positive_time_limit.json in Resources */ = {isa = PBXBuildFile; fileRef = A7C0CABC6909C07C15C6120D /* non_positive_time_limit.json */; };
-		F99EFBD47A7850B4907B78E8 /* MultiVanPlaytestLogTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 53951ADEE46B714D667930E0 /* MultiVanPlaytestLogTests.swift */; };
 		FABC539B70856A6A7E43AC14 /* UserSettingsServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B1F71A0D96F6EE65FC18B50 /* UserSettingsServiceTests.swift */; };
 		FCADAE930C23AEF2E40A2D13 /* MultiVanSoundPlayer.swift in Sources */ = {isa = PBXBuildFile; fileRef = DE8DB9D0B70335380602E4EE /* MultiVanSoundPlayer.swift */; };
 		FD2A2990B91D7217ED8E3789 /* TRMenuButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = B219E6530196E4FB312FDAF4 /* TRMenuButton.swift */; };
 		FDFD81D64CF0FAB733FFBBD9 /* MultiVanLevelRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = E85098EDE231C9F46CC3980D /* MultiVanLevelRepository.swift */; };
 		FE7495D0C01D185ABDF96AB5 /* ProgressService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3A2EB059F1ED8B1990CD973 /* ProgressService.swift */; };
+		FE7C65793E17EF12AD5CA1E6 /* TRLevelMapLayout.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1C0EC68105810807BCC0DC1 /* TRLevelMapLayout.swift */; };
 		FF04D88C3A93FB2A97C1A8A6 /* DeliveryDot.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6352EEEB57FB978CCB578FA1 /* DeliveryDot.swift */; };
 		FF083C62565C03AFDA125B37 /* TRStarCollectorPlaceholderCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8CD039BA1E7864D9741A0F27 /* TRStarCollectorPlaceholderCard.swift */; };
 /* End PBXBuildFile section */
@@ -285,9 +318,12 @@
 		0847ADA71C88202002773DAE /* MultiVanDioramaLawnTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MultiVanDioramaLawnTests.swift; sourceTree = "<group>"; };
 		08EDEDC6662C77E816DFB0CE /* missing_start_node.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = missing_start_node.json; sourceTree = "<group>"; };
 		091A518002F37AB5BFA91E98 /* MultiVanDioramaPieces.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MultiVanDioramaPieces.swift; sourceTree = "<group>"; };
+		0A1F12D81521B5A5655C3B12 /* TRCozySkyBackground.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TRCozySkyBackground.swift; sourceTree = "<group>"; };
 		0B6634FCA043D2B99D10F4BD /* RouteGraph.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RouteGraph.swift; sourceTree = "<group>"; };
 		0C8E8DFF873F8EE85BEF4C96 /* MultiVanDioramaScenery.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MultiVanDioramaScenery.swift; sourceTree = "<group>"; };
+		0D64B296B07E9DBFE3CE578E /* MultiVanTestBoards.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MultiVanTestBoards.swift; sourceTree = "<group>"; };
 		0D8DB95B4F93553409E996F3 /* MultiVanEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MultiVanEngine.swift; sourceTree = "<group>"; };
+		0F706AB3554999D2E40D636E /* TRCurvedLevelMapTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TRCurvedLevelMapTests.swift; sourceTree = "<group>"; };
 		0F881EF170BA7806FA70D13F /* unreachable_destination_from_package.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = unreachable_destination_from_package.json; sourceTree = "<group>"; };
 		110E615D1CB962B4C43D1072 /* ScoringAndProgressServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScoringAndProgressServiceTests.swift; sourceTree = "<group>"; };
 		1170CBB295798A262EF08DD3 /* PrototypeSolutions */ = {isa = PBXFileReference; lastKnownFileType = folder; name = PrototypeSolutions; path = TinyRoutesTests/Resources/PrototypeSolutions; sourceTree = SOURCE_ROOT; };
@@ -312,7 +348,9 @@
 		2529D5D1E0B42C1EF442262D /* missing_package_node.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = missing_package_node.json; sourceTree = "<group>"; };
 		253780D82BAB90952490CCCB /* MultiVanSoundPlayerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MultiVanSoundPlayerTests.swift; sourceTree = "<group>"; };
 		259121C00369C962168CC422 /* CosmeticServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CosmeticServiceTests.swift; sourceTree = "<group>"; };
+		25CAEA7E41E2B9BC11B1D73E /* MultiVanCargoViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MultiVanCargoViews.swift; sourceTree = "<group>"; };
 		27CA44A06CAECB543E0C9CFA /* TRResultStatsGrid.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TRResultStatsGrid.swift; sourceTree = "<group>"; };
+		289BAADA31B1300FE7560656 /* TRLevelMapScene.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TRLevelMapScene.swift; sourceTree = "<group>"; };
 		293BD2DAB243128D22D1B218 /* UserSettingsService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserSettingsService.swift; sourceTree = "<group>"; };
 		293C6852900343064629F978 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		29CCDB5DCEA604E7F0496B48 /* TRDeliveryTrailViewTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TRDeliveryTrailViewTests.swift; sourceTree = "<group>"; };
@@ -329,29 +367,32 @@
 		36D0F2D5B2BEDB9890D1635B /* blue_orb.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = blue_orb.png; sourceTree = "<group>"; };
 		37998A41F8C42D44D8EE6B1C /* TRShopPinnedBalanceBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TRShopPinnedBalanceBar.swift; sourceTree = "<group>"; };
 		37D41FF0F38C58BCD48358AE /* omitted_outgoing_graph_edge.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = omitted_outgoing_graph_edge.json; sourceTree = "<group>"; };
-		3AED21977EEFAD49E71C5F6D /* MultiVanPrototypeScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MultiVanPrototypeScreen.swift; sourceTree = "<group>"; };
 		3EF134C156238A0C9D937219 /* TRConfettiEmitter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TRConfettiEmitter.swift; sourceTree = "<group>"; };
+		3EFD56316A14460E5208E584 /* TRVillageArt.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TRVillageArt.swift; sourceTree = "<group>"; };
 		402F8052D1AC0F0719E01453 /* ShopCatalogItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShopCatalogItem.swift; sourceTree = "<group>"; };
 		415F69E291F49F32954A6253 /* TRCurrencyPill.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TRCurrencyPill.swift; sourceTree = "<group>"; };
 		41E5D61ED2A0DE43F01D9F13 /* TRSettingsToggleRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TRSettingsToggleRow.swift; sourceTree = "<group>"; };
 		424DB3A33844F9979A921908 /* MultiVanDioramaSceneView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MultiVanDioramaSceneView.swift; sourceTree = "<group>"; };
 		42717106079D5B20D6601180 /* LevelSelectProgressSnapshotTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LevelSelectProgressSnapshotTests.swift; sourceTree = "<group>"; };
+		42E5C15DCCF7904B84ECBDC3 /* MultiVanCosmeticsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MultiVanCosmeticsTests.swift; sourceTree = "<group>"; };
 		43431F22833C9470B99D4FF5 /* RouteEdge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RouteEdge.swift; sourceTree = "<group>"; };
 		438D5D7E05204727C907504D /* TRLevelPathView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TRLevelPathView.swift; sourceTree = "<group>"; };
 		43AEFC681671D4E071796810 /* DotMovementController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DotMovementController.swift; sourceTree = "<group>"; };
 		465CFC8159B3613A970FE259 /* CosmeticItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CosmeticItem.swift; sourceTree = "<group>"; };
 		46F20A76B944EE7DFFA58556 /* locked_pin.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = locked_pin.png; sourceTree = "<group>"; };
+		47BC485BDA5E7B1AA0F54180 /* MultiVanSignal.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MultiVanSignal.swift; sourceTree = "<group>"; };
 		49085F9F8941741534FFABA1 /* LevelHumanPlayabilityRulesTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LevelHumanPlayabilityRulesTests.swift; sourceTree = "<group>"; };
 		499046D6B8C66B0CEE6D741B /* unreachable_package.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = unreachable_package.json; sourceTree = "<group>"; };
 		499A3741695801E77DD300A2 /* LevelRuntimeState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LevelRuntimeState.swift; sourceTree = "<group>"; };
 		4AD6F0A9895119A8845EDFCF /* DailyBonusServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DailyBonusServiceTests.swift; sourceTree = "<group>"; };
 		4B7E03EFAABA7BECAC04F0C3 /* TRProgressBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TRProgressBar.swift; sourceTree = "<group>"; };
 		4C13BB2799AF7B8830705334 /* ResultScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResultScreen.swift; sourceTree = "<group>"; };
+		4CBBD300A399AE7C01FE78D7 /* MultiVanDeliberatePlayTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MultiVanDeliberatePlayTests.swift; sourceTree = "<group>"; };
 		4D3DCC7765DE330B51F87A15 /* TRMenuSettingsButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TRMenuSettingsButton.swift; sourceTree = "<group>"; };
 		507A4B3C1073E4C9899D941B /* TRProfileHeroCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TRProfileHeroCard.swift; sourceTree = "<group>"; };
-		53951ADEE46B714D667930E0 /* MultiVanPlaytestLogTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MultiVanPlaytestLogTests.swift; sourceTree = "<group>"; };
 		55D4E2A80A364361D0C1AD3D /* TRResultSummary.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TRResultSummary.swift; sourceTree = "<group>"; };
 		563D441318FC6043290F5415 /* LevelValidator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LevelValidator.swift; sourceTree = "<group>"; };
+		577460EA20363D6E3860263C /* MultiVanLevelRules.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MultiVanLevelRules.swift; sourceTree = "<group>"; };
 		58B0439944A237B461C753B6 /* TRResultScreenBackground.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TRResultScreenBackground.swift; sourceTree = "<group>"; };
 		58C5DDA73FDF03A33CDC5BAA /* negative_par_taps.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = negative_par_taps.json; sourceTree = "<group>"; };
 		5B08096B6623C38C2F65FB2A /* MultiVanLevel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MultiVanLevel.swift; sourceTree = "<group>"; };
@@ -360,14 +401,18 @@
 		5F08C3B9313317816DDFEDFD /* LevelRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LevelRepository.swift; sourceTree = "<group>"; };
 		5F33C1856997830DC8E92C5B /* TRBottomNavigationItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TRBottomNavigationItem.swift; sourceTree = "<group>"; };
 		5F406CF113D98F8303359AA8 /* MultiVanBoardStyleTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MultiVanBoardStyleTests.swift; sourceTree = "<group>"; };
+		5F74451C53722867E7A84922 /* MultiVanCosmetics.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MultiVanCosmetics.swift; sourceTree = "<group>"; };
 		60559547CC7D9A98DC0AECE1 /* play_filled.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = play_filled.png; sourceTree = "<group>"; };
 		6154D6AD36449F8760CCAEFF /* ScoringService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScoringService.swift; sourceTree = "<group>"; };
 		6187FAD2E50E89F7D252C3CD /* MultiVanSwitchButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MultiVanSwitchButton.swift; sourceTree = "<group>"; };
+		61ED17B76BA3FAEB37418DB2 /* TRVillageRoadTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TRVillageRoadTests.swift; sourceTree = "<group>"; };
+		626688F4C4DF233DBB5705BD /* TRCurvedWorld.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TRCurvedWorld.swift; sourceTree = "<group>"; };
 		6352EEEB57FB978CCB578FA1 /* DeliveryDot.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeliveryDot.swift; sourceTree = "<group>"; };
 		63F32ABE2ED4121568C097D2 /* TRTinyRoutesLogo.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TRTinyRoutesLogo.swift; sourceTree = "<group>"; };
 		6407AEC46DFBDB62CFAB65F2 /* TinyRoutesTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = TinyRoutesTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		657B3F5915B3BFD8DC6E8820 /* ProfileAchievement.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileAchievement.swift; sourceTree = "<group>"; };
 		65AAC10E1159602CE6707DC3 /* MultiVanDioramaGeometry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MultiVanDioramaGeometry.swift; sourceTree = "<group>"; };
+		6B00251FF3EEBFB1F34BE33E /* TRVillageMotion.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TRVillageMotion.swift; sourceTree = "<group>"; };
 		6C596DA5340849D282DD6B4E /* TRGameplayCosmeticStyle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TRGameplayCosmeticStyle.swift; sourceTree = "<group>"; };
 		6F0507FE7912D807DF6A39BE /* GameplayCosmeticLoadoutTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameplayCosmeticLoadoutTests.swift; sourceTree = "<group>"; };
 		71C3DCC3950929FB05DC901D /* TRBottomNavigationBarTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TRBottomNavigationBarTests.swift; sourceTree = "<group>"; };
@@ -381,17 +426,21 @@
 		7A28B9CBE5A4624F8B8D75B7 /* SwitchEligibilityServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwitchEligibilityServiceTests.swift; sourceTree = "<group>"; };
 		7A2B8C3AC8E24A49492D5A97 /* missing_destination_node.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = missing_destination_node.json; sourceTree = "<group>"; };
 		7C8BBBDD9550039E379D32EB /* MultiVanPerformanceMeterTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MultiVanPerformanceMeterTests.swift; sourceTree = "<group>"; };
+		7E6B526FA7BEE9DBEB14E5C2 /* MultiVanTutorial.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MultiVanTutorial.swift; sourceTree = "<group>"; };
 		805CC5AC1460E4D01DADF479 /* PurchaseServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PurchaseServiceTests.swift; sourceTree = "<group>"; };
 		811A1C9E006CEC882EA822FB /* MultiVanLevelRepositoryTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MultiVanLevelRepositoryTests.swift; sourceTree = "<group>"; };
 		8120FF4D4CC3F24DCE4CE9BB /* RouteEngineTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RouteEngineTests.swift; sourceTree = "<group>"; };
 		835A241F13DC0ED0992A689F /* LevelSimulationHarnessTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LevelSimulationHarnessTests.swift; sourceTree = "<group>"; };
+		840D0019F654AA37133F6AA5 /* MultiVanSignalTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MultiVanSignalTests.swift; sourceTree = "<group>"; };
 		8423A86EB968231672776BCD /* LevelSelectScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LevelSelectScreen.swift; sourceTree = "<group>"; };
 		8490DEADA9A1FC3AB3F8F0E2 /* shop_bag.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = shop_bag.png; sourceTree = "<group>"; };
 		84BBA7B3E656CE02C02D1372 /* TRShopGoodiesStrip.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TRShopGoodiesStrip.swift; sourceTree = "<group>"; };
 		85540DF19940935D159D1D94 /* MultiVanBoardParityTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MultiVanBoardParityTests.swift; sourceTree = "<group>"; };
 		86A6858B9DF28FFF58B64B89 /* PurchaseService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PurchaseService.swift; sourceTree = "<group>"; };
 		86D5601913C689EB5ED4A957 /* RouteNode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RouteNode.swift; sourceTree = "<group>"; };
+		86F2F290D5EA5A9969510787 /* TRLevelMapLayoutTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TRLevelMapLayoutTests.swift; sourceTree = "<group>"; };
 		87540AF29D8504011ADE3812 /* simple_single_switch.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = simple_single_switch.json; sourceTree = "<group>"; };
+		893CFF9EBE3317CCAFB9B25E /* TRCurvedLevelMapScene.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TRCurvedLevelMapScene.swift; sourceTree = "<group>"; };
 		8ADAC4DC85D57DA6B3A5D421 /* TRSettingsSliderRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TRSettingsSliderRow.swift; sourceTree = "<group>"; };
 		8B3916C50972D3AF0D04D6F2 /* SwitchEligibilityService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwitchEligibilityService.swift; sourceTree = "<group>"; };
 		8B6D699A9C78F07EBC037154 /* TRDeliveryDotView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TRDeliveryDotView.swift; sourceTree = "<group>"; };
@@ -402,11 +451,13 @@
 		8D66F47942EBD89088355D80 /* DomainModelsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DomainModelsTests.swift; sourceTree = "<group>"; };
 		8DE971EFF9E8C68D65CA2A87 /* edge_unknown_from_node.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = edge_unknown_from_node.json; sourceTree = "<group>"; };
 		8DFE5D9480972F04F714A31C /* GameplayCosmeticLoadout.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameplayCosmeticLoadout.swift; sourceTree = "<group>"; };
+		8E14E14F7868F76EAFBB7B33 /* MultiVanAssistance.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MultiVanAssistance.swift; sourceTree = "<group>"; };
 		8E20545F7B3660F4E6D38269 /* TRGlassCardBackground.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TRGlassCardBackground.swift; sourceTree = "<group>"; };
 		8E764605B373697DBAA80A02 /* MultiVanDioramaSceneryTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MultiVanDioramaSceneryTests.swift; sourceTree = "<group>"; };
 		8ED84D89056B1286C23FE145 /* TRLevelMapSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TRLevelMapSection.swift; sourceTree = "<group>"; };
 		901C7D08C5BBDBDCEE026D21 /* RouteObjective.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RouteObjective.swift; sourceTree = "<group>"; };
 		9032EFCCDA0E554BE40C5C88 /* ShopCatalogService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShopCatalogService.swift; sourceTree = "<group>"; };
+		926E3CD9F90CFEA2127562FD /* TRVillageRoad.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TRVillageRoad.swift; sourceTree = "<group>"; };
 		9270D46D1A770A624E55E2F9 /* TRShopFeaturedCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TRShopFeaturedCard.swift; sourceTree = "<group>"; };
 		9285EF0CD4BC02DAE0FF59D6 /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
 		9287E40776E45CA6068B151D /* MultiVanBoardLayoutTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MultiVanBoardLayoutTests.swift; sourceTree = "<group>"; };
@@ -416,23 +467,29 @@
 		99BBFAA66BFB910BC1BEA096 /* SaveDataRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SaveDataRepository.swift; sourceTree = "<group>"; };
 		9A994D21F5163CDF8D5285EA /* TinyRoutesApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TinyRoutesApp.swift; sourceTree = "<group>"; };
 		9BD8015CD420C65592995827 /* TRResultInfoBanner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TRResultInfoBanner.swift; sourceTree = "<group>"; };
+		9C12F3F3C72F318C777AAF76 /* MultiVanExperimentBoardTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MultiVanExperimentBoardTests.swift; sourceTree = "<group>"; };
+		9CA1EBB080890DE672416CCF /* TRCurvedLevelMapLens.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TRCurvedLevelMapLens.swift; sourceTree = "<group>"; };
 		9D377447E91FFA14AAF73DAA /* MultiVanFeedback.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MultiVanFeedback.swift; sourceTree = "<group>"; };
 		9D6C15F716688976FE0FC98A /* TRShopRoutePreviewView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TRShopRoutePreviewView.swift; sourceTree = "<group>"; };
 		9DAED5C09C2607B2276F1D93 /* TRMenuHeader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TRMenuHeader.swift; sourceTree = "<group>"; };
 		9E179536AFB50A68B5DD327D /* edge_unknown_to_node.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = edge_unknown_to_node.json; sourceTree = "<group>"; };
 		9E77727A6126FF5C351CB036 /* MultiVanDioramaEffectsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MultiVanDioramaEffectsTests.swift; sourceTree = "<group>"; };
+		9FA7CAF84F14EC923FAB88E8 /* MultiVanCargo.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MultiVanCargo.swift; sourceTree = "<group>"; };
 		9FAC5712507353F5B5FD60B3 /* MultiVanBoardStyle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MultiVanBoardStyle.swift; sourceTree = "<group>"; };
 		A1D5824298090FADAB8A6259 /* TRDestinationMarkerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TRDestinationMarkerView.swift; sourceTree = "<group>"; };
 		A3194A3847C7A4AB6DBEDAD3 /* TRProfileStatsCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TRProfileStatsCard.swift; sourceTree = "<group>"; };
 		A3A2EB059F1ED8B1990CD973 /* ProgressService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProgressService.swift; sourceTree = "<group>"; };
 		A44BFDF0354EBD17BD272F6E /* PrototypeLevels */ = {isa = PBXFileReference; lastKnownFileType = folder; name = PrototypeLevels; path = TinyRoutes/Resources/PrototypeLevels; sourceTree = SOURCE_ROOT; };
 		A4519EF374CDA861C406617B /* MultiVanBarrierView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MultiVanBarrierView.swift; sourceTree = "<group>"; };
+		A513874B7CEB4CD4B19F78B4 /* MultiVanCargoTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MultiVanCargoTests.swift; sourceTree = "<group>"; };
+		A728F7BBE2F5349E2D935B23 /* TRLevelMapDioramaView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TRLevelMapDioramaView.swift; sourceTree = "<group>"; };
 		A7C0CABC6909C07C15C6120D /* non_positive_time_limit.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = non_positive_time_limit.json; sourceTree = "<group>"; };
 		A876C96C4CBEC33CDFFE32C3 /* ExperimentalLevelSolver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExperimentalLevelSolver.swift; sourceTree = "<group>"; };
 		AA8E4F739945A7DFF001B19C /* MultiVanRoutePreview.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MultiVanRoutePreview.swift; sourceTree = "<group>"; };
 		AAAF32575B828F8158961DCF /* PrototypeSolutionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PrototypeSolutionTests.swift; sourceTree = "<group>"; };
 		AAE4354ADF7FBB27382D141A /* SaveDataRepositoryTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SaveDataRepositoryTests.swift; sourceTree = "<group>"; };
 		ACDA7906BE080836E0D26027 /* GameplayLevelNumberFormatterTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameplayLevelNumberFormatterTests.swift; sourceTree = "<group>"; };
+		AD5637CEC252B0BD5E2BAFF6 /* TRLevelMapLawn.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TRLevelMapLawn.swift; sourceTree = "<group>"; };
 		AFA7A302DFA9D1DB6E867866 /* TRProfileRewardProgressCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TRProfileRewardProgressCard.swift; sourceTree = "<group>"; };
 		B062DC62792DD750D631C000 /* AdsAdapter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AdsAdapter.swift; sourceTree = "<group>"; };
 		B064034548F2A810BA3D12F6 /* LevelRepositoryTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LevelRepositoryTests.swift; sourceTree = "<group>"; };
@@ -445,8 +502,10 @@
 		B5A668594640E5A1D7C10886 /* TRMenuHeaderTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TRMenuHeaderTests.swift; sourceTree = "<group>"; };
 		B5F86B1A2F3EEB483AEE1DB3 /* ShopScreenTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShopScreenTests.swift; sourceTree = "<group>"; };
 		B6AA24D327B7C23D4C02DECC /* TRProfileIconViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TRProfileIconViews.swift; sourceTree = "<group>"; };
+		B921390FE5C0BC91F507B986 /* TRShopBoardPreview.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TRShopBoardPreview.swift; sourceTree = "<group>"; };
 		BB0A5CB491F18C529CC74603 /* TRShopCategoryPillBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TRShopCategoryPillBar.swift; sourceTree = "<group>"; };
 		BBF9A119C53A9804C693368D /* AnalyticsAdapter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnalyticsAdapter.swift; sourceTree = "<group>"; };
+		BC5292F326AA69273F43227B /* TRVillageLevelMapView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TRVillageLevelMapView.swift; sourceTree = "<group>"; };
 		BC6EE6C24F31FD317FA05E82 /* CollisionResolver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CollisionResolver.swift; sourceTree = "<group>"; };
 		BCAE6FF35E76DFDBADE30054 /* TRDeliveryDotViewTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TRDeliveryDotViewTests.swift; sourceTree = "<group>"; };
 		BCC6D9FEE4600AC2F067BA92 /* TRProfileSummaryTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TRProfileSummaryTests.swift; sourceTree = "<group>"; };
@@ -456,13 +515,13 @@
 		C0646091BF269C70E31623CF /* duplicate_node_ids.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = duplicate_node_ids.json; sourceTree = "<group>"; };
 		C1884FA3191EADB5F9673AA3 /* TRDeliveryTrailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TRDeliveryTrailView.swift; sourceTree = "<group>"; };
 		C1B022B419A6C15C4612BCB4 /* SwitchNodeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwitchNodeView.swift; sourceTree = "<group>"; };
+		C1C0EC68105810807BCC0DC1 /* TRLevelMapLayout.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TRLevelMapLayout.swift; sourceTree = "<group>"; };
 		C24FC74DD7D0CB43B370434C /* TRShopCosmeticGrid.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TRShopCosmeticGrid.swift; sourceTree = "<group>"; };
 		C327FACFC5CAE3AEA90BCF1A /* EconomyServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EconomyServiceTests.swift; sourceTree = "<group>"; };
 		C48DCC55F0F69F382ECE7B89 /* MultiVanLevelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MultiVanLevelTests.swift; sourceTree = "<group>"; };
 		C57A0FF368DE7828D0B8EEB0 /* MultiVanAutoplay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MultiVanAutoplay.swift; sourceTree = "<group>"; };
 		C63499908293A2DBC881A1CE /* TRShopIconViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TRShopIconViews.swift; sourceTree = "<group>"; };
 		C717057F0F2E3F99C14521A7 /* MultiVanSwitchDialView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MultiVanSwitchDialView.swift; sourceTree = "<group>"; };
-		C8260565D0E82C9FA536DF7A /* MultiVanPlaytestLog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MultiVanPlaytestLog.swift; sourceTree = "<group>"; };
 		C944525464AD16A3C4C0A32B /* NodeSwitchController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NodeSwitchController.swift; sourceTree = "<group>"; };
 		CA6A9A236B9BA0E70733849E /* missing_outgoing_edge_id.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = missing_outgoing_edge_id.json; sourceTree = "<group>"; };
 		CC3781828CCF0BB8E4B08BB1 /* TRMapBackgroundView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TRMapBackgroundView.swift; sourceTree = "<group>"; };
@@ -485,11 +544,14 @@
 		DC7EF436B12024897B51A9AC /* LevelHumanPlayabilityRules.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LevelHumanPlayabilityRules.swift; sourceTree = "<group>"; };
 		DCAF7D08947EF67292DA85C9 /* RoadPathRenderer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RoadPathRenderer.swift; sourceTree = "<group>"; };
 		DCD9AB8B3D8D1486F7C8FC66 /* SwitchNodeViewTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwitchNodeViewTests.swift; sourceTree = "<group>"; };
+		DDD30F978289EAAA039BA399 /* MultiVanExperimentsScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MultiVanExperimentsScreen.swift; sourceTree = "<group>"; };
 		DE8DB9D0B70335380602E4EE /* MultiVanSoundPlayer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MultiVanSoundPlayer.swift; sourceTree = "<group>"; };
 		DFE6BF59DFA0338A86D55CE0 /* gold_coin.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = gold_coin.png; sourceTree = "<group>"; };
 		E02F44145D432403FF64D95B /* UserSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserSettings.swift; sourceTree = "<group>"; };
 		E105DE6F4E058FC27220DA8C /* TRProfileAchievementPreviewCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TRProfileAchievementPreviewCard.swift; sourceTree = "<group>"; };
+		E3B3695A56CB2CFBF90D43FF /* TRLevelMapScenery.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TRLevelMapScenery.swift; sourceTree = "<group>"; };
 		E540C87602DF9F761DD5828A /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		E5E79F172CB240DFFB2CA139 /* MultiVanTutorialTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MultiVanTutorialTests.swift; sourceTree = "<group>"; };
 		E6628B11A0491754E8D41DA1 /* level_028_style_switch_arrow_mismatch.solution.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = level_028_style_switch_arrow_mismatch.solution.json; sourceTree = "<group>"; };
 		E75962D7D7F4DCD4DC29D2CE /* level_028_style_switch_arrow_mismatch.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = level_028_style_switch_arrow_mismatch.json; sourceTree = "<group>"; };
 		E7C302D265D14AEEDD88BB21 /* TRMenuTitleLogo.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TRMenuTitleLogo.swift; sourceTree = "<group>"; };
@@ -498,10 +560,12 @@
 		E85098EDE231C9F46CC3980D /* MultiVanLevelRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MultiVanLevelRepository.swift; sourceTree = "<group>"; };
 		E8702E9ED3F38B1A8D2CDE67 /* TRCircularMarkerShell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TRCircularMarkerShell.swift; sourceTree = "<group>"; };
 		E874F6DEAE742EF2728616FF /* TRResultCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TRResultCard.swift; sourceTree = "<group>"; };
+		E9149BEDF7DC1AD6D3E0C257 /* MultiVanContentPackTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MultiVanContentPackTests.swift; sourceTree = "<group>"; };
 		EA0CD21DEA8E3A777D065857 /* background.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = background.png; sourceTree = "<group>"; };
 		EB4DCBD095F5933BDD6BD936 /* TRBottomNavigationBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TRBottomNavigationBar.swift; sourceTree = "<group>"; };
 		EED2343CD984E02344DF24A4 /* TRProfileSummary.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TRProfileSummary.swift; sourceTree = "<group>"; };
 		EED2692EFA7D34A03E5F840E /* TRProfileActionButtons.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TRProfileActionButtons.swift; sourceTree = "<group>"; };
+		F05D15CA83AC810D2B7B53FA /* TRCurvedLevelMapView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TRCurvedLevelMapView.swift; sourceTree = "<group>"; };
 		F0C4FA89482C8176623526D5 /* MultiVanDioramaSyncTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MultiVanDioramaSyncTests.swift; sourceTree = "<group>"; };
 		F139BB6512B7A9A897A0D611 /* LevelSimulationHarness.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LevelSimulationHarness.swift; sourceTree = "<group>"; };
 		F13D58AA79B37FEB5A13B10A /* LevelCompleteConfetti.sks */ = {isa = PBXFileReference; lastKnownFileType = file.sks; path = LevelCompleteConfetti.sks; sourceTree = "<group>"; };
@@ -522,6 +586,7 @@
 		F834A064D57AE4D8C135041C /* SettingsScreenTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsScreenTests.swift; sourceTree = "<group>"; };
 		F9806F0EE479DCBB7FAB93AA /* LevelSelectLayoutTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LevelSelectLayoutTests.swift; sourceTree = "<group>"; };
 		FB3E5CC6778A7FA5607D9B52 /* LevelValidationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LevelValidationTests.swift; sourceTree = "<group>"; };
+		FCEB074606C55C9565675D30 /* TRCozyMenuChrome.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TRCozyMenuChrome.swift; sourceTree = "<group>"; };
 		FD5279438CA33DB0C19A1CA9 /* TestLevelCatalog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TestLevelCatalog.swift; sourceTree = "<group>"; };
 		FDBA2E698046913782C0F0E6 /* TRSettingsDangerRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TRSettingsDangerRow.swift; sourceTree = "<group>"; };
 		FE2D44D3B9CB219F2E76480E /* PlayerProfile.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlayerProfile.swift; sourceTree = "<group>"; };
@@ -583,6 +648,7 @@
 				5E972F20245469B0B50038E0 /* ShopScreen.swift */,
 				C1B022B419A6C15C4612BCB4 /* SwitchNodeView.swift */,
 				AB79FA159EA19C6BCD38DAE2 /* Components */,
+				AFFAABA97EA6C301AC8146CB /* LevelMap */,
 			);
 			path = UI;
 			sourceTree = "<group>";
@@ -602,17 +668,23 @@
 				9287E40776E45CA6068B151D /* MultiVanBoardLayoutTests.swift */,
 				85540DF19940935D159D1D94 /* MultiVanBoardParityTests.swift */,
 				5F406CF113D98F8303359AA8 /* MultiVanBoardStyleTests.swift */,
+				A513874B7CEB4CD4B19F78B4 /* MultiVanCargoTests.swift */,
+				E9149BEDF7DC1AD6D3E0C257 /* MultiVanContentPackTests.swift */,
+				42E5C15DCCF7904B84ECBDC3 /* MultiVanCosmeticsTests.swift */,
+				4CBBD300A399AE7C01FE78D7 /* MultiVanDeliberatePlayTests.swift */,
 				9E77727A6126FF5C351CB036 /* MultiVanDioramaEffectsTests.swift */,
 				0847ADA71C88202002773DAE /* MultiVanDioramaLawnTests.swift */,
 				8E764605B373697DBAA80A02 /* MultiVanDioramaSceneryTests.swift */,
 				F0C4FA89482C8176623526D5 /* MultiVanDioramaSyncTests.swift */,
 				FED2A7BE6D078C065523B358 /* MultiVanDioramaTests.swift */,
 				B3192372BD60AC6E84EF12FB /* MultiVanEngineTests.swift */,
+				9C12F3F3C72F318C777AAF76 /* MultiVanExperimentBoardTests.swift */,
 				811A1C9E006CEC882EA822FB /* MultiVanLevelRepositoryTests.swift */,
 				C48DCC55F0F69F382ECE7B89 /* MultiVanLevelTests.swift */,
 				7C8BBBDD9550039E379D32EB /* MultiVanPerformanceMeterTests.swift */,
-				53951ADEE46B714D667930E0 /* MultiVanPlaytestLogTests.swift */,
+				840D0019F654AA37133F6AA5 /* MultiVanSignalTests.swift */,
 				253780D82BAB90952490CCCB /* MultiVanSoundPlayerTests.swift */,
+				E5E79F172CB240DFFB2CA139 /* MultiVanTutorialTests.swift */,
 				AAAF32575B828F8158961DCF /* PrototypeSolutionTests.swift */,
 			);
 			path = Prototype;
@@ -738,6 +810,7 @@
 				14696B23D19BA22DCA1042D7 /* LevelSolvabilityResult.swift */,
 				003704DD962727D365EAB808 /* LevelValidationIssue.swift */,
 				563D441318FC6043290F5415 /* LevelValidator.swift */,
+				0D64B296B07E9DBFE3CE578E /* MultiVanTestBoards.swift */,
 				1E8C158DE5F4578B5030F0D7 /* PrototypeSolutionRunner.swift */,
 				F1D3AFDBE64E9F34E3B2DC56 /* PrototypeSolutionScript.swift */,
 				FD5279438CA33DB0C19A1CA9 /* TestLevelCatalog.swift */,
@@ -754,6 +827,8 @@
 				E8702E9ED3F38B1A8D2CDE67 /* TRCircularMarkerShell.swift */,
 				3EF134C156238A0C9D937219 /* TRConfettiEmitter.swift */,
 				059373775DF13674AF281937 /* TRConfettiScene.swift */,
+				FCEB074606C55C9565675D30 /* TRCozyMenuChrome.swift */,
+				0A1F12D81521B5A5655C3B12 /* TRCozySkyBackground.swift */,
 				415F69E291F49F32954A6253 /* TRCurrencyPill.swift */,
 				CE6FD6A9BE3D0821ACAA7C80 /* TRDailyRoutePlaceholderCard.swift */,
 				8B6D699A9C78F07EBC037154 /* TRDeliveryDotView.swift */,
@@ -796,6 +871,7 @@
 				B15050153CD0E5051D157263 /* TRSettingsSectionCard.swift */,
 				8ADAC4DC85D57DA6B3A5D421 /* TRSettingsSliderRow.swift */,
 				41E5D61ED2A0DE43F01D9F13 /* TRSettingsToggleRow.swift */,
+				B921390FE5C0BC91F507B986 /* TRShopBoardPreview.swift */,
 				BB0A5CB491F18C529CC74603 /* TRShopCategoryPillBar.swift */,
 				C24FC74DD7D0CB43B370434C /* TRShopCosmeticGrid.swift */,
 				F268635BC9A0004613EA68F4 /* TRShopCosmeticOptionCard.swift */,
@@ -812,6 +888,26 @@
 			path = Components;
 			sourceTree = "<group>";
 		};
+		AFFAABA97EA6C301AC8146CB /* LevelMap */ = {
+			isa = PBXGroup;
+			children = (
+				9CA1EBB080890DE672416CCF /* TRCurvedLevelMapLens.swift */,
+				893CFF9EBE3317CCAFB9B25E /* TRCurvedLevelMapScene.swift */,
+				F05D15CA83AC810D2B7B53FA /* TRCurvedLevelMapView.swift */,
+				626688F4C4DF233DBB5705BD /* TRCurvedWorld.swift */,
+				A728F7BBE2F5349E2D935B23 /* TRLevelMapDioramaView.swift */,
+				AD5637CEC252B0BD5E2BAFF6 /* TRLevelMapLawn.swift */,
+				C1C0EC68105810807BCC0DC1 /* TRLevelMapLayout.swift */,
+				289BAADA31B1300FE7560656 /* TRLevelMapScene.swift */,
+				E3B3695A56CB2CFBF90D43FF /* TRLevelMapScenery.swift */,
+				3EFD56316A14460E5208E584 /* TRVillageArt.swift */,
+				BC5292F326AA69273F43227B /* TRVillageLevelMapView.swift */,
+				6B00251FF3EEBFB1F34BE33E /* TRVillageMotion.swift */,
+				926E3CD9F90CFEA2127562FD /* TRVillageRoad.swift */,
+			);
+			path = LevelMap;
+			sourceTree = "<group>";
+		};
 		D88E4DA4A34101D0CED29C93 /* Resources */ = {
 			isa = PBXGroup;
 			children = (
@@ -826,6 +922,7 @@
 		DAFFF046B12A88C55F275430 /* Prototype */ = {
 			isa = PBXGroup;
 			children = (
+				8E14E14F7868F76EAFBB7B33 /* MultiVanAssistance.swift */,
 				C57A0FF368DE7828D0B8EEB0 /* MultiVanAutoplay.swift */,
 				A4519EF374CDA861C406617B /* MultiVanBarrierView.swift */,
 				22266A4C9B4F82C341F77B0C /* MultiVanBoardLayout.swift */,
@@ -833,6 +930,9 @@
 				9FAC5712507353F5B5FD60B3 /* MultiVanBoardStyle.swift */,
 				E84ABF920E259543AD20DD8F /* MultiVanBoardSwitcher.swift */,
 				F3D1FDEDE1681E031CF0E9C4 /* MultiVanBoardView.swift */,
+				9FA7CAF84F14EC923FAB88E8 /* MultiVanCargo.swift */,
+				25CAEA7E41E2B9BC11B1D73E /* MultiVanCargoViews.swift */,
+				5F74451C53722867E7A84922 /* MultiVanCosmetics.swift */,
 				0770D7CF12C1ACFFD8135E45 /* MultiVanDioramaBoardView.swift */,
 				029C9DD95C8B5A6944834187 /* MultiVanDioramaEffects.swift */,
 				65AAC10E1159602CE6707DC3 /* MultiVanDioramaGeometry.swift */,
@@ -843,19 +943,21 @@
 				424DB3A33844F9979A921908 /* MultiVanDioramaSceneView.swift */,
 				5B9AA7EC7352500E4E7C8614 /* MultiVanDioramaSync.swift */,
 				0D8DB95B4F93553409E996F3 /* MultiVanEngine.swift */,
+				DDD30F978289EAAA039BA399 /* MultiVanExperimentsScreen.swift */,
 				9D377447E91FFA14AAF73DAA /* MultiVanFeedback.swift */,
 				BF92971427A3625518B9B08F /* MultiVanGameplayScreen.swift */,
 				D3B5321242E60439528476F8 /* MultiVanHouseView.swift */,
 				F2B49920C99BBC769ACECE54 /* MultiVanHUDChrome.swift */,
 				5B08096B6623C38C2F65FB2A /* MultiVanLevel.swift */,
 				E85098EDE231C9F46CC3980D /* MultiVanLevelRepository.swift */,
+				577460EA20363D6E3860263C /* MultiVanLevelRules.swift */,
 				8C10A99572FBC039617970A4 /* MultiVanPerformanceMeter.swift */,
-				C8260565D0E82C9FA536DF7A /* MultiVanPlaytestLog.swift */,
-				3AED21977EEFAD49E71C5F6D /* MultiVanPrototypeScreen.swift */,
 				AA8E4F739945A7DFF001B19C /* MultiVanRoutePreview.swift */,
+				47BC485BDA5E7B1AA0F54180 /* MultiVanSignal.swift */,
 				DE8DB9D0B70335380602E4EE /* MultiVanSoundPlayer.swift */,
 				6187FAD2E50E89F7D252C3CD /* MultiVanSwitchButton.swift */,
 				C717057F0F2E3F99C14521A7 /* MultiVanSwitchDialView.swift */,
+				7E6B526FA7BEE9DBEB14E5C2 /* MultiVanTutorial.swift */,
 				732CBD1A5D26C23F7511C863 /* MultiVanVanView.swift */,
 			);
 			path = Prototype;
@@ -927,15 +1029,18 @@
 				DCD9AB8B3D8D1486F7C8FC66 /* SwitchNodeViewTests.swift */,
 				71C3DCC3950929FB05DC901D /* TRBottomNavigationBarTests.swift */,
 				CF1DF88BA931FB8DF87A4ABF /* TRConfettiEmitterTests.swift */,
+				0F706AB3554999D2E40D636E /* TRCurvedLevelMapTests.swift */,
 				BCAE6FF35E76DFDBADE30054 /* TRDeliveryDotViewTests.swift */,
 				29CCDB5DCEA604E7F0496B48 /* TRDeliveryTrailViewTests.swift */,
 				DA159D82008BBEE377BE7CDA /* TRDestinationMarkerViewTests.swift */,
 				B173E23EEAFF9C95FCC8F786 /* TREdgeSwipeBackPolicyTests.swift */,
 				BF0CC4388F71CE3B90CBBC80 /* TRGameplayStyleTests.swift */,
+				86F2F290D5EA5A9969510787 /* TRLevelMapLayoutTests.swift */,
 				DB36FE885CC3E6CCDEBA0658 /* TRLevelPathViewTests.swift */,
 				B5A668594640E5A1D7C10886 /* TRMenuHeaderTests.swift */,
 				BCC6D9FEE4600AC2F067BA92 /* TRProfileSummaryTests.swift */,
 				11AB4806C5C7E3100BE7283A /* TRResultSummaryTests.swift */,
+				61ED17B76BA3FAEB37418DB2 /* TRVillageRoadTests.swift */,
 				1CACEEDC98C14DD3B2EEA468 /* UserSettingsRepositoryTests.swift */,
 				2B1F71A0D96F6EE65FC18B50 /* UserSettingsServiceTests.swift */,
 				570E09F240784EF68F83C244 /* Fixtures */,
@@ -945,7 +1050,7 @@
 			path = TinyRoutesTests;
 			sourceTree = "<group>";
 		};
-		"TEMP_AC48BF05-159A-4CCC-95D2-13B67D64606C" /* Resources */ = {
+		"TEMP_EB96E48C-6BDC-4748-B94C-1C8AF5EFAF37" /* Resources */ = {
 			isa = PBXGroup;
 			children = (
 			);
@@ -1036,6 +1141,7 @@
 				F1504A4E45C2F8EB67D3BE7A /* LevelCompleteConfetti.sks in Resources */,
 				91D7C28E1C015CE379FEC0BB /* PrivacyInfo.xcprivacy in Resources */,
 				5753FAACC632DD6B73C6ED25 /* PrototypeLevels in Resources */,
+				C60F6D70BBDFCB0BD8513EBE /* PrototypeSolutions in Resources */,
 				D48E40D1A48B39E7BC66C715 /* PrototypeSounds in Resources */,
 				3FA709903DD3E1C64A959C6B /* background.png in Resources */,
 				B73BE04DA45F79CAE6666794 /* blue_orb.png in Resources */,
@@ -1111,6 +1217,7 @@
 				C085B5C854E7515D89718CCB /* LevelRules.swift in Sources */,
 				84F3A1A4C912645C82AEDD2A /* LevelRuntimeState.swift in Sources */,
 				CB682E3A5073FD1E5B1A7D8E /* LevelSelectScreen.swift in Sources */,
+				B9B818487C6A2B86BF0F63BC /* MultiVanAssistance.swift in Sources */,
 				EFD2E04E6BFF660DE994BB31 /* MultiVanAutoplay.swift in Sources */,
 				18FA07250B9BAA1A8E05EF2F /* MultiVanBarrierView.swift in Sources */,
 				6C99B115AFB6B07BD07D51D6 /* MultiVanBoardLayout.swift in Sources */,
@@ -1118,6 +1225,9 @@
 				B4A0FBD24C412F1FF424B60B /* MultiVanBoardStyle.swift in Sources */,
 				B02CA16809F74B2AE6B7FD8E /* MultiVanBoardSwitcher.swift in Sources */,
 				0F203FFE4F5ECFB42F63138C /* MultiVanBoardView.swift in Sources */,
+				A8AE9CDEBF4F03DA30C7C666 /* MultiVanCargo.swift in Sources */,
+				E55A677E15FF567F9AC78F3B /* MultiVanCargoViews.swift in Sources */,
+				B01FEABCEAAE4ED4F53E5793 /* MultiVanCosmetics.swift in Sources */,
 				837CCD0973B0A09BF305DE55 /* MultiVanDioramaBoardView.swift in Sources */,
 				6136C35EC860F426E7973042 /* MultiVanDioramaEffects.swift in Sources */,
 				7A0FAFCCB481398D3B44FDF6 /* MultiVanDioramaGeometry.swift in Sources */,
@@ -1128,19 +1238,21 @@
 				E9DD21F09646BA5AE01322D3 /* MultiVanDioramaScenery.swift in Sources */,
 				385837680DC7205A88DECFD0 /* MultiVanDioramaSync.swift in Sources */,
 				54EFBB5FC18B9E1745AD0705 /* MultiVanEngine.swift in Sources */,
+				1ADF74934F6F3701A89299BA /* MultiVanExperimentsScreen.swift in Sources */,
 				8355D80C00C53B2312F1457B /* MultiVanFeedback.swift in Sources */,
 				703678187432C8604CFD24D9 /* MultiVanGameplayScreen.swift in Sources */,
 				F9417711AE9C96CD013EF0D6 /* MultiVanHUDChrome.swift in Sources */,
 				6CF5522E29C71BEC1E99ABD9 /* MultiVanHouseView.swift in Sources */,
 				30D08CD19704232DBE9982D8 /* MultiVanLevel.swift in Sources */,
 				FDFD81D64CF0FAB733FFBBD9 /* MultiVanLevelRepository.swift in Sources */,
+				52C7DED7CF909335244C38F7 /* MultiVanLevelRules.swift in Sources */,
 				110FC923AFF4CD17418BF5E2 /* MultiVanPerformanceMeter.swift in Sources */,
-				93BD9E0F787B3818FB9E3070 /* MultiVanPlaytestLog.swift in Sources */,
-				87DED3FBA1212223B26C4AF9 /* MultiVanPrototypeScreen.swift in Sources */,
 				7E3638194B0B8FEF28AE422F /* MultiVanRoutePreview.swift in Sources */,
+				68B8F09DABC920BDE4C5341F /* MultiVanSignal.swift in Sources */,
 				FCADAE930C23AEF2E40A2D13 /* MultiVanSoundPlayer.swift in Sources */,
 				6BFCB365D4E4B5CC5D187E17 /* MultiVanSwitchButton.swift in Sources */,
 				A16B99D8861444B3769E81E0 /* MultiVanSwitchDialView.swift in Sources */,
+				27B1DC94C894C8F1212EB252 /* MultiVanTutorial.swift in Sources */,
 				ADC024DBB7DB99A2E24112ED /* MultiVanVanView.swift in Sources */,
 				A0E778D7B18192EDCE0ECDB7 /* NodeSwitchController.swift in Sources */,
 				A657B28188ABC7873A7C6B80 /* PlayerProfile.swift in Sources */,
@@ -1175,7 +1287,13 @@
 				E98F524CF7F5A2E7CED59352 /* TRCircularMarkerShell.swift in Sources */,
 				EC28EA6303B182A0698FAFFF /* TRConfettiEmitter.swift in Sources */,
 				AB966FA2AE3CE4A1A3BDF464 /* TRConfettiScene.swift in Sources */,
+				8617346B9C605CD902D8C93C /* TRCozyMenuChrome.swift in Sources */,
+				300C83531418939865C374AB /* TRCozySkyBackground.swift in Sources */,
 				0CAB029FF99DF33C5F43AE41 /* TRCurrencyPill.swift in Sources */,
+				A8C78C36F1AC00123CE28452 /* TRCurvedLevelMapLens.swift in Sources */,
+				5DCFB933695115BF0CA8F3A0 /* TRCurvedLevelMapScene.swift in Sources */,
+				DD051666460809E821CBAAE6 /* TRCurvedLevelMapView.swift in Sources */,
+				C7B223C9FF9435E6F5846389 /* TRCurvedWorld.swift in Sources */,
 				E3AE5BDE1D493CB986F3E266 /* TRDailyRoutePlaceholderCard.swift in Sources */,
 				5C1E48E7F514D551B80D2A85 /* TRDeliveryDotView.swift in Sources */,
 				A66817DF09A53BC6DB3FB2A0 /* TRDeliveryTrailView.swift in Sources */,
@@ -1185,6 +1303,11 @@
 				3A6026DA9B0747F7AF393338 /* TRGameplayHUD.swift in Sources */,
 				C6C879E35B0A45FD1A8699A7 /* TRGameplayStyle.swift in Sources */,
 				16CD52A3C4F1D5C7E9760F3C /* TRGlassCardBackground.swift in Sources */,
+				7136A31F75E5C6F787208064 /* TRLevelMapDioramaView.swift in Sources */,
+				62EE6FC9EA5BD7BE83046FE5 /* TRLevelMapLawn.swift in Sources */,
+				FE7C65793E17EF12AD5CA1E6 /* TRLevelMapLayout.swift in Sources */,
+				DBCAED143A6EC8748106A61C /* TRLevelMapScene.swift in Sources */,
+				916755EF6D40482A9360736E /* TRLevelMapScenery.swift in Sources */,
 				81ACE7EA1A2CDFC43E63905F /* TRLevelMapSection.swift in Sources */,
 				5252A517CC9259BCBD509B89 /* TRLevelPathView.swift in Sources */,
 				EDE8594AA7900E4DE2B81BE2 /* TRLevelTile.swift in Sources */,
@@ -1218,6 +1341,7 @@
 				754EF25E54D6FAB97BF5AC71 /* TRSettingsSectionCard.swift in Sources */,
 				9B2F0910007BFD002F35C210 /* TRSettingsSliderRow.swift in Sources */,
 				7ACC6C245639F0DBF8169F3A /* TRSettingsToggleRow.swift in Sources */,
+				C1BBF4095E055DCFC15BB0E6 /* TRShopBoardPreview.swift in Sources */,
 				45AFF398D1918385980ADF4E /* TRShopCategoryPillBar.swift in Sources */,
 				2E5C97F498E8D1F38D59CDB0 /* TRShopCosmeticGrid.swift in Sources */,
 				C32E88E9AF95F6C6C9818063 /* TRShopCosmeticOptionCard.swift in Sources */,
@@ -1230,6 +1354,10 @@
 				90C9CFF145F57B0F5EDA37F2 /* TRShopSectionHeader.swift in Sources */,
 				FF083C62565C03AFDA125B37 /* TRStarCollectorPlaceholderCard.swift in Sources */,
 				2D4E31D7460E797CF0596E4C /* TRTinyRoutesLogo.swift in Sources */,
+				E943EF1FFAD60ADDD4CEED04 /* TRVillageArt.swift in Sources */,
+				C646968FD3E97D39C5466885 /* TRVillageLevelMapView.swift in Sources */,
+				12DF846BD4B0F89F1653F31B /* TRVillageMotion.swift in Sources */,
+				2E672C911ED58AB12E6AA0A3 /* TRVillageRoad.swift in Sources */,
 				B04EF4A680C930534A0A7924 /* TinyRoutesApp.swift in Sources */,
 				20C3785F47268256ABD3B92B /* UserSettings.swift in Sources */,
 				4928E6D6D6AD32AA84CD8E61 /* UserSettingsRepository.swift in Sources */,
@@ -1269,17 +1397,24 @@
 				A16F30B1367426E8D1C64CBB /* MultiVanBoardLayoutTests.swift in Sources */,
 				C1FBA17F552AA5D241DD06EE /* MultiVanBoardParityTests.swift in Sources */,
 				4C6CFBC1019EE75D2F05DB9A /* MultiVanBoardStyleTests.swift in Sources */,
+				8D1AC57EB65BC4A449639345 /* MultiVanCargoTests.swift in Sources */,
+				AC7B80FC38FE6EB200EDA7F9 /* MultiVanContentPackTests.swift in Sources */,
+				BA01986AE571F4E9161B31ED /* MultiVanCosmeticsTests.swift in Sources */,
+				392D7BAF1758190975A3B4F5 /* MultiVanDeliberatePlayTests.swift in Sources */,
 				4623EC9694951B5B772142D4 /* MultiVanDioramaEffectsTests.swift in Sources */,
 				B3D3EBD0AA7EF8B8D512A54E /* MultiVanDioramaLawnTests.swift in Sources */,
 				BF95452732DEF68606CFFD9B /* MultiVanDioramaSceneryTests.swift in Sources */,
 				EFC3A8F34C06DADA812D57A2 /* MultiVanDioramaSyncTests.swift in Sources */,
 				5632FE71E21E6D784DC4B56B /* MultiVanDioramaTests.swift in Sources */,
 				3769946EEAD62C8750590B19 /* MultiVanEngineTests.swift in Sources */,
+				364F4534576F96920A73F5C1 /* MultiVanExperimentBoardTests.swift in Sources */,
 				CE7071773CF42761E6A7397B /* MultiVanLevelRepositoryTests.swift in Sources */,
 				2F9C56F6D6C6AAA5D678B953 /* MultiVanLevelTests.swift in Sources */,
 				3B673AEA85BF8C45782FFEFE /* MultiVanPerformanceMeterTests.swift in Sources */,
-				F99EFBD47A7850B4907B78E8 /* MultiVanPlaytestLogTests.swift in Sources */,
+				80063435C9914383140585A4 /* MultiVanSignalTests.swift in Sources */,
 				05DCE508A641627D8417CE84 /* MultiVanSoundPlayerTests.swift in Sources */,
+				8FA09232A0798665F4133C37 /* MultiVanTestBoards.swift in Sources */,
+				8DC24AD479F799D6DEC032DA /* MultiVanTutorialTests.swift in Sources */,
 				54A79673924A643EF0F84A46 /* ProfileSummaryServiceTests.swift in Sources */,
 				14FCB5CB64F8567388A6F1D3 /* PrototypeSolutionRunner.swift in Sources */,
 				96E07378C0A906A448E56B7F /* PrototypeSolutionScript.swift in Sources */,
@@ -1296,15 +1431,18 @@
 				B22C95936C3DBB1BAA5C77DC /* SwitchNodeViewTests.swift in Sources */,
 				F2CDC9E307FB911EB86227A2 /* TRBottomNavigationBarTests.swift in Sources */,
 				E3FB663028FB06D051DB81C0 /* TRConfettiEmitterTests.swift in Sources */,
+				533574D0A2632B21B38AD708 /* TRCurvedLevelMapTests.swift in Sources */,
 				8F7D01504DDF30EA83929D74 /* TRDeliveryDotViewTests.swift in Sources */,
 				CE004A72F0F151745BD9A85B /* TRDeliveryTrailViewTests.swift in Sources */,
 				C61908F46D67D6B0C2C43DC1 /* TRDestinationMarkerViewTests.swift in Sources */,
 				26C375B98C7A8AF7D90A08A3 /* TREdgeSwipeBackPolicyTests.swift in Sources */,
 				F47ED91FDE86BB5A9D017415 /* TRGameplayStyleTests.swift in Sources */,
+				9F5603F1D930A75E61D7A5FA /* TRLevelMapLayoutTests.swift in Sources */,
 				AB50103C2414AC2398E81F2B /* TRLevelPathViewTests.swift in Sources */,
 				DFF7BE618702FB3D310420CD /* TRMenuHeaderTests.swift in Sources */,
 				46D325479952E85A89192775 /* TRProfileSummaryTests.swift in Sources */,
 				6C19A92B9F105B496A8D86B0 /* TRResultSummaryTests.swift in Sources */,
+				22501B426ACBB377A629577A /* TRVillageRoadTests.swift in Sources */,
 				11C816241E92A32BBEC27B84 /* TestLevelCatalog.swift in Sources */,
 				37070AEAAE1484C0E57688FA /* UserSettingsRepositoryTests.swift in Sources */,
 				FABC539B70856A6A7E43AC14 /* UserSettingsServiceTests.swift in Sources */,

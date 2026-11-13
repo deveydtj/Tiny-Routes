@@ -23,7 +23,7 @@ struct TRSettingsDangerRow: View {
             HStack(spacing: 12) {
                 TRSettingsIconCircle(
                     systemName: iconSystemName,
-                    tint: TRGameplayStyle.Colors.resultFailureRed
+                    tint: TRVillagePalette.roofs[0]
                 )
 
                 TRSettingsTextBlock(title: title, subtitle: subtitle)
@@ -31,8 +31,8 @@ struct TRSettingsDangerRow: View {
                 Spacer(minLength: 8)
 
                 Image(systemName: "chevron.right")
-                    .font(.system(size: 14, weight: .black))
-                    .foregroundStyle(TRGameplayStyle.Colors.resultFailureRed.opacity(0.72))
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundStyle(TRVillagePalette.roofs[0].opacity(0.72))
                     .accessibilityHidden(true)
             }
             .frame(maxWidth: .infinity, minHeight: 54, alignment: .leading)
@@ -60,5 +60,5 @@ struct TRSettingsDangerRow: View {
         action: {}
     )
     .padding(20)
-    .background(Color(red: 0.86, green: 0.94, blue: 0.98))
+    .background(TRVillageSky())
 }

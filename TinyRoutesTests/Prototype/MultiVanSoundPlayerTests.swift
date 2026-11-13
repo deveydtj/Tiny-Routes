@@ -34,7 +34,8 @@ final class MultiVanSoundPlayerTests: XCTestCase {
                 self.voices.append(voice)
                 return voice
             },
-            configureSession: {}, activateSession: { self.activations += 1 }
+            configureSession: {}, activateSession: { self.activations += 1 },
+            perform: { $0() }
         )
     }
 
@@ -60,12 +61,12 @@ final class MultiVanSoundPlayerTests: XCTestCase {
         let missing = MultiVanSoundPlayer(resourceURL: { _ in nil }, makeVoice: { _ in
             attempts += 1
             throw CocoaError(.fileReadNoSuchFile)
-        }, configureSession: {}, activateSession: { XCTFail("Missing assets must not activate audio") })
+        }, configureSession: {}, activateSession: { XCTFail("Missing assets must not activate audio") }, perform: { $0() })
         missing.play(.go)
         XCTAssertEqual(attempts, 0)
         let unreadable = MultiVanSoundPlayer(resourceURL: { URL(fileURLWithPath: "/\($0).caf") }, makeVoice: { _ in
             throw CocoaError(.fileReadCorruptFile)
-        }, configureSession: {}, activateSession: {})
+        }, configureSession: {}, activateSession: {}, perform: { $0() })
         unreadable.play(.allDelivered)
     }
 
@@ -165,11 +166,39 @@ final class MultiVanSoundPlayerTests: XCTestCase {
         XCTAssertEqual(haptics, [.error])
     }
 
+    func testVoicesAreOnlyTouchedThroughPerform() {
+        var queued: [() -> Void] = []
+        var played: [String] = []
+        var activations = 0
+        let player = MultiVanSoundPlayer(
+            resourceURL: { URL(fileURLWithPath: "/\($0).caf") },
+            makeVoice: { url in
+                let voice = Voice(url.deletingPathExtension().lastPathComponent)
+                voice.onPlay = { played.append($0) }
+                return voice
+            },
+            configureSession: {}, activateSession: { activations += 1 },
+            perform: { queued.append($0) }
+        )
+        // A tap only hands the voices a request; the session and the sound start on the queue.
+        player.update(settings: UserSettings())
+        player.play(.switchTapped)
+        XCTAssertTrue(played.isEmpty)
+        XCTAssertEqual(activations, 0)
+        queued.forEach { $0() }
+        XCTAssertEqual(played, ["click"])
+        XCTAssertEqual(activations, 1)
+        // Unchanged settings, passed with every event batch, queue nothing.
+        queued = []
+        player.update(settings: UserSettings())
+        XCTAssertTrue(queued.isEmpty)
+    }
+
     func testSessionFailureIsGraceful() {
         let player = MultiVanSoundPlayer(resourceURL: { URL(fileURLWithPath: "/\($0).caf") },
             makeVoice: { Voice($0.lastPathComponent) },
             configureSession: {},
-            activateSession: { throw CocoaError(.featureUnsupported) })
+            activateSession: { throw CocoaError(.featureUnsupported) }, perform: { $0() })
         player.play(.go)
     }
 

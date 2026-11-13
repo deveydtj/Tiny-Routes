@@ -1,0 +1,123 @@
+{
+  "id": "experiment_pickup_a",
+  "name": "Pick Up First",
+  "scenerySeed": 21,
+  "schemaVersion": 2,
+  "biome": "depot",
+  "graph": {
+    "nodes": [
+      {
+        "id": "start",
+        "x": 2,
+        "y": 0,
+        "outgoingEdgeIDs": [
+          "approach"
+        ]
+      },
+      {
+        "id": "fork",
+        "x": 2,
+        "y": 1,
+        "outgoingEdgeIDs": [
+          "direct",
+          "tour"
+        ]
+      },
+      {
+        "id": "pickup",
+        "x": 0,
+        "y": 2,
+        "outgoingEdgeIDs": [
+          "return"
+        ]
+      },
+      {
+        "id": "join",
+        "x": 2,
+        "y": 4,
+        "outgoingEdgeIDs": [
+          "home"
+        ]
+      },
+      {
+        "id": "house",
+        "x": 2,
+        "y": 6,
+        "outgoingEdgeIDs": []
+      }
+    ],
+    "edges": [
+      {
+        "id": "approach",
+        "fromNodeID": "start",
+        "toNodeID": "fork",
+        "roadShape": "verticalFirst"
+      },
+      {
+        "id": "direct",
+        "fromNodeID": "fork",
+        "toNodeID": "join",
+        "roadShape": "verticalFirst"
+      },
+      {
+        "id": "tour",
+        "fromNodeID": "fork",
+        "toNodeID": "pickup",
+        "roadShape": "horizontalFirst"
+      },
+      {
+        "id": "return",
+        "fromNodeID": "pickup",
+        "toNodeID": "join",
+        "roadShape": "verticalFirst"
+      },
+      {
+        "id": "home",
+        "fromNodeID": "join",
+        "toNodeID": "house",
+        "roadShape": "verticalFirst"
+      }
+    ]
+  },
+  "vans": [
+    {
+      "id": "red",
+      "color": "red",
+      "startNodeID": "start",
+      "departDelay": 0
+    }
+  ],
+  "houses": [
+    {
+      "nodeID": "house",
+      "color": "red"
+    }
+  ],
+  "packages": [
+    {
+      "id": "red_parcel",
+      "nodeID": "pickup",
+      "ownerVanID": "red"
+    }
+  ],
+  "initialSwitchEdges": {
+    "fork": "direct"
+  },
+  "parChanges": 1,
+  "liveSwitchNodeIDs": [],
+  "hint": "Red must collect its parcel before it goes home. Send it round by the pickup.",
+  "hintFocusNodeIDs": [
+    "fork"
+  ],
+  "tutorial": [
+    {
+      "trigger": "start",
+      "title": "Pick up first",
+      "body": "Red needs its parcel. Tap the switch to send it past the pickup.",
+      "focusNodeIDs": [
+        "fork"
+      ],
+      "practice": "route"
+    }
+  ]
+}

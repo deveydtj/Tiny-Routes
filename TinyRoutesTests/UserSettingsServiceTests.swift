@@ -17,7 +17,7 @@ final class UserSettingsServiceTests: XCTestCase {
         XCTAssertFalse(settings.isDailyReminderEnabled)
         XCTAssertEqual(settings.dailyReminderHour, 18)
         XCTAssertEqual(settings.dailyReminderMinute, 0)
-        XCTAssertEqual(settings.boardStyle, .flat)
+        XCTAssertEqual(settings.boardStyle, .diorama)
         XCTAssertTrue(settings.usesFlatBoardInLowPowerMode)
     }
 

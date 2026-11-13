@@ -23,7 +23,9 @@ func sameBytes(_ source: URL, _ destination: URL) throws {
     precondition(original == packaged, "Resource mismatch: \(destination.path)")
 }
 
-let expectedIDs = (1...12).map { String(format: "level_%03d", $0) }
+let expectedIDs = try files(resources.appendingPathComponent("PrototypeLevels"), extension: "json")
+    .map { $0.deletingPathExtension().lastPathComponent }
+precondition(!expectedIDs.isEmpty, "Source gameplay levels are missing")
 let levels = bundle.urls(forResourcesWithExtension: "json", subdirectory: "PrototypeLevels") ?? []
 precondition(levels.map { $0.deletingPathExtension().lastPathComponent }.sorted() == expectedIDs)
 for level in levels {
@@ -59,9 +61,28 @@ for sprite in sprites {
 try sameBytes(resources.appendingPathComponent("LevelCompleteConfetti.sks"), app.appendingPathComponent("LevelCompleteConfetti.sks"))
 precondition(manager.fileExists(atPath: app.appendingPathComponent("Assets.car").path))
 let packaged = manager.enumerator(at: app, includingPropertiesForKeys: nil)!.allObjects as! [URL]
-print("GAMEPLAY RESOURCES PASSED: 12 multi-van level JSONs, no retired level JSONs, 10 decodable CAFs, \(sprites.count) sprites, confetti and asset catalog")
+print("GAMEPLAY RESOURCES PASSED: \(expectedIDs.count) multi-van level JSONs, no retired level JSONs, 10 decodable CAFs, \(sprites.count) sprites, confetti and asset catalog")
 print("Identity: \(bundle.bundleIdentifier ?? "missing"), \(bundle.object(forInfoDictionaryKey: "CFBundleShortVersionString") ?? "missing") (\(bundle.object(forInfoDictionaryKey: "CFBundleVersion") ?? "missing"))")
-let unwanted = packaged.filter { $0.path.contains("PrototypeSolutions") || $0.lastPathComponent.hasSuffix(".solution.json") || ["md", "xctest"].contains($0.pathExtension) }
+// Help shows one step of a level's recorded solution, so the app carries those
+// scripts: one per bundled level, byte for byte what the tests prove, and
+// nothing else from the test tree.
+let solutionSource = root.appendingPathComponent("TinyRoutesTests/Resources/PrototypeSolutions")
+let solutionFolder = app.appendingPathComponent("PrototypeSolutions").standardizedFileURL
+var allowed = Set([solutionFolder.path])
+for id in expectedIDs {
+    let name = "\(id).solution.json"
+    let bundled = solutionFolder.appendingPathComponent(name)
+    guard manager.fileExists(atPath: bundled.path) else {
+        print("BLOCKED: level \(id) has no bundled solution for help to read: \(name)")
+        exit(1)
+    }
+    try sameBytes(solutionSource.appendingPathComponent(name), bundled)
+    allowed.insert(bundled.path)
+}
+let unwanted = packaged.filter { url in
+    if allowed.contains(url.standardizedFileURL.path) { return false }
+    return url.path.contains("PrototypeSolutions") || url.lastPathComponent.hasSuffix(".solution.json") || ["md", "xctest"].contains(url.pathExtension)
+}
 for url in unwanted { print("BLOCKED: unexpected bundled authoring/test file: \(url.path)") }
 let privacy = app.appendingPathComponent("PrivacyInfo.xcprivacy")
 guard manager.fileExists(atPath: privacy.path) else {
@@ -70,4 +91,4 @@ guard manager.fileExists(atPath: privacy.path) else {
 }
 try sameBytes(resources.appendingPathComponent("PrivacyInfo.xcprivacy"), privacy)
 guard unwanted.isEmpty else { exit(1) }
-print("FINAL PACKAGING PASSED: privacy manifest matches; no solutions/tests/docs")
+print("FINAL PACKAGING PASSED: privacy manifest matches; \(expectedIDs.count) help solutions match their levels; no stray solutions/tests/docs")

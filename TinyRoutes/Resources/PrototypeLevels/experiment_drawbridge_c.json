@@ -1,0 +1,148 @@
+{
+  "id": "experiment_drawbridge_c",
+  "name": "Bridge Down",
+  "scenerySeed": 41,
+  "biome": "harbor",
+  "graph": {
+    "nodes": [
+      {
+        "id": "red_start",
+        "x": 2,
+        "y": 0,
+        "outgoingEdgeIDs": [
+          "red_bridge"
+        ]
+      },
+      {
+        "id": "red_mid",
+        "x": 2,
+        "y": 3,
+        "outgoingEdgeIDs": [
+          "red_home"
+        ]
+      },
+      {
+        "id": "red_house",
+        "x": 2,
+        "y": 6,
+        "outgoingEdgeIDs": []
+      },
+      {
+        "id": "blue_start",
+        "x": 4,
+        "y": 2,
+        "outgoingEdgeIDs": [
+          "blue_approach"
+        ]
+      },
+      {
+        "id": "blue_fork",
+        "x": 4,
+        "y": 3,
+        "outgoingEdgeIDs": [
+          "blue_short",
+          "blue_long"
+        ]
+      },
+      {
+        "id": "blue_bend",
+        "x": 3,
+        "y": 4,
+        "outgoingEdgeIDs": [
+          "blue_return"
+        ]
+      },
+      {
+        "id": "blue_join",
+        "x": 4,
+        "y": 5,
+        "outgoingEdgeIDs": [
+          "blue_home"
+        ]
+      },
+      {
+        "id": "blue_house",
+        "x": 0,
+        "y": 5,
+        "outgoingEdgeIDs": []
+      }
+    ],
+    "edges": [
+      {
+        "id": "red_bridge",
+        "fromNodeID": "red_start",
+        "toNodeID": "red_mid",
+        "roadShape": "verticalFirst"
+      },
+      {
+        "id": "red_home",
+        "fromNodeID": "red_mid",
+        "toNodeID": "red_house",
+        "roadShape": "verticalFirst"
+      },
+      {
+        "id": "blue_approach",
+        "fromNodeID": "blue_start",
+        "toNodeID": "blue_fork",
+        "roadShape": "verticalFirst"
+      },
+      {
+        "id": "blue_short",
+        "fromNodeID": "blue_fork",
+        "toNodeID": "blue_join",
+        "roadShape": "verticalFirst"
+      },
+      {
+        "id": "blue_long",
+        "fromNodeID": "blue_fork",
+        "toNodeID": "blue_bend",
+        "roadShape": "horizontalFirst"
+      },
+      {
+        "id": "blue_return",
+        "fromNodeID": "blue_bend",
+        "toNodeID": "blue_join",
+        "roadShape": "verticalFirst"
+      },
+      {
+        "id": "blue_home",
+        "fromNodeID": "blue_join",
+        "toNodeID": "blue_house",
+        "roadShape": "horizontalFirst"
+      }
+    ]
+  },
+  "vans": [
+    {
+      "id": "red",
+      "color": "red",
+      "startNodeID": "red_start",
+      "departDelay": 0
+    },
+    {
+      "id": "blue",
+      "color": "blue",
+      "startNodeID": "blue_start",
+      "departDelay": 0
+    }
+  ],
+  "houses": [
+    {
+      "nodeID": "red_house",
+      "color": "red"
+    },
+    {
+      "nodeID": "blue_house",
+      "color": "blue"
+    }
+  ],
+  "initialSwitchEdges": {
+    "blue_fork": "blue_long"
+  },
+  "parChanges": 0,
+  "liveSwitchNodeIDs": [],
+  "hint": "No bridge to wait for. Red is quick, so Blue should take the long way round.",
+  "hintFocusNodeIDs": [
+    "blue_fork"
+  ]
+}

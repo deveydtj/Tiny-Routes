@@ -4,20 +4,15 @@ struct TRProfileRewardProgressCard: View {
     let rewardProgress: TRProfileRewardProgress
 
     var body: some View {
-        ViewThatFits(in: .horizontal) {
-            HStack(spacing: 14) {
-                mainContent
-                rewardTile
-            }
-
-            VStack(alignment: .leading, spacing: 14) {
-                mainContent
-                rewardTile
-            }
+        // The text wraps to make room for the chest, even on a narrow phone.
+        HStack(spacing: 14) {
+            mainContent
+                .frame(maxWidth: .infinity, alignment: .leading)
+            rewardTile
         }
         .padding(18)
         .background {
-            TRGlassCardBackground(cornerRadius: 25)
+            MultiVanHUDCardBackground(cornerRadius: 26)
         }
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(Text("\(rewardProgress.title), \(rewardProgress.progressText), reward \(rewardProgress.rewardCoins) coins"))
@@ -25,30 +20,30 @@ struct TRProfileRewardProgressCard: View {
 
     private var mainContent: some View {
         HStack(spacing: 14) {
-            TRProfileStatIcon(systemImage: "trophy.fill", color: TRGameplayStyle.Colors.resultGold, size: 58)
+            TRProfileStatIcon(systemImage: "trophy.fill", color: Color(hex: 0xE3A51C), size: 54)
 
             VStack(alignment: .leading, spacing: 7) {
                 Text(rewardProgress.title)
-                    .font(.system(size: 20, weight: .black, design: .rounded))
-                    .foregroundStyle(TRGameplayStyle.Colors.titleNavy)
+                    .font(.system(size: 19, weight: .bold, design: .rounded))
+                    .foregroundStyle(TRVillagePalette.navy)
                     .lineLimit(1)
                     .minimumScaleFactor(0.76)
 
                 Text(rewardProgress.subtitle)
                     .font(.system(size: 13, weight: .semibold, design: .rounded))
-                    .foregroundStyle(TRGameplayStyle.Colors.secondaryText)
+                    .foregroundStyle(TRVillagePalette.slate)
                     .lineLimit(2)
                     .minimumScaleFactor(0.76)
 
                 TRProgressBar(
                     progress: rewardProgress.progress,
                     height: 9,
-                    fillColor: TRGameplayStyle.Colors.successGreen
+                    fillColor: MultiVanHUDStyle.pine
                 )
 
                 Text(rewardProgress.progressText)
-                    .font(.system(size: 12, weight: .black, design: .rounded))
-                    .foregroundStyle(TRGameplayStyle.Colors.secondaryText)
+                    .font(.system(size: 12, weight: .semibold, design: .rounded))
+                    .foregroundStyle(TRVillagePalette.slate)
                     .monospacedDigit()
             }
         }
@@ -59,20 +54,17 @@ struct TRProfileRewardProgressCard: View {
             TRProfileRewardChestIcon(size: 48)
 
             HStack(spacing: 3) {
-                SpriteImage(name: "gold_coin")
-                    .scaledToFit()
-                    .frame(width: 18, height: 18)
+                TRVillageCoin(size: 15)
 
                 Text("\(rewardProgress.rewardCoins)")
-                    .font(.system(size: 15, weight: .black, design: .rounded))
-                    .foregroundStyle(TRGameplayStyle.Colors.titleNavy)
+                    .font(.system(size: 15, weight: .bold, design: .rounded))
+                    .foregroundStyle(TRVillagePalette.navy)
                     .monospacedDigit()
             }
         }
         .frame(width: 78, height: 94)
         .background {
-            RoundedRectangle(cornerRadius: 20, style: .continuous)
-                .fill(Color(red: 0.94, green: 0.97, blue: 1.00).opacity(0.95))
+            TRCozyWellBackground(cornerRadius: 20)
         }
     }
 }
@@ -83,5 +75,5 @@ struct TRProfileRewardProgressCard: View {
         TRProfileRewardProgressCard(rewardProgress: TRProfileSummary.emptyPreview.rewardProgress)
     }
     .padding(20)
-    .background(Color(red: 0.86, green: 0.94, blue: 0.98))
+    .background(TRVillageSky())
 }

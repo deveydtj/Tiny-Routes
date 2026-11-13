@@ -1,0 +1,245 @@
+{
+  "id": "level_019",
+  "name": "Neighborhood Round",
+  "scenerySeed": 19,
+  "schemaVersion": 2,
+  "biome": "depot",
+  "graph": {
+    "nodes": [
+      {
+        "id": "red_start",
+        "x": 2,
+        "y": 0,
+        "outgoingEdgeIDs": [
+          "red_approach"
+        ]
+      },
+      {
+        "id": "red_fork",
+        "x": 2,
+        "y": 1,
+        "outgoingEdgeIDs": [
+          "red_direct",
+          "red_tour"
+        ]
+      },
+      {
+        "id": "way_fork",
+        "x": 1,
+        "y": 2,
+        "outgoingEdgeIDs": [
+          "way_long",
+          "way_short"
+        ]
+      },
+      {
+        "id": "long_bend",
+        "x": 0,
+        "y": 5,
+        "outgoingEdgeIDs": [
+          "long_return"
+        ]
+      },
+      {
+        "id": "red_pickup",
+        "x": 1,
+        "y": 4,
+        "outgoingEdgeIDs": [
+          "red_collected"
+        ]
+      },
+      {
+        "id": "red_join",
+        "x": 2,
+        "y": 4,
+        "outgoingEdgeIDs": [
+          "red_home"
+        ]
+      },
+      {
+        "id": "red_house",
+        "x": 4,
+        "y": 5,
+        "outgoingEdgeIDs": []
+      },
+      {
+        "id": "blue_start",
+        "x": 3,
+        "y": 0,
+        "outgoingEdgeIDs": [
+          "blue_approach"
+        ]
+      },
+      {
+        "id": "blue_fork",
+        "x": 3,
+        "y": 2,
+        "outgoingEdgeIDs": [
+          "blue_direct",
+          "blue_tour"
+        ]
+      },
+      {
+        "id": "blue_pickup",
+        "x": 4,
+        "y": 3,
+        "outgoingEdgeIDs": [
+          "blue_return"
+        ]
+      },
+      {
+        "id": "blue_join",
+        "x": 3,
+        "y": 4,
+        "outgoingEdgeIDs": [
+          "blue_home"
+        ]
+      },
+      {
+        "id": "blue_house",
+        "x": 3,
+        "y": 6,
+        "outgoingEdgeIDs": []
+      }
+    ],
+    "edges": [
+      {
+        "id": "red_approach",
+        "fromNodeID": "red_start",
+        "toNodeID": "red_fork",
+        "roadShape": "verticalFirst"
+      },
+      {
+        "id": "red_direct",
+        "fromNodeID": "red_fork",
+        "toNodeID": "red_join",
+        "roadShape": "verticalFirst"
+      },
+      {
+        "id": "red_tour",
+        "fromNodeID": "red_fork",
+        "toNodeID": "way_fork",
+        "roadShape": "horizontalFirst"
+      },
+      {
+        "id": "way_long",
+        "fromNodeID": "way_fork",
+        "toNodeID": "long_bend",
+        "roadShape": "horizontalFirst"
+      },
+      {
+        "id": "way_short",
+        "fromNodeID": "way_fork",
+        "toNodeID": "red_pickup",
+        "roadShape": "verticalFirst"
+      },
+      {
+        "id": "long_return",
+        "fromNodeID": "long_bend",
+        "toNodeID": "red_pickup",
+        "roadShape": "horizontalFirst"
+      },
+      {
+        "id": "red_collected",
+        "fromNodeID": "red_pickup",
+        "toNodeID": "red_join",
+        "roadShape": "horizontalFirst"
+      },
+      {
+        "id": "red_home",
+        "fromNodeID": "red_join",
+        "toNodeID": "red_house",
+        "roadShape": "verticalFirst"
+      },
+      {
+        "id": "blue_approach",
+        "fromNodeID": "blue_start",
+        "toNodeID": "blue_fork",
+        "roadShape": "verticalFirst"
+      },
+      {
+        "id": "blue_direct",
+        "fromNodeID": "blue_fork",
+        "toNodeID": "blue_join",
+        "roadShape": "verticalFirst"
+      },
+      {
+        "id": "blue_tour",
+        "fromNodeID": "blue_fork",
+        "toNodeID": "blue_pickup",
+        "roadShape": "horizontalFirst"
+      },
+      {
+        "id": "blue_return",
+        "fromNodeID": "blue_pickup",
+        "toNodeID": "blue_join",
+        "roadShape": "verticalFirst"
+      },
+      {
+        "id": "blue_home",
+        "fromNodeID": "blue_join",
+        "toNodeID": "blue_house",
+        "roadShape": "verticalFirst"
+      }
+    ]
+  },
+  "vans": [
+    {
+      "id": "red",
+      "color": "red",
+      "startNodeID": "red_start",
+      "departDelay": 0
+    },
+    {
+      "id": "blue",
+      "color": "blue",
+      "startNodeID": "blue_start",
+      "departDelay": 3.3
+    }
+  ],
+  "houses": [
+    {
+      "nodeID": "red_house",
+      "color": "red"
+    },
+    {
+      "nodeID": "blue_house",
+      "color": "blue"
+    }
+  ],
+  "packages": [
+    {
+      "id": "red_parcel",
+      "nodeID": "red_pickup",
+      "ownerVanID": "red"
+    },
+    {
+      "id": "blue_parcel",
+      "nodeID": "blue_pickup",
+      "ownerVanID": "blue"
+    }
+  ],
+  "initialSwitchEdges": {
+    "red_fork": "red_direct",
+    "way_fork": "way_long",
+    "blue_fork": "blue_direct"
+  },
+  "parChanges": 3,
+  "liveSwitchNodeIDs": [],
+  "hint": "Both vans go round for their parcels. Blue's trip brings it to the crossing late, so send Red the short way to get there first.",
+  "hintFocusNodeIDs": [
+    "red_fork",
+    "blue_fork",
+    "way_fork"
+  ],
+  "tutorial": [
+    {
+      "trigger": "crash",
+      "title": "Same crossing, same time",
+      "body": "Red's long way round meets Blue at the crossing. Try Red's short road.",
+      "focusNodeIDs": [
+        "way_fork"
+      ]
+    }
+  ]
+}

@@ -151,20 +151,21 @@ final class PrototypeSolutionTests: XCTestCase {
         for tapCount in 0...3 {
             let expectedEdge = ["to_right_barrier", "to_top_barrier", "to_house", "to_right_barrier"][tapCount]
             XCTAssertEqual(engine.runtimeGraph.nodesByID["switch"]?.activeOutgoingEdgeID, expectedEdge)
-            XCTAssertEqual(engine.changeCount, tapCount % 3)
+            XCTAssertEqual(engine.changeCount, tapCount)
             XCTAssertEqual(engine.previewRoutes.first?.ending, tapCount == 2 ? .matchingHouse : .deadEnd)
             let result = try PrototypeSolutionRunner.run(level: level,
                                                         script: .init(planTaps: Array(repeating: "switch", count: tapCount)))
             let expected: MultiVanEngine.Outcome = tapCount == 2 ? .win : .failStuck(
                 vanID: "red", nodeID: tapCount == 1 ? "top_barrier" : "right_barrier")
             XCTAssertEqual(result.outcome, expected)
-            XCTAssertEqual(result.changeCount, tapCount % 3)
+            XCTAssertEqual(result.changeCount, tapCount)
             XCTAssertEqual(engine.tapSwitch(nodeID: "switch"), .accepted)
         }
-        // A full extra cycle must not inflate MV-07's configuration-based count.
-        let wrapped = try PrototypeSolutionRunner.verify(level: level,
-                                                         script: .init(planTaps: Array(repeating: "switch", count: 5)))
-        XCTAssertEqual(wrapped.changeCount, 2)
+        // A full extra cycle still wins, but every tap counts against par.
+        let wrapped = try PrototypeSolutionRunner.run(level: level,
+                                                      script: .init(planTaps: Array(repeating: "switch", count: 5)))
+        XCTAssertEqual(wrapped.outcome, .win)
+        XCTAssertEqual(wrapped.changeCount, 5)
     }
 
     func testLevelFiveRequiresBothColourRoutesAtPar() throws {
@@ -200,14 +201,15 @@ final class PrototypeSolutionTests: XCTestCase {
                 }
             }
         }
-        // An extra full cycle preserves MV-07's configuration-based par.
-        let wrapped = try PrototypeSolutionRunner.verify(level: level, script: .init(
+        // An extra full cycle still wins, but every tap counts against par.
+        let wrapped = try PrototypeSolutionRunner.run(level: level, script: .init(
             planTaps: ["red_switch", "red_switch", "red_switch", "blue_switch"]))
-        XCTAssertEqual(wrapped.changeCount, 2)
+        XCTAssertEqual(wrapped.outcome, .win)
+        XCTAssertEqual(wrapped.changeCount, 4)
     }
 
-    func testLevelSixConvoyDepartureSpacingLiveSplitAndBothDeliveries() throws {
-        let level = try level("level_006")
+    func testLevelSevenConvoyDepartureSpacingLiveSplitAndBothDeliveries() throws {
+        let level = try level("level_007")
         let script = try PrototypeSolutionScript.load(levelID: level.id)
         XCTAssertTrue(script.planTaps.isEmpty)
         XCTAssertEqual(script.liveTaps.count, 1)
@@ -285,14 +287,107 @@ final class PrototypeSolutionTests: XCTestCase {
         XCTAssertEqual(recorded.vans.map(\.position), engine.vans.map(\.position))
     }
 
-    func testLevelSixCannotWinWithEitherFrozenConfiguration() throws {
-        let level = try level("level_006")
+    func testLevelSevenCannotWinWithEitherFrozenConfiguration() throws {
+        let level = try level("level_007")
         let untouched = try PrototypeSolutionRunner.run(level: level, script: .init())
         XCTAssertEqual(untouched.outcome, .failWrongHouse(vanID: "blue", houseNodeID: "red_house"))
         XCTAssertEqual(untouched.changeCount, 0)
         let flipped = try PrototypeSolutionRunner.run(level: level, script: .init(planTaps: ["switch"]))
         XCTAssertEqual(flipped.outcome, .failWrongHouse(vanID: "red", houseNodeID: "blue_house"))
         XCTAssertEqual(flipped.changeCount, 1)
+    }
+
+    /// The stretch between the first van clearing a live switch and the next
+    /// van locking it, with no live input.
+    private func liveWindow(_ level: MultiVanLevel, switchID: String, planTaps: [String] = []) throws
+        -> (unlocked: Double, relocked: Double) {
+        let run = try trace(level, script: .init(planTaps: planTaps))
+        let first = try XCTUnwrap(run.samples.first { $0.locked.contains(switchID) })
+        let unlocked = try XCTUnwrap(run.samples.first { $0.time > first.time && !$0.locked.contains(switchID) })
+        let relocked = try XCTUnwrap(run.samples.first { $0.time > unlocked.time && $0.locked.contains(switchID) })
+        return (unlocked.time, relocked.time)
+    }
+
+    func testLevelSixWaitForItIntroducesLiveSwitchesWithMoreTimeThanConvoy() throws {
+        let level = try level("level_006")
+        let script = try PrototypeSolutionScript.load(levelID: level.id)
+        XCTAssertTrue(script.planTaps.isEmpty)
+        XCTAssertEqual(script.liveTaps.map(\.nodeID), ["switch"])
+        XCTAssertEqual(level.parChanges, 1)
+        XCTAssertEqual(level.liveSwitchNodeIDs, ["switch"])
+        XCTAssertEqual(level.vans.map(\.departDelay), [0, 0], "Blue's longer road, not a hidden delay, makes it second")
+        XCTAssertEqual(level.tutorialTip(for: .start)?.focusNodeIDs, ["switch"])
+
+        let initial = try MultiVanEngine(level: level)
+        XCTAssertEqual(initial.previewRoutes.map(\.ending), [.matchingHouse, .wrongHouse])
+        let untouched = try PrototypeSolutionRunner.run(level: level, script: .init())
+        XCTAssertEqual(untouched.outcome, .failWrongHouse(vanID: "blue", houseNodeID: "red_house"))
+        let flipped = try PrototypeSolutionRunner.run(level: level, script: .init(planTaps: ["switch"]))
+        XCTAssertEqual(flipped.outcome, .failWrongHouse(vanID: "red", houseNodeID: "blue_house"))
+
+        let run = try trace(level, script: script)
+        XCTAssertEqual(run.engine.outcome, .win)
+        XCTAssertEqual(run.engine.changeCount, level.parChanges)
+        XCTAssertTrue(minimumSeparation(run.samples) > 1.5, "Blue never closes on Red")
+
+        // The first live lesson gets at least twice Convoy's time to act.
+        let window = try liveWindow(level, switchID: "switch")
+        let convoy = try liveWindow(try self.level("level_007"), switchID: "switch")
+        XCTAssertTrue(window.relocked - window.unlocked >= 2, "Measured window: \(window)")
+        XCTAssertTrue(window.relocked - window.unlocked >= 2 * (convoy.relocked - convoy.unlocked))
+        XCTAssertTrue(window.unlocked <= script.liveTaps[0].atTime && script.liveTaps[0].atTime < window.relocked)
+        let step = initial.tuning.stepDuration
+        // Script times round up to the next step, so stop a step short of the relock.
+        for time in stride(from: window.unlocked, to: window.relocked - step, by: 0.1) {
+            _ = try PrototypeSolutionRunner.verify(level: level, script: .init(liveTaps: [.init(atTime: time, nodeID: "switch")]))
+        }
+        // Flipping before Red arrives sends Red the wrong way.
+        let early = try PrototypeSolutionRunner.run(level: level, script: .init(liveTaps: [.init(atTime: step, nodeID: "switch")]))
+        XCTAssertEqual(early.outcome, .failWrongHouse(vanID: "red", houseNodeID: "blue_house"))
+        print("Wait for It: unlocked [\(window.unlocked), \(window.relocked))s; Convoy [\(convoy.unlocked), \(convoy.relocked))s")
+    }
+
+    func testLevelNineTakeALapTeachesHoldingWithoutAnEntrySwitch() throws {
+        let level = try level("level_009")
+        let script = try PrototypeSolutionScript.load(levelID: level.id)
+        XCTAssertTrue(script.planTaps.isEmpty)
+        XCTAssertEqual(script.liveTaps.map(\.nodeID), ["loop_switch"])
+        XCTAssertEqual(level.parChanges, 1)
+        XCTAssertEqual(Set(level.initialSwitchEdges.keys), ["loop_switch"], "The loop switch is the only decision")
+
+        let initial = try MultiVanEngine(level: level)
+        XCTAssertEqual(initial.previewRoutes.map(\.ending), [.loopLimit, .matchingHouse])
+        // Releasing straight away meets Blue at the merge, with both lines showing ✓.
+        let released = try MultiVanEngine(level: level)
+        XCTAssertEqual(released.tapSwitch(nodeID: "loop_switch"), .accepted)
+        XCTAssertEqual(released.previewRoutes.map(\.ending), [.matchingHouse, .matchingHouse])
+        let crash = try PrototypeSolutionRunner.run(level: level, script: .init(planTaps: ["loop_switch"]))
+        guard case let .failCrash(vanIDs, point) = crash.outcome else {
+            return XCTFail("Releasing Red on its first pass must crash: \(String(describing: crash.outcome))")
+        }
+        XCTAssertEqual(vanIDs, ["red", "blue"])
+        XCTAssertTrue((1.7...2.3).contains(point.x) && (3.6...4.6).contains(point.y), "Crash must read at the merge: \(point)")
+        // Holding forever is safe but never finishes.
+        let held = try trace(level, script: .init())
+        XCTAssertNil(held.engine.outcome)
+        XCTAssertEqual(held.engine.vans.map(\.status), [.driving, .parked])
+        XCTAssertTrue(minimumSeparation(held.samples) > held.engine.tuning.crashDistance)
+
+        let run = try trace(level, script: script)
+        XCTAssertEqual(run.engine.outcome, .win)
+        XCTAssertEqual(run.engine.changeCount, level.parChanges)
+        XCTAssertTrue(minimumSeparation(run.samples) > run.engine.tuning.crashDistance)
+
+        let window = try liveWindow(level, switchID: "loop_switch")
+        XCTAssertTrue(window.relocked - window.unlocked >= 4, "Measured window: \(window)")
+        XCTAssertTrue(window.unlocked <= script.liveTaps[0].atTime && script.liveTaps[0].atTime < window.relocked)
+        let step = initial.tuning.stepDuration
+        for time in stride(from: window.unlocked, to: window.relocked - step, by: 0.25) {
+            _ = try PrototypeSolutionRunner.verify(level: level, script: .init(liveTaps: [.init(atTime: time, nodeID: "loop_switch")]))
+        }
+        // A later lap is another chance, not a failure: tap once Red has passed again.
+        _ = try PrototypeSolutionRunner.verify(level: level, script: .init(liveTaps: [.init(atTime: window.relocked + 1, nodeID: "loop_switch")]))
+        print("Take a Lap: unlocked [\(window.unlocked), \(window.relocked))s; crash at \(point)")
     }
 
     func testInvalidSwitchAndNonSwitchAreRejectedInScriptOrder() throws {
@@ -318,10 +413,11 @@ final class PrototypeSolutionTests: XCTestCase {
         }
     }
 
-    func testRepeatedTapsUseConfigurationCountRatherThanTapHistory() throws {
-        let engine = try PrototypeSolutionRunner.verify(level: level("level_002"),
-                                                       script: .init(planTaps: ["switch", "switch", "switch"]))
-        XCTAssertEqual(engine.changeCount, 1, "level_002: three taps on a two-way switch count as one change")
+    func testRepeatedTapsEachCountAgainstPar() throws {
+        let engine = try PrototypeSolutionRunner.run(level: level("level_002"),
+                                                    script: .init(planTaps: ["switch", "switch", "switch"]))
+        XCTAssertEqual(engine.outcome, .win)
+        XCTAssertEqual(engine.changeCount, 3, "level_002: three taps on a two-way switch count as three changes")
     }
 
     func testMissingSolutionReportsExpectedPath() {
@@ -371,7 +467,7 @@ final class PrototypeSolutionTests: XCTestCase {
     }
 
     func testSameTimestampTapsKeepScriptOrder() throws {
-        let level = try MultiVanLiveSwitchTests.fixture()
+        let level = try MultiVanLiveSwitchTests.fixture { $0["parChanges"] = 3 }
         // Two invalid switches make the first rejection observably order-dependent.
         for ids in [["missing", "normal"], ["normal", "missing"]] {
             assertDiagnostic([level.id, "liveTaps[0]", "node \(ids[0])", "atTime 1.0",
@@ -384,17 +480,17 @@ final class PrototypeSolutionTests: XCTestCase {
         // All accepted taps at that boundary must run before movement resumes.
         let script = PrototypeSolutionScript(liveTaps: Array(repeating: .init(atTime: 1, nodeID: "switch"), count: 3))
         let result = try PrototypeSolutionRunner.verify(level: level, script: script)
-        XCTAssertEqual(result.changeCount, 1)
+        XCTAssertEqual(result.changeCount, 3)
     }
 
     func testTimedRunnerAppliesPlanBeforeGoAndSortsByTime() throws {
-        let level = try MultiVanLiveSwitchTests.fixture()
+        let level = try MultiVanLiveSwitchTests.fixture { $0["parChanges"] = 3 }
         let script = PrototypeSolutionScript(planTaps: ["switch"], liveTaps: [
             .init(atTime: 1, nodeID: "switch"), .init(atTime: 0, nodeID: "switch")
         ])
         let result = try PrototypeSolutionRunner.verify(level: level, script: script)
         XCTAssertEqual(result.vans.map(\.currentEdgeID), ["red_exit", "blue_exit"])
-        XCTAssertEqual(result.changeCount, 1)
+        XCTAssertEqual(result.changeCount, 3)
     }
 
     func testTimedRunnerRejectsInvalidAndUnreachedTimestamps() throws {
@@ -462,24 +558,16 @@ extension PrototypeSolutionTests {
     #if DEBUG
     /// MV-46 engineering evidence only; these checks make no claim about human usability.
     func testMV46DefaultAndSingleParameterTrialsPreserveSolutionsAndReplay() throws {
-        let suite = "MultiVanMV46.\(UUID().uuidString)"
-        let defaults = try XCTUnwrap(UserDefaults(suiteName: suite))
-        defer { defaults.removePersistentDomain(forName: suite) }
-        let store = MultiVanPrototypeTuning(defaults: defaults)
-        let defaultTicks = [794, 560, 640, 400, 480, 580, 954, 1434, 634, 480, 954, 1108]
-        let trials: [(MultiVanPrototypeTuning.Parameter, Double, [Int])] = [
-            (.vanSpeed, 1.5, defaultTicks),
-            (.vanSpeed, 1.3, [916, 647, 739, 462, 554, 654, 1101, 1655, 732, 554, 1101, 1279]),
-            (.liveSwitchLockRadius, 0.3, defaultTicks)
+        let defaultTicks = [794, 560, 640, 400, 480, 788, 580, 954, 1416, 1434, 634, 480, 954, 1108, 788, 954, 954, 988, 1024]
+        let trials: [(WritableKeyPath<MultiVanTuning, Double>, Double, [Int])] = [
+            (\.vanSpeed, 1.5, defaultTicks),
+            (\.vanSpeed, 1.3, [916, 647, 739, 462, 554, 909, 654, 1101, 1634, 1655, 732, 554, 1101, 1279, 909, 1064, 1101, 1122, 1121]),
+            (\.liveSwitchLockRadius, 0.3, defaultTicks)
         ]
         for (parameter, value, completionTicks) in trials {
-            store.reset() // No trial inherits another trial's overrides.
-            store.set(value, for: parameter)
-            let tuning = store.tuning // Same validated snapshot injected by MV-45.
-            XCTAssertEqual(tuning.vanSpeed, parameter == .vanSpeed ? value : 1.5)
-            XCTAssertEqual(tuning.crashDistance, 0.35)
-            XCTAssertEqual(tuning.liveSwitchLockRadius, parameter == .liveSwitchLockRadius ? value : 0.4)
-            XCTAssertEqual(tuning.stepDuration, 1.0 / 120)
+            // Each trial changes one value from the defaults.
+            var tuning = MultiVanTuning.default
+            tuning[keyPath: parameter] = value
             for (index, level) in try levels().enumerated() {
                 let script = try PrototypeSolutionScript.load(levelID: level.id)
                 let reference = try replay(level, script: script, frames: [1.0 / 120], duration: 20, tuning: tuning)
@@ -506,11 +594,11 @@ extension PrototypeSolutionTests {
 
     func testMV46EveryStepOfMeasuredLiveWindowsWinsAndAdjacentStepsReject() throws {
         // Tick bounds are [first accepted, first relocked), at 120 Hz.
-        // Level 8 measures its FIRST safe release opportunity, not a global deadline.
+        // Loop levels 9 and 10 measure their FIRST safe release opportunity, not a global deadline.
         let trials: [(MultiVanTuning, [(Int, Int, Int)])] = [
-            (.default, [(6, 272, 388), (8, 432, 1009), (9, 192, 362), (11, 506, 609), (12, 506, 762)]),
-            (MultiVanTuning(vanSpeed: 1.3), [(6, 314, 433), (8, 499, 1164), (9, 222, 418), (11, 584, 702), (12, 584, 880)]),
-            (MultiVanTuning(liveSwitchLockRadius: 0.3), [(6, 264, 396), (8, 424, 1017), (9, 184, 370), (11, 498, 617), (12, 498, 770)])
+            (.default, [(6, 192, 442), (7, 272, 388), (9, 426, 990), (10, 432, 1009), (11, 192, 362), (13, 506, 609), (14, 506, 762)]),
+            (MultiVanTuning(vanSpeed: 1.3), [(6, 222, 510), (7, 314, 433), (9, 492, 1142), (10, 499, 1164), (11, 222, 418), (13, 584, 702), (14, 584, 880)]),
+            (MultiVanTuning(liveSwitchLockRadius: 0.3), [(6, 184, 450), (7, 264, 396), (9, 418, 998), (10, 424, 1017), (11, 184, 370), (13, 498, 617), (14, 498, 770)])
         ]
         for (tuning, windows) in trials {
             for (number, first, end) in windows {
@@ -607,8 +695,8 @@ extension PrototypeSolutionTests {
         }.min() ?? .infinity
     }
 
-    func testLevelSevenCorrectPreviewsStillCrashAndDetourSeparatesTheMerge() throws {
-        let level = try level("level_007")
+    func testLevelEightCorrectPreviewsStillCrashAndDetourSeparatesTheMerge() throws {
+        let level = try level("level_008")
         let initial = try MultiVanEngine(level: level)
         XCTAssertEqual(initial.previewRoutes.map(\.ending), [.matchingHouse, .matchingHouse])
         let crash = try PrototypeSolutionRunner.run(level: level, script: .init())
@@ -654,8 +742,8 @@ extension PrototypeSolutionTests {
         print("MV-29 Merge: crash \(crash.runTime)s at \(point); merge arrivals short=\(shortArrival), blue=\(blueArrival), long=\(longArrival); minimum safe separation=\(minimumSeparation(run.samples))")
     }
 
-    func testLevelEightLoopReleaseHasComfortableWindowAndRequiresLiveInput() throws {
-        let level = try level("level_008")
+    func testLevelTenLoopReleaseHasComfortableWindowAndRequiresLiveInput() throws {
+        let level = try level("level_010")
         let script = try PrototypeSolutionScript.load(levelID: level.id)
         XCTAssertEqual(script.planTaps, ["entry_switch"])
         XCTAssertEqual(script.liveTaps.map(\.nodeID), ["loop_switch"])
@@ -700,8 +788,8 @@ extension PrototypeSolutionTests {
         print("MV-29 Loop: unlocked [\(unlocked.time), \(relocked.time))s; hold=\(hold.time), release=\(release.time); minimum separation=\(minimumSeparation(run.samples))")
     }
 
-    func testLevelNineRedAndBlueUseDistinctExitsWithAnUnlockedGap() throws {
-        let level = try level("level_009")
+    func testLevelElevenRedAndBlueUseDistinctExitsWithAnUnlockedGap() throws {
+        let level = try level("level_011")
         let script = try PrototypeSolutionScript.load(levelID: level.id)
         XCTAssertEqual(script.planTaps, ["entry_switch"])
         XCTAssertEqual(script.liveTaps.map(\.nodeID), ["switch"])
@@ -744,8 +832,8 @@ extension PrototypeSolutionTests {
         print("MV-29 Split: Red=\(red.time), Blue=\(blue.time); unlocked [\(unlocked.time), \(relocked.time))s; minimum separation=\(minimumSeparation(run.samples))")
     }
 
-    func testLevelsEightAndNineCannotWinWithAnyStaticConfiguration() throws {
-        for id in ["level_008", "level_009"] {
+    func testLevelsTenAndElevenCannotWinWithAnyStaticConfiguration() throws {
+        for id in ["level_010", "level_011"] {
             let level = try level(id)
             let liveSwitch = try XCTUnwrap(level.liveSwitchNodeIDs.first)
             for taps in [[], ["entry_switch"], [liveSwitch], ["entry_switch", liveSwitch]] {
@@ -756,7 +844,7 @@ extension PrototypeSolutionTests {
     }
 
     func testTimingLevelSolutionsRemainIdenticalAcrossFramePartitions() throws {
-        for id in ["level_007", "level_008", "level_009", "level_010", "level_011", "level_012"] {
+        for id in ["level_006", "level_008", "level_009", "level_010", "level_011", "level_012", "level_013", "level_014"] {
             let level = try level(id)
             let script = try PrototypeSolutionScript.load(levelID: id)
             let reference = try PrototypeSolutionRunner.verify(level: level, script: script)
@@ -873,7 +961,7 @@ extension PrototypeSolutionTests {
     }
 
     func testMV38AllSolutionsAndCrashMatchAcrossPlaybackSpeedsAndFramePartitions() throws {
-        for number in 1...12 {
+        for number in 1...14 {
             let level = try level(String(format: "level_%03d", number))
             let script = try PrototypeSolutionScript.load(levelID: level.id)
             let reference = try replay(level, script: script, frames: [1.0 / 60], duration: 20)
@@ -893,7 +981,7 @@ extension PrototypeSolutionTests {
                 }
             }
         }
-        let level = try level("level_007")
+        let level = try level("level_008")
         let reference = try replay(level, frames: [1.0 / 60], duration: 20)
         guard case .failCrash = reference.engine.outcome else { return XCTFail("Expected crash") }
         for frames in [[1.0 / 60], [0.004, 0.030]] {
@@ -907,7 +995,7 @@ extension PrototypeSolutionTests {
     }
 
     func testMV38EquivalentPartialBudgetsExecuteEveryFixedStep() throws {
-        let level = try level("level_007")
+        let level = try level("level_008")
         for budget in [1.0, 1.0 + MultiVanTuning.default.stepDuration] {
             let reference = try replay(level, frames: [1.0 / 60], duration: budget)
             XCTAssertEqual(reference.engine.runTime, budget)
@@ -921,8 +1009,8 @@ extension PrototypeSolutionTests {
         }
     }
 
-    func testLevelSevenUntouchedCrashReplaysAcrossRegularAndUnevenFrames() throws {
-        let level = try level("level_007")
+    func testLevelEightUntouchedCrashReplaysAcrossRegularAndUnevenFrames() throws {
+        let level = try level("level_008")
         let initial = try MultiVanEngine(level: level)
         XCTAssertEqual(initial.previewRoutes.map(\.ending), [.matchingHouse, .matchingHouse])
         let reference = try PrototypeSolutionRunner.run(level: level, script: .init())
@@ -939,8 +1027,8 @@ extension PrototypeSolutionTests {
         }
     }
 
-    func testLevelNineReplaySplitsFramesBeforeTheTimedSwitchStep() throws {
-        let level = try level("level_009")
+    func testLevelElevenReplaySplitsFramesBeforeTheTimedSwitchStep() throws {
+        let level = try level("level_011")
         let script = try PrototypeSolutionScript.load(levelID: level.id)
         XCTAssertEqual(script.planTaps, ["entry_switch"])
         XCTAssertEqual(script.liveTaps.map(\.nodeID), ["switch"])
@@ -968,7 +1056,7 @@ extension PrototypeSolutionTests {
     }
 
     func testReplayPreservesChronologicalAndSameTimeScriptOrder() throws {
-        let level = try MultiVanLiveSwitchTests.fixture()
+        let level = try MultiVanLiveSwitchTests.fixture { $0["parChanges"] = 5 }
         let script = PrototypeSolutionScript(planTaps: ["switch"], liveTaps: [
             .init(atTime: 1, nodeID: "switch"), .init(atTime: 0, nodeID: "switch"),
             .init(atTime: 1, nodeID: "switch"), .init(atTime: 1, nodeID: "switch")
@@ -983,7 +1071,7 @@ extension PrototypeSolutionTests {
     }
 
     func testReplayRejectsInvalidPartitionsAndDistinguishesUnequalDurations() throws {
-        let level = try level("level_007")
+        let level = try level("level_008")
         for frames: [Double] in [[], [0], [-0.004, 0.030], [.nan], [.infinity]] {
             assertDiagnostic(["Invalid replay"]) { _ = try replay(level, frames: frames, duration: 1) }
         }
@@ -999,7 +1087,7 @@ extension PrototypeSolutionTests {
 
 extension PrototypeSolutionTests {
     func testMV37TimedSwitchAppearanceTracksMovementWithoutChangingSolutions() throws {
-        for (id, tapTime) in [("level_006", 2.75), ("level_008", 5.0), ("level_009", 2.25)] {
+        for (id, tapTime) in [("level_007", 2.75), ("level_010", 5.0), ("level_011", 2.25)] {
             let level = try level(id)
             let script = try PrototypeSolutionScript.load(levelID: id)
             let tap = try XCTUnwrap(script.liveTaps.first)
@@ -1032,7 +1120,7 @@ extension PrototypeSolutionTests {
                     blueUsedExit = true
                 }
             }
-            if id == "level_009" { XCTAssertTrue(blueUsedExit) }
+            if id == "level_011" { XCTAssertTrue(blueUsedExit) }
             let reference = try PrototypeSolutionRunner.verify(level: level, script: script)
             XCTAssertEqual(run.outcome, .win, id)
             XCTAssertEqual(run.changeCount, level.parChanges, id)
@@ -1048,7 +1136,7 @@ extension PrototypeSolutionTests {
 // MV-42: authoring checks reuse MV-18's scripts and MV-29's actual engine samples.
 extension PrototypeSolutionTests {
     func testMV42LevelTenRequiresAllThreeIndependentColourDecisions() throws {
-        let level = try level("level_010")
+        let level = try level("level_012")
         let script = try PrototypeSolutionScript.load(levelID: level.id)
         XCTAssertEqual(level.name, "Three's Company")
         XCTAssertEqual(level.vans.map(\.color), [.red, .blue, .yellow])
@@ -1100,7 +1188,7 @@ extension PrototypeSolutionTests {
     }
 
     func testRushBlueDetourStaysSeparateFromTheRoadHome() throws {
-        let engine = try MultiVanEngine(level: level("level_011"))
+        let engine = try MultiVanEngine(level: level("level_013"))
         let home = try XCTUnwrap(engine.runtimeGraph.edgesByID["blue_exit"]).roadPath
         for id in ["long", "detour_left_road", "detour_down", "detour_join"] {
             let detour = try XCTUnwrap(engine.runtimeGraph.edgesByID[id]).roadPath
@@ -1117,17 +1205,17 @@ extension PrototypeSolutionTests {
     }
 
     func testMV42RushAndFinalParAreMinimumAndStaticSettingsCannotWin() throws {
-        for id in ["level_011", "level_012"] {
+        for id in ["level_013", "level_014"] {
             let level = try level(id)
             let script = try PrototypeSolutionScript.load(levelID: id)
-            XCTAssertEqual(level.name, id == "level_011" ? "Rush" : "Big Delivery")
-            XCTAssertEqual(level.vans.map(\.color), id == "level_011" ? [.red, .blue, .yellow] : [.red, .blue, .yellow, .green])
-            XCTAssertEqual(level.graph.nodes.filter { $0.outgoingEdgeIDs.count > 1 }.count, id == "level_011" ? 3 : 5)
+            XCTAssertEqual(level.name, id == "level_013" ? "Rush" : "Big Delivery")
+            XCTAssertEqual(level.vans.map(\.color), id == "level_013" ? [.red, .blue, .yellow] : [.red, .blue, .yellow, .green])
+            XCTAssertEqual(level.graph.nodes.filter { $0.outgoingEdgeIDs.count > 1 }.count, id == "level_013" ? 3 : 5)
             XCTAssertEqual(level.liveSwitchNodeIDs, ["split_switch"])
-            XCTAssertEqual(script.liveTaps.map(\.atTime), [id == "level_011" ? 4.95 : 5.25])
+            XCTAssertEqual(script.liveTaps.map(\.atTime), [id == "level_013" ? 4.95 : 5.25])
             XCTAssertEqual(script.liveTaps.map(\.nodeID), ["split_switch"])
             let configurations = planningConfigurations(level)
-            XCTAssertEqual(configurations.count, id == "level_011" ? 6 : 24)
+            XCTAssertEqual(configurations.count, id == "level_013" ? 6 : 24)
             var wins = 0
             for plan in configurations {
                 for livePlan in [[], ["split_switch"]] {
@@ -1137,7 +1225,7 @@ extension PrototypeSolutionTests {
                 let run = try variant(level, plan: plan + ["split_switch"], liveTime: script.liveTaps.first?.atTime)
                 if run.outcome == .win {
                     wins += 1
-                    XCTAssertEqual(plan.count, level.parChanges)
+                    XCTAssertEqual(plan.count, level.parChanges - 2)
                     XCTAssertEqual(run.changeCount, level.parChanges)
                     XCTAssertEqual(run.runtimeGraph.nodesByID["split_switch"]?.activeOutgoingEdgeID,
                                    level.initialSwitchEdges["split_switch"])
@@ -1145,13 +1233,13 @@ extension PrototypeSolutionTests {
             }
             XCTAssertEqual(wins, 1, "\(id): exactly one normal-switch configuration can win")
             let run = try PrototypeSolutionRunner.verify(level: level, script: script)
-            XCTAssertEqual(run.changeCount, id == "level_011" ? 3 : 5)
-            XCTAssertEqual(script.planTaps.count, level.parChanges + 1)
+            XCTAssertEqual(run.changeCount, id == "level_013" ? 5 : 7)
+            XCTAssertEqual(script.planTaps.count, level.parChanges - 1)
         }
     }
 
     func testMV42FinalLoopHoldsAndShortcutCrashesDeterministically() throws {
-        let level = try level("level_012")
+        let level = try level("level_014")
         let script = try PrototypeSolutionScript.load(levelID: level.id)
         let hold = script.planTaps.filter { $0 != "route_switch" }
         let engine = try MultiVanEngine(level: level)
@@ -1175,8 +1263,8 @@ extension PrototypeSolutionTests {
 
     func testMV42LiveWindowsClearanceAndEveryAcceptedStepWinAtPar() throws {
         for (id, blueMerge, blueExit, relock, unlock) in [
-            ("level_011", 4.0, 640.0 / 120, 609.0 / 120, 672.0 / 120),
-            ("level_012", 5.95, 794.0 / 120, 6.35, 826 * MultiVanTuning.default.stepDuration)
+            ("level_013", 4.0, 640.0 / 120, 609.0 / 120, 672.0 / 120),
+            ("level_014", 5.95, 794.0 / 120, 6.35, 826 * MultiVanTuning.default.stepDuration)
         ] {
             let level = try level(id)
             let script = try PrototypeSolutionScript.load(levelID: id)
@@ -1184,9 +1272,9 @@ extension PrototypeSolutionTests {
             XCTAssertEqual(run.engine.outcome, .win)
             let redMerge = try XCTUnwrap(run.samples.first { $0.vans[0].currentEdgeID == "shared_stem" })
             let blueAtMerge = try XCTUnwrap(run.samples.first { $0.vans[1].currentEdgeID == "shared_stem" })
-            XCTAssertEqual(redMerge.time, (id == "level_011" ? 314.0 : 394.0) / 120)
+            XCTAssertEqual(redMerge.time, (id == "level_013" ? 314.0 : 394.0) / 120)
             XCTAssertEqual(blueAtMerge.time, blueMerge)
-            XCTAssertGreaterThan(blueAtMerge.time - redMerge.time, id == "level_011" ? 1.3 : 2.5)
+            XCTAssertGreaterThan(blueAtMerge.time - redMerge.time, id == "level_013" ? 1.3 : 2.5)
             XCTAssertEqual(run.samples.first { $0.vans[0].currentEdgeID == "red_exit" }?.time, 474 * MultiVanTuning.default.stepDuration)
             XCTAssertEqual(run.samples.first { $0.vans[1].currentEdgeID == "blue_exit" }?.time, blueExit)
             var locks: [Double] = []
@@ -1198,10 +1286,10 @@ extension PrototypeSolutionTests {
             }
             XCTAssertEqual(locks, [442.0 / 120, 506.0 / 120, relock, unlock])
             let start = locks[1], end = locks[2]
-            XCTAssertGreaterThan(end - start, id == "level_011" ? 0.8 : 2)
+            XCTAssertGreaterThan(end - start, id == "level_013" ? 0.8 : 2)
             let tapTime = try XCTUnwrap(script.liveTaps.first?.atTime)
-            XCTAssertGreaterThan(tapTime - start, id == "level_011" ? 0.1 : 1)
-            XCTAssertGreaterThan(end - tapTime, id == "level_011" ? 0.1 : 1)
+            XCTAssertGreaterThan(tapTime - start, id == "level_013" ? 0.1 : 1)
+            XCTAssertGreaterThan(end - tapTime, id == "level_013" ? 0.1 : 1)
             // Every fixed-step boundary in the entire inter-van unlocked gap.
             for tick in Int((start * 120).rounded())..<Int((end * 120).rounded()) {
                 _ = try PrototypeSolutionRunner.verify(level: level, script: .init(planTaps: script.planTaps,
@@ -1223,14 +1311,14 @@ extension PrototypeSolutionTests {
     }
 
     func testMV42MissingEarlyLateAndLockedLiveTaps() throws {
-        for id in ["level_011", "level_012"] {
+        for id in ["level_013", "level_014"] {
             let level = try level(id)
             let script = try PrototypeSolutionScript.load(levelID: id)
             let missing = try PrototypeSolutionRunner.run(level: level, script: .init(planTaps: script.planTaps))
             XCTAssertEqual(missing.outcome, .failWrongHouse(vanID: "blue", houseNodeID: "red_house"))
             let early = try PrototypeSolutionRunner.run(level: level, script: .init(planTaps: script.planTaps,
                 liveTaps: [.init(atTime: 0, nodeID: "split_switch")]))
-            if id == "level_011" {
+            if id == "level_013" {
                 XCTAssertEqual(early.outcome, .failWrongHouse(vanID: "red", houseNodeID: "blue_house"))
             } else {
                 // Big Delivery's east exit crosses Blue's detour while Blue is there.
@@ -1241,13 +1329,13 @@ extension PrototypeSolutionTests {
                 liveTaps: [.init(atTime: 7, nodeID: "split_switch")]))
             XCTAssertEqual(late.outcome, .failWrongHouse(vanID: "blue", houseNodeID: "red_house"))
             let missingPlan = try variant(level, plan: script.planTaps.filter { $0 != "split_switch" }, liveTime: script.liveTaps.first?.atTime)
-            if id == "level_011" {
+            if id == "level_013" {
                 XCTAssertEqual(missingPlan.outcome, .failWrongHouse(vanID: "red", houseNodeID: "blue_house"))
             } else {
                 guard case let .failCrash(missingPlanIDs, _) = missingPlan.outcome else { return XCTFail("Missing Red selection must crash") }
                 XCTAssertEqual(missingPlanIDs, ["red", "blue"])
             }
-            for time in [474 * MultiVanTuning.default.stepDuration, id == "level_011" ? 609.0 / 120 : 6.35] {
+            for time in [474 * MultiVanTuning.default.stepDuration, id == "level_013" ? 609.0 / 120 : 6.35] {
                 let engine = try MultiVanEngine(level: level)
                 for node in script.planTaps { XCTAssertEqual(engine.tapSwitch(nodeID: node), .accepted) }
                 engine.go(); engine.advance(by: time)
@@ -1256,7 +1344,7 @@ extension PrototypeSolutionTests {
                 XCTAssertEqual(engine.changeCount, before)
                 XCTAssertEqual(engine.runtimeGraph.nodesByID["split_switch"]?.activeOutgoingEdgeID, "red_exit")
             }
-            if id == "level_011" {
+            if id == "level_013" {
                 let short = try variant(level, plan: script.planTaps.filter { $0 != "route_switch" })
                 guard case let .failCrash(ids, _) = short.outcome else { return XCTFail("Rush shortcut must crash") }
                 XCTAssertEqual(ids, ["red", "blue"])
@@ -1269,7 +1357,7 @@ extension PrototypeSolutionTests {
     }
 
     func testMV42EveryVanMustDeliverBeforeVictory() throws {
-        for id in ["level_010", "level_011", "level_012"] {
+        for id in ["level_012", "level_013", "level_014"] {
             let level = try level(id)
             let script = try PrototypeSolutionScript.load(levelID: id)
             let reference = try PrototypeSolutionRunner.verify(level: level, script: script)
@@ -1283,23 +1371,5 @@ extension PrototypeSolutionTests {
             XCTAssertTrue(run.engine.vans.allSatisfy { $0.status == .parked })
             XCTAssertEqual(run.engine.drainEvents().filter { $0 == .allDelivered }.count, 1)
         }
-    }
-
-    func testMV42AuthoredLastLevelsNavigateInOrderThenReturnToList() throws {
-        let levels = try levels()
-        XCTAssertEqual(levels.map(\.id), (1...12).map { String(format: "level_%03d", $0) })
-        var session = MultiVanPrototypeSession()
-        try session.open(try level("level_010"))
-        for id in ["level_011", "level_012"] {
-            let previous = try XCTUnwrap(session.engine)
-            try session.next(in: levels)
-            let next = try XCTUnwrap(session.engine)
-            XCTAssertEqual(next.level.id, id)
-            XCTAssertFalse(next === previous)
-            XCTAssertEqual(next.phase, .plan)
-            XCTAssertEqual(next.changeCount, 0)
-        }
-        try session.next(in: levels)
-        XCTAssertNil(session.engine, "Final Next returns to the list; there is no Level 13")
     }
 }

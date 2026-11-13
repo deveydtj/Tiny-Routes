@@ -16,11 +16,10 @@ struct SettingsScreen: View {
     let onPrivacyPolicyTapped: () -> Void
     let onTermsTapped: () -> Void
     let onProfileChanged: () -> Void
+    /// Opens the boards on trial. Nil outside internal builds, which hides the row.
+    let onExperimentsTapped: (() -> Void)?
 
     @State private var activeAlert: SettingsAlert?
-    #if MULTIVAN_INTERNAL
-    @AppStorage("multiVanPrototype.enabled") private var prototypeEnabled = false
-    #endif
 
     init(
         settingsService: UserSettingsService,
@@ -35,7 +34,8 @@ struct SettingsScreen: View {
         onRateAppTapped: @escaping () -> Void,
         onPrivacyPolicyTapped: @escaping () -> Void,
         onTermsTapped: @escaping () -> Void,
-        onProfileChanged: @escaping () -> Void = {}
+        onProfileChanged: @escaping () -> Void = {},
+        onExperimentsTapped: (() -> Void)? = nil
     ) {
         self.settingsService = settingsService
         self.progressService = progressService
@@ -50,14 +50,12 @@ struct SettingsScreen: View {
         self.onPrivacyPolicyTapped = onPrivacyPolicyTapped
         self.onTermsTapped = onTermsTapped
         self.onProfileChanged = onProfileChanged
+        self.onExperimentsTapped = onExperimentsTapped
     }
 
     var body: some View {
         ScrollView(.vertical, showsIndicators: false) {
             VStack(spacing: 16) {
-                TRSettingsHeader(onBackTapped: onBackTapped)
-                    .padding(.top, 10)
-
                 playerSection
                 audioSection
                 gameplaySection
@@ -66,24 +64,15 @@ struct SettingsScreen: View {
                 dataSection
                 supportSection
                 aboutSection
-                    .padding(.bottom, 18)
             }
             .frame(maxWidth: 760)
             .frame(maxWidth: .infinity)
             .padding(.horizontal, 20)
-            .padding(.top, 4)
-            .padding(.bottom, 30)
+            .padding(.top, 18)
+            .padding(.bottom, 40)
         }
-        .background {
-            LinearGradient(
-                colors: [
-                    Color.white.opacity(0.24),
-                    Color(red: 0.69, green: 0.89, blue: 0.80).opacity(0.12)
-                ],
-                startPoint: .top,
-                endPoint: .bottom
-            )
-            .ignoresSafeArea()
+        .safeAreaInset(edge: .top, spacing: 0) {
+            TRSettingsHeader(onBackTapped: onBackTapped)
         }
         .alert(item: $activeAlert) { alert in
             makeAlert(alert)
@@ -214,8 +203,6 @@ struct SettingsScreen: View {
                 onChanged: settingsService.setConfirmsBeforeRestarting
             )
 
-            #if DEBUG || MULTIVAN_INTERNAL
-            // Internal, like the prototype itself, until the MW-10 playtests pass.
             boardStyleRow
 
             if settings.boardStyle == .diorama {
@@ -227,36 +214,31 @@ struct SettingsScreen: View {
                     onChanged: settingsService.setUsesFlatBoardInLowPowerMode
                 )
             }
-            #endif
         }
     }
 
-    #if DEBUG || MULTIVAN_INTERNAL
     private var boardStyleRow: some View {
         VStack(alignment: .leading, spacing: 10) {
             HStack(spacing: 12) {
                 TRSettingsIconCircle(
                     systemName: "map.fill",
-                    tint: TRGameplayStyle.Colors.primaryBlue
+                    tint: TRVillagePalette.teal
                 )
 
-                TRSettingsTextBlock(title: "Board Style", subtitle: "How the multi-van prototype draws its board")
+                TRSettingsTextBlock(title: "Board Style", subtitle: "How the board and the level map are drawn")
             }
             .accessibilityElement(children: .combine)
 
-            Picker("Board Style", selection: Binding(
-                get: { settings.boardStyle },
-                set: settingsService.setBoardStyle
-            )) {
-                Text("3D Diorama").tag(MultiVanBoardStyle.diorama)
-                Text("2D Map").tag(MultiVanBoardStyle.flat)
-            }
-            .pickerStyle(.segmented)
+            TRCozySegmentedPicker(
+                title: "Board Style",
+                options: [(MultiVanBoardStyle.diorama, "3D Diorama"), (MultiVanBoardStyle.flat, "2D Map")],
+                selection: settings.boardStyle,
+                onSelect: settingsService.setBoardStyle
+            )
         }
         .frame(maxWidth: .infinity, minHeight: 54, alignment: .leading)
         .padding(.vertical, 4)
     }
-    #endif
 
     private var notificationsSection: some View {
         TRSettingsSectionCard(
@@ -395,15 +377,14 @@ struct SettingsScreen: View {
                 iconSystemName: "hammer.fill"
             )
             #endif
-            #if MULTIVAN_INTERNAL
-            TRSettingsToggleRow(
-                title: "Multi-Van Prototype",
-                subtitle: "Internal playtest · default tuning",
-                iconSystemName: "hammer.fill",
-                isOn: prototypeEnabled,
-                onChanged: { prototypeEnabled = $0 }
-            )
-            #endif
+
+            if let onExperimentsTapped {
+                TRSettingsRow(
+                    title: "Experiment Boards",
+                    iconSystemName: "flask.fill",
+                    action: onExperimentsTapped
+                )
+            }
         }
     }
 
@@ -415,20 +396,20 @@ struct SettingsScreen: View {
         HStack(spacing: 12) {
             TRSettingsIconCircle(
                 systemName: iconSystemName,
-                tint: TRGameplayStyle.Colors.primaryBlue
+                tint: TRVillagePalette.teal
             )
 
             Text(title)
-                .font(.system(size: 16, weight: .black, design: .rounded))
-                .foregroundStyle(TRGameplayStyle.Colors.titleNavy)
+                .font(.system(size: 16, weight: .semibold, design: .rounded))
+                .foregroundStyle(TRVillagePalette.navy)
                 .lineLimit(1)
                 .minimumScaleFactor(0.76)
 
             Spacer(minLength: 8)
 
             Text(value)
-                .font(.system(size: 15, weight: .bold, design: .rounded))
-                .foregroundStyle(TRGameplayStyle.Colors.secondaryText)
+                .font(.system(size: 15, weight: .medium, design: .rounded))
+                .foregroundStyle(TRVillagePalette.slate)
                 .lineLimit(1)
                 .minimumScaleFactor(0.72)
                 .accessibilityHidden(true)
@@ -469,6 +450,8 @@ struct SettingsScreen: View {
 
     private func resetProgress() {
         progressService.resetProgress()
+        // A fresh start meets each mechanic's tip again.
+        MultiVanTutorialProgress().reset()
         onProfileChanged()
         activeAlert = .resetProgressComplete
     }
@@ -584,9 +567,7 @@ struct SettingsScreen_Previews: PreviewProvider {
     @MainActor
     static var previews: some View {
         ZStack {
-            SpriteImage(name: "background")
-                .scaledToFill()
-                .ignoresSafeArea()
+            TRCozySkyBackground()
 
             SettingsScreen(
                 settingsService: UserSettingsService(),

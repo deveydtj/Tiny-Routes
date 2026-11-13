@@ -69,7 +69,7 @@ struct TRResultSummaryFactory {
                 elapsedTime: elapsedTime,
                 tapCount: tapCount
             )
-            let wasFirstCompletion = progressService.isLevelCompleted(levelID) == false
+            let previousBestStars = progressService.bestStars(for: levelID)
             let bestStars: Int
             let coinReward: Int
 
@@ -84,14 +84,14 @@ struct TRResultSummaryFactory {
                 coinReward = economyService.awardLevelCompletionReward(
                     levelID: levelID,
                     earnedStars: earnedStars,
-                    isFirstCompletion: progressUpdate.wasFirstCompletion
+                    previousBestStars: progressUpdate.previousBestStars
                 )
             } else {
                 bestStars = max(progressService.bestStars(for: levelID), earnedStars)
                 coinReward = economyService.previewLevelCompletionReward(
                     levelID: levelID,
                     earnedStars: earnedStars,
-                    isFirstCompletion: wasFirstCompletion
+                    previousBestStars: previousBestStars
                 )
             }
 

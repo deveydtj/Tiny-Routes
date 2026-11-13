@@ -2,6 +2,7 @@
 DerivedData/
 .build/
 .local/
+fastlane/report.xml
 
 *.xcuserstate
 *.xccheckout

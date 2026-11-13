@@ -94,11 +94,11 @@ struct TRLevelProgressSnapshot {
 
 // MARK: - Level Selection Screen
 
-/// Level selection screen.
+/// Level selection screen: the village map, its road winding past a house for
+/// each level.
 struct LevelSelectScreen: View {
     let levels: [MultiVanLevel]
     let coinTotal: Int
-    let currentStreakDays: Int
     let onLevelSelected: (String) -> Void
     let onSettingsTapped: (() -> Void)?
     let onAddCurrencyTapped: (() -> Void)?
@@ -107,7 +107,6 @@ struct LevelSelectScreen: View {
     init(
         levels: [MultiVanLevel],
         coinTotal: Int = 1_250,
-        currentStreakDays: Int = 0,
         onLevelSelected: @escaping (String) -> Void,
         onSettingsTapped: (() -> Void)? = nil,
         onAddCurrencyTapped: (() -> Void)? = nil,
@@ -115,69 +114,49 @@ struct LevelSelectScreen: View {
     ) {
         self.levels = levels
         self.coinTotal = coinTotal
-        self.currentStreakDays = currentStreakDays
         self.onLevelSelected = onLevelSelected
         self.onSettingsTapped = onSettingsTapped
         self.onAddCurrencyTapped = onAddCurrencyTapped
         self.progressService = progressService
     }
 
-    /// Counts only the current levels so stars saved for retired levels never show.
-    private var totalStars: Int {
-        levels.reduce(0) { $0 + progressService.bestStars(for: $1.id) }
+    var body: some View {
+        TRVillageLevelMapView(
+            levels: levels,
+            progressService: progressService,
+            coinTotal: coinTotal,
+            onLevelSelected: onLevelSelected,
+            onSettingsTapped: { onSettingsTapped?() },
+            onCoinsTapped: { onAddCurrencyTapped?() }
+        )
     }
+}
+
+/// Brings the next level to play back into view on either map.
+struct TRJumpToCurrentButton: View {
+    let action: () -> Void
 
     var body: some View {
-        ScrollView(.vertical, showsIndicators: false) {
-            VStack(spacing: 16) {
-                TRMenuHeader(
-                    pageTitle: "Levels",
-                    coinTotal: coinTotal,
-                    onSettingsTapped: {
-                        onSettingsTapped?()
-                    },
-                    onAddCurrencyTapped: {
-                        onAddCurrencyTapped?()
-                    }
-                )
-                .padding(.top, 10)
-
-                TRDailyRoutePlaceholderCard(currentStreakDays: currentStreakDays)
-
-                TRMilestoneRewardsPlaceholderCard()
-
-                TRLevelMapSection(
-                    levels: levels,
-                    progressService: progressService,
-                    onLevelSelected: onLevelSelected
-                )
-
-                TRStarCollectorPlaceholderCard(totalStars: totalStars)
-                    .padding(.bottom, 12)
-            }
-            .padding(.horizontal, 20)
-            .padding(.top, 4)
-            .padding(.bottom, 8)
+        Button(action: action) {
+            Label("Jump to Current", systemImage: "scope")
+                .font(.system(.subheadline, design: .rounded, weight: .heavy))
+                .foregroundStyle(MultiVanHUDStyle.pineDark)
+                .padding(.horizontal, 14)
+                .frame(minHeight: 44)
         }
-        .background {
-            LinearGradient(
-                colors: [
-                    Color.white.opacity(0.18),
-                    Color(red: 0.72, green: 0.90, blue: 0.78).opacity(0.10)
-                ],
-                startPoint: .top,
-                endPoint: .bottom
-            )
-            .ignoresSafeArea()
-        }
+        .buttonStyle(MultiVanHUDButtonStyle(shape: AnyShape(Capsule())))
+        .accessibilityHint("Scroll the map to the next level to play")
     }
 }
 
 struct LevelSelectScreen_Previews: PreviewProvider {
     static var previews: some View {
-        LevelSelectScreen(
-            levels: (try? MultiVanLevelRepository().loadAllLevels()) ?? [],
-            onLevelSelected: { _ in }
-        )
+        ZStack {
+            TRVillageSky()
+            LevelSelectScreen(
+                levels: (try? MultiVanLevelRepository().loadAllLevels()) ?? [],
+                onLevelSelected: { _ in }
+            )
+        }
     }
 }

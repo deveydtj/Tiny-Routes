@@ -1,10 +1,11 @@
 import SwiftUI
 
+/// A progress bar sunk into a cream card, filling with a glossy colour.
 struct TRProgressBar: View {
     let progress: CGFloat
     var height: CGFloat = 10
-    var fillColor: Color = TRGameplayStyle.Colors.primaryBlue
-    var trackColor: Color = Color(red: 0.82, green: 0.87, blue: 0.93)
+    var fillColor: Color = TRVillagePalette.blue
+    var trackColor: Color = Color(hex: 0xE9DDC5)
 
     private var clampedProgress: CGFloat {
         min(max(progress, 0), 1)
@@ -15,10 +16,12 @@ struct TRProgressBar: View {
             ZStack(alignment: .leading) {
                 Capsule()
                     .fill(trackColor)
+                    .overlay { Capsule().strokeBorder(TRVillagePalette.creamLip.opacity(0.6), lineWidth: 1) }
 
                 Capsule()
                     .fill(fillColor)
-                    .frame(width: geometry.size.width * clampedProgress)
+                    .overlay { Capsule().fill(LinearGradient(colors: [.white.opacity(0.3), .clear], startPoint: .top, endPoint: .center)) }
+                    .frame(width: max(clampedProgress > 0 ? height : 0, geometry.size.width * clampedProgress))
             }
         }
         .frame(height: height)
@@ -30,8 +33,9 @@ struct TRProgressBar: View {
     VStack(spacing: 16) {
         TRProgressBar(progress: 0)
         TRProgressBar(progress: 0.55)
-        TRProgressBar(progress: 1)
+        TRProgressBar(progress: 1, fillColor: MultiVanHUDStyle.pine)
     }
     .padding(24)
-    .background(Color(red: 0.86, green: 0.94, blue: 0.98))
+    .background(MultiVanHUDCardBackground())
+    .padding(24)
 }

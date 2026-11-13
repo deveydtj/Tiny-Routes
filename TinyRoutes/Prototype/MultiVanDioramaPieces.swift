@@ -385,21 +385,45 @@ enum MultiVanDioramaPieces {
 
     // MARK: - Route previews
 
-    /// One dot of a van's preview line, a paper disc in the van's colour lying on
-    /// the road. Dots of a colour share their geometry.
+    /// One dot of a van's preview line, a sticker lying on the road: the van's
+    /// colour inside a white rim, which reads on asphalt and grass alike. Dots of
+    /// a colour share their geometry.
     static func trailDot(_ color: VanColor) -> SCNNode {
-        let node = SCNNode(geometry: trailDotGeometry(color), y: 0.012)
+        let node = SCNNode(geometry: trailDotGeometry(color), y: 0.014)
+        node.simdEulerAngles.x = -.pi / 2
         node.castsShadow = false
         return node
     }
 
     private static func trailDotGeometry(_ color: VanColor) -> SCNGeometry {
         if let geometry = trailDots[color] { return geometry }
-        let dot = SCNCylinder(radius: 0.03, height: 0.014)
-        dot.radialSegmentCount = 12
-        dot.materials = [paper(color: color.dioramaBody, roughness: 0.6)]
+        // A touch wider than a lane: neighbouring lines' rims overlap rather than leave a gap.
+        let side = CGFloat(MultiVanDioramaTrail.laneWidth * 1.1)
+        let dot = SCNPlane(width: side, height: side)
+        let material = SCNMaterial()
+        // Unlit, like the badges, so a line keeps its colour in the shade and
+        // through the grade instead of sinking into the asphalt.
+        material.lightingModel = .constant
+        material.diffuse.contents = trailDotImage(color)
+        material.diffuse.mipFilter = .linear
+        material.transparencyMode = .aOne
+        material.writesToDepthBuffer = false
+        dot.materials = [material]
         trailDots[color] = dot
         return dot
+    }
+
+    private static func trailDotImage(_ color: VanColor) -> UIImage {
+        let side = 64.0
+        let format = MultiVanDioramaLawn.textureFormat(opaque: false)
+        return UIGraphicsImageRenderer(size: CGSize(width: side, height: side), format: format).image { context in
+            let g = context.cgContext
+            g.setFillColor(UIColor(dioramaHex: 0xFBF8F1).cgColor)
+            g.fillEllipse(in: CGRect(x: 1, y: 1, width: side - 2, height: side - 2))
+            g.setFillColor(color.dioramaBody.cgColor)
+            let inset = side * 0.11
+            g.fillEllipse(in: CGRect(x: inset, y: inset, width: side - inset * 2, height: side - inset * 2))
+        }
     }
 
     private static var trailDots: [VanColor: SCNGeometry] = [:]
@@ -407,6 +431,17 @@ enum MultiVanDioramaPieces {
     /// A ✓ or ✗ disc that always faces the lens: a preview's ending in the van's ink,
     /// or a delivered house's tick in green.
     static func badge(_ kind: Texture.BadgeKind, side: Double = 0.28) -> SCNNode {
+        let node = SCNNode(geometry: badgeGeometry(kind, side: side))
+        node.castsShadow = false
+        node.constraints = [SCNBillboardConstraint()]
+        return node
+    }
+
+    /// Shared by every badge of a kind, so a rebuilt trail's badge doesn't upload
+    /// its texture again.
+    private static func badgeGeometry(_ kind: Texture.BadgeKind, side: Double) -> SCNGeometry {
+        let key = BadgeKey(kind: kind, side: side)
+        if let geometry = badges[key] { return geometry }
         let plane = SCNPlane(width: side, height: side)
         let material = SCNMaterial()
         // Unlit, like the prototype's sprites, so it reads the same in the sun and in shade.
@@ -414,11 +449,16 @@ enum MultiVanDioramaPieces {
         material.diffuse.contents = Texture.badge(kind)
         material.transparencyMode = .aOne
         plane.materials = [material]
-        let node = SCNNode(geometry: plane)
-        node.castsShadow = false
-        node.constraints = [SCNBillboardConstraint()]
-        return node
+        badges[key] = plane
+        return plane
     }
+
+    private struct BadgeKey: Hashable {
+        let kind: Texture.BadgeKind
+        let side: Double
+    }
+
+    private static var badges: [BadgeKey: SCNGeometry] = [:]
 
     // MARK: - Shared parts
 
@@ -466,6 +506,132 @@ enum MultiVanDioramaPieces {
     /// Glossy moulded plastic.
     private static func toy(_ color: UIColor) -> SCNMaterial {
         MultiVanDioramaScene.paper(color: color, roughness: 0.42)
+    }
+}
+
+// MARK: - Parcels and signals
+
+extension MultiVanDioramaPieces {
+    enum CargoPart {
+        /// The parcel on a van's roof, hidden until the van carries its cargo.
+        static let roofParcel = "cargo.roof"
+        /// The parcel waiting on a pickup's pad, hidden once it is collected.
+        static let waitingParcel = "cargo.waiting"
+        static let stopLamp = "signal.stop"
+        static let goLamp = "signal.go"
+        static let bridgeDeck = "signal.deck"
+    }
+
+    /// A kraft parcel tied in its owner's colour, the owner's shape on top.
+    static func parcel(_ color: VanColor, side: Double = 0.2) -> SCNNode {
+        let node = SCNNode()
+        let kraft = MultiVanDioramaScene.paper(
+            texture: MultiVanDioramaScene.grain(on: UIColor(dioramaHex: 0xC99A63), dots: 2600, seed: 23)
+        )
+        let height = side * 0.7
+        node.addChildNode(box(side, height, side, chamfer: side * 0.05, kraft, at: SIMD3(0, height / 2, 0)))
+        let ribbon = toy(color.dioramaBody)
+        node.addChildNode(box(side * 1.03, height * 1.03, side * 0.2, chamfer: 0, ribbon, at: SIMD3(0, height / 2, 0)))
+        node.addChildNode(box(side * 0.2, height * 1.03, side * 1.03, chamfer: 0, ribbon, at: SIMD3(0, height / 2, 0)))
+        let label = decal(color, side: side * 0.72)
+        label.simdPosition = SIMD3(0, Float(height * 1.04 + 0.002), 0)
+        label.simdEulerAngles.x = -.pi / 2
+        node.addChildNode(label)
+        return node
+    }
+
+    /// A cream pad beside the road with a parcel on it, turned a little so it
+    /// reads as set down, not printed.
+    static func pickup(_ color: VanColor) -> SCNNode {
+        let node = SCNNode()
+        let pad = SCNCylinder(radius: 0.19, height: 0.018)
+        pad.radialSegmentCount = 28
+        pad.materials = [toy(UIColor(dioramaHex: 0xFBF7EE))]
+        node.addChildNode(SCNNode(geometry: pad, y: 0.009))
+        let rim = SCNTube(innerRadius: 0.19, outerRadius: 0.21, height: 0.02)
+        rim.radialSegmentCount = 28
+        rim.materials = [toy(color.dioramaDeep)]
+        node.addChildNode(SCNNode(geometry: rim, y: 0.01))
+        let parcel = parcel(color)
+        parcel.name = CargoPart.waitingParcel
+        parcel.simdPosition.y = 0.018
+        parcel.simdEulerAngles.y = 0.35
+        node.addChildNode(parcel)
+        node.addChildNode(contactShadow(width: 0.52, length: 0.52))
+        return node
+    }
+
+    /// Fixes a hidden parcel to the back of a van's roof; `setCarried` shows it.
+    static func addRoofParcel(to van: SCNNode, color: VanColor) {
+        guard let chassis = van.childNode(withName: Part.chassis, recursively: true) else { return }
+        let parcel = parcel(color, side: 0.13)
+        parcel.name = CargoPart.roofParcel
+        parcel.simdPosition = SIMD3(0, 0.275, -0.12)
+        parcel.isHidden = true
+        chassis.addChildNode(parcel)
+    }
+
+    static func setCarried(_ van: SCNNode, _ carried: Bool) {
+        van.childNode(withName: CargoPart.roofParcel, recursively: true)?.isHidden = !carried
+    }
+
+    static func setWaiting(_ pickup: SCNNode, _ waiting: Bool) {
+        pickup.childNode(withName: CargoPart.waitingParcel, recursively: false)?.isHidden = !waiting
+    }
+
+    /// A short post with a lamp head facing back down its road. The head shows a
+    /// red square or a green disc: the shape says stop or go without colour.
+    static func signalPost(kind: MultiVanSignal.Kind) -> SCNNode {
+        let node = SCNNode()
+        let post = SCNCylinder(radius: 0.018, height: 0.3)
+        post.materials = [toy(UIColor(dioramaHex: 0x3B3A55))]
+        node.addChildNode(SCNNode(geometry: post, y: 0.15))
+        let dark = toy(UIColor(dioramaHex: 0x2A2933))
+        node.addChildNode(box(0.13, 0.13, 0.05, chamfer: 0.012, dark, at: SIMD3(0, 0.36, 0)))
+        let stop = box(0.08, 0.08, 0.02, chamfer: 0.004, glowing(UIColor(dioramaHex: 0xEC5B4B)), at: SIMD3(0, 0.36, 0.03))
+        stop.name = CargoPart.stopLamp
+        node.addChildNode(stop)
+        let lens = SCNCylinder(radius: 0.043, height: 0.02)
+        lens.radialSegmentCount = 20
+        lens.materials = [glowing(UIColor(dioramaHex: 0x4CB862))]
+        let go = SCNNode(geometry: lens)
+        go.name = CargoPart.goLamp
+        go.simdPosition = SIMD3(0, 0.36, 0.03)
+        go.simdEulerAngles.x = .pi / 2
+        node.addChildNode(go)
+        if kind == .drawbridge {
+            // A striped arm across the road: down while the bridge is up.
+            let arm = box(0.4, 0.03, 0.03, chamfer: 0.006, toy(UIColor(dioramaHex: 0xEC5B4B)), at: SIMD3(0.2, 0, 0))
+            let pivot = SCNNode()
+            pivot.name = CargoPart.bridgeDeck
+            pivot.simdPosition = SIMD3(0, 0.2, 0)
+            pivot.addChildNode(arm)
+            node.addChildNode(pivot)
+        }
+        node.addChildNode(contactShadow(width: 0.2, length: 0.2))
+        return node
+    }
+
+    /// Shows a post's go or stop lamp; a drawbridge's arm lifts clear on go.
+    static func setSignal(_ post: SCNNode, isOpen: Bool, animates: Bool) {
+        post.childNode(withName: CargoPart.goLamp, recursively: false)?.isHidden = !isOpen
+        post.childNode(withName: CargoPart.stopLamp, recursively: false)?.isHidden = isOpen
+        guard let arm = post.childNode(withName: CargoPart.bridgeDeck, recursively: false) else { return }
+        let angle: CGFloat = isOpen ? .pi / 2.2 : 0
+        arm.removeAllActions()
+        if animates {
+            arm.runAction(.rotateTo(x: 0, y: 0, z: angle, duration: 0.25, usesShortestUnitArc: true))
+        } else {
+            arm.simdEulerAngles.z = Float(angle)
+        }
+    }
+
+    /// A lamp that reads in shade as well as in the sun.
+    private static func glowing(_ color: UIColor) -> SCNMaterial {
+        let material = toy(color)
+        material.emission.contents = color
+        material.emission.intensity = 0.6
+        return material
     }
 }
 

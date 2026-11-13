@@ -20,13 +20,34 @@ final class AppCoordinator: ObservableObject {
             .profile
         case .settings:
             nil
-        case .boot, .gameplay:
+        case .boot, .gameplay, .experiments, .experiment:
             nil
         }
     }
 
     func launch() {
         state = .mainMenu
+        #if DEBUG
+        // `-OpenLevelSelect` starts on the level map, for screenshots.
+        if ProcessInfo.processInfo.arguments.contains("-OpenLevelSelect") { state = .levelSelect }
+        // `-OpenScreen shop|profile|settings` starts on that menu, likewise.
+        switch UserDefaults.standard.string(forKey: "OpenScreen") {
+        case "shop": state = .shop
+        case "profile": state = .profile
+        case "settings": openSettings()
+        default: break
+        }
+        #endif
+        #if DEBUG || MULTIVAN_INTERNAL
+        // Profiling launches go straight into their level; see MultiVanAutoplay.
+        if let autoplay = MultiVanAutoplay.launchConfiguration {
+            let isExperiment = autoplay.levelID.hasPrefix(MultiVanLevelRepository.experimentPrefix)
+            state = isExperiment ? .experiment(levelID: autoplay.levelID) : .gameplay(levelID: autoplay.levelID)
+        }
+        // `-OpenExperiment <id>` starts on that experiment board; `-OpenExperiments` on their list.
+        if let id = UserDefaults.standard.string(forKey: "OpenExperiment") { state = .experiment(levelID: id) }
+        if ProcessInfo.processInfo.arguments.contains("-OpenExperiments") { state = .experiments }
+        #endif
     }
 
     func openLevelSelect() {
@@ -55,11 +76,19 @@ final class AppCoordinator: ObservableObject {
             settingsReturnState = state
         case .settings:
             break
-        case .boot, .gameplay:
+        case .boot, .gameplay, .experiments, .experiment:
             settingsReturnState = .mainMenu
         }
 
         state = .settings
+    }
+
+    func openExperiments() {
+        state = .experiments
+    }
+
+    func startExperiment(levelID: String) {
+        state = .experiment(levelID: levelID)
     }
 
     func closeSettings() {

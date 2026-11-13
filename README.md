@@ -4,7 +4,7 @@
 
 Tiny Routes is a minimalist one-thumb route puzzle game for iPhone. Players guide a tiny delivery dot through compact route-map puzzles by tapping intersections, rotating direction arrows, collecting packages, and reaching the destination before time runs out.
 
-> **Current direction:** the game is now the "set the switches, then press Go" multi-van puzzle. Home → Play → Levels opens its 12 levels (`TinyRoutes/Resources/PrototypeLevels`); the original 27 single-dot levels have been removed. See the [multi-van prototype plan](docs/prototype/multi_van_prototype_plan.md). Sections below that describe the single-dot game, its generator and editor are historical until that code is retired.
+> **Current direction:** the game is now the "set the switches, then press Go" multi-van puzzle. Home → Play → Levels opens its 19 levels (`TinyRoutes/Resources/PrototypeLevels`); the original 27 single-dot levels have been removed. See the [multi-van prototype plan](docs/prototype/multi_van_prototype_plan.md). Sections below that describe the single-dot game, its generator and editor are historical until that code is retired.
 
 ## Concept
 
@@ -138,8 +138,30 @@ in Xcode Settings → Accounts to archive `MultiVanInternal`, verify its package
 resources, and upload for **internal TestFlight testing only**. Xcode manages the
 upload build number. Logs and archives stay in the ignored `.local/testflight/`
 directory. After Apple processes the build, check App Store Connect → Tiny Routes
-→ TestFlight. In the app, enable Settings → About → Multi-Van Prototype, then
-open Home → Prototype.
+→ TestFlight. Testers play through Home → Play, as in the App Store build.
+
+For external testing, double-click `Build External TestFlight.command`. It builds
+the current working tree with the production `TinyRoutes` / `Release` scheme,
+checks the packaged resources, uploads a new build, waits for processing, and
+submits it to the existing **Family and friends** external group. It enables
+tester notifications after Apple's beta approval. It does not create groups or
+add testers. Test information and beta review contact details must already be
+complete in App Store Connect.
+
+This script uses the installed `fastlane`. Before running, set `FASTLANE_USER`
+to your Apple ID and complete the first sign-in/2FA in a terminal, or set
+`APP_STORE_CONNECT_API_KEY_PATH` to a fastlane API-key JSON file stored outside
+the repository. External submission requires App Manager or Admin access.
+Xcode's saved account handles signing, but cannot authenticate fastlane.
+An existing fastlane session or API key can run without a browser login; a
+locked signing keychain can still require unlocking the Mac.
+
+Archives, IPAs and build logs stay in `.local/testflight/external-*/`. To retry
+distribution after a processing, metadata or authentication failure without
+uploading again, run `./Build\ External\ TestFlight.command ipa:/absolute/path/to/TinyRoutes.ipa`.
+The IPA's exact version and build number are used, so a retry cannot select a
+different upload. Keep API keys and passwords out of git.
+Run the offline submission checks with `ruby scripts/check_external_testflight.rb`.
 
 ## Git publishing
 

@@ -11,7 +11,7 @@ final class ShopCatalogServiceTests: XCTestCase {
     func testCategoriesReturnInExpectedOrder() {
         XCTAssertEqual(
             service.categories.map(\.title),
-            ["Route Themes", "Delivery Dots", "Trails", "Confetti", "Destinations"]
+            ["Table Themes", "Confetti"]
         )
     }
 
@@ -70,7 +70,8 @@ final class ShopCatalogServiceTests: XCTestCase {
     }
 
     func testEveryDefaultSelectedCosmeticExistsInCatalog() {
-        let catalogIDs = Set(service.cosmeticOptions.map(\.id))
+        // The retired screens' defaults still resolve, though the shop no longer sells them.
+        let catalogIDs = Set((service.cosmeticOptions + service.retiredCosmeticOptions).map(\.id))
 
         for cosmeticID in PlayerProfile.defaultSelectedCosmeticIDByCategoryID.values {
             XCTAssertTrue(catalogIDs.contains(cosmeticID), "\(cosmeticID) should exist in the catalog")
@@ -78,7 +79,7 @@ final class ShopCatalogServiceTests: XCTestCase {
     }
 
     func testEveryDefaultOwnedCosmeticExistsInCatalog() {
-        let catalogIDs = Set(service.cosmeticOptions.map(\.id))
+        let catalogIDs = Set((service.cosmeticOptions + service.retiredCosmeticOptions).map(\.id))
 
         for cosmeticID in PlayerProfile.defaultOwnedCosmeticIDs {
             XCTAssertTrue(catalogIDs.contains(cosmeticID), "\(cosmeticID) should exist in the catalog")

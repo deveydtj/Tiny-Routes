@@ -1,5 +1,34 @@
 # MV-48 — Multi-Van release readiness
 
+## External TestFlight upload — 2026-11-06
+
+The owner requested distribution of the current working tree to the existing
+**Family and friends** external group. Added `Build External TestFlight.command`
+and its fastlane lane, using the production `TinyRoutes` / `Release` scheme.
+The lane authenticates, verifies the exact external group, allocates a build
+number, checks packaged resources, uploads, waits for processing, submits beta
+review and enables tester notifications. Its IPA retry pins the exact version
+and build and skips re-upload. The offline submission checks passed.
+
+The shared packaging verifier now compares bundled levels against the source
+directory instead of the obsolete twelve-level list. A fresh signed Release
+archive passed verification with **14 levels**, ten CAFs, thirteen sprites,
+confetti, asset catalog and privacy manifest, with no bundled solutions or tests.
+
+Fastlane had no configured Apple ID/session or API key, so automatic group
+submission stopped before making changes. Using Xcode's existing credentials,
+uploaded that verified archive with `testFlightInternalTestingOnly=false` and
+Xcode-managed build numbering. Xcode reported **Upload succeeded** and
+**EXPORT SUCCEEDED** at 06:47 local time. Content Delivery metadata identifies
+the uploaded version as **1.0 (7)**. Apple processing, external group
+assignment, beta review submission/approval, notification and installation are
+**not verified**. Group submission remains pending an App Store Connect action
+on the owner's iPhone or the first fastlane sign-in.
+
+Archive, export options and build/upload log:
+`.local/testflight/external-current/` (ignored). The following sections are
+historical evidence and do not describe the current app navigation or level count.
+
 ## TestFlight upload follow-up — 2026-11-03
 
 The owner authorized uploading Tiny Routes to TestFlight. Added the root

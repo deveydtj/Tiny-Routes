@@ -4,6 +4,8 @@ Use this sheet for two separate, independent sessions on the same physical iPhon
 
 ## Objective
 
+> Since the [tutorial update](tutorials.md) there are fourteen levels, and the game shows hints itself after repeated failures; count a level with a `hint_shown` log event as assisted. Level numbers below are the old twelve-level order.
+
 See whether two people new to the prototype can understand and complete its twelve levels, especially the live-switch and collision puzzles, and collect evidence for the later TestFlight decision. Record what happened, not what you expected them to do. Use anonymous codes **P1** and **P2** only; collect no names, contact details, or device identifiers.
 
 ## Before each participant

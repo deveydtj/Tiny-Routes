@@ -1,0 +1,185 @@
+{
+  "id": "experiment_pickup_c",
+  "name": "The Same Streets",
+  "scenerySeed": 22,
+  "biome": "depot",
+  "graph": {
+    "nodes": [
+      {
+        "id": "red_start",
+        "x": 2,
+        "y": 0,
+        "outgoingEdgeIDs": [
+          "red_approach"
+        ]
+      },
+      {
+        "id": "red_fork",
+        "x": 2,
+        "y": 1,
+        "outgoingEdgeIDs": [
+          "red_direct",
+          "red_tour"
+        ]
+      },
+      {
+        "id": "pickup",
+        "x": 0,
+        "y": 1,
+        "outgoingEdgeIDs": [
+          "red_return"
+        ]
+      },
+      {
+        "id": "red_join",
+        "x": 2,
+        "y": 3,
+        "outgoingEdgeIDs": [
+          "red_home"
+        ]
+      },
+      {
+        "id": "red_house",
+        "x": 2,
+        "y": 6,
+        "outgoingEdgeIDs": []
+      },
+      {
+        "id": "blue_start",
+        "x": 3,
+        "y": 0,
+        "outgoingEdgeIDs": [
+          "blue_approach"
+        ]
+      },
+      {
+        "id": "blue_fork",
+        "x": 3,
+        "y": 2,
+        "outgoingEdgeIDs": [
+          "blue_short",
+          "blue_long"
+        ]
+      },
+      {
+        "id": "blue_bend",
+        "x": 4,
+        "y": 2,
+        "outgoingEdgeIDs": [
+          "blue_return"
+        ]
+      },
+      {
+        "id": "blue_join",
+        "x": 3,
+        "y": 4,
+        "outgoingEdgeIDs": [
+          "blue_home"
+        ]
+      },
+      {
+        "id": "blue_house",
+        "x": 0,
+        "y": 4,
+        "outgoingEdgeIDs": []
+      }
+    ],
+    "edges": [
+      {
+        "id": "red_approach",
+        "fromNodeID": "red_start",
+        "toNodeID": "red_fork",
+        "roadShape": "verticalFirst"
+      },
+      {
+        "id": "red_direct",
+        "fromNodeID": "red_fork",
+        "toNodeID": "red_join",
+        "roadShape": "verticalFirst"
+      },
+      {
+        "id": "red_tour",
+        "fromNodeID": "red_fork",
+        "toNodeID": "pickup",
+        "roadShape": "horizontalFirst"
+      },
+      {
+        "id": "red_return",
+        "fromNodeID": "pickup",
+        "toNodeID": "red_join",
+        "roadShape": "verticalFirst"
+      },
+      {
+        "id": "red_home",
+        "fromNodeID": "red_join",
+        "toNodeID": "red_house",
+        "roadShape": "verticalFirst"
+      },
+      {
+        "id": "blue_approach",
+        "fromNodeID": "blue_start",
+        "toNodeID": "blue_fork",
+        "roadShape": "verticalFirst"
+      },
+      {
+        "id": "blue_short",
+        "fromNodeID": "blue_fork",
+        "toNodeID": "blue_join",
+        "roadShape": "verticalFirst"
+      },
+      {
+        "id": "blue_long",
+        "fromNodeID": "blue_fork",
+        "toNodeID": "blue_bend",
+        "roadShape": "horizontalFirst"
+      },
+      {
+        "id": "blue_return",
+        "fromNodeID": "blue_bend",
+        "toNodeID": "blue_join",
+        "roadShape": "verticalFirst"
+      },
+      {
+        "id": "blue_home",
+        "fromNodeID": "blue_join",
+        "toNodeID": "blue_house",
+        "roadShape": "horizontalFirst"
+      }
+    ]
+  },
+  "vans": [
+    {
+      "id": "red",
+      "color": "red",
+      "startNodeID": "red_start",
+      "departDelay": 0
+    },
+    {
+      "id": "blue",
+      "color": "blue",
+      "startNodeID": "blue_start",
+      "departDelay": 2.0
+    }
+  ],
+  "houses": [
+    {
+      "nodeID": "red_house",
+      "color": "red"
+    },
+    {
+      "nodeID": "blue_house",
+      "color": "blue"
+    }
+  ],
+  "initialSwitchEdges": {
+    "red_fork": "red_direct",
+    "blue_fork": "blue_short"
+  },
+  "parChanges": 0,
+  "liveSwitchNodeIDs": [],
+  "hint": "Nothing to collect here. Both vans can take their shortest roads.",
+  "hintFocusNodeIDs": [
+    "red_fork",
+    "blue_fork"
+  ]
+}

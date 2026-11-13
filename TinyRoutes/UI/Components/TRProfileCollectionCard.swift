@@ -7,9 +7,7 @@ struct TRProfileCollectionCard: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
             HStack {
-                Text("Collections")
-                    .font(.system(size: 22, weight: .black, design: .rounded))
-                    .foregroundStyle(TRGameplayStyle.Colors.titleNavy)
+                TRCozyCardTitle(title: "Collections")
 
                 Spacer()
 
@@ -18,16 +16,12 @@ struct TRProfileCollectionCard: View {
                         Image(systemName: "pencil")
                         Text("Customize")
                     }
-                    .font(.system(size: 13, weight: .black, design: .rounded))
-                    .foregroundStyle(TRGameplayStyle.Colors.primaryBlue)
+                    .font(.system(size: 13, weight: .semibold, design: .rounded))
+                    .foregroundStyle(TRVillagePalette.teal)
                     .padding(.horizontal, 12)
-                    .frame(height: 34)
-                    .background {
-                        Capsule()
-                            .fill(Color(red: 0.91, green: 0.96, blue: 1.00))
-                    }
+                    .frame(height: 32)
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(MultiVanHUDButtonStyle(shape: AnyShape(Capsule())))
                 .accessibilityLabel(Text("Customize collections"))
             }
 
@@ -36,7 +30,7 @@ struct TRProfileCollectionCard: View {
                     ForEach(Array(selections.enumerated()), id: \.element.id) { index, selection in
                         collectionItem(selection)
                         if index < selections.count - 1 {
-                            Divider()
+                            TRCozyDivider()
                                 .frame(height: 82)
                         }
                     }
@@ -51,7 +45,7 @@ struct TRProfileCollectionCard: View {
         }
         .padding(18)
         .background {
-            TRGlassCardBackground(cornerRadius: 25)
+            MultiVanHUDCardBackground(cornerRadius: 26)
         }
     }
 
@@ -66,14 +60,14 @@ struct TRProfileCollectionCard: View {
             }
 
             Text(selection.label)
-                .font(.system(size: 12, weight: .black, design: .rounded))
-                .foregroundStyle(TRGameplayStyle.Colors.secondaryText)
+                .font(.system(size: 12, weight: .semibold, design: .rounded))
+                .foregroundStyle(TRVillagePalette.slate)
                 .lineLimit(1)
                 .minimumScaleFactor(0.68)
 
             Text(selection.value)
-                .font(.system(size: 15, weight: .black, design: .rounded))
-                .foregroundStyle(TRGameplayStyle.Colors.titleNavy)
+                .font(.system(size: 15, weight: .bold, design: .rounded))
+                .foregroundStyle(TRVillagePalette.navy)
                 .lineLimit(1)
                 .minimumScaleFactor(0.72)
         }
@@ -94,19 +88,18 @@ struct TRProfileCollectionCard: View {
 
             VStack(alignment: .leading, spacing: 2) {
                 Text(selection.label)
-                    .font(.system(size: 12, weight: .black, design: .rounded))
-                    .foregroundStyle(TRGameplayStyle.Colors.secondaryText)
+                    .font(.system(size: 12, weight: .semibold, design: .rounded))
+                    .foregroundStyle(TRVillagePalette.slate)
                 Text(selection.value)
-                    .font(.system(size: 16, weight: .black, design: .rounded))
-                    .foregroundStyle(TRGameplayStyle.Colors.titleNavy)
+                    .font(.system(size: 16, weight: .bold, design: .rounded))
+                    .foregroundStyle(TRVillagePalette.navy)
             }
 
             Spacer()
         }
         .padding(12)
         .background {
-            RoundedRectangle(cornerRadius: 18, style: .continuous)
-                .fill(Color(red: 0.94, green: 0.97, blue: 1.00).opacity(0.92))
+            TRCozyWellBackground(cornerRadius: 18)
         }
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(Text("\(selection.label), \(selection.value), selected"))
@@ -119,5 +112,5 @@ struct TRProfileCollectionCard: View {
         onCustomizeTapped: {}
     )
     .padding(20)
-    .background(Color(red: 0.86, green: 0.94, blue: 0.98))
+    .background(TRVillageSky())
 }

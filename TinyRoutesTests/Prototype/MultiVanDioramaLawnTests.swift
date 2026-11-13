@@ -7,7 +7,7 @@ final class MultiVanDioramaLawnTests: XCTestCase {
 
     func testLawnLayoutIsTheFlatBoardsLayoutAtTextureScale() throws {
         let levels = try MultiVanLevelRepository().loadAllLevels()
-        XCTAssertEqual(levels.count, 12)
+        XCTAssertEqual(levels.count, 19)
         // The flat board insets its grid by half a hit target on every side.
         let inset = MultiVanSwitchButton.hitSize
         let flatSize = CGSize(width: 5 * unit + inset, height: 7 * unit + inset)
@@ -55,7 +55,8 @@ final class MultiVanDioramaLawnTests: XCTestCase {
     }
 
     func testLawnStaysGrassAwayFromRoads() throws {
-        for level in try MultiVanLevelRepository().loadAllLevels() {
+        // A chapter's ground wash tints the lawn; the meadow is the plain grass.
+        for level in try MultiVanLevelRepository().loadAllLevels() where level.biome == .meadow {
             let graph = try Self.graph(for: level)
             let layout = MultiVanDioramaLawn.layout(for: level)
             let pixels = Pixels(MultiVanDioramaLawn.image(for: level, graph: graph))
@@ -101,7 +102,7 @@ final class MultiVanDioramaLawnTests: XCTestCase {
 
     func testSharedStartGetsOneBayStripedInEachVansColour() throws {
         // No authored level shares a start any more; put Convoy's Blue back on Red's spot.
-        let url = try XCTUnwrap(Bundle.main.url(forResource: "level_006", withExtension: "json", subdirectory: "PrototypeLevels"))
+        let url = try XCTUnwrap(Bundle.main.url(forResource: "level_007", withExtension: "json", subdirectory: "PrototypeLevels"))
         let json = try String(contentsOf: url, encoding: .utf8)
             .replacingOccurrences(of: #""startNodeID": "blue_start""#, with: #""startNodeID": "start""#)
         let level = try JSONDecoder().decode(MultiVanLevel.self, from: Data(json.utf8))
@@ -163,7 +164,7 @@ final class MultiVanDioramaLawnTests: XCTestCase {
     }
 
     func testPaintingIsTheSameEveryTime() throws {
-        let level = try XCTUnwrap(MultiVanLevelRepository().loadAllLevels().first { $0.id == "level_012" })
+        let level = try XCTUnwrap(MultiVanLevelRepository().loadAllLevels().first { $0.id == "level_014" })
         let graph = try Self.graph(for: level)
         let first = MultiVanDioramaLawn.image(for: level, graph: graph)
         XCTAssertEqual(first.size, MultiVanDioramaLawn.imageSize)
@@ -175,7 +176,7 @@ final class MultiVanDioramaLawnTests: XCTestCase {
     /// grid point's pixel lands on that grid point's world position.
     @MainActor
     func testLawnTextureLandsOnTheSlabAtEachNode() throws {
-        let level = try XCTUnwrap(MultiVanLevelRepository().loadAllLevels().first { $0.id == "level_012" })
+        let level = try XCTUnwrap(MultiVanLevelRepository().loadAllLevels().first { $0.id == "level_014" })
         let scene = MultiVanDioramaScene()
         scene.load(level, graph: try MultiVanEngine(level: level).runtimeGraph)
         let image = try XCTUnwrap(scene.lawn.diffuse.contents as? UIImage)

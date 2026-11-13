@@ -199,4 +199,22 @@ final class ScoringAndProgressServiceTests: XCTestCase {
         XCTAssertFalse(service.isLevelCompleted("level_001"))
         XCTAssertFalse(service.isLevelUnlocked("level_002"))
     }
+
+    func testLevelsAddedAfterAFinishedCampaignOpenWithoutAReplay() {
+        let suiteName = "ScoringAndProgressServiceTests.\(#function)"
+        let defaults = UserDefaults(suiteName: suiteName)!
+        defaults.removePersistentDomain(forName: suiteName)
+        let service = ProgressService(userDefaults: defaults)
+        // The campaign ended at level 2 when this player finished it.
+        service.completeLevel(levelID: "level_001", earnedStars: 3, nextLevelID: "level_002")
+        service.completeLevel(levelID: "level_002", earnedStars: 2, nextLevelID: nil)
+        XCTAssertFalse(service.isLevelUnlocked("level_003"))
+
+        service.unlockLevelsFollowingCompleted(in: ["level_001", "level_002", "level_003", "level_004"])
+        XCTAssertTrue(service.isLevelUnlocked("level_003"))
+        // Only the next one: the level after it still has to be earned.
+        XCTAssertFalse(service.isLevelUnlocked("level_004"))
+        XCTAssertFalse(service.isLevelCompleted("level_003"))
+        XCTAssertEqual(service.totalStars(), 5)
+    }
 }

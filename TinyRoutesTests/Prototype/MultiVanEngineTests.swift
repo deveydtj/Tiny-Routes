@@ -246,68 +246,6 @@ final class MultiVanGameplayTests: XCTestCase {
         XCTAssertEqual(engine.runTime, 0.125, accuracy: 1e-9)
     }
 
-    #if DEBUG
-    func testPrototypeNextUsesFreshEngineThenReturnsToList() throws {
-        let levels = try [engine().level, engine("level_002").level]
-        var session = MultiVanPrototypeSession()
-        XCTAssertNil(session.engine)
-        try session.open(levels[0])
-        let first = try XCTUnwrap(session.engine)
-        first.go()
-        first.advance(by: 20)
-        XCTAssertEqual(first.outcome, .win)
-
-        try session.next(in: levels)
-        let second = try XCTUnwrap(session.engine)
-        XCTAssertFalse(first === second)
-        XCTAssertEqual(second.level.id, "level_002")
-        XCTAssertEqual(second.level.name, "Pick a Lane")
-        XCTAssertEqual(Set(second.runtimeGraph.nodesByID.keys), Set(levels[1].graph.nodes.map(\.id)))
-        XCTAssertEqual(second.phase, .plan)
-        XCTAssertNil(second.outcome)
-        XCTAssertEqual(second.runTime, 0)
-        XCTAssertEqual(second.changeCount, 0)
-        XCTAssertEqual(second.vans[0].position, RoadPoint(x: 0, y: 0))
-        XCTAssertEqual(second.vans[0].status, .waiting)
-        XCTAssertEqual(second.runtimeGraph.nodesByID["switch"]?.activeOutgoingEdgeID, "to_barrier")
-        XCTAssertEqual(second.previewRoutes.first?.ending, .deadEnd)
-
-        second.tapSwitch(nodeID: "switch")
-        second.go()
-        second.advance(by: 20)
-        XCTAssertEqual(second.outcome, .win)
-        try session.next(in: levels)
-        XCTAssertNil(session.engine)
-    }
-
-    func testPrototypeDirectSelectionAndReopeningDiscardRunAndSwitchState() throws {
-        let level = try engine("level_002").level
-        var session = MultiVanPrototypeSession()
-        try session.open(level)
-        let previous = try XCTUnwrap(session.engine)
-        previous.tapSwitch(nodeID: "switch")
-        previous.go()
-        previous.advance(by: 0.25)
-        session.returnToList()
-        XCTAssertNil(session.engine)
-
-        try session.open(level)
-        let reopened = try XCTUnwrap(session.engine)
-        XCTAssertFalse(previous === reopened)
-        XCTAssertEqual(reopened.phase, .plan)
-        XCTAssertEqual(reopened.changeCount, 0)
-        XCTAssertEqual(reopened.runTime, 0)
-        XCTAssertEqual(reopened.vans[0].position, RoadPoint(x: 0, y: 0))
-        XCTAssertEqual(reopened.runtimeGraph.nodesByID["switch"]?.activeOutgoingEdgeID, "to_barrier")
-        XCTAssertEqual(reopened.previewRoutes.first?.ending, .deadEnd)
-
-        // An empty repository or absent selection also ends at the list.
-        try session.next(in: [])
-        XCTAssertNil(session.engine)
-        try session.next(in: [level])
-        XCTAssertNil(session.engine)
-    }
-    #endif
 }
 
 final class MultiVanEngineTests: XCTestCase {
@@ -363,12 +301,12 @@ final class MultiVanEngineTests: XCTestCase {
         XCTAssertEqual(engine.changeCount, 1)
         XCTAssertEqual(engine.tapSwitch(nodeID: "two"), .accepted)
         XCTAssertEqual(engine.runtimeGraph.nodesByID["two"]?.activeOutgoingEdgeID, "two_1")
-        XCTAssertEqual(engine.changeCount, 0)
+        XCTAssertEqual(engine.changeCount, 2, "flipping back still counts")
     }
 
-    func testThreeWaySwitchWrapsToStartingSettingAndZeroChanges() throws {
+    func testThreeWaySwitchWrapsToStartingSettingAndKeepsCounting() throws {
         let engine = try MultiVanEngine(level: makeLevel(initial: ["three": "three_1"]))
-        for (edge, changes) in [("three_2", 1), ("three_0", 2), ("three_1", 0)] {
+        for (edge, changes) in [("three_2", 1), ("three_0", 2), ("three_1", 3)] {
             XCTAssertEqual(engine.tapSwitch(nodeID: "three"), .accepted)
             XCTAssertEqual(engine.runtimeGraph.nodesByID["three"]?.activeOutgoingEdgeID, edge)
             XCTAssertEqual(engine.changeCount, changes)
@@ -380,7 +318,7 @@ final class MultiVanEngineTests: XCTestCase {
         for index in 1...4 {
             XCTAssertEqual(engine.tapSwitch(nodeID: "four"), .accepted)
             XCTAssertEqual(engine.runtimeGraph.nodesByID["four"]?.activeOutgoingEdgeID, "four_\(index % 4)")
-            XCTAssertEqual(engine.changeCount, index % 4)
+            XCTAssertEqual(engine.changeCount, index)
         }
     }
 
@@ -433,7 +371,7 @@ final class MultiVanEngineTests: XCTestCase {
         XCTAssertEqual(engine.runtimeGraph.nodesByID["four"]?.activeOutgoingEdgeID, "four_0")
         XCTAssertEqual(engine.changeCount, 3)
         engine.tapSwitch(nodeID: "two")
-        XCTAssertEqual(engine.changeCount, 2)
+        XCTAssertEqual(engine.changeCount, 4)
     }
 
     func testInjectedTuningIsCopiedPerEngine() throws {
@@ -611,7 +549,7 @@ final class MultiVanRoutePreviewTests: XCTestCase {
         ])
         XCTAssertEqual(engine.previewRoutes[0].ending, .deadEnd)
         let expected: [(String, Double, MultiVanPreviewEnding, Int)] = [
-            ("east", 0, .wrongHouse, 1), ("north", -.pi / 2, .matchingHouse, 2), ("south", .pi / 2, .deadEnd, 0)
+            ("east", 0, .wrongHouse, 1), ("north", -.pi / 2, .matchingHouse, 2), ("south", .pi / 2, .deadEnd, 3)
         ]
         for (edgeID, angle, ending, changes) in expected {
             XCTAssertEqual(engine.tapSwitch(nodeID: "switch"), .accepted)
@@ -1349,7 +1287,7 @@ final class MultiVanBoardSwitchTests: XCTestCase {
         XCTAssertEqual(engine.runtimeGraph.edgesByID["to_house"]?.toNodeID, "red_house")
 
         XCTAssertEqual(engine.tapSwitch(nodeID: "switch"), .accepted)
-        try assertConfiguration(engine, edgeID: "to_barrier", angle: -.pi / 2, ending: .deadEnd, changes: 0)
+        try assertConfiguration(engine, edgeID: "to_barrier", angle: -.pi / 2, ending: .deadEnd, changes: 2)
         engine.tapSwitch(nodeID: "switch")
         graphChanged.withLock { $0 = false }
         previewChanged.withLock { $0 = false }
@@ -1712,26 +1650,26 @@ final class MultiVanLiveSwitchTests: XCTestCase {
         XCTAssertEqual(engine.changeCount, count)
     }
 
-    func testNormalFrozenLiveAcceptedAndConfigurationCountWrapsDuringRun() throws {
+    func testNormalFrozenLiveAcceptedAndEveryTapCountsDuringRun() throws {
         let run = try engine()
         XCTAssertTrue(run.lockedSwitchNodeIDs.isEmpty)
         XCTAssertEqual(run.tapSwitch(nodeID: "normal"), .accepted)
         XCTAssertEqual(run.tapSwitch(nodeID: "normal"), .accepted)
         XCTAssertEqual(run.tapSwitch(nodeID: "switch"), .accepted)
-        XCTAssertEqual(run.changeCount, 1)
+        XCTAssertEqual(run.changeCount, 3)
         run.go()
         XCTAssertEqual(run.lockedSwitchNodeIDs, ["normal"])
         assertRejected(run, node: "normal", result: .rejectedFrozen)
         XCTAssertEqual(run.tapSwitch(nodeID: "switch"), .accepted)
         XCTAssertEqual(run.runtimeGraph.nodesByID["switch"]?.activeOutgoingEdgeID, "red_exit")
-        XCTAssertEqual(run.changeCount, 0)
+        XCTAssertEqual(run.changeCount, 4)
         XCTAssertEqual(run.previewRoutes[0].edgeIDs, ["approach", "red_exit"])
         XCTAssertEqual(run.tapSwitch(nodeID: "switch"), .accepted)
         XCTAssertEqual(run.previewRoutes[0].edgeIDs, ["approach", "blue_exit"])
-        XCTAssertEqual(run.changeCount, 1)
+        XCTAssertEqual(run.changeCount, 5)
         run.stop()
         XCTAssertTrue(run.lockedSwitchNodeIDs.isEmpty)
-        XCTAssertEqual(run.changeCount, 1)
+        XCTAssertEqual(run.changeCount, 5)
         run.resetSwitches()
         XCTAssertEqual(run.changeCount, 0)
     }
@@ -2857,7 +2795,7 @@ final class MultiVanAccessibilityTests: XCTestCase {
     }
 
     func testAuthoredSwitchLocationsAreUniqueAndDoNotSpeakInternalIDs() throws {
-        for index in 1...12 {
+        for index in 1...14 {
             let run = try engine(String(format: "level_%03d", index))
             let nodes = MultiVanBoardRules.switchNodes(in: run.runtimeGraph)
             let labels = nodes.map { MultiVanSwitchAppearance.accessibilityLabel(node: $0, gridRows: run.tuning.gridRows) }
@@ -2868,13 +2806,13 @@ final class MultiVanAccessibilityTests: XCTestCase {
                 XCTAssertFalse(label.contains(node.id))
             }
         }
-        let run = try engine("level_009")
+        let run = try engine("level_011")
         let node = try XCTUnwrap(run.runtimeGraph.nodesByID["switch"])
         XCTAssertEqual(MultiVanSwitchAppearance.accessibilityLabel(node: node, gridRows: 7), "Switch at column 3, row 4")
     }
 
     func testSharedSwitchControlsCoverEverySwitchWithTheSameWords() throws {
-        for index in 1...12 {
+        for index in 1...14 {
             let run = try engine(String(format: "level_%03d", index))
             let graph = run.runtimeGraph
             let nodes = MultiVanBoardRules.switchNodes(in: graph)
@@ -2903,7 +2841,7 @@ final class MultiVanAccessibilityTests: XCTestCase {
     }
 
     func testSelectedRouteUsesAuthoredGeometryAndDescriptionReadsDoNotEmitEvents() throws {
-        let run = try engine("level_009")
+        let run = try engine("level_011")
         func value() throws -> String {
             let node = try XCTUnwrap(run.runtimeGraph.nodesByID["switch"])
             let edge = try XCTUnwrap(node.activeOutgoingEdgeID.flatMap { run.runtimeGraph.edgesByID[$0] })
@@ -2986,8 +2924,7 @@ final class MultiVanAccessibilityTests: XCTestCase {
         // VoiceOver's default action and a touch share the one tap path.
         XCTAssertTrue(button.contains("Button(action: tap)"))
         XCTAssertTrue(button.contains(".accessibilityAction(.default, tap)"))
-        XCTAssertTrue(button.contains("private func tap() {\n        let result = engine.tapSwitch"))
-        XCTAssertTrue(button.contains("onSwitchTapped?(control.nodeID, result)"))
+        XCTAssertTrue(button.contains("private func tap() {\n        if engine.tapSwitch(nodeID: control.nodeID) == .accepted {"))
         XCTAssertTrue(button.contains(".accessibilityElement(children: .ignore)"))
         XCTAssertTrue(button.contains("accessibilityValue = appearance.routeAccessibilityValue("))
         XCTAssertTrue(button.contains(".accessibilityValue(control.accessibilityValue)"))
@@ -3018,9 +2955,6 @@ final class MultiVanAccessibilityTests: XCTestCase {
         XCTAssertTrue(screen.contains("onLongPressGesture(minimumDuration: .infinity"))
         XCTAssertTrue(screen.contains("frameDriver.setFastForwarding(enabled, at: Date(), engine: engine"))
         XCTAssertTrue(screen.contains(".accessibilityAddTraits(frameDriver.isFastForwarding ? [.isSelected] : [])"))
-        let levels = try source("TinyRoutes/Prototype/MultiVanPrototypeScreen.swift")
-        XCTAssertTrue(levels.contains(".accessibilityLabel(\"Level"))
-        XCTAssertTrue(levels.contains(".frame(minHeight: 44)"))
     }
 
     func testDynamicTypeAndReducedMotionSourceWiring() throws {
@@ -3053,32 +2987,15 @@ final class MultiVanAccessibilityTests: XCTestCase {
         XCTAssertTrue(screen.contains("All delivered! \\(winPresentation.accessibilityRating)"))
         XCTAssertTrue(screen.contains(".accessibilityHidden(true)")) // Star artwork is represented by the heading.
         XCTAssertEqual(screen.components(separatedBy: "drainEvents: engine.drainEvents").count - 1, 1)
-        XCTAssertFalse(screen.contains("UIAccessibility.post"))
+        // The one spoken announcement is a board cue, posted when the cue changes.
+        XCTAssertEqual(screen.components(separatedBy: "UIAccessibility.post").count - 1, 1)
+        XCTAssertTrue(screen.contains(".onChange(of: boardCue) { _, cue in\n            if voiceOverEnabled, let cue {\n                UIAccessibility.post(notification: .announcement, argument: cue.text)"))
         XCTAssertFalse(screen.contains("Timer("))
     }
 }
 
 
-#if DEBUG
 final class MultiVanTuningTests: XCTestCase {
-    private final class Rig {
-        let suite = "MultiVanTuningTests.\(UUID().uuidString)"
-        let store: MultiVanPrototypeTuning
-        let log: MultiVanPlaytestLog
-        let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
-
-        init() throws {
-            store = MultiVanPrototypeTuning(defaults: try XCTUnwrap(UserDefaults(suiteName: suite)))
-            log = MultiVanPlaytestLog(fileURL: directory.appendingPathComponent("attempts.jsonl"))
-        }
-
-        deinit {
-            log.flush()
-            try? FileManager.default.removeItem(at: directory)
-            store.defaults.removePersistentDomain(forName: suite)
-        }
-    }
-
     private var root: URL {
         URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent()
     }
@@ -3089,22 +3006,8 @@ final class MultiVanTuningTests: XCTestCase {
             root.appendingPathComponent("TinyRoutes/Resources/PrototypeLevels/\(id).json")))
     }
 
-    private func assertTuning(_ actual: MultiVanTuning, _ expected: MultiVanTuning,
-                              file: StaticString = #filePath, line: UInt = #line) {
-        XCTAssertEqual(actual.vanSpeed, expected.vanSpeed, file: file, line: line)
-        XCTAssertEqual(actual.crashDistance, expected.crashDistance, file: file, line: line)
-        XCTAssertEqual(actual.liveSwitchLockRadius, expected.liveSwitchLockRadius, file: file, line: line)
-        XCTAssertEqual(actual.stepDuration, expected.stepDuration, file: file, line: line)
-        XCTAssertEqual(actual.previewEdgeLimit, expected.previewEdgeLimit, file: file, line: line)
-        XCTAssertEqual(actual.failFreezeDuration, expected.failFreezeDuration, file: file, line: line)
-        XCTAssertEqual(actual.fastForwardMultiplier, expected.fastForwardMultiplier, file: file, line: line)
-        XCTAssertEqual(actual.gridColumns, expected.gridColumns, file: file, line: line)
-        XCTAssertEqual(actual.gridRows, expected.gridRows, file: file, line: line)
-    }
-
-    func testDefaultsPreserveEveryEstablishedValue() throws {
-        let rig = try Rig(), tuning = rig.store.tuning
-        assertTuning(tuning, .default)
+    func testDefaultsPreserveEveryEstablishedValue() {
+        let tuning = MultiVanTuning.default
         XCTAssertEqual(tuning.vanSpeed, 1.5)
         XCTAssertEqual(tuning.crashDistance, 0.35)
         XCTAssertEqual(tuning.liveSwitchLockRadius, 0.4)
@@ -3114,161 +3017,12 @@ final class MultiVanTuningTests: XCTestCase {
         XCTAssertEqual(tuning.fastForwardMultiplier, 2)
         XCTAssertEqual(tuning.gridColumns, 5)
         XCTAssertEqual(tuning.gridRows, 7)
-        XCTAssertTrue(MultiVanPrototypeTuning.isDefault(tuning))
-        XCTAssertEqual(MultiVanPrototypeTuning.Parameter.allCases.map(\.rawValue),
-                       ["vanSpeed", "crashDistance", "liveSwitchLockRadius"])
-    }
-
-    func testEachBoundPersistsAndReachesFreshEnginesWithoutChangingOtherFields() throws {
-        let rig = try Rig()
-        for parameter in MultiVanPrototypeTuning.Parameter.allCases {
-            for value in [parameter.range.lowerBound, parameter.range.upperBound] {
-                rig.store.reset()
-                rig.store.set(value, for: parameter)
-                let reopened = MultiVanPrototypeTuning(defaults: try XCTUnwrap(UserDefaults(suiteName: rig.suite)))
-                var expected = MultiVanTuning.default
-                expected[keyPath: parameter.keyPath] = value
-                assertTuning(reopened.tuning, expected)
-                var session = MultiVanPrototypeSession(playtestLog: rig.log, tuningOverrides: reopened)
-                try session.open(level(1))
-                assertTuning(try XCTUnwrap(session.engine).tuning, expected)
-                XCTAssertFalse(MultiVanPrototypeTuning.isDefault(reopened.tuning))
-                session.returnToList()
-                reopened.reset()
-                assertTuning(reopened.tuning, .default)
-                XCTAssertNil(rig.store.defaults.object(forKey: parameter.key))
-            }
-        }
-    }
-
-    func testInvalidWritesAreRejectedAndInvalidStoredOverridesFallBackToDefaults() throws {
-        let rig = try Rig()
-        for parameter in MultiVanPrototypeTuning.Parameter.allCases {
-            rig.store.set(parameter.range.upperBound, for: parameter)
-            let invalid = [Double.nan, .infinity, -.infinity, -1,
-                           parameter.range.lowerBound - 0.01, parameter.range.upperBound + 1]
-            for value in invalid {
-                rig.store.set(value, for: parameter)
-                XCTAssertEqual(rig.store.tuning[keyPath: parameter.keyPath], parameter.range.upperBound)
-            }
-            for value: Any in invalid.map({ $0 as Any }) + ["garbage", "0.5", true, [1.0]] {
-                rig.store.defaults.set(value, forKey: parameter.key)
-                XCTAssertEqual(rig.store.tuning[keyPath: parameter.keyPath], parameter.defaultValue)
-            }
-            rig.store.reset()
-        }
-    }
-
-    func testResetRemovesOnlyTuningOverridesAndExplicitDefaultsRemoveOverrides() throws {
-        let rig = try Rig()
-        rig.store.defaults.set("keep", forKey: "multiVanPrototype.unrelated")
-        rig.store.defaults.set(true, forKey: "production.preference")
-        for parameter in MultiVanPrototypeTuning.Parameter.allCases {
-            rig.store.set(parameter.range.upperBound, for: parameter)
-            rig.store.set(parameter.defaultValue, for: parameter)
-            XCTAssertNil(rig.store.defaults.object(forKey: parameter.key))
-            rig.store.set(parameter.range.lowerBound, for: parameter)
-        }
-        rig.store.reset()
-        assertTuning(rig.store.tuning, .default)
-        XCTAssertTrue(MultiVanPrototypeTuning.isDefault(rig.store.tuning))
-        XCTAssertEqual(rig.store.defaults.string(forKey: "multiVanPrototype.unrelated"), "keep")
-        XCTAssertTrue(rig.store.defaults.bool(forKey: "production.preference"))
-    }
-
-    func testOpenRetryReplayNextListAndReopenUseConsistentSnapshots() throws {
-        let rig = try Rig(), firstLevel = try level(1), secondLevel = try level(2)
-        var session = MultiVanPrototypeSession(playtestLog: rig.log, tuningOverrides: rig.store)
-        try session.open(firstLevel)
-        let first = try XCTUnwrap(session.engine)
-        first.go()
-        first.advance(by: 0.125)
-        let position = first.vans[0].position, time = first.runTime
-        for parameter in MultiVanPrototypeTuning.Parameter.allCases { rig.store.set(parameter.range.upperBound, for: parameter) }
-        assertTuning(first.tuning, .default)
-        XCTAssertEqual(first.vans[0].position, position)
-        XCTAssertEqual(first.runTime, time)
-        XCTAssertEqual(first.phase, .run)
-        first.advance(by: 120)
-        XCTAssertEqual(first.outcome, .win)
-        first.retry() // The same path serves Retry and Replay.
-        assertTuning(first.tuning, .default)
-        first.go()
-        first.advance(by: 120)
-        XCTAssertEqual(first.outcome, .win)
-        try session.next(in: [firstLevel, secondLevel])
-        let experimental = try XCTUnwrap(session.engine)
-        assertTuning(experimental.tuning, rig.store.tuning)
-        rig.store.reset()
-        XCTAssertFalse(MultiVanPrototypeTuning.isDefault(experimental.tuning))
-        session.returnToList()
-        try session.open(firstLevel)
-        assertTuning(try XCTUnwrap(session.engine).tuning, .default)
-        session.returnToList()
-        rig.store.set(2, for: .vanSpeed)
-        var reopened = MultiVanPrototypeSession(playtestLog: rig.log,
-            tuningOverrides: MultiVanPrototypeTuning(defaults: try XCTUnwrap(UserDefaults(suiteName: rig.suite))))
-        try reopened.open(firstLevel)
-        XCTAssertEqual(reopened.engine?.tuning.vanSpeed, 2)
-        reopened.returnToList()
-    }
-
-    private func replay(_ level: MultiVanLevel, tuning: MultiVanTuning, frame: Double) throws
-        -> (MultiVanEngine, [MultiVanEvent]) {
-        let script = try PrototypeSolutionScript.load(levelID: level.id)
-        let engine = try MultiVanEngine(level: level, tuning: tuning)
-        for node in script.planTaps { _ = engine.tapSwitch(nodeID: node) }
-        engine.go()
-        var nextTap = 0, events = engine.drainEvents()
-        var budget = 0.0
-        while engine.phase == .run && budget < 120 {
-            while nextTap < script.liveTaps.count && script.liveTaps[nextTap].atTime <= engine.runTime + 1e-12 {
-                _ = engine.tapSwitch(nodeID: script.liveTaps[nextTap].nodeID)
-                nextTap += 1
-            }
-            // Split at input boundaries so partitions receive identical inputs.
-            let untilTap = nextTap < script.liveTaps.count ? script.liveTaps[nextTap].atTime - budget : 120 - budget
-            let delta = min(frame, untilTap, 120 - budget)
-            guard delta > 1e-12 else { break }
-            engine.advance(by: delta)
-            budget += delta
-            events += engine.drainEvents()
-        }
-        return (engine, events)
-    }
-
-    func testEveryExperimentalBoundIsDeterministicAcrossPartitionsIncludingFailedSolutions() throws {
-        let rig = try Rig()
-        var sawFailure = false
-        for parameter in MultiVanPrototypeTuning.Parameter.allCases {
-            for value in [parameter.range.lowerBound, parameter.range.upperBound] {
-                rig.store.reset()
-                rig.store.set(value, for: parameter)
-                let tuning = rig.store.tuning
-                for number in [1, 7, 8, 9, 11, 12] {
-                    let level = try level(number)
-                    let (reference, events) = try replay(level, tuning: tuning, frame: tuning.stepDuration)
-                    sawFailure = sawFailure || (reference.outcome != nil && reference.outcome != .win)
-                    for frame in [tuning.stepDuration, 1.0 / 60, 0.037] {
-                        let (run, replayEvents) = try replay(level, tuning: tuning, frame: frame)
-                        XCTAssertEqual(run.outcome, reference.outcome)
-                        XCTAssertEqual(run.runTime, reference.runTime)
-                        XCTAssertEqual(run.vans.map(\.position), reference.vans.map(\.position))
-                        XCTAssertEqual(run.vans.map(\.status), reference.vans.map(\.status))
-                        XCTAssertEqual(run.lockedSwitchNodeIDs, reference.lockedSwitchNodeIDs)
-                        XCTAssertEqual(run.changeCount, reference.changeCount)
-                        XCTAssertEqual(replayEvents, events)
-                    }
-                }
-            }
-        }
-        XCTAssertTrue(sawFailure, "An experimental configuration should safely exercise a failed authored solution")
     }
 
     func testVanSpeedAndFastForwardScaleIndependentQuantitiesAndReleaseRestoresPlayback() throws {
-        let rig = try Rig()
-        rig.store.set(3, for: .vanSpeed)
-        let engine = try MultiVanEngine(level: level(1), tuning: rig.store.tuning)
+        var tuning = MultiVanTuning.default
+        tuning.vanSpeed = 3
+        let engine = try MultiVanEngine(level: level(1), tuning: tuning)
         engine.go()
         let driver = MultiVanFrameDriver()
         func date(_ time: Double) -> Date { Date(timeIntervalSinceReferenceDate: time) }
@@ -3288,4 +3042,3 @@ final class MultiVanTuningTests: XCTestCase {
         XCTAssertEqual(engine.tuning.fastForwardMultiplier, 2)
     }
 }
-#endif

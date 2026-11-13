@@ -94,7 +94,7 @@ final class MultiVanDioramaSceneryTests: XCTestCase {
 
     @MainActor
     func testSceneStandsEveryCutoutOnItsSpotAndSwaysUnlessMotionIsReduced() throws {
-        let level = try XCTUnwrap(MultiVanLevelRepository().loadAllLevels().first { $0.id == "level_010" })
+        let level = try XCTUnwrap(MultiVanLevelRepository().loadAllLevels().first { $0.id == "level_012" })
         let engine = try MultiVanEngine(level: level)
         let scene = MultiVanDioramaScene()
         scene.load(level, graph: engine.runtimeGraph)

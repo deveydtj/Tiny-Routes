@@ -12,16 +12,7 @@ struct ProfileScreen: View {
 
     var body: some View {
         ScrollView(.vertical, showsIndicators: false) {
-            VStack(spacing: 15) {
-                TRMenuHeader(
-                    pageTitle: "Profile",
-                    coinTotal: summary.coinTotal,
-                    onSettingsTapped: onSettingsTapped,
-                    onAddCurrencyTapped: onAddCurrencyTapped
-                )
-                .padding(.top, 10)
-                .padding(.bottom, 2)
-
+            VStack(spacing: 16) {
                 TRProfileHeroCard(summary: summary)
 
                 TRProfileStatsCard(summary: summary)
@@ -43,24 +34,21 @@ struct ProfileScreen: View {
                     onAchievementsTapped: showAchievementsPlaceholder
                 )
                 .padding(.top, 2)
-                .padding(.bottom, 14)
             }
             .frame(maxWidth: 760)
             .frame(maxWidth: .infinity)
             .padding(.horizontal, 20)
-            .padding(.top, 4)
-            .padding(.bottom, 10)
+            .padding(.top, 18)
+            .padding(.bottom, 24)
         }
-        .background {
-            LinearGradient(
-                colors: [
-                    Color.white.opacity(0.24),
-                    Color(red: 0.69, green: 0.89, blue: 0.80).opacity(0.12)
-                ],
-                startPoint: .top,
-                endPoint: .bottom
+        .safeAreaInset(edge: .top, spacing: 0) {
+            TRMenuHeader(
+                pageTitle: "Profile",
+                subtitleOverride: "Your driver's logbook",
+                coinTotal: summary.coinTotal,
+                onSettingsTapped: onSettingsTapped,
+                onAddCurrencyTapped: onAddCurrencyTapped
             )
-            .ignoresSafeArea()
         }
         .alert(item: $activePlaceholder) { placeholder in
             Alert(
@@ -111,9 +99,7 @@ private enum ProfilePlaceholderAlert: Identifiable {
 
 #Preview("Profile Screen") {
     ZStack {
-        SpriteImage(name: "background")
-            .scaledToFill()
-            .ignoresSafeArea()
+        TRCozySkyBackground()
 
         ProfileScreen(
             summary: .conceptPreview,
@@ -128,9 +114,7 @@ private enum ProfilePlaceholderAlert: Identifiable {
 
 #Preview("Profile Screen Empty") {
     ZStack {
-        SpriteImage(name: "background")
-            .scaledToFill()
-            .ignoresSafeArea()
+        TRCozySkyBackground()
 
         ProfileScreen(
             summary: .emptyPreview,

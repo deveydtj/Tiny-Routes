@@ -3,7 +3,10 @@ import Foundation
 /// Stores local player progression, currency, cosmetics, and entitlement state.
 struct PlayerProfile: Codable, Equatable {
     /// Version 3 replaced the original 27 levels with the multi-van levels.
-    static let currentSchemaVersion = 3
+    /// Version 4 inserted two teaching levels, at 6 and 9, moving later levels along.
+    /// Version 5 retired the cosmetics that never show on a Multi-Van board and
+    /// refunded what they cost.
+    static let currentSchemaVersion = 5
     static let firstLevelID = "level_001"
 
     static let defaultOwnedCosmeticIDs: Set<String> = [
@@ -100,6 +103,11 @@ struct PlayerProfile: Codable, Equatable {
             profile.bestStarsByLevelID = [:]
             profile.fastestCompletionTimeByLevelID = [:]
             profile.claimedLevelRewardKeys = profile.claimedLevelRewardKeys.filter { !$0.hasPrefix("levelComplete:") }
+        } else if profile.schemaVersion < 4 {
+            profile.moveLevelsForTeachingLevels()
+        }
+        if profile.schemaVersion < 5 {
+            profile.refundRetiredCosmetics()
         }
         profile.schemaVersion = max(profile.schemaVersion, PlayerProfile.currentSchemaVersion)
         if profile.playerName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
@@ -165,5 +173,49 @@ struct PlayerProfile: Codable, Equatable {
         }
 
         return profile
+    }
+
+    /// Hands back the coins spent on cosmetics the shop no longer sells and takes
+    /// them out of the collection. Free ones stay; table themes and confetti carry
+    /// over as they are.
+    private mutating func refundRetiredCosmetics() {
+        for (cosmeticID, price) in ShopCatalogService.retiredCosmeticPrices where ownedCosmeticIDs.contains(cosmeticID) {
+            ownedCosmeticIDs.remove(cosmeticID)
+            coinTotal += price
+            lifetimeCoinsSpent = max(lifetimeCoinsSpent - price, 0)
+        }
+    }
+
+    /// Where each level saved under schema 3 sits now that "Wait for It" is level 6
+    /// and "Take a Lap" is level 9.
+    static let schemaFourLevelIDs: [String: String] = [
+        "level_006": "level_007",
+        "level_007": "level_008",
+        "level_008": "level_010",
+        "level_009": "level_011",
+        "level_010": "level_012",
+        "level_011": "level_013",
+        "level_012": "level_014"
+    ]
+
+    /// Carries progress to the levels' new IDs, and opens each new level to
+    /// anyone who has finished the level before it.
+    private mutating func moveLevelsForTeachingLevels() {
+        let move = { (levelID: String) in PlayerProfile.schemaFourLevelIDs[levelID] ?? levelID }
+        unlockedLevelIDs = Set(unlockedLevelIDs.map(move))
+        completedLevelIDs = Set(completedLevelIDs.map(move))
+        bestStarsByLevelID = Dictionary(bestStarsByLevelID.map { (move($0.key), $0.value) }, uniquingKeysWith: max)
+        fastestCompletionTimeByLevelID = Dictionary(
+            fastestCompletionTimeByLevelID.map { (move($0.key), $0.value) }, uniquingKeysWith: min
+        )
+        let rewardPrefix = "levelComplete:"
+        claimedLevelRewardKeys = Set(claimedLevelRewardKeys.map { key in
+            guard key.hasPrefix(rewardPrefix) else { return key }
+            return rewardPrefix + move(String(key.dropFirst(rewardPrefix.count)))
+        })
+        let finished = completedLevelIDs.union(bestStarsByLevelID.filter { $0.value > 0 }.keys)
+        for (previous, inserted) in [("level_005", "level_006"), ("level_008", "level_009")] where finished.contains(previous) {
+            unlockedLevelIDs.insert(inserted)
+        }
     }
 }

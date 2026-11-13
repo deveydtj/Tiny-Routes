@@ -14,5 +14,16 @@
   "houses": [{ "nodeID": "red_house", "color": "red" }],
   "initialSwitchEdges": {},
   "parChanges": 0,
-  "liveSwitchNodeIDs": []
+  "liveSwitchNodeIDs": [],
+  "tutorial": [
+    {
+      "trigger": "start",
+      "title": "Deliver the van",
+      "body": "Tap Go to deliver the van.",
+      "focusNodeIDs": [
+        "red_house"
+      ],
+      "practice": "deliver"
+    }
+  ]
 }

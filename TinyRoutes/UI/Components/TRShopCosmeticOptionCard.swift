@@ -1,37 +1,31 @@
 import SwiftUI
 
+/// A cosmetic on a small cream card: its preview in a sunken window, its name,
+/// and its price or whether it's in use.
 struct TRShopCosmeticOptionCard: View {
     let option: ShopCosmeticOption
     let action: () -> Void
 
     var body: some View {
         Button(action: action) {
-            VStack(spacing: 9) {
+            VStack(spacing: 8) {
                 ZStack(alignment: .topTrailing) {
                     TRShopMiniCosmeticPreview(option: option)
                         .frame(height: 76)
+                        .saturation(option.isUnlocked ? 1 : 0.75)
 
                     if option.isSelected {
-                        TRShopSelectionBadge(size: 23)
+                        TRShopSelectionBadge(size: 24)
                             .offset(x: 7, y: -7)
-                    } else if option.isUnlocked {
-                        Circle()
-                            .stroke(TRGameplayStyle.Colors.primaryBlue.opacity(0.36), lineWidth: 2)
-                            .frame(width: 20, height: 20)
-                            .background {
-                                Circle()
-                                    .fill(.white.opacity(0.78))
-                            }
-                            .offset(x: 6, y: -6)
-                            .accessibilityHidden(true)
-                    } else {
+                    } else if !option.isUnlocked {
                         Image(systemName: "lock.fill")
-                            .font(.system(size: 11, weight: .black))
-                            .foregroundStyle(.white)
-                            .frame(width: 23, height: 23)
+                            .font(.system(size: 10, weight: .bold))
+                            .foregroundStyle(TRVillagePalette.cream)
+                            .frame(width: 24, height: 24)
                             .background {
                                 Circle()
-                                    .fill(Color(red: 0.43, green: 0.50, blue: 0.62))
+                                    .fill(TRVillagePalette.slate)
+                                    .overlay { Circle().strokeBorder(TRVillagePalette.cream, lineWidth: 2) }
                             }
                             .offset(x: 7, y: -7)
                             .accessibilityHidden(true)
@@ -39,48 +33,48 @@ struct TRShopCosmeticOptionCard: View {
                 }
 
                 Text(option.title)
-                    .font(.system(size: 14, weight: .black, design: .rounded))
-                    .foregroundStyle(TRGameplayStyle.Colors.titleNavy)
+                    .font(.system(size: 15, weight: .bold, design: .rounded))
+                    .foregroundStyle(TRVillagePalette.navy)
                     .lineLimit(1)
                     .minimumScaleFactor(0.68)
                     .frame(maxWidth: .infinity)
 
                 if let price = option.price, !option.isUnlocked {
                     TRShopCoinPriceLabel(price: price)
+                } else if option.isSelected {
+                    TRCozyTag(text: "In Use", systemImage: "checkmark", tint: TRVillagePalette.blue)
+                        .frame(height: 35)
                 } else {
-                    Text(option.isSelected ? "In Use" : "Owned")
-                        .font(.system(size: 12, weight: .black, design: .rounded))
-                        .foregroundStyle(option.isSelected ? TRGameplayStyle.Colors.primaryBlue : TRGameplayStyle.Colors.secondaryText)
-                        .lineLimit(1)
-                        .minimumScaleFactor(0.78)
-                        .frame(height: 30)
+                    Text("Owned")
+                        .font(.system(size: 12, weight: .semibold, design: .rounded))
+                        .foregroundStyle(TRVillagePalette.slate)
                         .padding(.horizontal, 10)
-                        .background {
-                            Capsule()
-                                .fill(Color(red: 0.92, green: 0.96, blue: 1.00).opacity(option.isSelected ? 1.0 : 0.72))
-                        }
+                        .frame(height: 24)
+                        .background { TRCozyWellBackground(shape: Capsule()) }
+                        .frame(height: 35)
                 }
             }
             .padding(12)
             .frame(maxWidth: .infinity)
-            .frame(height: 162)
+            .frame(height: 172)
             .background {
-                RoundedRectangle(cornerRadius: 22, style: .continuous)
-                    .fill(.white.opacity(option.isUnlocked ? 0.92 : 0.82))
+                MultiVanHUDCardBackground(cornerRadius: 22)
                     .overlay {
-                        RoundedRectangle(cornerRadius: 22, style: .continuous)
-                            .stroke(option.isSelected ? TRGameplayStyle.Colors.primaryBlue : .white.opacity(0.72), lineWidth: option.isSelected ? 3 : 1)
+                        if option.isSelected {
+                            RoundedRectangle(cornerRadius: 22, style: .continuous)
+                                .strokeBorder(TRVillagePalette.blue, lineWidth: 3)
+                        }
                     }
-                    .shadow(color: .black.opacity(option.isSelected ? 0.12 : 0.07), radius: 10, x: 0, y: 5)
             }
             .contentShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
         }
-        .buttonStyle(.plain)
+        .buttonStyle(TRVillagePressStyle())
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(Text(option.title))
         .accessibilityValue(Text(accessibilityValue))
         .accessibilityHint(Text(accessibilityHint))
-        .accessibilityAddTraits(option.isSelected ? [.isSelected] : [])
+        .accessibilityAddTraits(option.isSelected ? [.isButton, .isSelected] : [.isButton])
+        .accessibilityAction { action() }
     }
 
     private var accessibilityValue: String {
@@ -112,91 +106,18 @@ struct TRShopCosmeticOptionCard: View {
     }
 }
 
+/// The cosmetic at thumbnail size: a table theme's sky and base, or a confetti's
+/// paper over the standard table.
 private struct TRShopMiniCosmeticPreview: View {
     let option: ShopCosmeticOption
 
     var body: some View {
         ZStack {
-            TRShopRoutePreviewView(accent: option.accent, compact: true)
-
-            switch option.categoryID {
-            case ShopCosmeticCategoryID.deliveryDots:
-                deliveryDotPreview
-            case ShopCosmeticCategoryID.trails:
-                trailPreview
-            case ShopCosmeticCategoryID.confetti:
-                confettiPreview
-            case ShopCosmeticCategoryID.destinations:
-                destinationPreview
-            default:
-                EmptyView()
+            TRShopTableSwatch(table: MultiVanTableTheme(rawValue: option.id) ?? .standard)
+            if let confetti = MultiVanConfettiStyle(rawValue: option.id) {
+                TRShopConfettiScatter(style: confetti)
             }
         }
-    }
-
-    private var deliveryDotPreview: some View {
-        Circle()
-            .fill(option.accent.routeColor)
-            .overlay {
-                Circle()
-                    .stroke(.white, lineWidth: 5)
-            }
-            .frame(width: 34, height: 34)
-            .shadow(color: option.accent.routeColor.opacity(0.28), radius: 6, x: 0, y: 4)
-    }
-
-    private var trailPreview: some View {
-        HStack(spacing: 7) {
-            ForEach(0..<4, id: \.self) { index in
-                Image(systemName: index.isMultiple(of: 2) ? "sparkle" : "circle.fill")
-                    .font(.system(size: index.isMultiple(of: 2) ? 15 : 8, weight: .black))
-                    .foregroundStyle(.white)
-                    .shadow(color: option.accent.routeShadowColor.opacity(0.35), radius: 4, x: 0, y: 2)
-            }
-        }
-        .padding(.horizontal, 12)
-        .padding(.vertical, 8)
-        .background {
-            Capsule()
-                .fill(option.accent.routeColor.opacity(0.80))
-        }
-    }
-
-    private var confettiPreview: some View {
-        HStack(spacing: 5) {
-            ForEach(0..<5, id: \.self) { index in
-                Image(systemName: index.isMultiple(of: 2) ? "star.fill" : "circle.fill")
-                    .font(.system(size: index.isMultiple(of: 2) ? 13 : 8, weight: .black))
-                    .foregroundStyle(index.isMultiple(of: 2) ? TRGameplayStyle.Colors.resultGold : option.accent.routeColor)
-                    .rotationEffect(.degrees(Double(index * 13)))
-            }
-        }
-        .padding(9)
-        .background {
-            RoundedRectangle(cornerRadius: 16, style: .continuous)
-                .fill(.white.opacity(0.78))
-        }
-    }
-
-    private var destinationPreview: some View {
-        let visual = TRDestinationMarkerVisual(option: option)
-
-        return ZStack {
-            Circle()
-                .fill(.white.opacity(0.92))
-                .frame(width: 42, height: 42)
-
-            if visual.usesFinishFlagSprite {
-                SpriteImage(name: "finish_flag_pin")
-                    .scaledToFit()
-                    .frame(width: 34, height: 34)
-            } else {
-                Image(systemName: visual.systemImageName)
-                    .font(.system(size: 25, weight: .black))
-                    .foregroundStyle(option.accent.routeColor)
-            }
-        }
-        .shadow(color: option.accent.routeColor.opacity(0.22), radius: 6, x: 0, y: 4)
     }
 }
 
@@ -209,5 +130,5 @@ private struct TRShopMiniCosmeticPreview: View {
         }
     }
     .padding(20)
-    .background(Color(red: 0.86, green: 0.94, blue: 0.98))
+    .background(TRVillageSky())
 }

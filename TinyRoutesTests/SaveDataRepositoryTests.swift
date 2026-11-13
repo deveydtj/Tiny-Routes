@@ -65,6 +65,35 @@ final class SaveDataRepositoryTests: XCTestCase {
         XCTAssertEqual(profile.coinTotal, 125)
     }
 
+    func testSchemaThreeSaveFollowsLevelsToTheirNewNumbers() throws {
+        var saved = PlayerProfile(
+            unlockedLevelIDs: ["level_001", "level_005", "level_006", "level_007", "level_008"],
+            completedLevelIDs: ["level_001", "level_005", "level_006", "level_007"],
+            bestStarsByLevelID: ["level_001": 3, "level_005": 2, "level_006": 3, "level_007": 1],
+            coinTotal: 40,
+            fastestCompletionTimeByLevelID: ["level_007": 9, "level_012": 30],
+            claimedLevelRewardKeys: ["levelComplete:level_006", "levelComplete:level_005", "unrelatedReward"]
+        )
+        saved.schemaVersion = 3
+        defaults.set(try JSONEncoder().encode(saved), forKey: "playerProfile.v1")
+
+        let profile = repository.load()
+
+        XCTAssertEqual(profile.schemaVersion, PlayerProfile.currentSchemaVersion)
+        // Convoy (6 → 7) and Merge (7 → 8) keep their stars; Wait for It opens
+        // after Two Colours, and Take a Lap after Merge.
+        XCTAssertEqual(profile.bestStarsByLevelID, ["level_001": 3, "level_005": 2, "level_007": 3, "level_008": 1])
+        XCTAssertEqual(profile.completedLevelIDs, ["level_001", "level_005", "level_007", "level_008"])
+        XCTAssertEqual(profile.unlockedLevelIDs, ["level_001", "level_005", "level_006", "level_007", "level_008", "level_009", "level_010"])
+        XCTAssertEqual(profile.fastestCompletionTimeByLevelID, ["level_008": 9, "level_014": 30])
+        XCTAssertEqual(profile.claimedLevelRewardKeys, ["levelComplete:level_007", "levelComplete:level_005", "unrelatedReward"])
+        XCTAssertEqual(profile.coinTotal, 40)
+
+        // Migrated once: saving and loading again moves nothing further.
+        repository.save(profile)
+        XCTAssertEqual(repository.load(), profile)
+    }
+
     func testCorruptPayloadFallsBackToDefaultProfile() {
         defaults.set(Data("not-json".utf8), forKey: "playerProfile.v1")
 

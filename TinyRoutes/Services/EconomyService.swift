@@ -59,51 +59,45 @@ final class EconomyService {
         return didSpend
     }
 
-    func previewLevelCompletionReward(levelID: String, earnedStars: Int, isFirstCompletion: Bool) -> Int {
-        guard isFirstCompletion,
-              !levelID.isEmpty,
-              earnedStars > 0,
-              hasClaimedLevelCompletionReward(levelID: levelID) == false else {
+    static let coinsPerStar = 50
+
+    /// Coins a win is worth: 50 for each star above the level's best so far. A
+    /// first win pays for every star; a replay pays only for the improvement.
+    func previewLevelCompletionReward(levelID: String, earnedStars: Int, previousBestStars: Int) -> Int {
+        guard !levelID.isEmpty else {
             return 0
         }
 
-        return min(max(earnedStars, 0), 3) * 50
+        let earned = min(max(earnedStars, 0), 3)
+        let alreadyPaid = min(max(previousBestStars, 0), 3)
+        return max(earned - alreadyPaid, 0) * Self.coinsPerStar
     }
 
+    /// Pays `previewLevelCompletionReward`. `previousBestStars` is the level's best
+    /// before this win, as `LevelProgressUpdate` reports it.
     @discardableResult
     func awardLevelCompletionReward(
         levelID: String,
         earnedStars: Int,
-        isFirstCompletion: Bool
+        previousBestStars: Int
     ) -> Int {
         let reward = previewLevelCompletionReward(
             levelID: levelID,
             earnedStars: earnedStars,
-            isFirstCompletion: isFirstCompletion
+            previousBestStars: previousBestStars
         )
 
         guard reward > 0 else {
             return 0
         }
 
-        var awardedCoins = 0
         repository.update { profile in
-            let rewardKey = levelCompletionRewardKey(levelID: levelID)
-            guard profile.claimedLevelRewardKeys.contains(rewardKey) == false else {
-                return
-            }
-
-            profile.claimedLevelRewardKeys.insert(rewardKey)
+            profile.claimedLevelRewardKeys.insert(levelCompletionRewardKey(levelID: levelID))
             profile.coinTotal += reward
             profile.lifetimeCoinsEarned += reward
-            awardedCoins = reward
         }
 
-        return awardedCoins
-    }
-
-    private func hasClaimedLevelCompletionReward(levelID: String) -> Bool {
-        repository.load().claimedLevelRewardKeys.contains(levelCompletionRewardKey(levelID: levelID))
+        return reward
     }
 
     private func levelCompletionRewardKey(levelID: String) -> String {

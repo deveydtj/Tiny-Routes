@@ -6,6 +6,7 @@ import SwiftUI
 struct MultiVanSwitchControl: Identifiable {
     let nodeID: String
     let activeAngle: Double
+    let nextAngle: Double
     let optionAngles: [Double]
     let appearance: MultiVanSwitchAppearance
     let accessibilityLabel: String
@@ -18,9 +19,11 @@ struct MultiVanSwitchControl: Identifiable {
         node: RuntimeRouteNode, engine: MultiVanEngine, graph: RuntimeRouteGraph,
         systemReduceMotion: Bool = false, reducesExtraAnimations: Bool = false
     ) {
-        guard let edgeID = node.activeOutgoingEdgeID, let edge = graph.edgesByID[edgeID] else { return nil }
+        guard let edgeID = node.activeOutgoingEdgeID, let edge = graph.edgesByID[edgeID],
+              let nextID = MultiVanEngine.nextExit(in: node), let nextEdge = graph.edgesByID[nextID] else { return nil }
         nodeID = node.id
         activeAngle = SwitchArrowDirectionResolver.directionAngle(for: edge, from: node, in: graph)
+        nextAngle = SwitchArrowDirectionResolver.directionAngle(for: nextEdge, from: node, in: graph)
         optionAngles = node.outgoingEdgeIDs.compactMap { graph.edgesByID[$0] }.map {
             SwitchArrowDirectionResolver.directionAngle(for: $0, from: node, in: graph)
         }
@@ -126,16 +129,26 @@ struct MultiVanSwitchHitShape: Shape {
 /// The one place a switch tap reaches the engine. Boards only decide where it sits.
 struct MultiVanSwitchButton: View {
     static let hitSize: CGFloat = 44
+    private static let previewSide: CGFloat = 62
+    private static let previewDistance: CGFloat = 60
 
     let control: MultiVanSwitchControl
     let engine: MultiVanEngine
-    var onSwitchTapped: ((String, MultiVanTapResult) -> Void)? = nil
     var onEventsProduced: (() -> Void)? = nil
     var rejectionToken: UUID? = nil
     var animates = true
     var hitShape = MultiVanSwitchHitShape.square
     /// False when the board draws its own dial under the button, as the diorama does.
     var drawsDial = true
+    var previewOffset = CGSize(width: 0, height: -MultiVanSwitchButton.previewDistance)
+    var projectPreviewAngle: (Double) -> Double = { $0 }
+    @State private var confirmedTurn: Turn?
+
+    private struct Turn {
+        let id = UUID()
+        let from: Double
+        let to: Double
+    }
 
     var body: some View {
         Button(action: tap) {
@@ -143,7 +156,7 @@ struct MultiVanSwitchButton: View {
                 .frame(width: Self.hitSize, height: Self.hitSize)
                 .contentShape(hitShape)
         }
-        .buttonStyle(.plain)
+        .buttonStyle(PressStyle(preview: turnPreview))
         // Sizes the element too: a clear label alone leaves VoiceOver's frame unset.
         .frame(width: Self.hitSize, height: Self.hitSize)
         .accessibilityElement(children: .ignore)
@@ -154,12 +167,62 @@ struct MultiVanSwitchButton: View {
         .accessibilityLabel(control.accessibilityLabel)
         .accessibilityValue(control.accessibilityValue)
         .accessibilityHint(control.appearance.accessibilityHint)
+        .onChange(of: control.activeAngle) { _, angle in
+            if let confirmedTurn, confirmedTurn.to != angle { self.confirmedTurn = nil }
+        }
+        .task(id: confirmedTurn?.id) {
+            guard let id = confirmedTurn?.id else { return }
+            do { try await Task.sleep(for: .milliseconds(720)) } catch { return }
+            if confirmedTurn?.id == id { confirmedTurn = nil }
+        }
     }
 
     private func tap() {
-        let result = engine.tapSwitch(nodeID: control.nodeID)
-        onSwitchTapped?(control.nodeID, result)
+        if engine.tapSwitch(nodeID: control.nodeID) == .accepted {
+            confirmedTurn = Turn(from: control.activeAngle, to: control.nextAngle)
+        } else {
+            confirmedTurn = nil
+        }
         onEventsProduced?()
+    }
+
+    @ViewBuilder
+    private func turnPreview(isPressed: Bool) -> some View {
+        if !isPressed || control.appearance.isAvailable,
+           let angle = isPressed ? control.nextAngle : confirmedTurn?.to {
+            MultiVanSwitchDialView(
+                activeAngle: projectPreviewAngle(angle),
+                optionAngles: control.optionAngles.map(projectPreviewAngle),
+                tint: control.appearance.dialTint,
+                side: Self.previewSide,
+                animates: animates,
+                startingAngle: (isPressed ? control.activeAngle : confirmedTurn?.from).map(projectPreviewAngle)
+            )
+            .overlay { Circle().strokeBorder(TRGameplayStyle.Colors.orangeAccent, lineWidth: 2) }
+            .shadow(color: TRVillagePalette.ink.opacity(0.4), radius: 5, y: 3)
+            .offset(previewOffset)
+            .allowsHitTesting(false)
+            .accessibilityHidden(true)
+        }
+    }
+
+    /// Keep the enlarged dial above the finger, or move it sideways near the HUD.
+    static func previewOffset(at point: CGPoint, in size: CGSize, topInset: CGFloat = 0) -> CGSize {
+        let margin = previewSide / 2 + 5
+        let top = topInset + margin
+        let fitsAbove = point.y - previewDistance >= top
+        let sideways = point.x < size.width / 2 ? previewDistance : -previewDistance
+        let x = min(max(point.x + (fitsAbove ? 0 : sideways), margin), size.width - margin)
+        return CGSize(width: x - point.x, height: max(top - point.y, -previewDistance))
+    }
+
+    private struct PressStyle<Preview: View>: ButtonStyle {
+        let preview: (Bool) -> Preview
+
+        func makeBody(configuration: Configuration) -> some View {
+            configuration.label
+                .overlay { preview(configuration.isPressed) }
+        }
     }
 
     @ViewBuilder
@@ -203,7 +266,7 @@ private struct MultiVanSwitchIndicators: View {
         ZStack {
             if appearance.isLive {
                 Circle()
-                    .strokeBorder(Color.orange, style: StrokeStyle(
+                    .strokeBorder(Color(hex: 0xFF8C29), style: StrokeStyle(
                         lineWidth: appearance.showsLock ? 3 : 2,
                         dash: appearance.showsLock ? [3, 2] : []
                     ))
@@ -211,11 +274,11 @@ private struct MultiVanSwitchIndicators: View {
                     .phaseAnimator(appearance.pulses ? [false, true] : [false]) { content, phase in
                         content.opacity(phase ? 0.55 : 1)
                     } animation: { _ in appearance.pulses ? .easeInOut(duration: 0.9) : nil }
-                badge("bolt.fill", color: .orange)
+                badge("bolt.fill", color: Color(hex: 0xE0701D))
                     .offset(x: -13, y: -13)
             }
             if appearance.showsLock {
-                badge("lock.fill", color: .primary)
+                badge("lock.fill", color: Color(hex: 0x3B3A55))
                     .keyframeAnimator(initialValue: 1.0, trigger: rejectionToken) { content, opacity in
                         content.opacity(reduceMotion ? 1 : opacity)
                     } keyframes: { _ in
@@ -236,6 +299,7 @@ private struct MultiVanSwitchIndicators: View {
             .font(.system(size: 9, weight: .heavy))
             .foregroundStyle(color)
             .frame(width: 14, height: 14)
-            .background(.white, in: Circle())
+            .background(TRVillagePalette.cream, in: Circle())
+            .overlay { Circle().strokeBorder(MultiVanHUDStyle.creamLip, lineWidth: 0.75) }
     }
 }

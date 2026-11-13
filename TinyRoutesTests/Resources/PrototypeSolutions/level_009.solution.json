@@ -1,11 +1,4 @@
 {
-  "planTaps": [
-    "entry_switch"
-  ],
-  "liveTaps": [
-    {
-      "atTime": 2.25,
-      "nodeID": "switch"
-    }
-  ]
+  "planTaps": [],
+  "liveTaps": [{ "atTime": 5, "nodeID": "loop_switch" }]
 }

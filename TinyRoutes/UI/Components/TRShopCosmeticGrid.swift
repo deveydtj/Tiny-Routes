@@ -26,5 +26,5 @@ struct TRShopCosmeticGrid: View {
         onOptionTapped: { _ in }
     )
     .padding(20)
-    .background(Color(red: 0.86, green: 0.94, blue: 0.98))
+    .background(TRVillageSky())
 }

@@ -23,5 +23,18 @@
   "houses": [{ "nodeID": "red_house", "color": "red" }],
   "initialSwitchEdges": { "loop_switch": "to_loop_corner", "house_switch": "to_barrier" },
   "parChanges": 2,
-  "liveSwitchNodeIDs": []
+  "liveSwitchNodeIDs": [],
+  "tutorial": [
+    {
+      "trigger": "start",
+      "title": "Round in circles?",
+      "body": "Tap Go to watch the van loop.",
+      "focusNodeIDs": [
+        "loop_switch",
+        "house_switch"
+      ],
+      "practice": "stop",
+      "practiceEdgeID": "to_loop_corner"
+    }
+  ]
 }

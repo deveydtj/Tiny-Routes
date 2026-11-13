@@ -25,6 +25,7 @@ enum MultiVanDioramaLawn {
         static let asphalt = UIColor(dioramaHex: 0x626779)
         static let driveway = UIColor(dioramaHex: 0xE4D4B4)
         static let bay = UIColor(dioramaHex: 0x6F7486)
+        static let ice = UIColor(dioramaHex: 0xCFE8F7)
     }
 
     /// Widths and radii in grid units. Each pass is stroked over the whole network,
@@ -81,14 +82,47 @@ enum MultiVanDioramaLawn {
             }
         }
 
+        /// A short reach of water under a drawbridge, across its road.
+        struct Canal: Equatable {
+            let centre: RoadPoint
+            /// Along the water, a unit vector across the bridge's road.
+            let across: RoadVector
+
+            static let halfLength = 1.05
+            static let width = 0.56
+        }
+
         let plazas: [RoadPoint]
         let depots: [Depot]
         /// Each house's node and the road's arrival direction, towards its door.
         let houses: [House]
         let barriers: [Marking]
+        let canals: [Canal]
+        /// Where parcels, signal posts and water stand: scenery keeps clear of each.
+        let reserved: [(point: RoadPoint, radius: Double)]
 
         init(level: MultiVanLevel, graph: RuntimeRouteGraph) {
             let point = { (node: RuntimeRouteNode) in RoadPoint(x: node.x, y: node.y) }
+            var canals: [Canal] = []
+            var reserved: [(point: RoadPoint, radius: Double)] = level.packages.map {
+                (MultiVanPickup.markerPoint(nodeID: $0.nodeID, graph: graph), 0.3)
+            }
+            for signal in level.signals {
+                for approach in signal.approaches {
+                    guard let road = graph.edgesByID[approach.edgeID]?.roadPath else { continue }
+                    let line = road.point(atDistance: approach.stopDistance)
+                    let tangent = road.tangent(atDistance: approach.stopDistance)
+                    reserved.append((MultiVanSignalApproach.postPoint(stopPoint: line, tangent: tangent), 0.22))
+                    guard signal.kind == .drawbridge, !canals.contains(where: { $0.centre == RoadPoint(x: signal.area.x, y: signal.area.y) }) else { continue }
+                    let canal = Canal(centre: RoadPoint(x: signal.area.x, y: signal.area.y), across: RoadVector(x: tangent.y, y: -tangent.x))
+                    canals.append(canal)
+                    for offset in stride(from: -Canal.halfLength, through: Canal.halfLength, by: 0.15) {
+                        reserved.append((RoadPoint(x: canal.centre.x + canal.across.x * offset, y: canal.centre.y + canal.across.y * offset), Canal.width / 2 + 0.12))
+                    }
+                }
+            }
+            self.canals = canals
+            self.reserved = reserved
             plazas = MultiVanBoardRules.switchNodes(in: graph).map(point)
             var startIDs: [String] = []
             for van in level.vans where !startIDs.contains(van.startNodeID) { startIDs.append(van.startNodeID) }
@@ -125,13 +159,32 @@ enum MultiVanDioramaLawn {
     static func image(for level: MultiVanLevel, graph: RuntimeRouteGraph, scenery: MultiVanDioramaScenery) -> UIImage {
         let layout = layout(for: level)
         let features = Features(level: level, graph: graph)
-        let roads = roadLayer(graph: graph, features: features, layout: layout)
+        let roads = roadLayer(level: level, graph: graph, features: features, layout: layout)
         return UIGraphicsImageRenderer(size: imageSize, format: textureFormat(opaque: true)).image { context in
             let g = context.cgContext
             let pixel = { (point: RoadPoint) in layout.point(for: point) ?? .zero }
-            var random = MultiVanDioramaRandom(seed: UInt32(Int(level.id.filter(\.isNumber)) ?? 0) &* 97)
+            var random = MultiVanDioramaRandom(seed: UInt32(truncatingIfNeeded: level.scenerySeed) &* 97)
             paintGrass(g, random: &random)
+            if let wash = level.biome.groundWash {
+                // The chapter's ground, over the grass and under everything else.
+                g.setFillColor(UIColor(dioramaHex: Int(wash.hex)).withAlphaComponent(wash.opacity).cgColor)
+                g.fill(CGRect(origin: .zero, size: imageSize))
+            }
             paintScenery(g, scenery: scenery, houses: features.houses, pixel: pixel, random: &random)
+            // Water under each drawbridge; the road layer then lays the deck over it.
+            for canal in features.canals {
+                let half = Features.Canal.halfLength
+                let from = pixel(RoadPoint(x: canal.centre.x - canal.across.x * half, y: canal.centre.y - canal.across.y * half))
+                let to = pixel(RoadPoint(x: canal.centre.x + canal.across.x * half, y: canal.centre.y + canal.across.y * half))
+                for (width, hex) in [(Features.Canal.width + 0.08, 0x7DB457), (Features.Canal.width, 0x5A9CC4), (Features.Canal.width * 0.8, 0x8CC3E0)] {
+                    g.move(to: from)
+                    g.addLine(to: to)
+                    g.setLineCap(.round)
+                    g.setLineWidth(width * pixelsPerUnit)
+                    g.setStrokeColor(UIColor(dioramaHex: hex).cgColor)
+                    g.strokePath()
+                }
+            }
             // The road layer goes down in one piece so the curb casts a single shadow.
             g.saveGState()
             g.setShadow(
@@ -243,7 +296,9 @@ enum MultiVanDioramaLawn {
 
     // MARK: - Roads
 
-    private static func roadLayer(graph: RuntimeRouteGraph, features: Features, layout: BoardLayout) -> UIImage {
+    private static func roadLayer(
+        level: MultiVanLevel, graph: RuntimeRouteGraph, features: Features, layout: BoardLayout
+    ) -> UIImage {
         UIGraphicsImageRenderer(size: imageSize, format: textureFormat(opaque: false)).image { context in
             let g = context.cgContext
             let unit = pixelsPerUnit
@@ -283,6 +338,42 @@ enum MultiVanDioramaLawn {
             g.strokePath()
             strokeNetwork(width: Measure.edgeLineWidth, color: Palette.edgeLine, plazaRadius: Measure.plazaRadii.edgeLine)
             strokeNetwork(width: Measure.asphaltWidth, color: Palette.asphalt, plazaRadius: Measure.plazaRadii.asphalt)
+
+            // Ice lies over the asphalt: pale, with a hatch that reads without colour.
+            let iceEdgeIDs = Set(level.roadZones.filter { $0.kind == .ice }.flatMap(\.edgeIDs))
+            if !iceEdgeIDs.isEmpty {
+                let ice = CGMutablePath()
+                for edge in graph.edgesByID.values.sorted(by: { $0.id < $1.id }) where iceEdgeIDs.contains(edge.id) {
+                    ice.addPath(RoadPathRenderer.path(for: edge, layout: layout).cgPath)
+                }
+                g.addPath(ice)
+                g.setLineCap(.round)
+                g.setLineWidth(Measure.asphaltWidth * unit)
+                g.setStrokeColor(Palette.ice.cgColor)
+                g.strokePath()
+                g.addPath(ice)
+                g.setLineCap(.butt)
+                g.setLineWidth(Measure.asphaltWidth * 0.7 * unit)
+                g.setLineDash(phase: 0, lengths: [0.03 * unit, 0.11 * unit])
+                g.setStrokeColor(UIColor.white.cgColor)
+                g.strokePath()
+                g.setLineDash(phase: 0, lengths: [])
+            }
+            // A stop line crosses each signalled road where a held van waits.
+            for signal in level.signals {
+                for approach in signal.approaches {
+                    guard let road = graph.edgesByID[approach.edgeID]?.roadPath else { continue }
+                    let point = pixel(road.point(atDistance: approach.stopDistance))
+                    let heading = textureDirection(road.tangent(atDistance: approach.stopDistance))
+                    let half = Measure.asphaltWidth / 2 * unit
+                    g.move(to: CGPoint(x: point.x - heading.dy * half, y: point.y + heading.dx * half))
+                    g.addLine(to: CGPoint(x: point.x + heading.dy * half, y: point.y - heading.dx * half))
+                    g.setLineCap(.butt)
+                    g.setLineWidth(0.06 * unit)
+                    g.setStrokeColor(UIColor.white.cgColor)
+                    g.strokePath()
+                }
+            }
 
             for depot in features.depots {
                 drawRotated(g, at: pixel(depot.point), heading: depot.heading) { drawDepot(g, colors: depot.colors) }

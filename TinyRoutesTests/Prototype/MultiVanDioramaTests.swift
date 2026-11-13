@@ -182,7 +182,7 @@ final class MultiVanDioramaTests: XCTestCase {
     }
 
     func testOverheadViewLaysTheLawnWhereTheFlatBoardDrawsIt() throws {
-        let level = try XCTUnwrap(MultiVanLevelRepository().loadAllLevels().first { $0.id == "level_012" })
+        let level = try XCTUnwrap(MultiVanLevelRepository().loadAllLevels().first { $0.id == "level_014" })
         // Full screen under a HUD and controls, as wide and as tall as the band
         // allows; and a stacked board with nothing covered.
         let cases: [(CGSize, MultiVanDioramaCamera.Covered, Double)] = [
@@ -242,7 +242,7 @@ final class MultiVanDioramaTests: XCTestCase {
     @MainActor
     func testLoadingRebuildsPiecesOnlyForANewLevel() throws {
         let levels = try MultiVanLevelRepository().loadAllLevels()
-        let level12 = try XCTUnwrap(levels.first { $0.id == "level_012" })
+        let level12 = try XCTUnwrap(levels.first { $0.id == "level_014" })
         let level4 = try XCTUnwrap(levels.first { $0.id == "level_004" })
         let scene = MultiVanDioramaScene()
         let graph12 = try MultiVanEngine(level: level12).runtimeGraph
@@ -418,28 +418,118 @@ final class MultiVanDioramaTests: XCTestCase {
 
     @MainActor
     func testDismantlingTheViewReleasesTheScene() throws {
-        let level = try XCTUnwrap(MultiVanLevelRepository().loadAllLevels().first { $0.id == "level_012" })
+        let level = try XCTUnwrap(MultiVanLevelRepository().loadAllLevels().first { $0.id == "level_014" })
         weak var weakScene: SCNScene?
-        weak var weakCoordinator: MultiVanDioramaScene?
+        weak var weakRenderer: MultiVanDioramaRenderer?
         var view: SCNView?
         autoreleasepool {
-            var coordinator: MultiVanDioramaScene? = MultiVanDioramaScene()
-            coordinator?.load(level, graph: try! MultiVanEngine(level: level).runtimeGraph)
-            let sceneView = SCNView(frame: CGRect(x: 0, y: 0, width: 360, height: 460), options: nil)
-            sceneView.scene = coordinator?.scene
-            sceneView.pointOfView = coordinator?.cameraNode
-            coordinator?.setCamera(.framed(in: sceneView.bounds.size))
+            var renderer: MultiVanDioramaRenderer? = MultiVanDioramaRenderer()
+            let sceneView = renderer!.view
+            sceneView.frame = CGRect(x: 0, y: 0, width: 360, height: 460)
+            renderer?.scene.load(level, graph: try! MultiVanEngine(level: level).runtimeGraph)
+            renderer?.scene.setCamera(.framed(in: sceneView.bounds.size))
             sceneView.layoutIfNeeded()
-            weakScene = coordinator?.scene
-            weakCoordinator = coordinator
-            MultiVanDioramaSceneView.dismantleUIView(sceneView, coordinator: coordinator!)
+            weakScene = renderer?.scene.scene
+            weakRenderer = renderer
+            MultiVanDioramaSceneView.dismantleUIView(sceneView, coordinator: renderer!)
             XCTAssertNil(sceneView.scene)
             XCTAssertNil(sceneView.pointOfView)
-            coordinator = nil
+            renderer = nil
             view = sceneView
         }
-        XCTAssertNil(weakCoordinator)
+        XCTAssertNil(weakRenderer)
         XCTAssertNil(weakScene)
         XCTAssertNotNil(view)
+    }
+
+    @MainActor
+    func testThePreloadKeepsADismantledRendererForTheNextBoard() throws {
+        let preload = MultiVanDioramaPreload()
+        let renderer = MultiVanDioramaRenderer()
+        renderer.preload = preload
+        MultiVanDioramaSceneView.dismantleUIView(renderer.view, coordinator: renderer)
+        // Parked whole, so the next board draws at once.
+        XCTAssertNotNil(renderer.view.scene)
+        XCTAssertTrue(preload.hasRenderer)
+        // Only one waits; a second is dropped.
+        let second = MultiVanDioramaRenderer()
+        second.preload = preload
+        MultiVanDioramaSceneView.dismantleUIView(second.view, coordinator: second)
+        XCTAssertNil(second.view.scene)
+        XCTAssertTrue(preload.take() === renderer)
+        XCTAssertFalse(preload.hasRenderer)
+        XCTAssertNil(preload.take())
+    }
+
+    @MainActor
+    func testWarmingBuildsTheLevelBeforeTheBoardAsksForIt() async throws {
+        let level = try XCTUnwrap(MultiVanLevelRepository().loadAllLevels().first { $0.id == "level_014" })
+        let preload = MultiVanDioramaPreload()
+        await preload.warm(level, graph: try MultiVanEngine(level: level).runtimeGraph)
+        let renderer = try XCTUnwrap(preload.take())
+        XCTAssertEqual(renderer.scene.levelID, level.id)
+        XCTAssertFalse(renderer.scene.dials.isEmpty)
+        XCTAssertTrue(renderer.view.scene === renderer.scene.scene)
+        preload.release()
+        await preload.warm(level, graph: try MultiVanEngine(level: level).runtimeGraph)
+        XCTAssertTrue(preload.hasRenderer)
+        preload.release()
+        XCTAssertFalse(preload.hasRenderer)
+    }
+
+    @MainActor
+    func testATapRebuildsOnlyTheTrailsItReroutes() throws {
+        let level = try XCTUnwrap(MultiVanLevelRepository().loadAllLevels().first { $0.id == "level_014" })
+        let engine = try MultiVanEngine(level: level)
+        let scene = MultiVanDioramaScene()
+        scene.load(level, graph: engine.runtimeGraph)
+        let frame = { MultiVanDioramaFrame(engine: engine, systemReduceMotion: true, reducesExtraAnimations: false) }
+        scene.sync(frame())
+        var checked = false
+        for node in MultiVanBoardRules.switchNodes(in: engine.runtimeGraph) {
+            let before = scene.trails
+            let lines = scene.trailNodes
+            XCTAssertEqual(engine.tapSwitch(nodeID: node.id), .accepted)
+            scene.sync(frame())
+            // Shared lanes and stacked badges mean one van's reroute can move another's line.
+            let changed = zip(before, scene.trails).map { $0 != $1 }
+            for (index, rerouted) in changed.enumerated() {
+                XCTAssertEqual(scene.trailNodes[index] !== lines[index], rerouted, "\(node.id) van \(index)")
+                XCTAssertNotNil(scene.trailNodes[index].parent)
+            }
+            XCTAssertEqual(scene.trailNodes.count, level.vans.count)
+            if changed.contains(true), changed.contains(false) { checked = true }
+        }
+        // Only the rebuilt lines and badges stay in the scene.
+        let markers = scene.markerNodes.compactMap { $0 }.count
+        XCTAssertEqual(scene.trailNodes.first?.parent?.childNodes.count, level.vans.count + markers)
+        XCTAssertTrue(checked, "no tap moved some lines but not others")
+    }
+
+    @MainActor
+    func testAHandedOverSceneSetsDialsFlippedWhileItWaited() throws {
+        let level = try XCTUnwrap(MultiVanLevelRepository().loadAllLevels().first { $0.id == "level_014" })
+        let engine = try MultiVanEngine(level: level)
+        let waiting = MultiVanDioramaScene()
+        let showing = MultiVanDioramaScene()
+        waiting.load(level, graph: engine.runtimeGraph)
+        showing.load(level, graph: engine.runtimeGraph)
+        let frame = { MultiVanDioramaFrame(engine: engine, systemReduceMotion: false, reducesExtraAnimations: false) }
+        showing.sync(frame())
+        let nodeID = try XCTUnwrap(MultiVanBoardRules.switchNodes(in: engine.runtimeGraph).first?.id)
+        XCTAssertEqual(engine.tapSwitch(nodeID: nodeID), .accepted)
+        let pivot = { (scene: MultiVanDioramaScene) in
+            try XCTUnwrap(scene.dials[nodeID]?.childNode(withName: MultiVanDioramaPieces.Part.pivot, recursively: false))
+        }
+        // On screen the arrow turns to the new exit; handed over, it's already there.
+        showing.sync(frame())
+        XCTAssertTrue(try pivot(showing).hasActions)
+        waiting.prepareForBoard()
+        waiting.sync(frame())
+        XCTAssertFalse(try pivot(waiting).hasActions)
+        // Later flips turn as usual.
+        XCTAssertEqual(engine.tapSwitch(nodeID: nodeID), .accepted)
+        waiting.sync(frame())
+        XCTAssertTrue(try pivot(waiting).hasActions)
     }
 }

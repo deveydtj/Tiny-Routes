@@ -1,8 +1,11 @@
 {
   "planTaps": [
-    "red_switch",
-    "blue_switch",
-    "yellow_switch"
+    "entry_switch"
   ],
-  "liveTaps": []
+  "liveTaps": [
+    {
+      "atTime": 5,
+      "nodeID": "loop_switch"
+    }
+  ]
 }

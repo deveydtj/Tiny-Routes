@@ -4,6 +4,26 @@
 
 This is the recommended planning reference for future Multi-Van development, subject to approval. It supersedes V1's proposed sequencing, not its source files or any implemented behavior. This task created only this document and did not modify levels, solutions, tuning, source, settings or Git metadata. No builds, simulations, human sessions or subagents were run for this review. Referenced test assertions are source evidence, not newly executed results.
 
+## Implementation status (2026-11-12)
+
+The engineering side of this roadmap is built as **internal experiment boards**, and one small content pack has entered the campaign: levels 15–19 (L1, below). Levels 1–14, their pars, stars and saved progress are unchanged. Every human gate in §13 is still open, including the pickup trial the pack was meant to wait for.
+
+| Task (§11.3) | Status | Where |
+|---|---|---|
+| C1–C3 cargo core | Built and tested. Zero, one or two fixed-owner parcels per van; missing-parcel failure; cargo-aware preview. | [MultiVanCargo.swift](TinyRoutes/Prototype/MultiVanCargo.swift), [MultiVanLevelRules.swift](TinyRoutes/Prototype/MultiVanLevelRules.swift), [MultiVanEngine.swift](TinyRoutes/Prototype/MultiVanEngine.swift), [MultiVanRoutePreview.swift](TinyRoutes/Prototype/MultiVanRoutePreview.swift) |
+| C4–C5 boards A/B/C | Built on both boards, with all four switch settings pinned for B and C. **Player trial not run.** | `experiment_pickup_a/b/c.json`, [MultiVanCargoTests.swift](TinyRoutesTests/Prototype/MultiVanCargoTests.swift) |
+| C6 two parcels | Boards 28, 29 and 30 built. On board 30 all sixteen switch settings are pinned: each pickup order has exactly one safe road for Blue, both wins are at par, and every crash is at the one crossing. **Player trial not run.** | `experiment_pair_a/b/c.json`, [MultiVanExperimentBoardTests.swift](TinyRoutesTests/Prototype/MultiVanExperimentBoardTests.swift) |
+| D1 pause / inspect / resume | Built. Offered on boards with a live switch or a signal. The contingent "advance while paused" control is not built. | [MultiVanGameplayScreen.swift](TinyRoutes/Prototype/MultiVanGameplayScreen.swift), [MultiVanDeliberatePlayTests.swift](TinyRoutesTests/Prototype/MultiVanDeliberatePlayTests.swift) |
+| S1 automatic signal | Built: Wait or Wander, its other-phase variant and a no-light control. | [MultiVanSignal.swift](TinyRoutes/Prototype/MultiVanSignal.swift), `experiment_signal_a/b/c.json`, [MultiVanSignalTests.swift](TinyRoutesTests/Prototype/MultiVanSignalTests.swift) |
+| H1 help ladder | All three steps live on every board with a hint. Step 3 reads the recorded solutions, which now ship with the app; the packaging check holds them byte-identical to the tested scripts. | [MultiVanAssistance.swift](TinyRoutes/Prototype/MultiVanAssistance.swift), [MultiVanTutorial.swift](TinyRoutes/Prototype/MultiVanTutorial.swift) |
+| Biomes (§8) | `biome` field and a ground wash on both boards. No biome-specific scenery art yet. | [MultiVanSignal.swift](TinyRoutes/Prototype/MultiVanSignal.swift) |
+| E1 shop and rewards | Built, on the owner's go-ahead (2026-11-12) with §15's recommended choices. The shop sells only what shows on a Multi-Van board: six table themes (the base's soil bands and the sky; never the lawn, roads or pieces) and four win confetti, on both boards, each previewed on a real board. Themes and confetti a player owns carry over under the same IDs. Delivery dots, trails and destinations are retired and refunded at their price when an older save loads (profile schema 5). A win pays 50 coins for each star above the level's best, so a better replay pays the difference. Not built: van liveries, parcel wrapping, scenery decorations, milestone rewards and chapter bonuses. The paid Starter Pack and Remove Ads cards are unchanged placeholders. | [MultiVanCosmetics.swift](TinyRoutes/Prototype/MultiVanCosmetics.swift), [ShopCatalogService.swift](TinyRoutes/Services/ShopCatalogService.swift), [EconomyService.swift](TinyRoutes/Services/EconomyService.swift), [PlayerProfile.swift](TinyRoutes/Domain/PlayerProfile.swift), [MultiVanCosmeticsTests.swift](TinyRoutesTests/Prototype/MultiVanCosmeticsTests.swift) |
+| Tap-count scoring | Built (2026-11-12): every accepted switch tap counts against par; Reset switches clears it. See §9. | [MultiVanEngine.swift](TinyRoutes/Prototype/MultiVanEngine.swift) |
+| L1 content pack | Built on the owner's go-ahead (2026-11-12), **ahead of the C5 player trial, which has not run.** Parcel Row, campaign levels 15–19, planning only (no live switch, light or ice): **15 Pick Up First** and **16 Make Room for a Pickup** are trial boards A and B under campaign IDs; **17 Around the Block** (one-way pickup street, §8 slot 16); **18 Two Good Plans** (delivery-only, two shared switches, two equal plans; §8 slots 17 and 26); **19 Neighborhood Round** (a pickup each, then one road choice at a crossing; §8 slot 18, with one winning plan rather than two). Every static setting of 17–19 is pinned, each failure has its own cause, wins are not near misses, and both plans of 18 earn three stars. Review found and fixed two things: on the 3D board VoiceOver now reads parcels, lamps and a van's cargo as the flat board does; and switches one grid step apart could not both get a full tap target on the smallest board, so Blue's fork moved down a row on 16 and on trial boards B and C (timings unchanged). **Not done:** play on a physical device, VoiceOver and motor review by a person, and any player evidence that these boards are understood or wanted. If the trial rejects cargo, 15–17 and 19 come out again, which needs a save migration once players hold stars on them. | `level_015`–`level_019.json`, [MultiVanContentPackTests.swift](TinyRoutesTests/Prototype/MultiVanContentPackTests.swift), [MultiVanDioramaBoardView.swift](TinyRoutes/Prototype/MultiVanDioramaBoardView.swift) |
+| P1, R1 | **Not started.** Save migration and the scoring review each wait on an owner decision in §15. Level 18 is the first board with two real plans for R1 to look at. | — |
+
+Internal builds open the boards from Settings → Experiment Boards. Wins there save no stars, unlock nothing and pay no coins. The playtest logger this document refers to no longer exists in the tree, so attempts are not logged.
+
 ## 1. Executive direction
 
 **Make Multi-Van the lasting foundation of TinyRoutes. Expand the decisions players make before expanding the rules they must remember.** The central pleasure is examining a miniature delivery network, composing a plan, watching it work, intervening deliberately when appropriate, understanding failures, and enjoying the delivery payoff.
@@ -117,6 +137,30 @@ V1 ideas worth preserving over a more aggressive cut: a calm first pickup tutori
 8. **One readable miniature board.** Retain the current 5×7 coordinate envelope initially. Do not enlarge it or shrink controls to rescue a weak layout. Actual layout, Dynamic Type, diorama camera angles and nonvisual route comprehension still need device checks.
 9. **Previews explain their scope.** A route can satisfy destination and cargo while colliding. “Current route unfinished” differs from a proven failure, especially before a future live change.
 10. **Completion comes before mastery.** No timers, assistance penalties or repeated optimization requirements in pickup teaching. Existing stars/pars remain unchanged.
+
+### Assistance for harder boards — proposed
+
+Playtest feedback: later levels should not become so hard that they feel almost unsolvable. The principles above limit how difficulty grows. A player who is still stuck also needs a way forward that doesn't hand them the whole answer.
+
+**This builds on code that already exists.** `MultiVanTutorialPresentation` ([MultiVanTutorial.swift](TinyRoutes/Prototype/MultiVanTutorial.swift)) already counts failures per session, shows the level's `hint` on the failure card after `failuresBeforeHint` (2) failures, shows a one-time `crash` tip with ringed `focusNodeIDs` that persist through Retry, detects a stuck player (20 seconds of play plus 3 missed taps), and draws non-blocking board spotlights (`MultiVanTutorialSpotlight`). Level JSON already carries `hint` and `tutorial` tips, and levels 6–14 have hints. The gap: `supportsReminders(level:)` is hard-coded to levels 1–9, so on harder boards only the failure-card hint text appears; the reminder cue and the spotlight on retry stay off.
+
+**Proposed escalation ladder, reusing that system:**
+
+| Step | Trigger (provisional) | Help | Work |
+|---|---|---|---|
+| 1 | 2 failures on a level | Show the level's `hint` text on the failure card. | Already implemented. |
+| 2 | About 4 failures, or the stuck detector fires | Spotlight the switch(es) that matter, with the hint cue in the HUD. | Gate reminders on whether the level has hint data instead of on level numbers 1–9; add an optional hint `focusNodeIDs` field, or reuse the crash tip's. |
+| 3 | About 6 failures, or a deliberate "Help" tap | One nudge: ring a single switch and name the exit it should take, or highlight one van's correct route in the existing preview. Reveal one step, never the full solution. | New, small. Source the step from the validated solution scripts so the nudge is always correct; never infer it from the level at runtime. |
+
+Rules:
+
+- **No penalty for help.** Assistance never costs stars or progress, in line with principle 10. Whether a step-3 nudge still allows three stars is an owner decision (see §15); the default recommendation is yes.
+- **Help explains causes rather than timing.** On live boards, a nudge points to the switch and the moment ("after Blue clears the fork"); it doesn't operate controls for the player or bypass locks.
+- **Author help with the level.** Every new board from 13 onward ships with a `hint`; boards with more than one meaningful switch should also mark the focus nodes for step 2. Treat a missing hint as a content-validation warning.
+- **Use the ladder as a signal.** Log which step each attempt reached. A board where most testers reach step 3 is too hard for its slot: redesign or move it rather than relying on the hints.
+- **Counts reset per session**, as today; `MultiVanTutorialProgress` continues to track one-time tips only.
+
+This is a later implementation task (H1 in §11.3), not a prerequisite for the cargo experiment.
 
 ## 4. Recommended package pickup system
 
@@ -354,6 +398,16 @@ The core path uses only accepted mechanics. Live content waits for its control g
 | **45–52 Old Town Dependencies** | Multi-step causal plans; no mandatory new mechanic. | Only retained systems; two interacting vans first, third only with a role. | **3–6**; pairwise reasoning → chain → readable mastery, with 1–2 quiet boards. | A clears B's road; B's chosen route establishes room for C. | Every van/control has a role; cause/fix remains explainable. Signals/multiple pickups are variants, not dependencies. |
 | **53–60 Delivery Day** | Mastery, alternate strategies and a satisfying final composition; no new rules. | Accepted planning/coordination language and optional deliberate intervention. | **3–5**; confidence reset → mastery alternatives → quiet delivery → finale. | A compact two-episode finale, probably three vans; four only if clearly readable. | Sustained player interest, alternate-plan coverage, device/accessibility fit. Rehearsal is optional; end before 60 if stronger. |
 
+### Biomes as chapter themes — proposed
+
+Each chapter above can double as a **biome**: a distinct visual setting whose look explains that chapter's existing challenge. For example, Canal Streets uses water and bridges to make one-way approaches and missing links readable, Old Town has cobbles and tight streets for dependency chains, Signal Square is a market square with its one light, and Parcel Row is a depot and warehouse street. **In V2, biomes add art and atmosphere only, not rules.** A biome's "new challenge" is its chapter's V2 idea.
+
+- **Engineering:** small, contained presentation work. Add an optional `biome` field to level JSON (missing means the current lawn); the diorama lawn and scenery code read it alongside `scenerySeed`. No engine, preview, scoring or validation changes.
+- **Constraints:** biome scenery must never look like a road, connection or barrier the engine doesn't have (see principle 8 and the false-connection hazard in §11.1). Keep the vans, houses and cargo color-plus-symbol identity readable on every biome, in flat and diorama views.
+- **Pacing:** a new biome is a natural difficulty reset point, so open each one with an easy board.
+
+Biome-specific mechanics (snow, drawbridges, ferries and so on) are **not** part of V2. They are collected in [Roadmap V3](multi_van_future_roadmap_v3.md), gated on V2's experiments.
+
 These ranges intentionally do not add up to forty-eight new levels. They describe a pool of roughly 17–36 accepted candidates, with expansion beyond it earned by new puzzle ideas. The possible endpoint is a consequence of quality, not a target derived from this arithmetic.
 
 ### Detailed concepts — provisional levels 13–18
@@ -448,13 +502,46 @@ Replay value should come from understanding a different plan, refining a meaning
 
 ### Is `changeCount` appropriate?
 
-It is a consistent measure of **current configuration distance** from authored settings. It is suitable for some static boards, although it measures relation to the initial plan rather than route distance, traffic elegance or total effort. It is not a general execution-efficiency metric. Returning a live switch to its starting exit reduces the score even after several accepted taps. Existing Rush/Big Delivery scripts use five/seven physical inputs but finish at change counts three/five.
+**Owner decision (2026-11-12): every accepted switch tap counts against par.** `changeCount` in [MultiVanEngine.swift](TinyRoutes/Prototype/MultiVanEngine.swift) is a running tally of accepted taps, not the distance from the authored starting settings. Cycling a switch back to its starting exit no longer returns its cost to zero. Rules for future agents:
+
+- The tally resets only with "Reset switches" (and a new engine). Retry after a run keeps it, so a failed attempt's taps still cost.
+- Rejected taps (locked, frozen) and pause/resume never count.
+- Par is unchanged: every authored solution uses the fewest forward taps, so its tap count equals the old configuration distance. Boards that rely on a four-way switch's wrap-around are still counted per tap.
+- Historic stars do not matter. Saves so far are TestFlight-only and may be reset freely; do not spend effort preserving old star values for this change.
+- This supersedes the earlier "configuration distance" description and the "returning a live switch to its start reduces the score" behavior. Any text or test still describing those is stale.
 
 Cargo introduces no new player action, so the package trial can keep existing scoring without a new formula. Do not base its acceptance on stars or assign minimum pars from an unverified sketch. Trials should log physical tap count separately from `changeCount` and avoid optimization pressure.
 
 A **future scoring review is warranted before scoring new control types or making mastery a major product promise**. Compare a configuration objective, a clearly named route-efficiency objective, and actual accepted actions. Reject raw action count if it discourages safe exploration or makes accessibility operation cost stars. Do not score pause/resume or reject taps. Do not combine unrelated quantities into a hidden weighted score.
 
 Preserve all existing pars, stars and records now. Any new scoring contract needs owner approval, player explanation and record/content-version compatibility. A historic three-star completion remains earned; do not silently downgrade it. Time optimization, if ever used, measures simulation-time route consequences and states how deliberate holds are treated; human inspection speed is not a default skill test.
+
+### Rewards and coin unlocks — needs rework
+
+**The shop no longer matches the game.** Every coin unlock targets the old single-route gameplay. `GameplayCosmeticLoadout` and `TRGameplayCosmeticStyle` are used only by the legacy `GameplayScreen`/`ResultScreen`. `LevelPlayScreen` creates `MultiVanGameplayScreen` without any loadout, and the Multi-Van flat board and diorama use their own fixed styling and paper confetti. So a player who buys an item today sees no change in the game they actually play.
+
+Current catalog ([ShopCatalogService.swift](TinyRoutes/Services/ShopCatalogService.swift)), all paid items about 7,800 coins:
+
+| Category | Paid items (coins) | Fit with the Multi-Van look |
+|---|---|---|
+| Route Themes | Forest Path, Sunset Blvd (500); Neon Nights, Candy Lane (750) | Was a recolor of the 2D route. Could become a board/table or lighting theme for the diorama. |
+| Delivery Dots | Garden (300); Golden, Candy (450) | The dot is replaced by vans. No equivalent; retire or convert. |
+| Trails | Bubbles (350); Fireflies (500); Neon Glow (650) | Could become a van exhaust or route-preview trail, if it stays readable. |
+| Confetti | Spark Pop (250); Leaves (350); Sugar Burst (500) | Closest fit: the diorama already throws confetti on a win. |
+| Destinations | Beach Pin (350); Cabin (500); Arcade (650) | Houses are now color/symbol-coded objectives. Only decorations around a house are safe; the house itself must stay identifiable. |
+
+**Earning is also thin.** Coins come only from first completion (50 per star, so at most 150 per level) and the 50-coin daily bonus. Twelve levels pay at most 1,800 coins. Replaying for a better star rating pays nothing, because the reward is claimed once at first completion.
+
+**Proposed direction:**
+
+1. **Unlocks must show up on the Multi-Van board.** Candidate categories that fit the diorama: van paint/liveries (keeping each van's identity color and symbol readable), parcel wrapping (once cargo exists), win celebrations (confetti and effects), board/table and lighting themes, and scenery decorations (garden props, lamp posts, trees). Each item gets a preview in the shop showing it on a real board.
+2. **Readability beats decoration.** No cosmetic may change van identity colors/symbols, house markers, switch or route-preview visuals, or anything a player relies on to plan. This is the same constraint as principle 8 and the biome note in §8.
+3. **Keep what players own.** Existing purchases carry over (consistent with §10.3). Map each old item to the closest new one (for example Leaves confetti → leaf confetti in the diorama; Forest Path → a forest-green table theme). Items with no equivalent are refunded in coins or replaced with a free item, never silently removed.
+4. **Rebalance earning against the new catalog.** Options to evaluate: pay the star difference when a replay improves a rating; small chapter-completion bonuses; prices sized so a player who finishes the campaign can afford a meaningful set but not everything. No currency, gem or upgrade systems are added (§14).
+5. **Tie some rewards to milestones, not just coins.** Chapter or biome completion can grant a themed item (for example a canal-themed van livery for finishing Canal Streets). Biomes themselves are campaign content, never shop items, and V3 biome mechanics are never sold.
+6. **No gameplay advantages.** Cosmetics never affect routing, timing, hints or stars.
+
+This is task **E1** in §11.3. It can proceed alongside cargo and deliberate-play work, but should land before a broad release, since the shop is visible on day one.
 
 ## 10. Production migration strategy
 
@@ -562,7 +649,9 @@ Each row is a potential approved task boundary with an observable output. It is 
 | **L1 Accepted small content pack** | C5 acceptance; D1 only for live boards; production gates for release | A few distinct levels, complete scripts/negative cases, alternate strategies and device/accessibility review. No automatic 13–30 build-out. |
 | **C6 Two-item trial** | Stable accepted C5 cargo | Two counts/orders, readable summary and B/C-style value comparison with a neighbor; no signal dependency. |
 | **S1 One automatic signal trial** | Approved Section 7 contract; stable engine; gameplay priority decision | Held occupancy/admission tests and one worthwhile playable comparison; no cargo or two-item technical dependency. |
-| **R1 Mastery/scoring review** | Actual alternate-solution boards and observations | Clear proposed objective/record policy and one optional goal trial; preserve historic stars. Manual signal scoring waits for this decision. |
+| **H1 Escalating assistance on harder boards** | Existing tutorial system; validated solution scripts for step 3 | Steps 2–3 of the §3 assistance ladder: reminder gate driven by level data, hint focus nodes, one-step nudge from scripts, assistance-step logging. No star penalty. Can proceed alongside C/D. |
+| **E1 Multi-Van rewards and shop** | Owner-approved catalog direction; P1 data policy for owned items | Cosmetics applied to the Multi-Van flat board and diorama, readability rules, shop previews on a real board, mapping/refund of legacy items, rebalanced coin earning. Before broad release. |
+| **R1 Mastery/scoring review** | Actual alternate-solution boards and observations | Clear proposed objective/record policy and one optional goal trial. Tap-count scoring is already decided (§9); historic stars need no preservation while saves are TestFlight-only. Manual signal scoring waits for this decision. |
 
 Do not turn these boundaries into interfaces/services in advance. Reuse the existing graph/path/board/event seams. Share a small pure rule when engine and preview actually need it; keep the native engine authoritative.
 
@@ -657,7 +746,9 @@ These are future approval points. No implementation starts automatically, and no
 | Campaign scope | Variable chapter lengths and a shorter coherent release are allowed; sixty remains a horizon. Accept individual concepts only after verification. | Content-pack commitment. |
 | Production rollout / history policy | Confirm already-shipped populations. Preserve legacy history separately, genuine Multi-Van stars and account value; no automatic old→new star conversion. | Any save migration/repair or further rollout to legacy players. |
 | Legacy stars with ambiguous origin | Approve an explicit recovery/provenance policy after the audit; never wipe all current stars by assumption. | Compatibility repair. |
-| Future scoring | Keep existing rules/pars now. Review a clear future metric only for demonstrated mastery/control needs; no assistance penalty or retroactive star downgrade. | Scored new control types or a new mastery goal. |
+| Future scoring | Every accepted switch tap counts against par (decided 2026-11-12). Keep existing pars now. Review a clear future metric only for demonstrated mastery/control needs; no assistance penalty or retroactive star downgrade. | Scored new control types or a new mastery goal. |
+| Shop and rewards | Replace the legacy catalog with Multi-Van cosmetics; keep or convert owned items; refund those with no equivalent; pay improved star ratings on replay. | E1, and any broad release. |
+| Assistance and stars | Escalating hints (§3) never cost stars, including a one-step nudge. Thresholds stay provisional until playtests. | H1 implementation. |
 | Two-item collection | Authorize only a later either-order trial after one-item success, before signals if it remains the cheaper promising question. | C6, not initial cargo. |
 | Traffic lights | Retain one later automatic admission experiment; no guaranteed chapter/manual sequel or queue simulation. | Signal implementation. Interest in lights is preserved, not treated as feature approval. |
 | Legacy code retirement | Keep it through preservation, compatibility/release verification and tool audit; remove only in a separately reviewed cleanup. | Any deletion. |

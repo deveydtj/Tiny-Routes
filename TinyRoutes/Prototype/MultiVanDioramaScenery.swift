@@ -111,7 +111,7 @@ struct MultiVanDioramaScenery: Equatable {
     init(level: MultiVanLevel, graph: RuntimeRouteGraph) {
         let features = MultiVanDioramaLawn.Features(level: level, graph: graph)
         let ground = Ground(features: features, graph: graph)
-        var random = MultiVanDioramaRandom(seed: UInt32(Int(level.id.filter(\.isNumber)) ?? 0) &* 1013 &+ 7)
+        var random = MultiVanDioramaRandom(seed: UInt32(truncatingIfNeeded: level.scenerySeed) &* 1013 &+ 7)
         var keepOut = ground.keepOut
         var items: [Item] = []
 
@@ -209,6 +209,7 @@ struct MultiVanDioramaScenery: Equatable {
                 + features.plazas.map { ($0, Measure.switchClearance) }
                 + features.depots.map { ($0.point, Measure.depotClearance) }
                 + features.barriers.map { ($0.point, Measure.barrierClearance) }
+                + features.reserved
         }
 
         /// How far `point` is from the paint of the nearest road or switch plaza;

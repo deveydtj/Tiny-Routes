@@ -1,24 +1,24 @@
 {
   "id": "level_006",
-  "name": "Convoy",
+  "name": "Wait for It",
   "graph": {
     "nodes": [
-      { "id": "blue_start", "x": 2, "y": 0, "outgoingEdgeIDs": ["blue_lead"] },
-      { "id": "start", "x": 2, "y": 1, "outgoingEdgeIDs": ["approach"] },
+      { "id": "blue_start", "x": 4, "y": 0, "outgoingEdgeIDs": ["blue_road"] },
+      { "id": "red_start", "x": 2, "y": 2, "outgoingEdgeIDs": ["red_road"] },
       { "id": "switch", "x": 2, "y": 4, "outgoingEdgeIDs": ["red_exit", "blue_exit"] },
-      { "id": "red_house", "x": 0, "y": 4, "outgoingEdgeIDs": [] },
-      { "id": "blue_house", "x": 4, "y": 4, "outgoingEdgeIDs": [] }
+      { "id": "red_house", "x": 0, "y": 6, "outgoingEdgeIDs": [] },
+      { "id": "blue_house", "x": 4, "y": 6, "outgoingEdgeIDs": [] }
     ],
     "edges": [
-      { "id": "blue_lead", "fromNodeID": "blue_start", "toNodeID": "start", "roadShape": "verticalFirst" },
-      { "id": "approach", "fromNodeID": "start", "toNodeID": "switch", "roadShape": "verticalFirst" },
+      { "id": "blue_road", "fromNodeID": "blue_start", "toNodeID": "red_start", "roadShape": "verticalFirst" },
+      { "id": "red_road", "fromNodeID": "red_start", "toNodeID": "switch", "roadShape": "verticalFirst" },
       { "id": "red_exit", "fromNodeID": "switch", "toNodeID": "red_house", "roadShape": "horizontalFirst" },
       { "id": "blue_exit", "fromNodeID": "switch", "toNodeID": "blue_house", "roadShape": "horizontalFirst" }
     ]
   },
   "vans": [
-    { "id": "red", "color": "red", "startNodeID": "start", "departDelay": 0 },
-    { "id": "blue", "color": "blue", "startNodeID": "blue_start", "departDelay": 0.83 }
+    { "id": "red", "color": "red", "startNodeID": "red_start", "departDelay": 0 },
+    { "id": "blue", "color": "blue", "startNodeID": "blue_start", "departDelay": 0 }
   ],
   "houses": [
     { "nodeID": "red_house", "color": "red" },
@@ -27,5 +27,17 @@
   "initialSwitchEdges": { "switch": "red_exit" },
   "parChanges": 1,
   "liveSwitchNodeIDs": ["switch"],
-  "hint": "Let Red pass, then tap the ⚡ switch for Blue."
+  "hint": "Let Red turn left first, then tap the ⚡ switch before Blue gets there.",
+  "tutorial": [
+    {
+      "trigger": "start",
+      "title": "⚡ Live switches",
+      "body": "Wait for Red to turn left.",
+      "focusNodeIDs": [
+        "switch"
+      ],
+      "practice": "live",
+      "practiceEdgeID": "red_exit"
+    }
+  ]
 }

@@ -186,7 +186,7 @@ final class MultiVanBoardParityTests: XCTestCase {
 
     private func levels() throws -> [MultiVanLevel] {
         let levels = try MultiVanLevelRepository().loadAllLevels()
-        XCTAssertEqual(levels.count, 12)
+        XCTAssertEqual(levels.count, 19)
         return levels
     }
 

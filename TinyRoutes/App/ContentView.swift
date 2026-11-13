@@ -49,9 +49,20 @@ struct ContentView: View {
             // A level paints its own backdrop. The menu art fills past the safe
             // area, which sizes this stack to the whole screen and would put a
             // level's Levels button under the clock.
-            if !isGameplayVisible {
-                SpriteImage(name: "background")
-                    .scaledToFill()
+            if coordinator.state == .levelSelect || coordinator.state == .mainMenu {
+                // The village's sky, reaching down behind the tab bar.
+                TRVillageSky()
+            } else if coordinator.state == .shop || coordinator.state == .profile || coordinator.state == .settings
+                        || coordinator.state == .experiments {
+                // The same sky with clouds, and hills behind the tab bar.
+                TRCozySkyBackground()
+            } else if !isGameplayVisible {
+                // Hung over a clear screen-sized layer, so the art's overflow
+                // doesn't stretch this stack past the bottom and push the tab bar
+                // off screen.
+                Color.clear
+                    .overlay { SpriteImage(name: "background").scaledToFill() }
+                    .clipped()
                     .ignoresSafeArea()
             }
 
@@ -60,14 +71,14 @@ struct ContentView: View {
                 case .boot:
                     ProgressView("Loading Tiny Routes…")
                         .task {
+                            if let levels = try? loadSortedLevels() {
+                                progressService.unlockLevelsFollowingCompleted(in: levels.map(\.id))
+                            }
                             coordinator.launch()
                         }
 
                 case .mainMenu:
-                    HomeScreen(
-                        onPlayTapped: coordinator.openLevelSelect,
-                        settingsService: settingsService
-                    )
+                    HomeScreen(onPlayTapped: coordinator.openLevelSelect)
 
                 case .levelSelect:
                     levelSelectView
@@ -110,8 +121,19 @@ struct ContentView: View {
                         onRateAppTapped: {},
                         onPrivacyPolicyTapped: {},
                         onTermsTapped: {},
-                        onProfileChanged: handleProfileChanged
+                        onProfileChanged: handleProfileChanged,
+                        onExperimentsTapped: experimentsAction
                     )
+
+                case .experiments:
+                    MultiVanExperimentsScreen(
+                        levels: (try? levelRepository.loadExperimentLevels()) ?? [],
+                        onSelect: coordinator.startExperiment,
+                        onBack: coordinator.openSettings
+                    )
+
+                case let .experiment(levelID):
+                    experimentView(levelID: levelID)
                 }
             }
             .foregroundColor(.black)
@@ -142,7 +164,7 @@ struct ContentView: View {
 
     private var isFullBleedScreenVisible: Bool {
         switch coordinator.state {
-        case .levelSelect, .gameplay, .shop, .profile, .settings:
+        case .mainMenu, .levelSelect, .gameplay, .shop, .profile, .settings, .experiments, .experiment:
             return true
         default:
             return false
@@ -150,13 +172,40 @@ struct ContentView: View {
     }
 
     private var isGameplayVisible: Bool {
-        if case .gameplay = coordinator.state { return true }
-        return false
+        switch coordinator.state {
+        case .gameplay, .experiment: return true
+        default: return false
+        }
+    }
+
+    /// Internal builds list the boards on trial from Settings; release builds have no way in.
+    private var experimentsAction: (() -> Void)? {
+        #if DEBUG || MULTIVAN_INTERNAL
+        coordinator.openExperiments
+        #else
+        nil
+        #endif
+    }
+
+    @ViewBuilder
+    private func experimentView(levelID: String) -> some View {
+        let levels = (try? levelRepository.loadExperimentLevels()) ?? []
+        if let index = levels.firstIndex(where: { $0.id == levelID }) {
+            MultiVanExperimentPlayScreen(
+                level: levels[index],
+                settingsService: settingsService,
+                onNext: index + 1 < levels.count ? { coordinator.startExperiment(levelID: levels[index + 1].id) } : nil,
+                onBack: coordinator.openExperiments
+            )
+            .id(levelID)
+        } else {
+            unavailableLevelsView(message: "This experiment could not be loaded.")
+        }
     }
 
     private var isStandardMenuHeaderScreenVisible: Bool {
         switch coordinator.state {
-        case .levelSelect, .shop, .profile, .settings:
+        case .mainMenu, .levelSelect, .shop, .profile, .settings:
             return true
         default:
             return false
@@ -173,6 +222,7 @@ struct ContentView: View {
                 settingsService: settingsService,
                 progressService: progressService,
                 economyService: economyService,
+                cosmetics: MultiVanCosmetics(profile: saveDataRepository.load()),
                 onNextLevel: startGameplayIfUnlocked,
                 onBackToLevels: coordinator.exitGameplayToLevels,
                 onProfileChanged: handleProfileChanged
@@ -191,7 +241,6 @@ struct ContentView: View {
             LevelSelectScreen(
                 levels: levels,
                 coinTotal: currentCoinTotal,
-                currentStreakDays: saveDataRepository.load().currentStreakDays,
                 onLevelSelected: { levelID in
                     startGameplayIfUnlocked(levelID: levelID)
                 },

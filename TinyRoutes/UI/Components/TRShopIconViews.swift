@@ -24,7 +24,7 @@ struct TRShopGemIcon: View {
                 }
 
             Image(systemName: "sparkle")
-                .font(.system(size: size * 0.34, weight: .black))
+                .font(.system(size: size * 0.34, weight: .bold))
                 .foregroundStyle(.white.opacity(0.86))
                 .offset(x: -size * 0.08, y: -size * 0.08)
         }
@@ -81,7 +81,7 @@ struct TRShopNoAdsIcon: View {
                 .shadow(color: Color(red: 0.32, green: 0.18, blue: 0.78).opacity(0.22), radius: 10, x: 0, y: 6)
 
             Text("ADS")
-                .font(.system(size: size * 0.26, weight: .black, design: .rounded))
+                .font(.system(size: size * 0.26, weight: .bold, design: .rounded))
                 .foregroundStyle(Color(red: 0.35, green: 0.24, blue: 0.70))
                 .lineLimit(1)
                 .minimumScaleFactor(0.75)
@@ -147,12 +147,12 @@ struct TRShopDailyDealsIcon: View {
                 .offset(y: size * 0.10)
 
             Image(systemName: "tag.fill")
-                .font(.system(size: size * 0.34, weight: .black))
+                .font(.system(size: size * 0.34, weight: .bold))
                 .foregroundStyle(.white)
                 .rotationEffect(.degrees(-8))
         }
         .frame(width: size, height: size)
-        .shadow(color: TRGameplayStyle.Colors.primaryBlue.opacity(0.18), radius: 7, x: 0, y: 4)
+        .shadow(color: TRVillagePalette.blue.opacity(0.18), radius: 7, x: 0, y: 4)
         .accessibilityHidden(true)
     }
 }
@@ -181,52 +181,36 @@ struct TRShopGoodieIconView: View {
     }
 }
 
+/// The blue tick on the cosmetic in use, ringed in cream like the plaques.
 struct TRShopSelectionBadge: View {
     var size: CGFloat = 22
 
     var body: some View {
-        ZStack {
-            Circle()
-                .fill(TRGameplayStyle.Colors.primaryBlue)
-                .overlay {
-                    Circle()
-                        .stroke(.white, lineWidth: 2)
-                }
-
-            Image(systemName: "checkmark")
-                .font(.system(size: size * 0.44, weight: .black))
-                .foregroundStyle(.white)
-        }
-        .frame(width: size, height: size)
-        .shadow(color: TRGameplayStyle.Colors.primaryBlue.opacity(0.24), radius: 4, x: 0, y: 2)
-        .accessibilityHidden(true)
+        Image(systemName: "checkmark")
+            .font(.system(size: size * 0.44, weight: .bold))
+            .foregroundStyle(.white)
+            .frame(width: size, height: size)
+            .background {
+                Circle()
+                    .fill(TRVillagePalette.blue)
+                    .overlay { Circle().strokeBorder(TRVillagePalette.cream, lineWidth: 2) }
+                    .background { Circle().fill(TRVillagePalette.blueDark).offset(y: 2) }
+            }
+            .accessibilityHidden(true)
     }
 }
 
+/// A cosmetic's price as a cream coin pill, like the banner's count.
 struct TRShopCoinPriceLabel: View {
     let price: Int
 
     var body: some View {
-        HStack(spacing: 4) {
-            SpriteImage(name: "gold_coin")
-                .scaledToFit()
-                .frame(width: 17, height: 17)
-                .accessibilityHidden(true)
-
+        TRVillagePill {
+            TRVillageCoin(size: 14)
             Text(price.formatted(.number.grouping(.automatic)))
-                .font(.system(size: 13, weight: .black, design: .rounded))
-                .foregroundStyle(.white)
-                .lineLimit(1)
-                .minimumScaleFactor(0.76)
-                .monospacedDigit()
         }
-        .padding(.horizontal, 10)
-        .frame(height: 30)
-        .background {
-            Capsule()
-                .fill(TRGameplayStyle.Colors.successGreen)
-                .shadow(color: TRGameplayStyle.Colors.successGreen.opacity(0.24), radius: 5, x: 0, y: 3)
-        }
+        // Room for the pill's lip.
+        .padding(.bottom, 3)
     }
 }
 
@@ -240,5 +224,5 @@ struct TRShopCoinPriceLabel: View {
         TRShopGoodieIconView(icon: .dailyBonus)
     }
     .padding(24)
-    .background(Color(red: 0.86, green: 0.94, blue: 0.98))
+    .background(TRVillageSky())
 }

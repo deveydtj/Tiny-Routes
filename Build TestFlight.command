@@ -41,4 +41,4 @@ xcodebuild -exportArchive -archivePath "$archive_path" \
   -exportPath "$artifact_dir/export" -exportOptionsPlist "$artifact_dir/ExportOptions.plist" \
   -allowProvisioningUpdates
 print 'Upload succeeded. Wait for Apple processing, then check App Store Connect → Tiny Routes → TestFlight.'
-print 'On iPhone: Settings → About → Multi-Van Prototype, then Home → Prototype.'
+print 'On iPhone: Home → Play.'

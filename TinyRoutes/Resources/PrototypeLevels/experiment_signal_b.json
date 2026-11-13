@@ -1,0 +1,175 @@
+{
+  "id": "experiment_signal_b",
+  "name": "Phase and Path",
+  "scenerySeed": 31,
+  "schemaVersion": 3,
+  "biome": "market",
+  "graph": {
+    "nodes": [
+      {
+        "id": "red_start",
+        "x": 1,
+        "y": 0,
+        "outgoingEdgeIDs": [
+          "red_approach"
+        ]
+      },
+      {
+        "id": "red_mid",
+        "x": 1,
+        "y": 4,
+        "outgoingEdgeIDs": [
+          "red_home"
+        ]
+      },
+      {
+        "id": "red_house",
+        "x": 1,
+        "y": 6,
+        "outgoingEdgeIDs": []
+      },
+      {
+        "id": "blue_start",
+        "x": 3,
+        "y": 2,
+        "outgoingEdgeIDs": [
+          "blue_approach"
+        ]
+      },
+      {
+        "id": "blue_fork",
+        "x": 3,
+        "y": 3,
+        "outgoingEdgeIDs": [
+          "blue_short",
+          "blue_bypass"
+        ]
+      },
+      {
+        "id": "bypass_corner",
+        "x": 4,
+        "y": 5,
+        "outgoingEdgeIDs": [
+          "bypass_home"
+        ]
+      },
+      {
+        "id": "blue_house",
+        "x": 0,
+        "y": 4,
+        "outgoingEdgeIDs": []
+      }
+    ],
+    "edges": [
+      {
+        "id": "red_approach",
+        "fromNodeID": "red_start",
+        "toNodeID": "red_mid",
+        "roadShape": "verticalFirst"
+      },
+      {
+        "id": "red_home",
+        "fromNodeID": "red_mid",
+        "toNodeID": "red_house",
+        "roadShape": "verticalFirst"
+      },
+      {
+        "id": "blue_approach",
+        "fromNodeID": "blue_start",
+        "toNodeID": "blue_fork",
+        "roadShape": "verticalFirst"
+      },
+      {
+        "id": "blue_short",
+        "fromNodeID": "blue_fork",
+        "toNodeID": "blue_house",
+        "roadShape": "horizontalFirst"
+      },
+      {
+        "id": "blue_bypass",
+        "fromNodeID": "blue_fork",
+        "toNodeID": "bypass_corner",
+        "roadShape": "horizontalFirst"
+      },
+      {
+        "id": "bypass_home",
+        "fromNodeID": "bypass_corner",
+        "toNodeID": "blue_house",
+        "roadShape": "horizontalFirst"
+      }
+    ]
+  },
+  "vans": [
+    {
+      "id": "red",
+      "color": "red",
+      "startNodeID": "red_start",
+      "departDelay": 0
+    },
+    {
+      "id": "blue",
+      "color": "blue",
+      "startNodeID": "blue_start",
+      "departDelay": 0
+    }
+  ],
+  "houses": [
+    {
+      "nodeID": "red_house",
+      "color": "red"
+    },
+    {
+      "nodeID": "blue_house",
+      "color": "blue"
+    }
+  ],
+  "signals": [
+    {
+      "id": "square_light",
+      "kind": "trafficLight",
+      "approaches": [
+        {
+          "edgeID": "blue_short",
+          "stopDistance": 1.3,
+          "group": 0
+        },
+        {
+          "edgeID": "red_approach",
+          "stopDistance": 2.3,
+          "group": 1
+        }
+      ],
+      "phases": [
+        {
+          "group": 0,
+          "ticks": 290
+        },
+        {
+          "ticks": 56
+        },
+        {
+          "group": 1,
+          "ticks": 290
+        },
+        {
+          "ticks": 56
+        }
+      ],
+      "startTick": 346,
+      "area": {
+        "x": 1,
+        "y": 3,
+        "radius": 0.45
+      }
+    }
+  ],
+  "initialSwitchEdges": {
+    "blue_fork": "blue_bypass"
+  },
+  "parChanges": 0,
+  "liveSwitchNodeIDs": [],
+  "hint": "Red has the green first here. Blue can wait its turn at the light, or go round.",
+  "hintFocusNodeIDs": [
+    "blue_fork"
+  ]
+}

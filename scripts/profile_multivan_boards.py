@@ -2,7 +2,7 @@
 """Record Instruments traces of both multi-van boards on a device (MW-10).
 
 Builds the internal configuration, installs it, then for each board launches the
-prototype in autoplay (see TinyRoutes/Prototype/MultiVanAutoplay.swift) so it plays
+level in autoplay (see TinyRoutes/Prototype/MultiVanAutoplay.swift) so it plays
 one level on a loop with no touches, and records each template against it. The
 device must be unlocked and connected by cable (Instruments doesn't see a device
 that only `devicectl` reaches over the network). The app keeps it awake while
@@ -115,7 +115,7 @@ def measure(args: argparse.Namespace, boards: list[str], output: Path) -> None:
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--device", required=True, help="Device name or UDID, as `xcrun devicectl list devices` shows it.")
-    parser.add_argument("--level", default="level_012", help="Level to loop (default: level_012, the busiest board).")
+    parser.add_argument("--level", default="level_014", help="Level to loop (default: level_014, the busiest board).")
     parser.add_argument("--board", action="append", choices=["diorama", "flat"],
                         help="Board to record; repeat for both (default: both).")
     parser.add_argument("--template", action="append",

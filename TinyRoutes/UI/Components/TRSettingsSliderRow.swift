@@ -26,26 +26,26 @@ struct TRSettingsSliderRow: View {
             HStack(spacing: 12) {
                 TRSettingsIconCircle(
                     systemName: iconSystemName,
-                    tint: TRGameplayStyle.Colors.primaryBlue
+                    tint: TRVillagePalette.teal
                 )
 
                 Text(title)
-                    .font(.system(size: 16, weight: .black, design: .rounded))
-                    .foregroundStyle(TRGameplayStyle.Colors.titleNavy)
+                    .font(.system(size: 16, weight: .semibold, design: .rounded))
+                    .foregroundStyle(TRVillagePalette.navy)
                     .lineLimit(1)
                     .minimumScaleFactor(0.76)
 
                 Spacer(minLength: 8)
 
                 Text(percentText)
-                    .font(.system(size: 15, weight: .bold, design: .rounded))
-                    .foregroundStyle(TRGameplayStyle.Colors.secondaryText)
+                    .font(.system(size: 15, weight: .medium, design: .rounded))
+                    .foregroundStyle(TRVillagePalette.slate)
                     .monospacedDigit()
                     .lineLimit(1)
             }
 
             Slider(value: binding, in: 0...1)
-                .tint(TRGameplayStyle.Colors.primaryBlue)
+                .tint(TRVillagePalette.teal)
                 .disabled(!isEnabled)
                 .accessibilityLabel(Text(title))
                 .accessibilityValue(Text("\(percentage) percent"))
@@ -78,5 +78,5 @@ struct TRSettingsSliderRow: View {
         onChanged: { _ in }
     )
     .padding(20)
-    .background(Color(red: 0.86, green: 0.94, blue: 0.98))
+    .background(TRVillageSky())
 }

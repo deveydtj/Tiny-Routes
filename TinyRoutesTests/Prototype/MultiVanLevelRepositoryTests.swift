@@ -6,7 +6,7 @@ final class MultiVanLevelRepositoryTests: XCTestCase {
         let resources = URL(fileURLWithPath: #filePath).deletingLastPathComponent()
             .deletingLastPathComponent().deletingLastPathComponent()
             .appendingPathComponent("TinyRoutes/Resources/PrototypeLevels")
-        return try Dictionary(uniqueKeysWithValues: ["level_001", "level_002", "level_003", "level_004", "level_005", "level_006", "level_007", "level_008", "level_009", "level_010", "level_011", "level_012"].map { id in
+        return try Dictionary(uniqueKeysWithValues: ["level_001", "level_002", "level_003", "level_004", "level_005", "level_006", "level_007", "level_008", "level_009", "level_010", "level_011", "level_012", "level_013", "level_014"].map { id in
             ("PrototypeLevels/\(id).json", try String(contentsOf: resources.appendingPathComponent("\(id).json"), encoding: .utf8))
         })
     }
@@ -17,9 +17,9 @@ final class MultiVanLevelRepositoryTests: XCTestCase {
             _ = try JSONDecoder().decode(MultiVanLevel.self, from: Data(json.utf8))
         }
         let levels = try MultiVanLevelRepository(bundle: makeBundle(files: files)).loadAllLevels()
-        XCTAssertEqual(levels.map(\.id), ["level_001", "level_002", "level_003", "level_004", "level_005", "level_006", "level_007", "level_008", "level_009", "level_010", "level_011", "level_012"])
-        XCTAssertEqual(levels.map(\.name), ["Go!", "Pick a Lane", "Two Turns", "Roundabout", "Two Colours", "Convoy", "Merge", "Hold the Loop", "Split", "Three's Company", "Rush", "Big Delivery"])
-        XCTAssertEqual(levels.map(\.parChanges), [0, 1, 2, 2, 2, 1, 1, 2, 2, 3, 3, 5])
+        XCTAssertEqual(levels.map(\.id), ["level_001", "level_002", "level_003", "level_004", "level_005", "level_006", "level_007", "level_008", "level_009", "level_010", "level_011", "level_012", "level_013", "level_014"])
+        XCTAssertEqual(levels.map(\.name), ["Go!", "Pick a Lane", "Two Turns", "Roundabout", "Two Colours", "Wait for It", "Convoy", "Merge", "Take a Lap", "Hold the Loop", "Split", "Three's Company", "Rush", "Big Delivery"])
+        XCTAssertEqual(levels.map(\.parChanges), [0, 1, 2, 2, 2, 1, 1, 1, 1, 2, 2, 3, 5, 7])
         for level in levels {
             let nodeIDs = Set(level.graph.nodes.map(\.id))
             XCTAssertEqual(nodeIDs.count, level.graph.nodes.count)
@@ -35,11 +35,11 @@ final class MultiVanLevelRepositoryTests: XCTestCase {
                 XCTAssertEqual(edge.availability, .always)
                 XCTAssertNil(edge.availabilityRule)
             }
-            XCTAssertEqual(level.vans.count, level.id < "level_005" ? 1 : (level.id < "level_010" ? 2 : (level.id == "level_012" ? 4 : 3)))
+            XCTAssertEqual(level.vans.count, level.id < "level_005" ? 1 : (level.id < "level_012" ? 2 : (level.id == "level_014" ? 4 : 3)))
             XCTAssertEqual(level.houses.count, level.vans.count)
             for van in level.vans {
                 XCTAssertTrue(nodeIDs.contains(van.startNodeID))
-                XCTAssertEqual(van.departDelay, level.id == "level_006" && van.color == .blue ? 0.83 : 0)
+                XCTAssertEqual(van.departDelay, level.id == "level_007" && van.color == .blue ? 0.83 : 0)
                 XCTAssertTrue(level.houses.contains { $0.color == van.color })
             }
             for house in level.houses {
@@ -49,10 +49,10 @@ final class MultiVanLevelRepositoryTests: XCTestCase {
             let switches = level.graph.nodes.filter { $0.outgoingEdgeIDs.count > 1 }
             XCTAssertEqual(Set(level.initialSwitchEdges.keys), Set(switches.map(\.id)))
             for node in switches {
-                XCTAssertEqual(node.outgoingEdgeIDs.count, (level.id == "level_004" || (level.id == "level_011" && node.id == "yellow_switch") || (level.id == "level_012" && node.id == "route_switch")) ? 3 : 2)
+                XCTAssertEqual(node.outgoingEdgeIDs.count, (level.id == "level_004" || (level.id == "level_013" && node.id == "yellow_switch") || (level.id == "level_014" && node.id == "route_switch")) ? 3 : 2)
                 XCTAssertTrue(node.outgoingEdgeIDs.contains(try XCTUnwrap(level.initialSwitchEdges[node.id])))
             }
-            let liveSwitches = ["level_006": ["switch"], "level_008": ["loop_switch"], "level_009": ["switch"], "level_011": ["split_switch"], "level_012": ["split_switch"]]
+            let liveSwitches = ["level_006": ["switch"], "level_007": ["switch"], "level_009": ["loop_switch"], "level_010": ["loop_switch"], "level_011": ["switch"], "level_013": ["split_switch"], "level_014": ["split_switch"]]
             XCTAssertEqual(level.liveSwitchNodeIDs, liveSwitches[level.id] ?? [])
         }
 
@@ -161,8 +161,8 @@ final class MultiVanLevelRepositoryTests: XCTestCase {
         guard !(try MultiVanLevelRepository(bundle: .main).loadAllLevels()).isEmpty else {
             throw XCTSkip("Requires the iOS app bundle; isolated Foundation tests do not verify app packaging.")
         }
-        XCTAssertEqual(try MultiVanLevelRepository(bundle: .main).loadAllLevels().map(\.id), ["level_001", "level_002", "level_003", "level_004", "level_005", "level_006", "level_007", "level_008", "level_009", "level_010", "level_011", "level_012"])
-        for number in 1...12 {
+        XCTAssertEqual(try MultiVanLevelRepository(bundle: .main).loadAllLevels().map(\.id), ["level_001", "level_002", "level_003", "level_004", "level_005", "level_006", "level_007", "level_008", "level_009", "level_010", "level_011", "level_012", "level_013", "level_014", "level_015", "level_016", "level_017", "level_018", "level_019"])
+        for number in 1...19 {
             XCTAssertNil(Bundle.main.url(forResource: String(format: "level_%03d", number), withExtension: "json"))
         }
     }

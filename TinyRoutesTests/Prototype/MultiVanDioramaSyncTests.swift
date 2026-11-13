@@ -9,7 +9,7 @@ import XCTest
 final class MultiVanDioramaSyncTests: XCTestCase {
     private func levels() throws -> [MultiVanLevel] {
         let levels = try MultiVanLevelRepository().loadAllLevels()
-        XCTAssertEqual(levels.count, 12)
+        XCTAssertEqual(levels.count, 19)
         return levels
     }
 
@@ -42,7 +42,7 @@ final class MultiVanDioramaSyncTests: XCTestCase {
             }
         }
         // The corpus reaches every status, so every pose above was checked.
-        XCTAssertEqual(statuses, ["waiting", "driving", "parked", "crashed", "stuck"])
+        XCTAssertEqual(statuses, ["waiting", "driving", "parked", "crashed", "stuck", "missingCargo"])
     }
 
     private func assertScene(_ scene: MultiVanDioramaScene, matches engine: MultiVanEngine, _ label: String) {
@@ -63,7 +63,7 @@ final class MultiVanDioramaSyncTests: XCTestCase {
             switch van.status {
             case .crashed: XCTAssertNotEqual(pose.simdEulerAngles.z, 0, "\(label) \(van.id) tips over")
             case .stuck: XCTAssertNotEqual(pose.simdEulerAngles.y, 0, "\(label) \(van.id) skews")
-            case .waiting, .driving, .parked: XCTAssertEqual(pose.simdEulerAngles, .zero, "\(label) \(van.id) stands straight")
+            case .waiting, .driving, .parked, .missingCargo: XCTAssertEqual(pose.simdEulerAngles, .zero, "\(label) \(van.id) stands straight")
             }
             let chassis = try! XCTUnwrap(pose.childNode(withName: MultiVanDioramaPieces.Part.chassis, recursively: false))
             let signal = engine.phase == .run ? MultiVanVanView.turnSignal(for: van, graph: graph) : nil

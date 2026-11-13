@@ -13,11 +13,16 @@ enum MultiVanBoardMorph: Equatable {
 /// Builds one board for the selected style and crossfades when the style changes.
 /// Both boards read the same engine, so a swap carries every switch and van over;
 /// the board that isn't showing isn't built at all, which stops its rendering.
-/// Between the two boards the diorama morphs to and from the flat board's view.
+/// While the flat board shows, the diorama's renderer is built and parked off
+/// screen, so switching to 3D is instant. Between the two boards the diorama
+/// morphs to and from the flat board's view.
 struct MultiVanBoardSwitcher<Board: View>: View {
     let engine: MultiVanEngine
     let settings: UserSettings
     var reducesMotion = false
+    /// Whether to build the diorama ahead of time under the flat board. Autoplay
+    /// pins its board, so it would only cost the run it measures.
+    var preloadsDiorama = true
     /// Told the board on screen when it first appears and after every swap.
     var onBoardShown: (MultiVanBoardStyle) -> Void = { _ in }
     @ViewBuilder let board: (MultiVanBoardStyle, MultiVanBoardMorph) -> Board
@@ -28,6 +33,7 @@ struct MultiVanBoardSwitcher<Board: View>: View {
     @State private var morph = MultiVanBoardMorph.none
     /// The diorama lying down before the flat board takes over.
     @State private var folding: Task<Void, Never>?
+    @State private var preload = MultiVanDioramaPreload()
 
     private var target: MultiVanBoardStyle {
         MultiVanBoardStyle.resolve(settings: settings, isLowPowerMode: powerMonitor.isLowPowerModeEnabled)
@@ -40,6 +46,7 @@ struct MultiVanBoardSwitcher<Board: View>: View {
                 .id(shown)
                 .transition(reducesMotion ? .identity : .opacity)
         }
+        .environment(\.multiVanDioramaPreload, keepsDiorama ? preload : nil)
         .onAppear {
             selection = MultiVanBoardSelection(showing: target)
             onBoardShown(target)
@@ -48,6 +55,7 @@ struct MultiVanBoardSwitcher<Board: View>: View {
         .onDisappear {
             signposts.end()
             folding?.cancel()
+            preload.release()
         }
         .onChange(of: selection?.shown) { _, shown in
             guard let shown else { return }
@@ -65,6 +73,28 @@ struct MultiVanBoardSwitcher<Board: View>: View {
         }
         .onChange(of: ObjectIdentifier(engine)) { _, _ in select(isAutomatic: true) }
         .task { await powerMonitor.monitor() }
+        .task(id: Warming(levelID: engine.level.id, shown: shown, keeps: keepsDiorama)) {
+            guard keepsDiorama else { return preload.release() }
+            guard shown == .flat else { return }
+            // After the level, or the swap, has settled.
+            try? await Task.sleep(for: .seconds(0.6))
+            guard !Task.isCancelled else { return }
+            await preload.warm(engine.level, graph: engine.runtimeGraph)
+        }
+        .onReceive(NotificationCenter.default.publisher(for: UIApplication.didReceiveMemoryWarningNotification)) { _ in
+            preload.release()
+        }
+    }
+
+    /// Low Power Mode keeps today's trade: no diorama waits under the flat board.
+    private var keepsDiorama: Bool {
+        preloadsDiorama && !powerMonitor.isLowPowerModeEnabled
+    }
+
+    private struct Warming: Equatable {
+        let levelID: String
+        let shown: MultiVanBoardStyle
+        let keeps: Bool
     }
 
     private func select(isAutomatic: Bool) {

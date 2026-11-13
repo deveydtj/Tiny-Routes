@@ -1,27 +1,26 @@
 {
   "id": "level_008",
-  "name": "Hold the Loop",
+  "name": "Merge",
+  "scenerySeed": 7,
   "graph": {
     "nodes": [
-      { "id": "red_start", "x": 0, "y": 0, "outgoingEdgeIDs": ["red_approach"] },
-      { "id": "entry_switch", "x": 0, "y": 1, "outgoingEdgeIDs": ["wrong_entry", "enter_loop"] },
-      { "id": "barrier", "x": 1, "y": 0, "outgoingEdgeIDs": [] },
-      { "id": "loop_left", "x": 0, "y": 3, "outgoingEdgeIDs": ["loop_top"] },
-      { "id": "loop_switch", "x": 2, "y": 3, "outgoingEdgeIDs": ["hold", "release"] },
-      { "id": "loop_bottom", "x": 2, "y": 1, "outgoingEdgeIDs": ["loop_return"] },
-      { "id": "blue_start", "x": 4, "y": 0, "outgoingEdgeIDs": ["blue_approach"] },
+      { "id": "red_start", "x": 2, "y": 0, "outgoingEdgeIDs": ["red_approach"] },
+      { "id": "route_switch", "x": 2, "y": 1, "outgoingEdgeIDs": ["short", "long"] },
+      { "id": "detour_bottom", "x": 0, "y": 1, "outgoingEdgeIDs": ["detour_up"] },
+      { "id": "detour_top", "x": 0, "y": 3, "outgoingEdgeIDs": ["detour_back"] },
+      { "id": "red_join", "x": 2, "y": 3, "outgoingEdgeIDs": ["red_exit"] },
+      { "id": "blue_start", "x": 4, "y": 2, "outgoingEdgeIDs": ["blue_approach"] },
       { "id": "merge", "x": 2, "y": 4, "outgoingEdgeIDs": ["blue_exit"] },
       { "id": "red_house", "x": 0, "y": 6, "outgoingEdgeIDs": [] },
       { "id": "blue_house", "x": 4, "y": 6, "outgoingEdgeIDs": [] }
     ],
     "edges": [
-      { "id": "red_approach", "fromNodeID": "red_start", "toNodeID": "entry_switch", "roadShape": "verticalFirst" },
-      { "id": "wrong_entry", "fromNodeID": "entry_switch", "toNodeID": "barrier", "roadShape": "horizontalFirst" },
-      { "id": "enter_loop", "fromNodeID": "entry_switch", "toNodeID": "loop_left", "roadShape": "verticalFirst" },
-      { "id": "loop_top", "fromNodeID": "loop_left", "toNodeID": "loop_switch", "roadShape": "horizontalFirst" },
-      { "id": "hold", "fromNodeID": "loop_switch", "toNodeID": "loop_bottom", "roadShape": "verticalFirst" },
-      { "id": "release", "fromNodeID": "loop_switch", "toNodeID": "red_house", "roadShape": "verticalFirst" },
-      { "id": "loop_return", "fromNodeID": "loop_bottom", "toNodeID": "entry_switch", "roadShape": "horizontalFirst" },
+      { "id": "red_approach", "fromNodeID": "red_start", "toNodeID": "route_switch", "roadShape": "verticalFirst" },
+      { "id": "short", "fromNodeID": "route_switch", "toNodeID": "red_join", "roadShape": "verticalFirst" },
+      { "id": "long", "fromNodeID": "route_switch", "toNodeID": "detour_bottom", "roadShape": "horizontalFirst" },
+      { "id": "detour_up", "fromNodeID": "detour_bottom", "toNodeID": "detour_top", "roadShape": "verticalFirst" },
+      { "id": "detour_back", "fromNodeID": "detour_top", "toNodeID": "red_join", "roadShape": "horizontalFirst" },
+      { "id": "red_exit", "fromNodeID": "red_join", "toNodeID": "red_house", "roadShape": "verticalFirst" },
       { "id": "blue_approach", "fromNodeID": "blue_start", "toNodeID": "merge", "roadShape": "verticalFirst" },
       { "id": "blue_exit", "fromNodeID": "merge", "toNodeID": "blue_house", "roadShape": "verticalFirst" }
     ]
@@ -35,12 +34,19 @@
     { "nodeID": "blue_house", "color": "blue" }
   ],
   "initialSwitchEdges": {
-    "entry_switch": "wrong_entry",
-    "loop_switch": "hold"
+    "route_switch": "short"
   },
-  "parChanges": 2,
-  "liveSwitchNodeIDs": [
-    "loop_switch"
-  ],
-  "hint": "Hold Red in the loop until Blue clears, then tap the ⚡ switch."
+  "parChanges": 1,
+  "liveSwitchNodeIDs": [],
+  "hint": "Send Red the long way round, so it reaches the merge after Blue.",
+  "tutorial": [
+    {
+      "trigger": "crash",
+      "title": "Timing matters",
+      "body": "Try sending Red the long way round.",
+      "focusNodeIDs": [
+        "route_switch"
+      ]
+    }
+  ]
 }

@@ -28,6 +28,11 @@ targets:
       - path: TinyRoutes/Resources/PrototypeSounds
         type: folder
         buildPhase: resources
+      # The recorded solutions the tests prove; help shows one step of them.
+      # scripts/verify_multivan_bundle.swift checks the app carries exactly these.
+      - path: TinyRoutesTests/Resources/PrototypeSolutions
+        type: folder
+        buildPhase: resources
     resources:
       - TinyRoutes/Resources
     settings:

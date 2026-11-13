@@ -109,7 +109,7 @@ final class UserSettingsRepositoryTests: XCTestCase {
             dailyReminderMinute: 15
         )
         XCTAssertEqual(repository.load(), expected)
-        XCTAssertEqual(repository.load().boardStyle, .flat)
+        XCTAssertEqual(repository.load().boardStyle, .diorama)
         XCTAssertTrue(repository.load().usesFlatBoardInLowPowerMode)
     }
 

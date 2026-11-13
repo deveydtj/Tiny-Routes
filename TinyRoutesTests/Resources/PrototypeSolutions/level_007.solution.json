@@ -1,6 +1,4 @@
 {
-  "planTaps": [
-    "route_switch"
-  ],
-  "liveTaps": []
+  "planTaps": [],
+  "liveTaps": [{ "atTime": 2.75, "nodeID": "switch" }]
 }

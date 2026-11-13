@@ -26,7 +26,7 @@ struct TRSettingsRow: View {
             HStack(spacing: 12) {
                 TRSettingsIconCircle(
                     systemName: iconSystemName,
-                    tint: TRGameplayStyle.Colors.primaryBlue
+                    tint: TRVillagePalette.teal
                 )
 
                 TRSettingsTextBlock(title: title, subtitle: subtitle)
@@ -35,16 +35,16 @@ struct TRSettingsRow: View {
 
                 if let trailingText {
                     Text(trailingText)
-                        .font(.system(size: 15, weight: .bold, design: .rounded))
-                        .foregroundStyle(TRGameplayStyle.Colors.secondaryText)
+                        .font(.system(size: 15, weight: .medium, design: .rounded))
+                        .foregroundStyle(TRVillagePalette.slate)
                         .lineLimit(1)
                         .minimumScaleFactor(0.72)
                         .layoutPriority(1)
                 }
 
                 Image(systemName: "chevron.right")
-                    .font(.system(size: 14, weight: .black))
-                    .foregroundStyle(TRGameplayStyle.Colors.secondaryText.opacity(0.55))
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundStyle(TRVillagePalette.slate.opacity(0.6))
                     .accessibilityHidden(true)
             }
             .frame(maxWidth: .infinity, minHeight: 54, alignment: .leading)
@@ -64,25 +64,13 @@ struct TRSettingsRow: View {
     }
 }
 
+/// A settings row's symbol on a round badge.
 struct TRSettingsIconCircle: View {
     let systemName: String
     let tint: Color
 
     var body: some View {
-        Image(systemName: systemName)
-            .font(.system(size: 18, weight: .bold))
-            .symbolRenderingMode(.hierarchical)
-            .foregroundStyle(tint)
-            .frame(width: 42, height: 42)
-            .background {
-                Circle()
-                    .fill(tint.opacity(0.13))
-                    .overlay {
-                        Circle()
-                            .stroke(.white.opacity(0.70), lineWidth: 1)
-                    }
-            }
-            .accessibilityHidden(true)
+        TRCozyIconBadge(systemName: systemName, tint: tint, size: 38)
     }
 }
 
@@ -93,15 +81,15 @@ struct TRSettingsTextBlock: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 3) {
             Text(title)
-                .font(.system(size: 16, weight: .black, design: .rounded))
-                .foregroundStyle(TRGameplayStyle.Colors.titleNavy)
+                .font(.system(size: 16, weight: .semibold, design: .rounded))
+                .foregroundStyle(TRVillagePalette.navy)
                 .lineLimit(1)
                 .minimumScaleFactor(0.76)
 
             if let subtitle {
                 Text(subtitle)
-                    .font(.system(size: 12, weight: .semibold, design: .rounded))
-                    .foregroundStyle(TRGameplayStyle.Colors.secondaryText)
+                    .font(.system(size: 12, weight: .medium, design: .rounded))
+                    .foregroundStyle(TRVillagePalette.slate)
                     .lineLimit(2)
                     .minimumScaleFactor(0.78)
             }
@@ -119,5 +107,5 @@ struct TRSettingsTextBlock: View {
         action: {}
     )
     .padding(20)
-    .background(Color(red: 0.86, green: 0.94, blue: 0.98))
+    .background(TRVillageSky())
 }

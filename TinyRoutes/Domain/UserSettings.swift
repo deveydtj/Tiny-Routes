@@ -31,8 +31,8 @@ struct UserSettings: Codable, Equatable {
         isDailyReminderEnabled: Bool = false,
         dailyReminderHour: Int = 18,
         dailyReminderMinute: Int = 0,
-        // 2D until the MW-10 playtests choose the default to ship.
-        boardStyle: MultiVanBoardStyle = .flat,
+        // 3D by default; 2D stays as a choice and as the Low Power Mode fallback.
+        boardStyle: MultiVanBoardStyle = .diorama,
         usesFlatBoardInLowPowerMode: Bool = true
     ) {
         self.isMusicEnabled = isMusicEnabled

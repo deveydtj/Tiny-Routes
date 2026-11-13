@@ -18,9 +18,32 @@ struct MultiVanLevel: Decodable {
     let parChanges: Int
     let liveSwitchNodeIDs: [String]
     let hint: String?
+    /// Explains a mechanic the first time the player meets it.
+    let tutorial: [MultiVanTutorialTip]
+    /// Lays out the diorama's lawn and scenery. Defaults to the level's number;
+    /// a level that moved keeps the seed of its old number, and so its look.
+    let scenerySeed: Int
+    /// The content features this file uses; see `supportedSchemaVersion`.
+    let schemaVersion: Int
+    /// Parcels a van collects on the way home. Empty on a delivery-only board.
+    let packages: [MultiVanPackage]
+    /// Switches the second step of help rings; see `MultiVanAssistance`.
+    let hintFocusNodeIDs: [String]
+    /// The chapter's look. Art only: it never changes a rule.
+    let biome: MultiVanBiome
+    /// Automatic lights and bridges that hold vans at a stop line.
+    let signals: [MultiVanSignal]
+    /// Stretches of road that change how a van drives; see `MultiVanRoadZone`.
+    let roadZones: [MultiVanRoadZone]
+
+    /// Files without a version are 1: forks, houses and live switches. 2 adds
+    /// packages; 3 adds signals and road zones. A newer file is refused rather
+    /// than played with its rules missing.
+    static let supportedSchemaVersion = 3
 
     private enum CodingKeys: String, CodingKey {
-        case id, name, graph, vans, houses, initialSwitchEdges, parChanges, liveSwitchNodeIDs, hint
+        case id, name, graph, vans, houses, initialSwitchEdges, parChanges, liveSwitchNodeIDs, hint, tutorial, scenerySeed
+        case schemaVersion, packages, hintFocusNodeIDs, biome, signals, roadZones
     }
 
     init(from decoder: Decoder) throws {
@@ -34,6 +57,83 @@ struct MultiVanLevel: Decodable {
         parChanges = try container.decode(Int.self, forKey: .parChanges)
         liveSwitchNodeIDs = try container.decodeIfPresent([String].self, forKey: .liveSwitchNodeIDs) ?? []
         hint = try container.decodeIfPresent(String.self, forKey: .hint)
+        tutorial = try container.decodeIfPresent([MultiVanTutorialTip].self, forKey: .tutorial) ?? []
+        scenerySeed = try container.decodeIfPresent(Int.self, forKey: .scenerySeed) ?? Int(id.filter(\.isNumber)) ?? 0
+        schemaVersion = try container.decodeIfPresent(Int.self, forKey: .schemaVersion) ?? 1
+        packages = try container.decodeIfPresent([MultiVanPackage].self, forKey: .packages) ?? []
+        hintFocusNodeIDs = try container.decodeIfPresent([String].self, forKey: .hintFocusNodeIDs) ?? []
+        biome = try container.decodeIfPresent(MultiVanBiome.self, forKey: .biome) ?? .meadow
+        signals = try container.decodeIfPresent([MultiVanSignal].self, forKey: .signals) ?? []
+        roadZones = try container.decodeIfPresent([MultiVanRoadZone].self, forKey: .roadZones) ?? []
+
+        func refuse(_ key: CodingKeys, _ message: String) -> DecodingError {
+            .dataCorruptedError(forKey: key, in: container, debugDescription: "\(id): \(message)")
+        }
+        guard (1...Self.supportedSchemaVersion).contains(schemaVersion) else {
+            throw refuse(.schemaVersion, "schema version \(schemaVersion) is not supported (1 to \(Self.supportedSchemaVersion))")
+        }
+        if !packages.isEmpty, schemaVersion < 2 {
+            throw refuse(.packages, "packages need schemaVersion 2")
+        }
+        if !signals.isEmpty, schemaVersion < 3 {
+            throw refuse(.signals, "signals need schemaVersion 3")
+        }
+        if !roadZones.isEmpty, schemaVersion < 3 {
+            throw refuse(.roadZones, "road zones need schemaVersion 3")
+        }
+    }
+
+    /// The parcels `vanID` must collect before home, in authored order.
+    func packages(ownedBy vanID: String) -> [MultiVanPackage] {
+        packages.filter { $0.ownerVanID == vanID }
+    }
+
+    func tutorialTip(for trigger: MultiVanTutorialTip.Trigger) -> MultiVanTutorialTip? {
+        tutorial.first { $0.trigger == trigger }
+    }
+}
+
+/// A short cue for practicing a mechanic on the board, or a tip after a crash.
+struct MultiVanTutorialTip: Decodable, Equatable {
+    enum Trigger: String, Decodable {
+        /// When the level first opens, before anything moves.
+        case start
+        /// On the level's first crash, so the collision itself stays the surprise.
+        case crash
+    }
+
+    enum Practice: String, Decodable {
+        case deliver, route, stop, live
+    }
+
+    let trigger: Trigger
+    let title: String
+    let body: String
+    let focusNodeIDs: [String]
+    let practice: Practice?
+    let practiceEdgeID: String?
+
+    private enum CodingKeys: String, CodingKey {
+        case trigger, title, body, focusNodeIDs, practice, practiceEdgeID
+    }
+
+    init(trigger: Trigger, title: String, body: String, focusNodeIDs: [String] = []) {
+        self.trigger = trigger
+        self.title = title
+        self.body = body
+        self.focusNodeIDs = focusNodeIDs
+        practice = nil
+        practiceEdgeID = nil
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        trigger = try container.decode(Trigger.self, forKey: .trigger)
+        title = try container.decode(String.self, forKey: .title)
+        body = try container.decode(String.self, forKey: .body)
+        focusNodeIDs = try container.decodeIfPresent([String].self, forKey: .focusNodeIDs) ?? []
+        practice = try container.decodeIfPresent(Practice.self, forKey: .practice)
+        practiceEdgeID = try container.decodeIfPresent(String.self, forKey: .practiceEdgeID)
     }
 }
 
@@ -101,81 +201,3 @@ struct MultiVanTuning {
     var gridColumns = 5
     var gridRows = 7
 }
-
-#if DEBUG
-import CoreFoundation
-
-/// Only MV-45's three controls are persisted. Engines receive a value snapshot.
-struct MultiVanPrototypeTuning {
-    enum Parameter: String, CaseIterable {
-        case vanSpeed, crashDistance, liveSwitchLockRadius
-
-        var key: String { "multiVanPrototype.\(rawValue)" }
-
-        var label: String {
-            switch self {
-            case .vanSpeed: "Van speed"
-            case .crashDistance: "Collision distance"
-            case .liveSwitchLockRadius: "Live-switch locking radius"
-            }
-        }
-
-        var units: String { self == .vanSpeed ? "grid units/s" : "grid units" }
-
-        // The source plan specifies defaults but no bounds. These are panel
-        // limits for controlled playtests, not changes to engine rules.
-        var range: ClosedRange<Double> {
-            switch self {
-            case .vanSpeed: 0.5...3
-            case .crashDistance: 0.1...0.75
-            case .liveSwitchLockRadius: 0...1
-            }
-        }
-
-        var step: Double { self == .vanSpeed ? 0.1 : 0.05 }
-
-        var keyPath: WritableKeyPath<MultiVanTuning, Double> {
-            switch self {
-            case .vanSpeed: \.vanSpeed
-            case .crashDistance: \.crashDistance
-            case .liveSwitchLockRadius: \.liveSwitchLockRadius
-            }
-        }
-
-        var defaultValue: Double { MultiVanTuning.default[keyPath: keyPath] }
-    }
-
-    let defaults: UserDefaults
-
-    init(defaults: UserDefaults = .standard) { self.defaults = defaults }
-
-    var tuning: MultiVanTuning {
-        var result = MultiVanTuning.default
-        for parameter in Parameter.allCases {
-            guard let number = defaults.object(forKey: parameter.key) as? NSNumber,
-                  CFGetTypeID(number) != CFBooleanGetTypeID() else { continue }
-            let value = number.doubleValue
-            guard value.isFinite, parameter.range.contains(value) else { continue }
-            result[keyPath: parameter.keyPath] = value
-        }
-        return result
-    }
-
-    func set(_ value: Double, for parameter: Parameter) {
-        guard value.isFinite, parameter.range.contains(value) else { return }
-        if value == parameter.defaultValue {
-            defaults.removeObject(forKey: parameter.key)
-        } else {
-            defaults.set(value, forKey: parameter.key)
-        }
-    }
-
-    func reset() {
-        for parameter in Parameter.allCases { defaults.removeObject(forKey: parameter.key) }
-    }
-
-    static func isDefault(_ tuning: MultiVanTuning) -> Bool {
-        Parameter.allCases.allSatisfy { tuning[keyPath: $0.keyPath] == $0.defaultValue }
-    }
-}
-#endif

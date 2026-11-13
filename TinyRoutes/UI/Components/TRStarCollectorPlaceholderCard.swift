@@ -49,7 +49,7 @@ struct TRStarCollectorPlaceholderCard: View {
         }
         .padding(18)
         .background {
-            TRGlassCardBackground()
+            MultiVanHUDCardBackground(cornerRadius: 28)
         }
     }
 

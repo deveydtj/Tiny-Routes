@@ -28,7 +28,7 @@ struct TRSettingsToggleRow: View {
             HStack(spacing: 12) {
                 TRSettingsIconCircle(
                     systemName: iconSystemName,
-                    tint: TRGameplayStyle.Colors.primaryBlue
+                    tint: TRVillagePalette.teal
                 )
 
                 TRSettingsTextBlock(title: title, subtitle: subtitle)
@@ -36,7 +36,7 @@ struct TRSettingsToggleRow: View {
             .frame(maxWidth: .infinity, minHeight: 54, alignment: .leading)
         }
         .toggleStyle(.switch)
-        .tint(TRGameplayStyle.Colors.primaryBlue)
+        .tint(TRVillagePalette.teal)
         .animation(reduceMotion ? nil : .easeInOut(duration: 0.16), value: isOn)
         .accessibilityLabel(Text(title))
     }
@@ -58,5 +58,5 @@ struct TRSettingsToggleRow: View {
         onChanged: { _ in }
     )
     .padding(20)
-    .background(Color(red: 0.86, green: 0.94, blue: 0.98))
+    .background(TRVillageSky())
 }

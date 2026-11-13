@@ -1,0 +1,149 @@
+{
+  "id": "level_017",
+  "name": "Around the Block",
+  "scenerySeed": 27,
+  "schemaVersion": 2,
+  "biome": "depot",
+  "graph": {
+    "nodes": [
+      {
+        "id": "start",
+        "x": 1,
+        "y": 0,
+        "outgoingEdgeIDs": [
+          "approach"
+        ]
+      },
+      {
+        "id": "approach_fork",
+        "x": 1,
+        "y": 1,
+        "outgoingEdgeIDs": [
+          "near_side",
+          "far_side"
+        ]
+      },
+      {
+        "id": "far_corner",
+        "x": 4,
+        "y": 3,
+        "outgoingEdgeIDs": [
+          "pickup_street"
+        ]
+      },
+      {
+        "id": "pickup",
+        "x": 2,
+        "y": 3,
+        "outgoingEdgeIDs": [
+          "street_end"
+        ]
+      },
+      {
+        "id": "block_corner",
+        "x": 1,
+        "y": 3,
+        "outgoingEdgeIDs": [
+          "to_return"
+        ]
+      },
+      {
+        "id": "return_fork",
+        "x": 1,
+        "y": 5,
+        "outgoingEdgeIDs": [
+          "around_again",
+          "home"
+        ]
+      },
+      {
+        "id": "house",
+        "x": 1,
+        "y": 6,
+        "outgoingEdgeIDs": []
+      }
+    ],
+    "edges": [
+      {
+        "id": "approach",
+        "fromNodeID": "start",
+        "toNodeID": "approach_fork",
+        "roadShape": "verticalFirst"
+      },
+      {
+        "id": "near_side",
+        "fromNodeID": "approach_fork",
+        "toNodeID": "block_corner",
+        "roadShape": "verticalFirst"
+      },
+      {
+        "id": "far_side",
+        "fromNodeID": "approach_fork",
+        "toNodeID": "far_corner",
+        "roadShape": "horizontalFirst"
+      },
+      {
+        "id": "pickup_street",
+        "fromNodeID": "far_corner",
+        "toNodeID": "pickup",
+        "roadShape": "horizontalFirst"
+      },
+      {
+        "id": "street_end",
+        "fromNodeID": "pickup",
+        "toNodeID": "block_corner",
+        "roadShape": "horizontalFirst"
+      },
+      {
+        "id": "to_return",
+        "fromNodeID": "block_corner",
+        "toNodeID": "return_fork",
+        "roadShape": "verticalFirst"
+      },
+      {
+        "id": "around_again",
+        "fromNodeID": "return_fork",
+        "toNodeID": "far_corner",
+        "roadShape": "horizontalFirst"
+      },
+      {
+        "id": "home",
+        "fromNodeID": "return_fork",
+        "toNodeID": "house",
+        "roadShape": "verticalFirst"
+      }
+    ]
+  },
+  "vans": [
+    {
+      "id": "red",
+      "color": "red",
+      "startNodeID": "start",
+      "departDelay": 0
+    }
+  ],
+  "houses": [
+    {
+      "nodeID": "house",
+      "color": "red"
+    }
+  ],
+  "packages": [
+    {
+      "id": "red_parcel",
+      "nodeID": "pickup",
+      "ownerVanID": "red"
+    }
+  ],
+  "initialSwitchEdges": {
+    "approach_fork": "near_side",
+    "return_fork": "around_again"
+  },
+  "parChanges": 2,
+  "liveSwitchNodeIDs": [],
+  "hint": "The parcel's street runs one way. Send Red round the far side to reach it, then turn for home.",
+  "hintFocusNodeIDs": [
+    "approach_fork",
+    "return_fork"
+  ]
+}

@@ -1,70 +1,131 @@
 import SwiftUI
 
+/// The rewards for clearing 10, 25, 50 and 75 levels, as raised tiles along a
+/// dashed road. Still a placeholder: the first is shown as earned.
 struct TRMilestoneRewardsPlaceholderCard: View {
     private let primaryBlue = Color(red: 0.05, green: 0.48, blue: 0.95)
-    private let successGreen = Color(red: 0.16, green: 0.72, blue: 0.60)
     private let titleColor = Color(red: 0.05, green: 0.18, blue: 0.43)
     private let mutedTextColor = Color(red: 0.40, green: 0.49, blue: 0.62)
-    private let milestones = [10, 25, 50, 75]
+
+    private enum Reward: CaseIterable {
+        case badge, gift, coins, chest
+
+        var levels: Int {
+            switch self {
+            case .badge: 10
+            case .gift: 25
+            case .coins: 50
+            case .chest: 75
+            }
+        }
+    }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
             Text("MILESTONE REWARDS")
                 .font(.system(size: 12, weight: .black, design: .rounded))
                 .foregroundStyle(primaryBlue)
-                .tracking(0.8)
+                .tracking(1)
 
-            ZStack {
+            ZStack(alignment: .top) {
                 GeometryReader { geometry in
                     Path { path in
-                        let y = geometry.size.height * 0.33
-                        path.move(to: CGPoint(x: 28, y: y))
-                        path.addLine(to: CGPoint(x: geometry.size.width - 28, y: y))
+                        let y: CGFloat = 28
+                        path.move(to: CGPoint(x: geometry.size.width / 8, y: y))
+                        path.addLine(to: CGPoint(x: geometry.size.width * 7 / 8, y: y))
                     }
                     .stroke(
-                        Color(red: 0.72, green: 0.79, blue: 0.88),
-                        style: StrokeStyle(lineWidth: 3, lineCap: .round, dash: [4, 7])
+                        MultiVanHUDStyle.creamLip,
+                        style: StrokeStyle(lineWidth: 3, lineCap: .round, dash: [5, 7])
                     )
                 }
                 .allowsHitTesting(false)
 
                 HStack(alignment: .top, spacing: 0) {
-                    ForEach(Array(milestones.enumerated()), id: \.element) { index, milestone in
-                        milestoneNode(levelCount: milestone, isCompleted: index == 0)
+                    ForEach(Reward.allCases, id: \.levels) { reward in
+                        milestoneNode(reward, isEarned: reward == .badge)
                             .frame(maxWidth: .infinity)
                     }
                 }
             }
-            .frame(height: 76)
+            .frame(height: 86)
         }
         .padding(18)
         .background {
-            TRGlassCardBackground()
+            MultiVanHUDCardBackground(cornerRadius: 28)
         }
     }
 
-    private func milestoneNode(levelCount: Int, isCompleted: Bool) -> some View {
-        VStack(spacing: 7) {
-            ZStack {
-                Circle()
-                    .fill(isCompleted ? successGreen : Color(red: 0.94, green: 0.97, blue: 1.0))
-                    .frame(width: 42, height: 42)
-                    .overlay {
-                        Circle()
-                            .stroke(.white, lineWidth: 4)
-                    }
-                    .shadow(color: .black.opacity(0.08), radius: 6, x: 0, y: 3)
+    private func milestoneNode(_ reward: Reward, isEarned: Bool) -> some View {
+        VStack(spacing: 8) {
+            icon(for: reward, isEarned: isEarned)
+                .frame(width: 52, height: 52)
+                .background {
+                    tileShape.fill(isEarned
+                        ? AnyShapeStyle(LinearGradient(colors: [Color(red: 0.30, green: 0.76, blue: 0.44), Color(red: 0.14, green: 0.58, blue: 0.33)], startPoint: .top, endPoint: .bottom))
+                        : AnyShapeStyle(LinearGradient(colors: [.white, MultiVanHUDStyle.cream], startPoint: .top, endPoint: .bottom)))
+                        .overlay { tileShape.strokeBorder(.white.opacity(0.9), lineWidth: 2) }
+                }
+                .background {
+                    tileShape.fill(isEarned ? Color(red: 0.07, green: 0.40, blue: 0.22) : MultiVanHUDStyle.creamLip).offset(y: 3)
+                }
+                .shadow(color: MultiVanHUDStyle.shadow.opacity(0.14), radius: 5, x: 0, y: 4)
 
-                Image(systemName: isCompleted ? "checkmark" : "gift.fill")
-                    .font(.system(size: 16, weight: .bold))
-                    .foregroundStyle(isCompleted ? .white : primaryBlue)
-            }
-
-            Text("\(levelCount) Levels")
-                .font(.system(size: 11, weight: .bold, design: .rounded))
-                .foregroundStyle(isCompleted ? titleColor : mutedTextColor)
+            Text("\(reward.levels) Levels")
+                .font(.system(size: 13, weight: .bold, design: .rounded))
+                .foregroundStyle(isEarned ? titleColor : mutedTextColor)
                 .lineLimit(1)
                 .minimumScaleFactor(0.72)
+        }
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("\(reward.levels) levels reward")
+        .accessibilityValue(isEarned ? "Earned" : "Not yet earned")
+    }
+
+    /// Three gold coins, stacked and overlapping.
+    private var coinStack: some View {
+        let gold = Color(red: 1.0, green: 0.78, blue: 0.18), deep = Color(red: 0.86, green: 0.56, blue: 0.08)
+        return ZStack {
+            ForEach(0..<3, id: \.self) { index in
+                Ellipse()
+                    .fill(gold)
+                    .overlay { Ellipse().strokeBorder(deep, lineWidth: 1.5) }
+                    .frame(width: 22, height: 9)
+                    .background { Ellipse().fill(deep).frame(width: 22, height: 9).offset(y: 2.5) }
+                    .offset(x: index == 2 ? 6 : -3, y: index == 2 ? 3 : CGFloat(5 - index * 6))
+            }
+        }
+    }
+
+    private var tileShape: RoundedRectangle {
+        RoundedRectangle(cornerRadius: 15, style: .continuous)
+    }
+
+    @ViewBuilder
+    private func icon(for reward: Reward, isEarned: Bool) -> some View {
+        if isEarned {
+            Image(systemName: "checkmark")
+                .font(.system(size: 22, weight: .black))
+                .foregroundStyle(.white)
+        } else {
+            switch reward {
+            case .badge:
+                Image(systemName: "rosette")
+                    .font(.system(size: 24, weight: .bold))
+                    .foregroundStyle(primaryBlue)
+            case .gift:
+                Image(systemName: "gift.fill")
+                    .font(.system(size: 24, weight: .bold))
+                    .symbolRenderingMode(.palette)
+                    .foregroundStyle(Color(red: 1.0, green: 0.78, blue: 0.18), primaryBlue)
+            case .coins:
+                coinStack
+            case .chest:
+                Image(systemName: "shippingbox.fill")
+                    .font(.system(size: 24, weight: .bold))
+                    .symbolRenderingMode(.palette)
+                    .foregroundStyle(Color(red: 0.62, green: 0.40, blue: 0.22), Color(red: 1.0, green: 0.78, blue: 0.18))
+            }
         }
     }
 }

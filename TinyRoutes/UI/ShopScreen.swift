@@ -45,24 +45,17 @@ struct ShopScreen: View {
 
     var body: some View {
         ScrollView(.vertical, showsIndicators: false) {
-            VStack(spacing: 16) {
-                TRMenuTitleLogo(
-                    pageTitle: "Shop",
-                    subtitleOverride: "Customize your journey"
-                )
-                .padding(.top, 10)
-
+            VStack(spacing: 22) {
                 featuredSection
 
                 customizeSection
 
                 goodiesSection
-                    .padding(.bottom, 18)
             }
             .frame(maxWidth: 760)
             .frame(maxWidth: .infinity)
             .padding(.horizontal, 20)
-            .padding(.top, 4)
+            .padding(.top, 18)
             .padding(.bottom, 26)
         }
         .safeAreaInset(edge: .top, spacing: 0) {
@@ -71,17 +64,6 @@ struct ShopScreen: View {
                 onSettingsTapped: onSettingsTapped,
                 onAddCurrencyTapped: onAddCurrencyTapped
             )
-        }
-        .background {
-            LinearGradient(
-                colors: [
-                    Color.white.opacity(0.24),
-                    Color(red: 0.69, green: 0.89, blue: 0.80).opacity(0.12)
-                ],
-                startPoint: .top,
-                endPoint: .bottom
-            )
-            .ignoresSafeArea()
         }
         .alert(item: $activePlaceholder) { placeholder in
             Alert(
@@ -130,7 +112,7 @@ struct ShopScreen: View {
             if let selectedOption = selectedOptionForPreview {
                 ViewThatFits(in: .horizontal) {
                     HStack(alignment: .top, spacing: 14) {
-                        TRShopRouteThemePreviewCard(selectedOption: selectedOption)
+                        TRShopRouteThemePreviewCard(selectedOption: selectedOption, cosmetics: equippedCosmetics)
                             .frame(width: 286)
 
                         TRShopCosmeticGrid(
@@ -142,7 +124,7 @@ struct ShopScreen: View {
                     .frame(minWidth: 620)
 
                     VStack(spacing: 14) {
-                        TRShopRouteThemePreviewCard(selectedOption: selectedOption)
+                        TRShopRouteThemePreviewCard(selectedOption: selectedOption, cosmetics: equippedCosmetics)
 
                         TRShopCosmeticGrid(
                             options: selectedCategoryOptions,
@@ -167,6 +149,15 @@ struct ShopScreen: View {
 
     private var selectedCategoryOptions: [ShopCosmeticOption] {
         cosmeticService.options(forCategoryID: selectedCategoryID)
+    }
+
+    /// What the player has on now, for the preview board.
+    private var equippedCosmetics: MultiVanCosmetics {
+        let selected = cosmeticService.selectedCosmeticIDByCategoryID()
+        return MultiVanCosmetics(
+            table: selected[ShopCosmeticCategoryID.routeThemes].flatMap(MultiVanTableTheme.init) ?? .standard,
+            confetti: selected[ShopCosmeticCategoryID.confetti].flatMap(MultiVanConfettiStyle.init) ?? .standard
+        )
     }
 
     private var selectedOptionForPreview: ShopCosmeticOption? {
@@ -282,8 +273,6 @@ private enum ShopAlert: Identifiable {
             switch action.id {
             case "coins":
                 return "Coin packs coming soon."
-            case "gems":
-                return "Gems coming soon."
             case "dailyDeals":
                 return "Daily deals coming soon."
             default:
@@ -295,9 +284,7 @@ private enum ShopAlert: Identifiable {
 
 #Preview("Shop Screen") {
     ZStack {
-        SpriteImage(name: "background")
-            .scaledToFill()
-            .ignoresSafeArea()
+        TRCozySkyBackground()
 
         ShopScreen(
             coinTotal: 1_250,

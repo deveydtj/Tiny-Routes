@@ -63,6 +63,18 @@ final class ProgressService {
         repository.load().unlockedLevelIDs
     }
 
+    /// Opens each level that follows a completed one. Finishing a level opens the
+    /// next at that moment only, so a level added after a player finished the
+    /// last one would otherwise stay locked until they replayed it.
+    func unlockLevelsFollowingCompleted(in orderedLevelIDs: [String]) {
+        let profile = repository.load()
+        let opened = zip(orderedLevelIDs, orderedLevelIDs.dropFirst())
+            .filter { profile.completedLevelIDs.contains($0.0) && !profile.unlockedLevelIDs.contains($0.1) }
+            .map(\.1)
+        guard !opened.isEmpty else { return }
+        repository.update { $0.unlockedLevelIDs.formUnion(opened) }
+    }
+
     func resetProgress() {
         repository.update { profile in
             profile.unlockedLevelIDs = PlayerProfile.defaultValue.unlockedLevelIDs

@@ -1,6 +1,21 @@
 import SceneKit
 import UIKit
 
+/// The slow part of loading a level that needs no renderer: where its scenery
+/// stands and the lawn painted under it. Value types and a finished image only,
+/// so the preload makes it off the main actor.
+struct MultiVanDioramaGround: @unchecked Sendable {
+    let levelID: String
+    let scenery: MultiVanDioramaScenery
+    let lawn: UIImage
+
+    init(level: MultiVanLevel, graph: RuntimeRouteGraph) {
+        levelID = level.id
+        scenery = MultiVanDioramaScenery(level: level, graph: graph)
+        lawn = MultiVanDioramaLawn.image(for: level, graph: graph, scenery: scenery)
+    }
+}
+
 /// The diorama's SceneKit scene: a floating slab of lawn under a warm sun, seen
 /// through a long lens with shallow focus. Built once per board; `load` swaps the
 /// level's pieces and `setCamera` follows the board's framing and orbit. Only this
@@ -45,6 +60,12 @@ final class MultiVanDioramaScene {
     private(set) var roadblocks: [String: SCNNode] = [:]
     /// Each house's ✓, shown once its van is home.
     private(set) var deliveredBadges: [String: SCNNode] = [:]
+    /// Each parcel's pad by package ID, and each stop line's post by approach ID.
+    private(set) var pickups: [String: SCNNode] = [:]
+    private(set) var signalPosts: [String: SCNNode] = [:]
+    private var pickupsWaiting: [String: Bool] = [:]
+    private var signalsOpen: [String: Bool] = [:]
+    private var vansCarrying: [String: Bool] = [:]
     /// The level's scenery, and a node for each standing piece of it in its order.
     private(set) var scenery: MultiVanDioramaScenery?
     private(set) var sceneryNodes: [SCNNode] = []
@@ -77,14 +98,18 @@ final class MultiVanDioramaScene {
     private var dialPulses: [String: Bool] = [:]
     /// The tokens the last cues held; nil until a board's first cues.
     private var playedCues: Set<UUID>?
+    /// The next sync puts dials and vans straight where the engine has them.
+    private var snapsNextSync = false
     /// Seeds each burst, so bursts differ but a run plays the same every time.
     private var burstCount: UInt32 = 0
     /// Clouds drifting in the sky around and below the slab.
     private(set) var clouds: [SCNNode] = []
+    /// The shop's choices as drawn: the table's base, the sky and the win's paper.
+    private(set) var cosmetics = MultiVanCosmetics.standard
 
     init() {
         lawn = Self.lawnMaterial()
-        scene.background.contents = Self.backdrop()
+        scene.background.contents = Self.backdrop(cosmetics.table)
         scene.lightingEnvironment.contents = Self.skyGround()
         scene.lightingEnvironment.intensity = Look.skyIntensity
         scene.rootNode.addChildNode(Self.sun())
@@ -102,20 +127,27 @@ final class MultiVanDioramaScene {
     }
 
     /// Rebuilds the level's lawn and pieces when the level changes; a retry keeps
-    /// them. `graph` is the engine's, so dials start on its active exits.
-    func load(_ level: MultiVanLevel, graph: RuntimeRouteGraph) {
+    /// them. `graph` is the engine's, so dials start on its active exits. `ground`
+    /// is the level's scenery and lawn made ahead, off the main actor.
+    func load(_ level: MultiVanLevel, graph: RuntimeRouteGraph, ground: MultiVanDioramaGround? = nil) {
         guard level.id != levelID else { return }
+        let ground = ground.flatMap { $0.levelID == level.id ? $0 : nil } ?? MultiVanDioramaGround(level: level, graph: graph)
         levelID = level.id
         self.level = level
-        let scenery = MultiVanDioramaScenery(level: level, graph: graph)
+        let scenery = ground.scenery
         self.scenery = scenery
-        lawn.diffuse.contents = MultiVanDioramaLawn.image(for: level, graph: graph, scenery: scenery)
+        lawn.diffuse.contents = ground.lawn
         piecesNode.childNodes.forEach { $0.removeFromParentNode() }
         houses = [:]
         vans = [:]
         dials = [:]
         roadblocks = [:]
         deliveredBadges = [:]
+        pickups = [:]
+        signalPosts = [:]
+        pickupsWaiting = [:]
+        signalsOpen = [:]
+        vansCarrying = [:]
         dialYaws = [:]
         dialTints = [:]
         vanLooks = [:]
@@ -193,8 +225,32 @@ final class MultiVanDioramaScene {
         for van in level.vans {
             guard let depot = depots[van.startNodeID] else { continue }
             let node = MultiVanDioramaPieces.van(van.color)
+            if !level.packages(ownedBy: van.id).isEmpty {
+                MultiVanDioramaPieces.addRoofParcel(to: node, color: van.color)
+            }
             place(node, depot.point, MultiVanDioramaGeometry.yaw(facing: depot.heading))
             vans[van.id] = node
+        }
+        for package in level.packages {
+            guard let owner = level.vans.first(where: { $0.id == package.ownerVanID }) else { continue }
+            let pad = MultiVanDioramaPieces.pickup(owner.color)
+            // Beside the road, where the flat board sets its marker.
+            place(pad, MultiVanPickup.markerPoint(nodeID: package.nodeID, graph: graph), 0)
+            pickups[package.id] = pad
+        }
+        for signal in level.signals {
+            for approach in signal.approaches {
+                guard let road = graph.edgesByID[approach.edgeID]?.roadPath else { continue }
+                let point = road.point(atDistance: approach.stopDistance)
+                let tangent = road.tangent(atDistance: approach.stopDistance)
+                let post = MultiVanDioramaPieces.signalPost(kind: signal.kind)
+                // To the right of travel, facing the van that drives up to it.
+                place(
+                    post, MultiVanSignalApproach.postPoint(stopPoint: point, tangent: tangent),
+                    MultiVanDioramaGeometry.yaw(facing: RoadVector(x: -tangent.x, y: -tangent.y))
+                )
+                signalPosts["\(signal.id):\(approach.edgeID)"] = post
+            }
         }
         for node in MultiVanBoardRules.switchNodes(in: graph) {
             let exits = node.outgoingEdgeIDs.compactMap { graph.edgesByID[$0] }
@@ -218,12 +274,23 @@ final class MultiVanDioramaScene {
         }
     }
 
+    /// A new board takes this scene, which may have sat out while the flat board
+    /// played on: the first sync jumps every piece to the engine, and the cues the
+    /// board starts with count as already played.
+    func prepareForBoard() {
+        playedCues = nil
+        snapsNextSync = true
+        stopEffects()
+    }
+
     // MARK: - Sync
 
     /// Puts every piece where the engine has it this frame. Called from SwiftUI's
     /// update on the main actor; SceneKit only animates what this sets.
     func sync(_ frame: MultiVanDioramaFrame) {
         guard let level else { return }
+        let moves = frame.animates && !snapsNextSync
+        snapsNextSync = false
         if frame.animates != sceneryAnimates {
             sceneryAnimates = frame.animates
             setSway(frame.animates)
@@ -240,13 +307,29 @@ final class MultiVanDioramaScene {
             setTrails(MultiVanDioramaTrail.make(routes: frame.routes, vans: level.vans, graph: frame.graph), routes: frame.routes)
         }
         for (index, van) in frame.vans.enumerated() {
-            if let node = vans[van.id] { syncVan(node, van, index: index, animates: frame.animates) }
+            if let node = vans[van.id] { syncVan(node, van, index: index, animates: moves) }
         }
         for dial in frame.dials {
-            if let node = dials[dial.nodeID] { syncDial(node, dial, animates: frame.animates) }
+            if let node = dials[dial.nodeID] { syncDial(node, dial, animates: frame.animates, turns: moves) }
         }
         for (nodeID, badge) in deliveredBadges {
             badge.isHidden = !frame.deliveredHouseNodeIDs.contains(nodeID)
+        }
+        for pickup in frame.pickups {
+            let waiting = pickup.state == .atPickup
+            guard pickupsWaiting[pickup.id] != waiting, let node = pickups[pickup.id] else { continue }
+            pickupsWaiting[pickup.id] = waiting
+            MultiVanDioramaPieces.setWaiting(node, waiting)
+        }
+        for approach in frame.signalApproaches {
+            guard signalsOpen[approach.id] != approach.isOpen, let post = signalPosts[approach.id] else { continue }
+            // The first sync sets the lamp; later ones swing a bridge's arm.
+            MultiVanDioramaPieces.setSignal(post, isOpen: approach.isOpen, animates: moves && signalsOpen[approach.id] != nil)
+            signalsOpen[approach.id] = approach.isOpen
+        }
+        for van in frame.vans where vansCarrying[van.id] != van.carriesCargo {
+            vansCarrying[van.id] = van.carriesCargo
+            if let node = vans[van.id] { MultiVanDioramaPieces.setCarried(node, van.carriesCargo) }
         }
         for (index, trail) in trails.enumerated() {
             let first = trail.firstVisibleDot(for: index < frame.vans.count ? frame.vans[index] : nil)
@@ -308,7 +391,7 @@ final class MultiVanDioramaScene {
         switch van.status {
         case .crashed: target = SIMD3(0, 0.6 * side, 0.3 * side)
         case .stuck: target = SIMD3(0, 0.25 * side, 0)
-        case .waiting, .driving, .parked: target = .zero
+        case .waiting, .driving, .parked, .missingCargo: target = .zero
         }
         pose.removeAction(forKey: Self.poseKey)
         if animates, van.status == .crashed {
@@ -369,7 +452,8 @@ final class MultiVanDioramaScene {
         return (Float(start), .sequence([first, loop]))
     }
 
-    private func syncDial(_ node: SCNNode, _ dial: MultiVanDioramaFrame.Dial, animates: Bool) {
+    /// `turns` is false to set the arrow without turning it there.
+    private func syncDial(_ node: SCNNode, _ dial: MultiVanDioramaFrame.Dial, animates: Bool, turns: Bool) {
         if dialTints[dial.nodeID] != dial.tint {
             dialTints[dial.nodeID] = dial.tint
             MultiVanDioramaPieces.tintDial(node, dial.tint)
@@ -391,7 +475,7 @@ final class MultiVanDioramaScene {
         let target = current + delta
         dialYaws[dial.nodeID] = target
         pivot.removeAllActions()
-        guard animates else {
+        guard turns else {
             pivot.simdEulerAngles.y = target
             return
         }
@@ -454,7 +538,7 @@ final class MultiVanDioramaScene {
             )
         }
         if let confetti = cues.confetti, isNew(confetti) {
-            let colors = VanColor.allCases.map(\.dioramaBody) + [.white]
+            let colors = cosmetics.confetti.winColors ?? VanColor.allCases.map(\.dioramaBody) + [.white]
             effectsNode.addChildNode(MultiVanDioramaEffects.confetti(
                 at: SIMD3(0, 1.4, 0), colors: colors, count: 90, spread: 2.2,
                 delay: MultiVanDioramaEffects.Timing.winConfettiDelay, seed: nextSeed()
@@ -526,35 +610,59 @@ final class MultiVanDioramaScene {
         }
     }
 
+    /// Rebuilds only the vans' trails that changed: a tap reroutes one or two vans,
+    /// and rebuilding every line mid-morph costs frames.
     private func setTrails(_ trails: [MultiVanDioramaTrail], routes: [MultiVanPreviewRoute]?) {
+        let previous = self.trails
         self.trails = trails
         self.routes = routes
-        trailsNode.childNodes.forEach { $0.removeFromParentNode() }
-        // Nothing is synced yet, so the first sync shows or hides every dot.
-        firstVisibleDots = [Int?](repeating: -1, count: trails.count)
+        for index in previous.indices.dropFirst(trails.count) {
+            trailNodes[index].removeFromParentNode()
+            markerNodes[index]?.removeFromParentNode()
+        }
+        trailNodes = Array(trailNodes.prefix(trails.count))
+        markerNodes = Array(markerNodes.prefix(trails.count))
+        firstVisibleDots = Array(firstVisibleDots.prefix(trails.count))
+        for (index, trail) in trails.enumerated() {
+            if index < previous.count {
+                guard previous[index] != trail else { continue }
+                trailNodes[index].removeFromParentNode()
+                markerNodes[index]?.removeFromParentNode()
+            }
+            let (line, marker) = trailPieces(trail)
+            // Nothing is synced yet, so the next sync shows or hides every dot.
+            if index < previous.count {
+                trailNodes[index] = line
+                markerNodes[index] = marker
+                firstVisibleDots[index] = -1
+            } else {
+                trailNodes.append(line)
+                markerNodes.append(marker)
+                firstVisibleDots.append(-1)
+            }
+        }
+    }
+
+    /// One trail's dots and its ✓ / ✗, added to the scene.
+    private func trailPieces(_ trail: MultiVanDioramaTrail) -> (line: SCNNode, marker: SCNNode?) {
+        let line = SCNNode()
+        for dot in trail.dots {
+            let piece = MultiVanDioramaPieces.trailDot(trail.color)
+            piece.simdPosition += SIMD3<Float>(MultiVanDioramaGeometry.world(gridX: dot.point.x, gridY: dot.point.y))
+            line.addChildNode(piece)
+        }
+        trailsNode.addChildNode(line)
+        guard let marker = trail.marker, let endpoint = trail.endpoint else { return (line, nil) }
         let right = SIMD3<Float>(MultiVanDioramaCamera().basis.right)
-        trailNodes = trails.map { trail in
-            let node = SCNNode()
-            for dot in trail.dots {
-                let piece = MultiVanDioramaPieces.trailDot(trail.color)
-                piece.simdPosition += SIMD3<Float>(MultiVanDioramaGeometry.world(gridX: dot.point.x, gridY: dot.point.y))
-                node.addChildNode(piece)
-            }
-            trailsNode.addChildNode(node)
-            return node
+        let badge = MultiVanDioramaPieces.badge(.ending(marker.ending, trail.color))
+        var base = SIMD3<Float>(MultiVanDioramaGeometry.world(gridX: endpoint.x, gridY: endpoint.y, height: Look.badgeHeight))
+        if let house = houses[marker.nodeID] {
+            base = house.simdPosition + SIMD3(0, Float(Look.houseBadgeHeight), 0)
         }
-        markerNodes = trails.map { trail in
-            guard let marker = trail.marker, let endpoint = trail.endpoint else { return nil }
-            let badge = MultiVanDioramaPieces.badge(.ending(marker.ending, trail.color))
-            var base = SIMD3<Float>(MultiVanDioramaGeometry.world(gridX: endpoint.x, gridY: endpoint.y, height: Look.badgeHeight))
-            if let house = houses[marker.nodeID] {
-                base = house.simdPosition + SIMD3(0, Float(Look.houseBadgeHeight), 0)
-            }
-            let column = Float(marker.column ?? 0) * Float(Look.badgeColumn)
-            badge.simdPosition = base + right * column + SIMD3(0, Float(marker.row) * Float(Look.badgeRow), 0)
-            trailsNode.addChildNode(badge)
-            return badge
-        }
+        let column = Float(marker.column ?? 0) * Float(Look.badgeColumn)
+        badge.simdPosition = base + right * column + SIMD3(0, Float(marker.row) * Float(Look.badgeRow), 0)
+        trailsNode.addChildNode(badge)
+        return (line, badge)
     }
 
     /// Moves the lens to where the board's switch buttons assume it is.
@@ -627,11 +735,10 @@ final class MultiVanDioramaScene {
 
     /// The studio sky behind the table. The lens looks 31°–61° below the horizon,
     /// so the blue-to-cream sweep sits in that band of this equirectangular image.
-    private static func backdrop() -> UIImage {
+    static func backdrop(_ table: MultiVanTableTheme = .standard) -> UIImage {
         let size = CGSize(width: 8, height: 512)
         return UIGraphicsImageRenderer(size: size).image { context in
-            let colors = [UIColor(dioramaHex: 0xBFE1F2), UIColor(dioramaHex: 0xE4F3F6), UIColor(dioramaHex: 0xFBF1E3)]
-                .map(\.cgColor) as CFArray
+            let colors = table.skyHexes.map { UIColor(dioramaHex: Int($0)).cgColor } as CFArray
             let gradient = CGGradient(colorsSpace: nil, colors: colors, locations: [0.64, 0.75, 0.86])!
             context.cgContext.drawLinearGradient(
                 gradient, start: .zero, end: CGPoint(x: 0, y: size.height), options: [.drawsBeforeStartLocation, .drawsAfterEndLocation]
@@ -764,25 +871,38 @@ final class MultiVanDioramaScene {
     // MARK: - The slab
 
     /// A die-cut slice of lawn on two soil strata, each stepped in slightly.
-    private static func slab(lawn: SCNMaterial) -> SCNNode {
+    /// The table: lawn over two bands of soil. The level map lays a longer one.
+    static func slab(
+        lawn: SCNMaterial,
+        width: Double = MultiVanDioramaGeometry.slabWidth,
+        depth: Double = MultiVanDioramaGeometry.slabDepth
+    ) -> SCNNode {
         let slab = SCNNode()
         // The sides wrap the whole rim once.
-        let rimTiles = CGSize(width: 14, height: 1)
+        let rimTiles = CGSize(width: 14 * (width + depth) / (MultiVanDioramaGeometry.slabWidth + MultiVanDioramaGeometry.slabDepth), height: 1)
         let grassSide = paper(texture: grain(on: UIColor(dioramaHex: 0x7DB457), dots: 2600, seed: 11), tiles: rimTiles)
         let soil = paper(texture: grain(on: UIColor(dioramaHex: 0xA26E48), dots: 2600, seed: 13), tiles: rimTiles)
         let deepSoil = paper(texture: grain(on: UIColor(dioramaHex: 0x7B5339), dots: 2600, seed: 17), tiles: rimTiles)
-        let grass = slabLayer(inset: 0, bottom: -0.16, height: 0.16, top: lawn, sides: grassSide)
+        let grass = slabLayer(width: width, depth: depth, inset: 0, bottom: -0.16, height: 0.16, top: lawn, sides: grassSide)
         grass.name = lawnNodeName
         slab.addChildNode(grass)
-        slab.addChildNode(slabLayer(inset: 0.05, bottom: -0.6, height: 0.44, top: soil, sides: soil))
-        slab.addChildNode(slabLayer(inset: 0.11, bottom: MultiVanDioramaGeometry.slabBottom, height: 0.36, top: deepSoil, sides: deepSoil))
-        slab.addChildNode(pebbles())
+        let soilLayer = slabLayer(width: width, depth: depth, inset: 0.05, bottom: -0.6, height: 0.44, top: soil, sides: soil)
+        soilLayer.name = soilNodeName
+        slab.addChildNode(soilLayer)
+        let deepSoilLayer = slabLayer(
+            width: width, depth: depth, inset: 0.11, bottom: MultiVanDioramaGeometry.slabBottom, height: 0.36, top: deepSoil, sides: deepSoil
+        )
+        deepSoilLayer.name = deepSoilNodeName
+        slab.addChildNode(deepSoilLayer)
+        slab.addChildNode(pebbles(width: width, depth: depth))
         return slab
     }
 
-    private static func slabLayer(inset: Double, bottom: Double, height: Double, top: SCNMaterial, sides: SCNMaterial) -> SCNNode {
-        let width = MultiVanDioramaGeometry.slabWidth - inset * 2
-        let depth = MultiVanDioramaGeometry.slabDepth - inset * 2
+    private static func slabLayer(
+        width slabWidth: Double, depth slabDepth: Double, inset: Double, bottom: Double, height: Double, top: SCNMaterial, sides: SCNMaterial
+    ) -> SCNNode {
+        let width = slabWidth - inset * 2
+        let depth = slabDepth - inset * 2
         let path = UIBezierPath(
             roundedRect: CGRect(x: -width / 2, y: -depth / 2, width: width, height: depth),
             cornerRadius: MultiVanDioramaGeometry.slabCornerRadius - inset * 0.5
@@ -799,7 +919,7 @@ final class MultiVanDioramaScene {
     }
 
     /// Pebbles pressed into the soil walls, flattened into one node.
-    private static func pebbles() -> SCNNode {
+    private static func pebbles(width: Double, depth: Double) -> SCNNode {
         var random = MultiVanDioramaRandom(seed: 3)
         let shapes = [0xC9B8A2, 0x9C8B78, 0xE0D3BF].map { hex in
             let sphere = SCNSphere(radius: 1)
@@ -807,10 +927,12 @@ final class MultiVanDioramaScene {
             sphere.materials = [paper(color: UIColor(dioramaHex: hex))]
             return sphere
         }
-        let halfWidth = MultiVanDioramaGeometry.slabWidth / 2
-        let halfDepth = MultiVanDioramaGeometry.slabDepth / 2
+        let halfWidth = width / 2
+        let halfDepth = depth / 2
         let group = SCNNode()
-        for index in 0..<46 {
+        // As many to the unit of rim as the table has.
+        let count = Int((46 * (width + depth) / (MultiVanDioramaGeometry.slabWidth + MultiVanDioramaGeometry.slabDepth)).rounded())
+        for index in 0..<count {
             let side = Int(random.next() * 4)
             let along = random.next() - 0.5
             let inset = 0.03 + random.next() * 0.06
@@ -819,10 +941,10 @@ final class MultiVanDioramaScene {
             let size = 0.035 + random.next() * 0.05
             node.simdScale = SIMD3<Float>(Float(size * 1.3), Float(size), Float(size))
             switch side {
-            case 0: node.simdPosition = SIMD3<Float>(SIMD3(along * (MultiVanDioramaGeometry.slabWidth - 1), y, halfDepth - inset))
-            case 1: node.simdPosition = SIMD3<Float>(SIMD3(along * (MultiVanDioramaGeometry.slabWidth - 1), y, -halfDepth + inset))
-            case 2: node.simdPosition = SIMD3<Float>(SIMD3(halfWidth - inset, y, along * (MultiVanDioramaGeometry.slabDepth - 1)))
-            default: node.simdPosition = SIMD3<Float>(SIMD3(-halfWidth + inset, y, along * (MultiVanDioramaGeometry.slabDepth - 1)))
+            case 0: node.simdPosition = SIMD3<Float>(SIMD3(along * (width - 1), y, halfDepth - inset))
+            case 1: node.simdPosition = SIMD3<Float>(SIMD3(along * (width - 1), y, -halfDepth + inset))
+            case 2: node.simdPosition = SIMD3<Float>(SIMD3(halfWidth - inset, y, along * (depth - 1)))
+            default: node.simdPosition = SIMD3<Float>(SIMD3(-halfWidth + inset, y, along * (depth - 1)))
             }
             node.simdEulerAngles = SIMD3<Float>(Float(random.next() * 3), Float(random.next() * 3), Float(random.next() * 3))
             group.addChildNode(node)
@@ -847,6 +969,22 @@ final class MultiVanDioramaScene {
     }
 
     static let lawnNodeName = "lawn"
+    static let soilNodeName = "soil"
+    static let deepSoilNodeName = "deepSoil"
+
+    /// Repaints the table's base and sky and sets the win's paper. The lawn, the
+    /// roads and every piece are left alone.
+    func apply(_ cosmetics: MultiVanCosmetics) {
+        guard cosmetics != self.cosmetics else { return }
+        if cosmetics.table != self.cosmetics.table {
+            scene.background.contents = Self.backdrop(cosmetics.table)
+            for (name, hex, seed) in [(Self.soilNodeName, cosmetics.table.soilHex, 13), (Self.deepSoilNodeName, cosmetics.table.deepSoilHex, 17)] as [(String, UInt32, UInt32)] {
+                let texture = Self.grain(on: UIColor(dioramaHex: Int(hex)), dots: 2600, seed: seed)
+                scene.rootNode.childNode(withName: name, recursively: true)?.geometry?.materials.forEach { $0.diffuse.contents = texture }
+            }
+        }
+        self.cosmetics = cosmetics
+    }
 
     /// SCNShape maps its front face's bounding box onto the texture, far edge at the
     /// top, which is how `MultiVanDioramaLawn` paints it. Plain grass until a level loads.

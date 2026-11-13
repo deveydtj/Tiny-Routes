@@ -163,26 +163,26 @@ final class CosmeticServiceTests: XCTestCase {
     }
 
     func testUnlockAndAutoSelectSpendsCoinsAndSelectsPurchasedItem() throws {
-        let option = try paidOption(id: "dotGolden")
-        economyService.addCoins(450, reason: .debug)
+        let option = try paidOption(id: "confettiCandy")
+        economyService.addCoins(500, reason: .debug)
 
         let result = cosmeticService.unlockAndSelectCosmetic(option)
 
         XCTAssertEqual(result, .unlockedAndSelected)
-        XCTAssertTrue(cosmeticService.isOwned(cosmeticID: "dotGolden"))
-        XCTAssertEqual(cosmeticService.selectedCosmeticID(forCategoryID: ShopCosmeticCategoryID.deliveryDots), "dotGolden")
+        XCTAssertTrue(cosmeticService.isOwned(cosmeticID: "confettiCandy"))
+        XCTAssertEqual(cosmeticService.selectedCosmeticID(forCategoryID: ShopCosmeticCategoryID.confetti), "confettiCandy")
         XCTAssertEqual(economyService.coinTotal(), 0)
     }
 
     func testUnlockAndAutoSelectWithInsufficientCoinsDoesNotUnlockOrSelect() throws {
-        let option = try paidOption(id: "dotGolden")
+        let option = try paidOption(id: "confettiCandy")
         economyService.addCoins(100, reason: .debug)
 
         let result = cosmeticService.unlockAndSelectCosmetic(option)
 
         XCTAssertEqual(result, .insufficientCoins)
-        XCTAssertFalse(cosmeticService.isOwned(cosmeticID: "dotGolden"))
-        XCTAssertEqual(cosmeticService.selectedCosmeticID(forCategoryID: ShopCosmeticCategoryID.deliveryDots), "dotCourierBlue")
+        XCTAssertFalse(cosmeticService.isOwned(cosmeticID: "confettiCandy"))
+        XCTAssertEqual(cosmeticService.selectedCosmeticID(forCategoryID: ShopCosmeticCategoryID.confetti), "confettiStars")
         XCTAssertEqual(economyService.coinTotal(), 100)
     }
 

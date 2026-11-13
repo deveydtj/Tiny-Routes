@@ -3,23 +3,28 @@ import Foundation
 struct ShopCatalogService {
     let featuredOffers: [ShopFeaturedOffer]
     let categories: [ShopCosmeticCategory]
+    /// What the shop sells: every one shows on the Multi-Van boards.
     let cosmeticOptions: [ShopCosmeticOption]
+    /// Retired cosmetics, resolvable by ID but never offered.
+    let retiredCosmeticOptions: [ShopCosmeticOption]
     let goodieActions: [ShopGoodieAction]
 
     init(
         featuredOffers: [ShopFeaturedOffer] = Self.defaultFeaturedOffers,
         categories: [ShopCosmeticCategory] = Self.defaultCategories,
         cosmeticOptions: [ShopCosmeticOption] = Self.defaultCosmeticOptions,
+        retiredCosmeticOptions: [ShopCosmeticOption] = Self.defaultRetiredCosmeticOptions,
         goodieActions: [ShopGoodieAction] = Self.defaultGoodieActions
     ) {
         self.featuredOffers = featuredOffers
         self.categories = categories
         self.cosmeticOptions = cosmeticOptions
+        self.retiredCosmeticOptions = retiredCosmeticOptions
         self.goodieActions = goodieActions
     }
 
     func options(forCategoryID categoryID: String) -> [ShopCosmeticOption] {
-        cosmeticOptions.filter { $0.categoryID == categoryID }
+        (cosmeticOptions + retiredCosmeticOptions).filter { $0.categoryID == categoryID }
     }
 
     func options(
@@ -41,16 +46,32 @@ struct ShopCatalogService {
     }
 
     func option(withID optionID: String) -> ShopCosmeticOption? {
-        cosmeticOptions.first { $0.id == optionID }
+        (cosmeticOptions + retiredCosmeticOptions).first { $0.id == optionID }
     }
 }
 
-private extension ShopCatalogService {
+extension ShopCatalogService {
+    /// Categories the shop no longer sells: nothing in them shows on a Multi-Van board.
+    static let retiredCategoryIDs: Set<String> = [
+        ShopCosmeticCategoryID.deliveryDots, ShopCosmeticCategoryID.trails, ShopCosmeticCategoryID.destinations
+    ]
+
+    /// What each retired paid cosmetic cost, for refunding a player who owns it.
+    static let retiredCosmeticPrices: [String: Int] = Dictionary(
+        uniqueKeysWithValues: defaultRetiredCosmeticOptions.compactMap { option in option.price.map { (option.id, $0) } }
+    )
+
+    static func isRetired(_ option: ShopCosmeticOption) -> Bool {
+        retiredCategoryIDs.contains(option.categoryID)
+    }
+}
+
+extension ShopCatalogService {
     static let defaultFeaturedOffers = [
         ShopFeaturedOffer(
             id: "starterPack",
             title: "Starter Pack",
-            subtitle: "Coins, gems, and bonus delivery goodies.",
+            subtitle: "Coins and bonus delivery goodies.",
             badgeText: "Best Value",
             displayPrice: "$2.99",
             style: .starterPack
@@ -68,28 +89,13 @@ private extension ShopCatalogService {
     static let defaultCategories = [
         ShopCosmeticCategory(
             id: ShopCosmeticCategoryID.routeThemes,
-            title: "Route Themes",
+            title: "Table Themes",
             systemImage: "paintbrush.fill"
-        ),
-        ShopCosmeticCategory(
-            id: ShopCosmeticCategoryID.deliveryDots,
-            title: "Delivery Dots",
-            systemImage: "circle.fill"
-        ),
-        ShopCosmeticCategory(
-            id: ShopCosmeticCategoryID.trails,
-            title: "Trails",
-            systemImage: "sparkles"
         ),
         ShopCosmeticCategory(
             id: ShopCosmeticCategoryID.confetti,
             title: "Confetti",
             systemImage: "party.popper.fill"
-        ),
-        ShopCosmeticCategory(
-            id: ShopCosmeticCategoryID.destinations,
-            title: "Destinations",
-            systemImage: "mappin.circle.fill"
         )
     ]
 
@@ -148,6 +154,47 @@ private extension ShopCatalogService {
             isSelected: false,
             accent: .candyLane
         ),
+        ShopCosmeticOption(
+            id: "confettiStars",
+            categoryID: ShopCosmeticCategoryID.confetti,
+            title: "Classic Paper",
+            price: nil,
+            isUnlocked: true,
+            isSelected: true,
+            accent: .sunsetBlvd
+        ),
+        ShopCosmeticOption(
+            id: "confettiSpark",
+            categoryID: ShopCosmeticCategoryID.confetti,
+            title: "Spark Pop",
+            price: 250,
+            isUnlocked: false,
+            isSelected: false,
+            accent: .oceanDrive
+        ),
+        ShopCosmeticOption(
+            id: "confettiGarden",
+            categoryID: ShopCosmeticCategoryID.confetti,
+            title: "Leaves",
+            price: 350,
+            isUnlocked: false,
+            isSelected: false,
+            accent: .forestPath
+        ),
+        ShopCosmeticOption(
+            id: "confettiCandy",
+            categoryID: ShopCosmeticCategoryID.confetti,
+            title: "Sugar Burst",
+            price: 500,
+            isUnlocked: false,
+            isSelected: false,
+            accent: .candyLane
+        )
+    ]
+
+    /// What the single-route game sold and Multi-Van has no place for. Kept so the
+    /// retired screens still resolve their defaults and a refund knows each price.
+    static let defaultRetiredCosmeticOptions = [
         ShopCosmeticOption(
             id: "dotCourierBlue",
             categoryID: ShopCosmeticCategoryID.deliveryDots,
@@ -221,42 +268,6 @@ private extension ShopCatalogService {
             accent: .neonNights
         ),
         ShopCosmeticOption(
-            id: "confettiStars",
-            categoryID: ShopCosmeticCategoryID.confetti,
-            title: "Stars",
-            price: nil,
-            isUnlocked: true,
-            isSelected: true,
-            accent: .sunsetBlvd
-        ),
-        ShopCosmeticOption(
-            id: "confettiSpark",
-            categoryID: ShopCosmeticCategoryID.confetti,
-            title: "Spark Pop",
-            price: 250,
-            isUnlocked: false,
-            isSelected: false,
-            accent: .oceanDrive
-        ),
-        ShopCosmeticOption(
-            id: "confettiGarden",
-            categoryID: ShopCosmeticCategoryID.confetti,
-            title: "Leaves",
-            price: 350,
-            isUnlocked: false,
-            isSelected: false,
-            accent: .forestPath
-        ),
-        ShopCosmeticOption(
-            id: "confettiCandy",
-            categoryID: ShopCosmeticCategoryID.confetti,
-            title: "Sugar Burst",
-            price: 500,
-            isUnlocked: false,
-            isSelected: false,
-            accent: .candyLane
-        ),
-        ShopCosmeticOption(
             id: "destinationFlag",
             categoryID: ShopCosmeticCategoryID.destinations,
             title: "Finish Flag",
@@ -301,13 +312,6 @@ private extension ShopCatalogService {
             subtitle: "Top up unlocks",
             buttonTitle: "Add",
             icon: .coins
-        ),
-        ShopGoodieAction(
-            id: "gems",
-            title: "Gems",
-            subtitle: "Premium boosts",
-            buttonTitle: "View",
-            icon: .gems
         ),
         ShopGoodieAction(
             id: "dailyDeals",

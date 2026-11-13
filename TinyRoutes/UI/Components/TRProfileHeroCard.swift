@@ -10,7 +10,7 @@ struct TRProfileHeroCard: View {
         }
         .padding(18)
         .background {
-            TRGlassCardBackground(cornerRadius: 28)
+            MultiVanHUDCardBackground(cornerRadius: 26)
         }
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(Text("\(summary.playerName), \(summary.rankTitle), \(summary.levelText), \(summary.xpText)"))
@@ -20,7 +20,7 @@ struct TRProfileHeroCard: View {
         HStack(spacing: 18) {
             identityRow
 
-            Divider()
+            TRCozyDivider()
                 .frame(height: 74)
 
             xpBlock
@@ -41,19 +41,19 @@ struct TRProfileHeroCard: View {
 
             VStack(alignment: .leading, spacing: 4) {
                 Text(summary.playerName)
-                    .font(.system(size: 26, weight: .black, design: .rounded))
-                    .foregroundStyle(TRGameplayStyle.Colors.titleNavy)
+                    .font(.system(size: 25, weight: .bold, design: .rounded))
+                    .foregroundStyle(TRVillagePalette.navy)
                     .lineLimit(1)
                     .minimumScaleFactor(0.74)
 
                 Text(summary.rankTitle)
-                    .font(.system(size: 15, weight: .bold, design: .rounded))
-                    .foregroundStyle(TRGameplayStyle.Colors.primaryBlue)
+                    .font(.system(size: 15, weight: .semibold, design: .rounded))
+                    .foregroundStyle(TRVillagePalette.teal)
                     .lineLimit(1)
 
                 Text(summary.memberSinceText)
-                    .font(.system(size: 12, weight: .semibold, design: .rounded))
-                    .foregroundStyle(TRGameplayStyle.Colors.secondaryText)
+                    .font(.system(size: 12, weight: .medium, design: .rounded))
+                    .foregroundStyle(TRVillagePalette.slate)
                     .lineLimit(1)
                     .minimumScaleFactor(0.76)
             }
@@ -62,19 +62,11 @@ struct TRProfileHeroCard: View {
 
     private var xpBlock: some View {
         VStack(alignment: .leading, spacing: 9) {
-            Text(summary.levelText)
-                .font(.system(size: 13, weight: .black, design: .rounded))
-                .foregroundStyle(.white)
-                .padding(.horizontal, 12)
-                .frame(height: 30)
-                .background {
-                    Capsule()
-                        .fill(TRGameplayStyle.Colors.primaryBlue)
-                }
+            TRCozyTag(text: summary.levelText, systemImage: "star.fill", tint: TRVillagePalette.blue)
 
             Text(summary.xpText)
-                .font(.system(size: 12, weight: .bold, design: .rounded))
-                .foregroundStyle(TRGameplayStyle.Colors.secondaryText)
+                .font(.system(size: 12, weight: .medium, design: .rounded))
+                .foregroundStyle(TRVillagePalette.slate)
                 .lineLimit(1)
                 .minimumScaleFactor(0.72)
                 .monospacedDigit()
@@ -87,5 +79,5 @@ struct TRProfileHeroCard: View {
 #Preview("Profile Hero Card") {
     TRProfileHeroCard(summary: .conceptPreview)
         .padding(20)
-        .background(Color(red: 0.86, green: 0.94, blue: 0.98))
+        .background(TRVillageSky())
 }

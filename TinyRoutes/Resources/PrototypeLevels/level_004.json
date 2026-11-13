@@ -20,5 +20,16 @@
   "houses": [{ "nodeID": "red_house", "color": "red" }],
   "initialSwitchEdges": { "switch": "to_right_barrier" },
   "parChanges": 2,
-  "liveSwitchNodeIDs": []
+  "liveSwitchNodeIDs": [],
+  "tutorial": [
+    {
+      "trigger": "start",
+      "title": "Three-way switches",
+      "body": "Tap until the route ends in a ✓.",
+      "focusNodeIDs": [
+        "switch"
+      ],
+      "practice": "route"
+    }
+  ]
 }

@@ -23,6 +23,8 @@ struct MultiVanDioramaFrame {
         let signalIsLit: Bool
         /// Rumbles in place, as the flat board's van sways: waiting or parked, with motion on.
         let idles: Bool
+        /// Holds every parcel it needs: a parcel rides on the roof.
+        var carriesCargo = false
     }
 
     struct Dial: Equatable {
@@ -40,6 +42,10 @@ struct MultiVanDioramaFrame {
     let controls: [MultiVanSwitchControl]
     let dials: [Dial]
     let deliveredHouseNodeIDs: Set<String>
+    /// Every parcel and where it is, as the flat board's markers show them.
+    let pickups: [MultiVanPickup]
+    /// Every stop line and whether it lets vans in, as the flat board's lamps show.
+    let signalApproaches: [MultiVanSignalApproach]
     /// Where the last run went wrong, ringed while the player plans the next.
     let failPoint: RoadPoint?
     /// False under Reduce Motion or "Reduce Animations": pieces snap instead of moving.
@@ -65,9 +71,12 @@ struct MultiVanDioramaFrame {
                 // Like the flat board, only the system setting holds a signal steady.
                 signalIsLit: systemReduceMotion || signal == .hazard
                     || MultiVanVanView.signalIsLit(for: state, graph: graph, speed: engine.tuning.vanSpeed),
-                idles: MultiVanPersonality.isIdle(status: state.status, reduceMotion: !animates)
+                idles: MultiVanPersonality.isIdle(status: state.status, reduceMotion: !animates),
+                carriesCargo: engine.cargoStatus(forVanID: state.id) == .carrying
             )
         }
+        pickups = MultiVanPickup.pickups(engine: engine)
+        signalApproaches = MultiVanSignalApproach.approaches(engine: engine)
         controls = MultiVanSwitchControl.controls(
             engine: engine, graph: graph,
             systemReduceMotion: systemReduceMotion, reducesExtraAnimations: reducesExtraAnimations
@@ -159,11 +168,12 @@ struct MultiVanDioramaTrail: Equatable {
         let distance: Double
     }
 
-    /// Grid units, from the HTML prototype.
-    static let spacing = 0.13
+    /// Grid units, wide enough to leave a gap between the dots.
+    static let spacing = 0.16
     /// No dots under the van itself.
     static let clearance = 0.27
-    static let laneWidth = 0.07
+    /// About one dot across, so lines sharing a road sit side by side.
+    static let laneWidth = 0.11
 
     let color: VanColor
     let leadEdgeID: String?
@@ -193,10 +203,9 @@ struct MultiVanDioramaTrail: Equatable {
                 // leaves the later pass drawn.
                 if position == 0 || drawnEdgeIDs.insert(edgeID).inserted {
                     // Each road starts its own dots, so a rebuilt route keeps them in place.
-                    var distance = spacing / 2
-                    while distance < length {
+                    // Strided, not summed, so rounding never adds a dot on the road's end.
+                    for distance in stride(from: spacing / 2, to: length, by: spacing) {
                         dots.append(Dot(point: lanePoint(on: road, at: distance, offset: offset), distance: start + distance))
-                        distance += spacing
                     }
                 }
                 endpoint = lanePoint(on: road, at: length, offset: offset)
@@ -218,7 +227,7 @@ struct MultiVanDioramaTrail: Equatable {
         case .driving:
             // A route rebuilt for a later road no longer starts under the van.
             covered = van?.currentEdgeID == leadEdgeID ? van?.distanceAlongEdge ?? 0 : leadLength
-        case .parked, .crashed, .stuck: return nil
+        case .parked, .crashed, .stuck, .missingCargo: return nil
         }
         let limit = covered + Self.clearance
         return dots.firstIndex { $0.distance >= limit } ?? dots.count

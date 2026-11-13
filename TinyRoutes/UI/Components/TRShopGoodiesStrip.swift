@@ -9,22 +9,17 @@ struct TRShopGoodiesStrip: View {
             wideLayout
             scrollLayout
         }
-        .padding(14)
+        .padding(12)
         .background {
-            TRGlassCardBackground(cornerRadius: 28)
+            MultiVanHUDCardBackground(cornerRadius: 26)
         }
     }
 
     private var wideLayout: some View {
-        HStack(spacing: 0) {
-            ForEach(Array(actions.enumerated()), id: \.element.id) { index, action in
+        HStack(spacing: 10) {
+            ForEach(actions) { action in
                 goodieTile(action)
                     .frame(maxWidth: .infinity)
-
-                if index < actions.count - 1 {
-                    Divider()
-                        .frame(height: 118)
-                }
             }
         }
         .frame(minWidth: 560)
@@ -32,10 +27,10 @@ struct TRShopGoodiesStrip: View {
 
     private var scrollLayout: some View {
         ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: 12) {
+            HStack(spacing: 10) {
                 ForEach(actions) { action in
                     goodieTile(action)
-                        .frame(width: 130)
+                        .frame(width: 128)
                 }
             }
             .padding(.vertical, 1)
@@ -51,45 +46,50 @@ struct TRShopGoodiesStrip: View {
 
                 VStack(spacing: 2) {
                     Text(action.title)
-                        .font(.system(size: 14, weight: .black, design: .rounded))
-                        .foregroundStyle(TRGameplayStyle.Colors.titleNavy)
+                        .font(.system(size: 15, weight: .bold, design: .rounded))
+                        .foregroundStyle(TRVillagePalette.navy)
                         .lineLimit(1)
                         .minimumScaleFactor(0.68)
 
                     Text(action.subtitle)
-                        .font(.system(size: 11, weight: .semibold, design: .rounded))
-                        .foregroundStyle(TRGameplayStyle.Colors.secondaryText)
+                        .font(.system(size: 12, weight: .medium, design: .rounded))
+                        .foregroundStyle(TRVillagePalette.slate)
                         .lineLimit(1)
                         .minimumScaleFactor(0.72)
                 }
 
                 Text(action.buttonTitle)
-                    .font(.system(size: 12, weight: .black, design: .rounded))
-                    .foregroundStyle(.white)
+                    .font(.system(size: 13, weight: .semibold, design: .rounded))
+                    .foregroundStyle(TRVillagePalette.cream)
                     .lineLimit(1)
                     .minimumScaleFactor(0.78)
                     .padding(.horizontal, 12)
-                    .frame(height: 31)
+                    .frame(height: 30)
                     .frame(maxWidth: .infinity)
                     .background {
                         Capsule()
-                            .fill(TRGameplayStyle.Colors.successGreen)
+                            .fill(MultiVanHUDStyle.pine)
+                            .background { Capsule().fill(MultiVanHUDStyle.pineDark).overlay { Capsule().fill(.black.opacity(0.2)) }.offset(y: 2.5) }
                     }
+                    .padding(.bottom, 2.5)
             }
             .padding(.horizontal, 9)
             .padding(.vertical, 10)
             .frame(minHeight: 136)
+            .background { TRCozyWellBackground(cornerRadius: 18) }
             .contentShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
         }
-        .buttonStyle(.plain)
+        .buttonStyle(TRVillagePressStyle())
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(Text("\(action.title), \(action.subtitle), \(action.buttonTitle)"))
         .accessibilityHint(Text(action.id == "dailyBonus" ? "Claim daily coin bonus." : "Coming soon."))
+        .accessibilityAddTraits(.isButton)
+        .accessibilityAction { onActionTapped(action) }
     }
 }
 
 #Preview("Shop Goodies Strip") {
     TRShopGoodiesStrip(actions: ShopCatalogService().goodieActions, onActionTapped: { _ in })
         .padding(20)
-        .background(Color(red: 0.86, green: 0.94, blue: 0.98))
+        .background(TRVillageSky())
 }

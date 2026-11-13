@@ -135,7 +135,8 @@ final class CosmeticService {
     @discardableResult
     func unlockAndSelectCosmetic(_ option: ShopCosmeticOption) -> CosmeticUnlockAndSelectResult {
         guard let catalogOption = catalogService.option(withID: option.id),
-              catalogOption.categoryID == option.categoryID else {
+              catalogOption.categoryID == option.categoryID,
+              !ShopCatalogService.isRetired(catalogOption) else {
             return .notFound
         }
 
@@ -177,29 +178,20 @@ final class CosmeticService {
         return [
             collectionSelection(
                 id: "favorite-theme",
-                label: "Favorite Theme",
+                label: "Table Theme",
                 categoryID: ShopCosmeticCategoryID.routeThemes,
                 fallbackValue: "Ocean Drive",
-                systemImage: "water.waves",
+                systemImage: "square.stack.3d.up.fill",
                 accent: .theme,
                 profile: profile
             ),
             collectionSelection(
-                id: "trail",
-                label: "Trail",
-                categoryID: ShopCosmeticCategoryID.trails,
-                fallbackValue: "Classic",
-                systemImage: "point.topleft.down.curvedto.point.bottomright.up",
+                id: "confetti",
+                label: "Confetti",
+                categoryID: ShopCosmeticCategoryID.confetti,
+                fallbackValue: "Classic Paper",
+                systemImage: "party.popper.fill",
                 accent: .trail,
-                profile: profile
-            ),
-            collectionSelection(
-                id: "destination",
-                label: "Destination",
-                categoryID: ShopCosmeticCategoryID.destinations,
-                fallbackValue: "Finish Flag",
-                systemImage: "house.fill",
-                accent: .destination,
                 profile: profile
             )
         ]

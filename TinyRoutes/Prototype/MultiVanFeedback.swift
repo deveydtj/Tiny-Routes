@@ -8,6 +8,13 @@ enum MultiVanEvent: Equatable {
     case allDelivered
     case crashed(point: RoadPoint)
     case wrongHouse(vanID: String)
+    /// `tick` is the simulation step the transition happened on, not when it was drained.
+    case pickedUp(vanID: String, packageID: String, tick: Int)
+    case missingPackage(vanID: String, packageID: String)
+    case held(vanID: String, signalID: String, tick: Int)
+    case released(vanID: String, signalID: String, tick: Int)
+    case paused(tick: Int)
+    case resumed(tick: Int)
 }
 
 @MainActor
@@ -25,6 +32,52 @@ enum MultiVanFeedback {
             soundPlayer.play(event)
             reactVisually(event)
         }
+    }
+}
+
+/// Spoken notes for things a sighted player sees happen on the board.
+enum MultiVanAnnouncer {
+    @MainActor
+    static func announce(_ text: String) {
+        UIAccessibility.post(notification: .announcement, argument: text)
+    }
+
+    /// What VoiceOver says for `event`, or nil when the event needs no words.
+    static func announcement(for event: MultiVanEvent, level: MultiVanLevel) -> String? {
+        switch event {
+        case let .pickedUp(vanID, _, _):
+            guard let van = level.vans.first(where: { $0.id == vanID }) else { return nil }
+            return "\(van.color.displayName) van collected its parcel."
+        case let .held(vanID, signalID, _):
+            guard let van = level.vans.first(where: { $0.id == vanID }) else { return nil }
+            let isBridge = level.signals.first { $0.id == signalID }?.kind == .drawbridge
+            return "\(van.color.displayName) van is waiting at the \(isBridge ? "bridge" : "light")."
+        case .paused: return "Paused."
+        case .resumed: return "Resumed at normal speed."
+        default: return nil
+        }
+    }
+}
+
+/// Why a switch refused a tap while the run is paused, and how to go on.
+enum MultiVanPauseCopy {
+    static let resting = "Paused. Change a ⚡ switch if you need to, then Resume."
+
+    static func note(forRejectedTapAt nodeID: String, engine: MultiVanEngine) -> String {
+        guard engine.level.liveSwitchNodeIDs.contains(nodeID) else {
+            return "That switch only changes while planning. Stop to plan again."
+        }
+        let colors = engine.vansLocking(switchNodeID: nodeID).compactMap { id in
+            engine.level.vans.first { $0.id == id }?.color.displayName
+        }
+        guard !colors.isEmpty else { return resting }
+        let isOnIce = engine.level.roadZones.contains { zone in
+            zone.kind == .ice && engine.vans.contains { van in
+                van.status == .driving && van.currentEdgeID.map(zone.edgeIDs.contains) == true
+            }
+        }
+        let reason = isOnIce ? "is on the ice and cannot be re-routed" : (colors.count == 1 ? "is too close to that switch" : "are too close to that switch")
+        return "\(colors.joined(separator: " and ")) \(reason). Resume, let it pass, then pause again."
     }
 }
 
@@ -290,7 +343,10 @@ enum MultiVanHaptic: Equatable {
         case .go: .mediumImpact
         case .delivered, .allDelivered: .success
         case .crashed: .error
-        case .wrongHouse: .warning
+        case .wrongHouse, .missingPackage: .warning
+        case .pickedUp: .lightImpact
+        case .paused, .resumed: .selection
+        case .held, .released: nil
         }
     }
 

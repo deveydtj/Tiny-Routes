@@ -1,0 +1,201 @@
+{
+  "id": "level_018",
+  "name": "Two Good Plans",
+  "scenerySeed": 28,
+  "biome": "depot",
+  "graph": {
+    "nodes": [
+      {
+        "id": "red_start",
+        "x": 0,
+        "y": 0,
+        "outgoingEdgeIDs": [
+          "red_approach"
+        ]
+      },
+      {
+        "id": "red_fork",
+        "x": 0,
+        "y": 1,
+        "outgoingEdgeIDs": [
+          "red_top",
+          "red_round"
+        ]
+      },
+      {
+        "id": "blue_start",
+        "x": 4,
+        "y": 0,
+        "outgoingEdgeIDs": [
+          "blue_approach"
+        ]
+      },
+      {
+        "id": "blue_fork",
+        "x": 4,
+        "y": 1,
+        "outgoingEdgeIDs": [
+          "blue_top",
+          "blue_round"
+        ]
+      },
+      {
+        "id": "top_merge",
+        "x": 2,
+        "y": 1,
+        "outgoingEdgeIDs": [
+          "top_stem"
+        ]
+      },
+      {
+        "id": "top_switch",
+        "x": 2,
+        "y": 2,
+        "outgoingEdgeIDs": [
+          "top_to_red",
+          "top_to_blue"
+        ]
+      },
+      {
+        "id": "red_house",
+        "x": 1,
+        "y": 4,
+        "outgoingEdgeIDs": []
+      },
+      {
+        "id": "blue_house",
+        "x": 3,
+        "y": 4,
+        "outgoingEdgeIDs": []
+      },
+      {
+        "id": "bottom_switch",
+        "x": 2,
+        "y": 5,
+        "outgoingEdgeIDs": [
+          "bottom_to_red",
+          "bottom_to_blue"
+        ]
+      },
+      {
+        "id": "bottom_merge",
+        "x": 2,
+        "y": 6,
+        "outgoingEdgeIDs": [
+          "bottom_stem"
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "id": "red_approach",
+        "fromNodeID": "red_start",
+        "toNodeID": "red_fork",
+        "roadShape": "verticalFirst"
+      },
+      {
+        "id": "red_top",
+        "fromNodeID": "red_fork",
+        "toNodeID": "top_merge",
+        "roadShape": "horizontalFirst"
+      },
+      {
+        "id": "red_round",
+        "fromNodeID": "red_fork",
+        "toNodeID": "bottom_merge",
+        "roadShape": "verticalFirst"
+      },
+      {
+        "id": "blue_approach",
+        "fromNodeID": "blue_start",
+        "toNodeID": "blue_fork",
+        "roadShape": "verticalFirst"
+      },
+      {
+        "id": "blue_top",
+        "fromNodeID": "blue_fork",
+        "toNodeID": "top_merge",
+        "roadShape": "horizontalFirst"
+      },
+      {
+        "id": "blue_round",
+        "fromNodeID": "blue_fork",
+        "toNodeID": "bottom_merge",
+        "roadShape": "verticalFirst"
+      },
+      {
+        "id": "top_stem",
+        "fromNodeID": "top_merge",
+        "toNodeID": "top_switch",
+        "roadShape": "verticalFirst"
+      },
+      {
+        "id": "top_to_red",
+        "fromNodeID": "top_switch",
+        "toNodeID": "red_house",
+        "roadShape": "horizontalFirst"
+      },
+      {
+        "id": "top_to_blue",
+        "fromNodeID": "top_switch",
+        "toNodeID": "blue_house",
+        "roadShape": "horizontalFirst"
+      },
+      {
+        "id": "bottom_stem",
+        "fromNodeID": "bottom_merge",
+        "toNodeID": "bottom_switch",
+        "roadShape": "verticalFirst"
+      },
+      {
+        "id": "bottom_to_red",
+        "fromNodeID": "bottom_switch",
+        "toNodeID": "red_house",
+        "roadShape": "horizontalFirst"
+      },
+      {
+        "id": "bottom_to_blue",
+        "fromNodeID": "bottom_switch",
+        "toNodeID": "blue_house",
+        "roadShape": "horizontalFirst"
+      }
+    ]
+  },
+  "vans": [
+    {
+      "id": "red",
+      "color": "red",
+      "startNodeID": "red_start",
+      "departDelay": 0
+    },
+    {
+      "id": "blue",
+      "color": "blue",
+      "startNodeID": "blue_start",
+      "departDelay": 1.0
+    }
+  ],
+  "houses": [
+    {
+      "nodeID": "red_house",
+      "color": "red"
+    },
+    {
+      "nodeID": "blue_house",
+      "color": "blue"
+    }
+  ],
+  "initialSwitchEdges": {
+    "red_fork": "red_top",
+    "blue_fork": "blue_top",
+    "top_switch": "top_to_red",
+    "bottom_switch": "bottom_to_red"
+  },
+  "parChanges": 2,
+  "liveSwitchNodeIDs": [],
+  "hint": "Each middle switch points one way for every van. Send one van over the top and the other round the bottom, then set each switch for the van that uses it.",
+  "hintFocusNodeIDs": [
+    "blue_fork",
+    "bottom_switch"
+  ]
+}

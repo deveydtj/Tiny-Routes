@@ -9,7 +9,7 @@ struct MultiVanGameplayScreen: View {
     var onNext: (() -> Void)? = nil
     /// Shows a back button in the HUD when set.
     var onBack: (() -> Void)? = nil
-    var playtestLog: MultiVanPlaytestLog? = nil
+    var tutorialProgress = MultiVanTutorialProgress()
     #if DEBUG || MULTIVAN_INTERNAL
     /// Plays the level on a loop for profiling; see `MultiVanAutoplay`.
     var autoplay: MultiVanAutoplay? = nil
@@ -20,6 +20,7 @@ struct MultiVanGameplayScreen: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.accessibilityVoiceOverEnabled) private var voiceOverEnabled
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+    @Environment(\.multiVanCosmetics) private var cosmetics
     @AccessibilityFocusState private var accessibilityFocus: FocusTarget?
     @State private var frameDriver = MultiVanFrameDriver()
     @StateObject private var soundPlayer = MultiVanSoundPlayer()
@@ -29,6 +30,11 @@ struct MultiVanGameplayScreen: View {
     @State private var personality = MultiVanPersonality()
     @State private var crashEffects = MultiVanCrashEffects()
     @State private var switchFeedback = MultiVanSwitchFeedback()
+    @State private var tutorial = MultiVanTutorialPresentation()
+    /// The level's recorded solution, for the help ladder's single step.
+    @State private var solution: MultiVanSolution?
+    /// Why the last tap was refused while paused; nil shows the resting note.
+    @State private var pauseNote: String?
     /// Where the full-screen board, the HUD's bottom and the controls' top sit,
     /// in global points; the board frames its table between the two.
     @State private var boardFrame: CGRect?
@@ -68,7 +74,7 @@ struct MultiVanGameplayScreen: View {
             }
         }
         .background {
-            TimelineView(.animation(paused: engine.phase != .run || !isActive)) { frame in
+            TimelineView(.animation(paused: engine.phase != .run || !isActive || engine.isPaused)) { frame in
                 Color.clear
                     .onChange(of: frame.date) { _, date in
                         // onChange runs after view construction, never from the
@@ -83,15 +89,15 @@ struct MultiVanGameplayScreen: View {
         .onChange(of: scenePhase) { _, phase in
             frameDriver.reset()
             if phase != .active {
-                playtestLog?.speedChanged(false, engine: engine)
                 crashEffects.reset()
                 switchFeedback.reset()
             }
         }
         .onChange(of: engine.phase) { _, _ in frameDriver.reset() }
+        // No wall time crosses a pause: the next frame starts a fresh interval.
+        .onChange(of: engine.isPaused) { _, _ in frameDriver.reset() }
         .onChange(of: voiceOverEnabled) { _, _ in
             frameDriver.reset()
-            playtestLog?.speedChanged(false, engine: engine)
         }
         .onChange(of: ObjectIdentifier(engine)) { _, _ in
             soundPlayer.stop()
@@ -103,8 +109,17 @@ struct MultiVanGameplayScreen: View {
             personality.reset()
             crashEffects.reset()
             switchFeedback.reset()
+            pauseNote = nil
+            solution = MultiVanSolution.load(levelID: engine.level.id)
+            beginTutorial()
         }
-        .onChange(of: engine.outcome) { _, _ in presentedFailure = nil }
+        .onChange(of: engine.outcome) { _, outcome in
+            presentedFailure = nil
+            if outcome == .win { tutorial.complete(level: engine.level, progress: tutorialProgress) }
+        }
+        .onChange(of: tutorial.observesPracticeEdge ? engine.vans.map(\.currentEdgeID) : []) { _, _ in
+            tutorial.observeRun(engine: engine)
+        }
         .onChange(of: settingsService.settings) { _, settings in soundPlayer.update(settings: settings) }
         .onChange(of: reducesExtraAnimations) { _, reduced in
             if reduced {
@@ -118,11 +133,12 @@ struct MultiVanGameplayScreen: View {
         .onAppear {
             frameDriver.reset()
             soundPlayer.update(settings: settingsService.settings)
+            solution = MultiVanSolution.load(levelID: engine.level.id)
+            beginTutorial()
         }
         .onDisappear {
             soundPlayer.stop()
             frameDriver.reset()
-            playtestLog?.speedChanged(false, engine: engine)
             accessibilityFocus = nil
             presentedFailure = nil
             winPresentation.reset()
@@ -130,6 +146,15 @@ struct MultiVanGameplayScreen: View {
             personality.reset()
             crashEffects.reset()
             switchFeedback.reset()
+            tutorial.reset()
+        }
+        .task(id: HintClockKey(engine: ObjectIdentifier(engine), isPlaying: tracksTutorialHelp)) {
+            guard tracksTutorialHelp else { return }
+            while tutorial.needsPlayTime {
+                do { try await Task.sleep(for: .seconds(1)) } catch { return }
+                guard !Task.isCancelled else { return }
+                tutorial.playedSecond(engine: engine)
+            }
         }
         .task(id: FailureDelayKey(engine: ObjectIdentifier(engine), outcome: engine.outcome, phase: engine.phase)) {
             guard engine.phase == .finished, engine.outcome == .win else { return }
@@ -161,12 +186,20 @@ struct MultiVanGameplayScreen: View {
                 return
             }
             guard !Task.isCancelled, engine.phase == .finished, engine.outcome == outcome else { return }
+            if showsTutorial {
+                tutorial.failed(outcome, level: engine.level, progress: tutorialProgress)
+            }
             withAnimation(reducesExtraAnimations ? nil : .easeOut(duration: 0.18)) {
                 presentedFailure = outcome
             }
         }
         .onChange(of: presentedFailure) { _, failure in
             if failure != nil { accessibilityFocus = .failure }
+        }
+        .onChange(of: boardCue) { _, cue in
+            if voiceOverEnabled, let cue {
+                UIAccessibility.post(notification: .announcement, argument: cue.text)
+            }
         }
         #if DEBUG || MULTIVAN_INTERNAL
         // Planning and results run on the clock; live taps also run per frame.
@@ -208,6 +241,12 @@ struct MultiVanGameplayScreen: View {
                             .padding(.horizontal, -16)
                             .padding(.bottom, -200)
                     }
+                    .overlay(alignment: .top) {
+                        // The cue sits in the hills' existing clearance, so the board
+                        // keeps its framing as the cue changes.
+                        tutorialPrompt
+                            .alignmentGuide(.top) { $0[.bottom] + 4 }
+                    }
                     // The table stays clear of the hills too.
                     .onGeometryChange(for: CGFloat.self) { $0.frame(in: .global).minY - MultiVanHUDHills.rise } action: { controlsTop = $0 }
             }
@@ -233,6 +272,7 @@ struct MultiVanGameplayScreen: View {
                         resultCards
                     }
 
+                    tutorialPrompt
                     controlBar
                 }
                 .frame(minHeight: geometry.size.height)
@@ -255,9 +295,9 @@ struct MultiVanGameplayScreen: View {
     private func boardSwitcher(covered: MultiVanDioramaCamera.Covered, isFullScreen: Bool) -> some View {
         MultiVanBoardSwitcher(
             engine: engine, settings: boardSettings, reducesMotion: reducesExtraAnimations,
+            preloadsDiorama: !isAutoplaying,
             onBoardShown: { style in
                 shownBoard = style
-                playtestLog?.boardShown(style, engine: engine)
             }
         ) { style, morph in
             board(style, morph: morph, covered: covered, isFullScreen: isFullScreen)
@@ -291,21 +331,21 @@ struct MultiVanGameplayScreen: View {
     private func board(
         _ style: MultiVanBoardStyle, morph: MultiVanBoardMorph, covered: MultiVanDioramaCamera.Covered, isFullScreen: Bool
     ) -> some View {
-        let onSwitchTapped: (String, MultiVanTapResult) -> Void = switchTapped
         let shakesBoard = crashEffects.impact != nil && !reducesExtraAnimations
         switch style {
         case .flat:
             // The diorama shakes its own camera and throws its own paper confetti.
             MultiVanBoardView(
                 engine: engine,
-                onSwitchTapped: onSwitchTapped,
                 onEventsProduced: processPendingEvents,
                 celebration: celebration, reducesExtraAnimations: reducesExtraAnimations,
                 personality: personality,
                 onDeliveryEffectCompleted: { celebration.complete($0) },
                 crashEffects: crashEffects,
                 switchFeedback: switchFeedback,
-                onCrashEffectCompleted: { crashEffects.complete($0) }
+                onCrashEffectCompleted: { crashEffects.complete($0) },
+                spotlightNodeIDs: spotlightNodeIDs,
+                onMissedTap: tracksTutorialHelp ? recordMissedTap : nil
             )
             // The flat board stays a card, set in the band between the HUD and controls.
             .padding(.top, CGFloat(covered.top))
@@ -324,14 +364,15 @@ struct MultiVanGameplayScreen: View {
                 if !reducesExtraAnimations {
                     TRConfettiEmitter(
                         mode: celebration.confettiID == nil ? .idle : .success,
-                        playbackID: celebration.confettiID ?? Self.idleConfettiID
+                        playbackID: celebration.confettiID ?? Self.idleConfettiID,
+                        selectedConfettiOption: ShopCatalogService().option(withID: cosmetics.confetti.rawValue)
+                            ?? GameplayCosmeticLoadout.default.confetti
                     )
                 }
             }
         case .diorama:
             MultiVanDioramaBoardView(
                 engine: engine,
-                onSwitchTapped: onSwitchTapped,
                 onEventsProduced: processPendingEvents,
                 celebration: celebration, reducesExtraAnimations: reducesExtraAnimations,
                 personality: personality,
@@ -343,7 +384,9 @@ struct MultiVanGameplayScreen: View {
                 cornerRadius: isFullScreen ? 0 : 20,
                 morph: morph,
                 // The flat board's own side padding, so the morph lands on it.
-                flatSideInset: isFullScreen ? 16 : 0
+                flatSideInset: isFullScreen ? 16 : 0,
+                spotlightNodeIDs: spotlightNodeIDs,
+                onMissedTap: tracksTutorialHelp ? recordMissedTap : nil
             )
         }
     }
@@ -352,9 +395,8 @@ struct MultiVanGameplayScreen: View {
     /// the screen and reaches halfway down the card.
     private func hud(isDecorated: Bool) -> some View {
         VStack(spacing: 10) {
-            if isDecorated || showsTopBar {
-                topBar(showsLogo: isDecorated)
-            }
+            // Always there: it holds the 2D/3D button.
+            topBar(showsLogo: isDecorated)
             levelCard
                 .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { levelCardHeight = $0 }
         }
@@ -369,15 +411,7 @@ struct MultiVanGameplayScreen: View {
         }
     }
 
-    private var showsTopBar: Bool {
-        #if DEBUG || MULTIVAN_INTERNAL
-        true
-        #else
-        onBack != nil
-        #endif
-    }
-
-    /// Back on the left, the wordmark in the middle, and the internal 2D/3D
+    /// Back on the left, the wordmark in the middle, and the 2D/3D
     /// button on the right; empty slots keep the wordmark centred.
     private func topBar(showsLogo: Bool) -> some View {
         HStack(spacing: 10) {
@@ -394,12 +428,7 @@ struct MultiVanGameplayScreen: View {
             if showsLogo { MultiVanHUDLogo() }
             Spacer(minLength: 0)
 
-            #if DEBUG || MULTIVAN_INTERNAL
-            // Internal, like the Settings picker, until the MW-10 playtests pass.
             boardStyleButton
-            #else
-            Self.emptyCircleSlot
-            #endif
         }
     }
 
@@ -441,6 +470,7 @@ struct MultiVanGameplayScreen: View {
                 }
                 Spacer(minLength: 0)
                 changesBadge
+                helpButton
             }
 
             VStack(alignment: .leading, spacing: 10) {
@@ -448,6 +478,7 @@ struct MultiVanGameplayScreen: View {
                     levelTitle
                         .frame(maxWidth: .infinity, alignment: .leading)
                     changesBadge
+                    helpButton
                 }
 
                 LazyVGrid(columns: [GridItem(.adaptive(minimum: dynamicTypeSize.isAccessibilitySize ? 240 : 110), alignment: .leading)], alignment: .leading) {
@@ -455,7 +486,6 @@ struct MultiVanGameplayScreen: View {
                         vanChip(van)
                     }
                 }
-                // Levels still carry their `hint`; the HUD leaves it out for now.
             }
         }
         .padding(.horizontal, 14)
@@ -487,8 +517,16 @@ struct MultiVanGameplayScreen: View {
     }
 
     private func vanChip(_ van: MultiVanVan, isCompact: Bool = false) -> some View {
-        HStack(spacing: isCompact ? 4 : 5) {
+        let cargo = engine.cargoStatus(forVanID: van.id)
+        return HStack(spacing: isCompact ? 4 : 5) {
             Text("\(van.color.symbol) →")
+            // A van with a parcel to fetch shows it on the way: an outline until
+            // it is aboard, filled while carried, ticked once delivered.
+            if cargo != .ready {
+                Image(systemName: Self.cargoSymbol(for: cargo))
+                    .contentTransition(.symbolEffect(.replace))
+                Text("→")
+            }
             if let house = engine.level.houses.first(where: { $0.color == van.color }) {
                 Image(systemName: "house.fill")
                 Text(house.color.symbol)
@@ -505,9 +543,29 @@ struct MultiVanGameplayScreen: View {
         }
         .accessibilityElement(children: .ignore)
         .accessibilityLabel("\(van.color.displayName) \(van.color.accessibilitySymbolName) van to \(van.color.displayName.lowercased()) \(van.color.accessibilitySymbolName) house")
+        .accessibilityValue(vanChipValue(van, cargo: cargo))
     }
 
-    #if DEBUG || MULTIVAN_INTERNAL
+    private static func cargoSymbol(for cargo: MultiVanCargoStatus) -> String {
+        switch cargo {
+        case .ready, .pickupNeeded: "shippingbox"
+        case .carrying: "shippingbox.fill"
+        case .delivered: "checkmark.circle.fill"
+        }
+    }
+
+    /// The van's cargo and where its planned route leads, for inspection at any
+    /// time: nothing here depends on a sound, a pulse or a parcel in flight.
+    private func vanChipValue(_ van: MultiVanVan, cargo: MultiVanCargoStatus) -> String {
+        let index = engine.level.vans.firstIndex { $0.id == van.id }
+        let routes = engine.previewRoutes
+        let route = index.flatMap { $0 < routes.count ? routes[$0] : nil }
+        let summary = route.flatMap { $0.ending == .offRoad ? nil : MultiVanRoutePreview.summary(for: van, route: $0, level: engine.level) }
+        // On a board with parcels, a van with none says it is ready.
+        let status = engine.level.packages.isEmpty ? nil : cargo.label
+        return [status, summary].compactMap { $0 }.joined(separator: ". ")
+    }
+
     /// Swaps between the flat map and the 3D table; the switcher animates one into
     /// the other. It sets the same preference as Settings, so the choice sticks.
     private var boardStyleButton: some View {
@@ -517,7 +575,15 @@ struct MultiVanGameplayScreen: View {
             .accessibilityLabel(isDiorama ? "Show 2D map" : "Show 3D diorama")
             .accessibilityHint(isDiorama ? "Lay the board flat" : "Tilt the board up into a 3D table")
             // Autoplay pins its own board.
-            .disabled(autoplay != nil)
+            .disabled(isAutoplaying)
+    }
+
+    private var isAutoplaying: Bool {
+        #if DEBUG || MULTIVAN_INTERNAL
+        autoplay != nil
+        #else
+        false
+        #endif
     }
 
     private func toggleBoardStyle() {
@@ -529,7 +595,32 @@ struct MultiVanGameplayScreen: View {
         }
         settingsService.setBoardStyle(next)
     }
-    #endif
+
+    /// Toggles the guided practice while planning.
+    @ViewBuilder
+    private var helpButton: some View {
+        if engine.level.tutorialTip(for: .start) != nil || tutorial.isReminding {
+            let isShowing = tutorial.activeTip != nil || tutorial.isReminding
+            Button(action: toggleTutorial) {
+                Image(systemName: "questionmark")
+                    .font(.system(.headline, design: .rounded, weight: .black))
+                    .foregroundStyle(isShowing ? .white : TRGameplayStyle.Colors.primaryBlue)
+                    .frame(width: 34, height: 34)
+                    .background {
+                        Circle()
+                            .fill(TRGameplayStyle.Colors.primaryBlue.opacity(isShowing ? 1 : 0.12))
+                            .overlay { Circle().stroke(TRGameplayStyle.Colors.primaryBlue.opacity(0.20), lineWidth: 1) }
+                    }
+                    // A full-size target around the small disc.
+                    .padding(5)
+                    .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .padding(-5)
+            .disabled(engine.phase != .plan)
+            .accessibilityLabel(isShowing ? "Hide tutorial" : "Show tutorial")
+        }
+    }
 
     /// The switch changes so far against par; orange once over it.
     private var changesBadge: some View {
@@ -566,6 +657,22 @@ struct MultiVanGameplayScreen: View {
             .background { MultiVanHUDCardBackground(cornerRadius: 30) }
     }
 
+    @ViewBuilder
+    private var tutorialPrompt: some View {
+        if let cue = boardCue {
+            Label(cue.text, systemImage: cue.symbol)
+                .font(.system(.subheadline, design: .rounded, weight: .heavy))
+                .foregroundStyle(TRGameplayStyle.Colors.titleNavy)
+                .multilineTextAlignment(.center)
+                .fixedSize(horizontal: false, vertical: true)
+                .padding(.vertical, 6)
+                .padding(.horizontal, 12)
+                .frame(maxWidth: .infinity)
+                .background(TRGameplayStyle.Colors.resultSoftYellow, in: RoundedRectangle(cornerRadius: 14))
+                .allowsHitTesting(false)
+        }
+    }
+
     /// Every phase's buttons share one footprint and the same two places: going
     /// back on the left, going on on the right. So nothing moves under a finger
     /// when a press changes the phase, and the board never changes size.
@@ -577,6 +684,7 @@ struct MultiVanGameplayScreen: View {
                     secondaryButton("Reset switches", systemImage: "arrow.clockwise", action: resetSwitches)
                         .accessibilityHint("Restore the level's initial switch selections")
                     primaryButton("Go", systemImage: "play.fill", action: go)
+                        .overlay { tutorialOutline(for: .go) }
                         .accessibilityHint("Start all vans on the selected routes")
                 }
             }
@@ -604,39 +712,81 @@ struct MultiVanGameplayScreen: View {
             .accessibilityHidden(!isShown)
     }
 
-    private var runControls: some View {
-        controlLayout {
-            secondaryButton("Stop", systemImage: "stop.fill") {
-                winPresentation.reset()
-                celebration.reset()
-                personality.reset()
-                crashEffects.reset()
-                switchFeedback.reset()
-                soundPlayer.stop()
-                playtestLog?.stop(engine)
-                frameDriver.reset()
-                engine.stop()
-                playtestLog?.begin(engine, action: .planningStarted)
-                processPendingEvents()
-            }
-            .accessibilityHint("Return to planning with your switch selections kept")
-            Button {} label: {
-                controlLabel(frameDriver.isFastForwarding ? "2× active" : (voiceOverEnabled ? "2× speed" : "Hold 2×"), systemImage: "forward.fill")
-            }
-            .buttonStyle(MultiVanHUDButtonStyle(
-                isProminent: true,
-                tint: frameDriver.isFastForwarding ? TRGameplayStyle.Colors.orangeAccent : TRGameplayStyle.Colors.primaryBlue
-            ))
-            .onLongPressGesture(minimumDuration: .infinity, maximumDistance: 44) {} onPressingChanged: { pressed in
-                guard !voiceOverEnabled else { return }
-                setFastForwarding(pressed)
-            }
-            .accessibilityLabel("Fast-forward")
-            .accessibilityValue(frameDriver.isFastForwarding ? "2× speed, active" : "Normal speed")
-            .accessibilityHint("Activate to toggle between normal and twice normal speed")
-            .accessibilityAddTraits(frameDriver.isFastForwarding ? [.isSelected] : [])
-            .accessibilityAction { setFastForwarding(!frameDriver.isFastForwarding) }
+    /// Pausing helps where something can be changed or waited for mid-run.
+    private var supportsPause: Bool {
+        !engine.level.liveSwitchNodeIDs.isEmpty || !engine.level.signals.isEmpty
+    }
+
+    private func stopRun() {
+        winPresentation.reset()
+        celebration.reset()
+        personality.reset()
+        crashEffects.reset()
+        switchFeedback.reset()
+        soundPlayer.stop()
+        frameDriver.reset()
+        pauseNote = nil
+        engine.stop()
+        tutorial.stopped()
+        processPendingEvents()
+    }
+
+    private func togglePause() {
+        pauseNote = nil
+        if engine.isPaused {
+            engine.resume()
+        } else {
+            // Settle the frame in flight, then freeze: resuming is always at 1×.
+            frameDriver.advance(at: Date(), engine: engine, isActive: isActive)
+            engine.pause()
         }
+        frameDriver.reset()
+        processPendingEvents()
+    }
+
+    @ViewBuilder
+    private var runControls: some View {
+        if supportsPause {
+            controlLayout {
+                secondaryButton("Stop", systemImage: "stop.fill", width: 78, action: stopRun)
+                    .overlay { tutorialOutline(for: .stop) }
+                    .accessibilityHint("Return to planning with your switch selections kept")
+                if engine.isPaused {
+                    primaryButton("Resume", systemImage: "play.fill", action: togglePause)
+                        .accessibilityHint("Continue the run at normal speed")
+                } else {
+                    secondaryButton("Pause", systemImage: "pause.fill", width: 78, action: togglePause)
+                        .accessibilityHint("Freeze the run to look at the routes. Live switches can still be changed")
+                    fastForwardButton
+                }
+            }
+        } else {
+            controlLayout {
+                secondaryButton("Stop", systemImage: "stop.fill", action: stopRun)
+                    .overlay { tutorialOutline(for: .stop) }
+                    .accessibilityHint("Return to planning with your switch selections kept")
+                fastForwardButton
+            }
+        }
+    }
+
+    private var fastForwardButton: some View {
+        Button {} label: {
+            controlLabel(frameDriver.isFastForwarding ? "2× active" : (voiceOverEnabled ? "2× speed" : "Hold 2×"), systemImage: "forward.fill")
+        }
+        .buttonStyle(MultiVanHUDButtonStyle(
+            isProminent: true,
+            tint: frameDriver.isFastForwarding ? TRGameplayStyle.Colors.orangeAccent : TRGameplayStyle.Colors.primaryBlue
+        ))
+        .onLongPressGesture(minimumDuration: .infinity, maximumDistance: 44) {} onPressingChanged: { pressed in
+            guard !voiceOverEnabled else { return }
+            setFastForwarding(pressed)
+        }
+        .accessibilityLabel("Fast-forward")
+        .accessibilityValue(frameDriver.isFastForwarding ? "2× speed, active" : "Normal speed")
+        .accessibilityHint("Activate to toggle between normal and twice normal speed")
+        .accessibilityAddTraits(frameDriver.isFastForwarding ? [.isSelected] : [])
+        .accessibilityAction { setFastForwarding(!frameDriver.isFastForwarding) }
     }
 
     private var winCard: some View {
@@ -681,13 +831,42 @@ struct MultiVanGameplayScreen: View {
 
     /// What went wrong, over the top of the board; Try again waits below it.
     private func failureCard(for outcome: MultiVanEngine.Outcome) -> some View {
-        Text(failureMessage(for: outcome))
-            .font(.system(.title3, design: .rounded, weight: .bold))
-            .multilineTextAlignment(.center)
-            .foregroundStyle(TRGameplayStyle.Colors.titleNavy)
-            .fixedSize(horizontal: false, vertical: true)
-            .accessibilityAddTraits(.isHeader)
-            .accessibilityFocused($accessibilityFocus, equals: .failure)
+        VStack(spacing: 12) {
+            Text(failureMessage(for: outcome))
+                .font(.system(.title3, design: .rounded, weight: .bold))
+                .multilineTextAlignment(.center)
+                .foregroundStyle(TRGameplayStyle.Colors.titleNavy)
+                .fixedSize(horizontal: false, vertical: true)
+                .accessibilityAddTraits(.isHeader)
+                .accessibilityFocused($accessibilityFocus, equals: .failure)
+            if let tip = tutorial.failureTip {
+                Divider()
+                Label(tip.body, systemImage: "arrow.turn.up.right")
+                    .font(.system(.subheadline, design: .rounded, weight: .semibold))
+                    .foregroundStyle(TRGameplayStyle.Colors.secondaryText)
+                    .multilineTextAlignment(.center)
+                    .fixedSize(horizontal: false, vertical: true)
+            } else if let hint = tutorial.failureHint {
+                Label(hint, systemImage: "lightbulb.fill")
+                    .font(.system(.subheadline, design: .rounded, weight: .semibold))
+                    .foregroundStyle(TRGameplayStyle.Colors.secondaryText)
+                    .multilineTextAlignment(.leading)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .accessibilityLabel("Hint: \(hint)")
+            }
+            // One step of a known solution, on request. It never costs stars.
+            if tutorial.canOfferNudge, solution != nil {
+                Button(action: showOneStep) {
+                    Label("Show me one step", systemImage: "hand.point.up.left.fill")
+                        .font(.system(.subheadline, design: .rounded, weight: .bold))
+                        .foregroundStyle(TRGameplayStyle.Colors.primaryBlue)
+                        .frame(minHeight: 44)
+                        .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                .accessibilityHint("Go back to planning with one switch of a working plan ringed")
+            }
+        }
         .padding(16)
         .frame(maxWidth: 340)
         .background { MultiVanHUDCardBackground(cornerRadius: 20) }
@@ -700,7 +879,7 @@ struct MultiVanGameplayScreen: View {
 
     private func isFailure(_ outcome: MultiVanEngine.Outcome?) -> Bool {
         switch outcome {
-        case .failWrongHouse, .failCrash, .failStuck: true
+        case .failWrongHouse, .failCrash, .failStuck, .failMissingPackage: true
         case .win, nil: false
         }
     }
@@ -709,6 +888,11 @@ struct MultiVanGameplayScreen: View {
         let engine: ObjectIdentifier
         let outcome: MultiVanEngine.Outcome?
         let phase: MultiVanEngine.Phase
+    }
+
+    private struct HintClockKey: Equatable {
+        let engine: ObjectIdentifier
+        let isPlaying: Bool
     }
 
     /// Every control is at least this tall, whatever the phase.
@@ -722,12 +906,14 @@ struct MultiVanGameplayScreen: View {
     }
 
     /// Narrow beside the primary button, with its icon over its title.
-    private func secondaryButton(_ title: String, systemImage: String? = nil, action: @escaping () -> Void) -> some View {
+    private func secondaryButton(
+        _ title: String, systemImage: String? = nil, width: CGFloat = 124, action: @escaping () -> Void
+    ) -> some View {
         Button(action: action) {
             controlLabel(title, systemImage: systemImage, isStacked: true)
         }
         .buttonStyle(MultiVanHUDButtonStyle())
-        .frame(maxWidth: dynamicTypeSize.isAccessibilitySize ? .infinity : 124)
+        .frame(maxWidth: dynamicTypeSize.isAccessibilitySize ? .infinity : width)
     }
 
     private func controlLabel(_ title: String, systemImage: String?, isStacked: Bool = false) -> some View {
@@ -751,7 +937,6 @@ struct MultiVanGameplayScreen: View {
 
     private func setFastForwarding(_ enabled: Bool) {
         frameDriver.setFastForwarding(enabled, at: Date(), engine: engine, isActive: isActive)
-        playtestLog?.speedChanged(frameDriver.isFastForwarding, engine: engine)
         processPendingEvents()
     }
 
@@ -762,18 +947,77 @@ struct MultiVanGameplayScreen: View {
         crashEffects.reset()
         switchFeedback.reset()
         frameDriver.reset()
-        playtestLog?.go(engine)
+        tutorial.go(engine: engine, progress: tutorialProgress)
         engine.go()
+        tutorial.observeRun(engine: engine)
         processPendingEvents()
     }
 
-    private func resetSwitches() {
-        engine.resetSwitches()
-        playtestLog?.record(.reset, engine: engine)
+    private var spotlightNodeIDs: [String] {
+        tutorial.spotlightNodeIDs(engine: engine, cue: tutorialCue)
     }
 
-    private func switchTapped(_ nodeID: String, _ result: MultiVanTapResult) {
-        playtestLog?.switchTapped(engine, nodeID: nodeID, result: result)
+    private var tutorialCue: MultiVanTutorialPresentation.Cue? {
+        tutorial.cue(engine: engine)
+    }
+
+    /// The strip above the controls: the pause note while paused, else the tutorial's cue.
+    private var boardCue: MultiVanTutorialPresentation.Cue? {
+        if engine.phase == .run, engine.isPaused {
+            return .init(text: pauseNote ?? MultiVanPauseCopy.resting, target: .pause)
+        }
+        return tutorialCue
+    }
+
+    private func showOneStep() {
+        tutorial.requestNudge()
+        retry()
+    }
+
+    @ViewBuilder
+    private func tutorialOutline(for target: MultiVanTutorialPresentation.Cue.Target) -> some View {
+        if tutorialCue?.target == target {
+            RoundedRectangle(cornerRadius: 18)
+                .strokeBorder(TRGameplayStyle.Colors.orangeAccent, style: StrokeStyle(lineWidth: 3, dash: [7, 5]))
+                .allowsHitTesting(false)
+                .accessibilityHidden(true)
+        }
+    }
+
+    private var showsTutorial: Bool {
+        #if DEBUG || MULTIVAN_INTERNAL
+        // Autoplay profiles the board alone.
+        if autoplay != nil { return false }
+        #endif
+        return true
+    }
+
+    private var tracksTutorialHelp: Bool {
+        showsTutorial && isActive && engine.phase != .finished &&
+            MultiVanTutorialPresentation.supportsReminders(level: engine.level)
+    }
+
+    private func recordMissedTap() {
+        guard tracksTutorialHelp else { return }
+        tutorial.missedTap(engine: engine)
+    }
+
+    private func beginTutorial() {
+        guard showsTutorial else { return tutorial.reset() }
+        tutorial.begin(level: engine.level, progress: tutorialProgress)
+    }
+
+    private func toggleTutorial() {
+        if tutorial.activeTip != nil || tutorial.isReminding {
+            tutorial.complete(level: engine.level, progress: tutorialProgress)
+        } else {
+            tutorial.reopen(level: engine.level)
+        }
+    }
+
+    private func resetSwitches() {
+        tutorial.usedControl()
+        engine.resetSwitches()
     }
 
     /// The settings the switcher picks a board from. Autoplay pins its board.
@@ -795,8 +1039,7 @@ struct MultiVanGameplayScreen: View {
         switch press {
         case .resetSwitches: resetSwitches()
         case let .tap(nodeID):
-            let result = engine.tapSwitch(nodeID: nodeID)
-            switchTapped(nodeID, result)
+            engine.tapSwitch(nodeID: nodeID)
             processPendingEvents()
         case .go: go()
         case .retry: retry()
@@ -806,7 +1049,6 @@ struct MultiVanGameplayScreen: View {
     }
 
     private func retry() {
-        let isReplay = engine.outcome == .win
         winPresentation.reset()
         celebration.reset()
         personality.reset()
@@ -815,8 +1057,10 @@ struct MultiVanGameplayScreen: View {
         soundPlayer.stop()
         frameDriver.reset()
         presentedFailure = nil
+        pauseNote = nil
+        tutorial.retried()
         engine.retry()
-        playtestLog?.begin(engine, action: isReplay ? .replay : .retry)
+        tutorial.prepareNudge(engine: engine, solution: solution)
         accessibilityFocus = .levelTitle
         processPendingEvents()
     }
@@ -827,15 +1071,25 @@ struct MultiVanGameplayScreen: View {
             settings: settingsService.settings,
             soundPlayer: soundPlayer,
             reactVisually: { event in
-                playtestLog?.observe(event, engine: engine)
+                switch event {
+                case .switchTapped:
+                    tutorial.usedControl()
+                    tutorial.switchChanged(engine: engine)
+                    pauseNote = nil
+                case let .tapRejected(nodeID):
+                    recordMissedTap()
+                    if engine.isPaused { pauseNote = MultiVanPauseCopy.note(forRejectedTapAt: nodeID, engine: engine) }
+                default: break
+                }
+                if voiceOverEnabled, let words = MultiVanAnnouncer.announcement(for: event, level: engine.level) {
+                    MultiVanAnnouncer.announce(words)
+                }
                 celebration.process(event, engine: engine, reduceMotion: reducesExtraAnimations)
                 personality.process(event, engine: engine, reduceMotion: reducesExtraAnimations)
                 crashEffects.process(event, reduceMotion: reducesExtraAnimations)
                 switchFeedback.process(event, reduceMotion: reducesExtraAnimations)
             }
         )
-        // Includes stuck failures, which have no MV-31 terminal event.
-        playtestLog?.completed(engine)
     }
 }
 
@@ -878,6 +1132,10 @@ enum MultiVanFailureCopy {
         case let .failStuck(vanID, _):
             let color = level.vans.first(where: { $0.id == vanID })?.color.displayName ?? "A van"
             return "\(color) hit a dead end!"
+        case let .failMissingPackage(vanID, _, _):
+            let color = level.vans.first(where: { $0.id == vanID })?.color.displayName ?? "A van"
+            let count = level.packages(ownedBy: vanID).count
+            return "\(color) got home without \(count > 1 ? "all its parcels" : "its parcel")! Pick it up first."
         case .win:
             return ""
         }
@@ -909,7 +1167,8 @@ final class MultiVanFrameDriver {
     }
 
     func advance(at date: Date, engine: MultiVanEngine, isActive: Bool) {
-        guard isActive, engine.phase == .run else {
+        // A paused run takes no time, and comes back at normal speed.
+        guard isActive, engine.phase == .run, !engine.isPaused else {
             reset()
             return
         }

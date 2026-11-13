@@ -1,4 +1,5 @@
 import SwiftUI
+import UIKit
 
 /// Hosts one multi-van level from the main level map and records its progress.
 struct LevelPlayScreen: View {
@@ -7,6 +8,8 @@ struct LevelPlayScreen: View {
     @ObservedObject var settingsService: UserSettingsService
     let progressService: ProgressService
     let economyService: EconomyService
+    /// The player's shop choices, drawn on both boards.
+    var cosmetics = MultiVanCosmetics.standard
     let onNextLevel: (String) -> Void
     let onBackToLevels: () -> Void
     let onProfileChanged: () -> Void
@@ -19,21 +22,11 @@ struct LevelPlayScreen: View {
     var body: some View {
         Group {
             if let engine {
-                MultiVanGameplayScreen(
-                    engine: engine,
-                    settingsService: settingsService,
-                    onNext: {
-                        if let nextLevelID {
-                            onNextLevel(nextLevelID)
-                        } else {
-                            onBackToLevels()
-                        }
-                    },
-                    onBack: onBackToLevels
-                )
-                .onChange(of: engine.outcome) { _, outcome in
-                    if outcome == .win { recordWin(engine) }
-                }
+                gameplay(engine)
+                    .onChange(of: engine.outcome) { _, outcome in
+                        // Autoplay's robot wins earn nothing and unlock nothing.
+                        if outcome == .win, !isAutoplaying { recordWin(engine) }
+                    }
             } else {
                 VStack(spacing: 0) {
                     HStack {
@@ -55,6 +48,7 @@ struct LevelPlayScreen: View {
                 }
             }
         }
+        .environment(\.multiVanCosmetics, cosmetics)
         .background(Color(red: 0.88, green: 0.94, blue: 0.97).ignoresSafeArea())
         .task {
             guard engine == nil else { return }
@@ -63,7 +57,49 @@ struct LevelPlayScreen: View {
             } catch {
                 loadError = "Could not open \(level.name). \(error.localizedDescription)"
             }
+            #if DEBUG || MULTIVAN_INTERNAL
+            if isAutoplaying {
+                // A profiling run outlasts the auto-lock.
+                UIApplication.shared.isIdleTimerDisabled = true
+                MultiVanPerformanceMeter.shared?.start()
+            }
+            #endif
         }
+        .onDisappear {
+            if isAutoplaying { UIApplication.shared.isIdleTimerDisabled = false }
+        }
+    }
+
+    private func gameplay(_ engine: MultiVanEngine) -> some View {
+        let onNext = {
+            if let nextLevelID {
+                onNextLevel(nextLevelID)
+            } else {
+                onBackToLevels()
+            }
+        }
+        #if DEBUG || MULTIVAN_INTERNAL
+        return MultiVanGameplayScreen(
+            engine: engine, settingsService: settingsService, onNext: onNext, onBack: onBackToLevels, autoplay: autoplay
+        )
+        #else
+        return MultiVanGameplayScreen(engine: engine, settingsService: settingsService, onNext: onNext, onBack: onBackToLevels)
+        #endif
+    }
+
+    #if DEBUG || MULTIVAN_INTERNAL
+    /// The profiling option, when this launch is one for this level; see `MultiVanAutoplay`.
+    private var autoplay: MultiVanAutoplay? {
+        MultiVanAutoplay.launchConfiguration.flatMap { $0.levelID == level.id ? $0 : nil }
+    }
+    #endif
+
+    private var isAutoplaying: Bool {
+        #if DEBUG || MULTIVAN_INTERNAL
+        autoplay != nil
+        #else
+        false
+        #endif
     }
 
     private func recordWin(_ engine: MultiVanEngine) {
@@ -76,7 +112,7 @@ struct LevelPlayScreen: View {
         economyService.awardLevelCompletionReward(
             levelID: level.id,
             earnedStars: stars,
-            isFirstCompletion: update.wasFirstCompletion
+            previousBestStars: update.previousBestStars
         )
         onProfileChanged()
     }

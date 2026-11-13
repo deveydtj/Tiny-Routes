@@ -7,9 +7,7 @@ struct TRProfileAchievementPreviewCard: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
             HStack {
-                Text("Achievements")
-                    .font(.system(size: 22, weight: .black, design: .rounded))
-                    .foregroundStyle(TRGameplayStyle.Colors.titleNavy)
+                TRCozyCardTitle(title: "Achievements")
 
                 Spacer()
 
@@ -18,16 +16,12 @@ struct TRProfileAchievementPreviewCard: View {
                         Text("View All")
                         Image(systemName: "chevron.right")
                     }
-                    .font(.system(size: 13, weight: .black, design: .rounded))
-                    .foregroundStyle(TRGameplayStyle.Colors.primaryBlue)
+                    .font(.system(size: 13, weight: .semibold, design: .rounded))
+                    .foregroundStyle(TRVillagePalette.teal)
                     .padding(.horizontal, 12)
-                    .frame(height: 34)
-                    .background {
-                        Capsule()
-                            .fill(Color(red: 0.91, green: 0.96, blue: 1.00))
-                    }
+                    .frame(height: 32)
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(MultiVanHUDButtonStyle(shape: AnyShape(Capsule())))
                 .accessibilityLabel(Text("View all achievements"))
             }
 
@@ -42,7 +36,7 @@ struct TRProfileAchievementPreviewCard: View {
         }
         .padding(18)
         .background {
-            TRGlassCardBackground(cornerRadius: 25)
+            MultiVanHUDCardBackground(cornerRadius: 26)
         }
     }
 }
@@ -62,23 +56,22 @@ private struct AchievementTile: View {
             }
 
             Text(achievement.title)
-                .font(.system(size: 13, weight: .black, design: .rounded))
-                .foregroundStyle(TRGameplayStyle.Colors.titleNavy)
+                .font(.system(size: 13, weight: .bold, design: .rounded))
+                .foregroundStyle(TRVillagePalette.navy)
                 .lineLimit(2)
                 .multilineTextAlignment(.center)
                 .minimumScaleFactor(0.75)
                 .frame(minHeight: 32)
 
             Text(achievement.subtitle)
-                .font(.system(size: 12, weight: .bold, design: .rounded))
-                .foregroundStyle(TRGameplayStyle.Colors.secondaryText)
+                .font(.system(size: 12, weight: .semibold, design: .rounded))
+                .foregroundStyle(TRVillagePalette.slate)
                 .lineLimit(1)
                 .minimumScaleFactor(0.72)
         }
         .frame(width: 112, height: 142)
         .background {
-            RoundedRectangle(cornerRadius: 20, style: .continuous)
-                .fill(Color(red: 0.94, green: 0.97, blue: 1.00).opacity(0.92))
+            TRCozyWellBackground(cornerRadius: 20)
         }
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(Text("\(achievement.title), \(achievement.subtitle), \(achievement.isUnlocked ? "unlocked" : "locked")"))
@@ -91,5 +84,5 @@ private struct AchievementTile: View {
         onViewAllTapped: {}
     )
     .padding(20)
-    .background(Color(red: 0.86, green: 0.94, blue: 0.98))
+    .background(TRVillageSky())
 }

@@ -1,0 +1,64 @@
+require "spaceship"
+require "shellwords"
+
+desc "Build and submit Tiny Routes to the existing Family and friends external group"
+lane :external do |options|
+  root = File.expand_path("..", __dir__)
+  group_name = "Family and friends"
+  api_key_path = ENV["APP_STORE_CONNECT_API_KEY_PATH"]
+  if api_key_path && !api_key_path.empty?
+    Spaceship::ConnectAPI.token = Spaceship::ConnectAPI::Token.from(filepath: api_key_path)
+  else
+    username = ENV["FASTLANE_USER"]
+    UI.user_error!("Set FASTLANE_USER to your Apple ID and sign in once from a terminal, or set APP_STORE_CONNECT_API_KEY_PATH to a fastlane API-key JSON file. Xcode's saved login cannot be reused for external group submission.") if username.to_s.empty?
+    Spaceship::ConnectAPI.login(username, use_portal: false, use_tunes: true)
+  end
+
+  app = Spaceship::ConnectAPI::App.find("com.tinyroutes.app")
+  UI.user_error!("Tiny Routes was not found in this App Store Connect account.") unless app
+  groups = app.get_beta_groups.select { |group| group.name == group_name && !group.is_internal_group }
+  UI.user_error!("Expected exactly one external group named '#{group_name}'; found #{groups.length}.") unless groups.length == 1
+
+  # Resume a failed submission with the original IPA, without another upload.
+  ipa = options[:ipa] && File.expand_path(options[:ipa], root)
+  unless ipa
+    source_plist = File.join(root, "TinyRoutes/Resources/Info.plist")
+    version = get_info_plist_value(path: source_plist, key: "CFBundleShortVersionString")
+    build_number = latest_testflight_build_number(app_identifier: app.bundle_id, version: version, initial_build_number: 0) + 1
+    artifacts = File.join(root, ".local/testflight/external-#{Time.now.strftime('%Y%m%d-%H%M%S')}")
+    FileUtils.mkdir_p(artifacts)
+    # Change only the artifact copy; leave the working tree's version untouched.
+    build_plist = File.join(artifacts, "Info.plist")
+    set_info_plist_value(path: source_plist, key: "CFBundleVersion", value: build_number.to_s, output_file_name: build_plist)
+    archive = File.join(artifacts, "TinyRoutes.xcarchive")
+    ipa = build_app(
+      project: File.join(root, "TinyRoutes.xcodeproj"), scheme: "TinyRoutes", configuration: "Release",
+      archive_path: archive, output_directory: artifacts, output_name: "TinyRoutes.ipa",
+      buildlog_path: artifacts, derived_data_path: File.join(root, ".local/testflight/ExternalDerivedData"),
+      xcargs: "-allowProvisioningUpdates INFOPLIST_FILE=#{Shellwords.escape(build_plist)}",
+      export_xcargs: "-allowProvisioningUpdates", export_method: "app-store",
+      export_options: { signingStyle: "automatic", teamID: "JM23Z9GG95", manageAppVersionAndBuildNumber: false, testFlightInternalTestingOnly: false, uploadSymbols: true }
+    )
+    sh("xcrun", "swift", File.join(root, "scripts/verify_multivan_bundle.swift"), File.join(archive, "Products/Applications/TinyRoutes.app"))
+  end
+  UI.user_error!("IPA does not exist: #{ipa}") unless File.file?(ipa)
+  version = FastlaneCore::IpaFileAnalyser.fetch_app_version(ipa)
+  build_number = FastlaneCore::IpaFileAnalyser.fetch_app_build(ipa)
+  if options[:ipa]
+    FastlaneCore::BuildWatcher.wait_for_build_processing_to_be_complete(
+      app_id: app.id, platform: "ios", app_version: version, build_version: build_number,
+      poll_interval: 30, timeout_duration: 1800, wait_for_build_beta_detail_processing: true
+    )
+  end
+  UI.message("Submitting #{ipa} to '#{group_name}'. If submission fails, rerun with ipa:#{Shellwords.escape(ipa)}; it will not upload again.")
+  upload_to_testflight(
+    app_identifier: app.bundle_id, apple_id: app.id, ipa: ipa,
+    app_version: version, build_number: build_number,
+    distribute_only: !options[:ipa].nil?, distribute_external: true, groups: [groups.first.id],
+    skip_waiting_for_build_processing: false, wait_processing_timeout_duration: 1800,
+    submit_beta_review: true, notify_external_testers: true,
+    changelog: "Please test the updated village map, tutorials, all 14 delivery puzzles, sounds, and progress saving. Report crashes or confusing controls through TestFlight.",
+    demo_account_required: false
+  )
+  UI.success("Submitted to '#{group_name}'. Apple may require beta review before testers can install it.")
+end

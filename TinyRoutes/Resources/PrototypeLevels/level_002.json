@@ -18,5 +18,16 @@
   "houses": [{ "nodeID": "red_house", "color": "red" }],
   "initialSwitchEdges": { "switch": "to_barrier" },
   "parChanges": 1,
-  "liveSwitchNodeIDs": []
+  "liveSwitchNodeIDs": [],
+  "tutorial": [
+    {
+      "trigger": "start",
+      "title": "Tap to switch",
+      "body": "Tap the switch to turn the arrow.",
+      "focusNodeIDs": [
+        "switch"
+      ],
+      "practice": "route"
+    }
+  ]
 }

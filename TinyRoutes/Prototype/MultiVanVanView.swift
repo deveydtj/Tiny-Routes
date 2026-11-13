@@ -8,6 +8,8 @@ struct MultiVanVanView: View {
     var reaction: MultiVanPersonality.Reaction?
     var reducesExtraAnimations = false
     var isDelivered = false
+    /// What the van still has to collect or carries; drawn as a parcel on the roof.
+    var cargo: MultiVanCargoStatus = .ready
     var turnSignal: TurnSignal?
     var signalIsLit = true
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -29,34 +31,65 @@ struct MultiVanVanView: View {
         let activeReaction = MultiVanPersonality.activeReaction(reaction, status: status, reduceMotion: reduced)
 
         ZStack {
+            // A soft shadow on the road, a little behind and below the van.
+            RoundedRectangle(cornerRadius: length * 0.16)
+                .fill(TRVillagePalette.ink.opacity(0.22))
+                .frame(width: length * 0.7, height: length * 0.98)
+                .offset(y: length * 0.05)
+                .blur(radius: length * 0.03)
+
             ForEach([-1.0, 1.0], id: \.self) { side in
                 ForEach([-1.0, 1.0], id: \.self) { axle in
                     RoundedRectangle(cornerRadius: length * 0.04)
-                        .fill(Color(white: 0.22))
+                        .fill(Color(hex: 0x2A2933))
                         .frame(width: length * 0.11, height: length * 0.19)
                         .offset(x: length * 0.32 * side, y: length * 0.25 * axle)
                 }
             }
 
-            RoundedRectangle(cornerRadius: length * 0.15)
-                .fill(color.boardColor.gradient)
+            // A deeper skirt all round, the body sitting on it like a toy's shell.
+            RoundedRectangle(cornerRadius: length * 0.17)
+                .fill(color.boardDeep)
+                .frame(width: length * 0.66, height: length)
+            RoundedRectangle(cornerRadius: length * 0.14)
+                .fill(color.boardColor)
                 .overlay {
-                    RoundedRectangle(cornerRadius: length * 0.15)
-                        .strokeBorder(.white, lineWidth: length * 0.055)
+                    RoundedRectangle(cornerRadius: length * 0.14)
+                        .fill(LinearGradient(colors: [.white.opacity(0.2), .clear], startPoint: .top, endPoint: .center))
                 }
-                .frame(width: length * 0.64, height: length)
+                .frame(width: length * 0.56, height: length * 0.9)
+                .offset(y: -length * 0.02)
 
             // Wide blue-black glass and two bright lamps identify the front.
-            RoundedRectangle(cornerRadius: length * 0.045)
-                .fill(Color(red: 0.12, green: 0.25, blue: 0.34))
-                .overlay(alignment: .top) {
+            RoundedRectangle(cornerRadius: length * 0.05)
+                .fill(Color(hex: 0x2C3A55))
+                .overlay(alignment: .topLeading) {
                     Capsule()
-                        .fill(.white.opacity(0.6))
-                        .frame(width: length * 0.29, height: length * 0.025)
-                        .padding(.top, length * 0.025)
+                        .fill(.white.opacity(0.55))
+                        .frame(width: length * 0.14, height: length * 0.03)
+                        .padding(.top, length * 0.03)
+                        .padding(.leading, length * 0.05)
                 }
-                .frame(width: length * 0.43, height: length * 0.17)
-                .offset(y: -length * 0.24)
+                .frame(width: length * 0.45, height: length * 0.16)
+                .offset(y: -length * 0.25)
+
+            // The cream roof panel carries the colour's shape, as the diorama's van does.
+            RoundedRectangle(cornerRadius: length * 0.07)
+                .fill(Color(hex: 0xFBF7EE))
+                .overlay {
+                    VanSymbolShape(color: color)
+                        .fill(color.boardInk)
+                        .padding(length * 0.07)
+                }
+                .frame(width: length * 0.42, height: length * 0.5)
+                .offset(y: length * 0.12)
+
+            // A carried parcel rides at the back of the roof, clear of the symbol.
+            if cargo == .carrying {
+                MultiVanParcelView(color: color, side: length * 0.3, showsSymbol: false)
+                    .offset(y: length * 0.36)
+                    .transition(.scale.combined(with: .opacity))
+            }
 
             ForEach([-1.0, 1.0], id: \.self) { side in
                 let signalling = turnSignal?.rawValue == side
@@ -64,31 +97,14 @@ struct MultiVanVanView: View {
                 ForEach([-1.0, 1.0], id: \.self) { end in
                     Capsule()
                         .fill(signalling
-                              ? Color(red: 1, green: 0.67, blue: 0.12).opacity(lit ? 1 : 0.18)
-                              : (end < 0 ? .white : Color(red: 0.75, green: 0.16, blue: 0.12)))
+                              ? Color(hex: 0xFFAB1F).opacity(lit ? 1 : 0.18)
+                              : (end < 0 ? Color(hex: 0xFFF6C8) : Color(hex: 0xD33B30)))
                         .frame(width: length * 0.15, height: length * 0.1)
-                        .shadow(color: .orange.opacity(lit ? 0.8 : 0), radius: length * 0.14)
+                        .shadow(color: Color(hex: 0xFFAB1F).opacity(lit ? 0.8 : 0), radius: length * 0.14)
                         .animation(reduceMotion ? nil : .easeInOut(duration: 0.06), value: lit)
                         .offset(x: length * 0.17 * side, y: length * 0.4 * end)
                 }
             }
-
-            Text(color.symbol)
-                .font(.system(size: length * 0.29, weight: .bold))
-                .foregroundStyle(.white)
-                .shadow(color: .black.opacity(0.35), radius: 0, y: length * 0.015)
-                .offset(y: length * 0.055)
-
-            // Decorative parcel stays behind the roof symbol, clear of the cab.
-            RoundedRectangle(cornerRadius: length * 0.025)
-                .fill(Color(red: 0.76, green: 0.49, blue: 0.25))
-                .overlay {
-                    Rectangle()
-                        .fill(Color(red: 1, green: 0.85, blue: 0.57))
-                        .frame(width: length * 0.04)
-                }
-                .frame(width: length * 0.23, height: length * 0.17)
-                .offset(y: length * 0.32)
         }
         .frame(width: length * 0.75, height: length)
         .keyframeAnimator(initialValue: 0.0, repeating: idle) { content, angle in
@@ -130,14 +146,16 @@ struct MultiVanVanView: View {
         }
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(Self.accessibilityLabel(color: color))
-        .accessibilityValue(Self.accessibilityValue(color: color, status: status, isDelivered: isDelivered))
+        .accessibilityValue(Self.accessibilityValue(color: color, status: status, isDelivered: isDelivered, cargo: cargo))
     }
 
     static func accessibilityLabel(color: VanColor) -> String {
         "\(color.displayName) \(color.accessibilitySymbolName) van"
     }
 
-    static func accessibilityValue(color: VanColor, status: MultiVanVanState.Status, isDelivered: Bool) -> String {
+    static func accessibilityValue(
+        color: VanColor, status: MultiVanVanState.Status, isDelivered: Bool, cargo: MultiVanCargoStatus = .ready
+    ) -> String {
         let state: String
         switch status {
         case .waiting: state = "Waiting"
@@ -145,8 +163,11 @@ struct MultiVanVanView: View {
         case .parked: state = isDelivered ? "Delivered, parked at its matching house" : "Parked at a different house"
         case .crashed: state = "Crashed"
         case .stuck: state = "Stopped at a dead end"
+        case .missingCargo: state = "Stopped at its house without its parcel"
         }
-        return "\(state). Destination: \(color.displayName.lowercased()) \(color.accessibilitySymbolName) house"
+        // A van with no parcels says nothing about cargo, as before.
+        let load = cargo == .ready || status == .missingCargo ? "" : " \(cargo.label)."
+        return "\(state).\(load) Destination: \(color.displayName.lowercased()) \(color.accessibilitySymbolName) house"
     }
 
     static func heading(
@@ -215,6 +236,15 @@ struct MultiVanVanView: View {
     }
 }
 
+/// The colour's shape, centred and as large as fits.
+struct VanSymbolShape: Shape {
+    let color: VanColor
+
+    func path(in rect: CGRect) -> Path {
+        Path(color.dioramaSymbolPath(centre: CGPoint(x: rect.midX, y: rect.midY), radius: min(rect.width, rect.height) / 2))
+    }
+}
+
 #if DEBUG
 #Preview("Toy vans — 28 pt and 56 pt") {
     VStack(spacing: 24) {
@@ -229,6 +259,6 @@ struct MultiVanVanView: View {
         }
     }
     .padding(28)
-    .background(Color(white: 0.9))
+    .background(Color(hex: 0x626779))
 }
 #endif

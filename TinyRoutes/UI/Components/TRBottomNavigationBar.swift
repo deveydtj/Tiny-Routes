@@ -17,13 +17,7 @@ struct TRBottomNavigationBar: View {
         .padding(.top, 10)
         .padding(.bottom, 12)
         .background {
-            RoundedRectangle(cornerRadius: 28, style: .continuous)
-                .fill(.white.opacity(0.94))
-                .overlay {
-                    RoundedRectangle(cornerRadius: 28, style: .continuous)
-                        .stroke(.white.opacity(0.70), lineWidth: 1)
-                }
-                .shadow(color: .black.opacity(0.10), radius: 12, x: 0, y: 6)
+            MultiVanHUDCardBackground(cornerRadius: 30)
         }
         .padding(.horizontal, 16)
         .padding(.bottom, 8)

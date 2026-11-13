@@ -18,16 +18,12 @@ struct TRSettingsSectionCard<Content: View>: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 13) {
             VStack(alignment: .leading, spacing: 3) {
-                Text(title)
-                    .font(.system(size: 20, weight: .black, design: .rounded))
-                    .foregroundStyle(TRGameplayStyle.Colors.titleNavy)
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.82)
+                TRCozyCardTitle(title: title)
 
                 if let subtitle {
                     Text(subtitle)
-                        .font(.system(size: 13, weight: .semibold, design: .rounded))
-                        .foregroundStyle(TRGameplayStyle.Colors.secondaryText)
+                        .font(.system(size: 13, weight: .medium, design: .rounded))
+                        .foregroundStyle(TRVillagePalette.slate)
                         .fixedSize(horizontal: false, vertical: true)
                 }
             }
@@ -40,7 +36,7 @@ struct TRSettingsSectionCard<Content: View>: View {
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(18)
         .background {
-            TRGlassCardBackground(cornerRadius: 26)
+            MultiVanHUDCardBackground(cornerRadius: 26)
         }
     }
 }
@@ -56,5 +52,5 @@ struct TRSettingsSectionCard<Content: View>: View {
         )
     }
     .padding(20)
-    .background(Color(red: 0.86, green: 0.94, blue: 0.98))
+    .background(TRVillageSky())
 }

@@ -1,5 +1,6 @@
 import SwiftUI
 
+/// The cosmetic categories as a row of cream pills, the chosen one teal.
 struct TRShopCategoryPillBar: View {
     let categories: [ShopCosmeticCategory]
     let selectedCategoryID: String
@@ -7,13 +8,17 @@ struct TRShopCategoryPillBar: View {
 
     var body: some View {
         ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: 10) {
+            HStack(spacing: 8) {
                 ForEach(categories) { category in
                     categoryButton(category)
                 }
             }
-            .padding(.vertical, 2)
+            // Room for the pills' lips and shadows.
+            .padding(.horizontal, 4)
+            .padding(.top, 2)
+            .padding(.bottom, 8)
         }
+        .padding(.horizontal, -4)
         .accessibilityElement(children: .contain)
     }
 
@@ -23,37 +28,34 @@ struct TRShopCategoryPillBar: View {
         return Button {
             onCategorySelected(category.id)
         } label: {
-            HStack(spacing: 7) {
+            HStack(spacing: 6) {
                 Image(systemName: category.systemImage)
-                    .font(.system(size: 13, weight: .black))
+                    .font(.system(size: 13, weight: .semibold))
                     .accessibilityHidden(true)
 
                 Text(category.title)
-                    .font(.system(size: 13, weight: .black, design: .rounded))
+                    .font(.system(size: 14, weight: .semibold, design: .rounded))
                     .lineLimit(1)
-                    .minimumScaleFactor(0.82)
-
-                if isSelected {
-                    Image(systemName: "checkmark")
-                        .font(.system(size: 11, weight: .black))
-                        .accessibilityHidden(true)
-                }
             }
-            .foregroundStyle(isSelected ? .white : TRGameplayStyle.Colors.titleNavy)
+            .foregroundStyle(isSelected ? TRVillagePalette.cream : TRVillagePalette.navy)
             .padding(.horizontal, 14)
-            .frame(height: 42)
+            .frame(height: 38)
             .background {
                 Capsule()
-                    .fill(isSelected ? TRGameplayStyle.Colors.primaryBlue : .white.opacity(0.88))
-                    .overlay {
+                    .fill(isSelected
+                        ? AnyShapeStyle(TRVillagePalette.teal)
+                        : AnyShapeStyle(LinearGradient(colors: [TRVillagePalette.cream, TRVillagePalette.creamDeep], startPoint: .top, endPoint: .bottom)))
+                    .overlay { Capsule().strokeBorder(.white.opacity(isSelected ? 0.25 : 0.9), lineWidth: 1) }
+                    .background {
                         Capsule()
-                            .stroke(isSelected ? .white.opacity(0.38) : .white.opacity(0.70), lineWidth: 1)
+                            .fill(isSelected ? TRVillagePalette.tealDark : TRVillagePalette.creamLip)
+                            .offset(y: 3)
                     }
-                    .shadow(color: .black.opacity(isSelected ? 0.12 : 0.07), radius: 8, x: 0, y: 4)
+                    .shadow(color: MultiVanHUDStyle.shadow.opacity(0.14), radius: 5, x: 0, y: 4)
             }
             .contentShape(Capsule())
         }
-        .buttonStyle(.plain)
+        .buttonStyle(TRVillagePressStyle())
         .accessibilityLabel(Text(category.title))
         .accessibilityValue(Text(isSelected ? "Selected" : "Not selected"))
         .accessibilityAddTraits(isSelected ? [.isSelected] : [])
@@ -69,5 +71,5 @@ struct TRShopCategoryPillBar: View {
         onCategorySelected: { _ in }
     )
     .padding(20)
-    .background(Color(red: 0.86, green: 0.94, blue: 0.98))
+    .background(TRVillageSky())
 }

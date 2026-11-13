@@ -9,4 +9,8 @@ enum AppState: Equatable {
     case shop
     case profile
     case settings
+    /// Boards on trial, listed for internal builds only.
+    case experiments
+    /// One experiment board in play. It records no progress and earns nothing.
+    case experiment(levelID: String)
 }

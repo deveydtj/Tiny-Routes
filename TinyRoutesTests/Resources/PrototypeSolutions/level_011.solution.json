@@ -1,14 +1,11 @@
 {
   "planTaps": [
-    "route_switch",
-    "yellow_switch",
-    "yellow_switch",
-    "split_switch"
+    "entry_switch"
   ],
   "liveTaps": [
     {
-      "atTime": 4.95,
-      "nodeID": "split_switch"
+      "atTime": 2.25,
+      "nodeID": "switch"
     }
   ]
 }

@@ -1,0 +1,134 @@
+{
+  "id": "experiment_signal_c",
+  "name": "The Same Square",
+  "scenerySeed": 31,
+  "biome": "market",
+  "graph": {
+    "nodes": [
+      {
+        "id": "red_start",
+        "x": 1,
+        "y": 0,
+        "outgoingEdgeIDs": [
+          "red_approach"
+        ]
+      },
+      {
+        "id": "red_mid",
+        "x": 1,
+        "y": 4,
+        "outgoingEdgeIDs": [
+          "red_home"
+        ]
+      },
+      {
+        "id": "red_house",
+        "x": 1,
+        "y": 6,
+        "outgoingEdgeIDs": []
+      },
+      {
+        "id": "blue_start",
+        "x": 3,
+        "y": 2,
+        "outgoingEdgeIDs": [
+          "blue_approach"
+        ]
+      },
+      {
+        "id": "blue_fork",
+        "x": 3,
+        "y": 3,
+        "outgoingEdgeIDs": [
+          "blue_short",
+          "blue_bypass"
+        ]
+      },
+      {
+        "id": "bypass_corner",
+        "x": 4,
+        "y": 5,
+        "outgoingEdgeIDs": [
+          "bypass_home"
+        ]
+      },
+      {
+        "id": "blue_house",
+        "x": 0,
+        "y": 4,
+        "outgoingEdgeIDs": []
+      }
+    ],
+    "edges": [
+      {
+        "id": "red_approach",
+        "fromNodeID": "red_start",
+        "toNodeID": "red_mid",
+        "roadShape": "verticalFirst"
+      },
+      {
+        "id": "red_home",
+        "fromNodeID": "red_mid",
+        "toNodeID": "red_house",
+        "roadShape": "verticalFirst"
+      },
+      {
+        "id": "blue_approach",
+        "fromNodeID": "blue_start",
+        "toNodeID": "blue_fork",
+        "roadShape": "verticalFirst"
+      },
+      {
+        "id": "blue_short",
+        "fromNodeID": "blue_fork",
+        "toNodeID": "blue_house",
+        "roadShape": "horizontalFirst"
+      },
+      {
+        "id": "blue_bypass",
+        "fromNodeID": "blue_fork",
+        "toNodeID": "bypass_corner",
+        "roadShape": "horizontalFirst"
+      },
+      {
+        "id": "bypass_home",
+        "fromNodeID": "bypass_corner",
+        "toNodeID": "blue_house",
+        "roadShape": "horizontalFirst"
+      }
+    ]
+  },
+  "vans": [
+    {
+      "id": "red",
+      "color": "red",
+      "startNodeID": "red_start",
+      "departDelay": 0
+    },
+    {
+      "id": "blue",
+      "color": "blue",
+      "startNodeID": "blue_start",
+      "departDelay": 0
+    }
+  ],
+  "houses": [
+    {
+      "nodeID": "red_house",
+      "color": "red"
+    },
+    {
+      "nodeID": "blue_house",
+      "color": "blue"
+    }
+  ],
+  "initialSwitchEdges": {
+    "blue_fork": "blue_bypass"
+  },
+  "parChanges": 0,
+  "liveSwitchNodeIDs": [],
+  "hint": "No light here. Both vans reach the square together, so Blue should go round.",
+  "hintFocusNodeIDs": [
+    "blue_fork"
+  ]
+}

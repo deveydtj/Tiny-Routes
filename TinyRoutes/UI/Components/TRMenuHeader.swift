@@ -1,5 +1,7 @@
 import SwiftUI
 
+/// A tab's banner: its title, the coin count and the settings gear, pinned over
+/// the page as on the level map.
 struct TRMenuHeader: View {
     let pageTitle: String
     let subtitleOverride: String?
@@ -22,34 +24,21 @@ struct TRMenuHeader: View {
     }
 
     var body: some View {
-        VStack(spacing: 18) {
-            HStack(alignment: .center) {
-                TRMenuSettingsButton(action: onSettingsTapped)
-
-                Spacer(minLength: 12)
-
-                TRCurrencyPill(
-                    coinTotal: coinTotal,
-                    onAddTapped: onAddCurrencyTapped,
-                    size: .menuHeader
-                )
-            }
-
-            TRMenuTitleLogo(
-                pageTitle: pageTitle,
-                subtitleOverride: subtitleOverride
-            )
+        TRCozyMenuBanner(eyebrow: subtitleOverride ?? "Tiny Routes", title: pageTitle) {
+            EmptyView()
+        } trailing: {
+            TRCozyCoinButton(coinTotal: coinTotal, action: onAddCurrencyTapped)
+            TRMenuSettingsButton(action: onSettingsTapped)
         }
-        .padding(.top, 8)
     }
 }
 
 #Preview("Menu Header Variants") {
-    VStack(spacing: 28) {
-        TRMenuHeader(pageTitle: "Levels", coinTotal: 1_250, onSettingsTapped: {}, onAddCurrencyTapped: {})
-        TRMenuHeader(pageTitle: "Shop", coinTotal: 1_250, onSettingsTapped: {}, onAddCurrencyTapped: {})
-        TRMenuHeader(pageTitle: "Profile", coinTotal: 1_250, onSettingsTapped: {}, onAddCurrencyTapped: {})
+    ZStack(alignment: .top) {
+        TRCozySkyBackground()
+        VStack(spacing: 40) {
+            TRMenuHeader(pageTitle: "Shop", subtitleOverride: "Customize your journey", coinTotal: 1_250, onSettingsTapped: {}, onAddCurrencyTapped: {})
+            TRMenuHeader(pageTitle: "Profile", subtitleOverride: "Your driver's log", coinTotal: 12_500, onSettingsTapped: {}, onAddCurrencyTapped: {})
+        }
     }
-    .padding(20)
-    .background(Color(red: 0.86, green: 0.94, blue: 0.98))
 }

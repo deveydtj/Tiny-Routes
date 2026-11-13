@@ -1,0 +1,193 @@
+{
+  "id": "experiment_ice_a",
+  "name": "Slippery Corner",
+  "scenerySeed": 51,
+  "schemaVersion": 3,
+  "biome": "snow",
+  "graph": {
+    "nodes": [
+      {
+        "id": "red_start",
+        "x": 2,
+        "y": 0,
+        "outgoingEdgeIDs": [
+          "red_approach"
+        ]
+      },
+      {
+        "id": "merge",
+        "x": 2,
+        "y": 2,
+        "outgoingEdgeIDs": [
+          "stem"
+        ]
+      },
+      {
+        "id": "split",
+        "x": 2,
+        "y": 4,
+        "outgoingEdgeIDs": [
+          "red_exit",
+          "blue_exit"
+        ]
+      },
+      {
+        "id": "red_house",
+        "x": 0,
+        "y": 5,
+        "outgoingEdgeIDs": []
+      },
+      {
+        "id": "blue_house",
+        "x": 2,
+        "y": 6,
+        "outgoingEdgeIDs": []
+      },
+      {
+        "id": "blue_start",
+        "x": 4,
+        "y": 0,
+        "outgoingEdgeIDs": [
+          "blue_approach"
+        ]
+      },
+      {
+        "id": "blue_fork",
+        "x": 4,
+        "y": 1,
+        "outgoingEdgeIDs": [
+          "blue_short",
+          "blue_long"
+        ]
+      },
+      {
+        "id": "far_corner",
+        "x": 4,
+        "y": 4,
+        "outgoingEdgeIDs": [
+          "far_down"
+        ]
+      },
+      {
+        "id": "far_bend",
+        "x": 3,
+        "y": 3,
+        "outgoingEdgeIDs": [
+          "far_join"
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "id": "red_approach",
+        "fromNodeID": "red_start",
+        "toNodeID": "merge",
+        "roadShape": "verticalFirst"
+      },
+      {
+        "id": "stem",
+        "fromNodeID": "merge",
+        "toNodeID": "split",
+        "roadShape": "verticalFirst"
+      },
+      {
+        "id": "red_exit",
+        "fromNodeID": "split",
+        "toNodeID": "red_house",
+        "roadShape": "horizontalFirst"
+      },
+      {
+        "id": "blue_exit",
+        "fromNodeID": "split",
+        "toNodeID": "blue_house",
+        "roadShape": "verticalFirst"
+      },
+      {
+        "id": "blue_approach",
+        "fromNodeID": "blue_start",
+        "toNodeID": "blue_fork",
+        "roadShape": "verticalFirst"
+      },
+      {
+        "id": "blue_short",
+        "fromNodeID": "blue_fork",
+        "toNodeID": "merge",
+        "roadShape": "verticalFirst"
+      },
+      {
+        "id": "blue_long",
+        "fromNodeID": "blue_fork",
+        "toNodeID": "far_corner",
+        "roadShape": "verticalFirst"
+      },
+      {
+        "id": "far_down",
+        "fromNodeID": "far_corner",
+        "toNodeID": "far_bend",
+        "roadShape": "horizontalFirst"
+      },
+      {
+        "id": "far_join",
+        "fromNodeID": "far_bend",
+        "toNodeID": "merge",
+        "roadShape": "verticalFirst"
+      }
+    ]
+  },
+  "vans": [
+    {
+      "id": "red",
+      "color": "red",
+      "startNodeID": "red_start",
+      "departDelay": 0
+    },
+    {
+      "id": "blue",
+      "color": "blue",
+      "startNodeID": "blue_start",
+      "departDelay": 0
+    }
+  ],
+  "houses": [
+    {
+      "nodeID": "red_house",
+      "color": "red"
+    },
+    {
+      "nodeID": "blue_house",
+      "color": "blue"
+    }
+  ],
+  "roadZones": [
+    {
+      "id": "icy_stem",
+      "kind": "ice",
+      "edgeIDs": [
+        "stem"
+      ]
+    }
+  ],
+  "initialSwitchEdges": {
+    "split": "red_exit",
+    "blue_fork": "blue_short"
+  },
+  "parChanges": 2,
+  "liveSwitchNodeIDs": [
+    "split"
+  ],
+  "hint": "A van on the ice cannot be re-routed. Send Blue the long way, so Red is off the ice before Blue reaches it. Then flip the \u26a1 switch.",
+  "hintFocusNodeIDs": [
+    "blue_fork",
+    "split"
+  ],
+  "tutorial": [
+    {
+      "trigger": "start",
+      "title": "Ice",
+      "body": "The \u26a1 switch stays locked while a van is on the icy road. Set it before the next van reaches the ice.",
+      "focusNodeIDs": [
+        "split"
+      ]
+    }
+  ]
+}

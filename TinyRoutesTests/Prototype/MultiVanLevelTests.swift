@@ -58,6 +58,17 @@ final class MultiVanLevelTests: XCTestCase {
         for id in level.liveSwitchNodeIDs where !switches.contains(id) {
             reject("live switch \(id) is not a real switch")
         }
+        for tip in level.tutorial {
+            if level.tutorial.filter({ $0.trigger == tip.trigger }).count > 1 {
+                reject("more than one \(tip.trigger.rawValue) tip")
+            }
+            if tip.title.trimmingCharacters(in: .whitespaces).isEmpty || tip.body.trimmingCharacters(in: .whitespaces).isEmpty {
+                reject("\(tip.trigger.rawValue) tip needs a title and body")
+            }
+            for id in tip.focusNodeIDs where nodes[id] == nil {
+                reject("\(tip.trigger.rawValue) tip focuses unknown node \(id)")
+            }
+        }
         for van in level.vans {
             if nodes[van.startNodeID] == nil { reject("van \(van.id) references unknown start node \(van.startNodeID)") }
             let count = level.houses.filter { $0.color == van.color }.count
@@ -104,13 +115,14 @@ final class MultiVanLevelTests: XCTestCase {
         let urls = try FileManager.default.contentsOfDirectory(at: directory, includingPropertiesForKeys: nil)
             .filter { $0.pathExtension == "json" && $0.lastPathComponent.hasPrefix("level_") }
             .sorted { $0.lastPathComponent < $1.lastPathComponent }
-        XCTAssertEqual(urls.map(\.lastPathComponent), (1...12).map { String(format: "level_%03d.json", $0) })
+        XCTAssertEqual(urls.map(\.lastPathComponent), (1...19).map { String(format: "level_%03d.json", $0) })
         XCTAssertTrue(urls.contains { $0.lastPathComponent == "level_001.json" }, "level_001: Go! is missing")
         XCTAssertTrue(urls.contains { $0.lastPathComponent == "level_002.json" }, "level_002: Pick a Lane is missing")
         XCTAssertTrue(urls.contains { $0.lastPathComponent == "level_003.json" }, "level_003: Two Turns is missing")
         XCTAssertTrue(urls.contains { $0.lastPathComponent == "level_004.json" }, "level_004: Roundabout is missing")
         XCTAssertTrue(urls.contains { $0.lastPathComponent == "level_005.json" }, "level_005: Two Colours is missing")
-        XCTAssertTrue(urls.contains { $0.lastPathComponent == "level_006.json" }, "level_006: Convoy is missing")
+        XCTAssertTrue(urls.contains { $0.lastPathComponent == "level_006.json" }, "level_006: Wait for It is missing")
+        XCTAssertTrue(urls.contains { $0.lastPathComponent == "level_007.json" }, "level_007: Convoy is missing")
         // Load separately: a malformed file must not hide failures in subsequent levels.
         for url in urls {
             do {

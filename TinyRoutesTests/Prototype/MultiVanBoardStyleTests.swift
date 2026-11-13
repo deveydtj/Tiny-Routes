@@ -87,7 +87,7 @@ final class MultiVanBoardStyleTests: XCTestCase {
     }
 
     func testSwitchSettingsSurviveEverySwap() throws {
-        let engine = try engine("level_012")
+        let engine = try engine("level_014")
         for node in MultiVanBoardRules.switchNodes(in: engine.runtimeGraph) {
             XCTAssertEqual(engine.tapSwitch(nodeID: node.id), .accepted)
         }

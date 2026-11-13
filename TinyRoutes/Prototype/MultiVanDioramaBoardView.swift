@@ -6,7 +6,6 @@ import SwiftUI
 /// stays in SwiftUI, where its text stays sharp through the depth of field.
 struct MultiVanDioramaBoardView: View {
     let engine: MultiVanEngine
-    var onSwitchTapped: ((String, MultiVanTapResult) -> Void)? = nil
     var onEventsProduced: (() -> Void)? = nil
     var celebration = MultiVanCelebration()
     var reducesExtraAnimations = false
@@ -25,7 +24,12 @@ struct MultiVanDioramaBoardView: View {
     /// Points between the flat board and the view's sides, so the overhead view
     /// lays the lawn where the flat board drew it.
     var flatSideInset: CGFloat = 0
+    /// Pieces a tutorial tip is about, ringed under the switches.
+    var spotlightNodeIDs: [String] = []
+    var onMissedTap: (() -> Void)? = nil
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.multiVanDioramaPreload) private var preload
+    @Environment(\.multiVanCosmetics) private var cosmetics
     /// Where the player left the table, and the drag or pinch still under their fingers.
     @State private var orbit = MultiVanDioramaOrbit.resting
     @GestureState private var dragTranslation = CGSize.zero
@@ -125,7 +129,7 @@ struct MultiVanDioramaBoardView: View {
     ) -> some View {
         let animates = state.animates
         return ZStack(alignment: .topLeading) {
-            MultiVanDioramaSceneView(level: engine.level, state: state, cues: cues, camera: camera)
+            MultiVanDioramaSceneView(level: engine.level, state: state, cues: cues, camera: camera, preload: preload, cosmetics: cosmetics)
                 .accessibilityHidden(true)
             // Drags anywhere off a switch turn the table, pinches zoom it, and a
             // double tap straightens it.
@@ -152,9 +156,21 @@ struct MultiVanDioramaBoardView: View {
                                 }
                         )
                 )
-                .onTapGesture(count: 2) {
-                    withAnimation(animates ? .smooth(duration: 0.45) : nil) { orbit = .resting }
-                }
+                .simultaneousGesture(
+                    TapGesture(count: 2).exclusively(before: TapGesture())
+                        .onEnded { tap in
+                            switch tap {
+                            case .first:
+                                if orbit == .resting {
+                                    onMissedTap?()
+                                } else {
+                                    withAnimation(animates ? .smooth(duration: 0.45) : nil) { orbit = .resting }
+                                }
+                            case .second:
+                                onMissedTap?()
+                            }
+                        }
+                )
                 .accessibilityHidden(true)
             // VoiceOver finds the pieces the scene draws where it draws them.
             ForEach(Self.landmarks(engine: engine, graph: state.graph, camera: camera, size: size)) { landmark in
@@ -166,15 +182,30 @@ struct MultiVanDioramaBoardView: View {
                     .position(landmark.point)
                     .allowsHitTesting(false)
             }
+            ForEach(spotlightNodeIDs, id: \.self) { nodeID in
+                if let node = state.graph.nodesByID[nodeID],
+                   let point = camera.viewPoint(for: MultiVanDioramaGeometry.switchPoint(node), in: size) {
+                    MultiVanTutorialSpotlight(reduceMotion: !animates)
+                        .position(point)
+                }
+            }
             // The scene draws the dials; the buttons over them take taps and speak.
             ForEach(Self.switchPlacements(controls: state.controls, graph: state.graph, camera: camera, size: size)) { placement in
                 MultiVanSwitchButton(
                     control: placement.control, engine: engine,
-                    onSwitchTapped: onSwitchTapped, onEventsProduced: onEventsProduced,
+                    onEventsProduced: onEventsProduced,
                     rejectionToken: switchFeedback.rejectionTokens[placement.control.nodeID],
                     animates: animates,
                     hitShape: placement.hitShape,
-                    drawsDial: false
+                    drawsDial: false,
+                    previewOffset: MultiVanSwitchButton.previewOffset(at: placement.point, in: size, topInset: CGFloat(covered.top)),
+                    projectPreviewAngle: { angle in
+                        guard let node = state.graph.nodesByID[placement.id] else { return angle }
+                        let tip = MultiVanDioramaGeometry.switchPoint(node) +
+                            MultiVanDioramaGeometry.worldDirection(screenAngle: angle) * 0.22
+                        guard let end = camera.viewPoint(for: tip, in: size) else { return angle }
+                        return atan2(end.y - placement.point.y, end.x - placement.point.x)
+                    }
                 )
                 .position(placement.point)
             }
@@ -215,7 +246,8 @@ struct MultiVanDioramaBoardView: View {
         }
     }
 
-    /// What VoiceOver says about a house, van or roadblock, and where it points.
+    /// What VoiceOver says about a house, van, roadblock, parcel or lamp, and
+    /// where it points.
     struct Landmark: Identifiable {
         let id: String
         let label: String
@@ -225,8 +257,8 @@ struct MultiVanDioramaBoardView: View {
 
     private static let landmarkSize: CGFloat = 32
 
-    /// The flat board's words for every house, van and roadblock, at the middle of
-    /// each piece as `camera` sees it.
+    /// The flat board's words for every house, van, roadblock, parcel and lamp, at
+    /// the middle of each piece as `camera` sees it.
     static func landmarks(
         engine: MultiVanEngine, graph: RuntimeRouteGraph, camera: MultiVanDioramaCamera, size: CGSize
     ) -> [Landmark] {
@@ -249,7 +281,9 @@ struct MultiVanDioramaBoardView: View {
             let isDelivered = engine.level.houses.contains { MultiVanBoardRules.isDelivered($0, vans: [van], graph: graph) }
             return Landmark(
                 id: "van \(van.id)", label: MultiVanVanView.accessibilityLabel(color: van.color),
-                value: MultiVanVanView.accessibilityValue(color: van.color, status: van.status, isDelivered: isDelivered),
+                value: MultiVanVanView.accessibilityValue(
+                    color: van.color, status: van.status, isDelivered: isDelivered, cargo: engine.cargoStatus(forVanID: van.id)
+                ),
                 point: point
             )
         }
@@ -258,7 +292,18 @@ struct MultiVanDioramaBoardView: View {
             guard let point = view(standing, 0.15) else { return nil }
             return Landmark(id: "barrier \(barrier.nodeID)", label: MultiVanBarrierView.accessibilityLabel, value: "", point: point)
         }
-        return houses + vanLandmarks + barriers
+        let parcels = MultiVanPickup.pickups(engine: engine).compactMap { pickup -> Landmark? in
+            guard let point = view(pickup.point, 0.1) else { return nil }
+            return Landmark(id: "parcel \(pickup.id)", label: pickup.accessibilityLabel, value: pickup.accessibilityValue, point: point)
+        }
+        let lamps = MultiVanSignalApproach.approaches(engine: engine).compactMap { approach -> Landmark? in
+            guard let point = view(approach.postPoint, 0.3) else { return nil }
+            return Landmark(
+                id: "lamp \(approach.id)", label: MultiVanSignalLampView.accessibilityLabel(kind: approach.kind),
+                value: MultiVanSignalLampView.accessibilityValue(kind: approach.kind, isOpen: approach.isOpen), point: point
+            )
+        }
+        return houses + vanLandmarks + barriers + parcels + lamps
     }
 
     /// The switch buttons over their dials as `camera` sees them in a view of `size`.
@@ -322,7 +367,7 @@ private struct MultiVanDioramaOrbiting<Content: View>: View, Animatable {
 struct MultiVanDioramaBoardView_Previews: PreviewProvider {
     static var previews: some View {
         Group {
-            board(levelID: "level_012").previewDisplayName("Level 12 — Big Delivery")
+            board(levelID: "level_014").previewDisplayName("Level 12 — Big Delivery")
             board(levelID: "level_005").previewDisplayName("Level 5 — Two colours")
         }
         .previewLayout(.fixed(width: 360, height: 460))

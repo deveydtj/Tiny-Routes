@@ -54,7 +54,7 @@ final class MultiVanDioramaEffectsTests: XCTestCase {
 
     private func levels() throws -> [MultiVanLevel] {
         let levels = try MultiVanLevelRepository().loadAllLevels()
-        XCTAssertEqual(levels.count, 12)
+        XCTAssertEqual(levels.count, 19)
         return levels
     }
 
@@ -100,7 +100,8 @@ final class MultiVanDioramaEffectsTests: XCTestCase {
                             seen.insert("allDelivered")
                         case .go:
                             seen.insert("go")
-                        case .switchTapped, .tapRejected, .wrongHouse:
+                        case .switchTapped, .tapRejected, .wrongHouse, .pickedUp, .missingPackage,
+                             .held, .released, .paused, .resumed:
                             break
                         }
                     }
@@ -231,7 +232,7 @@ final class MultiVanDioramaEffectsTests: XCTestCase {
     }
 
     func testLiveDialsPulseOnlyMidRunWithMotionOn() throws {
-        let level = try XCTUnwrap(levels().first { $0.id == "level_006" })
+        let level = try XCTUnwrap(levels().first { $0.id == "level_007" })
         let liveID = try XCTUnwrap(level.liveSwitchNodeIDs.first)
         for reduced in [false, true] {
             let engine = try MultiVanEngine(level: level)

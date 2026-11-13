@@ -29,5 +29,17 @@
   ],
   "initialSwitchEdges": { "red_switch": "red_to_blue", "blue_switch": "blue_to_red" },
   "parChanges": 2,
-  "liveSwitchNodeIDs": []
+  "liveSwitchNodeIDs": [],
+  "tutorial": [
+    {
+      "trigger": "start",
+      "title": "Two vans",
+      "body": "Tap the switches to match both houses.",
+      "focusNodeIDs": [
+        "red_switch",
+        "blue_switch"
+      ],
+      "practice": "route"
+    }
+  ]
 }

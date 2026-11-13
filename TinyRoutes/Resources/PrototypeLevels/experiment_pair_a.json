@@ -1,0 +1,166 @@
+{
+  "id": "experiment_pair_a",
+  "name": "A Pair of Parcels",
+  "scenerySeed": 61,
+  "schemaVersion": 2,
+  "biome": "depot",
+  "graph": {
+    "nodes": [
+      {
+        "id": "start",
+        "x": 2,
+        "y": 0,
+        "outgoingEdgeIDs": [
+          "approach"
+        ]
+      },
+      {
+        "id": "first_fork",
+        "x": 2,
+        "y": 1,
+        "outgoingEdgeIDs": [
+          "first_direct",
+          "first_tour"
+        ]
+      },
+      {
+        "id": "west_parcel",
+        "x": 0,
+        "y": 2,
+        "outgoingEdgeIDs": [
+          "first_return"
+        ]
+      },
+      {
+        "id": "second_fork",
+        "x": 2,
+        "y": 3,
+        "outgoingEdgeIDs": [
+          "second_direct",
+          "second_tour"
+        ]
+      },
+      {
+        "id": "east_parcel",
+        "x": 4,
+        "y": 4,
+        "outgoingEdgeIDs": [
+          "second_return"
+        ]
+      },
+      {
+        "id": "join",
+        "x": 2,
+        "y": 5,
+        "outgoingEdgeIDs": [
+          "home"
+        ]
+      },
+      {
+        "id": "house",
+        "x": 2,
+        "y": 6,
+        "outgoingEdgeIDs": []
+      }
+    ],
+    "edges": [
+      {
+        "id": "approach",
+        "fromNodeID": "start",
+        "toNodeID": "first_fork",
+        "roadShape": "verticalFirst"
+      },
+      {
+        "id": "first_direct",
+        "fromNodeID": "first_fork",
+        "toNodeID": "second_fork",
+        "roadShape": "verticalFirst"
+      },
+      {
+        "id": "first_tour",
+        "fromNodeID": "first_fork",
+        "toNodeID": "west_parcel",
+        "roadShape": "horizontalFirst"
+      },
+      {
+        "id": "first_return",
+        "fromNodeID": "west_parcel",
+        "toNodeID": "second_fork",
+        "roadShape": "verticalFirst"
+      },
+      {
+        "id": "second_direct",
+        "fromNodeID": "second_fork",
+        "toNodeID": "join",
+        "roadShape": "verticalFirst"
+      },
+      {
+        "id": "second_tour",
+        "fromNodeID": "second_fork",
+        "toNodeID": "east_parcel",
+        "roadShape": "horizontalFirst"
+      },
+      {
+        "id": "second_return",
+        "fromNodeID": "east_parcel",
+        "toNodeID": "join",
+        "roadShape": "verticalFirst"
+      },
+      {
+        "id": "home",
+        "fromNodeID": "join",
+        "toNodeID": "house",
+        "roadShape": "verticalFirst"
+      }
+    ]
+  },
+  "vans": [
+    {
+      "id": "red",
+      "color": "red",
+      "startNodeID": "start",
+      "departDelay": 0
+    }
+  ],
+  "houses": [
+    {
+      "nodeID": "house",
+      "color": "red"
+    }
+  ],
+  "packages": [
+    {
+      "id": "west",
+      "nodeID": "west_parcel",
+      "ownerVanID": "red"
+    },
+    {
+      "id": "east",
+      "nodeID": "east_parcel",
+      "ownerVanID": "red"
+    }
+  ],
+  "initialSwitchEdges": {
+    "first_fork": "first_direct",
+    "second_fork": "second_direct"
+  },
+  "parChanges": 2,
+  "liveSwitchNodeIDs": [],
+  "hint": "Red has two parcels to collect. Send it down both side roads before home.",
+  "hintFocusNodeIDs": [
+    "first_fork",
+    "second_fork"
+  ],
+  "tutorial": [
+    {
+      "trigger": "start",
+      "title": "Two parcels",
+      "body": "Red needs both parcels, in either order. Route it past each one.",
+      "focusNodeIDs": [
+        "first_fork",
+        "second_fork"
+      ],
+      "practice": "route"
+    }
+  ]
+}

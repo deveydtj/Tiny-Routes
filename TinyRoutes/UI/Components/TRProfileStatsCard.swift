@@ -15,49 +15,49 @@ struct TRProfileStatsCard: View {
         }
         .padding(18)
         .background {
-            TRGlassCardBackground(cornerRadius: 25)
+            MultiVanHUDCardBackground(cornerRadius: 26)
         }
     }
 
     private var statColumns: some View {
         Group {
-            statItem(label: "Stars", value: "\(summary.totalStars)", icon: "star.fill", color: TRGameplayStyle.Colors.resultGold)
+            statItem(label: "Stars", value: "\(summary.totalStars)", icon: "star.fill", color: Color(hex: 0xE3A51C))
             divider
-            statItem(label: "Levels", value: "\(summary.completedLevelCount)", icon: "map.fill", color: TRGameplayStyle.Colors.primaryBlue)
+            statItem(label: "Levels", value: "\(summary.completedLevelCount)", icon: "map.fill", color: TRVillagePalette.blue)
             divider
-            statItem(label: "Best Streak", value: "\(summary.bestStreakDays)", icon: "flame.fill", color: TRGameplayStyle.Colors.orangeAccent)
+            statItem(label: "Best Streak", value: "\(summary.bestStreakDays)", icon: "flame.fill", color: TRVillagePalette.roofs[0])
             divider
-            statItem(label: "Fastest", value: summary.fastestTimeText, icon: "stopwatch.fill", color: Color(red: 0.55, green: 0.33, blue: 0.95))
+            statItem(label: "Fastest", value: summary.fastestTimeText, icon: "stopwatch.fill", color: Color(hex: 0x8A6FD1))
         }
     }
 
     private var statItems: some View {
         Group {
-            statItem(label: "Stars", value: "\(summary.totalStars)", icon: "star.fill", color: TRGameplayStyle.Colors.resultGold)
-            statItem(label: "Levels", value: "\(summary.completedLevelCount)", icon: "map.fill", color: TRGameplayStyle.Colors.primaryBlue)
-            statItem(label: "Best Streak", value: "\(summary.bestStreakDays)", icon: "flame.fill", color: TRGameplayStyle.Colors.orangeAccent)
-            statItem(label: "Fastest", value: summary.fastestTimeText, icon: "stopwatch.fill", color: Color(red: 0.55, green: 0.33, blue: 0.95))
+            statItem(label: "Stars", value: "\(summary.totalStars)", icon: "star.fill", color: Color(hex: 0xE3A51C))
+            statItem(label: "Levels", value: "\(summary.completedLevelCount)", icon: "map.fill", color: TRVillagePalette.blue)
+            statItem(label: "Best Streak", value: "\(summary.bestStreakDays)", icon: "flame.fill", color: TRVillagePalette.roofs[0])
+            statItem(label: "Fastest", value: summary.fastestTimeText, icon: "stopwatch.fill", color: Color(hex: 0x8A6FD1))
         }
     }
 
     private var divider: some View {
-        Divider()
+        TRCozyDivider()
             .frame(height: 84)
     }
 
     private func statItem(label: String, value: String, icon: String, color: Color) -> some View {
         VStack(spacing: 7) {
             Text(label)
-                .font(.system(size: 12, weight: .black, design: .rounded))
-                .foregroundStyle(TRGameplayStyle.Colors.secondaryText)
+                .font(.system(size: 12, weight: .semibold, design: .rounded))
+                .foregroundStyle(TRVillagePalette.slate)
                 .lineLimit(1)
                 .minimumScaleFactor(0.70)
 
-            TRProfileStatIcon(systemImage: icon, color: color, size: 42)
+            TRProfileStatIcon(systemImage: icon, color: color, size: 40)
 
             Text(value)
-                .font(.system(size: 27, weight: .black, design: .rounded))
-                .foregroundStyle(TRGameplayStyle.Colors.titleNavy)
+                .font(.system(size: 25, weight: .bold, design: .rounded))
+                .foregroundStyle(TRVillagePalette.navy)
                 .lineLimit(1)
                 .minimumScaleFactor(0.70)
                 .monospacedDigit()
@@ -71,5 +71,5 @@ struct TRProfileStatsCard: View {
 #Preview("Profile Stats Card") {
     TRProfileStatsCard(summary: .conceptPreview)
         .padding(20)
-        .background(Color(red: 0.86, green: 0.94, blue: 0.98))
+        .background(TRVillageSky())
 }

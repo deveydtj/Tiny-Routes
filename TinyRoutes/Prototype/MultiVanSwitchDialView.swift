@@ -30,26 +30,30 @@ struct MultiVanSwitchDialView: View {
 
     init(
         activeAngle: Double, optionAngles: [Double] = [], tint: Tint = .ready,
-        side: CGFloat = 34, animates: Bool = true
+        side: CGFloat = 34, animates: Bool = true, startingAngle: Double? = nil
     ) {
         self.activeAngle = activeAngle
         self.optionAngles = optionAngles
         self.tint = tint
         self.side = side
         self.animates = animates
-        _turnedAngle = State(initialValue: activeAngle)
+        _turnedAngle = State(initialValue: animates ? startingAngle ?? activeAngle : activeAngle)
     }
 
     var body: some View {
         ZStack {
+            // A cream face on a darker lip, like the HUD's buttons.
             Circle()
-                .fill(Color(red: 1, green: 0.965, blue: 0.89).gradient)
-                .overlay { Circle().strokeBorder(.white, lineWidth: side * 0.075) }
-                .shadow(color: .black.opacity(0.2), radius: side * 0.05, y: side * 0.05)
+                .fill(MultiVanHUDStyle.creamLip)
+                .offset(y: side * 0.07)
+                .shadow(color: TRVillagePalette.ink.opacity(0.25), radius: side * 0.05, y: side * 0.06)
+            Circle()
+                .fill(LinearGradient(colors: [MultiVanHUDStyle.cream, MultiVanHUDStyle.creamDeep], startPoint: .top, endPoint: .bottom))
+                .overlay { Circle().strokeBorder(.white, lineWidth: side * 0.06) }
 
             ForEach(Array(optionAngles.enumerated()), id: \.offset) { _, angle in
                 Circle()
-                    .fill(Color(red: 0.8, green: 0.72, blue: 0.56))
+                    .fill(Color(hex: 0xC3B392))
                     .frame(width: side * 0.1, height: side * 0.1)
                     .offset(x: cos(angle) * side * 0.41, y: sin(angle) * side * 0.41)
             }
@@ -85,7 +89,7 @@ struct MultiVanSwitchDialView: View {
 
             // Fixed cap and glint stay put while the knob turns beneath them.
             Circle()
-                .fill(TRGameplayStyle.Colors.titleNavy)
+                .fill(Color(hex: 0x3B3A55))
                 .frame(width: side * 0.15, height: side * 0.15)
             Ellipse()
                 .fill(.white.opacity(0.5))
@@ -93,7 +97,7 @@ struct MultiVanSwitchDialView: View {
                 .offset(x: -side * 0.1, y: -side * 0.12)
         }
         .frame(width: side, height: side)
-        .onChange(of: activeAngle) { _, newAngle in
+        .onChange(of: activeAngle, initial: true) { _, newAngle in
             let delta = Self.shortestTurn(from: turnedAngle, to: newAngle)
             guard abs(delta) > 0.001 else { return }
             guard animates else {
@@ -112,9 +116,9 @@ struct MultiVanSwitchDialView: View {
 
     private var knobGradient: AnyGradient {
         switch tint {
-        case .ready: Color(red: 1, green: 0.78, blue: 0.2).gradient
-        case .live: Color(red: 1, green: 0.55, blue: 0.16).gradient
-        case .locked: Color(red: 0.62, green: 0.67, blue: 0.75).gradient
+        case .ready: TRVillagePalette.gold.gradient
+        case .live: Color(hex: 0xFF8C29).gradient
+        case .locked: Color(hex: 0xAAA395).gradient
         }
     }
 
@@ -167,7 +171,7 @@ struct DialKnobShape: Shape {
                 }
             }
             .padding(32)
-            .background(Color(white: 0.9))
+            .background(Color(hex: 0x8FC766))
         }
     }
     return Demo()

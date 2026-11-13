@@ -65,31 +65,41 @@ final class EconomyServiceTests: XCTestCase {
         XCTAssertEqual(repository.load().coinTotal, 0)
     }
 
-    func testLevelCompletionRewardPaysOnlyFirstCompletion() {
-        let firstReward = service.awardLevelCompletionReward(
-            levelID: "level_001",
-            earnedStars: 3,
-            isFirstCompletion: true
-        )
-        let duplicateReward = service.awardLevelCompletionReward(
-            levelID: "level_001",
-            earnedStars: 3,
-            isFirstCompletion: true
-        )
+    func testFirstWinPaysForEveryStar() {
+        let reward = service.awardLevelCompletionReward(levelID: "level_001", earnedStars: 3, previousBestStars: 0)
 
-        XCTAssertEqual(firstReward, 150)
-        XCTAssertEqual(duplicateReward, 0)
+        XCTAssertEqual(reward, 150)
+        XCTAssertEqual(service.coinTotal(), 150)
+        XCTAssertEqual(repository.load().lifetimeCoinsEarned, 150)
+    }
+
+    func testReplayPaysOnlyForTheStarsItAdds() {
+        XCTAssertEqual(service.awardLevelCompletionReward(levelID: "level_001", earnedStars: 1, previousBestStars: 0), 50)
+        // Better: the difference. The same or worse: nothing.
+        XCTAssertEqual(service.previewLevelCompletionReward(levelID: "level_001", earnedStars: 3, previousBestStars: 1), 100)
+        XCTAssertEqual(service.awardLevelCompletionReward(levelID: "level_001", earnedStars: 3, previousBestStars: 1), 100)
+        XCTAssertEqual(service.awardLevelCompletionReward(levelID: "level_001", earnedStars: 3, previousBestStars: 3), 0)
+        XCTAssertEqual(service.awardLevelCompletionReward(levelID: "level_001", earnedStars: 2, previousBestStars: 3), 0)
         XCTAssertEqual(service.coinTotal(), 150)
     }
 
-    func testLevelCompletionRewardDoesNotPayForReplay() {
-        let reward = service.awardLevelCompletionReward(
-            levelID: "level_001",
-            earnedStars: 3,
-            isFirstCompletion: false
-        )
+    func testRewardFollowsTheProgressServiceAcrossReplays() {
+        let progress = ProgressService(repository: repository)
+        var paid: [Int] = []
+        for stars in [1, 1, 2, 3, 3] {
+            let update = progress.completeLevel(levelID: "level_002", earnedStars: stars, nextLevelID: nil)
+            paid.append(service.awardLevelCompletionReward(
+                levelID: "level_002", earnedStars: stars, previousBestStars: update.previousBestStars
+            ))
+        }
+        XCTAssertEqual(paid, [50, 0, 50, 50, 0])
+        // A level can never pay more than three stars' worth.
+        XCTAssertEqual(service.coinTotal(), 3 * EconomyService.coinsPerStar)
+    }
 
-        XCTAssertEqual(reward, 0)
-        XCTAssertEqual(service.coinTotal(), 0)
+    func testRewardIgnoresStarsOutOfRangeAndNamelessLevels() {
+        XCTAssertEqual(service.awardLevelCompletionReward(levelID: "level_001", earnedStars: 9, previousBestStars: -4), 150)
+        XCTAssertEqual(service.awardLevelCompletionReward(levelID: "", earnedStars: 3, previousBestStars: 0), 0)
+        XCTAssertEqual(service.coinTotal(), 150)
     }
 }
